@@ -1,0 +1,14 @@
+[
+  {
+    "AllowedOrigins": [
+      "https://studio-galleries.com",
+      "https://albums.studio-galleries.com",
+      "http://localhost:3000",
+      "http://localhost:3001"
+    ],
+    "AllowedMethods": ["GET", "PUT", "POST", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
