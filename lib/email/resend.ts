@@ -32,6 +32,35 @@ function emailFrom() {
   )
 }
 
+export async function sendGalleryPasswordEmail(input: {
+  galleryId: string
+  galleryTitle: string
+  clientEmail: string
+  clientName: string
+  studioName: string
+  password: string
+}) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] gallery password', input)
+    return
+  }
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.clientEmail,
+    subject: `סיסמת הגלריה: ${input.galleryTitle}`,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif;">
+        <h2>שלום ${input.clientName},</h2>
+        <p>הסיסמה לגלריה <strong>${input.galleryTitle}</strong> היא:</p>
+        <p style="font-size: 1.25rem;"><strong>${input.password}</strong></p>
+        <p><a href="${appUrl(`/g/${input.galleryId}`)}">כניסה לגלריה</a></p>
+      </div>
+    `,
+  })
+}
+
 export async function sendGalleryInviteEmail(input: {
   galleryId: string
   galleryTitle: string

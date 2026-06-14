@@ -57,6 +57,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       <GalleryActions
         galleryId={gallery.id}
         status={gallery.status}
+        galleryType={gallery.gallery_type}
         clientLink={clientLink}
       />
 

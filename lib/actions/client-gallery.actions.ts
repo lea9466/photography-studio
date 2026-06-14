@@ -8,7 +8,12 @@ import {
   setGallerySession,
 } from '@/lib/gallery-session'
 import { prepareGalleryForDelivery } from '@/lib/actions/photo.actions'
-import { sendSelectionDoneEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
+import {
+  sendGalleryPasswordEmail,
+  sendSelectionDoneEmail,
+  sendDeliveryReadyEmail,
+} from '@/lib/email/resend'
+import { getEmailHint, type EmailHint } from '@/lib/utils'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -52,7 +57,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
-    .select('id, title, status, gallery_type, users(studio_name)')
+    .select('id, title, status, gallery_type, users(studio_name), clients(email)')
     .eq('id', galleryId)
     .single()
 
@@ -62,6 +67,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     status: GalleryStatus
     gallery_type: string
     users: { studio_name: string | null } | { studio_name: string | null }[] | null
+    clients: { email: string | null } | { email: string | null }[] | null
   }
 
   const gallery = data as Row | null
@@ -69,11 +75,74 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
   if (gallery.gallery_type === 'portfolio') return null
 
   const user = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
+  const client = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
+  const emailHint = client?.email ? getEmailHint(client.email) : null
+
   return {
     id: gallery.id,
     title: gallery.title,
     status: gallery.status,
     studio_name: user?.studio_name ?? null,
+    emailHint,
+  }
+}
+
+export async function requestGalleryPassword(galleryId: string) {
+  const admin = createAdminClient()
+
+  const { data } = await admin
+    .from('galleries')
+    .select(
+      `
+      id, title, password, expires_at, status,
+      clients (name, email),
+      users (studio_name)
+    `
+    )
+    .eq('id', galleryId)
+    .single()
+
+  type GalleryRow = {
+    id: string
+    title: string
+    password: string | null
+    expires_at: string | null
+    status: GalleryStatus
+    clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
+    users: { studio_name: string | null } | { studio_name: string | null }[] | null
+  }
+
+  const gallery = data as GalleryRow | null
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+  if (gallery.status === 'draft') throw new Error('הגלריה עדיין לא נשלחה')
+  if (gallery.status === 'locked') throw new Error('הגלריה סגורה')
+  if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
+    throw new Error('פג תוקף הגלריה')
+  }
+
+  const client = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
+  if (!client?.email) {
+    throw new Error('לא נמצא מייל ללקוח — פנו לצלם/ת')
+  }
+  if (!gallery.password) {
+    throw new Error('לא הוגדרה סיסמה לגלריה')
+  }
+
+  const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
+  const emailHint = getEmailHint(client.email)
+
+  await sendGalleryPasswordEmail({
+    galleryId: gallery.id,
+    galleryTitle: gallery.title,
+    clientEmail: client.email,
+    clientName: client.name,
+    studioName: profile?.studio_name ?? 'Studio Gallery',
+    password: gallery.password,
+  })
+
+  return {
+    success: true,
+    emailHint: emailHint as EmailHint,
   }
 }
 

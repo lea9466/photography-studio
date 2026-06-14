@@ -2,11 +2,105 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { sendGalleryInviteEmail } from '@/lib/email/resend'
+import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
+
+type GalleryEmailRow = {
+  id: string
+  title: string
+  password: string | null
+  expires_at: string | null
+  status: GalleryStatus
+  gallery_type: Database['public']['Tables']['galleries']['Row']['gallery_type']
+  clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
+  users: { studio_name: string | null } | { studio_name: string | null }[] | null
+}
+
+async function fetchOwnedGalleryForEmail(galleryId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data } = await supabase
+    .from('galleries')
+    .select(
+      `
+      id, title, password, expires_at, status, gallery_type,
+      clients (name, email),
+      users!galleries_user_id_fkey (studio_name)
+    `
+    )
+    .eq('id', galleryId)
+    .eq('user_id', user.id)
+    .single()
+
+  const gallery = data as GalleryEmailRow | null
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+  return gallery
+}
+
+async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
+  const client = Array.isArray(gallery.clients)
+    ? gallery.clients[0]
+    : gallery.clients
+  const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
+
+  if (!client?.email) throw new Error('לא נמצא מייל ללקוח')
+  if (!gallery.password) throw new Error('לא הוגדרה סיסמה לגלריה')
+
+  await sendGalleryInviteEmail({
+    galleryId: gallery.id,
+    galleryTitle: gallery.title,
+    clientEmail: client.email,
+    clientName: client.name,
+    studioName: profile?.studio_name ?? 'Studio Gallery',
+    password: gallery.password,
+    expiresAt: gallery.expires_at,
+  })
+}
+
+async function sendDeliveryEmailForGallery(gallery: GalleryEmailRow) {
+  const client = Array.isArray(gallery.clients)
+    ? gallery.clients[0]
+    : gallery.clients
+
+  if (!client?.email) throw new Error('לא נמצא מייל ללקוח')
+
+  await sendDeliveryReadyEmail({
+    galleryId: gallery.id,
+    galleryTitle: gallery.title,
+    clientEmail: client.email,
+    clientName: client.name,
+  })
+}
+
+export async function resendGalleryEmail(galleryId: string) {
+  const gallery = await fetchOwnedGalleryForEmail(galleryId)
+
+  if (gallery.gallery_type === 'portfolio') {
+    throw new Error('לא ניתן לשלוח מייל לתיק עבודות')
+  }
+  if (gallery.status === 'draft') {
+    throw new Error('יש לשלוח את הגלריה לפני שליחת מייל חוזר')
+  }
+
+  if (['delivery_ready', 'locked'].includes(gallery.status)) {
+    await sendDeliveryEmailForGallery(gallery)
+    return
+  }
+
+  if (['sent', 'selection', 'editing'].includes(gallery.status)) {
+    await sendInviteEmailForGallery(gallery)
+    return
+  }
+
+  throw new Error('לא ניתן לשלוח מייל בשלב זה')
+}
 
 export async function updateGalleryStatus(
   galleryId: string,
@@ -38,55 +132,10 @@ export async function updateGalleryStatus(
 }
 
 export async function sendGallery(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data } = await supabase
-    .from('galleries')
-    .select(
-      `
-      id, title, password, expires_at,
-      clients (name, email),
-      users!galleries_user_id_fkey (studio_name)
-    `
-    )
-    .eq('id', galleryId)
-    .eq('user_id', user.id)
-    .single()
-
-  type GallerySendRow = {
-    id: string
-    title: string
-    password: string | null
-    expires_at: string | null
-    clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
-    users: { studio_name: string | null } | { studio_name: string | null }[] | null
-  }
-
-  const gallery = data as GallerySendRow | null
-  if (!gallery) throw new Error('גלריה לא נמצאה')
+  const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
   await updateGalleryStatus(galleryId, 'sent')
-
-  const client = Array.isArray(gallery.clients)
-    ? gallery.clients[0]
-    : gallery.clients
-  const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
-
-  if (client?.email && gallery.password) {
-    await sendGalleryInviteEmail({
-      galleryId: gallery.id,
-      galleryTitle: gallery.title,
-      clientEmail: client.email,
-      clientName: client.name,
-      studioName: profile?.studio_name ?? 'Studio Gallery',
-      password: gallery.password,
-      expiresAt: gallery.expires_at,
-    })
-  }
+  await sendInviteEmailForGallery(gallery)
 }
 
 export async function archiveGallery(galleryId: string) {
