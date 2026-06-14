@@ -1,0 +1,69 @@
+import { downloadMediaObject } from '@/lib/r2/storage'
+import { isR2Configured } from '@/lib/r2/config'
+import type { MediaBucket } from '@/lib/r2/types'
+
+const ALLOWED_PREFIXES = [
+  'originals/',
+  'previews/',
+  'watermarked/',
+  'edited/',
+  'zips/',
+] as const
+
+function textResponse(message: string, status: number) {
+  return new Response(message, {
+    status,
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
+}
+
+function isAllowedGalleryMediaKey(key: string) {
+  const normalized = key.replace(/^\/+/, '').trim()
+  if (!normalized || normalized.includes('..')) return false
+  return ALLOWED_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+}
+
+function bucketFromKey(key: string): MediaBucket | null {
+  const normalized = key.replace(/^\/+/, '')
+  const prefix = normalized.split('/')[0]
+  if (
+    prefix === 'originals' ||
+    prefix === 'previews' ||
+    prefix === 'watermarked' ||
+    prefix === 'edited' ||
+    prefix === 'zips'
+  ) {
+    return prefix
+  }
+  return null
+}
+
+export async function GET(request: Request) {
+  if (!isR2Configured()) {
+    return textResponse('אחסון תמונות לא מוגדר', 503)
+  }
+
+  const key = new URL(request.url).searchParams.get('key')?.trim() ?? ''
+  const normalizedKey = key.replace(/^\/+/, '')
+  if (!isAllowedGalleryMediaKey(normalizedKey)) {
+    return textResponse('לא נמצא', 404)
+  }
+
+  const bucket = bucketFromKey(normalizedKey)
+  if (!bucket) {
+    return textResponse('לא נמצא', 404)
+  }
+
+  const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
+  try {
+    const data = await downloadMediaObject(bucket, path)
+    return new Response(Buffer.from(data), {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    })
+  } catch {
+    return textResponse('קובץ לא נמצא', 404)
+  }
+}

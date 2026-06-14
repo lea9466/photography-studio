@@ -1,0 +1,235 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+
+export type AuthActionState = {
+  error?: string
+  success?: string
+}
+
+function mapSignInError(message: string): string {
+  const lower = message.toLowerCase()
+  if (lower.includes('email not confirmed')) {
+    return 'יש לאמת את האימייל לפני ההתחברות — בדקי את תיבת הדואר (גם ספאם)'
+  }
+  if (lower.includes('invalid login credentials')) {
+    return 'אימייל או סיסמה שגויים'
+  }
+  if (lower.includes('database error')) {
+    return 'שגיאת מסד נתונים — ייתכן שה-migrations לא הורצו ב-Supabase'
+  }
+  return message
+}
+
+function mapSignUpError(message: string): string {
+  if (message.toLowerCase().includes('database error')) {
+    return 'שגיאה ביצירת פרופיל — הריצי את ה-migrations ב-Supabase (SQL Editor)'
+  }
+  return message
+}
+
+async function ensureUserProfile(
+  user: User,
+  meta?: { name?: string; studio_name?: string | null }
+) {
+  const supabase = await createClient()
+  const { data: existing } = await supabase
+    .from('users')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (existing) return
+
+  const name =
+    meta?.name ??
+    (typeof user.user_metadata?.name === 'string'
+      ? user.user_metadata.name
+      : user.email?.split('@')[0] ?? 'User')
+
+  const studioName =
+    meta?.studio_name ??
+    (typeof user.user_metadata?.studio_name === 'string'
+      ? user.user_metadata.studio_name
+      : null)
+
+  const { error } = await supabase.from('users').insert({
+    id: user.id,
+    email: user.email,
+    name,
+    studio_name: studioName,
+  } as never)
+
+  if (error) {
+    if (error.message.includes('does not exist')) {
+      throw new Error(
+        'טבלאות המערכת לא קיימות — הריצי את קבצי ה-migration ב-Supabase SQL Editor'
+      )
+    }
+    throw new Error(error.message)
+  }
+}
+
+export async function signIn(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const email = String(formData.get('email') ?? '').trim()
+  const password = String(formData.get('password') ?? '')
+  const next = String(formData.get('next') ?? '/dashboard')
+
+  if (!email || !password) {
+    return { error: 'נא למלא אימייל וסיסמה' }
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    return { error: mapSignInError(error.message) }
+  }
+
+  try {
+    await ensureUserProfile(data.user)
+  } catch (profileError) {
+    return {
+      error:
+        profileError instanceof Error
+          ? profileError.message
+          : 'שגיאה ביצירת פרופיל',
+    }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect(next.startsWith('/') ? next : '/dashboard')
+}
+
+export async function signUp(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const name = String(formData.get('name') ?? '').trim()
+  const studioName = String(formData.get('studio_name') ?? '').trim()
+  const email = String(formData.get('email') ?? '').trim()
+  const password = String(formData.get('password') ?? '')
+
+  if (!name || !email || !password) {
+    return { error: 'נא למלא שם, אימייל וסיסמה' }
+  }
+
+  if (password.length < 8) {
+    return { error: 'הסיסמה חייבת להכיל לפחות 8 תווים' }
+  }
+
+  const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: `${appUrl}/auth/callback`,
+      data: {
+        name,
+        studio_name: studioName || null,
+      },
+    },
+  })
+
+  if (error) {
+    return { error: mapSignUpError(error.message) }
+  }
+
+  // Supabase returns empty identities when email is already registered
+  if (data.user?.identities?.length === 0) {
+    return {
+      error:
+        'האימייל כבר רשום — נסי להתחבר עם אותה סיסמה, או השתמשי באימייל אחר.',
+    }
+  }
+
+  let user = data.user
+  let session = data.session
+
+  // When confirm-email is off but no session returned, sign in immediately
+  if (!session) {
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({ email, password })
+
+    if (signInError) {
+      return {
+        error: mapSignInError(signInError.message),
+        success:
+          signInError.message.toLowerCase().includes('email not confirmed')
+            ? 'אם ביטלת אימות מייל — מחקי את המשתמש הישן ב-Supabase Dashboard → Authentication → Users'
+            : undefined,
+      }
+    }
+
+    user = signInData.user
+    session = signInData.session
+  }
+
+  if (!user || !session) {
+    return {
+      success:
+        'נשלח מייל לאימות. לחצי על הקישור במייל ואז התחברי עם אותה סיסמה.',
+    }
+  }
+
+  try {
+    await ensureUserProfile(user, {
+      name,
+      studio_name: studioName || null,
+    })
+  } catch (profileError) {
+    return {
+      error:
+        profileError instanceof Error
+          ? profileError.message
+          : 'שגיאה ביצירת פרופיל',
+    }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
+}
+
+export async function signOut() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+  revalidatePath('/', 'layout')
+  redirect('/login')
+}
+
+export async function resendConfirmationEmail(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const email = String(formData.get('email') ?? '').trim()
+  if (!email) {
+    return { error: 'נא להזין אימייל' }
+  }
+
+  const supabase = await createClient()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: `${appUrl}/auth/callback`,
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: 'מייל אימות נשלח שוב — בדקי את תיבת הדואר' }
+}

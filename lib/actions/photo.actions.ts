@@ -1,0 +1,478 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
+import type { MediaBucket } from '@/lib/r2/types'
+import type { Database } from '@/lib/types/database.types'
+
+type PhotoInsert = Database['public']['Tables']['photos']['Insert']
+
+const COMPLETE_BATCH_SIZE = 50
+
+async function assertGalleryOwner(galleryId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: gallery } = await supabase
+    .from('galleries')
+    .select('id')
+    .eq('id', galleryId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+
+  return { supabase, user }
+}
+
+export async function reservePhotosBatch(galleryId: string, count: number) {
+  const { supabase } = await assertGalleryOwner(galleryId)
+  if (count <= 0) return []
+
+  const { data: lastPhoto } = await supabase
+    .from('photos')
+    .select('sort_order')
+    .eq('gallery_id', galleryId)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const startSortOrder =
+    ((lastPhoto as { sort_order: number } | null)?.sort_order ?? -1) + 1
+
+  const payloads: PhotoInsert[] = Array.from({ length: count }, (_, index) => ({
+    gallery_id: galleryId,
+    original_url: null,
+    preview_url: null,
+    watermarked_preview_url: null,
+    sort_order: startSortOrder + index,
+  }))
+
+  const { data, error } = await supabase
+    .from('photos')
+    .insert(payloads as never)
+    .select('id, sort_order')
+
+  if (error) throw new Error(error.message)
+  return (data ?? []) as { id: string; sort_order: number }[]
+}
+
+export async function completePhotosBatch(
+  galleryId: string,
+  items: {
+    id: string
+    originalPath: string
+    previewPath: string
+    watermarkedPath: string
+  }[]
+) {
+  if (items.length === 0) return
+
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  for (let offset = 0; offset < items.length; offset += COMPLETE_BATCH_SIZE) {
+    const chunk = items.slice(offset, offset + COMPLETE_BATCH_SIZE)
+    const results = await Promise.all(
+      chunk.map((item) =>
+        supabase
+          .from('photos')
+          .update({
+            original_url: item.originalPath,
+            preview_url: item.previewPath,
+            watermarked_preview_url: item.watermarkedPath,
+          } as never)
+          .eq('id', item.id)
+          .eq('gallery_id', galleryId)
+      )
+    )
+
+    const failed = results.find((result) => result.error)
+    if (failed?.error) throw new Error(failed.error.message)
+  }
+}
+
+export async function cleanupPhotosBatch(
+  galleryId: string,
+  photoIds: string[],
+  storagePaths: {
+    originalPath?: string | null
+    previewPath?: string | null
+    watermarkedPath?: string | null
+  }[]
+) {
+  if (photoIds.length === 0) return
+
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  for (const paths of storagePaths) {
+    const removals = [
+      { bucket: 'originals' as const, path: paths.originalPath },
+      { bucket: 'previews' as const, path: paths.previewPath },
+      { bucket: 'watermarked' as const, path: paths.watermarkedPath },
+    ].filter((entry) => entry.path)
+
+    for (const { bucket, path } of removals) {
+      await deleteMediaObject(bucket, path!)
+    }
+  }
+
+  const { error } = await supabase
+    .from('photos')
+    .delete()
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
+
+  if (error) throw new Error(error.message)
+}
+
+export async function finalizeGalleryUpload(galleryId: string) {
+  await assertGalleryOwner(galleryId)
+  revalidatePath(`/dashboard/galleries/${galleryId}`)
+  revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
+  revalidatePath('/dashboard')
+}
+
+export async function registerPhoto(input: {
+  galleryId: string
+  originalPath: string
+  previewPath: string
+  watermarkedPath: string
+  sortOrder?: number
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: gallery } = await supabase
+    .from('galleries')
+    .select('id')
+    .eq('id', input.galleryId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+
+  const payload: PhotoInsert = {
+    gallery_id: input.galleryId,
+    original_url: input.originalPath,
+    preview_url: input.previewPath,
+    watermarked_preview_url: input.watermarkedPath,
+    sort_order: input.sortOrder ?? 0,
+  }
+
+  const { data, error } = await supabase
+    .from('photos')
+    .insert(payload as never)
+    .select('id')
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${input.galleryId}`)
+  revalidatePath('/dashboard')
+
+  return { id: (data as { id: string }).id }
+}
+
+export async function setPhotosVisibilityBulk(
+  galleryId: string,
+  photoIds: string[],
+  visible: boolean
+) {
+  if (photoIds.length === 0) return
+
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  const { error } = await supabase
+    .from('photos')
+    .update({ is_visible_to_client: visible } as never)
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
+  revalidatePath(`/g/${galleryId}`)
+}
+
+export async function prepareGalleryForDelivery(galleryId: string) {
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  const { data: selections, error: selectionsError } = await supabase
+    .from('photo_selections')
+    .select('photo_id')
+    .eq('gallery_id', galleryId)
+    .or('selected_album.eq.true,selected_edit.eq.true')
+
+  if (selectionsError) throw new Error(selectionsError.message)
+
+  const keepVisible = new Set(
+    ((selections ?? []) as { photo_id: string }[]).map((row) => row.photo_id)
+  )
+
+  const { data: photos, error: photosError } = await supabase
+    .from('photos')
+    .select('id')
+    .eq('gallery_id', galleryId)
+
+  if (photosError) throw new Error(photosError.message)
+
+  const toHide = ((photos ?? []) as { id: string }[])
+    .map((photo) => photo.id)
+    .filter((id) => !keepVisible.has(id))
+
+  if (toHide.length > 0) {
+    const { error } = await supabase
+      .from('photos')
+      .update({ is_visible_to_client: false } as never)
+      .eq('gallery_id', galleryId)
+      .in('id', toHide)
+
+    if (error) throw new Error(error.message)
+  }
+
+  revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
+  revalidatePath(`/g/${galleryId}`)
+}
+
+export async function togglePhotoVisibility(photoId: string, visible: boolean) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: photo } = await supabase
+    .from('photos')
+    .select('gallery_id')
+    .eq('id', photoId)
+    .single()
+
+  const row = photo as { gallery_id: string } | null
+  if (!row) throw new Error('תמונה לא נמצאה')
+
+  const { error } = await supabase
+    .from('photos')
+    .update({ is_visible_to_client: visible } as never)
+    .eq('id', photoId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${row.gallery_id}`)
+}
+
+export async function deletePhoto(photoId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: photo } = await supabase
+    .from('photos')
+    .select('gallery_id, original_url, preview_url, watermarked_preview_url')
+    .eq('id', photoId)
+    .single()
+
+  type PhotoRow = {
+    gallery_id: string
+    original_url: string | null
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const row = photo as PhotoRow | null
+  if (!row) throw new Error('תמונה לא נמצאה')
+
+  const paths = [
+    { bucket: 'originals' as const, path: row.original_url },
+    { bucket: 'previews' as const, path: row.preview_url },
+    { bucket: 'watermarked' as const, path: row.watermarked_preview_url },
+  ].filter((p) => p.path)
+
+  for (const { bucket, path } of paths) {
+    await deleteMediaObject(bucket, path!)
+  }
+
+  const { error } = await supabase.from('photos').delete().eq('id', photoId)
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${row.gallery_id}`)
+  revalidatePath('/dashboard')
+}
+
+export async function getSignedPhotoUrl(
+  bucket: MediaBucket,
+  path: string
+) {
+  const url = await resolveMediaUrl(bucket, path)
+  if (!url) throw new Error('לא ניתן ליצור קישור לתמונה')
+  return url
+}
+
+export async function registerEditedPhoto(input: {
+  galleryId: string
+  photoId: string
+  editedPath: string
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: existing } = await supabase
+    .from('edited_photos')
+    .select('id')
+    .eq('photo_id', input.photoId)
+    .eq('gallery_id', input.galleryId)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('edited_photos')
+      .update({ final_url: input.editedPath } as never)
+      .eq('photo_id', input.photoId)
+      .eq('gallery_id', input.galleryId)
+    if (error) throw new Error(error.message)
+  } else {
+    const { error } = await supabase.from('edited_photos').insert({
+      gallery_id: input.galleryId,
+      photo_id: input.photoId,
+      final_url: input.editedPath,
+    } as never)
+    if (error) throw new Error(error.message)
+  }
+
+  revalidatePath(`/dashboard/galleries/${input.galleryId}`)
+}
+
+export async function registerEditedPhotosBatch(input: {
+  galleryId: string
+  items: { photoId: string; editedPath: string }[]
+}) {
+  if (input.items.length === 0) return { uploaded: 0 }
+
+  await assertGalleryOwner(input.galleryId)
+  const supabase = await createClient()
+
+  for (const item of input.items) {
+    const { data: existing } = await supabase
+      .from('edited_photos')
+      .select('id')
+      .eq('photo_id', item.photoId)
+      .eq('gallery_id', input.galleryId)
+      .maybeSingle()
+
+    if (existing) {
+      const { error } = await supabase
+        .from('edited_photos')
+        .update({ final_url: item.editedPath } as never)
+        .eq('photo_id', item.photoId)
+        .eq('gallery_id', input.galleryId)
+      if (error) throw new Error(error.message)
+    } else {
+      const { error } = await supabase.from('edited_photos').insert({
+        gallery_id: input.galleryId,
+        photo_id: item.photoId,
+        final_url: item.editedPath,
+      } as never)
+      if (error) throw new Error(error.message)
+    }
+  }
+
+  await prepareGalleryForDelivery(input.galleryId)
+
+  revalidatePath(`/dashboard/galleries/${input.galleryId}`)
+  revalidatePath(`/dashboard/galleries/${input.galleryId}/selections`)
+  revalidatePath(`/g/${input.galleryId}`)
+
+  return { uploaded: input.items.length }
+}
+
+export async function fetchGalleryPhotos(galleryId: string) {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('photos')
+    .select('*')
+    .eq('gallery_id', galleryId)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+export type GallerySelectionPhoto = {
+  id: string
+  preview_url: string | null
+  preview_signed_url: string | null
+  edited_signed_url: string | null
+  selected_album: boolean
+  selected_edit: boolean
+}
+
+export async function fetchGallerySelections(galleryId: string) {
+  await assertGalleryOwner(galleryId)
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('photos')
+    .select(
+      `
+      id, preview_url,
+      photo_selections (selected_album, selected_edit),
+      edited_photos (final_url)
+    `
+    )
+    .eq('gallery_id', galleryId)
+    .order('sort_order', { ascending: true })
+
+  if (error) throw new Error(error.message)
+
+  type Row = {
+    id: string
+    preview_url: string | null
+    photo_selections:
+      | { selected_album: boolean; selected_edit: boolean }
+      | { selected_album: boolean; selected_edit: boolean }[]
+      | null
+    edited_photos:
+      | { final_url: string | null }
+      | { final_url: string | null }[]
+      | null
+  }
+
+  const mapped = await Promise.all(
+    ((data ?? []) as Row[]).map(async (photo) => {
+      const selection = Array.isArray(photo.photo_selections)
+        ? photo.photo_selections[0]
+        : photo.photo_selections
+      const edited = Array.isArray(photo.edited_photos)
+        ? photo.edited_photos[0]
+        : photo.edited_photos
+
+      return {
+        id: photo.id,
+        preview_url: photo.preview_url,
+        preview_signed_url: await resolveMediaUrl('previews', photo.preview_url),
+        edited_signed_url: await resolveMediaUrl('edited', edited?.final_url ?? null),
+        selected_album: selection?.selected_album ?? false,
+        selected_edit: selection?.selected_edit ?? false,
+      } satisfies GallerySelectionPhoto
+    })
+  )
+
+  return {
+    albumPhotos: mapped.filter((photo) => photo.selected_album),
+    editPhotos: mapped.filter((photo) => photo.selected_edit),
+  }
+}

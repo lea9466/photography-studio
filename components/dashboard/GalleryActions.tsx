@@ -1,0 +1,106 @@
+'use client'
+
+import Link from 'next/link'
+import { useTransition } from 'react'
+import { Archive, ExternalLink, Send, Truck } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  archiveGallery,
+  sendGallery,
+  updateGalleryStatus,
+} from '@/lib/actions/gallery.actions'
+import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
+import type { GalleryStatus } from '@/lib/types/database.types'
+import { Button } from '@/components/ui/button'
+
+type GalleryActionsProps = {
+  galleryId: string
+  status: GalleryStatus
+  clientLink: string
+}
+
+export function GalleryActions({
+  galleryId,
+  status,
+  clientLink,
+}: GalleryActionsProps) {
+  const [isPending, startTransition] = useTransition()
+
+  function run(action: () => Promise<void>, message: string) {
+    startTransition(async () => {
+      try {
+        await action()
+        toast.success(message)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button variant="outline" size="sm" asChild>
+        <Link href={clientLink} target="_blank">
+          <ExternalLink className="h-4 w-4" />
+          {clientLink.startsWith('/portfolio') ? 'תצוגה ציבורית' : 'תצוגת לקוח'}
+        </Link>
+      </Button>
+
+      {status === 'draft' ? (
+        <Button
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
+          }
+        >
+          <Send className="h-4 w-4" />
+          שלח ללקוח
+        </Button>
+      ) : null}
+
+      {status === 'editing' ? (
+        <Button
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
+          }
+        >
+          <Truck className="h-4 w-4" />
+          סמן מוכן למסירה
+        </Button>
+      ) : null}
+
+      {status !== 'locked' ? (
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(() => archiveGallery(galleryId), 'הגלריה הועברה לארכיב')
+          }
+        >
+          <Archive className="h-4 w-4" />
+          ארכיב
+        </Button>
+      ) : null}
+
+      {status === 'sent' ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(
+              () => updateGalleryStatus(galleryId, 'selection'),
+              'מצב בחירה נפתח'
+            )
+          }
+        >
+          פתח בחירה
+        </Button>
+      ) : null}
+    </div>
+  )
+}
