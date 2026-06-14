@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
       ) : null}
       <AuthForm mode="login" action={signIn} next={next} />
-      <ResendConfirmation />
+      {/* <ResendConfirmation /> */}
     </div>
   )
 }
