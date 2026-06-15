@@ -8,7 +8,6 @@ import { createClientRecord } from '@/lib/actions/client.actions'
 import { createGallery } from '@/lib/actions/gallery.actions'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import type { Client, GalleryType } from '@/lib/types/database.types'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -29,12 +28,13 @@ import {
 import { Stepper } from '@/components/ui/stepper'
 import { Switch } from '@/components/ui/switch'
 
-const WIZARD_STEPS = ['לקוח', 'סוג גלריה', 'העלאת תמונות', 'פרסום']
+const WIZARD_STEPS = ['לקוח', 'סוג גלריה', 'פרסום']
 
 const GALLERY_TYPES: GalleryType[] = ['selection', 'delivery', 'portfolio']
 
 type GalleryWizardProps = {
   clients: Client[]
+  defaultWatermarkText?: string
 }
 
 type WizardState = {
@@ -73,13 +73,17 @@ const initialState: WizardState = {
   sendToClient: false,
 }
 
-export function GalleryWizard({ clients }: GalleryWizardProps) {
+export function GalleryWizard({
+  clients,
+  defaultWatermarkText = '',
+}: GalleryWizardProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [state, setState] = useState<WizardState>({
     ...initialState,
     clientId: clients[0]?.id ?? '',
     clientMode: clients.length > 0 ? 'existing' : 'new',
+    watermarkText: defaultWatermarkText,
   })
   const [isPending, startTransition] = useTransition()
 
@@ -161,7 +165,7 @@ export function GalleryWizard({ clients }: GalleryWizardProps) {
             ? 'הגלריה נוצרה וסומנה כנשלחה'
             : 'הגלריה נוצרה בהצלחה'
         )
-        router.push(`/dashboard/galleries/${gallery.id}`)
+        router.push(`/dashboard/galleries/${gallery.id}/photos`)
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : 'יצירת הגלריה נכשלה'
@@ -319,30 +323,20 @@ export function GalleryWizard({ clients }: GalleryWizardProps) {
       {step === 3 ? (
         <Card>
           <CardHeader>
-            <CardTitle>העלאת תמונות</CardTitle>
-            <CardDescription>
-              לאחר יצירת הגלריה — העלי תמונות בטאב &quot;תמונות&quot;
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex min-h-48 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[--border] bg-[--background] p-8 text-center">
-              <ImagePlus className="h-10 w-10 text-[--muted]" />
-              <p className="text-sm text-[--muted]">
-                גררי תמונות לכאן או לחצי להעלאה
-              </p>
-              <Badge variant="muted">יהיה זמין לאחר יצירת הגלריה</Badge>
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {step === 4 ? (
-        <Card>
-          <CardHeader>
             <CardTitle>פרסום</CardTitle>
             <CardDescription>הגדרות גישה, בחירות ושליחה ללקוח</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <div className="flex items-start gap-3 rounded-xl border border-dashed border-[--border] bg-[--background] p-4">
+              <ImagePlus className="mt-0.5 h-5 w-5 shrink-0 text-[--muted]" />
+              <div>
+                <p className="text-sm font-medium">העלאת תמונות</p>
+                <p className="mt-1 text-sm text-[--muted]">
+                  לאחר יצירת הגלריה תועברי ישירות לעמוד התמונות להעלאה
+                </p>
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="password">סיסמת גלריה</Label>

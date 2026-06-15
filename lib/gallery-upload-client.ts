@@ -128,9 +128,10 @@ async function uploadReservedPhoto(
     }
   }
 
+  const resolvedWatermark = watermarkText?.trim() || 'Studio Gallery'
   const watermarkedBlob = await applyWatermarkToBlob(
     previewBlob,
-    watermarkText ?? undefined
+    resolvedWatermark
   )
 
   let uploadUrls: string[]

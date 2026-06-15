@@ -1,9 +1,10 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { GalleryUploadCallbacks } from '@/lib/gallery-upload-client'
-import { setPhotosVisibilityBulk } from '@/lib/actions/photo.actions'
+import { deletePhotosBulk, setPhotosVisibilityBulk } from '@/lib/actions/photo.actions'
 import { UploadDropzone } from '@/components/gallery/UploadDropzone'
 import {
   GalleryGrid,
@@ -17,6 +18,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { Photo } from '@/lib/types/database.types'
 
 type GalleryPhotosSectionProps = {
@@ -37,6 +44,7 @@ export function GalleryPhotosSection({
   const objectUrlsRef = useRef<string[]>([])
   const [pendingPhotos, setPendingPhotos] = useState<PendingGalleryPhoto[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -144,8 +152,34 @@ export function GalleryPhotosSection({
     })
   }
 
+  function bulkDeletePhotos() {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) {
+      toast.error('בחרי תמונות קודם')
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        const { deleted } = await deletePhotosBulk(galleryId, ids)
+        toast.success(`${deleted} תמונות נמחקו`)
+        setSelectedIds(new Set())
+        setDeleteDialogOpen(false)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-lg font-medium">ניהול תמונות</h2>
+        <p className="text-sm text-[--muted]">
+          העלאה, תצוגה מקדימה והצגה או הסתרה מהלקוח
+        </p>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>העלאת תמונות</CardTitle>
@@ -207,6 +241,16 @@ export function GalleryPhotosSection({
                   >
                     הסתר מהלקוח
                   </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    disabled={isPending}
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחק תמונות
+                  </Button>
                 </>
               ) : null}
             </div>
@@ -220,6 +264,33 @@ export function GalleryPhotosSection({
           onToggleSelect={togglePhotoSelected}
         />
       </div>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md p-6">
+          <DialogTitle>מחיקת תמונות</DialogTitle>
+          <DialogDescription>
+            למחוק {selectedIds.size} תמונות מהגלריה? פעולה זו אינה ניתנת לביטול.
+          </DialogDescription>
+          <div className="mt-6 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              ביטול
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isPending}
+              onClick={bulkDeletePhotos}
+            >
+              מחק
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

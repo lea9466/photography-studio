@@ -93,12 +93,12 @@ export function SelectionsView({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SelectionColumn
-          title="❤️ אלבום"
+          title="אלבום"
           count={albumPhotos.length}
           photos={albumPhotos}
         />
         <SelectionColumn
-          title="✨ לעיבוד"
+          title="לעיבוד"
           count={editPhotos.length}
           photos={editPhotos}
         />

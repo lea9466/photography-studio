@@ -8,6 +8,7 @@ import {
   archiveGallery,
   sendGallery,
 } from '@/lib/actions/gallery.actions'
+import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
 import {
   GALLERY_STATUS_LABELS,
   GALLERY_TYPE_LABELS,
@@ -67,7 +68,14 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
     <Card className="animate-float-up transition-shadow hover:shadow-md">
       <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
         <div className="min-w-0 flex-1">
-          <CardTitle className="truncate text-lg">{gallery.title}</CardTitle>
+          <CardTitle className="truncate text-lg">
+            <Link
+              href={`/dashboard/galleries/${gallery.id}`}
+              className="transition-colors hover:text-[--muted]"
+            >
+              {gallery.title}
+            </Link>
+          </CardTitle>
           <CardDescription className="mt-1 truncate">
             {gallery.client_name ?? 'ללא לקוח'}
           </CardDescription>
@@ -122,6 +130,12 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
                 </DropdownMenuItem>
               </>
             ) : null}
+            <DropdownMenuSeparator />
+            <DeleteGalleryButton
+              galleryId={gallery.id}
+              galleryTitle={gallery.title}
+              variant="menu-item"
+            />
           </DropdownMenuContent>
         </DropdownMenu>
       </CardHeader>
@@ -136,9 +150,14 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           <span>{gallery.photo_count} תמונות</span>
           <span>{formatDate(gallery.created_at)}</span>
         </div>
-        <Button variant="outline" size="sm" className="w-full" asChild>
-          <Link href={`/dashboard/galleries/${gallery.id}`}>ניהול גלריה</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="flex-1" asChild>
+            <Link href={`/dashboard/galleries/${gallery.id}`}>פתיחה</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/galleries/${gallery.id}/photos`}>תמונות</Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )

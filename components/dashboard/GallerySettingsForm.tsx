@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateGallerySettings } from '@/lib/actions/gallery.actions'
+import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
 import type { Gallery, GallerySettings } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -66,10 +67,11 @@ export function GallerySettingsForm({
   }
 
   return (
-    <Card className="animate-fade-in">
+    <div className="space-y-6">
+      <Card className="animate-fade-in">
       <CardHeader>
-        <CardTitle>הגדרות גלריה</CardTitle>
-        <CardDescription>עריכה ושמירה</CardDescription>
+        <CardTitle>עריכת הגדרות</CardTitle>
+        <CardDescription>שינויים נשמרים בלחיצה על &quot;שמור הגדרות&quot;</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -142,6 +144,22 @@ export function GallerySettingsForm({
           {isPending ? 'שומר...' : 'שמור הגדרות'}
         </Button>
       </CardContent>
-    </Card>
+      </Card>
+
+      <Card className="animate-fade-in border-[--foreground]/20">
+      <CardHeader>
+        <CardTitle>מחיקת גלריה</CardTitle>
+        <CardDescription>
+          מחיקה לצמיתות של הגלריה וכל התמונות, הבחירות והקבצים שבה
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <DeleteGalleryButton
+          galleryId={gallery.id}
+          galleryTitle={gallery.title}
+        />
+      </CardContent>
+      </Card>
+    </div>
   )
 }

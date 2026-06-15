@@ -1,6 +1,6 @@
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions/auth.actions'
+import { DashboardNav } from '@/components/dashboard/DashboardNav'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/lib/types/database.types'
 
@@ -50,20 +50,8 @@ export default async function DashboardLayout({
               {profile?.name ?? user?.email}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            {portfolioSlug ? (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/portfolio/${portfolioSlug}`} target="_blank">
-                  דף ציבורי
-                </Link>
-              </Button>
-            ) : null}
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard">גלריות</Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/dashboard/settings">הגדרות</Link>
-            </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <DashboardNav portfolioSlug={portfolioSlug} />
             <form action={signOut}>
               <Button variant="ghost" size="sm" type="submit">
                 יציאה

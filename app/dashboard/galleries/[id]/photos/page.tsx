@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchGalleryPhotos } from '@/lib/actions/photo.actions'
+import { resolveWatermarkText } from '@/lib/images/process'
 import { signStoragePaths } from '@/lib/storage'
 import { unwrapOne } from '@/lib/unwrap'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
@@ -19,6 +20,15 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   } = await supabase.auth.getUser()
 
   if (!user) notFound()
+
+  const { data: profileData } = await supabase
+    .from('users')
+    .select('studio_name')
+    .eq('id', user.id)
+    .single()
+
+  const studioName =
+    (profileData as { studio_name: string | null } | null)?.studio_name ?? null
 
   const galleryData = await fetchGalleryDetail(id)
   if (!galleryData) notFound()
@@ -38,7 +48,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
     <GalleryPhotosSection
       galleryId={id}
       userId={user.id}
-      watermarkText={settings?.watermark_text}
+      watermarkText={resolveWatermarkText(settings?.watermark_text, studioName)}
       photos={photos as never}
       signedUrls={signedUrls}
     />

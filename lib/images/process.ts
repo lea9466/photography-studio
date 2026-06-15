@@ -51,13 +51,48 @@ function applyWatermark(canvas: HTMLCanvasElement, text: string) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return canvas
 
-  const fontSize = Math.max(16, Math.round(canvas.width * 0.04))
-  ctx.font = `600 ${fontSize}px Heebo, sans-serif`
-  ctx.fillStyle = 'rgba(255,255,255,0.35)'
+  const fontSize = Math.max(14, Math.round(canvas.width * 0.032))
+  ctx.font = `600 ${fontSize}px Heebo, Arial, sans-serif`
+  ctx.fillStyle = 'rgba(255,255,255,0.32)'
+  ctx.strokeStyle = 'rgba(0,0,0,0.14)'
+  ctx.lineWidth = 1
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+
+  const stepX = Math.max(fontSize * 4, text.length * fontSize * 0.55)
+  const stepY = fontSize * 3.5
+
+  ctx.save()
+  ctx.translate(canvas.width / 2, canvas.height / 2)
+  ctx.rotate(-Math.PI / 6)
+
+  const cols = Math.ceil(canvas.width / stepX) + 2
+  const rows = Math.ceil(canvas.height / stepY) + 2
+
+  for (let row = -rows; row <= rows; row += 1) {
+    for (let col = -cols; col <= cols; col += 1) {
+      const x = col * stepX + (row % 2) * (stepX / 2)
+      const y = row * stepY
+      ctx.strokeText(text, x, y)
+      ctx.fillText(text, x, y)
+    }
+  }
+
+  ctx.restore()
   return canvas
+}
+
+export function resolveWatermarkText(
+  watermarkText: string | null | undefined,
+  studioName: string | null | undefined
+) {
+  const custom = watermarkText?.trim()
+  if (custom) return custom
+
+  const studio = studioName?.trim()
+  if (studio) return studio
+
+  return 'Studio Gallery'
 }
 
 export type ProcessedImages = {
@@ -107,12 +142,18 @@ export async function applyWatermarkToBlob(
   preview: Blob,
   watermarkText?: string
 ): Promise<Blob> {
-  if (!watermarkText?.trim()) return preview
+  const text = watermarkText?.trim()
+  if (!text) return preview
 
   const img = await loadImage(
     new File([preview], 'preview.jpg', { type: preview.type || 'image/jpeg' })
   )
-  const canvas = resizeCanvas(img, MAX_PREVIEW_SIZE)
-  applyWatermark(canvas, watermarkText.trim())
+  const canvas = document.createElement('canvas')
+  canvas.width = img.width
+  canvas.height = img.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas not supported')
+  ctx.drawImage(img, 0, 0)
+  applyWatermark(canvas, text)
   return canvasToBlob(canvas, WATERMARK_QUALITY)
 }

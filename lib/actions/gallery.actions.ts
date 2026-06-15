@@ -2,11 +2,111 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { deleteMediaObject } from '@/lib/r2/storage'
+import type { MediaBucket } from '@/lib/r2/types'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
+
+const DELETE_BATCH_SIZE = 50
+
+async function assertGalleryOwner(galleryId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const { data: gallery } = await supabase
+    .from('galleries')
+    .select('id')
+    .eq('id', galleryId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+
+  return { supabase, user }
+}
+
+async function deleteGalleryMedia(supabase: Awaited<ReturnType<typeof createClient>>, galleryId: string) {
+  const [photosResult, editedResult, jobsResult] = await Promise.all([
+    supabase
+      .from('photos')
+      .select('original_url, preview_url, watermarked_preview_url')
+      .eq('gallery_id', galleryId),
+    supabase.from('edited_photos').select('final_url').eq('gallery_id', galleryId),
+    supabase.from('download_jobs').select('file_url').eq('gallery_id', galleryId),
+  ])
+
+  if (photosResult.error) throw new Error(photosResult.error.message)
+  if (editedResult.error) throw new Error(editedResult.error.message)
+  if (jobsResult.error) throw new Error(jobsResult.error.message)
+
+  type PhotoRow = {
+    original_url: string | null
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const storageDeletes: { bucket: MediaBucket; path: string }[] = []
+
+  for (const photo of (photosResult.data ?? []) as PhotoRow[]) {
+    if (photo.original_url) {
+      storageDeletes.push({ bucket: 'originals', path: photo.original_url })
+    }
+    if (photo.preview_url) {
+      storageDeletes.push({ bucket: 'previews', path: photo.preview_url })
+    }
+    if (photo.watermarked_preview_url) {
+      storageDeletes.push({
+        bucket: 'watermarked',
+        path: photo.watermarked_preview_url,
+      })
+    }
+  }
+
+  for (const row of (editedResult.data ?? []) as { final_url: string | null }[]) {
+    if (row.final_url) {
+      storageDeletes.push({ bucket: 'edited', path: row.final_url })
+    }
+  }
+
+  for (const row of (jobsResult.data ?? []) as { file_url: string | null }[]) {
+    if (row.file_url) {
+      storageDeletes.push({ bucket: 'zips', path: row.file_url })
+    }
+  }
+
+  for (let offset = 0; offset < storageDeletes.length; offset += DELETE_BATCH_SIZE) {
+    const chunk = storageDeletes.slice(offset, offset + DELETE_BATCH_SIZE)
+    await Promise.all(
+      chunk.map(({ bucket, path }) => deleteMediaObject(bucket, path))
+    )
+  }
+}
+
+export async function deleteGallery(galleryId: string) {
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  await deleteGalleryMedia(supabase, galleryId)
+
+  const { error } = await supabase
+    .from('galleries')
+    .delete()
+    .eq('id', galleryId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/dashboard')
+  revalidatePath(`/dashboard/galleries/${galleryId}`)
+  revalidatePath(`/g/${galleryId}`)
+
+  return { success: true }
+}
 
 type GalleryEmailRow = {
   id: string
@@ -214,6 +314,18 @@ export async function createGallery(input: CreateGalleryInput) {
     throw new Error(galleryError?.message ?? 'יצירת הגלריה נכשלה')
   }
 
+  let watermarkText: string | null = input.watermarkText?.trim() || null
+  if (!watermarkText) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('studio_name')
+      .eq('id', user.id)
+      .single()
+    watermarkText =
+      (profile as { studio_name: string | null } | null)?.studio_name?.trim() ||
+      null
+  }
+
   const settingsPayload: Database['public']['Tables']['gallery_settings']['Insert'] =
     {
       gallery_id: gallery.id,
@@ -221,7 +333,7 @@ export async function createGallery(input: CreateGalleryInput) {
       max_edit_selection: input.maxEditSelection ?? null,
       allow_download_preview: input.allowDownloadPreview ?? false,
       allow_download_original: input.allowDownloadOriginal ?? false,
-      watermark_text: input.watermarkText?.trim() || null,
+      watermark_text: watermarkText,
     }
 
   const { error: settingsError } = await supabase

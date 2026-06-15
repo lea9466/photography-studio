@@ -5,13 +5,7 @@ import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchGallerySelections } from '@/lib/actions/photo.actions'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { UploadEdited } from '@/components/gallery/UploadEdited'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 type SelectionsPageProps = {
   params: Promise<{ id: string }>
@@ -35,29 +29,38 @@ export default async function GallerySelectionsPage({
 
   return (
     <div className="space-y-8 animate-fade-in">
-      <SelectionsView
-        galleryId={id}
-        albumPhotos={albumPhotos}
-        editPhotos={editPhotos}
-      />
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-medium">בחירות הלקוח</h2>
+          <p className="text-sm text-[--muted]">
+            תמונות שנבחרו לאלבום ולעיבוד
+          </p>
+        </div>
+        <SelectionsView
+          galleryId={id}
+          albumPhotos={albumPhotos}
+          editPhotos={editPhotos}
+        />
+      </section>
 
       {['editing', 'delivery_ready'].includes(gallery.status) ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>העלאת תמונות מעובדות</CardTitle>
-            <CardDescription>
-              גררי את כל התמונות המעובדות בבת אחת — הן ישויכו לבחירות הלקוח
-              והתמונות הרגילות יוסתרו מהלקוח אוטומטית
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UploadEdited
-              galleryId={id}
-              userId={user.id}
-              selectedPhotos={editPhotos}
-            />
-          </CardContent>
-        </Card>
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-medium">העלאת תמונות מעובדות</h2>
+            <p className="text-sm text-[--muted]">
+              גררי את כל התמונות המעובדות — הן ישויכו לבחירות הלקוח
+            </p>
+          </div>
+          <Card>
+            <CardContent className="pt-6">
+              <UploadEdited
+                galleryId={id}
+                userId={user.id}
+                selectedPhotos={editPhotos}
+              />
+            </CardContent>
+          </Card>
+        </section>
       ) : null}
     </div>
   )

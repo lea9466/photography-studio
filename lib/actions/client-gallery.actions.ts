@@ -259,9 +259,17 @@ export async function getClientGallery(galleryId: string) {
         : editedPath ?? photo.preview_url
 
       const gridPath =
-        isDelivered && editedPath ? editedPath : photo.preview_url
+        isDelivered && editedPath
+          ? editedPath
+          : useWatermarked && photo.watermarked_preview_url
+            ? photo.watermarked_preview_url
+            : photo.preview_url
       const gridBucket: MediaBucket =
-        isDelivered && editedPath ? 'edited' : 'previews'
+        isDelivered && editedPath
+          ? 'edited'
+          : useWatermarked && photo.watermarked_preview_url
+            ? 'watermarked'
+            : 'previews'
 
       return {
         id: photo.id,

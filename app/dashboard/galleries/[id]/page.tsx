@@ -1,10 +1,6 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { fetchGalleryDetail, ensurePortfolioSlug } from '@/lib/actions/gallery.actions'
-import { GALLERY_STATUS_LABELS, GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -48,20 +44,31 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       : `/g/${gallery.id}`
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="muted">{GALLERY_STATUS_LABELS[gallery.status]}</Badge>
-        <Badge variant="outline">{GALLERY_TYPE_LABELS[gallery.gallery_type]}</Badge>
-      </div>
+    <div className="animate-fade-in space-y-8">
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-medium">פעולות</h2>
+          <p className="text-sm text-[--muted]">
+            שליחה ללקוח, תצוגה מקדימה וניהול סטטוס
+          </p>
+        </div>
+        <GalleryActions
+          galleryId={gallery.id}
+          galleryTitle={gallery.title}
+          status={gallery.status}
+          galleryType={gallery.gallery_type}
+          clientLink={clientLink}
+        />
+      </section>
 
-      <GalleryActions
-        galleryId={gallery.id}
-        status={gallery.status}
-        galleryType={gallery.gallery_type}
-        clientLink={clientLink}
-      />
-
-      <div className="grid gap-4 sm:grid-cols-2">
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-lg font-medium">פרטים</h2>
+          <p className="text-sm text-[--muted]">
+            פרטי לקוח, לינק גישה והגדרות בחירה
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
         {client ? (
           <ClientEditForm client={client} galleryId={gallery.id} />
         ) : (
@@ -100,16 +107,8 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
             ) : null}
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/galleries/${id}/photos`}>ניהול תמונות</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href={`/dashboard/galleries/${id}/selections`}>צפייה בבחירות</Link>
-        </Button>
-      </div>
+        </div>
+      </section>
     </div>
   )
 }

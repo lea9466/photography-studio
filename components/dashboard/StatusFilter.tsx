@@ -18,26 +18,29 @@ type StatusFilterProps = {
 
 export function StatusFilter({ current }: StatusFilterProps) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {FILTER_OPTIONS.map((option) => (
-        <Button
-          key={option.value}
-          variant={current === option.value ? 'default' : 'outline'}
-          size="sm"
-          asChild
-        >
-          <Link
-            href={
-              option.value === 'all'
-                ? '/dashboard'
-                : `/dashboard?status=${option.value}`
-            }
-            className={cn(current === option.value && 'pointer-events-none')}
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-[--muted]">סינון לפי סטטוס</p>
+      <div className="flex flex-wrap gap-2">
+        {FILTER_OPTIONS.map((option) => (
+          <Button
+            key={option.value}
+            variant={current === option.value ? 'default' : 'outline'}
+            size="sm"
+            asChild
           >
-            {option.label}
-          </Link>
-        </Button>
-      ))}
+            <Link
+              href={
+                option.value === 'all'
+                  ? '/dashboard'
+                  : `/dashboard?status=${option.value}`
+              }
+              className={cn(current === option.value && 'pointer-events-none')}
+            >
+              {option.label}
+            </Link>
+          </Button>
+        ))}
+      </div>
     </div>
   )
 }

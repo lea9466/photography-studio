@@ -5,11 +5,10 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const TABS = [
-  { href: '', label: 'סקירה' },
-  { href: '/photos', label: 'תמונות' },
-  { href: '/selections', label: 'בחירות' },
-  { href: '/upload-edited', label: 'מעובדות' },
-  { href: '/settings', label: 'הגדרות' },
+  { href: '', label: 'סקירה', description: 'מידע ופעולות' },
+  { href: '/photos', label: 'תמונות', description: 'העלאה וניהול' },
+  { href: '/selections', label: 'בחירות', description: 'בחירות הלקוח ומעובדות' },
+  { href: '/settings', label: 'הגדרות', description: 'עריכת גלריה' },
 ] as const
 
 type TabNavProps = {
@@ -21,7 +20,10 @@ export function TabNav({ galleryId }: TabNavProps) {
   const base = `/dashboard/galleries/${galleryId}`
 
   return (
-    <nav className="flex flex-wrap gap-1 rounded-lg border border-[--border] bg-[--background] p-1">
+    <nav
+      aria-label="ניווט גלריה"
+      className="flex flex-wrap gap-1 rounded-lg border border-[--border] bg-[--background] p-1"
+    >
       {TABS.map((tab) => {
         const href = tab.href ? `${base}${tab.href}` : base
         const isActive =
@@ -33,14 +35,24 @@ export function TabNav({ galleryId }: TabNavProps) {
           <Link
             key={tab.href}
             href={href}
+            aria-current={isActive ? 'page' : undefined}
+            title={tab.description}
             className={cn(
-              'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+              'flex flex-col rounded-md px-3 py-2 transition-colors sm:py-1.5',
               isActive
                 ? 'bg-[--accent] text-[--background]'
                 : 'text-[--muted] hover:text-[--foreground]'
             )}
           >
-            {tab.label}
+            <span className="text-sm font-medium">{tab.label}</span>
+            <span
+              className={cn(
+                'hidden text-xs sm:block',
+                isActive ? 'text-[--background]/70' : 'text-[--muted]'
+              )}
+            >
+              {tab.description}
+            </span>
           </Link>
         )
       })}

@@ -165,23 +165,16 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         <Tabs value={tab} onValueChange={setTab}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <TabsList>
-            {!isDelivered ? (
-              <>
+              {!isDelivered ? (
                 <TabsTrigger value="all">כל התמונות</TabsTrigger>
-                <TabsTrigger value="album">❤️ אלבום</TabsTrigger>
-                <TabsTrigger value="edit">✨ לעיבוד</TabsTrigger>
-              </>
-            ) : (
-              <>
-                <TabsTrigger value="album">❤️ אלבום</TabsTrigger>
-                {showEdited ? (
-                  <TabsTrigger value="edited">מעובדות</TabsTrigger>
-                ) : null}
-              </>
-            )}
-            {!isDelivered && showEdited ? (
-              <TabsTrigger value="edited">מעובדות</TabsTrigger>
-            ) : null}
+              ) : null}
+              <TabsTrigger value="album">אלבום</TabsTrigger>
+              {!isDelivered ? (
+                <TabsTrigger value="edit">לעיבוד</TabsTrigger>
+              ) : null}
+              {showEdited ? (
+                <TabsTrigger value="edited">מעובדות</TabsTrigger>
+              ) : null}
             </TabsList>
 
             {isDelivered && showEdited ? (

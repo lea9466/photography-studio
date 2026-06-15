@@ -21,5 +21,15 @@ export default async function GallerySettingsPage({ params }: SettingsPageProps)
     ? gallery.gallery_settings[0]
     : gallery.gallery_settings
 
-  return <GallerySettingsForm gallery={gallery} settings={settings ?? null} />
+  return (
+    <div className="space-y-3 animate-fade-in">
+      <div>
+        <h2 className="text-lg font-medium">הגדרות גלריה</h2>
+        <p className="text-sm text-[--muted]">
+          שם, סיסמה, מגבלות בחירה והורדות
+        </p>
+      </div>
+      <GallerySettingsForm gallery={gallery} settings={settings ?? null} />
+    </div>
+  )
 }

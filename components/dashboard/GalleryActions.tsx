@@ -2,20 +2,29 @@
 
 import Link from 'next/link'
 import { useTransition } from 'react'
-import { Archive, ExternalLink, Mail, Send, Truck } from 'lucide-react'
+import { ExternalLink, Mail, Send, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import {
-  archiveGallery,
   resendGalleryEmail,
   sendGallery,
   updateGalleryStatus,
 } from '@/lib/actions/gallery.actions'
 import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
+import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
+import { GALLERY_STATUS_LABELS } from '@/lib/types/app.types'
 import type { GalleryStatus, GalleryType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type GalleryActionsProps = {
   galleryId: string
+  galleryTitle: string
   status: GalleryStatus
   galleryType: GalleryType
   clientLink: string
@@ -40,6 +49,7 @@ function resendSuccessMessage(status: GalleryStatus): string {
 
 export function GalleryActions({
   galleryId,
+  galleryTitle,
   status,
   galleryType,
   clientLink,
@@ -80,6 +90,34 @@ export function GalleryActions({
         </Button>
       ) : null}
 
+      {status === 'sent' ? (
+        <Button
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(
+              () => updateGalleryStatus(galleryId, 'selection'),
+              'מצב בחירה נפתח'
+            )
+          }
+        >
+          פתח בחירה
+        </Button>
+      ) : null}
+
+      {status === 'editing' ? (
+        <Button
+          size="sm"
+          disabled={isPending}
+          onClick={() =>
+            run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
+          }
+        >
+          <Truck className="h-4 w-4" />
+          סמן מוכן למסירה
+        </Button>
+      ) : null}
+
       {resendLabel ? (
         <Button
           variant="outline"
@@ -97,48 +135,36 @@ export function GalleryActions({
         </Button>
       ) : null}
 
-      {status === 'editing' ? (
-        <Button
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
-          }
-        >
-          <Truck className="h-4 w-4" />
-          סמן מוכן למסירה
-        </Button>
-      ) : null}
+      <Select
+        value={status}
+        disabled={isPending}
+        onValueChange={(value) => {
+          const nextStatus = value as GalleryStatus
+          if (nextStatus === status) return
+          run(
+            () => updateGalleryStatus(galleryId, nextStatus),
+            `הסטטוס עודכן ל־${GALLERY_STATUS_LABELS[nextStatus]}`
+          )
+        }}
+      >
+        <SelectTrigger className="h-9 w-auto min-w-[9rem]">
+          <SelectValue placeholder="סטטוס" />
+        </SelectTrigger>
+        <SelectContent>
+          {(
+            Object.entries(GALLERY_STATUS_LABELS) as [GalleryStatus, string][]
+          ).map(([value, label]) => (
+            <SelectItem key={value} value={value}>
+              {label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      {status !== 'locked' ? (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(() => archiveGallery(galleryId), 'הגלריה הועברה לארכיב')
-          }
-        >
-          <Archive className="h-4 w-4" />
-          ארכיב
-        </Button>
-      ) : null}
-
-      {status === 'sent' ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(
-              () => updateGalleryStatus(galleryId, 'selection'),
-              'מצב בחירה נפתח'
-            )
-          }
-        >
-          פתח בחירה
-        </Button>
-      ) : null}
+      <DeleteGalleryButton
+        galleryId={galleryId}
+        galleryTitle={galleryTitle}
+      />
     </div>
   )
 }

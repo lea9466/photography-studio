@@ -9,6 +9,7 @@ import type { Database } from '@/lib/types/database.types'
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
 const COMPLETE_BATCH_SIZE = 50
+const DELETE_BATCH_SIZE = 50
 
 async function assertGalleryOwner(galleryId: string) {
   const supabase = await createClient()
@@ -267,6 +268,88 @@ export async function togglePhotoVisibility(photoId: string, visible: boolean) {
   if (error) throw new Error(error.message)
 
   revalidatePath(`/dashboard/galleries/${row.gallery_id}`)
+}
+
+export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
+  if (photoIds.length === 0) return { deleted: 0 }
+
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  const { data: photos, error: fetchError } = await supabase
+    .from('photos')
+    .select('id, original_url, preview_url, watermarked_preview_url')
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
+
+  if (fetchError) throw new Error(fetchError.message)
+
+  type PhotoRow = {
+    id: string
+    original_url: string | null
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const rows = (photos ?? []) as PhotoRow[]
+  if (rows.length === 0) return { deleted: 0 }
+
+  const ids = rows.map((row) => row.id)
+
+  const { data: edited, error: editedError } = await supabase
+    .from('edited_photos')
+    .select('photo_id, final_url')
+    .eq('gallery_id', galleryId)
+    .in('photo_id', ids)
+
+  if (editedError) throw new Error(editedError.message)
+
+  const editedByPhoto = new Map(
+    ((edited ?? []) as { photo_id: string; final_url: string | null }[]).map(
+      (row) => [row.photo_id, row.final_url]
+    )
+  )
+
+  const storageDeletes: { bucket: MediaBucket; path: string }[] = []
+  for (const row of rows) {
+    if (row.original_url) {
+      storageDeletes.push({ bucket: 'originals', path: row.original_url })
+    }
+    if (row.preview_url) {
+      storageDeletes.push({ bucket: 'previews', path: row.preview_url })
+    }
+    if (row.watermarked_preview_url) {
+      storageDeletes.push({
+        bucket: 'watermarked',
+        path: row.watermarked_preview_url,
+      })
+    }
+    const editedPath = editedByPhoto.get(row.id)
+    if (editedPath) {
+      storageDeletes.push({ bucket: 'edited', path: editedPath })
+    }
+  }
+
+  for (let offset = 0; offset < storageDeletes.length; offset += DELETE_BATCH_SIZE) {
+    const chunk = storageDeletes.slice(offset, offset + DELETE_BATCH_SIZE)
+    await Promise.all(
+      chunk.map(({ bucket, path }) => deleteMediaObject(bucket, path))
+    )
+  }
+
+  const { error } = await supabase
+    .from('photos')
+    .delete()
+    .eq('gallery_id', galleryId)
+    .in('id', ids)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
+  revalidatePath(`/dashboard/galleries/${galleryId}`)
+  revalidatePath(`/g/${galleryId}`)
+  revalidatePath('/dashboard')
+
+  return { deleted: ids.length }
 }
 
 export async function deletePhoto(photoId: string) {
