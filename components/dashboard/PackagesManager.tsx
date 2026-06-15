@@ -148,7 +148,7 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
             <div key={pkg.id} className="space-y-3">
               <div className="flex items-center justify-between gap-2 px-1">
                 {!pkg.is_active ? (
-                  <Badge variant="secondary">מוסתרת</Badge>
+                  <Badge variant="muted">מוסתרת</Badge>
                 ) : (
                   <span />
                 )}
