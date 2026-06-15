@@ -381,6 +381,53 @@ export type Database = {
         }
         Relationships: []
       }
+      photography_packages: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          price_amount: number
+          duration_text: string | null
+          includes: string[]
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          price_amount: number
+          duration_text?: string | null
+          includes?: string[]
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          price_amount?: number
+          duration_text?: string | null
+          includes?: string[]
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'photography_packages_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -406,6 +453,8 @@ export type EditedPhoto = Database['public']['Tables']['edited_photos']['Row']
 export type DownloadJob = Database['public']['Tables']['download_jobs']['Row']
 export type GallerySettings = Database['public']['Tables']['gallery_settings']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type PhotographyPackage =
+  Database['public']['Tables']['photography_packages']['Row']
 
 export type GalleryWithSettings = Gallery & {
   gallery_settings: GallerySettings | null

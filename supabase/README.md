@@ -7,11 +7,13 @@
 | `migrations/20250614000001_initial_schema.sql` | 9 טבלאות + triggers |
 | `migrations/20250614000002_rls_policies.sql` | RLS לכל טבלה |
 | `migrations/20250614000003_storage_buckets.sql` | 5 buckets + storage RLS |
+| `migrations/20250614000005_grants.sql` | grants ל-API roles |
+| `migrations/20250615000001_photography_packages_and_scenes.sql` | חבילות צילום |
 | `../lib/types/database.types.ts` | TypeScript types |
 
 ### טבלאות
 
-`users` · `clients` · `galleries` · `photos` · `photo_selections` · `edited_photos` · `download_jobs` · `gallery_settings` · `feedback`
+`users` · `clients` · `galleries` · `photos` · `photo_selections` · `edited_photos` · `download_jobs` · `gallery_settings` · `feedback` · `photography_packages`
 
 ### Storage buckets
 
@@ -60,6 +62,7 @@ supabase db reset   # מריץ את כל ה-migrations + seed
    - `20250614000003_storage_buckets.sql`
    - `20250614000004_user_studio_name_trigger.sql`
    - `20250614000005_grants.sql` ← **חובה** — בלי זה: `permission denied for table galleries`
+   - `20250615000001_photography_packages_and_scenes.sql`
 
 ---
 

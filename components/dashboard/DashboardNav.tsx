@@ -19,6 +19,11 @@ const NAV_ITEMS: NavItem[] = [
       pathname.startsWith('/dashboard/galleries'),
   },
   {
+    href: '/dashboard/packages',
+    label: 'חבילות',
+    isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
+  },
+  {
     href: '/dashboard/settings',
     label: 'הגדרות',
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
