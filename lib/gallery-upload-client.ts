@@ -63,11 +63,11 @@ export type GalleryUploadCallbacks = {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const UPLOAD_CONCURRENCY = 6        // הועלה מ-4 — bottleneck הוא בד"כ הרשת, לא ה-CPU
-const RESERVATION_BATCH_SIZE = 100  // רישום ב-DB במנות גדולות יותר → פחות round-trips
-const URL_BATCH_SIZE = 100          // Presigned URLs במנות תואמות
-const COMPLETE_BATCH_SIZE = 100     // רישום הצלחות ב-DB במנות גדולות יותר
-const PREFETCH_AHEAD = 2            // כמה batches להביא מראש לפני שנדרשים
+const UPLOAD_CONCURRENCY = 3        // חזרנו למספר הזהב המהיר והיציב
+const RESERVATION_BATCH_SIZE = 100  
+const URL_BATCH_SIZE = 100          
+const COMPLETE_BATCH_SIZE = 100     
+const PREFETCH_AHEAD = 2            
 const THUMB_MAX_MB = 0.18
 const THUMB_MAX_DIMENSION = 1200
 const THUMB_QUALITY = 0.78
@@ -166,7 +166,6 @@ async function uploadReservedPhoto(
   const paths = buildPhotoStoragePaths(userId, galleryId, job.photoId)
   const originalContentType = job.file.type || 'image/jpeg'
 
-  // דחיסה ווטרמרק במקביל — חוסכים את זמן ה-watermark מ-critical path
   let previewBlob: Blob
   try {
     previewBlob = await compressGalleryPreview(job.file)
@@ -182,13 +181,12 @@ async function uploadReservedPhoto(
     return { ok: false, message: `כתובות העלאה חסרות: ${job.file.name}`, paths }
   }
 
-  // העלאת 3 הקבצים במקביל — מקצר את זמן ההמתנה לרשת בכ-60%
+  // העלאה סדרתית יציבה — מונע חניקה של הרשת וביטולים של דפדפן/שרת סינון
+  // העלאה סדרתית יציבה — ללא פרמטר שלישי שמכשיל קומפילציה
   try {
-    await Promise.all([
-      withRetry(() => putToPresignedUrl(originalUrl, job.file)),
-      withRetry(() => putToPresignedUrl(previewUrl, previewBlob)),
-      withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob)),
-    ])
+    await withRetry(() => putToPresignedUrl(originalUrl, job.file))
+    await withRetry(() => putToPresignedUrl(previewUrl, previewBlob))
+    await withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob))
   } catch (error) {
     return {
       ok: false,
@@ -208,10 +206,6 @@ async function uploadReservedPhoto(
 
 // ─── Batch pipeline ──────────────────────────────────────────────────────────
 
-/**
- * מנהל את ה-pipeline של Reservation + URL Prefetch ב-batches,
- * כולל prefetch מראש של batch הבא בזמן שמעלים את הנוכחי.
- */
 class BatchPipeline {
   private readonly userId: string
   private readonly galleryId: string
@@ -219,11 +213,9 @@ class BatchPipeline {
   private readonly callbacks?: GalleryUploadCallbacks
   private readonly total: number
 
-  // אינדקסי גבול — מה כבר בוצע
   private reservedUpTo = 0
   private urlsFetchedUpTo = 0
 
-  // מניעת ריצה כפולה של batch אותו
   private reservationInFlight: Promise<void> | null = null
   private urlFetchInFlight: Map<number, Promise<void>> = new Map()
 
@@ -243,7 +235,6 @@ class BatchPipeline {
     this.total = files.length
   }
 
-  /** מבטיח שה-photoIds עבור `fileIndex` ומה שלפניו קיימים ב-jobsMap */
   async ensureReserved(fileIndex: number): Promise<void> {
     while (fileIndex >= this.reservedUpTo) {
       if (!this.reservationInFlight) {
@@ -273,9 +264,7 @@ class BatchPipeline {
     this.reservedUpTo = from + count
   }
 
-  /** מבטיח ש-presigned URLs עבור `fileIndex` קיימים ב-urlMap */
   async ensureUrls(fileIndex: number): Promise<void> {
-    // ודא שה-job קיים קודם
     await this.ensureReserved(fileIndex)
 
     while (fileIndex >= this.urlsFetchedUpTo) {
@@ -292,7 +281,7 @@ class BatchPipeline {
 
   private async _doFetchUrlsBatch(from: number): Promise<void> {
     if (from >= this.total) return
-    await this.ensureReserved(from + URL_BATCH_SIZE - 1) // ודא שה-jobs קיימים לכל ה-batch
+    await this.ensureReserved(from + URL_BATCH_SIZE - 1)
 
     const count = Math.min(URL_BATCH_SIZE, this.total - from)
     const requests: { bucket: 'originals' | 'previews' | 'watermarked'; path: string; contentType: string }[] = []
@@ -318,18 +307,12 @@ class BatchPipeline {
     this.urlsFetchedUpTo = from + count
   }
 
-  /**
-   * Prefetch פרואקטיבי — מפעיל אנשינכרוני את ה-batch הבא
-   * כדי שיהיה מוכן כשהעובדים יגיעו אליו.
-   */
   prefetchAhead(currentIndex: number): void {
     for (let ahead = 1; ahead <= PREFETCH_AHEAD; ahead++) {
       const nextBatchStart =
         Math.floor(currentIndex / URL_BATCH_SIZE) * URL_BATCH_SIZE + ahead * URL_BATCH_SIZE
       if (nextBatchStart < this.total) {
-        void this.ensureUrls(nextBatchStart).catch(() => {
-          // שגיאות prefetch לא קריטיות — יינסה שוב כשנגיע ל-batch
-        })
+        void this.ensureUrls(nextBatchStart).catch(() => {})
       }
     }
   }
@@ -378,10 +361,7 @@ export async function uploadGalleryPhotosWithQueue(
         const index = nextFileIndex++
         if (index >= total) return
 
-        // הבטח URLs מוכנים — ה-pipeline מנהל reservations אוטומטית
         await pipeline.ensureUrls(index)
-
-        // הפעל prefetch למי שבא אחרינו
         pipeline.prefetchAhead(index)
 
         await waitWhileTabHidden()
@@ -422,12 +402,11 @@ export async function uploadGalleryPhotosWithQueue(
           })
           callbacks?.onPhotoFailed?.(job.photoId)
         } finally {
-          // שחרור זיכרון מיידי — קריטי עבור אלפי תמונות
           pipeline.jobsMap.delete(index)
           pipeline.urlMap.delete(job.photoId)
         }
 
-        processed++
+        processed += 1
         reportProgress('uploading')
       }
     }
@@ -436,7 +415,6 @@ export async function uploadGalleryPhotosWithQueue(
       Array.from({ length: Math.min(UPLOAD_CONCURRENCY, total) }, () => worker())
     )
 
-    // ── רישום הצלחות ב-DB ──────────────────────────────────────────────────
     if (successes.length > 0) {
       reportProgress('registering')
       for (let offset = 0; offset < successes.length; offset += COMPLETE_BATCH_SIZE) {
@@ -453,7 +431,6 @@ export async function uploadGalleryPhotosWithQueue(
       await finalizeGalleryUpload(galleryId)
     }
 
-    // ── ניקוי כשלונות ──────────────────────────────────────────────────────
     if (failures.length > 0) {
       await cleanupPhotosBatch(
         galleryId,
@@ -465,7 +442,6 @@ export async function uploadGalleryPhotosWithQueue(
     releaseWakeLock()
   }
 
-  // ── תוצאה סופית ────────────────────────────────────────────────────────────
   const failCount = failures.length
   if (failCount === 0) {
     callbacks?.onComplete?.()
