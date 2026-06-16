@@ -62,17 +62,16 @@ export function GalleryPhotosSection({
 
   const uploadCallbacks = useMemo<GalleryUploadCallbacks>(
     () => ({
-      onJobsReady: (jobs) => {
-        const items: PendingGalleryPhoto[] = jobs.map((job) => {
-          const previewUrl = URL.createObjectURL(job.file)
-          objectUrlsRef.current.push(previewUrl)
-          return {
-            id: job.photoId,
+      onPhotoStaged: (photoId, file, previewUrl) => {
+        objectUrlsRef.current.push(previewUrl)
+        setPendingPhotos((prev) => [
+          ...prev,
+          {
+            id: photoId,
             previewUrl,
             status: 'uploading',
-          }
-        })
-        setPendingPhotos(items)
+          },
+        ])
       },
       onPhotoUploaded: (photoId) => {
         setPendingPhotos((prev) =>
