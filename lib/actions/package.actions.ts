@@ -123,6 +123,7 @@ export async function updatePackage(
     durationText?: string
     includesText?: string
     isActive?: boolean
+    isFeatured?: boolean
   }
 ): Promise<PhotographyPackage> {
   const supabase = await createClient()
@@ -165,6 +166,10 @@ export async function updatePackage(
 
   if (input.isActive !== undefined) {
     payload.is_active = input.isActive
+  }
+
+  if (input.isFeatured !== undefined) {
+    payload.is_featured = input.isFeatured
   }
 
   if (Object.keys(payload).length === 0) {

@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { CustomToggle } from '@/components/ui/custom-toggle'
 import { Textarea } from '@/components/ui/textarea'
 
 type PackagesManagerProps = {
@@ -35,6 +35,7 @@ type PackageFormState = {
   durationText: string
   includesText: string
   isActive: boolean
+  isFeatured: boolean
 }
 
 const EMPTY_FORM: PackageFormState = {
@@ -43,6 +44,7 @@ const EMPTY_FORM: PackageFormState = {
   durationText: '',
   includesText: '',
   isActive: true,
+  isFeatured: false,
 }
 
 function packageToForm(pkg: PhotographyPackage): PackageFormState {
@@ -52,6 +54,7 @@ function packageToForm(pkg: PhotographyPackage): PackageFormState {
     durationText: pkg.duration_text ?? '',
     includesText: pkg.includes.join('\n'),
     isActive: pkg.is_active,
+    isFeatured: pkg.is_featured,
   }
 }
 
@@ -86,6 +89,7 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
             durationText: form.durationText,
             includesText: form.includesText,
             isActive: form.isActive,
+            isFeatured: form.isFeatured,
           })
           setPackages((current) =>
             current.map((pkg) => (pkg.id === updated.id ? updated : pkg))
@@ -147,11 +151,14 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
           {packages.map((pkg) => (
             <div key={pkg.id} className="space-y-3">
               <div className="flex items-center justify-between gap-2 px-1">
-                {!pkg.is_active ? (
-                  <Badge variant="muted">מוסתרת</Badge>
-                ) : (
-                  <span />
-                )}
+                <div className="flex gap-2">
+                  {pkg.is_featured ? (
+                    <Badge variant="default">מומלצת</Badge>
+                  ) : null}
+                  {!pkg.is_active ? (
+                    <Badge variant="muted">מוסתרת</Badge>
+                  ) : null}
+                </div>
                 <div className="flex gap-1">
                   <Button
                     type="button"
@@ -185,7 +192,7 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingId ? 'עריכת חבילה' : 'חבילה חדשה'}
@@ -257,23 +264,34 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
               />
             </div>
 
-            {editingId ? (
-              <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
-                <div>
-                  <Label htmlFor="package-active">מוצגת ללקוחות</Label>
-                  <p className="text-xs text-[--muted]">
-                    חבילות מוסתרות לא יופיעו בדף הציבורי
-                  </p>
-                </div>
-                <Switch
-                  id="package-active"
-                  checked={form.isActive}
-                  onCheckedChange={(checked) =>
-                    setForm((current) => ({ ...current, isActive: checked }))
-                  }
-                />
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
+              <div>
+                <Label htmlFor="package-active">מוצגת ללקוחות</Label>
+                <p className="text-xs text-[--muted]">
+                  חבילות מוסתרות לא יופיעו בדף הציבורי
+                </p>
               </div>
-            ) : null}
+              <CustomToggle
+                checked={form.isActive}
+                onCheckedChange={(checked: boolean) =>
+                  setForm((current) => ({ ...current, isActive: checked }))
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
+              <div>
+                <Label htmlFor="package-featured">מומלצת</Label>
+                <p className="text-xs text-[--muted]">
+                  חבילות מומלצות יופיעו עם מסגרת מודגשת בדף הציבורי
+                </p>
+              </div>
+              <CustomToggle
+                checked={form.isFeatured}
+                onCheckedChange={(checked: boolean) =>
+                  setForm((current) => ({ ...current, isFeatured: checked }))
+                }
+              />
+            </div>
           </div>
 
           <DialogFooter>

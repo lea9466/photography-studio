@@ -15,7 +15,7 @@ type PackageCardProps = {
 
 export function PackageCard({ pkg, className }: PackageCardProps) {
   return (
-    <Card className={cn('h-full', className)}>
+    <Card className={cn('h-full', pkg.is_featured && 'border-2 border-[--primary]', className)}>
       <CardHeader className="space-y-3">
         <CardTitle className="text-xl">{pkg.name}</CardTitle>
         <p className="text-3xl font-semibold tracking-tight">

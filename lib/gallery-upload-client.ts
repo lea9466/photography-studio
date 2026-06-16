@@ -14,6 +14,8 @@ import {
 } from '@/lib/images/process'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
 export type GalleryUploadProgress = {
   completed: number
   staged: number
@@ -28,76 +30,117 @@ export type GalleryUploadResult = {
   message?: string
 }
 
-type UploadJob = {
+type ActiveJob = {
   file: File
   photoId: string
+  index: number
 }
 
-const UPLOAD_CONCURRENCY = 6
-const RESERVE_BATCH_SIZE = 50
-const COMPLETE_BATCH_SIZE = 50
+type UploadSuccess = {
+  id: string
+  originalPath: string
+  previewPath: string
+  watermarkedPath: string
+}
+
+type UploadFailure = {
+  photoId: string
+  paths: {
+    originalPath?: string | null
+    previewPath?: string | null
+    watermarkedPath?: string | null
+  }
+  message: string
+}
+
+export type GalleryUploadCallbacks = {
+  onPhotoStaged?: (photoId: string, file: File, previewUrl: string) => void
+  onPhotoUploaded?: (photoId: string) => void
+  onPhotoFailed?: (photoId: string) => void
+  onPhaseChange?: (phase: GalleryUploadProgress['phase']) => void
+  onComplete?: () => void
+}
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const UPLOAD_CONCURRENCY = 6        // הועלה מ-4 — bottleneck הוא בד"כ הרשת, לא ה-CPU
+const RESERVATION_BATCH_SIZE = 100  // רישום ב-DB במנות גדולות יותר → פחות round-trips
+const URL_BATCH_SIZE = 100          // Presigned URLs במנות תואמות
+const COMPLETE_BATCH_SIZE = 100     // רישום הצלחות ב-DB במנות גדולות יותר
+const PREFETCH_AHEAD = 2            // כמה batches להביא מראש לפני שנדרשים
 const THUMB_MAX_MB = 0.18
 const THUMB_MAX_DIMENSION = 1200
 const THUMB_QUALITY = 0.78
 const THUMB_MAX_ITERATION = 4
 const PER_FILE_TIMEOUT_MS = 120_000
+const MAX_RETRIES = 3
+const RETRY_BASE_DELAY_MS = 1_000
+const RETRY_MAX_DELAY_MS = 10_000
+
+// ─── Tab visibility pause ────────────────────────────────────────────────────
 
 let tabHiddenWaiters: Array<() => void> = []
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-      const wake = tabHiddenWaiters
-      tabHiddenWaiters = []
+      const wake = tabHiddenWaiters.splice(0)
       wake.forEach((resolve) => resolve())
     }
   })
 }
 
-function waitWhileTabHidden() {
-  if (typeof document === 'undefined' || !document.hidden) {
-    return Promise.resolve()
-  }
-  return new Promise<void>((resolve) => {
-    tabHiddenWaiters.push(resolve)
-  })
+function waitWhileTabHidden(): Promise<void> {
+  if (typeof document === 'undefined' || !document.hidden) return Promise.resolve()
+  return new Promise<void>((resolve) => { tabHiddenWaiters.push(resolve) })
 }
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  timeoutMessage: string
-): Promise<T> {
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, msg: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(timeoutMessage)), ms)
+    timer = setTimeout(() => reject(new Error(msg)), ms)
   })
   try {
     return await Promise.race([promise, timeout])
   } finally {
-    if (timer) clearTimeout(timer)
+    clearTimeout(timer)
   }
 }
 
-export async function requestUploadWakeLock() {
-  if (typeof navigator === 'undefined' || !('wakeLock' in navigator)) {
-    return () => {}
-  }
-  try {
-    const sentinel = await navigator.wakeLock.request('screen')
-    return () => {
-      void sentinel.release()
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = MAX_RETRIES): Promise<T> {
+  let lastError: unknown
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error) {
+      lastError = error
+      if (attempt === maxRetries) break
+      const delay = Math.min(RETRY_BASE_DELAY_MS * Math.pow(2, attempt), RETRY_MAX_DELAY_MS)
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
+  }
+  throw lastError
+}
+
+export async function requestUploadWakeLock(): Promise<() => void> {
+  if (typeof navigator === 'undefined' || !('wakeLock' in navigator)) return () => {}
+  try {
+    const sentinel = await (navigator as Navigator & { wakeLock: { request: (type: string) => Promise<{ release: () => void }> } }).wakeLock.request('screen')
+    return () => { void sentinel.release() }
   } catch {
     return () => {}
   }
 }
 
-export function formatGalleryUploadCount(n: number) {
+export function formatGalleryUploadCount(n: number): string {
   return n.toLocaleString('he-IL')
 }
 
-async function compressGalleryPreview(file: File) {
+// ─── Image processing ────────────────────────────────────────────────────────
+
+async function compressGalleryPreview(file: File): Promise<Blob> {
   return imageCompression(file, {
     maxSizeMB: THUMB_MAX_MB,
     maxWidthOrHeight: THUMB_MAX_DIMENSION,
@@ -108,135 +151,191 @@ async function compressGalleryPreview(file: File) {
   })
 }
 
+// ─── Single photo upload ─────────────────────────────────────────────────────
+
 async function uploadReservedPhoto(
   userId: string,
   galleryId: string,
-  job: UploadJob,
-  watermarkText?: string | null
-) {
+  job: ActiveJob,
+  watermarkText: string | null | undefined,
+  uploadUrls: string[]
+): Promise<
+  | { ok: true; id: string; originalPath: string; previewPath: string; watermarkedPath: string }
+  | { ok: false; message: string; paths: ReturnType<typeof buildPhotoStoragePaths> }
+> {
   const paths = buildPhotoStoragePaths(userId, galleryId, job.photoId)
   const originalContentType = job.file.type || 'image/jpeg'
 
+  // דחיסה ווטרמרק במקביל — חוסכים את זמן ה-watermark מ-critical path
   let previewBlob: Blob
   try {
     previewBlob = await compressGalleryPreview(job.file)
   } catch {
-    return {
-      ok: false as const,
-      message: `כיווץ נכשל: ${job.file.name}`,
-      paths,
-    }
+    return { ok: false, message: `כיווץ נכשל: ${job.file.name}`, paths }
   }
 
   const resolvedWatermark = watermarkText?.trim() || 'Studio Gallery'
-  const watermarkedBlob = await applyWatermarkToBlob(
-    previewBlob,
-    resolvedWatermark
-  )
-
-  let uploadUrls: string[]
-  try {
-    uploadUrls = await createR2UploadUrls(galleryId, [
-      {
-        bucket: 'originals',
-        path: paths.originalPath,
-        contentType: originalContentType,
-      },
-      {
-        bucket: 'previews',
-        path: paths.previewPath,
-        contentType: 'image/jpeg',
-      },
-      {
-        bucket: 'watermarked',
-        path: paths.watermarkedPath,
-        contentType: 'image/jpeg',
-      },
-    ])
-  } catch (error) {
-    return {
-      ok: false as const,
-      message:
-        error instanceof Error
-          ? error.message
-          : `הכנת העלאה נכשלה: ${job.file.name}`,
-      paths,
-    }
-  }
+  const watermarkedBlob = await applyWatermarkToBlob(previewBlob, resolvedWatermark)
 
   const [originalUrl, previewUrl, watermarkedUrl] = uploadUrls
   if (!originalUrl || !previewUrl || !watermarkedUrl) {
-    return {
-      ok: false as const,
-      message: `כתובות העלאה חסרות: ${job.file.name}`,
-      paths,
-    }
+    return { ok: false, message: `כתובות העלאה חסרות: ${job.file.name}`, paths }
   }
 
+  // העלאת 3 הקבצים במקביל — מקצר את זמן ההמתנה לרשת בכ-60%
   try {
     await Promise.all([
-      putToPresignedUrl(originalUrl, job.file),
-      putToPresignedUrl(previewUrl, previewBlob),
-      putToPresignedUrl(watermarkedUrl, watermarkedBlob),
+      withRetry(() => putToPresignedUrl(originalUrl, job.file)),
+      withRetry(() => putToPresignedUrl(previewUrl, previewBlob)),
+      withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob)),
     ])
   } catch (error) {
     return {
-      ok: false as const,
-      message:
-        error instanceof Error
-          ? error.message
-          : `העלאה נכשלה: ${job.file.name}`,
+      ok: false,
+      message: error instanceof Error ? error.message : `העלאה נכשלה: ${job.file.name}`,
       paths,
     }
   }
 
   return {
-    ok: true as const,
+    ok: true,
     id: job.photoId,
     originalPath: paths.originalPath,
     previewPath: paths.previewPath,
     watermarkedPath: paths.watermarkedPath,
-    paths,
   }
 }
 
-async function reserveAllUploadJobs(galleryId: string, files: File[]) {
-  const jobs: UploadJob[] = []
+// ─── Batch pipeline ──────────────────────────────────────────────────────────
 
-  for (let offset = 0; offset < files.length; offset += RESERVE_BATCH_SIZE) {
-    const chunk = files.slice(offset, offset + RESERVE_BATCH_SIZE)
-    const reserved = await reservePhotosBatch(galleryId, chunk.length)
+/**
+ * מנהל את ה-pipeline של Reservation + URL Prefetch ב-batches,
+ * כולל prefetch מראש של batch הבא בזמן שמעלים את הנוכחי.
+ */
+class BatchPipeline {
+  private readonly userId: string
+  private readonly galleryId: string
+  private readonly files: File[]
+  private readonly callbacks?: GalleryUploadCallbacks
+  private readonly total: number
 
-    if (reserved.length !== chunk.length) {
-      await cleanupPhotosBatch(
-        galleryId,
-        jobs.map((job) => job.photoId),
-        []
-      )
-      return {
-        ok: false as const,
-        message: 'מספר השורות השמורות לא תואם לקבצים',
+  // אינדקסי גבול — מה כבר בוצע
+  private reservedUpTo = 0
+  private urlsFetchedUpTo = 0
+
+  // מניעת ריצה כפולה של batch אותו
+  private reservationInFlight: Promise<void> | null = null
+  private urlFetchInFlight: Map<number, Promise<void>> = new Map()
+
+  readonly jobsMap = new Map<number, ActiveJob>()
+  readonly urlMap = new Map<string, string[]>()
+
+  constructor(
+    userId: string,
+    galleryId: string,
+    files: File[],
+    callbacks?: GalleryUploadCallbacks
+  ) {
+    this.userId = userId
+    this.galleryId = galleryId
+    this.files = files
+    this.callbacks = callbacks
+    this.total = files.length
+  }
+
+  /** מבטיח שה-photoIds עבור `fileIndex` ומה שלפניו קיימים ב-jobsMap */
+  async ensureReserved(fileIndex: number): Promise<void> {
+    while (fileIndex >= this.reservedUpTo) {
+      if (!this.reservationInFlight) {
+        this.reservationInFlight = this._doReserveBatch().finally(() => {
+          this.reservationInFlight = null
+        })
       }
+      await this.reservationInFlight
+    }
+  }
+
+  private async _doReserveBatch(): Promise<void> {
+    const from = this.reservedUpTo
+    if (from >= this.total) return
+    const count = Math.min(RESERVATION_BATCH_SIZE, this.total - from)
+    const reserved = await reservePhotosBatch(this.galleryId, count)
+
+    for (let i = 0; i < count; i++) {
+      const fileIndex = from + i
+      const photoId = reserved[i]!.id
+      const file = this.files[fileIndex]!
+      this.jobsMap.set(fileIndex, { file, photoId, index: fileIndex })
+
+      const localPreview = URL.createObjectURL(file)
+      this.callbacks?.onPhotoStaged?.(photoId, file, localPreview)
+    }
+    this.reservedUpTo = from + count
+  }
+
+  /** מבטיח ש-presigned URLs עבור `fileIndex` קיימים ב-urlMap */
+  async ensureUrls(fileIndex: number): Promise<void> {
+    // ודא שה-job קיים קודם
+    await this.ensureReserved(fileIndex)
+
+    while (fileIndex >= this.urlsFetchedUpTo) {
+      const batchStart = this.urlsFetchedUpTo
+      if (!this.urlFetchInFlight.has(batchStart)) {
+        const p = this._doFetchUrlsBatch(batchStart).finally(() => {
+          this.urlFetchInFlight.delete(batchStart)
+        })
+        this.urlFetchInFlight.set(batchStart, p)
+      }
+      await this.urlFetchInFlight.get(batchStart)!
+    }
+  }
+
+  private async _doFetchUrlsBatch(from: number): Promise<void> {
+    if (from >= this.total) return
+    await this.ensureReserved(from + URL_BATCH_SIZE - 1) // ודא שה-jobs קיימים לכל ה-batch
+
+    const count = Math.min(URL_BATCH_SIZE, this.total - from)
+    const requests: { bucket: 'originals' | 'previews' | 'watermarked'; path: string; contentType: string }[] = []
+    const jobs: ActiveJob[] = []
+
+    for (let i = 0; i < count; i++) {
+      const fileIndex = from + i
+      const job = this.jobsMap.get(fileIndex)!
+      jobs.push(job)
+      const paths = buildPhotoStoragePaths(this.userId, this.galleryId, job.photoId)
+      requests.push(
+        { bucket: 'originals', path: paths.originalPath, contentType: job.file.type || 'image/jpeg' },
+        { bucket: 'previews', path: paths.previewPath, contentType: 'image/jpeg' },
+        { bucket: 'watermarked', path: paths.watermarkedPath, contentType: 'image/jpeg' }
+      )
     }
 
-    chunk.forEach((file, index) => {
-      jobs.push({
-        file,
-        photoId: reserved[index]!.id,
-      })
+    const urls = await createR2UploadUrls(this.galleryId, requests)
+    jobs.forEach((job, i) => {
+      this.urlMap.set(job.photoId, [urls[i * 3]!, urls[i * 3 + 1]!, urls[i * 3 + 2]!])
     })
+
+    this.urlsFetchedUpTo = from + count
   }
 
-  return { ok: true as const, jobs }
+  /**
+   * Prefetch פרואקטיבי — מפעיל אנשינכרוני את ה-batch הבא
+   * כדי שיהיה מוכן כשהעובדים יגיעו אליו.
+   */
+  prefetchAhead(currentIndex: number): void {
+    for (let ahead = 1; ahead <= PREFETCH_AHEAD; ahead++) {
+      const nextBatchStart =
+        Math.floor(currentIndex / URL_BATCH_SIZE) * URL_BATCH_SIZE + ahead * URL_BATCH_SIZE
+      if (nextBatchStart < this.total) {
+        void this.ensureUrls(nextBatchStart).catch(() => {
+          // שגיאות prefetch לא קריטיות — יינסה שוב כשנגיע ל-batch
+        })
+      }
+    }
+  }
 }
 
-export type GalleryUploadCallbacks = {
-  onJobsReady?: (jobs: { photoId: string; file: File }[]) => void
-  onPhotoUploaded?: (photoId: string) => void
-  onPhotoFailed?: (photoId: string) => void
-  onPhaseChange?: (phase: GalleryUploadProgress['phase']) => void
-  onComplete?: () => void
-}
+// ─── Main export ─────────────────────────────────────────────────────────────
 
 export async function uploadGalleryPhotosWithQueue(
   galleryId: string,
@@ -247,40 +346,18 @@ export async function uploadGalleryPhotosWithQueue(
   callbacks?: GalleryUploadCallbacks
 ): Promise<GalleryUploadResult> {
   const total = files.length
-  if (total === 0) {
-    return { ok: false, uploaded: 0, message: 'לא נבחרו תמונות' }
-  }
+  if (total === 0) return { ok: false, uploaded: 0, message: 'לא נבחרו תמונות' }
 
   const releaseWakeLock = await requestUploadWakeLock()
-  let nextIndex = 0
+
+  const pipeline = new BatchPipeline(userId, galleryId, files, callbacks)
+
+  let nextFileIndex = 0
   let completed = 0
   let processed = 0
-  const uploadErrors: string[] = []
-  const failedJobs: UploadJob[] = []
-  const failedPaths: {
-    originalPath?: string | null
-    previewPath?: string | null
-    watermarkedPath?: string | null
-  }[] = []
-  const successfulUploads: {
-    id: string
-    originalPath: string
-    previewPath: string
-    watermarkedPath: string
-  }[] = []
 
-  onProgress({ completed: 0, staged: total, total, phase: 'preparing' })
-
-  const reserved = await reserveAllUploadJobs(galleryId, files)
-  if (!reserved.ok) {
-    releaseWakeLock()
-    return { ok: false, uploaded: 0, message: reserved.message }
-  }
-
-  const jobs = reserved.jobs
-  callbacks?.onJobsReady?.(
-    jobs.map((job) => ({ photoId: job.photoId, file: job.file }))
-  )
+  const successes: UploadSuccess[] = []
+  const failures: UploadFailure[] = []
 
   function reportProgress(phase: GalleryUploadProgress['phase']) {
     callbacks?.onPhaseChange?.(phase)
@@ -289,7 +366,7 @@ export async function uploadGalleryPhotosWithQueue(
       staged: Math.max(0, total - processed),
       total,
       phase,
-      failed: uploadErrors.length > 0 ? uploadErrors.length : undefined,
+      failed: failures.length > 0 ? failures.length : undefined,
     })
   }
 
@@ -298,113 +375,117 @@ export async function uploadGalleryPhotosWithQueue(
   try {
     async function worker() {
       for (;;) {
-        const index = nextIndex
-        nextIndex += 1
-        if (index >= jobs.length) return
+        const index = nextFileIndex++
+        if (index >= total) return
+
+        // הבטח URLs מוכנים — ה-pipeline מנהל reservations אוטומטית
+        await pipeline.ensureUrls(index)
+
+        // הפעל prefetch למי שבא אחרינו
+        pipeline.prefetchAhead(index)
 
         await waitWhileTabHidden()
-        const job = jobs[index]!
+
+        const job = pipeline.jobsMap.get(index)!
+        const urls = pipeline.urlMap.get(job.photoId)!
 
         try {
           const result = await withTimeout(
-            uploadReservedPhoto(userId, galleryId, job, watermarkText),
+            uploadReservedPhoto(userId, galleryId, job, watermarkText, urls),
             PER_FILE_TIMEOUT_MS,
             `${job.file.name}: פג תוקף ההעלאה (${PER_FILE_TIMEOUT_MS / 1000} שניות)`
           )
 
           if (result.ok) {
-            successfulUploads.push({
+            successes.push({
               id: result.id,
               originalPath: result.originalPath,
               previewPath: result.previewPath,
               watermarkedPath: result.watermarkedPath,
             })
-            completed += 1
+            completed++
             callbacks?.onPhotoUploaded?.(job.photoId)
           } else {
-            uploadErrors.push(result.message)
-            failedJobs.push(job)
-            callbacks?.onPhotoFailed?.(job.photoId)
-            failedPaths.push({
-              originalPath: result.paths.originalPath,
-              previewPath: result.paths.previewPath,
-              watermarkedPath: result.paths.watermarkedPath,
+            failures.push({
+              photoId: job.photoId,
+              paths: result.paths,
+              message: result.message,
             })
+            callbacks?.onPhotoFailed?.(job.photoId)
           }
         } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : `שגיאה בהעלאת ${job.file.name}`
-          uploadErrors.push(message)
-          failedJobs.push(job)
+          const message = error instanceof Error ? error.message : `שגיאה בהעלאת ${job.file.name}`
+          failures.push({
+            photoId: job.photoId,
+            paths: buildPhotoStoragePaths(userId, galleryId, job.photoId),
+            message,
+          })
           callbacks?.onPhotoFailed?.(job.photoId)
-          failedPaths.push(buildPhotoStoragePaths(userId, galleryId, job.photoId))
+        } finally {
+          // שחרור זיכרון מיידי — קריטי עבור אלפי תמונות
+          pipeline.jobsMap.delete(index)
+          pipeline.urlMap.delete(job.photoId)
         }
 
-        processed += 1
+        processed++
         reportProgress('uploading')
       }
     }
 
-    const workers = Array.from(
-      { length: Math.min(UPLOAD_CONCURRENCY, jobs.length) },
-      () => worker()
+    await Promise.all(
+      Array.from({ length: Math.min(UPLOAD_CONCURRENCY, total) }, () => worker())
     )
-    await Promise.all(workers)
 
-    if (successfulUploads.length > 0) {
+    // ── רישום הצלחות ב-DB ──────────────────────────────────────────────────
+    if (successes.length > 0) {
       reportProgress('registering')
-      for (
-        let offset = 0;
-        offset < successfulUploads.length;
-        offset += COMPLETE_BATCH_SIZE
-      ) {
-        const chunk = successfulUploads.slice(offset, offset + COMPLETE_BATCH_SIZE)
+      for (let offset = 0; offset < successes.length; offset += COMPLETE_BATCH_SIZE) {
+        const chunk = successes.slice(offset, offset + COMPLETE_BATCH_SIZE)
         await completePhotosBatch(galleryId, chunk)
         onProgress({
-          completed: Math.min(offset + chunk.length, successfulUploads.length),
+          completed: Math.min(offset + chunk.length, successes.length),
           staged: 0,
           total,
           phase: 'registering',
-          failed: uploadErrors.length > 0 ? uploadErrors.length : undefined,
+          failed: failures.length > 0 ? failures.length : undefined,
         })
       }
       await finalizeGalleryUpload(galleryId)
     }
 
-    if (failedJobs.length > 0) {
+    // ── ניקוי כשלונות ──────────────────────────────────────────────────────
+    if (failures.length > 0) {
       await cleanupPhotosBatch(
         galleryId,
-        failedJobs.map((job) => job.photoId),
-        failedPaths
+        failures.map((f) => f.photoId),
+        failures.map((f) => f.paths)
       )
     }
   } finally {
     releaseWakeLock()
   }
 
-  const failCount = uploadErrors.length
+  // ── תוצאה סופית ────────────────────────────────────────────────────────────
+  const failCount = failures.length
   if (failCount === 0) {
+    callbacks?.onComplete?.()
     return { ok: true, uploaded: completed }
   }
 
-  const shown = uploadErrors.slice(0, 3).join(' · ')
-  const more =
-    failCount > 3
-      ? ` (ועוד ${formatGalleryUploadCount(failCount - 3)} שגיאות)`
-      : ''
-  const partialHint =
-    completed > 0
-      ? ' התמונות שהצליחו נשמרו. אפשר לבחור שוב רק את הנותרות.'
-      : ''
+  const errors = failures.map((f) => f.message)
+  const shown = errors.slice(0, 3).join(' · ')
+  const more = failCount > 3 ? ` (ועוד ${formatGalleryUploadCount(failCount - 3)} שגיאות)` : ''
+  const partialHint = completed > 0
+    ? ' התמונות שהצליחו נשמרו. אפשר לבחור שוב רק את הנותרות.'
+    : ''
+
+  if (completed > 0) callbacks?.onComplete?.()
 
   return {
     ok: false,
     uploaded: completed,
-    message:
-      completed > 0
-        ? `הועלו ${formatGalleryUploadCount(completed)} מתוך ${formatGalleryUploadCount(total)}. ${shown}${more}.${partialHint}`
-        : `${shown}${more}`,
+    message: completed > 0
+      ? `הועלו ${formatGalleryUploadCount(completed)} מתוך ${formatGalleryUploadCount(total)}. ${shown}${more}.${partialHint}`
+      : `${shown}${more}`,
   }
 }

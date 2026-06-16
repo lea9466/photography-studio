@@ -390,6 +390,7 @@ export type Database = {
           duration_text: string | null
           includes: string[]
           is_active: boolean
+          is_featured: boolean
           sort_order: number
           created_at: string
           updated_at: string
@@ -402,6 +403,7 @@ export type Database = {
           duration_text?: string | null
           includes?: string[]
           is_active?: boolean
+          is_featured?: boolean
           sort_order?: number
           created_at?: string
           updated_at?: string
@@ -414,6 +416,7 @@ export type Database = {
           duration_text?: string | null
           includes?: string[]
           is_active?: boolean
+          is_featured?: boolean
           sort_order?: number
           created_at?: string
           updated_at?: string
