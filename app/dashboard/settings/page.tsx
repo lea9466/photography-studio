@@ -12,7 +12,7 @@ export default async function SettingsPage() {
 
   const { data } = await supabase
     .from('users')
-    .select('name, studio_name, theme_primary, about_text, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, about_image_url')
+    .select('name, studio_name, theme_primary, about_text, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, about_image_url, email, slug')
     .eq('id', user.id)
     .single()
 
@@ -30,15 +30,19 @@ export default async function SettingsPage() {
     hero_desktop_url: string | null
     hero_mobile_url: string | null
     about_image_url: string | null
+    email: string | null
+    slug: string | null
   } | null
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">הגדרות פרופיל</h1>
-        <p className="mt-1 text-sm text-[--muted]">שם, סטודיו וצבע מותג</p>
+    <div className="animate-fade-in">
+      <div className="p-6 md:p-10 space-y-10 max-w-5xl mx-auto">
+        <div>
+          <h1 className="text-2xl font-bold text-[--foreground] tracking-tight">הגדרות אתר</h1>
+          <p className="mt-1 text-sm text-[--muted]">ניהול זהות המותג ותוכן האתר שלך</p>
+        </div>
+        <ProfileForm profile={profile} />
       </div>
-      <ProfileForm profile={profile} />
     </div>
   )
 }

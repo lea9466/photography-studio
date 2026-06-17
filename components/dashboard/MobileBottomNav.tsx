@@ -48,7 +48,7 @@ export function MobileBottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 md:hidden bg-[--background] border-t border-[--border]/30 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 md:hidden bg-[--background] border-t border-[--border] shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
       {NAV_ITEMS.map((item) => {
         const active = item.isActive(pathname)
         return (

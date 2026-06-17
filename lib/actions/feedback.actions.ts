@@ -44,6 +44,9 @@ export async function updateProfile(input: {
   hero_desktop_url?: string
   hero_mobile_url?: string
   about_image_url?: string
+  phone?: string
+  email?: string
+  slug?: string
 }) {
   const supabase = await createClient()
   const {

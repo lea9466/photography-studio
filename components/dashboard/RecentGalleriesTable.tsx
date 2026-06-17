@@ -46,7 +46,7 @@ function getStatusBadge(status: string) {
   const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-800' }
   
   return (
-    <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider', config.className)}>
+    <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider whitespace-nowrap', config.className)}>
       {config.label}
     </span>
   )
@@ -147,13 +147,14 @@ type RecentGalleriesTableProps = {
 }
 
 export function RecentGalleriesTable({ galleries, filter, title = 'גלריות אחרונות' }: RecentGalleriesTableProps) {
-  const filteredGalleries = filter && filter !== 'all' 
+  const filteredGalleries = filter && filter !== 'all'
     ? galleries.filter(gallery => {
         if (filter === 'draft') return gallery.status === 'draft'
         if (filter === 'waiting') return gallery.status === 'selection' || gallery.status === 'editing'
         if (filter === 'sent') return gallery.status === 'sent'
         if (filter === 'expired') {
-          // Check if gallery has expired
+          // Include locked galleries and expired galleries
+          if (gallery.status === 'locked') return true
           if (gallery.expires_at) {
             return new Date(gallery.expires_at) < new Date()
           }

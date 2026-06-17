@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const waiting = recentGalleries.filter(g => g.status === 'selection' || g.status === 'editing').length
   const sent = recentGalleries.filter(g => g.status === 'sent').length
   const expired = recentGalleries.filter(g => {
+    if (g.status === 'locked') return true
     if (g.expires_at) {
       return new Date(g.expires_at) < new Date()
     }

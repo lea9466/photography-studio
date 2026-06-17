@@ -1,7 +1,8 @@
 'use client'
 
+import React from 'react'
 import { cn } from '@/lib/utils'
-import { 
+import {
   FileText,
   AlertCircle,
   Send,
@@ -58,29 +59,29 @@ function StatCard({ title, value, subtitle, icon, variant = 'default', isActive 
       </div>
 
       {/* Mobile layout */}
-      <div className="flex md:hidden items-center gap-3 w-full">
+      <div dir="rtl" className="flex md:hidden items-center justify-between w-full">
+        {/* Right side: Text, Number, Badge */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[--muted]">{title}</span>
+          <span className="text-xl font-bold text-[--foreground] leading-none">{value}</span>
+          {badge && (
+            <span className={cn(
+              'px-1.5 py-0.5 rounded text-[9px] font-bold',
+              badgeColor || 'bg-gray-100 text-gray-700'
+            )}>
+              {badge}
+            </span>
+          )}
+        </div>
+        {/* Left side: Icon */}
         <div className={cn(
-          'w-12 h-12 rounded-full flex items-center justify-center',
-          variant === 'urgent' ? 'bg-[#7D3A52]/10' : 'bg-[--border]/30'
+          'flex items-center justify-center',
+          variant === 'urgent' ? 'text-[#7D3A52]' : 'text-[--muted]'
         )}>
-          <span className={cn(
-            variant === 'urgent' ? 'text-[#7D3A52]' : 'text-[--muted]'
-          )}>
+          <div className="h-5 w-5">
             {icon}
-          </span>
+          </div>
         </div>
-        <div className="flex-1">
-          <span className="text-xs text-[--muted] block">{title}</span>
-          <span className="text-2xl font-bold text-[--foreground] leading-none">{value}</span>
-        </div>
-        {badge && (
-          <span className={cn(
-            'px-2 py-1 rounded text-[10px] font-bold',
-            badgeColor || 'bg-gray-100 text-gray-700'
-          )}>
-            {badge}
-          </span>
-        )}
       </div>
     </div>
   )
@@ -104,7 +105,7 @@ export function StatsCards({
   onFilterChange 
 }: StatsCardsProps) {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-6 md:mb-8">
+    <section className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-6 md:mb-8">
       <StatCard
         title="טיוטות"
         value={drafts}

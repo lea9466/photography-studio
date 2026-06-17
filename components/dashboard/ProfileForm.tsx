@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Building2, Globe, Palette, Upload } from 'lucide-react'
 
 type ProfileFormProps = {
   profile: {
@@ -33,6 +34,8 @@ type ProfileFormProps = {
     hero_desktop_url: string | null
     hero_mobile_url: string | null
     about_image_url: string | null
+    email: string | null
+    slug: string | null
   } | null
 }
 
@@ -57,6 +60,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [heroDesktopUrl, setHeroDesktopUrl] = useState(profile?.hero_desktop_url ?? '')
   const [heroMobileUrl, setHeroMobileUrl] = useState(profile?.hero_mobile_url ?? '')
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
+  const [email, setEmail] = useState(profile?.email ?? '')
+  const [slug, setSlug] = useState(profile?.slug ?? '')
   const [isUploading, setIsUploading] = useState(false)
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about') {
@@ -102,6 +107,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           hero_desktop_url: heroDesktopUrl || undefined,
           hero_mobile_url: heroMobileUrl || undefined,
           about_image_url: aboutImageUrl || undefined,
+          email,
+          slug,
         })
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
@@ -113,229 +120,241 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>פרופיל צלמת</CardTitle>
-          <CardDescription>מוצג ללקוחות בגלריה</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="space-y-10">
+      {/* Section 1: Business Details */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+          <Building2 className="h-6 w-6 text-[--foreground]" />
+          <h2 className="text-lg font-semibold text-[--foreground]">פרטי העסק</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="name">שם</Label>
-            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="studio">שם הסטודיו</Label>
+            <Label htmlFor="studio-name">שם העסק</Label>
             <Input
-              id="studio"
+              id="studio-name"
               value={studioName}
               onChange={(e) => setStudioName(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
             />
           </div>
+          <div className="space-y-2" dir="ltr">
+            <Label htmlFor="slug" className="text-right">כתובת אתר (Slug)</Label>
+            <div className="flex items-center bg-white dark:bg-zinc-900 border-[--border] rounded-lg overflow-hidden">
+              <span className="bg-[--border]/30 px-3 py-3 text-[--muted] text-sm border-r border-[--border]">gallery.studio/</span>
+              <Input
+                id="slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                className="flex-1 border-none focus:ring-0"
+              />
+            </div>
+          </div>
           <div className="space-y-2">
-            <Label htmlFor="about">טקסט אודות</Label>
-            <Textarea
-              id="about"
-              value={aboutText}
-              onChange={(e) => setAboutText(e.target.value)}
-              rows={4}
-              placeholder="ספרי על עצמך ועל הסטודיו שלך..."
+            <Label htmlFor="email">אימייל רשמי</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
             />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>סטטיסטיקות</CardTitle>
-          <CardDescription>מוצגות בסקשן אודות</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="projects">פרויקטים</Label>
-              <Input
-                id="projects"
-                type="number"
-                value={statProjects}
-                onChange={(e) => setStatProjects(Number(e.target.value))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clients">לקוחות</Label>
-              <Input
-                id="clients"
-                type="number"
-                value={statClients}
-                onChange={(e) => setStatClients(Number(e.target.value))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="experience">שנות ניסיון</Label>
-              <Input
-                id="experience"
-                type="number"
-                value={statExperienceYears}
-                onChange={(e) => setStatExperienceYears(Number(e.target.value))}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>עיצוב וצבעים</CardTitle>
-          <CardDescription>התאמה אישית של המראה</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="accent">צבע הדגשה</Label>
-            <div className="flex gap-2">
-              <Input
-                id="accent"
-                type="color"
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="h-10 w-20"
-              />
-              <Input
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="flex-1"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label>ערכת נושא</Label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {THEMES.map((theme) => (
-                <button
-                  key={theme.id}
-                  type="button"
-                  onClick={() => setSelectedTheme(theme.id)}
-                  className={`relative rounded-lg border-2 p-4 text-right transition-all ${
-                    selectedTheme === theme.id
-                      ? 'border-[var(--client-accent)] ring-2 ring-[var(--client-accent)] ring-offset-2'
-                      : 'border-[--border] hover:border-[--muted]'
-                  }`}
-                  style={{
-                    backgroundColor: theme.background,
-                    color: theme.foreground,
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{theme.name}</span>
-                    {selectedTheme === theme.id && (
-                      <Badge variant="default">נבחר</Badge>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>תמונות מותג</CardTitle>
-          <CardDescription>לוגו, תמונות רקע ותמונת אודות</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="logo">לוגו</Label>
-            <div className="flex items-center gap-4">
-              {logoUrl && (
-                <div className="relative h-20 w-20 overflow-hidden rounded-full border border-[--border]">
-                  <Image
-                    src={logoUrl}
-                    alt="Logo preview"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              )}
-              <div className="flex-1">
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/svg+xml"
-                  onChange={(e) => handleFileUpload(e, 'logo')}
-                  disabled={isUploading}
+      {/* Section 2: Website Content */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+          <Globe className="h-6 w-6 text-[--foreground]" />
+          <h2 className="text-lg font-semibold text-[--foreground]">תוכן האתר</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Hero Desktop */}
+          <div className="space-y-3">
+            <Label htmlFor="hero-desktop">תמונת הירו (דסקטופ)</Label>
+            <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+              {heroDesktopUrl ? (
+                <Image
+                  src={heroDesktopUrl}
+                  alt="Hero desktop preview"
+                  fill
+                  className="object-cover"
                 />
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="hero-desktop">תמונת רקע - דסקטופ</Label>
-            <div className="space-y-2">
-              {heroDesktopUrl && (
-                <div className="relative h-32 w-full overflow-hidden rounded-lg border border-[--border]">
-                  <Image
-                    src={heroDesktopUrl}
-                    alt="Hero desktop preview"
-                    fill
-                    className="object-cover"
-                  />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <Upload className="h-8 w-8" />
                 </div>
               )}
-              <Input
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-sm font-medium">החלף תמונה</span>
+              </div>
+              <input
                 id="hero-desktop"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'hero_desktop')}
                 disabled={isUploading}
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="hero-mobile">תמונת רקע - מובייל</Label>
-            <div className="space-y-2">
-              {heroMobileUrl && (
-                <div className="relative h-32 w-full overflow-hidden rounded-lg border border-[--border]">
-                  <Image
-                    src={heroMobileUrl}
-                    alt="Hero mobile preview"
-                    fill
-                    className="object-cover"
-                  />
+          {/* Hero Mobile */}
+          <div className="space-y-3">
+            <Label htmlFor="hero-mobile">תמונת הירו (מובייל)</Label>
+            <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
+              {heroMobileUrl ? (
+                <Image
+                  src={heroMobileUrl}
+                  alt="Hero mobile preview"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <Upload className="h-8 w-8" />
                 </div>
               )}
-              <Input
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-sm font-medium">החלף תמונה</span>
+              </div>
+              <input
                 id="hero-mobile"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'hero_mobile')}
                 disabled={isUploading}
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
           </div>
-          <div className="space-y-2">
+          {/* About Section Image */}
+          <div className="space-y-3">
             <Label htmlFor="about-image">תמונת אודות</Label>
-            <div className="space-y-2">
-              {aboutImageUrl && (
-                <div className="relative h-32 w-full overflow-hidden rounded-lg border border-[--border]">
-                  <Image
-                    src={aboutImageUrl}
-                    alt="About image preview"
-                    fill
-                    className="object-cover"
-                  />
+            <div className="relative group aspect-square bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+              {aboutImageUrl ? (
+                <Image
+                  src={aboutImageUrl}
+                  alt="About image preview"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <Upload className="h-8 w-8" />
                 </div>
               )}
-              <Input
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-sm font-medium">החלף תמונה</span>
+              </div>
+              <input
                 id="about-image"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'about')}
                 disabled={isUploading}
+                className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+        <div className="space-y-2 pt-4">
+          <Label htmlFor="about-text">טקסט אודות העסק</Label>
+          <Textarea
+            id="about-text"
+            value={aboutText}
+            onChange={(e) => setAboutText(e.target.value)}
+            rows={4}
+            className="bg-white dark:bg-zinc-900 border-[--border] resize-none"
+            placeholder="ספרי על עצמך ועל הסטודיו שלך..."
+          />
+        </div>
+      </section>
 
+      {/* Section 3: Branding & Design */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+          <Palette className="h-6 w-6 text-[--foreground]" />
+          <h2 className="text-lg font-semibold text-[--foreground]">מיתוג ועיצוב</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">שם הצלם/ת</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-white dark:bg-zinc-900 border-[--border]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="accent">צבע מותג ראשי</Label>
+              <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border-[--border] rounded-lg px-4 py-2">
+                <Input
+                  id="accent"
+                  type="color"
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="w-10 h-10 rounded-lg border-none cursor-pointer bg-transparent p-0"
+                />
+                <Input
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  className="flex-1 border-none focus:ring-0"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="theme">ערכת נושא מועדפת</Label>
+              <select
+                id="theme"
+                value={selectedTheme}
+                onChange={(e) => setSelectedTheme(e.target.value)}
+                className="w-full bg-white dark:bg-zinc-900 border-[--border] rounded-lg px-4 py-3 appearance-none"
+              >
+                {THEMES.map((theme) => (
+                  <option key={theme.id} value={theme.id}>
+                    {theme.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="logo">לוגו סטודיו</Label>
+            <div className="relative h-full min-h-[160px] flex flex-col items-center justify-center bg-white dark:bg-zinc-900 border-2 border-dashed border-[--border] hover:border-[--foreground] transition-colors cursor-pointer group">
+              <div className="p-6 text-center">
+                {logoUrl ? (
+                  <div className="relative h-20 w-20 mb-2">
+                    <Image
+                      src={logoUrl}
+                      alt="Logo preview"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <Upload className="h-10 w-10 text-[--muted] group-hover:text-[--foreground] mb-2 transition-colors mx-auto" />
+                    <p className="text-sm text-[--muted]">גרור לוגו או לחץ להעלאה</p>
+                    <p className="text-xs text-[--muted] mt-1">PNG, SVG (רקע שקוף מומלץ)</p>
+                  </>
+                )}
+              </div>
+              <input
+                id="logo"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                onChange={(e) => handleFileUpload(e, 'logo')}
+                disabled={isUploading}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Save Button */}
       <Button onClick={handleSave} disabled={isPending} size="lg" className="w-full">
         {isPending ? 'שומר...' : 'שמור שינויים'}
       </Button>

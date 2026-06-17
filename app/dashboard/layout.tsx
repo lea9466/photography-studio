@@ -54,7 +54,10 @@ export default async function DashboardLayout({
       />
       
       {/* Mobile Header */}
-      <MobileHeader studioName={profile?.studio_name || undefined} />
+      <MobileHeader 
+        studioName={profile?.studio_name || undefined}
+        logoUrl={profile?.logo_url || undefined}
+      />
       
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
