@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { QuickAccessActions } from '@/components/dashboard/QuickAccessActions'
+import { QuickActionsGrid } from '@/components/dashboard/QuickActionsGrid'
 import { Button } from '@/components/ui/button'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
@@ -93,7 +94,7 @@ export default function DashboardPage() {
         </div>
         <Button 
           asChild 
-          className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg shadow-[#7D3A52]/20 px-6 py-3 text-base font-semibold"
+          className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg shadow-[#7D3A52]/20 px-6 py-3 text-base font-semibold md:flex hidden"
         >
           <Link href="/dashboard/galleries/new">
             <Plus className="h-5 w-5 ml-2" />
@@ -101,6 +102,9 @@ export default function DashboardPage() {
           </Link>
         </Button>
       </header>
+
+      {/* Quick Actions Grid (Mobile Only) */}
+      <QuickActionsGrid />
 
       {/* Stats Grid */}
       <StatsCards 

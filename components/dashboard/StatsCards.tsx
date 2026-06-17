@@ -16,29 +16,71 @@ type StatCardProps = {
   variant?: 'default' | 'urgent'
   isActive?: boolean
   onClick?: () => void
+  badge?: string
+  badgeColor?: string
 }
 
-function StatCard({ title, value, subtitle, icon, variant = 'default', isActive = false, onClick }: StatCardProps) {
+function StatCard({ title, value, subtitle, icon, variant = 'default', isActive = false, onClick, badge, badgeColor }: StatCardProps) {
   return (
     <div
       onClick={onClick}
       className={cn(
-        'bg-white dark:bg-zinc-900 border border-[--border] rounded-xl p-6 flex flex-col justify-between min-h-[140px] hover:shadow-sm transition-all cursor-pointer',
+        // Base styles
+        'bg-white dark:bg-zinc-900 border border-[--border] rounded-xl hover:shadow-sm transition-all cursor-pointer relative',
         variant === 'urgent' && 'bg-rose-50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800',
-        isActive && 'ring-2 ring-[--accent] ring-offset-2'
+        isActive && 'ring-2 ring-[--accent] ring-offset-2',
+        
+        // Mobile layout
+        'flex flex-row items-center justify-between p-4 min-h-0',
+        
+        // Desktop layout override
+        'md:flex-col md:justify-between md:p-6 md:min-h-[140px]'
       )}
     >
-      <div className="flex justify-between items-start">
-        <span className="text-sm text-[--muted]">{title}</span>
-        <span className={cn('opacity-60', variant === 'urgent' && 'text-rose-600 dark:text-rose-400')}>
+      {/* Desktop layout */}
+      <div className="hidden md:block relative w-full text-right h-full">
+        {/* Icon strictly positioned at the top-left corner */}
+        <span className={cn('absolute top-0 left-0 opacity-60', variant === 'urgent' && 'text-rose-600 dark:text-rose-400')}>
           {icon}
         </span>
+
+        {/* Content stacked neatly and aligned to the right */}
+        <div className="pr-2"> {/* Optional right padding to match design */}
+          <span className="text-sm text-[--muted] block">{title}</span>
+          
+          <div className="mt-4">
+            <p className="text-[32px] font-bold text-[--foreground] leading-none mb-1">{value}</p>
+            <p className={cn('text-[12px]', variant === 'urgent' ? 'text-rose-700 dark:text-rose-300 font-medium' : 'text-[--muted]')}>
+              {subtitle}
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="mt-4">
-        <p className="text-3xl font-bold text-[--foreground]">{value}</p>
-        <p className={cn('text-xs', variant === 'urgent' ? 'text-rose-700 dark:text-rose-300 font-medium' : 'text-[--muted]')}>
-          {subtitle}
-        </p>
+
+      {/* Mobile layout */}
+      <div className="flex md:hidden items-center gap-3 w-full">
+        <div className={cn(
+          'w-12 h-12 rounded-full flex items-center justify-center',
+          variant === 'urgent' ? 'bg-[#7D3A52]/10' : 'bg-[--border]/30'
+        )}>
+          <span className={cn(
+            variant === 'urgent' ? 'text-[#7D3A52]' : 'text-[--muted]'
+          )}>
+            {icon}
+          </span>
+        </div>
+        <div className="flex-1">
+          <span className="text-xs text-[--muted] block">{title}</span>
+          <span className="text-2xl font-bold text-[--foreground] leading-none">{value}</span>
+        </div>
+        {badge && (
+          <span className={cn(
+            'px-2 py-1 rounded text-[10px] font-bold',
+            badgeColor || 'bg-gray-100 text-gray-700'
+          )}>
+            {badge}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -62,37 +104,43 @@ export function StatsCards({
   onFilterChange 
 }: StatsCardsProps) {
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-6 md:mb-8">
       <StatCard
         title="טיוטות"
         value={drafts}
         subtitle="גלריות בתהליך"
-        icon={<FileText className="h-5 w-5" />}
+        icon={<FileText className="h-6 w-6" />}
         isActive={activeFilter === 'draft'}
         onClick={() => onFilterChange?.('draft')}
-      />
-      <StatCard
-        title="ממתינות לעיבוד"
-        value={waiting}
-        subtitle="דורש תשומת לב מיידית"
-        icon={<AlertCircle className="h-5 w-5" />}
-        variant="urgent"
-        isActive={activeFilter === 'waiting'}
-        onClick={() => onFilterChange?.('waiting')}
+        badge="טיוטה"
+        badgeColor="bg-orange-100 text-orange-700"
       />
       <StatCard
         title="נשלחו ללקוחות"
         value={sent}
         subtitle="החודש האחרון"
-        icon={<Send className="h-5 w-5" />}
+        icon={<Send className="h-6 w-6" />}
         isActive={activeFilter === 'sent'}
         onClick={() => onFilterChange?.('sent')}
+        badge="נשלח"
+        badgeColor="bg-green-100 text-green-700"
+      />
+      <StatCard
+        title="ממתינות לעיבוד"
+        value={waiting}
+        subtitle="דורש תשומת לב מיידית"
+        icon={<AlertCircle className="h-6 w-6" />}
+        variant="urgent"
+        isActive={activeFilter === 'waiting'}
+        onClick={() => onFilterChange?.('waiting')}
+        badge="ממתין"
+        badgeColor="bg-pink-100 text-pink-700"
       />
       <StatCard
         title="ארכיון"
         value={expired}
         subtitle="גלריות שפג תוקפן"
-        icon={<Archive className="h-5 w-5" />}
+        icon={<Archive className="h-6 w-6" />}
         isActive={activeFilter === 'expired'}
         onClick={() => onFilterChange?.('expired')}
       />
