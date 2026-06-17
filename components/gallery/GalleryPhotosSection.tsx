@@ -100,7 +100,7 @@ export function GalleryPhotosSection({
       },
       onComplete: clearPending,
     }),
-    [clearPending]
+    [] // Remove clearPending dependency to prevent infinite loop
   )
 
   const activePendingCount = pendingPhotos.filter(

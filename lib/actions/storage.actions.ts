@@ -38,11 +38,16 @@ export async function createR2UploadUrls(
   galleryId: string,
   items: R2UploadRequest[]
 ) {
+  console.log('👉 10. createR2UploadUrls START', { galleryId, itemCount: items.length })
   await assertGalleryUploadPaths(galleryId, items)
+  console.log('👉 11. assertGalleryUploadPaths done')
 
-  return Promise.all(
+  console.log('👉 12. About to create presigned URLs')
+  const urls = await Promise.all(
     items.map((item) =>
       createPresignedUploadUrl(item.bucket, item.path, item.contentType)
     )
   )
+  console.log('👉 13. Presigned URLs created', { urlCount: urls.length })
+  return urls
 }

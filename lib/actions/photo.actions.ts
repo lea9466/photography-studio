@@ -32,9 +32,15 @@ async function assertGalleryOwner(galleryId: string) {
 }
 
 export async function reservePhotosBatch(galleryId: string, count: number) {
+  console.log('👉 1. reservePhotosBatch START', { galleryId, count })
   const { supabase } = await assertGalleryOwner(galleryId)
-  if (count <= 0) return []
+  console.log('👉 2. assertGalleryOwner done')
+  if (count <= 0) {
+    console.log('👉 3. count <= 0, returning early')
+    return []
+  }
 
+  console.log('👉 4. About to query last photo')
   const { data: lastPhoto } = await supabase
     .from('photos')
     .select('sort_order')
@@ -42,6 +48,7 @@ export async function reservePhotosBatch(galleryId: string, count: number) {
     .order('sort_order', { ascending: false })
     .limit(1)
     .maybeSingle()
+  console.log('👉 5. Last photo query done')
 
   const startSortOrder =
     ((lastPhoto as { sort_order: number } | null)?.sort_order ?? -1) + 1
@@ -54,12 +61,15 @@ export async function reservePhotosBatch(galleryId: string, count: number) {
     sort_order: startSortOrder + index,
   }))
 
+  console.log('👉 6. About to insert photos batch')
   const { data, error } = await supabase
     .from('photos')
     .insert(payloads as never)
     .select('id, sort_order')
+  console.log('👉 7. Photos batch insert done', { error, dataLength: data?.length })
 
   if (error) throw new Error(error.message)
+  console.log('👉 8. reservePhotosBatch COMPLETE')
   return (data ?? []) as { id: string; sort_order: number }[]
 }
 
@@ -72,12 +82,19 @@ export async function completePhotosBatch(
     watermarkedPath: string
   }[]
 ) {
-  if (items.length === 0) return
+  console.log('👉 20. completePhotosBatch START', { galleryId, itemCount: items.length })
+  if (items.length === 0) {
+    console.log('👉 21. No items to complete, returning early')
+    return
+  }
 
   const { supabase } = await assertGalleryOwner(galleryId)
+  console.log('👉 22. assertGalleryOwner done for completePhotosBatch')
 
   for (let offset = 0; offset < items.length; offset += COMPLETE_BATCH_SIZE) {
+    console.log('👉 23. Processing batch', { offset, batchSize: COMPLETE_BATCH_SIZE })
     const chunk = items.slice(offset, offset + COMPLETE_BATCH_SIZE)
+    console.log('👉 24. About to update photos in database')
     const results = await Promise.all(
       chunk.map((item) =>
         supabase
@@ -91,10 +108,15 @@ export async function completePhotosBatch(
           .eq('gallery_id', galleryId)
       )
     )
+    console.log('👉 25. Database update done', { resultCount: results.length })
 
     const failed = results.find((result) => result.error)
-    if (failed?.error) throw new Error(failed.error.message)
+    if (failed?.error) {
+      console.log('👉 26. ERROR in database update', { error: failed.error.message })
+      throw new Error(failed.error.message)
+    }
   }
+  console.log('👉 27. completePhotosBatch COMPLETE')
 }
 
 export async function cleanupPhotosBatch(
@@ -132,10 +154,14 @@ export async function cleanupPhotosBatch(
 }
 
 export async function finalizeGalleryUpload(galleryId: string) {
+  console.log('👉 30. finalizeGalleryUpload START', { galleryId })
   await assertGalleryOwner(galleryId)
+  console.log('👉 31. assertGalleryOwner done for finalizeGalleryUpload')
+  console.log('👉 32. About to revalidate paths')
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath('/dashboard')
+  console.log('👉 33. finalizeGalleryUpload COMPLETE')
 }
 
 export async function registerPhoto(input: {

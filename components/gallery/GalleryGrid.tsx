@@ -34,16 +34,18 @@ function PendingPhotoCard({ photo }: { photo: PendingGalleryPhoto }) {
   return (
     <div className="relative overflow-hidden rounded-xl border border-[--border] bg-[--background] animate-float-up">
       <div className="relative aspect-square">
-        <Image
-          src={photo.previewUrl}
-          alt=""
-          fill
-          unoptimized
-          className={`object-cover transition-opacity ${
-            photo.status === 'failed' ? 'opacity-40' : 'opacity-100'
-          }`}
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        {photo.previewUrl ? (
+          <Image
+            src={photo.previewUrl}
+            alt=""
+            fill
+            unoptimized
+            className={`object-cover transition-opacity ${
+              photo.status === 'failed' ? 'opacity-40' : 'opacity-100'
+            }`}
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        ) : null}
         {photo.status !== 'uploaded' && photo.status !== 'failed' ? (
           <div className="absolute inset-0 flex items-center justify-center bg-[--foreground]/30">
             <Loader2 className="h-8 w-8 animate-spin text-[--background]" />

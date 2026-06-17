@@ -54,15 +54,15 @@ export function UploadDropzone({
         return
       }
 
-      setIsUploading(true)
-      setUploadProgress({
-        completed: 0,
-        staged: selected.length,
-        total: selected.length,
-        phase: 'preparing',
-      })
-
       try {
+        setIsUploading(true)
+        setUploadProgress({
+          completed: 0,
+          staged: selected.length,
+          total: selected.length,
+          phase: 'preparing',
+        })
+
         const result = await uploadGalleryPhotosWithQueue(
           galleryId,
           userId,
@@ -94,7 +94,7 @@ export function UploadDropzone({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, router, uploadCallbacks]
+    [galleryId, userId, watermarkText] // Remove router and uploadCallbacks to prevent infinite loop
   )
 
   return (

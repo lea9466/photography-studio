@@ -63,11 +63,11 @@ export type GalleryUploadCallbacks = {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const UPLOAD_CONCURRENCY = 3        // חזרנו למספר הזהב המהיר והיציב
+const UPLOAD_CONCURRENCY = 3        // Back to original stable value
 const RESERVATION_BATCH_SIZE = 100  
 const URL_BATCH_SIZE = 100          
 const COMPLETE_BATCH_SIZE = 100     
-const PREFETCH_AHEAD = 2            
+const PREFETCH_AHEAD = 2            // Re-enabled after testing            
 const THUMB_MAX_MB = 0.18
 const THUMB_MAX_DIMENSION = 1200
 const THUMB_QUALITY = 0.78
@@ -144,7 +144,7 @@ async function compressGalleryPreview(file: File): Promise<Blob> {
   return imageCompression(file, {
     maxSizeMB: THUMB_MAX_MB,
     maxWidthOrHeight: THUMB_MAX_DIMENSION,
-    useWebWorker: true,
+    useWebWorker: false,
     fileType: 'image/jpeg',
     initialQuality: THUMB_QUALITY,
     maxIteration: THUMB_MAX_ITERATION,
@@ -258,32 +258,54 @@ class BatchPipeline {
       const file = this.files[fileIndex]!
       this.jobsMap.set(fileIndex, { file, photoId, index: fileIndex })
 
-      const localPreview = URL.createObjectURL(file)
-      this.callbacks?.onPhotoStaged?.(photoId, file, localPreview)
+      // Don't create blob URLs - they cause memory leaks and aren't used
+      this.callbacks?.onPhotoStaged?.(photoId, file, '')
     }
     this.reservedUpTo = from + count
   }
 
   async ensureUrls(fileIndex: number): Promise<void> {
+    console.log('👉 CLIENT 1. ensureUrls START', { fileIndex })
     await this.ensureReserved(fileIndex)
+    console.log('👉 CLIENT 2. ensureReserved done')
 
     while (fileIndex >= this.urlsFetchedUpTo) {
+      console.log('👉 CLIENT 3. In while loop', { fileIndex, urlsFetchedUpTo: this.urlsFetchedUpTo })
       const batchStart = this.urlsFetchedUpTo
       if (!this.urlFetchInFlight.has(batchStart)) {
+        console.log('👉 CLIENT 4. Starting new URL fetch batch', { batchStart })
         const p = this._doFetchUrlsBatch(batchStart).finally(() => {
+          console.log('👉 CLIENT 5. URL fetch batch finally', { batchStart })
           this.urlFetchInFlight.delete(batchStart)
         })
         this.urlFetchInFlight.set(batchStart, p)
+      } else {
+        console.log('👉 CLIENT 4b. URL fetch already in flight', { batchStart })
       }
-      await this.urlFetchInFlight.get(batchStart)!
+      console.log('👉 CLIENT 6. About to await URL fetch', { batchStart })
+      const existingPromise = this.urlFetchInFlight.get(batchStart)
+      if (!existingPromise) {
+        console.log('👉 CLIENT 6b. ERROR: Promise missing from map!', { batchStart })
+        throw new Error(`URL fetch promise missing for batch ${batchStart}`)
+      }
+      await existingPromise
+      console.log('👉 CLIENT 7. URL fetch await done', { batchStart })
     }
+    console.log('👉 CLIENT 8. ensureUrls COMPLETE', { fileIndex })
   }
 
   private async _doFetchUrlsBatch(from: number): Promise<void> {
-    if (from >= this.total) return
-    await this.ensureReserved(from + URL_BATCH_SIZE - 1)
-
+    console.log('👉 CLIENT 10. _doFetchUrlsBatch START', { from, total: this.total })
+    if (from >= this.total) {
+      console.log('👉 CLIENT 11. from >= total, returning early')
+      return
+    }
+    console.log('👉 CLIENT 12. About to ensureReserved for URL batch')
     const count = Math.min(URL_BATCH_SIZE, this.total - from)
+    await this.ensureReserved(from + count - 1)
+    console.log('👉 CLIENT 13. ensureReserved done for URL batch')
+
+    console.log('👉 CLIENT 14. Building requests', { count })
     const requests: { bucket: 'originals' | 'previews' | 'watermarked'; path: string; contentType: string }[] = []
     const jobs: ActiveJob[] = []
 
@@ -299,12 +321,15 @@ class BatchPipeline {
       )
     }
 
+    console.log('👉 CLIENT 15. About to call createR2UploadUrls', { requestCount: requests.length })
     const urls = await createR2UploadUrls(this.galleryId, requests)
+    console.log('👉 CLIENT 16. createR2UploadUrls returned', { urlCount: urls.length })
     jobs.forEach((job, i) => {
       this.urlMap.set(job.photoId, [urls[i * 3]!, urls[i * 3 + 1]!, urls[i * 3 + 2]!])
     })
 
     this.urlsFetchedUpTo = from + count
+    console.log('👉 CLIENT 17. _doFetchUrlsBatch COMPLETE', { urlsFetchedUpTo: this.urlsFetchedUpTo })
   }
 
   prefetchAhead(currentIndex: number): void {
@@ -328,16 +353,23 @@ export async function uploadGalleryPhotosWithQueue(
   onProgress: (progress: GalleryUploadProgress) => void,
   callbacks?: GalleryUploadCallbacks
 ): Promise<GalleryUploadResult> {
+  console.log('👉 CLIENT 0. uploadGalleryPhotosWithQueue START', { galleryId, fileCount: files.length })
   const total = files.length
   if (total === 0) return { ok: false, uploaded: 0, message: 'לא נבחרו תמונות' }
 
   const releaseWakeLock = await requestUploadWakeLock()
 
   const pipeline = new BatchPipeline(userId, galleryId, files, callbacks)
+  console.log('👉 CLIENT 0.5. BatchPipeline created')
 
   let nextFileIndex = 0
   let completed = 0
   let processed = 0
+
+  // Atomic increment to prevent race conditions between workers
+  function getNextIndex(): number {
+    return nextFileIndex++
+  }
 
   const successes: UploadSuccess[] = []
   const failures: UploadFailure[] = []
@@ -354,15 +386,25 @@ export async function uploadGalleryPhotosWithQueue(
   }
 
   reportProgress('uploading')
+  console.log('👉 CLIENT 0.6. Initial progress reported')
 
   try {
     async function worker() {
+      console.log('👉 CLIENT 100. Worker START')
       for (;;) {
-        const index = nextFileIndex++
-        if (index >= total) return
+        console.log('👉 CLIENT 101. Worker loop iteration')
+        const index = getNextIndex()
+        console.log('👉 CLIENT 102. Got index', { index, total })
+        if (index >= total) {
+          console.log('👉 CLIENT 103. index >= total, worker returning')
+          return
+        }
 
+        console.log('👉 CLIENT 104. About to call ensureUrls', { index })
         await pipeline.ensureUrls(index)
-        pipeline.prefetchAhead(index)
+        console.log('👉 CLIENT 105. ensureUrls done', { index })
+        // Temporarily disable prefetch to prevent race conditions
+        // pipeline.prefetchAhead(index)
 
         await waitWhileTabHidden()
 
@@ -411,9 +453,11 @@ export async function uploadGalleryPhotosWithQueue(
       }
     }
 
+    console.log('👉 CLIENT 200. About to start workers', { concurrency: Math.min(UPLOAD_CONCURRENCY, total) })
     await Promise.all(
       Array.from({ length: Math.min(UPLOAD_CONCURRENCY, total) }, () => worker())
     )
+    console.log('👉 CLIENT 201. All workers done')
 
     if (successes.length > 0) {
       reportProgress('registering')

@@ -107,12 +107,16 @@ export async function processImageFile(
   const img = await loadImage(file)
   const previewCanvas = resizeCanvas(img, MAX_PREVIEW_SIZE)
   const preview = await canvasToBlob(previewCanvas, PREVIEW_QUALITY)
+  previewCanvas.width = 0
+  previewCanvas.height = 0
 
   const watermarkedCanvas = resizeCanvas(img, MAX_PREVIEW_SIZE)
   if (watermarkText?.trim()) {
     applyWatermark(watermarkedCanvas, watermarkText.trim())
   }
   const watermarked = await canvasToBlob(watermarkedCanvas, WATERMARK_QUALITY)
+  watermarkedCanvas.width = 0
+  watermarkedCanvas.height = 0
 
   return { preview, watermarked }
 }
@@ -155,5 +159,8 @@ export async function applyWatermarkToBlob(
   if (!ctx) throw new Error('Canvas not supported')
   ctx.drawImage(img, 0, 0)
   applyWatermark(canvas, text)
-  return canvasToBlob(canvas, WATERMARK_QUALITY)
+  const blob = await canvasToBlob(canvas, WATERMARK_QUALITY)
+  canvas.width = 0
+  canvas.height = 0
+  return blob
 }
