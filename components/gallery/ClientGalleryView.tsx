@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import { ClientPhotoMasonry } from '@/components/gallery/ClientPhotoMasonry'
 import {
@@ -17,6 +18,7 @@ import {
   selectionStorageKey,
   type ClientSelectionPayload,
 } from '@/lib/gallery-selection'
+import { resolveMediaUrl } from '@/lib/r2/storage'
 
 type ClientGalleryViewProps = {
   gallery: ClientGalleryData
@@ -60,6 +62,9 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const [items, setItems] = useState(photos)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
+  const [logoImageUrl, setLogoImageUrl] = useState<string | null>(null)
+  const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null)
 
   const showEdited = items.some((p) => p.edited_signed_url)
   const [tab, setTab] = useState(() => {
@@ -80,6 +85,22 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
       // ignore invalid draft data
     }
   }, [canSelect, gallery.id, photos])
+
+  useEffect(() => {
+    async function loadBrandingImages() {
+      const heroPath = gallery.hero_desktop_url || gallery.hero_mobile_url
+      if (heroPath) {
+        setHeroImageUrl(await resolveMediaUrl('branding', heroPath))
+      }
+      if (gallery.logo_url) {
+        setLogoImageUrl(await resolveMediaUrl('branding', gallery.logo_url))
+      }
+      if (gallery.about_image_url) {
+        setAboutImageUrl(await resolveMediaUrl('branding', gallery.about_image_url))
+      }
+    }
+    loadBrandingImages()
+  }, [gallery.hero_desktop_url, gallery.hero_mobile_url, gallery.logo_url, gallery.about_image_url])
 
   useEffect(() => {
     if (!canSelect) return
@@ -147,8 +168,48 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   }
 
   return (
-    <div className="min-h-screen pb-16" dir="rtl">
-      <header className="border-b border-[--border] px-4 py-6 text-center">
+    <div
+      className="min-h-screen pb-16"
+      dir="rtl"
+      data-theme={gallery.selected_theme}
+      style={{ '--client-accent': gallery.accent_color } as React.CSSProperties}
+    >
+      {/* Hero Section */}
+      {heroImageUrl && (
+        <div className="relative h-64 w-full overflow-hidden sm:h-96 lg:h-[500px]">
+          <Image
+            src={heroImageUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <div className="text-center text-white">
+              {logoImageUrl && (
+                <div className="mb-4 flex justify-center">
+                  <Image
+                    src={logoImageUrl}
+                    alt="Logo"
+                    width={120}
+                    height={120}
+                    className="h-20 w-20 rounded-full object-contain"
+                  />
+                </div>
+              )}
+              <p className="text-lg font-medium">
+                {gallery.studio_name ?? 'Studio Gallery'}
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold sm:text-4xl lg:text-5xl">
+                {gallery.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className={`border-b border-[--border] px-4 py-6 text-center ${!gallery.hero_desktop_url && !gallery.hero_mobile_url ? '' : 'hidden'}`}>
         <p className="text-sm text-[--muted]">
           {gallery.studio_name ?? 'Studio Gallery'}
         </p>
@@ -219,6 +280,61 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
           selections={buildSelections(items)}
         />
       ) : null}
+
+      {/* About Section */}
+      {(gallery.about_text || aboutImageUrl || gallery.stat_projects > 0 || gallery.stat_clients > 0 || gallery.stat_experience_years > 0) && (
+        <section className="mx-auto mt-12 max-w-5xl px-4 py-8">
+          <div className="grid gap-8 md:grid-cols-2">
+            {aboutImageUrl && (
+              <div className="relative aspect-square overflow-hidden rounded-xl">
+                <Image
+                  src={aboutImageUrl}
+                  alt="About"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+            )}
+            <div className={`flex flex-col justify-center ${aboutImageUrl ? '' : 'md:col-span-2'}`}>
+              {gallery.about_text && (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-2xl font-semibold">אודות</h2>
+                  <p className="text-sm leading-relaxed text-[--muted] whitespace-pre-line">
+                    {gallery.about_text}
+                  </p>
+                </div>
+              )}
+              <div className="grid gap-4 sm:grid-cols-3">
+                {gallery.stat_projects > 0 && (
+                  <div className="rounded-lg border border-[--border] p-4 text-center">
+                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                      {gallery.stat_projects}
+                    </p>
+                    <p className="mt-1 text-sm text-[--muted]">פרויקטים</p>
+                  </div>
+                )}
+                {gallery.stat_clients > 0 && (
+                  <div className="rounded-lg border border-[--border] p-4 text-center">
+                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                      {gallery.stat_clients}
+                    </p>
+                    <p className="mt-1 text-sm text-[--muted]">לקוחות</p>
+                  </div>
+                )}
+                {gallery.stat_experience_years > 0 && (
+                  <div className="rounded-lg border border-[--border] p-4 text-center">
+                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                      {gallery.stat_experience_years}
+                    </p>
+                    <p className="mt-1 text-sm text-[--muted]">שנות ניסיון</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <Lightbox
         photos={items}

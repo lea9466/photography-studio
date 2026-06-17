@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>S Studio Gallery - הגדרות אתר</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#f9b4c6",
+                    "secondary-fixed-dim": "#ffb0c8",
+                    "on-tertiary": "#ffffff",
+                    "surface-container-high": "#ebe7e9",
+                    "surface-container-low": "#f7f2f4",
+                    "outline-variant": "#c9c5cd",
+                    "tertiary-fixed": "#ffd9e1",
+                    "surface-dim": "#ddd9db",
+                    "primary-fixed": "#e5dff9",
+                    "outline": "#79767d",
+                    "on-secondary-fixed": "#3b051d",
+                    "on-tertiary-fixed": "#350d1c",
+                    "error-container": "#ffdad6",
+                    "on-surface": "#1c1b1d",
+                    "on-secondary-fixed-variant": "#723149",
+                    "background": "#fdf8fa",
+                    "on-error-container": "#93000a",
+                    "inverse-primary": "#c9c3dc",
+                    "primary": "#100d1f",
+                    "surface-container": "#f1edef",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#313032",
+                    "surface-bright": "#fdf8fa",
+                    "surface-container-highest": "#e5e1e3",
+                    "on-secondary-container": "#7c3951",
+                    "secondary": "#8e4860",
+                    "on-tertiary-fixed-variant": "#693747",
+                    "on-primary-container": "#8d89a0",
+                    "on-tertiary-container": "#b87a8b",
+                    "inverse-on-surface": "#f4f0f1",
+                    "secondary-container": "#ffa8c3",
+                    "surface-tint": "#605c71",
+                    "on-primary": "#ffffff",
+                    "primary-fixed-dim": "#c9c3dc",
+                    "secondary-fixed": "#ffd9e2",
+                    "on-surface-variant": "#48464c",
+                    "on-primary-fixed-variant": "#484459",
+                    "on-background": "#1c1b1d",
+                    "primary-container": "#252235",
+                    "on-secondary": "#ffffff",
+                    "surface": "#fdf8fa",
+                    "tertiary-container": "#401625",
+                    "surface-variant": "#e5e1e3",
+                    "on-error": "#ffffff",
+                    "tertiary": "#25020f",
+                    "on-primary-fixed": "#1c192c",
+                    "brand-burgundy": "#7D3A52",
+                    "brand-burgundy-light": "#F0ACBE"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "12px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "xs": "4px",
+                    "xxl": "64px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "margin-desktop": "40px",
+                    "md": "16px",
+                    "margin-mobile": "16px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "title-md": ["Hanken Grotesk"],
+                    "label-sm": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Hanken Grotesk', sans-serif; background-color: #fdf8fa; color: #1c1b1d; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .hairline-border { border: 1px solid #EBEBEB; }
+        .soft-shadow { box-shadow: 0px 4px 20px rgba(37, 34, 53, 0.05); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c9c5cd; border-radius: 10px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #7D3A52 !important; box-shadow: 0 0 0 2px rgba(240, 172, 190, 0.2); }
+    </style>
+</head>
+<body class="overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- NavigationDrawer (Right Aligned) -->
+<aside class="fixed inset-y-0 right-0 w-72 z-50 bg-surface border-l border-outline-variant shadow-lg flex flex-col h-full p-4 gap-2 text-right">
+<div class="mb-10 px-4 py-2">
+<span class="font-xl text-xl font-bold text-primary">S Studio Gallery</span>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-base text-base">דאשבורד</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="collections">collections</span>
+<span class="font-base text-base">גלריות</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-base text-base">לקוחות</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="redeem">redeem</span>
+<span class="font-base text-base">חבילות צילום</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container/20 text-primary font-bold rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-base text-base">הגדרות</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-container-high transition-all rounded-lg cursor-pointer" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="font-base text-base">פרופיל</span>
+</a>
+</nav>
+<div class="mt-auto px-4 py-4 border-t border-outline-variant/30">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-brand-burgundy/10 flex items-center justify-center text-brand-burgundy font-bold">
+                        DS
+                    </div>
+<div class="text-right">
+<p class="text-sm font-bold text-primary">דניאל סטודיו</p>
+<p class="text-xs text-on-surface-variant">מנוי Pro</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="mr-72 flex-1 flex flex-col h-full bg-background relative custom-scrollbar overflow-y-auto">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-40 bg-surface border-b border-outline-variant flex flex-row-reverse justify-between items-center px-margin-desktop py-4">
+<div class="flex items-center gap-4">
+<button class="bg-brand-burgundy text-on-primary px-6 py-2.5 rounded-xl font-label-sm text-label-sm active:scale-95 transition-all shadow-sm">
+                        שמור שינויים
+                    </button>
+</div>
+<div class="text-right">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">הגדרות אתר</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">ניהול זהות המותג ותוכן האתר שלך</p>
+</div>
+</header>
+<div class="p-margin-desktop space-y-10 max-w-5xl mx-auto w-full">
+<!-- Section 1: Business Details -->
+<section class="space-y-6">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-brand-burgundy" data-icon="business_center">business_center</span>
+<h2 class="font-title-md text-title-md text-primary">פרטי העסק</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">שם העסק</label>
+<input class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md" type="text" value="דניאל סטודיו לצילום"/>
+</div>
+<div class="space-y-2 text-left" dir="ltr">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1 text-right">כתובת אתר (Slug)</label>
+<div class="flex items-center w-full bg-white hairline-border rounded-xl overflow-hidden">
+<span class="bg-surface-container-low px-3 py-3 text-on-surface-variant text-sm border-r border-outline-variant">gallery.studio/</span>
+<input class="flex-1 border-none py-3 px-3 text-body-md font-body-md focus:ring-0" type="text" value="daniel-photography"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">טלפון ליצירת קשר</label>
+<input class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md" type="tel" value="054-1234567"/>
+</div>
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">אימייל רשמי</label>
+<input class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md" type="email" value="contact@danielstudio.co.il"/>
+</div>
+</div>
+</section>
+<!-- Section 2: Website Content -->
+<section class="space-y-6">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-brand-burgundy" data-icon="web">web</span>
+<h2 class="font-title-md text-title-md text-primary">תוכן האתר</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Hero Desktop -->
+<div class="space-y-3">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">תמונת הירו (דסקטופ)</label>
+<div class="relative group aspect-video bg-surface-container-highest rounded-xl overflow-hidden hairline-border cursor-pointer transition-all hover:border-brand-burgundy">
+<img class="w-full h-full object-cover" data-alt="A sophisticated photography studio desktop hero image showcasing a high-end camera setup in a minimalist, sun-drenched architectural space with clean lines and warm gray tones. The mood is professional and elegant, perfectly aligned with a luxury brand aesthetic. Soft morning light creates gentle shadows on white textured walls, emphasizing a sense of high-end editorial clarity and artistic precision." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtjTUgZrywYpAcSqZ1zAURd4aCq7IV7AG0wSLgx4F1-fTZl-2cOftwu_6BgF9gntZmB16Tj1TJ1R3qAWV2cpiq0l9P-w6ZjTOdPtrCaWhjXEKiXou9bwm7JSh3s0_Y8oqfC1OxJcyZU1NiTdpbyHO-Pg2Kk4CR5COtd3aO7xWmAXHJCBp7djlQdX_He7k-GSWaMtrAhZAX2N0V5QBJ2G7q-zggFjnJU5sU4qbAJO3NpTwD3Z8wALGtejk3gpqSSklVe4RyOWb8qSJX"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="text-white font-label-sm">החלף תמונה</span>
+</div>
+</div>
+</div>
+<!-- Hero Mobile -->
+<div class="space-y-3">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">תמונת הירו (מובייל)</label>
+<div class="relative group aspect-[9/16] bg-surface-container-highest rounded-xl overflow-hidden hairline-border max-w-[200px] mx-auto cursor-pointer transition-all hover:border-brand-burgundy">
+<img class="w-full h-full object-cover" data-alt="A vertical, atmospheric portrait photography hero image optimized for mobile screens. The composition features a professional camera lens reflecting a soft, warm burgundy glow from studio lighting. The background is a clean, minimalist white studio setting with subtle texture. The overall aesthetic is modern, high-end, and focuses on the precision of the photographic craft in a boutique studio environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBi1dyNOk0U_nPrZiK6_13-71y3eHnc8LGnTt87J_RoDHO102mByWLXPbUTh4WCYXWpNt74Iyfqv9LB3Z3x2C0gFQ_LoY6LNW3AK07x64FfNUFlt-nRstW3jFlKUOc9wDrC16eukF2FWv4rHy2GESDvW7QI62gmJ5KHMGD7NkOdvVwLWaeRHn9bIsAtuA6QQGc30dwzAIXGBb79he_V0dTyYtb9VWCKAvP_hgIEVeWRUDR2yOD61PEioTQzI-IymBnpRx-nTANu-GX4"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="text-white font-label-sm">החלף תמונה</span>
+</div>
+</div>
+</div>
+<!-- About Section Image -->
+<div class="space-y-3">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">תמונת "אודות"</label>
+<div class="relative group aspect-square bg-surface-container-highest rounded-xl overflow-hidden hairline-border cursor-pointer transition-all hover:border-brand-burgundy">
+<img class="w-full h-full object-cover" data-alt="A clean and artistic profile image of a professional photographer in a minimalist studio environment. The photographer is dressed in high-end, neutral tones, holding a camera against a soft, cream-colored backdrop. The lighting is diffused and natural, highlighting a sophisticated and approachable professional identity. The color palette is composed of warm grays and subtle burgundy accents, maintaining a consistent boutique studio feel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBHQM_5dWIFEbiV8k676ZySn2jCcRA4bEM9e9Ank0llUrvWpr1PHVDJuN7KwlZ9nnwxQ63WHwlSRJavSZ4rqkzFm_NGZSiPDL371spZRnfelLRHRbe6iGOQTwkD77SUaHIsDXF-qHLOd2iZX1-2I1b_x21g0wld4-A8XjGWiyqAYQ2tmBB0M2bE5R9etuS2H67XP0cj52aF07IbK4uBUmFrYLRZsy6H5OQrCv37rjRhBw6s7YFlf8qikW4ku5KMNRSE78jEZNKOx_i"/>
+<div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="text-white font-label-sm">החלף תמונה</span>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-2 pt-4">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">טקסט אודות העסק</label>
+<textarea class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md resize-none" rows="4">סטודיו דניאל מתמחה בצילום אומנותי, אופנה ואירועים עסקיים. עם ניסיון של מעל עשור, אנחנו מביאים ראייה ייחודית לכל פריים, תוך דגש על מינימליזם, אור טבעי ודיוק קומפוזיציוני. האתר שלנו הוא חלון הראווה ליצירות שלנו ולרגעים המיוחדים של לקוחותינו.</textarea>
+</div>
+</section>
+<!-- Section 3: Branding & Design -->
+<section class="space-y-6">
+<div class="flex items-center gap-2 border-b border-outline-variant pb-2">
+<span class="material-symbols-outlined text-brand-burgundy" data-icon="palette">palette</span>
+<h2 class="font-title-md text-title-md text-primary">מיתוג ועיצוב</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="space-y-4">
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">שם הצלם/ת</label>
+<input class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md" type="text" value="דניאל כהן"/>
+</div>
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">צבע מותג ראשי</label>
+<div class="flex items-center gap-3 bg-white hairline-border rounded-xl px-4 py-2">
+<input class="w-10 h-10 rounded-lg border-none cursor-pointer bg-transparent" type="color" value="#7D3A52"/>
+<input class="flex-1 border-none focus:ring-0 text-body-md font-body-md tracking-wider" type="text" value="#7D3A52"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">ערכת נושא מועדפת</label>
+<select class="w-full bg-white hairline-border rounded-xl px-4 py-3 text-body-md font-body-md appearance-none">
+<option>Achromatic Minimalist (White &amp; Gray)</option>
+<option>Deep Studio (Dark Mode)</option>
+<option>Warm Vintage (Beige &amp; Sepia)</option>
+<option>Editorial Bold (High Contrast)</option>
+</select>
+</div>
+</div>
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm text-on-surface-variant px-1">לוגו סטודיו</label>
+<div class="h-full min-h-[160px] flex flex-col items-center justify-center bg-white hairline-border rounded-xl border-dashed border-2 border-outline-variant hover:border-brand-burgundy transition-colors cursor-pointer group">
+<div class="p-6 text-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant group-hover:text-brand-burgundy mb-2 transition-colors" data-icon="upload_file">upload_file</span>
+<p class="text-body-md font-body-md text-on-surface-variant">גרור לוגו או לחץ להעלאה</p>
+<p class="text-xs text-outline mt-1">PNG, SVG (Transparent background recommended)</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Status Summary (Bento-lite card) -->
+<div class="bg-surface-container-low p-6 rounded-xl hairline-border flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+<span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<p class="font-title-md text-primary">האתר שלך באוויר</p>
+<p class="text-sm text-on-surface-variant">כל השינויים מסונכרנים בזמן אמת לכתובת הציבורית שלך.</p>
+</div>
+</div>
+<button class="bg-white hairline-border text-primary px-5 py-2 rounded-xl text-sm font-bold hover:bg-surface-container-highest transition-colors">
+                        צפה באתר
+                    </button>
+</div>
+<div class="h-32"></div> <!-- Spacer for scrolling -->
+</div>
+<!-- Sticky Bottom FAB (Mobile-Desktop Hybrid Check) -->
+<div class="fixed bottom-10 left-10 z-50">
+<button class="w-16 h-16 bg-brand-burgundy text-white rounded-full shadow-lg flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="help">help</span>
+</button>
+</div>
+</main>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+        document.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('focus', () => {
+                // Focus interaction logic if needed
+            });
+        });
+        
+        // Simulate Save Changes animation
+        const saveBtn = document.querySelector('header button');
+        saveBtn.addEventListener('click', () => {
+            const originalText = saveBtn.innerText;
+            saveBtn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm" data-icon="progress_activity">progress_activity</span> שומר...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                saveBtn.innerHTML = '<span class="material-symbols-outlined text-sm" data-icon="check">check</span> נשמר!';
+                saveBtn.classList.replace('bg-brand-burgundy', 'bg-green-600');
+                
+                setTimeout(() => {
+                    saveBtn.innerText = originalText;
+                    saveBtn.classList.replace('bg-green-600', 'bg-brand-burgundy');
+                    saveBtn.disabled = false;
+                }, 2000);
+            }, 1200);
+        });
+    </script>
+</body></html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-progress {
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .client-card-radio:checked + .client-card-ui {
+            border-color: #7D3A52;
+            background-color: rgba(255, 168, 195, 0.1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-fixed": "#ffd9e2",
+                      "primary-fixed-dim": "#c9c3dc",
+                      "surface-dim": "#ddd9db",
+                      "on-secondary-container": "#7c3951",
+                      "on-secondary": "#ffffff",
+                      "on-primary-fixed": "#1c192c",
+                      "inverse-on-surface": "#f4f0f1",
+                      "on-error": "#ffffff",
+                      "on-surface": "#1c1b1d",
+                      "outline": "#79767d",
+                      "on-secondary-fixed-variant": "#723149",
+                      "background": "#fdf8fa",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#484459",
+                      "on-error-container": "#93000a",
+                      "surface-container": "#f1edef",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#8e4860",
+                      "surface-bright": "#fdf8fa",
+                      "secondary-fixed-dim": "#ffb0c8",
+                      "tertiary": "#25020f",
+                      "on-surface-variant": "#48464c",
+                      "surface-variant": "#e5e1e3",
+                      "on-background": "#1c1b1d",
+                      "surface": "#fdf8fa",
+                      "tertiary-container": "#401625",
+                      "outline-variant": "#c9c5cd",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed": "#350d1c",
+                      "inverse-surface": "#313032",
+                      "on-tertiary-container": "#b87a8b",
+                      "primary-fixed": "#e5dff9",
+                      "surface-container-highest": "#e5e1e3",
+                      "tertiary-fixed-dim": "#f9b4c6",
+                      "primary-container": "#252235",
+                      "primary": "#100d1f",
+                      "on-secondary-fixed": "#3b051d",
+                      "on-tertiary-fixed-variant": "#693747",
+                      "surface-container-low": "#f7f2f4",
+                      "tertiary-fixed": "#ffd9e1",
+                      "surface-tint": "#605c71",
+                      "secondary-container": "#ffa8c3",
+                      "on-primary-container": "#8d89a0",
+                      "on-primary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "surface-container-high": "#ebe7e9",
+                      "inverse-primary": "#c9c3dc"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "lg": "24px",
+                      "gutter": "24px",
+                      "xs": "4px",
+                      "xxl": "64px",
+                      "sm": "8px",
+                      "margin-desktop": "40px",
+                      "xl": "32px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Hanken Grotesk"],
+                      "display-lg": ["Hanken Grotesk"],
+                      "headline-lg": ["Hanken Grotesk"],
+                      "title-md": ["Hanken Grotesk"],
+                      "body-md": ["Hanken Grotesk"],
+                      "body-lg": ["Hanken Grotesk"],
+                      "label-sm": ["Hanken Grotesk"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "title-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "body-md": ["14px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- Top Navigation Anchor (Suppressed in Wizard Flow per Logic but Headline used for context) -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16">
+<div class="flex items-center gap-md">
+<button class="material-symbols-outlined text-on-surface cursor-pointer active:scale-95 transition-opacity hover:opacity-80">close</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-bold text-primary">יצירת גלריה חדשה</h1>
+</div>
+<div class="flex items-center gap-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant">שלב 1 מתוך 4</span>
+</div>
+</header>
+<main class="flex-grow pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-5xl mx-auto w-full">
+<!-- Progress Bar Container -->
+<div class="w-full bg-surface-container rounded-full h-1.5 mb-12 overflow-hidden">
+<div class="bg-secondary h-full step-progress" style="width: 25%;"></div>
+</div>
+<section class="grid grid-cols-1 md:grid-cols-12 gap-xl">
+<!-- Header Section -->
+<div class="md:col-span-12 mb-sm">
+<h2 class="font-headline-lg text-headline-lg text-primary mb-xs">בחירת לקוח</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">בחרו לקוח קיים מהרשימה או הוסיפו לקוח חדש לגלריה</p>
+</div>
+<!-- Client Selection Toggle -->
+<div class="md:col-span-12">
+<div class="flex p-1 bg-surface-container-low rounded-xl w-fit mb-lg">
+<button class="px-xl py-sm rounded-lg font-title-md text-title-md transition-all duration-200 bg-surface shadow-sm text-primary" id="btn-existing">לקוח קיים</button>
+<button class="px-xl py-sm rounded-lg font-title-md text-title-md transition-all duration-200 text-on-surface-variant hover:bg-surface-container-high" id="btn-new">לקוח חדש</button>
+</div>
+</div>
+<!-- Existing Clients Grid -->
+<div class="md:col-span-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-md" id="section-existing">
+<!-- Search Box -->
+<div class="col-span-full mb-md relative">
+<span class="material-symbols-outlined absolute right-md top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pr-12 pl-md py-md bg-surface border border-surface-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="חיפוש לקוח לפי שם או אימייל..." type="text"/>
+</div>
+<!-- Client Card 1 -->
+<label class="relative cursor-pointer group">
+<input checked="" class="hidden client-card-radio" name="client_select" type="radio"/>
+<div class="client-card-ui p-lg rounded-xl border border-surface-variant bg-surface transition-all duration-200 hover:shadow-sm flex items-start gap-md">
+<div class="w-12 h-12 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold text-lg">אנ</div>
+<div>
+<p class="font-title-md text-title-md text-primary">אביב נחום</p>
+<p class="font-body-md text-body-md text-on-surface-variant">aviv.n@example.com</p>
+</div>
+</div>
+</label>
+<!-- Client Card 2 -->
+<label class="relative cursor-pointer group">
+<input class="hidden client-card-radio" name="client_select" type="radio"/>
+<div class="client-card-ui p-lg rounded-xl border border-surface-variant bg-surface transition-all duration-200 hover:shadow-sm flex items-start gap-md">
+<div class="w-12 h-12 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold text-lg">מל</div>
+<div>
+<p class="font-title-md text-title-md text-primary">מיה לוי</p>
+<p class="font-body-md text-body-md text-on-surface-variant">maya.l@example.com</p>
+</div>
+</div>
+</label>
+<!-- Client Card 3 -->
+<label class="relative cursor-pointer group">
+<input class="hidden client-card-radio" name="client_select" type="radio"/>
+<div class="client-card-ui p-lg rounded-xl border border-surface-variant bg-surface transition-all duration-200 hover:shadow-sm flex items-start gap-md">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed flex items-center justify-center text-on-tertiary-fixed font-bold text-lg">דכ</div>
+<div>
+<p class="font-title-md text-title-md text-primary">דניאל כהן</p>
+<p class="font-body-md text-body-md text-on-surface-variant">danny.c@example.com</p>
+</div>
+</div>
+</label>
+</div>
+<!-- New Client Form (Hidden Initially) -->
+<div class="md:col-span-8 hidden" id="section-new">
+<form class="space-y-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant pr-xs">שם מלא</label>
+<input class="p-md bg-surface border border-surface-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="ישראל ישראלי" type="text"/>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant pr-xs">מספר טלפון</label>
+<input class="p-md bg-surface border border-surface-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md text-right" dir="ltr" placeholder="050-0000000" type="tel"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant pr-xs">אימייל</label>
+<input class="p-md bg-surface border border-surface-variant rounded-xl focus:ring-2 focus:ring-secondary/20 focus:border-secondary outline-none transition-all font-body-md text-body-md" placeholder="example@studio.com" type="email"/>
+</div>
+<div class="flex items-center gap-sm p-md bg-surface-container-low rounded-xl">
+<input class="w-5 h-5 rounded border-surface-variant text-secondary focus:ring-secondary cursor-pointer" id="notify" type="checkbox"/>
+<label class="font-body-md text-body-md text-on-surface cursor-pointer" for="notify">שלח הזמנה אוטומטית ללקוח במייל עם סיום היצירה</label>
+</div>
+</form>
+</div>
+</section>
+</main>
+<!-- Wizard Footer Actions -->
+<footer class="fixed bottom-0 w-full bg-surface-bright border-t border-surface-variant/50 py-md px-margin-mobile md:px-margin-desktop z-50">
+<div class="max-w-5xl mx-auto flex justify-between items-center">
+<button class="px-xl py-md font-title-md text-title-md text-primary border border-primary rounded-xl hover:bg-surface-container transition-colors active:scale-95">ביטול</button>
+<div class="flex gap-md">
+<button class="px-xxl py-md font-title-md text-title-md bg-secondary text-on-secondary rounded-xl hover:opacity-90 transition-opacity active:scale-95 shadow-sm">המשך לשלב הבא</button>
+</div>
+</div>
+</footer>
+<script>
+        const btnExisting = document.getElementById('btn-existing');
+        const btnNew = document.getElementById('btn-new');
+        const sectionExisting = document.getElementById('section-existing');
+        const sectionNew = document.getElementById('section-new');
+
+        btnExisting.addEventListener('click', () => {
+            sectionExisting.classList.remove('hidden');
+            sectionNew.classList.add('hidden');
+            btnExisting.classList.add('bg-surface', 'shadow-sm', 'text-primary');
+            btnExisting.classList.remove('text-on-surface-variant');
+            btnNew.classList.remove('bg-surface', 'shadow-sm', 'text-primary');
+            btnNew.classList.add('text-on-surface-variant');
+        });
+
+        btnNew.addEventListener('click', () => {
+            sectionExisting.classList.add('hidden');
+            sectionNew.classList.remove('hidden');
+            btnNew.classList.add('bg-surface', 'shadow-sm', 'text-primary');
+            btnNew.classList.remove('text-on-surface-variant');
+            btnExisting.classList.remove('bg-surface', 'shadow-sm', 'text-primary');
+            btnExisting.classList.add('text-on-surface-variant');
+        });
+
+        // Add micro-interactions for input focus
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+    </script>
+</body></html>

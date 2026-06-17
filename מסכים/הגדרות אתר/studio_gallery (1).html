@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "outline": "#79767d",
+                    "on-secondary": "#ffffff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#3b051d",
+                    "on-background": "#1c1b1d",
+                    "primary": "#100d1f",
+                    "surface": "#fdf8fa",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed-variant": "#484459",
+                    "surface-variant": "#e5e1e3",
+                    "surface-dim": "#ddd9db",
+                    "primary-container": "#252235",
+                    "on-primary": "#ffffff",
+                    "on-primary-fixed": "#1c192c",
+                    "inverse-primary": "#c9c3dc",
+                    "primary-fixed": "#e5dff9",
+                    "on-surface": "#1c1b1d",
+                    "background": "#fdf8fa",
+                    "secondary": "#8e4860",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#ffd9e2",
+                    "on-tertiary-fixed": "#350d1c",
+                    "outline-variant": "#c9c5cd",
+                    "surface-container": "#f1edef",
+                    "inverse-surface": "#313032",
+                    "on-secondary-fixed-variant": "#723149",
+                    "surface-container-low": "#f7f2f4",
+                    "on-tertiary-container": "#b87a8b",
+                    "on-tertiary-fixed-variant": "#693747",
+                    "surface-bright": "#fdf8fa",
+                    "primary-fixed-dim": "#c9c3dc",
+                    "tertiary-fixed-dim": "#f9b4c6",
+                    "tertiary": "#25020f",
+                    "on-surface-variant": "#48464c",
+                    "surface-container-highest": "#e5e1e3",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#ffa8c3",
+                    "on-secondary-container": "#7c3951",
+                    "on-primary-container": "#8d89a0",
+                    "inverse-on-surface": "#f4f0f1",
+                    "surface-tint": "#605c71",
+                    "tertiary-container": "#401625",
+                    "secondary-fixed-dim": "#ffb0c8",
+                    "tertiary-fixed": "#ffd9e1",
+                    "error-container": "#ffdad6",
+                    "surface-container-high": "#ebe7e9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "8px",
+                    "xl": "12px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "sm": "8px",
+                    "lg": "24px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "40px",
+                    "gutter": "24px",
+                    "xs": "4px",
+                    "xxl": "64px",
+                    "md": "16px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "label-sm": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "headline-lg": ["Hanken Grotesk"],
+                    "title-md": ["Hanken Grotesk"],
+                    "headline-lg-mobile": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "body-md": ["Hanken Grotesk"]
+            },
+            "fontSize": {
+                    "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "title-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #fdf8fa;
+            color: #1c1b1d;
+            font-family: 'Hanken Grotesk', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+        }
+        .custom-shadow {
+            box-shadow: 0px 4px 20px rgba(37, 34, 53, 0.05);
+        }
+        .hairline-border {
+            border: 1px solid #EBEBEB;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #7D3A52 !important;
+            box-shadow: 0 0 0 2px rgba(240, 172, 190, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="flex min-h-screen">
+<!-- Navigation Drawer (Desktop) -->
+<aside class="hidden md:flex flex-col h-full bg-surface dark:bg-surface border-l border-outline-variant w-[280px] fixed right-0 top-0 z-40">
+<div class="px-lg py-xl">
+<h1 class="font-headline-2xl text-headline-2xl font-semibold text-primary">Studio Gallery</h1>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-base text-body-base">דאשבורד</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">photo_library</span>
+<span class="font-body-base text-body-base">גלריות</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-base text-body-base">לקוחות</span>
+</a>
+<a class="bg-primary-container text-primary border-r-2 border-primary flex items-center gap-md px-lg py-md active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-base text-body-base">הגדרות</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-body-base text-body-base">פרופיל</span>
+</a>
+</nav>
+</aside>
+<!-- Top App Bar (Mobile) -->
+<header class="md:hidden flex flex-row-reverse justify-between items-center px-margin-mobile h-16 w-full fixed top-0 z-50 bg-surface border-b border-outline-variant">
+<span class="font-headline-2xl text-headline-2xl font-semibold text-primary">Studio Gallery</span>
+<button class="material-symbols-outlined text-primary cursor-pointer active:opacity-80">menu</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="Sara Cohen" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZRu6-DNB_094DtReVVvBP9oE9I6TRmG3zBvNTO-sbMPq2P8scFJUfN1UaZ8vJLBD0DeV9sWH_kjf2FP0ZSETiBMpY-d4jO8sHLGe2uETqJE_Y1zcrnpJq71HwYrCpq6HzM4FIJSgUv57KGiYdcq56W4at_tKNo--7DI-jgjn9OjTaTWx_V9mlpUbujSslfkfGPzFlHte2VzxBroVZUwpE9ss1er0I-7CocAEFzcKQ1aCN-R3o6336Ua-GvdWZUiQhssWCYv_IEWfL"/>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 md:mr-[280px] pt-20 md:pt-0 p-margin-mobile md:p-margin-desktop bg-background">
+<div class="max-w-4xl mx-auto">
+<!-- Header Section -->
+<header class="mb-xl flex items-center justify-between">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary md:block hidden">הגדרות אתר</h2>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-primary md:hidden">הגדרות אתר</h2>
+<p class="text-on-surface-variant font-body-md text-body-md mt-xs">נהל את זהות המותג והגדרות האתר שלך</p>
+</div>
+<button class="hidden md:flex items-center gap-xs px-md py-sm bg-secondary text-on-secondary rounded-xl font-label-sm text-label-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+                    שמירת שינויים
+                </button>
+</header>
+<div class="space-y-gutter"><!-- Business Details -->
+<section class="bg-surface-container-lowest hairline-border rounded-xl p-lg custom-shadow">
+<h3 class="font-title-md text-title-md text-primary mb-lg border-b border-outline-variant pb-sm">פרטי העסק</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">שם עסק</label>
+<input class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" type="text" value="Studio Gallery"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">סלאג (Slug)</label>
+<input class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" type="text" value="studio-gallery"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">טלפון</label>
+<input class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" type="tel" value="050-0000000"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">אימייל</label>
+<input class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" type="email" value="sara.cohen@studiogallery.co.il"/>
+</div>
+</div>
+</section>
+<!-- Content Management -->
+<section class="bg-surface-container-lowest hairline-border rounded-xl p-lg custom-shadow">
+<h3 class="font-title-md text-title-md text-primary mb-lg border-b border-outline-variant pb-sm">תוכן האתר</h3>
+<div class="space-y-md">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">תמונת הרו דסקטופ</label>
+<div class="flex items-center gap-md p-md border border-dashed border-outline-variant rounded-xl bg-surface">
+<span class="material-symbols-outlined text-outline">desktop_windows</span>
+<span class="text-on-surface-variant font-body-md text-body-md flex-1">בחר תמונה</span>
+<button class="text-secondary font-label-sm text-label-sm">העלה</button>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">תמונת הרו מובייל</label>
+<div class="flex items-center gap-md p-md border border-dashed border-outline-variant rounded-xl bg-surface">
+<span class="material-symbols-outlined text-outline">smartphone</span>
+<span class="text-on-surface-variant font-body-md text-body-md flex-1">בחר תמונה</span>
+<button class="text-secondary font-label-sm text-label-sm">העלה</button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">תמונת אודות</label>
+<div class="flex items-center gap-md p-md border border-dashed border-outline-variant rounded-xl bg-surface">
+<span class="material-symbols-outlined text-outline">person</span>
+<span class="text-on-surface-variant font-body-md text-body-md flex-1">בחר תמונה</span>
+<button class="text-secondary font-label-sm text-label-sm">העלה</button>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">טקסט אודות</label>
+<textarea class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" rows="3">סטודיו בוטיק לצילום אומנותי...</textarea>
+</div>
+</div>
+</div>
+</section>
+<!-- Branding & Theme -->
+<section class="bg-surface-container-lowest hairline-border rounded-xl p-lg custom-shadow">
+<h3 class="font-title-md text-title-md text-primary mb-lg border-b border-outline-variant pb-sm">מיתוג ועיצוב</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl">
+<div class="space-y-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">שם צלמת</label>
+<input class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md" type="text" value="שרה כהן"/>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">לוגו</label>
+<div class="flex items-center gap-md p-md border border-dashed border-outline-variant rounded-xl bg-surface">
+<span class="material-symbols-outlined text-outline">image</span>
+<span class="text-on-surface-variant font-body-md text-body-md flex-1">העלה לוגו</span>
+<button class="text-secondary font-label-sm text-label-sm">בחר קובץ</button>
+</div>
+</div>
+</div>
+<div class="space-y-md">
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">צבע מותג</label>
+<div class="p-sm border border-outline-variant rounded-xl flex items-center gap-sm">
+<div class="w-8 h-8 rounded-lg bg-[#8e4860]"></div>
+<span class="font-body-md text-body-md">#8E4860</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-xs">ערכת נושא</label>
+<select class="w-full p-md bg-surface border border-outline-variant rounded-xl font-body-md text-body-md">
+<option>Achromatic Studio</option>
+<option>Minimalist Light</option>
+<option>Dark Editorial</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer Actions (Mobile Only) -->
+<div class="md:hidden pt-lg">
+<button class="w-full py-md bg-secondary text-on-secondary rounded-xl font-label-sm text-label-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">save</span>
+    שמירת שינויים
+  </button>
+</div></div>
+<!-- Visual Flare - Subtle Background Interaction -->
+<div class="fixed -bottom-32 -left-32 w-64 h-64 bg-secondary opacity-[0.03] blur-3xl rounded-full pointer-events-none"></div>
+</div>
+</main>
+<script>
+        // Micro-interactions for buttons and inputs
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                button.classList.add('scale-[0.98]');
+            });
+            button.addEventListener('mouseup', () => {
+                button.classList.remove('scale-[0.98]');
+            });
+            button.addEventListener('mouseleave', () => {
+                button.classList.remove('scale-[0.98]');
+            });
+        });
+
+        // Input active states managed by CSS but can be enhanced here
+        const inputs = document.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('z-10');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('z-10');
+            });
+        });
+    </script>
+</body></html>

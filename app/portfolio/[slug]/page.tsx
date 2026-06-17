@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
+import { resolveMediaUrl } from '@/lib/r2/storage'
 import { PackageCard } from '@/components/dashboard/PackageCard'
 
 type PortfolioPageProps = {
@@ -28,11 +29,33 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const admin = createAdminClient()
   const { data: user } = await admin
     .from('users')
-    .select('studio_name, logo_url')
+    .select('studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url, about_text, about_image_url, stat_projects, stat_clients, stat_experience_years')
     .eq('id', gallery.user_id)
     .single()
 
-  const profile = user as { studio_name: string | null; logo_url: string | null } | null
+  const profile = user as {
+    studio_name: string | null
+    logo_url: string | null
+    accent_color: string | null
+    selected_theme: string | null
+    hero_desktop_url: string | null
+    hero_mobile_url: string | null
+    about_text: string | null
+    about_image_url: string | null
+    stat_projects: number | null
+    stat_clients: number | null
+    stat_experience_years: number | null
+  } | null
+
+  const accentColor = profile?.accent_color ?? '#7c3aed'
+  const selectedTheme = profile?.selected_theme ?? 'classic'
+  const heroPath = profile?.hero_desktop_url || profile?.hero_mobile_url
+  const heroImageUrl = heroPath ? await resolveMediaUrl('branding', heroPath) : null
+  const logoImageUrl = profile?.logo_url ? await resolveMediaUrl('branding', profile.logo_url) : null
+  const aboutImageUrl = profile?.about_image_url ? await resolveMediaUrl('branding', profile.about_image_url) : null
+  const statProjects = profile?.stat_projects ?? 0
+  const statClients = profile?.stat_clients ?? 0
+  const statExperienceYears = profile?.stat_experience_years ?? 0
 
   const { data: photos } = await admin
     .from('photos')
@@ -56,8 +79,48 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const packages = await fetchPublicPackages(gallery.user_id)
 
   return (
-    <div className="min-h-screen" dir="rtl">
-      <header className="border-b border-[--border] px-4 py-8 text-center">
+    <div
+      className="min-h-screen"
+      dir="rtl"
+      data-theme={selectedTheme}
+      style={{ '--client-accent': accentColor } as React.CSSProperties}
+    >
+      {/* Hero Section */}
+      {heroImageUrl && (
+        <div className="relative h-64 w-full overflow-hidden sm:h-96 lg:h-[500px]">
+          <Image
+            src={heroImageUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            <div className="text-center text-white">
+              {logoImageUrl && (
+                <div className="mb-4 flex justify-center">
+                  <Image
+                    src={logoImageUrl}
+                    alt="Logo"
+                    width={120}
+                    height={120}
+                    className="h-20 w-20 rounded-full object-contain"
+                  />
+                </div>
+              )}
+              <p className="text-lg font-medium">
+                {profile?.studio_name ?? 'Portfolio'}
+              </p>
+              <h1 className="mt-2 text-3xl font-semibold sm:text-4xl lg:text-5xl">
+                {gallery.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className={`border-b border-[--border] px-4 py-8 text-center ${heroImageUrl ? 'hidden' : ''}`}>
         <p className="text-sm text-[--muted]">
           {profile?.studio_name ?? 'Portfolio'}
         </p>
@@ -99,6 +162,61 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
           ))}
         </div>
         </section>
+
+        {/* About Section */}
+        {(profile?.about_text || aboutImageUrl || statProjects > 0 || statClients > 0 || statExperienceYears > 0) && (
+          <section className="mx-auto max-w-5xl px-4 py-8">
+            <div className="grid gap-8 md:grid-cols-2">
+              {aboutImageUrl && (
+                <div className="relative aspect-square overflow-hidden rounded-xl">
+                  <Image
+                    src={aboutImageUrl}
+                    alt="About"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                </div>
+              )}
+              <div className={`flex flex-col justify-center ${aboutImageUrl ? '' : 'md:col-span-2'}`}>
+                {profile?.about_text && (
+                  <div className="mb-6">
+                    <h2 className="mb-3 text-2xl font-semibold">אודות</h2>
+                    <p className="text-sm leading-relaxed text-[--muted] whitespace-pre-line">
+                      {profile.about_text}
+                    </p>
+                  </div>
+                )}
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {statProjects > 0 && (
+                    <div className="rounded-lg border border-[--border] p-4 text-center">
+                      <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                        {statProjects}
+                      </p>
+                      <p className="mt-1 text-sm text-[--muted]">פרויקטים</p>
+                    </div>
+                  )}
+                  {statClients > 0 && (
+                    <div className="rounded-lg border border-[--border] p-4 text-center">
+                      <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                        {statClients}
+                      </p>
+                      <p className="mt-1 text-sm text-[--muted]">לקוחות</p>
+                    </div>
+                  )}
+                  {statExperienceYears > 0 && (
+                    <div className="rounded-lg border border-[--border] p-4 text-center">
+                      <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
+                        {statExperienceYears}
+                      </p>
+                      <p className="mt-1 text-sm text-[--muted]">שנות ניסיון</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
     </div>
   )

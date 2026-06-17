@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>סטודיו גלרי - סטודיו לצילום מודרני</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Heebo:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        :root {
+            --headline-font: 'Space Grotesk', 'Heebo', sans-serif;
+        }
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+            scroll-behavior: smooth;
+        }
+        .font-headline {
+            font-family: var(--headline-font);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .modern-shadow {
+            box-shadow: 0px 4px 20px rgba(15, 23, 42, 0.05);
+        }
+        
+        /* Motion Effects */
+        @keyframes revealUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-reveal {
+            animation: revealUp 0.6s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+
+        /* Snappy interactions */
+        .hover-scale {
+            transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        
+        .btn-magnetic {
+            transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-magnetic:active {
+            transform: scale(0.96);
+        }
+
+        /* Glassmorphism for Nav */
+        .nav-glass {
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#6366F1",
+                        background: "#F8FAFC",
+                        "on-surface": "#0F172A",
+                        "on-surface-variant": "#475569",
+                        outline: "#94a3b8",
+                        "outline-variant": "#cbd5e1",
+                        surface: "#ffffff",
+                        "surface-dim": "#f1f5f9",
+                        "surface-container": "#f1f5f9",
+                        "surface-variant": "#e2e8f0",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "12px",
+                        "lg": "12px",
+                        "xl": "16px",
+                        "2xl": "24px",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xl": "48px",
+                        "md": "16px",
+                        "xxl": "80px",
+                        "lg": "24px"
+                    }
+                },
+            },
+        }
+    </script>
+
+<meta name="NetsparkQuiltingResult" total-length="24312" removed="0" rules-found="w21132,w33626,w7654,w2676,w3473,w4838,w4839,w5260,w22645,w17173,w33310,w22884,w23108,w33718,w22393,w33224,w3056,w21182,w5513,w9711,w19727,w12860,w12861,w22544,w33108,w18843,w23122,w33719,w20342,w22572,w33633,w33641,w18958,w9033,w22403,w20352,w33441" />
+</head>
+<body class="bg-background text-on-surface overflow-x-hidden">
+<!-- Navigation -->
+<nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent" id="navbar">
+<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="flex items-center gap-sm">
+<span class="font-headline text-2xl font-bold text-on-surface">Studio Gallery</span>
+</div>
+<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#about">אודות</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#portfolio">גלריות</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#pricing">מחירון</a>
+</div>
+<a class="bg-primary text-white px-lg py-sm rounded-lg text-sm font-bold btn-magnetic hover:shadow-lg transition-all" href="#contact">
+            צור קשר
+        </a>
+</div>
+</nav>
+<main class="pt-xxl">
+<!-- Hero Section -->
+<section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center" id="about">
+<div class="flex flex-col gap-md order-2 md:order-1 animate-reveal">
+<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">
+                אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span>
+</h1>
+<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed">
+                אנחנו מאמינים שכל תמונה מספרת סיפור ייחודי. הסטודיו שלנו משלב טכנולוגיה מתקדמת עם עין אמנותית כדי להעניק לכם זכרונות שיישארו לנצח.
+            </p>
+<div class="flex flex-wrap gap-md pt-md">
+<button class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
+                    התחילו עכשיו
+                </button>
+<button class="border border-outline text-on-surface px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-surface-variant transition-all">
+                    לצפייה בגלריה
+                </button>
+</div>
+</div>
+<div class="relative order-1 md:order-2 animate-reveal delay-100">
+<div class="aspect-square rounded-2xl overflow-hidden modern-shadow hover-scale group">
+<img alt="סטודיו לצילום מקצועי" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4UaJN_221LkM5O7WsMGKk7x5sXcm2lPhrwtb9AE9LMc5c6VhG-eIE3k_6Y4TsCMdIr-YpjD3Ogne6Ay4l73F6x6JD-ieJczfbbFHrlbgqyf51R_pHYoOShnnXXCBz3NhyajPBV-tQBv4QBzekynLbSPVn91dINKFIagcA6VZ4CJbZCHXarY2wg_PdDUctCZ-siawu5AhRsjv-65ysq8DvFQ8fDc8FqMu97-lqpKRuAseM97zEod14qR7DJmjuwt-9HVu87jL1sHI"/>
+</div>
+<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10"></div>
+</div>
+</section>
+<!-- Stats/About Summary -->
+<section class="max-w-7xl mx-auto px-lg py-xxl">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal hover-scale">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="photo_camera">photo_camera</span>
+<h3 class="font-headline text-4xl font-bold text-on-surface">+150</h3>
+<p class="text-on-surface-variant font-medium">פרויקטים שהושלמו</p>
+</div>
+<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-100 hover-scale">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="groups">groups</span>
+<h3 class="font-headline text-4xl font-bold text-on-surface">+2,000</h3>
+<p class="text-on-surface-variant font-medium">לקוחות מרוצים</p>
+</div>
+<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-200 hover-scale">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="military_tech">military_tech</span>
+<h3 class="font-headline text-4xl font-bold text-on-surface">12</h3>
+<p class="text-on-surface-variant font-medium">פרסי עיצוב וצילום</p>
+</div>
+</div>
+</section>
+<!-- Portfolio Grid -->
+<section class="py-xxl max-w-7xl mx-auto px-lg" id="portfolio">
+<div class="flex flex-row-reverse justify-between items-end mb-xl gap-md animate-reveal">
+<div class="text-right">
+<h2 class="font-headline text-4xl font-bold mb-xs">העבודות האחרונות שלנו</h2>
+<p class="text-on-surface-variant">מבט קצר אל הרגעים שתפסנו לאחרונה</p>
+</div>
+<button class="text-primary font-bold flex items-center gap-xs hover:gap-sm transition-all group">
+<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                כל הגלריות
+            </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md items-start">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md h-full">
+<div class="aspect-square rounded-xl overflow-hidden group relative animate-reveal">
+<img alt="נוף אדריכלי מינימליסטי" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaPvsH7a4ofQbOBW-hDkvAEGCTC4UgxXtl_IJRjvm9f5k29ns9oj_zuZMJtSH7t6rQVpA_ZM8T6ZPF02aNe8S7RHA_ZO4N1wwDdSVQhiCLCLeyFdJIj97Jk7IWFFHEWRZzWWEoPxoBJdBZn3qAcLepItaT0Jy010pAVhF6uOlhdpt0ysRN8WjH3YrLPssx7YmPG6ezyIlS4amW5O-b7ppqBO_s1cRZJ-eijztLaBgXSdZWO9agtkkVvJl3tOmueCc3YWOHCcm9h6A"/>
+</div>
+<div class="aspect-square rounded-xl overflow-hidden group relative animate-reveal delay-100">
+<img alt="פורטרט מעוצב" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfJ0ZBmGmkyd4coX19T9b9WfWMQ8FXiDlGKyZ-QvYY1ENcblieujsDvSh2qjUYABWtzs0jqZg7L6gbfKyiwGDw-wvngTQ3hiP55q_1evxJNMzM3EL2628286vVcq2pcmSWjwCHD-OHUfmJAh8duqpAX-5vj_Wf2VkXI02Gg-PFBF3Ir4G-6jJHTmZJj4a34xBWn6ips-ZzM668sZNzmPDAgvODa7wmt-tBwtWtQwS-idk-AlY1tsFAxszuVkS2EfmtWTDAuoP5iKY"/>
+</div>
+<div class="col-span-1 sm:col-span-2 aspect-video rounded-xl overflow-hidden group relative animate-reveal delay-200">
+<img alt="נוף טבע" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfEm1bgwOsPp3Xs0QLTSLHfxU1u2-CZTVbcngjTCK75osPyoJk5fEZeOypCZjLx0XeIuxg-1JSe2kCb5LrWiSx8yZuKoHgwXu83iz4FXeR7ovGY-1umDOp2hEjT-109z7agPOa-J70rwL76ZsIF98x4T2ATwKFBndVd6sBQsonO55t2PaPPa68nshQdWcjAs4x6-xTYNV8LOHK7p4m63jni58EVr7fgqF3VXQY4Zgq6WZEytuG92XyisxXijffsGYU5-wqWJs-jy8"/>
+</div>
+</div>
+<div class="h-full animate-reveal delay-300">
+<div class="rounded-xl overflow-hidden h-[400px] md:h-[600px] group relative">
+<img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFPFoakrhhHnt81g8iI-JLQjMqqsjC_0sQY5xvusavgGBuGBxlU5Kuidld8UAxf5mkN5RkUPVaJsguITmuPZ4dv6AI8u8fjqYN9W3RECdPWq3xbf9NNYU9ABZZGMLZlIl6cy6wl19sZt92IFNbKNfiWIB9-OGWFOQucKhn9ga3uprTPv5aFe4sHu0Xqe4tWvC6Wh0Qg3jBeKLHoLh-1ry0tIu7LJXR-_nIwBeWkCHFsuUce7hR4aPkiN88sZpm-9rxOgHrP9bP0aI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
+<p class="text-white font-headline text-2xl translate-y-4 group-hover:translate-y-0 transition-transform duration-300">חתונת שיש מודרנית</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="bg-surface-dim py-xxl" id="pricing">
+<div class="max-w-7xl mx-auto px-lg">
+<div class="text-center mb-xl animate-reveal">
+<h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
+<p class="text-on-surface-variant">בחרו את החבילה המתאימה ביותר עבורכם</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">
+<!-- Basic -->
+<div class="bg-white p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal">
+<div>
+<h3 class="font-headline text-2xl font-bold">בסיסי</h3>
+<div class="flex items-baseline gap-xs mt-sm">
+<span class="font-headline text-3xl font-bold text-primary">₪850</span>
+<span class="text-on-surface-variant text-sm">/ לסשן</span>
+</div>
+</div>
+<ul class="flex flex-col gap-sm flex-grow">
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            שעת צילום אחת
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            20 תמונות ערוכות
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            גלריה דיגיטלית לשיתוף
+                        </li>
+</ul>
+<button class="w-full py-md border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5 transition-all">
+                        הזמינו עכשיו
+                    </button>
+</div>
+<!-- Pro - Featured -->
+<div class="bg-white p-xl rounded-2xl modern-shadow border-2 border-primary flex flex-col gap-md relative transition-all hover:-translate-y-2 animate-reveal delay-100">
+<div class="absolute -top-4 right-1/2 translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                        הפופולרי ביותר
+                    </div>
+<div>
+<h3 class="font-headline text-2xl font-bold">מקצועי</h3>
+<div class="flex items-baseline gap-xs mt-sm">
+<span class="font-headline text-3xl font-bold text-primary">₪1,500</span>
+<span class="text-on-surface-variant text-sm">/ לסשן</span>
+</div>
+</div>
+<ul class="flex flex-col gap-sm flex-grow">
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            3 שעות צילום
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            50 תמונות ערוכות
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            אלבום מודפס (20 עמודים)
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            גיבוי בענן לשנה
+                        </li>
+</ul>
+<button class="w-full py-md bg-primary text-white rounded-lg font-bold btn-magnetic shadow-lg shadow-indigo-100 transition-all">
+                        הזמינו עכשיו
+                    </button>
+</div>
+<!-- Premium -->
+<div class="bg-white p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal delay-200">
+<div>
+<h3 class="font-headline text-2xl font-bold">פרמיום</h3>
+<div class="flex items-baseline gap-xs mt-sm">
+<span class="font-headline text-3xl font-bold text-primary">₪2,800</span>
+<span class="text-on-surface-variant text-sm">/ לסשן</span>
+</div>
+</div>
+<ul class="flex flex-col gap-sm flex-grow">
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            יום צילומים מלא
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            כל חומרי הגלם + 100 ערוכות
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            אלבום פרימיום בכריכת עור
+                        </li>
+<li class="flex items-center gap-sm text-md">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="check_circle">check_circle</span>
+                            צילום וידאו קצר (Highlight)
+                        </li>
+</ul>
+<button class="w-full py-md border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5 transition-all">
+                        הזמינו עכשיו
+                    </button>
+</div>
+</div>
+</div>
+</section>
+<!-- Testimonials -->
+<section class="py-xxl max-w-7xl mx-auto px-lg">
+<h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">מה הלקוחות אומרים</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div class="bg-white p-xl rounded-2xl border border-outline-variant italic text-lg flex gap-md animate-reveal hover-scale modern-shadow">
+<span class="material-symbols-outlined text-primary text-5xl opacity-30" data-icon="format_quote">format_quote</span>
+<div>
+                    "החוויה עם סטודיו גלרי הייתה מדהימה. הם הצליחו לתפוס את האווירה בדיוק כפי שחלמנו. התמונות פשוט יצאו מושלמות."
+                    <div class="not-italic mt-md font-bold text-on-surface">מיכל ורוני אברהם</div>
+</div>
+</div>
+<div class="bg-white p-xl rounded-2xl border border-outline-variant italic text-lg flex gap-md animate-reveal delay-100 hover-scale modern-shadow">
+<span class="material-symbols-outlined text-primary text-5xl opacity-30" data-icon="format_quote">format_quote</span>
+<div>
+                    "סטודיו מקצועי ברמות הגבוהות ביותר. השירות היה אדיב והתוצאה הסופית עלתה על כל הציפיות שלנו. מומלץ בחום!"
+                    <div class="not-italic mt-md font-bold text-on-surface">יונתן כהן, הייטקיסט</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Contact Form Section -->
+<section class="max-w-7xl mx-auto px-lg mb-xxl pb-[120px]" id="contact"><div class="bg-primary rounded-2xl p-xl md:p-xxl text-white animate-reveal">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
+<div class="max-w-md text-right">
+<h2 class="font-headline text-4xl font-bold mb-sm text-white">צרו איתנו קשר</h2>
+<p class="text-lg opacity-90 text-white mb-lg">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או סשן צילומים.</p>
+<div class="flex flex-col gap-md">
+<div class="flex items-center justify-start gap-sm">
+<span class="material-symbols-outlined text-white">call</span>
+<span class="text-white" dir="ltr">050-1234567</span>
+</div>
+<div class="flex items-center justify-start gap-sm">
+<span class="material-symbols-outlined text-white">mail</span>
+<span class="text-white">hello@studiogallery.co.il</span>
+</div>
+<div class="flex items-center justify-start gap-sm">
+<span class="material-symbols-outlined text-white">location_on</span>
+<span class="text-white">תל אביב, ישראל</span>
+</div>
+</div>
+</div>
+<form class="flex flex-col gap-md w-full">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<div class="relative">
+<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
+</div>
+<div class="relative">
+<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
+</div>
+</div>
+<div class="relative">
+<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
+</div>
+<div class="relative">
+<textarea class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
+</div>
+<button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl self-start transition-all" type="submit">
+                        שליחת הודעה
+                    </button>
+</form>
+</div>
+</div></section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container border-t border-outline-variant w-full py-xl pb-[120px]">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
+<div class="flex flex-col items-center md:items-end gap-xs">
+<span class="font-headline text-2xl font-bold text-primary">Studio Gallery</span>
+<p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
+</div>
+<div class="flex flex-col sm:flex-row-reverse gap-lg items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">תקנון</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">פרטיות</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">נגישות</a>
+</div>
+<div class="text-on-surface-variant text-sm text-center">
+            © 2024 סטודיו גלרי. כל הזכויות שמורות.
+        </div>
+<div class="flex gap-md">
+<a aria-label="שיתוף" class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all btn-magnetic" href="#">
+<span class="material-symbols-outlined text-xl">share</span>
+</a>
+<a aria-label="אימייל" class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all btn-magnetic" href="#">
+<span class="material-symbols-outlined text-xl">mail</span>
+</a>
+</div>
+</div>
+</footer>
+<script>
+    // Reveal on scroll observer
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-reveal');
+                entry.target.style.opacity = "1";
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.animate-reveal').forEach(el => revealObserver.observe(el));
+
+    // Navigation scroll effect
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('navbar');
+        if (window.scrollY > 20) {
+            nav.classList.add('nav-glass', 'shadow-sm', 'border-outline-variant');
+            nav.classList.remove('border-transparent');
+        } else {
+            nav.classList.remove('nav-glass', 'shadow-sm', 'border-outline-variant');
+            nav.classList.add('border-transparent');
+        }
+    });
+
+    // Simple Magnetic Effect
+    document.querySelectorAll('.btn-magnetic').forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = `translate(0px, 0px)`;
+        });
+    });
+</script>
+</body></html>

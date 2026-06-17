@@ -4,16 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
-import { QuickAccessActions } from '@/components/dashboard/QuickAccessActions'
 import { Button } from '@/components/ui/button'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
-export default function DashboardPage() {
-  const [userName, setUserName] = useState('משתמש')
+export default function GalleriesPage() {
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
-  const [activeFilter, setActiveFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -22,15 +18,7 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user) {
-        // Fetch user name
-        const { data: userData } = await supabase
-          .from('users')
-          .select('name')
-          .eq('id', user.id)
-          .single()
-        setUserName((userData as any)?.name || 'משתמש')
-
-        // Fetch recent galleries with client details and photo count
+        // Fetch all galleries with client details and photo count
         const { data: galleries } = await supabase
           .from('galleries')
           .select(`
@@ -41,7 +29,6 @@ export default function DashboardPage() {
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
-          .limit(50) // Fetch more to allow filtering
 
         // Transform the data to match the expected format
         const transformedGalleries = (galleries || []).map((gallery: any) => ({
@@ -57,17 +44,6 @@ export default function DashboardPage() {
 
     fetchData()
   }, [])
-
-  // Calculate stats
-  const drafts = recentGalleries.filter(g => g.status === 'draft').length
-  const waiting = recentGalleries.filter(g => g.status === 'selection' || g.status === 'editing').length
-  const sent = recentGalleries.filter(g => g.status === 'sent').length
-  const expired = recentGalleries.filter(g => {
-    if (g.expires_at) {
-      return new Date(g.expires_at) < new Date()
-    }
-    return false
-  }).length
 
   if (loading) {
     return (
@@ -85,10 +61,10 @@ export default function DashboardPage() {
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-[--foreground]">
-            שלום {userName} 👋
+            כל הגלריות
           </h1>
           <p className="text-sm text-[--muted]">
-            הנה מה שקורה בסטודיו שלך היום
+            {recentGalleries.length} גלריות סה״כ
           </p>
         </div>
         <Button 
@@ -102,21 +78,8 @@ export default function DashboardPage() {
         </Button>
       </header>
 
-      {/* Stats Grid */}
-      <StatsCards 
-        drafts={drafts}
-        waiting={waiting}
-        sent={sent}
-        expired={expired}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-      />
-
-      {/* Recent Galleries Table */}
-      <RecentGalleriesTable galleries={recentGalleries} filter={activeFilter} />
-
-      {/* Quick Access Actions */}
-      <QuickAccessActions upcomingMeetings={2} />
+      {/* Galleries Table */}
+      <RecentGalleriesTable galleries={recentGalleries} title="כל הגלריות" />
     </div>
   )
 }

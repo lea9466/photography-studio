@@ -28,9 +28,48 @@ export function UploadDropzone({
 }: UploadDropzoneProps) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
+  const wakeLockRef = useRef<WakeLockSentinel | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] =
     useState<GalleryUploadProgress | null>(null)
+
+  const requestWakeLock = useCallback(async () => {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLockRef.current = await navigator.wakeLock.request('screen')
+      }
+    } catch (err) {
+      console.warn('Wake Lock request failed:', err)
+    }
+  }, [])
+
+  const startSilentAudio = useCallback(() => {
+    try {
+      const audio = new Audio()
+      audio.src =
+        'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA=='
+      audio.loop = true
+      audio.volume = 0.01
+      audio.play().catch(() => {
+        // Audio play failed (likely due to autoplay policy)
+      })
+      audioRef.current = audio
+    } catch (err) {
+      console.warn('Silent audio fallback failed:', err)
+    }
+  }, [])
+
+  const releaseKeepAlive = useCallback(() => {
+    if (wakeLockRef.current) {
+      wakeLockRef.current.release()
+      wakeLockRef.current = null
+    }
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     if (!isUploading) return
@@ -40,9 +79,15 @@ export function UploadDropzone({
       event.returnValue = ''
     }
 
+    requestWakeLock()
+    startSilentAudio()
+
     window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [isUploading])
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      releaseKeepAlive()
+    }
+  }, [isUploading, requestWakeLock, startSilentAudio, releaseKeepAlive])
 
   const uploadFiles = useCallback(
     async (fileList: FileList | File[]) => {

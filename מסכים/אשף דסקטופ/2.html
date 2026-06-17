@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>אשף יצירת גלריה - שלב 2</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #fdf8fa;
+            color: #1c1b1d;
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid #EBEBEB;
+        }
+        .selection-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .selection-card:hover {
+            border-color: #7D3A52;
+            transform: translateY(-2px);
+            box-shadow: 0px 4px 20px rgba(37, 34, 53, 0.05);
+        }
+        .selection-card.active {
+            border-color: #7D3A52;
+            background-color: rgba(125, 58, 82, 0.03);
+            border-width: 1.5px;
+        }
+        .custom-shadow {
+            box-shadow: 0px 4px 20px rgba(37, 34, 53, 0.05);
+        }
+        /* Custom radio hiding */
+        .gallery-radio:checked + .card-content {
+            border-color: #7D3A52;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fdf8fa",
+                        "surface": "#fdf8fa",
+                        "on-primary-fixed": "#1c192c",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#723149",
+                        "primary-fixed-dim": "#c9c3dc",
+                        "primary-fixed": "#e5dff9",
+                        "on-tertiary-fixed": "#350d1c",
+                        "error": "#ba1a1a",
+                        "primary-container": "#252235",
+                        "on-primary-container": "#8d89a0",
+                        "surface-container": "#f1edef",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#313032",
+                        "secondary": "#8e4860",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#ddd9db",
+                        "on-primary-fixed-variant": "#484459",
+                        "inverse-primary": "#c9c3dc",
+                        "background": "#fdf8fa",
+                        "secondary-container": "#ffa8c3",
+                        "on-tertiary-fixed-variant": "#693747",
+                        "surface-container-high": "#ebe7e9",
+                        "surface-tint": "#605c71",
+                        "primary": "#100d1f",
+                        "secondary-fixed-dim": "#ffb0c8",
+                        "on-background": "#1c1b1d",
+                        "outline": "#79767d",
+                        "surface-container-highest": "#e5e1e3",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c9c5cd",
+                        "tertiary-fixed-dim": "#f9b4c6",
+                        "secondary-fixed": "#ffd9e2",
+                        "on-tertiary-container": "#b87a8b",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#3b051d",
+                        "on-surface-variant": "#48464c",
+                        "tertiary-fixed": "#ffd9e1",
+                        "surface-variant": "#e5e1e3",
+                        "surface-container-low": "#f7f2f4",
+                        "on-secondary-container": "#7c3951",
+                        "tertiary-container": "#401625",
+                        "inverse-on-surface": "#f4f0f1",
+                        "tertiary": "#25020f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1c1b1d"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex">
+<!-- Navigation Drawer (Shared Component) -->
+<aside class="flex flex-col h-full bg-surface border-l border-outline-variant w-[280px] fixed right-0 top-0 z-40">
+<div class="px-lg py-xl">
+<h1 class="font-semibold text-primary text-headline-2xl">Studio Gallery</h1>
+</div>
+<nav class="flex-1 space-y-xs">
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200 active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-base">דאשבורד</span>
+</a>
+<a class="bg-primary-container text-primary border-r-2 border-primary flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200 active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="photo_library">photo_library</span>
+<span class="font-body-base">גלריות</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200 active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-base">לקוחות</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200 active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-base">הגדרות</span>
+</a>
+<a class="text-on-surface-variant flex items-center gap-md px-lg py-md hover:bg-surface-container-high transition-colors duration-200 active:scale-[0.98] transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-body-base">פרופיל</span>
+</a>
+</nav>
+<div class="p-lg border-t border-outline-variant">
+<div class="flex items-center gap-md p-sm bg-surface-container-low rounded-xl">
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold">
+                    YM
+                </div>
+<div>
+<p class="text-body-md font-semibold">יוסי מלכה</p>
+<p class="text-xs text-on-surface-variant">צלם אופנה</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="mr-[280px] flex-1 min-h-screen relative overflow-y-auto">
+<!-- Header Section -->
+<header class="h-16 flex items-center justify-between px-margin-desktop border-b border-outline-variant sticky top-0 bg-surface/80 backdrop-blur-md z-30">
+<h2 class="font-headline-lg text-headline-lg text-primary">אשף יצירת גלריה - שלב 2: סוג גלריה</h2>
+<div class="flex items-center gap-md">
+<div class="flex gap-xs items-center">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-8 h-2 rounded-full bg-secondary"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+</div>
+<span class="text-label-sm text-on-surface-variant uppercase tracking-widest">שלב 2 מתוך 4</span>
+</div>
+</header>
+<!-- Gallery Creation Wizard Content -->
+<div class="max-w-5xl mx-auto py-xxl px-margin-desktop">
+<div class="space-y-xl">
+<!-- Section 1: Gallery Name -->
+<section class="space-y-md">
+<div class="flex flex-col gap-xs">
+<label class="font-title-md text-title-md text-on-surface-variant" for="gallery-name">שם הגלריה</label>
+<p class="text-body-md text-on-surface-variant/70">זהו השם שיופיע ללקוחות שלך בראש הדף ובקישור.</p>
+</div>
+<div class="relative max-w-xl">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-xl px-lg py-md text-body-lg focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all outline-none" id="gallery-name" placeholder="למשל: חתונה של דנה ואבי" type="text"/>
+<span class="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline" data-icon="edit">edit</span>
+</div>
+</section>
+<hr class="border-outline-variant"/>
+<!-- Section 2: Gallery Type Selection -->
+<section class="space-y-md">
+<div class="flex flex-col gap-xs">
+<label class="font-title-md text-title-md text-on-surface-variant">בחירת סוג גלריה</label>
+<p class="text-body-md text-on-surface-variant/70">איך הלקוח יתקשר עם התמונות שלך?</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mt-lg">
+<!-- Type 1: Client Selection -->
+<label class="cursor-pointer">
+<input class="hidden peer" name="gallery_type" type="radio" value="selection"/>
+<div class="selection-card h-full p-xl rounded-xl border border-outline-variant flex flex-col gap-md text-right peer-checked:border-secondary peer-checked:bg-secondary/[0.03] peer-checked:ring-1 peer-checked:ring-secondary group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="how_to_reg">how_to_reg</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary">בחירת לקוח</h3>
+<p class="text-body-md text-on-surface-variant leading-relaxed">אידיאלי לתהליכי עבודה. הלקוח יכול לסמן 'לבבות' על תמונות נבחרות לצורך עריכה או הדפסה.</p>
+<div class="mt-auto pt-md flex items-center gap-xs text-secondary font-semibold text-sm">
+<span>הוסף לשלב העריכה</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+</div>
+</div>
+</label>
+<!-- Type 2: Delivery -->
+<label class="cursor-pointer">
+<input checked="" class="hidden peer" name="gallery_type" type="radio" value="delivery"/>
+<div class="selection-card h-full p-xl rounded-xl border border-outline-variant flex flex-col gap-md text-right peer-checked:border-secondary peer-checked:bg-secondary/[0.03] peer-checked:ring-1 peer-checked:ring-secondary group">
+<div class="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center text-white">
+<span class="material-symbols-outlined" data-icon="photo_album">photo_album</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary">מסירת גלריה</h3>
+<p class="text-body-md text-on-surface-variant leading-relaxed">למסירת תמונות סופיות. הלקוח מקבל גישה להורדה ברזולוציה גבוהה ושיתוף עם משפחה וחברים.</p>
+<div class="mt-auto pt-md flex items-center gap-xs text-secondary font-semibold text-sm">
+<span>מוכן למשלוח</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+</div>
+</div>
+</label>
+<!-- Type 3: Portfolio -->
+<label class="cursor-pointer">
+<input class="hidden peer" name="gallery_type" type="radio" value="portfolio"/>
+<div class="selection-card h-full p-xl rounded-xl border border-outline-variant flex flex-col gap-md text-right peer-checked:border-secondary peer-checked:bg-secondary/[0.03] peer-checked:ring-1 peer-checked:ring-secondary group">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined" data-icon="visibility">visibility</span>
+</div>
+<h3 class="font-title-md text-title-md text-primary">תיק עבודות</h3>
+<p class="text-body-md text-on-surface-variant leading-relaxed">גלריה ציבורית להצגת מיטב העבודות שלך. מותאם לקידום מכירות והצגה מרהיבה לקהל הרחב.</p>
+<div class="mt-auto pt-md flex items-center gap-xs text-secondary font-semibold text-sm">
+<span>הצגה לציבור</span>
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+</div>
+</div>
+</label>
+</div>
+</section>
+<!-- Navigation Buttons -->
+<footer class="pt-xxl flex items-center justify-between">
+<button class="px-xl py-md rounded-xl border border-primary text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center gap-sm">
+<span class="material-symbols-outlined" data-icon="chevron_right">chevron_right</span>
+                        חזור
+                    </button>
+<button class="px-xl py-md rounded-xl bg-secondary text-white font-semibold hover:opacity-90 active:scale-95 transition-all custom-shadow flex items-center gap-sm">
+                        המשך לשלב הבא
+                        <span class="material-symbols-outlined" data-icon="chevron_left">chevron_left</span>
+</button>
+</footer>
+</div>
+</div>
+<!-- Decorative Background Element -->
+<div class="fixed bottom-0 left-0 w-1/3 h-1/2 opacity-20 pointer-events-none z-0">
+<div class="w-full h-full bg-gradient-to-tr from-secondary-container to-transparent blur-3xl"></div>
+</div>
+<!-- Image Preview Card (Asymmetric Layout) -->
+<div class="fixed bottom-margin-desktop left-margin-desktop w-64 z-20 hidden xl:block">
+<div class="glass-card p-sm rounded-xl overflow-hidden custom-shadow rotate-3 transform hover:rotate-0 transition-transform duration-500">
+<img alt="Preview" class="w-full h-40 object-cover rounded-lg" data-alt="A professional photography setup in a bright, modern studio. Soft diffused light falls on a minimalist workspace with a high-end camera lens and a high-resolution display showing a beautiful portrait of a woman. The color palette is composed of elegant neutrals with deep burgundy accents, reflecting a luxury brand aesthetic. The atmosphere is quiet, focused, and sophisticated." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCssBr-p2bWDl51N1fKzXjEPtalhkWY0y2NY1pa9DePVJof02UUOCHkOA5DZYkCfZCD7q_cf6jLaEffkuv_KVhvGEHTPhLBNkWMhKxUqnd2IHG6ged9LdFIUf5lOFxj8QuqXlpYCL6OuvCTRCq6Ly4dJk4dWd2kQF6PS_PnmiFl_nmKklpxmbPV_1U2Ofk5UZQFoPDyIsHfctudWWHC5Y5R7ebUy5MKKNRijAfS3UcwbuToCqev6lc2YToyxf634oFcvBBdYYp9IuTk"/>
+<div class="mt-sm px-xs">
+<p class="text-xs font-semibold text-on-surface-variant">תצוגה מקדימה</p>
+<p class="text-[10px] text-on-surface-variant/60">גלריית סטודיו פרימיום</p>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interaction for gallery type selection
+        const radioButtons = document.querySelectorAll('input[name="gallery_type"]');
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                // We could add more logic here, like updating a preview
+                console.log(`Selected type: ${e.target.value}`);
+            });
+        });
+
+        // Simple button click effect
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 150);
+            });
+        });
+    </script>
+</body></html>

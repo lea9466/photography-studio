@@ -4,6 +4,7 @@ export type MediaBucket =
   | 'watermarked'
   | 'edited'
   | 'zips'
+  | 'branding'
 
 export type R2UploadRequest = {
   bucket: MediaBucket

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>אשף יצירת גלריה - שלב 3: הגדרות מתקדמות</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fdf8fa",
+                        "surface": "#fdf8fa",
+                        "on-primary-fixed": "#1c192c",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#723149",
+                        "primary-fixed-dim": "#c9c3dc",
+                        "primary-fixed": "#e5dff9",
+                        "on-tertiary-fixed": "#350d1c",
+                        "error": "#ba1a1a",
+                        "primary-container": "#252235",
+                        "on-primary-container": "#8d89a0",
+                        "surface-container": "#f1edef",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#313032",
+                        "secondary": "#8e4860",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "surface-dim": "#ddd9db",
+                        "on-primary-fixed-variant": "#484459",
+                        "inverse-primary": "#c9c3dc",
+                        "background": "#fdf8fa",
+                        "secondary-container": "#ffa8c3",
+                        "on-tertiary-fixed-variant": "#693747",
+                        "surface-container-high": "#ebe7e9",
+                        "surface-tint": "#605c71",
+                        "primary": "#100d1f",
+                        "secondary-fixed-dim": "#ffb0c8",
+                        "on-background": "#1c1b1d",
+                        "outline": "#79767d",
+                        "surface-container-highest": "#e5e1e3",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#c9c5cd",
+                        "tertiary-fixed-dim": "#f9b4c6",
+                        "secondary-fixed": "#ffd9e2",
+                        "on-tertiary-container": "#b87a8b",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#3b051d",
+                        "on-surface-variant": "#48464c",
+                        "tertiary-fixed": "#ffd9e1",
+                        "surface-variant": "#e5e1e3",
+                        "surface-container-low": "#f7f2f4",
+                        "on-secondary-container": "#7c3951",
+                        "tertiary-container": "#401625",
+                        "inverse-on-surface": "#f4f0f1",
+                        "tertiary": "#25020f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface": "#1c1b1d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xxl": "64px",
+                        "xl": "32px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "margin-desktop": "40px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Hanken Grotesk', sans-serif;
+            background-color: #fdf8fa;
+            color: #1c1b1d;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bento-card {
+            background-color: #ffffff;
+            border: 1px solid #ebebe8;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .bento-card:hover {
+            border-color: #7D3A52;
+            box-shadow: 0px 4px 20px rgba(37, 34, 53, 0.05);
+        }
+        .input-field {
+            background-color: #ffffff;
+            border: 1px solid #ebebe8;
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #7D3A52;
+            box-shadow: 0 0 0 2px rgba(240, 172, 190, 0.2);
+        }
+        .primary-btn {
+            background-color: #7D3A52;
+            color: white;
+            border-radius: 12px;
+            padding: 12px 32px;
+            font-weight: 600;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+        .primary-btn:hover {
+            background-color: #6a3146;
+        }
+        .primary-btn:active {
+            transform: scale(0.98);
+        }
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background-color: #e5e1e3;
+            border-radius: 100px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-switch.active {
+            background-color: #7D3A52;
+        }
+        .toggle-circle {
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            transition: transform 0.3s ease;
+        }
+        .toggle-switch.active .toggle-circle {
+            transform: translateX(-20px);
+        }
+        .sidebar-item-active {
+            background-color: #252235;
+            color: #ffffff;
+            border-right: 2px solid #7D3A52;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- Navigation Drawer (Mandatory Shell - Desktop) -->
+<aside class="fixed right-0 top-0 h-full w-[280px] bg-surface border-l border-outline-variant z-40 hidden md:flex flex-col">
+<div class="p-lg flex items-center gap-md">
+<span class="font-headline-2xl text-headline-2xl font-semibold text-primary">Studio Gallery</span>
+</div>
+<nav class="flex-1 px-md mt-md">
+<div class="flex flex-col gap-xs">
+<div class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-body-md font-body-md">דאשבורד</span>
+</div>
+<div class="flex items-center gap-md px-lg py-md sidebar-item-active transition-colors cursor-pointer rounded-lg">
+<span class="material-symbols-outlined" data-icon="photo_library">photo_library</span>
+<span class="text-body-md font-body-md">גלריות</span>
+</div>
+<div class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-body-md font-body-md">לקוחות</span>
+</div>
+<div class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-body-md font-body-md">הגדרות</span>
+</div>
+<div class="flex items-center gap-md px-lg py-md text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer rounded-lg">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="text-body-md font-body-md">פרופיל</span>
+</div>
+</div>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="md:pr-[280px] transition-all duration-300">
+<!-- Top App Bar (Desktop Context) -->
+<header class="h-20 px-margin-desktop flex items-center justify-between bg-surface-bright sticky top-0 z-30">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-primary">אשף יצירת גלריה - שלב 3: הגדרות מתקדמות</h1>
+<p class="text-on-surface-variant text-body-md">התאמה אישית של אבטחה, מגבלות והרשאות</p>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed overflow-hidden">
+<img alt="User Profile Photo" class="w-full h-full object-cover" data-alt="A professional close-up headshot of a creative director in a minimalist photography studio. The person is wearing a simple black turtleneck against a soft grey background. The lighting is crisp and flattering, emphasizing a professional yet approachable personality. The overall aesthetic is clean, modern, and high-end." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR_CgdVDuBYkueLt-XcIsoDHzNsrqUV-hkjsEm8P9bfIe0g9Kp91CEvPFgT9vewvRsX3TL4r0pxptWr98WYDneKFOXUo5bapGg7_u2B0-cHkHk5fJOeaLRHDm8H_fByINXYHL6JrOjL4GqCUxMcm3zCQOVXwR5QBLEeeMfH9634bboKGxpKCo9TLVD_MJMEimoCySZHGLQzFHZmx2do3gjyMHdLVn2wQte4BYqgI71tlQcoxwFFmOIh0p8BCi2NuTqlHcv9qiz2L8x"/>
+</div>
+</div>
+</header>
+<div class="px-margin-desktop py-xl max-w-7xl mx-auto">
+<!-- Progress Stepper -->
+<div class="mb-xxl flex items-center gap-md">
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold">1</div>
+<span class="text-on-surface-variant font-medium">פרטים כלליים</span>
+</div>
+<div class="h-[1px] w-16 bg-outline-variant"></div>
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center text-sm font-bold">2</div>
+<span class="text-on-surface-variant font-medium">העלאת תוכן</span>
+</div>
+<div class="h-[1px] w-16 bg-outline-variant"></div>
+<div class="flex items-center gap-sm">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center text-sm font-bold">3</div>
+<span class="text-primary font-bold">הגדרות מתקדמות</span>
+</div>
+</div>
+<!-- Bento Grid Layout for Sections -->
+<form class="grid grid-cols-12 gap-gutter">
+<!-- Security Section -->
+<section class="col-span-12 lg:col-span-7 bento-card p-xl">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="lock">lock</span>
+<h2 class="text-title-md font-title-md text-primary">אבטחה ופרטיות</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">סיסמת גלריה</label>
+<div class="relative">
+<input class="input-field pr-10" placeholder="הזן סיסמה..." type="password"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-lg" data-icon="key">key</span>
+</div>
+</div>
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">תאריך תפוגה</label>
+<div class="relative">
+<input class="input-field pr-10" type="date"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-body-lg" data-icon="calendar_today">calendar_today</span>
+</div>
+</div>
+</div>
+<p class="mt-md text-body-md text-on-surface-variant italic">לאחר תאריך התפוגה, הגישה לגלריה תיחסם אוטומטית.</p>
+</section>
+<!-- Limits Section -->
+<section class="col-span-12 lg:col-span-5 bento-card p-xl">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="speed">speed</span>
+<h2 class="text-title-md font-title-md text-primary">מגבלות אלבום</h2>
+</div>
+<div class="space-y-lg">
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">מקסימום תמונות בגלריה</label>
+<input class="input-field" placeholder="ללא הגבלה" type="number"/>
+</div>
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">מקסימום תמונות לעריכה</label>
+<input class="input-field" placeholder="50" type="number"/>
+</div>
+</div>
+</section>
+<!-- Content & Watermark Section -->
+<section class="col-span-12 lg:col-span-6 bento-card p-xl overflow-hidden relative">
+<!-- Subtle background decoration -->
+<div class="absolute -bottom-12 -left-12 w-48 h-48 bg-primary-fixed opacity-10 rounded-full blur-3xl"></div>
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="branding_watermark">branding_watermark</span>
+<h2 class="text-title-md font-title-md text-primary">תוכן וסימן מים</h2>
+</div>
+<div class="space-y-lg">
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">טקסט לסימן מים</label>
+<input class="input-field" placeholder="הזן טקסט למיתוג..." type="text"/>
+</div>
+<div>
+<label class="block text-label-sm text-on-surface-variant mb-xs">תגיות (Tags)</label>
+<input class="input-field" placeholder="חתונה, טבע, 2024..." type="text"/>
+<div class="flex gap-xs mt-sm">
+<span class="px-sm py-xs bg-surface-container-high rounded-full text-label-sm text-on-surface-variant flex items-center gap-xs">חתונה <span class="material-symbols-outlined text-[14px] cursor-pointer" data-icon="close">close</span></span>
+<span class="px-sm py-xs bg-surface-container-high rounded-full text-label-sm text-on-surface-variant flex items-center gap-xs">צילומי חוץ <span class="material-symbols-outlined text-[14px] cursor-pointer" data-icon="close">close</span></span>
+</div>
+</div>
+</div>
+</section>
+<!-- Download Permissions Section -->
+<section class="col-span-12 lg:col-span-6 bento-card p-xl">
+<div class="flex items-center gap-sm mb-lg">
+<span class="material-symbols-outlined text-secondary" data-icon="download">download</span>
+<h2 class="text-title-md font-title-md text-primary">הרשאות הורדה</h2>
+</div>
+<div class="space-y-xl">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="text-body-lg font-semibold text-primary">אפשר הורדת תצוגה מקדימה</h4>
+<p class="text-body-md text-on-surface-variant">הורדת תמונות ברזולוציה נמוכה עם סימן מים</p>
+</div>
+<div class="toggle-switch active" onclick="this.classList.toggle('active')">
+<div class="toggle-circle"></div>
+</div>
+</div>
+<div class="h-[1px] w-full bg-outline-variant opacity-50"></div>
+<div class="flex items-center justify-between">
+<div>
+<h4 class="text-body-lg font-semibold text-primary">אפשר הורדת קבצי מקור</h4>
+<p class="text-body-md text-on-surface-variant">הורדת קבצי Full HD ללא סימן מים (ללקוחות משלמים בלבד)</p>
+</div>
+<div class="toggle-switch" onclick="this.classList.toggle('active')">
+<div class="toggle-circle"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Action Footer -->
+<div class="col-span-12 mt-xxl flex items-center justify-between border-t border-outline-variant pt-xl">
+<button class="px-lg py-md text-primary font-semibold flex items-center gap-sm hover:underline" type="button">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+                        חזור לשלב הקודם
+                    </button>
+<button class="primary-btn flex items-center gap-sm" type="submit">
+                        יצירת גלריה ושיתוף
+                        <span class="material-symbols-outlined" data-icon="rocket_launch">rocket_launch</span>
+</button>
+</div>
+</form>
+</div>
+</main>
+<!-- Simple Micro-interaction Script -->
+<script>
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.parentElement.classList.add('border-primary');
+            });
+            input.addEventListener('blur', function() {
+                this.parentElement.parentElement.classList.remove('border-primary');
+            });
+        });
+
+        // Prevention of form submission for demo purposes
+        document.querySelector('form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('הגלריה נוצרה בהצלחה!');
+        });
+    </script>
+</body></html>

@@ -12,7 +12,7 @@ export default async function SettingsPage() {
 
   const { data } = await supabase
     .from('users')
-    .select('name, studio_name, theme_primary')
+    .select('name, studio_name, theme_primary, about_text, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, about_image_url')
     .eq('id', user.id)
     .single()
 
@@ -20,6 +20,16 @@ export default async function SettingsPage() {
     name: string | null
     studio_name: string | null
     theme_primary: string
+    about_text: string | null
+    stat_projects: number
+    stat_clients: number
+    stat_experience_years: number
+    accent_color: string
+    selected_theme: string
+    logo_url: string | null
+    hero_desktop_url: string | null
+    hero_mobile_url: string | null
+    about_image_url: string | null
   } | null
 
   return (

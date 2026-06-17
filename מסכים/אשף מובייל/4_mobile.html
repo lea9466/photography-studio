@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --db-shadow-sm: 0px 4px 20px rgba(37, 34, 53, 0.05);
+        }
+        body {
+            font-family: 'Hanken+Grotesk', sans-serif;
+            background-color: #fdf8fa;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layer {
+            background: #ffffff;
+            border: 1px solid #EBEBEB;
+            box-shadow: var(--db-shadow-sm);
+        }
+        .upload-dashed {
+            border: 2px dashed #c9c5cd;
+            transition: all 0.3s ease;
+        }
+        .upload-dashed:hover {
+            border-color: #8e4860;
+            background-color: rgba(240, 172, 190, 0.05);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e5e1e3;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1c1b1d",
+                        "tertiary": "#25020f",
+                        "inverse-surface": "#313032",
+                        "inverse-primary": "#c9c3dc",
+                        "surface-variant": "#e5e1e3",
+                        "surface-container-high": "#ebe7e9",
+                        "primary-container": "#252235",
+                        "secondary-fixed": "#ffd9e2",
+                        "surface-container": "#f1edef",
+                        "on-surface-variant": "#48464c",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e5e1e3",
+                        "tertiary-fixed-dim": "#f9b4c6",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#e5dff9",
+                        "on-tertiary-container": "#b87a8b",
+                        "on-primary-fixed": "#1c192c",
+                        "outline": "#79767d",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffd9e1",
+                        "error-container": "#ffdad6",
+                        "secondary": "#8e4860",
+                        "on-secondary-fixed": "#3b051d",
+                        "on-error-container": "#93000a",
+                        "on-background": "#1c1b1d",
+                        "surface-container-low": "#f7f2f4",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#8d89a0",
+                        "secondary-fixed-dim": "#ffb0c8",
+                        "surface-tint": "#605c71",
+                        "on-secondary-fixed-variant": "#723149",
+                        "secondary-container": "#ffa8c3",
+                        "primary": "#100d1f",
+                        "on-tertiary-fixed-variant": "#693747",
+                        "surface-bright": "#fdf8fa",
+                        "on-tertiary-fixed": "#350d1c",
+                        "background": "#fdf8fa",
+                        "inverse-on-surface": "#f4f0f1",
+                        "surface-dim": "#ddd9db",
+                        "outline-variant": "#c9c5cd",
+                        "tertiary-container": "#401625",
+                        "surface": "#fdf8fa",
+                        "on-secondary-container": "#7c3951",
+                        "on-primary-fixed-variant": "#484459",
+                        "on-primary": "#ffffff",
+                        "primary-fixed-dim": "#c9c3dc"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "8px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "xl": "32px",
+                        "xs": "4px",
+                        "margin-desktop": "40px",
+                        "xxl": "64px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "title-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "title-md": ["20px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 bg-surface border-b border-surface-variant flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16">
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform">menu</span>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-bold text-primary">Studio Gallery</h1>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary-container/20 overflow-hidden border border-surface-variant cursor-pointer hover:opacity-80 transition-opacity">
+<img alt="Avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAn4abn04kWx2KiPlfJqCYOQzdos6KmeRQLhB9tGDQprUA1YaD9TIO_mqtIAilIhwDPsjyatmEblt4XGQMcY6Il1hJbSDTHMEsE2lr0b1ZGznQ1DMPaB0-gtJnstllVud1xKFb4g31GkYF1EuIV89BsPUtdCLCtm-dobm36owxlSFEKgPFwabcMVBKRx96L0cbBtDHscM4fRwXilwX61mn9iJAzwK2b7RPzDbi45XRxPXUpumX-8t4Wn90GU_72m1GqSgNoHOKYiY7H"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-xxl pb-xxl px-margin-mobile md:px-margin-desktop flex items-center justify-center">
+<div class="max-w-4xl w-full">
+<!-- Wizard Header -->
+<div class="mb-xl text-center md:text-start"><div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-md"><div><span class="font-label-sm text-label-sm text-secondary mb-xs block">שלב 4 מתוך 4</span><h2 class="font-display-lg text-headline-lg-mobile md:text-display-lg text-primary">אשף יצירת גלריה</h2><p class="text-on-surface-variant font-body-md">העלאת תמונות ופרסום</p></div></div><div class="w-full h-1 bg-surface-container-high rounded-full overflow-hidden"><div class="h-full bg-secondary w-full transition-all duration-700 ease-in-out"></div></div></div>
+<!-- Upload Section -->
+<div class="tonal-layer rounded-xl p-lg md:p-xl flex flex-col gap-xl">
+<!-- Dropzone -->
+<div class="upload-dashed rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer group" id="dropzone"><div class="w-20 h-20 rounded-full bg-surface-container flex items-center justify-center mb-md group-hover:scale-110 transition-transform"><span class="material-symbols-outlined text-[40px] text-primary">cloud_upload</span></div><h3 class="font-title-md text-title-md text-primary mb-xs">גררו תמונות לכאן או לחצו לבחירה</h3><p class="text-on-surface-variant font-body-md max-w-sm px-sm">תמיכה בפורמטים JPG, PNG ו-RAW. ניתן להעלות עד 100 קבצים בו זמנית.</p></div>
+<!-- Active Uploads Grid -->
+<div class="space-y-md">
+<h3 class="font-title-md text-title-md text-primary">העלאות נוכחיות</h3>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-md max-h-80 overflow-y-auto custom-scrollbar p-xs">
+<!-- Upload Placeholder 1 -->
+<div class="relative aspect-square rounded-lg overflow-hidden border border-surface-variant group">
+<img class="w-full h-full object-cover" data-alt="A professional photography session in a sun-drenched studio, featuring high-end camera equipment and minimalist white decor. The lighting is soft and airy, creating a high-key aesthetic with subtle deep burgundy accents in the background fabrics. The overall mood is sophisticated and artistic, aligning with a modern studio brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkwy8O33_DQnwlxXS89Dskx0IjNjcEv2nOWgieIrig5HyLdik7xQFcCMDEybS2lvYjOgaD9UwEgWVZnAGfCtq1hkdQxiOto5w4k8iUzpAjUK_-KZxJJl1x67Bzbu2Ex1zqUJj80gcQ6eRQ5JL1swGRyX7C7ZlBHCEw3nrFbUJ9Wb3sImyppnpT4QX8a2lCzskGU7HqGIn_MSfzs9DTtmJmURxEPYjEG4TVFNAZs4IT37HHBBm2-ImyfuznoYeGcsEiH1q2egr9DIbY"/>
+<div class="absolute inset-0 bg-black/40 flex flex-col justify-end p-sm">
+<div class="w-full h-1.5 bg-white/30 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[85%]"></div>
+</div>
+<span class="text-[10px] text-white font-bold mt-xs text-left">85%</span>
+</div>
+</div>
+<!-- Upload Placeholder 2 -->
+<div class="relative aspect-square rounded-lg overflow-hidden border border-surface-variant group">
+<img class="w-full h-full object-cover" data-alt="A detailed close-up of a high-end camera lens on a dark mahogany table, reflecting studio lights. The atmosphere is professional and sleek, with a color palette of blacks, whites, and deep wine-colored shadows. The image style is clean, modern, and editorial, suitable for a luxury photography studio dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALXIdFBwT4d--361AI8ukhkEdsn5zIs2Hf0dO0pXwREaC96YxVEW03D_D8P1A2UNKo1BeAnpon47BSvco6vuG5pGgqDV-0HWfIB7jZBenR4k6QEoaVwHTl_B6uPvTlBFRaEDbX2hYNTgSYNvoBi7435OCBY-iGmbylHgWZ_0TkE8ln7vIC5_C6vKfNGsi5g7nPCbohwJuJKxkLdLQqNXmnwR2UdJphE2W1YtOl66tFtHcsi_2AzL74jjB2TulQL2_WWvRETdgwXb_v"/>
+<div class="absolute inset-0 bg-black/40 flex flex-col justify-end p-sm">
+<div class="w-full h-1.5 bg-white/30 rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[40%]"></div>
+</div>
+<span class="text-[10px] text-white font-bold mt-xs text-left">40%</span>
+</div>
+</div>
+<!-- Upload Placeholder 3 -->
+<div class="relative aspect-square rounded-lg overflow-hidden border border-surface-variant group">
+<img class="w-full h-full object-cover" data-alt="A minimalist architectural photograph of a gallery space with white walls and dark flooring. Dramatic lighting creates sharp contrasts and highlights the sophisticated design. A singular splash of deep burgundy is present in a piece of abstract art on the wall. The mood is calm, modern, and premium." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD85_FNBfSWwEr9Rl9GJG7oFmXq2Da9GCRUl184B9q_ga4rbf9HZ8AwaLAjad0AYoMDWNqHmb250yZWVv-2C68-iviaRX_hYyRP-xmVsoAV6yROt41ADTaH-H6GbeNsRPuKA0pgg1x1U4KmlLApvnoVnjhmvzKgnkneQMFtAKNAc13TmN1JVAuOx9hvdAmD5VDO0eWvv3bXJ0dVKVt8OEQzdXF3_v_WB55luSxoDKCPY0Y_eHZq6lA50wtQ8z9MP-oZ-4PLgdJhSsNd"/>
+<div class="absolute inset-0 bg-black/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-3xl">check_circle</span>
+</div>
+</div>
+<!-- Upload Placeholder 4 (Empty/Loading) -->
+<div class="aspect-square rounded-lg border border-surface-variant bg-surface-container flex items-center justify-center">
+<div class="flex flex-col items-center gap-xs">
+<div class="w-6 h-6 border-2 border-secondary border-t-transparent rounded-full animate-spin"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">מעבד...</span>
+</div>
+</div>
+<!-- Static Item 5 -->
+<div class="relative aspect-square rounded-lg overflow-hidden border border-surface-variant group">
+<img class="w-full h-full object-cover opacity-60" data-alt="A stylish indoor photo shoot setup with professional lighting and a minimalist aesthetic. The color palette is dominated by neutral tones like ivory and charcoal, punctuated by sophisticated deep red props. The image is captured with professional clarity, emphasizing the high-end nature of the studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuClliwveQaBPKn4sKuDPt0O2yB3OMolwqUmP7okrdQXWfIYYfUuABgqcqWWw6g9DL2mBD2CWTPrjOsyALFCyC-7s475GMQo7hCC5SWTNfxJLXwDv_B_VTWEiQIKfxHQuqbdkrAfliHgIJKGv6pYs5-ETIWi_O_Brasw3QRLVHc2dom85MFTLXxL_FMCJotmYfE5vKhDPsSUqG2oMqWBGr87wwlU8OEoxChP7ikur_mEfUepdHQq19XhqDry7rgONKgIBez1DF8yksDO"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-3xl">hourglass_empty</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer -->
+<div class="space-y-lg mt-xl"><div class="bg-white rounded-xl border border-outline-variant p-lg shadow-sm"><h5 class="font-title-md text-title-md text-primary mb-md">סיכום העלאה</h5><div class="space-y-md"><div class="flex justify-between items-center text-body-md"><span class="text-on-surface-variant">סה"כ תמונות:</span><span class="font-bold">24</span></div><div class="flex justify-between items-center text-body-md"><span class="text-on-surface-variant">נפח אחסון:</span><span class="font-bold">142 MB</span></div><div class="pt-md border-t border-outline-variant"><div class="flex justify-between items-center mb-xs"><span class="text-label-sm font-semibold">ניצול אחסון</span><span class="text-label-sm text-on-surface-variant">142MB / 10GB</span></div><div class="w-full bg-surface-container h-2 rounded-full overflow-hidden"><div class="bg-secondary h-full" style="width: 1.42%;"></div></div></div></div></div><div class="bg-white rounded-xl border border-outline-variant p-lg shadow-sm"><h5 class="font-title-md text-title-md text-primary mb-md">פרטי גלריה</h5><div class="space-y-sm"><div class="flex flex-col"><span class="text-label-sm text-on-surface-variant">שם הגלריה</span><span class="text-body-md font-semibold">חתונה - דניאל ונועה</span></div><div class="flex flex-col"><span class="text-label-sm text-on-surface-variant">סטטוס נוכחי</span><span class="inline-flex items-center gap-xs text-[12px] font-bold text-secondary"><span class="w-2 h-2 rounded-full bg-secondary"></span>טיוטה</span></div></div></div></div><div class="mt-xl flex justify-end">
+<button class="w-full bg-secondary text-on-secondary px-xxl py-md rounded-xl font-bold text-body-lg shadow-sm hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-sm"><span>סיום ופרסום הגלריה</span><span class="material-symbols-outlined">rocket_launch</span></button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full z-50 bg-surface border-t border-surface-variant flex justify-around items-center h-16 px-sm">
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-sm text-label-sm">דף הבית</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary font-semibold">
+<span class="material-symbols-outlined">collections</span>
+<span class="font-label-sm text-label-sm">גלריות</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-sm text-label-sm">נתונים</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">חשבון</span>
+</div>
+</nav>
+<script>
+        // Simple drag & drop visual feedback
+        const dropzone = document.getElementById('dropzone');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.add('bg-secondary-container/10');
+                dropzone.classList.add('border-secondary');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, () => {
+                dropzone.classList.remove('bg-secondary-container/10');
+                dropzone.classList.remove('border-secondary');
+            }, false);
+        });
+        
+        // Micro-interaction for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                console.log('Action triggered');
+            });
+        });
+    </script>
+</body></html>

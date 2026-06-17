@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gallery - Modern | Studio Gallery</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Heebo:wght@300;400;500;700&amp;family=Frank+Ruhl+Libre:wght@700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-surface": "#2D2825",
+                    "inverse-surface": "#31302f",
+                    "on-secondary-container": "#6f6054",
+                    "primary-fixed-dim": "#f4b9a0",
+                    "on-primary-container": "#fffbff",
+                    "outline-variant": "#d6c3bb",
+                    "surface-container-high": "#eae8e5",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#aa6243",
+                    "surface-container-highest": "#e5e2df",
+                    "outline": "#83746e",
+                    "on-primary-fixed": "#321304",
+                    "on-tertiary-fixed-variant": "#72361a",
+                    "on-secondary-fixed": "#241910",
+                    "secondary": "#6b5b50",
+                    "on-secondary-fixed-variant": "#524439",
+                    "inverse-primary": "#f4b9a0",
+                    "surface-container": "#f0edea",
+                    "surface-dim": "#dcdad7",
+                    "on-primary-fixed-variant": "#653c29",
+                    "surface-bright": "#fcf9f6",
+                    "tertiary": "#8c4a2d",
+                    "primary": "#7e513d",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#d7c3b5",
+                    "on-error": "#ffffff",
+                    "surface-tint": "#81533f",
+                    "surface": "#FAF7F4",
+                    "surface-variant": "#e5e2df",
+                    "background": "#fcf9f6",
+                    "on-background": "#1c1c1a",
+                    "overlay-warm": "rgba(181, 129, 106, 0.6)",
+                    "on-surface-variant": "#5A504A",
+                    "on-tertiary-fixed": "#360f00",
+                    "tertiary-fixed-dim": "#ffb597",
+                    "primary-container": "#9a6953",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#ffdbcd",
+                    "surface-container-lowest": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "primary-fixed": "#ffdbcc",
+                    "on-tertiary-container": "#fffbff",
+                    "inverse-on-surface": "#f3f0ed",
+                    "secondary-fixed": "#f4dfd0",
+                    "surface-container-low": "#f6f3f0",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#f1dccd",
+                    "on-error-container": "#93000a",
+                    "modern-bg": "#F8FAFC",
+                    "modern-accent": "#6366F1"
+            },
+            "borderRadius": {
+                    "DEFAULT": "12px",
+                    "lg": "16px",
+                    "xl": "24px",
+                    "full": "9999px",
+                    "modern": "12px"
+            },
+            "spacing": {
+                    "xl": "48px",
+                    "xxl": "80px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "sm": "8px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Space Grotesk", "sans-serif"],
+                    "display-lg": ["Space Grotesk", "sans-serif"],
+                    "body-md": ["Heebo", "sans-serif"],
+                    "label-sm": ["Heebo", "sans-serif"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body {
+            background-color: #F8FAFC;
+            font-family: 'Heebo', sans-serif;
+            color: #2D2825;
+            overflow-x: hidden;
+        }
+        .modern-heading {
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: -0.02em;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .image-card-hover:hover .image-overlay {
+            opacity: 1;
+        }
+        .image-card-hover:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-modern-bg">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 backdrop-blur-md bg-surface/80 shadow-sm">
+<nav class="flex justify-between items-center px-lg py-md max-w-[1280px] mx-auto">
+<div class="font-headline-sm text-headline-sm text-on-surface tracking-tight modern-heading font-bold">Studio Gallery</div>
+<div class="hidden md:flex gap-lg items-center">
+<a class="font-label-sm text-label-sm text-primary border-b border-primary pb-1 transition-all duration-300" href="#">Gallery</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Services</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">About</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors duration-300" href="#">Contact</a>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-modern font-label-sm text-label-sm shadow-sm hover:shadow-md transition-all">
+                Book a Session
+            </button>
+</nav>
+</header>
+<main class="pt-xxl">
+<!-- Hero Section -->
+<section class="max-w-[1280px] mx-auto px-lg mt-xxl mb-xl text-center">
+<h1 class="font-display-lg text-[68px] md:text-[120px] font-bold modern-heading text-on-surface leading-none mb-md opacity-0 translate-y-8 animate-[fadeInUp_0.8s_ease-out_forwards]">
+                גלריה
+            </h1>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto opacity-0 translate-y-4 animate-[fadeInUp_0.8s_ease-out_0.2s_forwards]">
+                רגעים של השראה, אמנות ודיוק טכנולוגי שנלכדו מבעד לעדשה המודרנית שלנו.
+            </p>
+</section>
+<!-- Filter Bar -->
+<section class="max-w-[1280px] mx-auto px-lg mb-xl">
+<div class="flex flex-wrap justify-center gap-sm overflow-x-auto pb-md">
+<button class="px-lg py-sm rounded-full bg-modern-accent text-white font-label-sm text-label-sm shadow-md transition-all whitespace-nowrap">הכל</button>
+<button class="px-lg py-sm rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-modern-accent hover:text-modern-accent transition-all whitespace-nowrap">אורבני</button>
+<button class="px-lg py-sm rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-modern-accent hover:text-modern-accent transition-all whitespace-nowrap">מינימליזם</button>
+<button class="px-lg py-sm rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-modern-accent hover:text-modern-accent transition-all whitespace-nowrap">פורטרטים</button>
+<button class="px-lg py-sm rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-modern-accent hover:text-modern-accent transition-all whitespace-nowrap">טכנולוגיה</button>
+<button class="px-lg py-sm rounded-full bg-white border border-outline-variant text-on-surface-variant font-label-sm text-label-sm hover:border-modern-accent hover:text-modern-accent transition-all whitespace-nowrap">אדריכלות</button>
+</div>
+</section>
+<!-- Image Grid -->
+<section class="max-w-[1280px] mx-auto px-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg mb-xxl">
+<!-- Grid Item 1 -->
+<div class="group relative overflow-hidden rounded-modern aspect-[4/5] bg-surface-container image-card-hover transition-all duration-500 shadow-sm hover:shadow-xl cursor-pointer">
+<img alt="" class="w-full h-full object-cover transition-transform duration-700 ease-out" data-alt="A sophisticated architectural photograph of a minimalist concrete building with sharp geometric lines and shadows. The scene is bathed in cool, natural morning light with a soft blue sky. The composition is clean and modern, emphasizing the texture of the raw materials and the elegant intersection of planes in a high-end editorial style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb_7h25iJnHD_ZV8ssfCytQwzOE60wJx6pTLQfIsGU25GhBo_VIBalKN9SWI3g0YI3Hzltrdh7_XP_c6gp7FTjdgL0FbT3rxQQ1z9nv5ytkMmLEh71dgbwc5hfm1sRxf2rL7O1wJDk7cnSYIEp5P2vR6dBK97DfVovvoOX-CP4QVl5K3cqpmu6M_N3WjqKYodSlyIwb83PY7IrDA-scSJPxEGo-yhbZENnFQdAlq9FgBXDjU8oKOUiTBgYUVV6B6YD4nZJee-jAwLW"/>
+<div class="image-overlay absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-lg">
+<span class="text-white font-label-sm text-label-sm mb-xs">אדריכלות מודרנית</span>
+<h3 class="text-white font-headline-sm text-headline-sm modern-heading">זוויות של שקט</h3>
+</div>
+</div>
+<!-- Grid Item 2 (Wide) -->
+<div class="group relative overflow-hidden rounded-modern md:col-span-2 aspect-video bg-surface-container image-card-hover transition-all duration-500 shadow-sm hover:shadow-xl cursor-pointer">
+<img alt="" class="w-full h-full object-cover transition-transform duration-700 ease-out" data-alt="A futuristic technology-themed close-up of a circuit board illuminated by neon cyan and violet light pulses. The atmosphere is high-tech and sleek, with shallow depth of field focusing on glowing microchips and digital pathways. The color palette is dark, dominated by deep navy and vibrant electric accents, evoking a sense of advanced digital evolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsCzcsWkiWex8-c-RK3jBMjCWN7YGgkcdsvIQ7vlC9V3oXS8w3PHny-55ke_F6lzigwECVaWOLJ2gxStXfwNApfgyZyDUDWfF1QDNTfExenwdLeOqR4WuftHzQppLgs_-MwTISk8JeuA80BCHZ53da6Lq-1J9tki9a5Z_yTG2SW3XjufV1HbI28oUl66sXcBMkJFinppFgRJ0x8mzE8Ce256rczGKFbU-l7UEw4r3VOCtUnUyTidSx3jbFJbShvvJvMDIxWj1BXHgd"/>
+<div class="image-overlay absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-lg">
+<span class="text-white font-label-sm text-label-sm mb-xs">טכנולוגיה</span>
+<h3 class="text-white font-headline-sm text-headline-sm modern-heading">סימפוניה דיגיטלית</h3>
+</div>
+</div>
+<!-- Grid Item 3 -->
+<div class="group relative overflow-hidden rounded-modern aspect-square bg-surface-container image-card-hover transition-all duration-500 shadow-sm hover:shadow-xl cursor-pointer">
+<img alt="" class="w-full h-full object-cover transition-transform duration-700 ease-out" data-alt="A curated collection of vintage tech items like a beige computer and cassette tapes arranged in a clean, minimalist workspace. The lighting is bright and warm, creating a nostalgic yet modern editorial aesthetic. The composition uses plenty of negative space on a white surface, highlighting the unique shapes and ivory tones of the objects." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQGjHoa8Hbwq_mQYjxb6R7pySs21XxeFuJWhOnAMk8bTca6WzHZr2KYneC-jGrIPFys4JA80oObU2gBUSz4BIoLVBLCOuKBQ0-GfvWGmpw8b9IQOh8ZFMJsbkSnBKJxhae-uovwo2rw113QxaAPOoIsGF24upxrDY9fydDX2xJKE0zxJxIoLefnv7wxfRGHgEWkTg8aDaCW5isEFrZHtm14aiBvGbWPBOyAkifxCKx8ssYAlEYB1ALGB8qer9PyzSebvX-06-Q-z9Y"/>
+<div class="image-overlay absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-lg">
+<span class="text-white font-label-sm text-label-sm mb-xs">מינימליזם</span>
+<h3 class="text-white font-headline-sm text-headline-sm modern-heading">רטרו עתידני</h3>
+</div>
+</div>
+<!-- Grid Item 4 -->
+<div class="group relative overflow-hidden rounded-modern aspect-[3/4] bg-surface-container image-card-hover transition-all duration-500 shadow-sm hover:shadow-xl cursor-pointer">
+<img alt="" class="w-full h-full object-cover transition-transform duration-700 ease-out" data-alt="A vibrant urban street scene captured at dusk, featuring glowing neon signs and reflected city lights on a damp pavement. The color palette is rich with deep magenta, electric blue, and golden amber. The motion blur of passing cars creates dynamic light trails, giving the image a sense of constant energy and modern urban life." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKWcTeXoq7_9R2TeGmCq0tzHm4gaEV0a65hSpydoLoaRcc53GaH1I-JlptfEomPIuRUml6OqWQVk_obqNXzpuCxgTj-bhlOYv_ICYmyBWUaJ-58SVRAtFX6quq3s2T14abH1L4-i8yrW8vCS0I_5Tz2xNMKP4p5m5FhsXOtmXsb3gkntddMLHYk9Jmsim2IhRbpQBNrKFHbduJJiL0XSNRNszHaciiGdAad7yWqED_-UkMUwtoMQG1IT6XVQoQbj_iEbIUEWn8Swhg"/>
+<div class="image-overlay absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-lg">
+<span class="text-white font-label-sm text-label-sm mb-xs">אורבני</span>
+<h3 class="text-white font-headline-sm text-headline-sm modern-heading">קצב העיר</h3>
+</div>
+</div>
+<!-- Grid Item 5 -->
+<div class="group relative overflow-hidden rounded-modern aspect-square bg-surface-container image-card-hover transition-all duration-500 shadow-sm hover:shadow-xl cursor-pointer">
+<img alt="" class="w-full h-full object-cover transition-transform duration-700 ease-out" data-alt="A high-fashion editorial portrait of a person with a serene expression, illuminated by soft, directional light that creates subtle shadows. The background is a neutral, warm earth tone that complements the sophisticated styling. The mood is intimate and professional, emphasizing high-end craftsmanship in lighting and composition for a premium photographic experience." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBExTmLrH4ImRx4pLhvUvQY1H5tXZeRNU_CBSyR-gRSpRSv1sCFwXaSQAf3PHaJSN06wXSZHnaSkZ1O3S0u8ijHs5UxsDmctM_nyaSkyKTPW8uR-gh7icCkss8Dk7gNA3vKS36wgxE0dH7TSa6zZXS0heXsHYHvh3PyRcQ6s3rMLV8hcaxi21ZyXNf_L5qR8f1Bj8MmajDFOg-LO8_3haE5fR6Naj5XsxMhFyb2XspXfvChRx8fQqRGUFrf_ESVQkhhPUE9lGeZnnKK"/>
+<div class="image-overlay absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-lg">
+<span class="text-white font-label-sm text-label-sm mb-xs">פורטרט</span>
+<h3 class="text-white font-headline-sm text-headline-sm modern-heading">ביטוי אישי</h3>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="max-w-[1280px] mx-auto px-lg mb-xxl">
+<div class="relative bg-on-surface text-white rounded-xl p-xl md:p-xxl overflow-hidden shadow-xl">
+<!-- Background Decoration -->
+<div class="absolute top-0 right-0 w-1/2 h-full opacity-10 pointer-events-none">
+
+</div>
+<div class="relative z-10 max-w-2xl">
+<h2 class="font-display-lg text-headline-md md:text-display-lg modern-heading mb-md">מוכנים ליצור משהו יוצא דופן?</h2>
+<p class="font-body-lg text-surface-variant mb-xl opacity-80">אנחנו משלבים טכנולוגיה מתקדמת עם ראייה אמנותית כדי להפוך את החזון שלך למציאות ויזואלית מרהיבה.</p>
+<div class="flex flex-col sm:flex-row gap-md">
+<button class="bg-modern-accent text-white px-xl py-md rounded-modern font-label-sm text-label-sm shadow-lg hover:scale-105 transition-transform">
+                            התחילו פרויקט חדש
+                        </button>
+<button class="border border-white/30 text-white px-xl py-md rounded-modern font-label-sm text-label-sm hover:bg-white/10 transition-all flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">play_circle</span>
+                            צפו בסיפור שלנו
+                        </button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full mt-xxl bg-surface-container">
+<div class="flex flex-col md:flex-row justify-between items-center px-lg py-xl max-w-[1280px] mx-auto gap-lg">
+<div class="flex flex-col gap-sm items-center md:items-start">
+<div class="font-headline-sm text-headline-sm text-on-surface modern-heading font-bold">Studio Gallery</div>
+<p class="font-body-md text-body-md text-on-secondary-container">© 2024 Studio Gallery. כל הזכויות שמורות.</p>
+</div>
+<div class="flex gap-lg flex-wrap justify-center">
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-all" href="#">מדיניות פרטיות</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-all" href="#">תנאי שימוש</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-all" href="#">אינסטגרם</a>
+<a class="font-body-md text-body-md text-on-secondary-container hover:text-primary transition-all" href="#">בלוג</a>
+</div>
+</div>
+</footer>
+<script>
+        // Simple entrance animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observerOptions = {
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fadeInUp');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Add standard fade up animation to cards as they scroll into view
+            document.querySelectorAll('.image-card-hover').forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = `all 0.6s ease-out ${index * 0.1}s`;
+                
+                const cardObserver = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }
+                }, { threshold: 0.2 });
+                
+                cardObserver.observe(el);
+            });
+        });
+    </script>
+<style>
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+    </style>
+</body></html>

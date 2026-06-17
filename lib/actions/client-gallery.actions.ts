@@ -43,6 +43,15 @@ export type ClientGalleryData = {
   gallery_type: string
   studio_name: string | null
   logo_url: string | null
+  accent_color: string
+  selected_theme: string
+  hero_desktop_url: string | null
+  hero_mobile_url: string | null
+  about_text: string | null
+  about_image_url: string | null
+  stat_projects: number
+  stat_clients: number
+  stat_experience_years: number
   max_album_selection: number | null
   max_edit_selection: number | null
   allow_download_preview: boolean
@@ -296,6 +305,15 @@ export async function getClientGallery(galleryId: string) {
     gallery_type: gallery.gallery_type,
     studio_name: user?.studio_name ?? null,
     logo_url: user?.logo_url ?? null,
+    accent_color: (user as any)?.accent_color ?? '#7c3aed',
+    selected_theme: (user as any)?.selected_theme ?? 'classic',
+    hero_desktop_url: (user as any)?.hero_desktop_url ?? null,
+    hero_mobile_url: (user as any)?.hero_mobile_url ?? null,
+    about_text: (user as any)?.about_text ?? null,
+    about_image_url: (user as any)?.about_image_url ?? null,
+    stat_projects: (user as any)?.stat_projects ?? 0,
+    stat_clients: (user as any)?.stat_clients ?? 0,
+    stat_experience_years: (user as any)?.stat_experience_years ?? 0,
     max_album_selection: settings?.max_album_selection ?? null,
     max_edit_selection: settings?.max_edit_selection ?? null,
     allow_download_preview: settings?.allow_download_preview ?? false,

@@ -34,6 +34,16 @@ export async function updateProfile(input: {
   name?: string
   studio_name?: string
   theme_primary?: string
+  about_text?: string
+  stat_projects?: number
+  stat_clients?: number
+  stat_experience_years?: number
+  accent_color?: string
+  selected_theme?: string
+  logo_url?: string
+  hero_desktop_url?: string
+  hero_mobile_url?: string
+  about_image_url?: string
 }) {
   const supabase = await createClient()
   const {
@@ -48,4 +58,6 @@ export async function updateProfile(input: {
 
   if (error) throw new Error(error.message)
   revalidatePath('/dashboard')
+  revalidatePath('/g/[id]', 'page')
+  revalidatePath('/portfolio/[slug]', 'page')
 }

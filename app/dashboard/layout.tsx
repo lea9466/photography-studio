@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions/auth.actions'
-import { DashboardNav } from '@/components/dashboard/DashboardNav'
+import { SidebarNav } from '@/components/dashboard/SidebarNav'
+import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
 import { Button } from '@/components/ui/button'
 import type { User } from '@/lib/types/database.types'
 
@@ -14,16 +15,16 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  let profile: Pick<User, 'name' | 'studio_name'> | null = null
+  let profile: Pick<User, 'name' | 'studio_name' | 'logo_url'> | null = null
   let portfolioSlug: string | null = null
 
   if (user) {
     const { data } = await supabase
       .from('users')
-      .select('name, studio_name')
+      .select('name, studio_name, logo_url')
       .eq('id', user.id)
       .single()
-    profile = data as Pick<User, 'name' | 'studio_name'> | null
+    profile = data as Pick<User, 'name' | 'studio_name' | 'logo_url'> | null
 
     const { data: portfolio } = await supabase
       .from('galleries')
@@ -40,27 +41,24 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-[--border]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <p className="font-semibold">
-              {profile?.studio_name ?? 'Studio Gallery'}
-            </p>
-            <p className="text-sm text-[--muted]">
-              {profile?.name ?? user?.email}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <DashboardNav portfolioSlug={portfolioSlug} />
-            <form action={signOut}>
-              <Button variant="ghost" size="sm" type="submit">
-                יציאה
-              </Button>
-            </form>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      {/* Desktop Sidebar */}
+      <SidebarNav 
+        userName={profile?.name || undefined}
+        studioName={profile?.studio_name || undefined}
+        logoUrl={profile?.logo_url || undefined}
+        onSignOut={async () => {
+          'use server'
+          await signOut()
+        }}
+      />
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+      
+      {/* Main Content */}
+      <main className="md:mr-72 p-4 md:p-10 min-h-screen pb-24 md:pb-10">
+        {children}
+      </main>
     </div>
   )
 }

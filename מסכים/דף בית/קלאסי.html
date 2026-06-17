@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="he"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>סטודיו גלריה | צילום מקצועי</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&amp;family=Frank+Ruhl+Libre:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        :root {
+            --headline-font: 'Frank Ruhl Libre', serif;
+        }
+        body {
+            font-family: 'Heebo', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Classic Theme Specifics */
+        .classic-overlay {
+            background: linear-gradient(to top, rgba(181, 129, 106, 0.6) 0%, rgba(181, 129, 106, 0) 100%);
+        }
+        /* Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .reveal.active .stagger-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stagger-item:nth-child(1) { transition-delay: 0.1s; }
+        .stagger-item:nth-child(2) { transition-delay: 0.2s; }
+        .stagger-item:nth-child(3) { transition-delay: 0.3s; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "primary-fixed": "#ffdf93",
+                      "on-surface-variant": "#5a504a",
+                      "on-surface": "#2d2825",
+                      "on-tertiary": "#ffffff",
+                      "primary-container": "#f1e3da",
+                      "on-primary": "#ffffff",
+                      "background": "#FAF7F4",
+                      "inverse-surface": "#34302e",
+                      "surface-container-highest": "#e8e1da",
+                      "surface-container-high": "#efe7df",
+                      "surface-container": "#f4ede6",
+                      "tertiary-fixed-dim": "#e7c365",
+                      "inverse-primary": "#eec148",
+                      "error": "#ba1a1a",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "surface-container-low": "#faf3eb",
+                      "on-background": "#2d2825",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-fixed": "#261a00",
+                      "surface-tint": "#B5816A",
+                      "secondary-fixed-dim": "#d9c4a0",
+                      "surface-dim": "#e1d9ce",
+                      "secondary-fixed": "#f6e0bb",
+                      "on-secondary-fixed-variant": "#50452d",
+                      "inverse-on-surface": "#f8efe4",
+                      "secondary": "#7a6a5e",
+                      "surface": "#FAF7F4",
+                      "on-primary-container": "#4e3325",
+                      "primary": "#B5816A",
+                      "tertiary-container": "#c9a74d",
+                      "surface-variant": "#ede1cf",
+                      "outline-variant": "#d1c6b4",
+                      "surface-bright": "#FAF7F4",
+                      "secondary-container": "#f1e3c8",
+                      "tertiary": "#8c4a2d",
+                      "tertiary-fixed": "#ffdbcf",
+                      "on-primary-fixed-variant": "#594400",
+                      "on-tertiary-container": "#351000",
+                      "primary-fixed-dim": "#eec148",
+                      "on-primary-fixed": "#241a00",
+                      "on-secondary-container": "#241a00",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#351000",
+                      "outline": "#8a7d75"
+              },
+              "borderRadius": {
+                      "DEFAULT": "4px",
+                      "lg": "4px",
+                      "xl": "4px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "16px",
+                      "xl": "48px",
+                      "lg": "24px",
+                      "sm": "8px",
+                      "xs": "4px",
+                      "xxl": "80px"
+              },
+              "fontFamily": {
+                      "body-lg": ["Heebo"],
+                      "headline-sm": ["var(--headline-font)"],
+                      "display-lg": ["var(--headline-font)"],
+                      "display-lg-mobile": ["var(--headline-font)"],
+                      "label-sm": ["Heebo"],
+                      "headline-md": ["var(--headline-font)"],
+                      "body-md": ["Heebo"]
+              },
+              "fontSize": {
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-sm": ["26px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "display-lg": ["68px", {"lineHeight": "1.1", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                      "display-lg-mobile": ["42px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                      "label-sm": ["13px", {"lineHeight": "1", "letterSpacing": "0.06em", "fontWeight": "500"}],
+                      "headline-md": ["36px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+
+<meta name="NetsparkQuiltingResult" total-length="28375" removed="0" rules-found="w22544,w33626,w7654,w7000,w2676,w3473,w3056,w22645,w2598,w17173,w18843,w21577,w33224,w5513,w21182,w5260,w22558,w33633,w33634,w33108,w33109,w11963,w23122,w33719,w20622,w22403,w20342,w22572,w33641,w17281,w18958,w18871,w4387,w20763" />
+</head>
+<body class="bg-surface text-on-surface overflow-x-hidden">
+<!-- Section 1: Nav -->
+<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-b border-transparent" id="main-nav">
+<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="font-headline-sm text-headline-sm text-on-surface tracking-tight">
+                סטודיו גלריה
+            </div>
+<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#about">אודות</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#galleries">גלריות</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#pricing">חבילות</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#testimonials">המלצות</a>
+</div>
+<button class="bg-primary text-on-primary px-lg py-sm rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all active:scale-95 shadow-sm">
+                צור קשר
+            </button>
+</div>
+</nav>
+<!-- Section 2: Hero -->
+<section class="relative h-screen w-full flex items-center justify-center overflow-hidden reveal" id="hero">
+<div class="absolute inset-0 z-0 scale-105">
+<img alt="סטודיו צילום קלאסי" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnGvM7yGMOQtBU90CDGg2lgde82reSqFu9abXI7hGbz0KCWYT_pCSCw2MGMgtFUhtQy0KldxazdNju_HbFJivqNoFdNMH8hiL6eJU8SNenxCZvYDS50TjLm7pYQkNEvyvxugQw8kayI9QSxge9mt4M9CqeVoB0AYJbk-4UzL7PDpLnJ-4jIIUtVsn_6GA7KKYXioso2jXVpAwStHl_P5KmXCU0vYj-EXnDEOE-BS5f0O6rwYLd4D9xLxwFnhCZyfOxJ5IFV4_KY70"/>
+<div class="absolute inset-0 bg-black/40"></div>
+</div>
+<div class="relative z-10 text-center px-md max-w-4xl text-white">
+<span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">הבית לרגעים יפים</span>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-md leading-tight">אמנות הצילום במיטבה</h1>
+<p class="font-body-lg text-body-lg text-white/90 mb-xl max-w-2xl mx-auto">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
+<a class="inline-block bg-primary text-on-primary px-xxl py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95" href="#contact">
+                תיאום פגישה
+            </a>
+</div>
+</section>
+<!-- Section 3: About -->
+<section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="about">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
+<div class="order-2 md:order-1 transform transition-transform duration-700">
+<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover rounded-sm shadow-xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHzVOk3kbe1HuMn6oZY1VToE100ra8MS21dJfbBxSMIk-FPa1_iA8G0aGqCofduAzBNw1hhqPeAvc97oewh7SCO2SfWPhzFt-Rbbdpq1_4WHi9fBpQEhvhlwrN-VtYnshPNcSubvzCwtM8b3ow4JCg25w7K2_dleM3X455PrAuQBeDyjndhCXAPt_66Jqf2YhTRwdEA4GaQ736Rbjahzt4y-Jg3-iBrlHBoN55biV9GSD3IeiUFrSHnrByYQyj2qVxbGti5mXky6k"/>
+</div>
+<div class="order-1 md:order-2 space-y-lg">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">סיפור אישי</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">אודות הסטודיו</h2>
+<div class="w-16 h-0.5 bg-primary/40"></div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                    במשך שנים אני מחפשת את האור המדויק, את החיוך האותנטי ואת הסיפור שמסתתר מאחורי כל פריים. הצילום עבורי הוא שילוב של טכניקה מוקפדת ורגש טהור.
+                </p>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    בסטודיו שלנו אנו יוצרים סביבה רגועה ונינוחה שמאפשרת לכם להיות מי שאתם באמת. התוצאה? זיכרונות ויזואליים שיישארו איתכם לנצח.
+                </p>
+<div class="pt-md">
+<a class="font-label-sm text-label-sm text-primary flex items-center gap-2 group flex-row-reverse justify-end" href="#galleries">
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_back</span>
+                        לצפייה בגלריות
+                    </a>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Selected Works Gallery -->
+<section class="bg-surface-container-low py-xxl reveal" id="galleries">
+<div class="max-w-7xl mx-auto px-lg">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface">עבודות נבחרות</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">מבט אל הרגעים שהפכו לנצח</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
+<img alt="צילומי ניובורן" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZUB_XWMQJmDciJDjUljJ80mRNV5W2FQ_ydAGNPybtSOWyVWWb6PYCSfjfi5wB9rAyPua1JMnXwhIzZdbEcMiZbzZq0bdBvajvV4qqWCRTEbgYcdYecgSAgrFu5ltdQ5ZZtty_3wk-6wsY0rogzfJiE5VTMWUS6hBJ6f3dh3spv6QNUNph1bGw7vgI0HPg1TvUSfCxeCDdP4NqBQPvPyQdALLU_Ljf5-bsaStYZMlceyrpPph1uO2OBgOo6NMLoHk5XQQoUodIiuI"/>
+<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
+<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי ניובורן</span>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
+<img alt="צילומי משפחה" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1X6O6h8K75WUGdZv4HFelsXo2jp4J--3R0NbI4ItUyYuYskGHlAXx0o6m-SGP0d7km1ES6pf0ndSIbIUZTmhgMZoBjTVbjkt32WSJU8oKc48wroKSjJRbqNB_qM8Qlh4kPcxO1gckJIWsjuSs-umb7CnQPDXJLSxJc49RpF94g5a8_6P9NRz6rqDXkfnyl43iULHn12rVPGTaU5O7LJpd2K3FxhgX07EpGytKr3R0Q3F4KEVvjRPUaEWUgQiCYXWZV6lAO1jllcQ"/>
+<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
+<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי משפחה</span>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
+<img alt="צילומי חתונה" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAW-XHx2RrlTtIR3U2BDgF4d4BAkCJT86p3SBwJL7w56JX9txm7Cndg3ZcjjhbmagNAK08bqHaV5i_QMrjRlRvKu8HUcLbmnWlfU4SqwLfjJR14mGTr_XJ_DXcq2JM5Em0nr8yFSYp-3LDpN5XxWKtvwfoi0o7PwCm3yQlSNR5OD-cmXbYqvA39F-N2thVYIbdJzIT88ZDEdXtCkBtBjx_g5EJ4gMDHs8bFc5BuBq_2dAeIncBYjpgYGPPpAyIBefeck4QFM724m_c"/>
+<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
+<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי חתונות</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Pricing Packages (Redesigned) -->
+<section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="pricing">
+<div class="text-center mb-xl">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">השקעה ברגעי קסם</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">חבילות צילום</h2>
+<div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">
+<!-- Package 1 -->
+<div class="bg-surface border border-outline-variant/30 p-xl flex flex-col items-center rounded-sm hover:border-primary/50 transition-colors duration-500 stagger-item">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">בייסיק</h3>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg">לרגעים קטנים ומרגשים</p>
+<div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1" dir="ltr"><span class="text-lg font-normal">₪</span>1,200</div>
+<ul class="space-y-md mb-xl text-right w-full border-t border-outline-variant/20 pt-lg">
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">90 דקות צילום בסטודיו</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">25 תמונות בעיבוד אמנותי</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">גלריה דיגיטלית להורדה</span>
+</li>
+</ul>
+<button class="w-full mt-auto border border-primary/40 text-primary py-sm rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300">הזמנת חבילה</button>
+</div>
+<!-- Package 2 (Premium Highlight) -->
+<div class="bg-surface-container-low border border-primary/30 p-xl flex flex-col items-center rounded-sm shadow-xl relative scale-105 z-10 stagger-item">
+<div class="absolute -top-3 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider">הנמכרת ביותר</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">פרימיום</h3>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg">החוויה המלאה לכל המשפחה</p>
+<div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1" dir="ltr"><span class="text-lg font-normal">₪</span>2,500</div>
+<ul class="space-y-md mb-xl text-right w-full border-t border-primary/10 pt-lg">
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">3 שעות צילומי חוץ וסטודיו</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">70 תמונות ערוכות בקפידה</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">אלבום דיגיטלי מעוצב אישית</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface-variant">הדפס קנבס 40x60 מתנה</span>
+</li>
+</ul>
+<button class="w-full mt-auto bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all duration-300 shadow-md">בחירה בחבילה</button>
+</div>
+<!-- Package 3 -->
+<div class="bg-surface border border-outline-variant/30 p-xl flex flex-col items-center rounded-sm hover:border-primary/50 transition-colors duration-500 stagger-item">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs">יוקרה VIP</h3>
+<p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg">ללא פשרות על איכות</p>
+<div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1" dir="ltr"><span class="text-lg font-normal">₪</span>4,800</div>
+<ul class="space-y-md mb-xl text-right w-full border-t border-outline-variant/20 pt-lg">
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">יום צילומים מלא באתר לבחירתכם</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">כל התמונות בעיבוד פרימיום</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">אלבום יוקרתי מודפס בכריכת עור</span>
+</li>
+<li class="flex items-start gap-md flex-row-reverse">
+<span class="material-symbols-outlined text-primary mt-1">check</span>
+<span class="font-body-md text-body-md text-on-surface-variant">מצגת וידאו אמנותית של כל הרגעים</span>
+</li>
+</ul>
+<button class="w-full mt-auto border border-primary/40 text-primary py-sm rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300">פרטים נוספים</button>
+</div>
+</div>
+</section>
+<!-- Section 6: Testimonials -->
+<section class="bg-surface-container-high py-xxl reveal" id="testimonials">
+<div class="max-w-4xl mx-auto px-lg">
+<div class="text-center mb-xl">
+<h2 class="font-headline-md text-headline-md text-on-surface">לקוחות מספרים</h2>
+</div>
+<div class="space-y-lg">
+<div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
+<span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
+                        "החוויה בסטודיו הייתה מדהימה. ידעת להוציא מאיתנו את המיטב גם כשהיינו נבוכים מול המצלמה. התמונות יצאו פשוט עוצרות נשימה!"
+                    </p>
+<div class="font-label-sm text-label-sm text-primary font-bold">משפחת כהן, תל אביב</div>
+</div>
+<div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
+<span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
+                        "צילומים ביום החתונה יכולים להיות מלחיצים, אבל איתך הכל הרגיש כל כך טבעי וזורם. תודה על הזיכרונות הכי יפים של החיים שלנו."
+                    </p>
+<div class="font-label-sm text-label-sm text-primary font-bold">מיכל ורוני, ירושלים</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 7: Contact Full (Redesigned) -->
+<section class="bg-surface-container-low py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl" id="contact">
+<div class="max-w-7xl mx-auto px-lg">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start lg:gap-xl lg:gap-xxl">
+<div class="lg:col-span-5 space-y-lg">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">צרו קשר</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">בואו ניצור זיכרונות יחד</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">השאירו פרטים ואחזור אליכם בהקדם לתיאום פגישת היכרות נעימה, שבה נתכנן את הצילומים המושלמים עבורכם.</p>
+<div class="space-y-md pt-lg">
+<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="tel:050-1234567">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">call</span>
+<span class="font-body-md text-body-md" dir="ltr">050-1234567</span>
+</a>
+<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="mailto:hello@studiogallery.co.il">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
+<span class="font-body-md text-body-md">hello@studiogallery.co.il</span>
+</a>
+<div class="flex items-center gap-md flex-row-reverse justify-end">
+<span class="material-symbols-outlined text-primary">location_on</span>
+<span class="font-body-md text-body-md">מתחם האמנים, תל אביב</span>
+</div>
+</div>
+</div>
+<div class="lg:col-span-7">
+<form class="bg-surface p-xl lg:p-xxl rounded-sm shadow-xl border border-outline-variant/20 stagger-item">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
+<div class="space-y-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">שם מלא</label>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
+</div>
+<div class="space-y-xs">
+<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">טלפון ליצירת קשר</label>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" required="" type="tel"/>
+</div>
+</div>
+<div class="space-y-xs mb-lg">
+<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">כתובת אימייל</label>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
+</div>
+<div class="space-y-xs mb-xl">
+<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">ספרו לי על האירוע שלכם</label>
+<textarea class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
+</div>
+<button class="w-full bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-md" type="submit">
+                        שלח פנייה
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</form>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="bg-surface-container-highest border-t border-outline-variant/20 py-xl pb-xxl">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
+<div class="font-headline-md text-headline-md text-primary tracking-tight">
+                סטודיו גלריה
+            </div>
+<div class="flex flex-row-reverse gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">פרטיות</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">נגישות</a>
+</div>
+<div class="font-body-md text-body-md text-on-surface/60">
+                © 2024 סטודיו גלריה. כל הזכויות שמורות.
+            </div>
+</div>
+</footer>
+<script>
+        // Scroll triggered Navbar
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            if (window.scrollY > 80) {
+                nav.classList.add('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
+                nav.classList.remove('py-md', 'border-transparent');
+            } else {
+                nav.classList.remove('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
+                nav.classList.add('py-md', 'border-transparent');
+            }
+        });
+
+        // Intersection Observer for Reveal Animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Initial check for elements in view
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.reveal').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight) {
+                    el.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body></html>
