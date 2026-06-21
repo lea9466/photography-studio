@@ -4,7 +4,6 @@ import { ChevronRight } from 'lucide-react'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { GALLERY_STATUS_LABELS, GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
-import { TabNav } from '@/components/gallery/TabNav'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
@@ -64,7 +63,6 @@ export default async function GalleryLayout({
         </div>
       </div>
 
-      <TabNav galleryId={id} />
       {children}
     </div>
   )
