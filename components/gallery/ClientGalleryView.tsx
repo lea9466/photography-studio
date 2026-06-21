@@ -57,7 +57,7 @@ function mergeStoredSelections(
 }
 
 export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
-  const canSelect = ['sent', 'selection'].includes(gallery.status)
+  const canSelect = ['selection'].includes(gallery.status)
   const isDelivered = ['delivery_ready', 'locked'].includes(gallery.status)
   const [items, setItems] = useState(photos)
   const [lightboxIndex, setLightboxIndex] = useState(0)

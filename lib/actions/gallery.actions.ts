@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
-import type { Database } from '@/lib/types/database.types'
+import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
@@ -194,7 +194,7 @@ export async function resendGalleryEmail(galleryId: string) {
     return
   }
 
-  if (['sent', 'selection', 'editing'].includes(gallery.status)) {
+  if (['selection', 'editing'].includes(gallery.status)) {
     await sendInviteEmailForGallery(gallery)
     return
   }
@@ -234,7 +234,7 @@ export async function updateGalleryStatus(
 export async function sendGallery(galleryId: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
-  await updateGalleryStatus(galleryId, 'sent')
+  await updateGalleryStatus(galleryId, 'selection')
   await sendInviteEmailForGallery(gallery)
 }
 
@@ -463,5 +463,5 @@ export async function fetchGalleryDetail(galleryId: string) {
     .single()
 
   if (error) throw new Error(error.message)
-  return data
+  return data as GalleryWithSettings | null
 }

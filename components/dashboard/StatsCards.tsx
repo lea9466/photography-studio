@@ -122,7 +122,7 @@ export function StatsCards({
         subtitle="החודש האחרון"
         icon={<Send className="h-6 w-6" />}
         isActive={activeFilter === 'sent'}
-        onClick={() => onFilterChange?.('sent')}
+        onClick={() => onFilterChange?.('selection')}
         badge="נשלח"
         badgeColor="bg-green-100 text-green-700"
       />

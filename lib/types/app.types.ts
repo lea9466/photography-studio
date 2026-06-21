@@ -2,7 +2,6 @@ import type { GalleryStatus, GalleryType } from '@/lib/types/database.types'
 
 export const GALLERY_STATUS_LABELS: Record<GalleryStatus, string> = {
   draft: 'טיוטה',
-  sent: 'נשלח',
   selection: 'בחירה',
   editing: 'עיבוד',
   delivery_ready: 'מוכן למסירה',

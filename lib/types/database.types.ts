@@ -8,7 +8,6 @@ export type Json =
 
 export type GalleryStatus =
   | 'draft'
-  | 'sent'
   | 'selection'
   | 'editing'
   | 'delivery_ready'

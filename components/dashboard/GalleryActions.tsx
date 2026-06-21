@@ -35,7 +35,7 @@ type GalleryActionsProps = {
 }
 
 function resendEmailLabel(status: GalleryStatus): string | null {
-  if (['sent', 'selection', 'editing'].includes(status)) {
+  if (['selection', 'editing'].includes(status)) {
     return 'שלחו שוב מייל גלריה ללקוח'
   }
   if (['delivery_ready', 'locked'].includes(status)) {
@@ -93,21 +93,6 @@ export function GalleryActions({
               </Button>
             ) : null}
 
-            {status === 'sent' ? (
-              <Button
-                size="sm"
-                disabled={isPending}
-                onClick={() =>
-                  run(
-                    () => updateGalleryStatus(galleryId, 'selection'),
-                    'מצב בחירה נפתח'
-                  )
-                }
-                className="bg-[#6b2d43] hover:bg-[#5a2538]"
-              >
-                פתח בחירה
-              </Button>
-            ) : null}
 
             {status === 'editing' ? (
               <Button

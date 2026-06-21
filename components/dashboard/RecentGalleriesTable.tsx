@@ -47,7 +47,6 @@ type GalleryRowProps = {
 function getStatusBadge(status: string) {
   const statusConfig: Record<string, { label: string; className: string }> = {
     draft: { label: 'טיוטה', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
-    sent: { label: 'נשלח ללקוח', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
     selection: { label: 'ממתין לבחירה', className: 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200' },
     editing: { label: 'בעריכה', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
     delivery_ready: { label: 'מוכן למסירה', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
@@ -241,7 +240,7 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
     ? galleries.filter(gallery => {
         if (filter === 'draft') return gallery.status === 'draft'
         if (filter === 'waiting') return gallery.status === 'selection' || gallery.status === 'editing'
-        if (filter === 'sent') return gallery.status === 'sent'
+        if (filter === 'sent') return gallery.status === 'selection'
         if (filter === 'expired') {
           // Include locked galleries and expired galleries
           if (gallery.status === 'locked') return true

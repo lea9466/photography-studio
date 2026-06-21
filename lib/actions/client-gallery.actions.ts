@@ -348,7 +348,7 @@ export async function completeClientSelection(
 
   const gallery = galleryData as GalleryWithClient | null
   if (!gallery) throw new Error('גלריה לא נמצאה')
-  if (!['sent', 'selection'].includes(gallery.status)) {
+  if (!['selection'].includes(gallery.status)) {
     throw new Error('הבחירה אינה פתוחה')
   }
 
