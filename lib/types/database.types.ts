@@ -155,6 +155,7 @@ export type Database = {
           preview_url: string | null
           watermarked_preview_url: string | null
           is_visible_to_client: boolean
+          is_processed: boolean
           sort_order: number
           created_at: string
         }
@@ -165,6 +166,7 @@ export type Database = {
           preview_url?: string | null
           watermarked_preview_url?: string | null
           is_visible_to_client?: boolean
+          is_processed?: boolean
           sort_order?: number
           created_at?: string
         }
@@ -175,6 +177,7 @@ export type Database = {
           preview_url?: string | null
           watermarked_preview_url?: string | null
           is_visible_to_client?: boolean
+          is_processed?: boolean
           sort_order?: number
           created_at?: string
         }

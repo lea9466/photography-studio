@@ -230,6 +230,27 @@ export async function setPhotosVisibilityBulk(
   revalidatePath(`/g/${galleryId}`)
 }
 
+export async function setPhotosProcessedBulk(
+  galleryId: string,
+  photoIds: string[],
+  processed: boolean
+) {
+  if (photoIds.length === 0) return
+
+  const { supabase } = await assertGalleryOwner(galleryId)
+
+  const { error } = await supabase
+    .from('photos')
+    .update({ is_processed: processed } as never)
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
+  revalidatePath(`/dashboard/galleries/${galleryId}`)
+}
+
 export async function prepareGalleryForDelivery(galleryId: string) {
   const { supabase } = await assertGalleryOwner(galleryId)
 

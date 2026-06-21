@@ -26,7 +26,7 @@ import {
   uploadGalleryPhotosWithQueue,
   type GalleryUploadProgress,
 } from '@/lib/gallery-upload-client'
-import { deletePhotosBulk, setPhotosVisibilityBulk } from '@/lib/actions/photo.actions'
+import { deletePhotosBulk, setPhotosVisibilityBulk, setPhotosProcessedBulk } from '@/lib/actions/photo.actions'
 import { updateGalleryStatus } from '@/lib/actions/gallery.actions'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
@@ -251,6 +251,25 @@ export function GalleryPhotosSection({
     })
   }
 
+  function bulkSetProcessed(processed: boolean) {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) {
+      toast.error('בחרי תמונות קודם')
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        await setPhotosProcessedBulk(galleryId, ids, processed)
+        toast.success(processed ? 'התמונות סומנו כמעובדות' : 'התמונות סומנו כרגילות')
+        setSelectedIds(new Set())
+        router.refresh()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
   function deleteSelectedPhotos() {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) {
@@ -328,7 +347,12 @@ export function GalleryPhotosSection({
   const shouldShowToggleButton = photos.length > 0
 
   // Filter photos based on view filter
-  const filteredPhotos = photos
+  const filteredPhotos = useMemo(() => {
+    if (viewFilter === 'processed') {
+      return photos.filter(photo => photo.is_processed)
+    }
+    return photos
+  }, [photos, viewFilter])
   const displayFilteredPhotos = showAllPhotos ? filteredPhotos : filteredPhotos.slice(0, initialPhotoLimit)
 
   return (
@@ -440,14 +464,32 @@ export function GalleryPhotosSection({
                   {allSelected ? 'בטל בחירה' : 'בחר הכל'}
                 </Button>
                 {selectedIds.size > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDeleteDialogOpen(true)}
-                    className="border-red-300 hover:bg-red-50 text-red-600 text-xs"
-                  >
-                    מחק נבחרים ({selectedIds.size})
-                  </Button>
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => bulkSetProcessed(true)}
+                      className="border-green-300 hover:bg-green-50 text-green-600 text-xs"
+                    >
+                      סמן כמעובד
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => bulkSetProcessed(false)}
+                      className="border-blue-300 hover:bg-blue-50 text-blue-600 text-xs"
+                    >
+                      סמן כרגיל
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDeleteDialogOpen(true)}
+                      className="border-red-300 hover:bg-red-50 text-red-600 text-xs"
+                    >
+                      מחק נבחרים ({selectedIds.size})
+                    </Button>
+                  </>
                 )}
                 <div className="flex items-center gap-2 border-r border-[#c9c5cd] pr-2">
                   <span className="text-xs text-[#48464c]">צפה:</span>
@@ -458,6 +500,14 @@ export function GalleryPhotosSection({
                     className={viewFilter === 'all' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
                   >
                     הכל
+                  </Button>
+                  <Button
+                    variant={viewFilter === 'processed' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewFilter('processed')}
+                    className={viewFilter === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
+                  >
+                    מעובד
                   </Button>
                 </div>
               </div>
