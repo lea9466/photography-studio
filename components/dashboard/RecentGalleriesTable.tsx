@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { 
   Edit,
@@ -11,7 +11,8 @@ import {
   Archive,
   Trash2,
   Copy,
-  Check
+  Check,
+  Upload
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +21,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import { deleteGallery } from '@/lib/actions/gallery.actions'
 import type { Gallery, Client } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
@@ -55,26 +66,54 @@ function getStatusBadge(status: string) {
 function GalleryRow({ gallery }: GalleryRowProps) {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const handleShare = async () => {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const galleryLink = gallery.gallery_type === 'portfolio' && gallery.slug
       ? `${baseUrl}/portfolio/${gallery.slug}`
       : `${baseUrl}/g/${gallery.id}`
-    
+
     await navigator.clipboard.writeText(galleryLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   const handleArchive = () => {
-    // TODO: Implement archive functionality
-    console.log('Archive gallery:', gallery.id)
+    setArchiveDialogOpen(true)
+  }
+
+  const confirmArchive = () => {
+    startTransition(async () => {
+      try {
+        await deleteGallery(gallery.id)
+        toast.success('הגלריה הועברה לארכיון בהצלחה')
+        setArchiveDialogOpen(false)
+        window.location.reload()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'העברה לארכיון נכשלה')
+      }
+    })
   }
 
   const handleDelete = () => {
-    // TODO: Implement delete functionality
-    console.log('Delete gallery:', gallery.id)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteGallery(gallery.id)
+        toast.success('הגלריה נמחקה בהצלחה')
+        setDeleteDialogOpen(false)
+        // Refresh the page to update the list
+        window.location.reload()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'מחיקת הגלריה נכשלה')
+      }
+    })
   }
 
   const handleImageError = () => {
@@ -82,61 +121,112 @@ function GalleryRow({ gallery }: GalleryRowProps) {
   }
 
   return (
-    <tr className="hover:bg-[--background] transition-colors">
-      <td className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-lg overflow-hidden bg-[--background] border border-[--border]">
-            {gallery.first_photo_url && !imageError ? (
-              <img 
-                alt={gallery.title} 
-                className="w-full h-full object-cover" 
-                src={gallery.first_photo_url}
-                onError={handleImageError}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                <span className="text-2xl">📷</span>
-              </div>
-            )}
+    <>
+      <tr className="hover:bg-[--background] transition-colors">
+        <td className="px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg overflow-hidden bg-[--background] border border-[--border]">
+              {gallery.first_photo_url && !imageError ? (
+                <img 
+                  alt={gallery.title} 
+                  className="w-full h-full object-cover" 
+                  src={gallery.first_photo_url}
+                  onError={handleImageError}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <span className="text-2xl">📷</span>
+                </div>
+              )}
+            </div>
+            <span className="font-semibold text-[--foreground]">{gallery.title}</span>
           </div>
-          <span className="font-semibold text-[--foreground]">{gallery.title}</span>
-        </div>
-      </td>
-      <td className="px-6 py-4 text-sm text-[--muted]">{gallery.client?.name || 'ללא לקוח'}</td>
-      <td className="px-6 py-4">
-        {getStatusBadge(gallery.status)}
-      </td>
-      <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
-      <td className="px-6 py-4 text-left">
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-            <Link href={`/dashboard/galleries/${gallery.id}`}>
-              <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleShare}>
-            {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleArchive}>
-                <Archive className="h-4 w-4 ml-2" />
-                העבר לארכיון
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-red-600">
-                <Trash2 className="h-4 w-4 ml-2" />
-                מחק גלריה
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </td>
-    </tr>
+        </td>
+        <td className="px-6 py-4 text-sm text-[--muted]">{gallery.client?.name || 'ללא לקוח'}</td>
+        <td className="px-6 py-4">
+          {getStatusBadge(gallery.status)}
+        </td>
+        <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
+        <td className="px-6 py-4 text-left">
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" size="sm" className="h-8 px-3" asChild>
+              <Link href={`/dashboard/galleries/${gallery.id}/photos`}>
+                <Upload className="h-4 w-4 ml-2" />
+                העלאת תמונות
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+              <Link href={`/dashboard/galleries/${gallery.id}`}>
+                <Edit className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleShare}>
+              {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleArchive}>
+                  <Archive className="h-4 w-4 ml-2" />
+                  העבר לארכיון
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+                  <Trash2 className="h-4 w-4 ml-2" />
+                  מחק גלריה
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </td>
+      </tr>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>מחיקת גלריה</DialogTitle>
+            <DialogDescription>
+              האם את/ה בטוח/ה שברצונך למחוק את הגלריה "{gallery.title}"? פעולה זו תמחק גם את כל התמונות בגלריה ולא ניתנת לביטול.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={isPending} onClick={() => setDeleteDialogOpen(false)}>
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={isPending}
+            >
+              {isPending ? 'מוחק...' : 'מחק גלריה'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+        <DialogContent onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>העברה לארכיון</DialogTitle>
+            <DialogDescription>
+              האם את/ה בטוח/ה שברצונך להעביר את הגלריה "{gallery.title}" לארכיון?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" disabled={isPending} onClick={() => setArchiveDialogOpen(false)}>
+              ביטול
+            </Button>
+            <Button
+              onClick={confirmArchive}
+              disabled={isPending}
+            >
+              {isPending ? 'מעביר...' : 'העבר לארכיון'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 

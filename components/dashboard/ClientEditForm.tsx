@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, Mail, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateClientRecord } from '@/lib/actions/client.actions'
 import type { Client } from '@/lib/types/database.types'
@@ -46,16 +46,28 @@ export function ClientEditForm({ client, galleryId }: ClientEditFormProps) {
     })
   }
 
+  const colors = [
+    { bg: '#e5dff9', text: '#100d1f' },
+    { bg: '#ffd9e1', text: '#25020f' },
+    { bg: '#ffd9e2', text: '#3b051d' },
+    { bg: '#ddd9db', text: '#1c1b1d' },
+    { bg: '#c9c3dc', text: '#484459' },
+    { bg: '#f9b4c6', text: '#693747' }
+  ]
+  const colorIndex = client.name.charCodeAt(0) % colors.length
+  const color = colors[colorIndex]
+
   return (
-    <Card>
+    <Card className="border-[#c9c5cd] shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle>פרטי לקוח</CardTitle>
+        <CardTitle className="text-[#100d1f]">פרטי לקוח</CardTitle>
         {!isEditing ? (
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => setIsEditing(true)}
+            className="border-[#c9c5cd] hover:bg-[#f7f2f4]"
           >
             <Pencil className="h-4 w-4" />
             עריכה
@@ -66,16 +78,17 @@ export function ClientEditForm({ client, galleryId }: ClientEditFormProps) {
         {isEditing ? (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor={`client-name-${client.id}`}>שם</Label>
+              <Label htmlFor={`client-name-${client.id}`} className="text-[#100d1f]">שם</Label>
               <Input
                 id={`client-name-${client.id}`}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`client-email-${client.id}`}>אימייל</Label>
+              <Label htmlFor={`client-email-${client.id}`} className="text-[#100d1f]">אימייל</Label>
               <Input
                 id={`client-email-${client.id}`}
                 type="email"
@@ -83,10 +96,11 @@ export function ClientEditForm({ client, galleryId }: ClientEditFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="client@email.com"
+                className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`client-phone-${client.id}`}>טלפון</Label>
+              <Label htmlFor={`client-phone-${client.id}`} className="text-[#100d1f]">טלפון</Label>
               <Input
                 id={`client-phone-${client.id}`}
                 type="tel"
@@ -94,10 +108,11 @@ export function ClientEditForm({ client, galleryId }: ClientEditFormProps) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="050-0000000"
+                className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={handleSave} disabled={isPending}>
+              <Button onClick={handleSave} disabled={isPending} className="bg-[#6b2d43] hover:bg-[#5a2538]">
                 {isPending ? 'שומר...' : 'שמור'}
               </Button>
               <Button
@@ -105,25 +120,34 @@ export function ClientEditForm({ client, galleryId }: ClientEditFormProps) {
                 variant="outline"
                 onClick={handleCancel}
                 disabled={isPending}
+                className="border-[#c9c5cd] hover:bg-[#f7f2f4]"
               >
                 ביטול
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-2 text-sm">
-            <p>
-              <span className="text-[--muted]">שם: </span>
-              {client.name}
-            </p>
-            <p>
-              <span className="text-[--muted]">אימייל: </span>
-              {client.email ?? '—'}
-            </p>
-            <p>
-              <span className="text-[--muted]">טלפון: </span>
-              {client.phone ?? '—'}
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0" style={{ backgroundColor: color.bg, color: color.text }}>
+              {client.name.slice(0, 2)}
+            </div>
+            <div className="flex-grow min-w-0">
+              <h4 className="font-semibold text-lg text-[#100d1f] truncate">{client.name}</h4>
+              <div className="flex items-center gap-4 mt-1">
+                {client.email && (
+                  <div className="flex items-center gap-1.5 text-sm text-[#48464c]">
+                    <Mail className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate" dir="ltr">{client.email}</span>
+                  </div>
+                )}
+                {client.phone && (
+                  <div className="flex items-center gap-1.5 text-sm text-[#48464c]">
+                    <Phone className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate" dir="ltr">{client.phone}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </CardContent>

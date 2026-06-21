@@ -1,9 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions/auth.actions'
-import { SidebarNav } from '@/components/dashboard/SidebarNav'
-import { MobileBottomNav } from '@/components/dashboard/MobileBottomNav'
-import { MobileHeader } from '@/components/dashboard/MobileHeader'
-import { Button } from '@/components/ui/button'
+import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import type { User } from '@/lib/types/database.types'
 
 export default async function DashboardLayout({
@@ -41,31 +38,17 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Desktop Sidebar */}
-      <SidebarNav 
-        userName={profile?.name || undefined}
-        studioName={profile?.studio_name || undefined}
-        logoUrl={profile?.logo_url || undefined}
-        onSignOut={async () => {
-          'use server'
-          await signOut()
-        }}
-      />
-      
-      {/* Mobile Header */}
-      <MobileHeader 
-        studioName={profile?.studio_name || undefined}
-        logoUrl={profile?.logo_url || undefined}
-      />
-      
-      {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
-      
-      {/* Main Content */}
-      <main className="md:mr-72 p-4 md:p-10 min-h-screen pt-20 md:pt-10 pb-24 md:pb-10">
-        {children}
-      </main>
-    </div>
+    <DashboardLayoutWrapper
+      userName={profile?.name || undefined}
+      studioName={profile?.studio_name || undefined}
+      logoUrl={profile?.logo_url || undefined}
+      portfolioSlug={portfolioSlug}
+      onSignOut={async () => {
+        'use server'
+        await signOut()
+      }}
+    >
+      {children}
+    </DashboardLayoutWrapper>
   )
 }

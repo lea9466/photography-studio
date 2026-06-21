@@ -25,7 +25,7 @@ export default function GalleriesPage() {
             *,
             client:clients(name),
             photos(count),
-            first_photo:photos!inner(preview_url)
+            first_photo:photos(preview_url)
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })

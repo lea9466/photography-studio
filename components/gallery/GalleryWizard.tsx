@@ -3,7 +3,28 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ImagePlus, Send } from 'lucide-react'
+import { 
+  ImagePlus, 
+  Send, 
+  Search, 
+  UserPlus, 
+  Check, 
+  Edit, 
+  UserCheck, 
+  Image as ImageIcon, 
+  Eye, 
+  ArrowLeft, 
+  Lock, 
+  Key, 
+  Calendar, 
+  Zap, 
+  Droplets, 
+  Download, 
+  CloudUpload, 
+  Filter, 
+  Plus, 
+  Info 
+} from 'lucide-react'
 import { createClientRecord } from '@/lib/actions/client.actions'
 import { createGallery } from '@/lib/actions/gallery.actions'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
@@ -25,10 +46,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Stepper } from '@/components/ui/stepper'
 import { Switch } from '@/components/ui/switch'
 
-const WIZARD_STEPS = ['לקוח', 'סוג גלריה', 'פרסום']
+const WIZARD_STEPS = ['בחירת לקוח', 'סוג גלריה', 'הגדרות מתקדמות']
 
 const GALLERY_TYPES: GalleryType[] = ['selection', 'delivery', 'portfolio']
 
@@ -104,6 +124,9 @@ export function GalleryWizard({
     if (step === 2) {
       return Boolean(state.title.trim())
     }
+    if (step === 3) {
+      return true
+    }
     return true
   }
 
@@ -175,292 +198,405 @@ export function GalleryWizard({
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <Stepper steps={WIZARD_STEPS} currentStep={step} />
+    <div className="w-full max-w-7xl mx-auto p-8 space-y-8">
+      {/* Progress Stepper - Visible on all steps */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+            step === 1 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
+          }`}>1</div>
+          <span className={`font-medium transition-colors ${
+            step === 1 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
+          }`}>בחירת לקוח</span>
+        </div>
+        <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+            step === 2 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
+          }`}>2</div>
+          <span className={`font-medium transition-colors ${
+            step === 2 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
+          }`}>סוג גלריה</span>
+        </div>
+        <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
+        <div className="flex items-center gap-2">
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+            step === 3 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
+          }`}>3</div>
+          <span className={`font-medium transition-colors ${
+            step === 3 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
+          }`}>הגדרות מתקדמות</span>
+        </div>
+      </div>
 
       {step === 1 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>לקוח</CardTitle>
-            <CardDescription>בחרי לקוח קיים או צרי חדש</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                variant={state.clientMode === 'existing' ? 'default' : 'outline'}
-                size="sm"
-                disabled={clients.length === 0}
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-8 text-center">
+            <h3 className="text-xl font-semibold text-[#1c1b1d] mb-2">מי הלקוח של הגלריה הזו?</h3>
+            <p className="text-base text-[#48464c]">בחר לקוח קיים מהרשימה או צור לקוח חדש כדי להמשיך בתהליך.</p>
+          </div>
+          
+          {/* Actions Row */}
+          <div className="flex flex-col md:flex-row gap-6 mb-8 items-center justify-between">
+            <div className="relative w-full md:w-96">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-[#79767d] w-5 h-5" />
+              <input 
+                className="w-full pr-11 py-3 bg-white border border-[#c9c5cd] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7D3A52]/20 focus:border-[#7D3A52] transition-all text-base" 
+                placeholder="חיפוש לקוח לפי שם או אימייל..." 
+                type="text"
+              />
+            </div>
+            <button 
+              className="flex items-center gap-2 px-6 py-3 bg-white border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#f7f2f4] transition-colors active:scale-95"
+              onClick={() => updateState('clientMode', 'new')}
+            >
+              <UserPlus className="w-5 h-5" />
+              <span className="text-base">הוספת לקוח חדש</span>
+            </button>
+          </div>
+          
+          {/* Client Grid - Show when clientMode is 'existing' */}
+          {state.clientMode === 'existing' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {clients.map((client, index) => {
+                const colors = [
+                  { bg: '#e5dff9', text: '#100d1f' },
+                  { bg: '#ffd9e1', text: '#25020f' },
+                  { bg: '#ffd9e2', text: '#3b051d' },
+                  { bg: '#ddd9db', text: '#1c1b1d' },
+                  { bg: '#c9c3dc', text: '#484459' },
+                  { bg: '#f9b4c6', text: '#693747' }
+                ]
+                const color = colors[index % colors.length]
+                return (
+                  <label
+                    key={client.id}
+                    className="relative cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="client_selection"
+                      value={client.id}
+                      checked={state.clientId === client.id}
+                      onChange={(e) => updateState('clientId', e.target.value)}
+                      className="sr-only client-card-radio"
+                    />
+                    <div className={`client-card-inner h-full p-6 bg-white border border-[#c9c5cd] rounded-xl transition-all duration-200 hover:border-[#7D3A52] hover:shadow-sm flex items-center gap-4 ${
+                      state.clientId === client.id
+                        ? 'border-[#7D3A52] bg-[#f1edef]'
+                        : ''
+                    }`}>
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg" style={{ backgroundColor: color.bg, color: color.text }}>
+                        {client.name.slice(0, 2)}
+                      </div>
+                      <div className="flex-grow overflow-hidden">
+                        <h4 className="font-semibold text-base text-[#100d1f] truncate">{client.name}</h4>
+                        <p className="text-sm text-[#48464c] truncate">{client.email || 'אין אימייל'}</p>
+                      </div>
+                      {state.clientId === client.id && (
+                        <div className="check-icon absolute top-3 left-3 w-6 h-6 rounded-full bg-[#7D3A52] text-white items-center justify-center flex">
+                          <Check className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+          )}
+
+          {/* New Client Form - Show when clientMode is 'new' */}
+          {state.clientMode === 'new' && (
+            <div className="max-w-md mx-auto bg-white border border-[#c9c5cd] rounded-xl p-6 space-y-4">
+              <h4 className="text-lg font-semibold text-[#100d1f]">יצירת לקוח חדש</h4>
+              <div>
+                <label className="block text-sm font-semibold text-[#48464c] mb-2">שם הלקוח</label>
+                <input
+                  className="w-full bg-white border border-[#c9c5cd] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all"
+                  placeholder="הזן שם מלא"
+                  type="text"
+                  value={state.newClientName}
+                  onChange={(e) => updateState('newClientName', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#48464c] mb-2">אימייל</label>
+                <input
+                  className="w-full bg-white border border-[#c9c5cd] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all"
+                  placeholder="email@example.com"
+                  type="email"
+                  value={state.newClientEmail}
+                  onChange={(e) => updateState('newClientEmail', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#48464c] mb-2">טלפון</label>
+                <input
+                  className="w-full bg-white border border-[#c9c5cd] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all"
+                  placeholder="050-0000000"
+                  type="tel"
+                  value={state.newClientPhone}
+                  onChange={(e) => updateState('newClientPhone', e.target.value)}
+                />
+              </div>
+              <button
+                className="w-full mt-4 px-6 py-3 bg-[#7D3A52] text-white rounded-xl font-semibold hover:bg-[#6a2f44] transition-colors"
                 onClick={() => updateState('clientMode', 'existing')}
               >
-                לקוח קיים
-              </Button>
-              <Button
-                type="button"
-                variant={state.clientMode === 'new' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => updateState('clientMode', 'new')}
-              >
-                לקוח חדש
-              </Button>
+                בחר לקוח קיים במקום
+              </button>
             </div>
-
-            {state.clientMode === 'existing' ? (
-              <div className="space-y-2">
-                <Label>בחירת לקוח</Label>
-                <Select
-                  value={state.clientId}
-                  onValueChange={(value) => updateState('clientId', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחרי לקוח" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {clients.length === 0 ? (
-                  <p className="text-sm text-[--muted]">
-                    אין לקוחות עדיין — צרי לקוח חדש
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="client-name">שם הלקוח</Label>
-                  <Input
-                    id="client-name"
-                    value={state.newClientName}
-                    onChange={(e) =>
-                      updateState('newClientName', e.target.value)
-                    }
-                    placeholder="שם מלא"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client-email">אימייל</Label>
-                  <Input
-                    id="client-email"
-                    type="email"
-                    dir="ltr"
-                    value={state.newClientEmail}
-                    onChange={(e) =>
-                      updateState('newClientEmail', e.target.value)
-                    }
-                    placeholder="client@email.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="client-phone">טלפון</Label>
-                  <Input
-                    id="client-phone"
-                    type="tel"
-                    dir="ltr"
-                    value={state.newClientPhone}
-                    onChange={(e) =>
-                      updateState('newClientPhone', e.target.value)
-                    }
-                    placeholder="050-0000000"
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          )}
+          
+          {clients.length === 0 && state.clientMode === 'existing' ? (
+            <p className="text-sm text-[#48464c] text-center py-8 bg-[#fdf8fa] rounded-xl border-2 border-dashed border-[#e5e1e3]">
+              אין לקוחות עדיין — צרי לקוח חדש
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {step === 2 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>סוג גלריה</CardTitle>
-            <CardDescription>בחרי את סוג הגלריה ושם</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="gallery-title">שם הגלריה</Label>
-              <Input
-                id="gallery-title"
+        <div className="max-w-5xl mx-auto space-y-8">
+          {/* Section 1: Gallery Name */}
+          <section className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-base font-semibold text-[#48464c]" htmlFor="gallery-name">שם הגלריה</label>
+              <p className="text-base text-[#48464c]/70">זהו השם שיופיע ללקוחות שלך בראש הדף ובקישור.</p>
+            </div>
+            <div className="relative max-w-xl">
+              <input 
+                className="w-full bg-[#f7f2f4] border border-[#c9c5cd] rounded-xl px-6 py-4 text-lg focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all outline-none" 
+                id="gallery-name" 
+                placeholder="למשל: חתונה של דנה ואבי" 
+                type="text"
                 value={state.title}
                 onChange={(e) => updateState('title', e.target.value)}
-                placeholder="לדוגמה: חתונה — דנה ויוסי"
-                required
               />
+              <Edit className="absolute left-4 top-1/2 -translate-y-1/2 text-[#79767d] w-5 h-5" />
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
+          </section>
+          
+          <hr className="border-[#c9c5cd]"/>
+          
+          {/* Section 2: Gallery Type Selection */}
+          <section className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-base font-semibold text-[#48464c]">בחירת סוג גלריה</label>
+              <p className="text-base text-[#48464c]/70">איך הלקוח יתקשר עם התמונות שלך?</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               {GALLERY_TYPES.map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => updateState('galleryType', type)}
-                  className={`rounded-xl border p-4 text-right transition-shadow hover:shadow-md ${
+                <label key={type} className="cursor-pointer">
+                  <input 
+                    className="hidden peer" 
+                    name="gallery_type" 
+                    type="radio" 
+                    value={type}
+                    checked={state.galleryType === type}
+                    onChange={() => updateState('galleryType', type)}
+                  />
+                  <div className={`selection-card h-full p-8 rounded-xl border border-[#c9c5cd] flex flex-col gap-4 text-right peer-checked:border-[#7D3A52] peer-checked:bg-[#7D3A52]/[0.03] peer-checked:ring-1 peer-checked:ring-[#7D3A52] group transition-all duration-300 ${
                     state.galleryType === type
-                      ? 'border-[--accent] shadow-sm'
-                      : 'border-[--border]'
-                  }`}
-                >
-                  <p className="font-medium">{GALLERY_TYPE_LABELS[type]}</p>
-                  <p className="mt-2 text-sm text-[--muted]">
-                    {type === 'selection'
-                      ? 'לקוח בוחר תמונות לאלבום ולעיבוד'
-                      : type === 'delivery'
-                        ? 'מסירת תמונות מעובדות בלבד'
-                        : 'תיק עבודות ציבורי'}
-                  </p>
-                </button>
+                      ? 'border-[#7D3A52] bg-[#7D3A52]/[0.03] ring-1 ring-[#7D3A52]'
+                      : 'hover:border-[#7D3A52] hover:shadow-sm'
+                  }`}>
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center transition-colors ${
+                      state.galleryType === type
+                        ? 'bg-[#7D3A52] text-white'
+                        : 'bg-[#ebe7e9] text-[#7D3A52] group-hover:bg-[#7D3A52] group-hover:text-white'
+                    }`}>
+                      {type === 'selection' ? (
+                        <UserCheck className="w-5 h-5" />
+                      ) : type === 'delivery' ? (
+                        <ImageIcon className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </div>
+                    <h3 className="text-base font-semibold text-[#100d1f]">{GALLERY_TYPE_LABELS[type]}</h3>
+                    <p className="text-sm text-[#48464c] leading-relaxed">
+                      {type === 'selection'
+                        ? 'אידיאלי לתהליכי עבודה. הלקוח יכול לסמן לבבות על תמונות נבחרות לצורך עריכה או הדפסה.'
+                        : type === 'delivery'
+                          ? 'למסירת תמונות סופיות. הלקוח מקבל גישה להורדה ברזולוציה גבוהה ושיתוף עם משפחה וחברים.'
+                          : 'גלריה ציבורית להצגת מיטב העבודות שלך. מותאם לקידום מכירות והצגה מרהיבה לקהל הרחב.'}
+                    </p>
+                    <div className="mt-auto pt-4 flex items-center gap-2 text-[#7D3A52] font-semibold text-sm">
+                      <span>
+                        {type === 'selection' ? 'הוסף לשלב העריכה' : type === 'delivery' ? 'מוכן למשלוח' : 'הצגה לציבור'}
+                      </span>
+                      <ArrowLeft className="w-4 h-4" />
+                    </div>
+                  </div>
+                </label>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </section>
+        </div>
       ) : null}
 
       {step === 3 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>פרסום</CardTitle>
-            <CardDescription>הגדרות גישה, בחירות ושליחה ללקוח</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-start gap-3 rounded-xl border border-dashed border-[--border] bg-[--background] p-4">
-              <ImagePlus className="mt-0.5 h-5 w-5 shrink-0 text-[--muted]" />
-              <div>
-                <p className="text-sm font-medium">העלאת תמונות</p>
-                <p className="mt-1 text-sm text-[--muted]">
-                  לאחר יצירת הגלריה תועברי ישירות לעמוד התמונות להעלאה
-                </p>
+        <div className="max-w-7xl mx-auto">
+          {/* Bento Grid Layout for Sections */}
+          <form className="grid grid-cols-12 gap-6">
+            {/* Security Section */}
+            <section className="col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Lock className="w-5 h-5 text-[#7D3A52]" />
+                <h2 className="text-base font-semibold text-[#100d1f]">אבטחה ופרטיות</h2>
               </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="password">סיסמת גלריה</Label>
-                <Input
-                  id="password"
-                  dir="ltr"
-                  value={state.password}
-                  onChange={(e) => updateState('password', e.target.value)}
-                  placeholder="אוטומטי אם ריק"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expires">תאריך תפוגה</Label>
-                <Input
-                  id="expires"
-                  type="date"
-                  value={state.expiresAt}
-                  onChange={(e) => updateState('expiresAt', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-album">מקסימום לאלבום</Label>
-                <Input
-                  id="max-album"
-                  type="number"
-                  min={0}
-                  value={state.maxAlbumSelection}
-                  onChange={(e) =>
-                    updateState('maxAlbumSelection', e.target.value)
-                  }
-                  placeholder="ללא הגבלה"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-edit">מקסימום לעיבוד</Label>
-                <Input
-                  id="max-edit"
-                  type="number"
-                  min={0}
-                  value={state.maxEditSelection}
-                  onChange={(e) =>
-                    updateState('maxEditSelection', e.target.value)
-                  }
-                  placeholder="ללא הגבלה"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="watermark">טקסט סימן מים</Label>
-              <Input
-                id="watermark"
-                value={state.watermarkText}
-                onChange={(e) => updateState('watermarkText', e.target.value)}
-                placeholder="שם הסטודיו"
-              />
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-[--border] p-4">
-              <div className="flex items-center justify-between gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm font-medium">הורדת תצוגה מקדימה</p>
-                  <p className="text-sm text-[--muted]">לאפשר ללקוח להוריד previews</p>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">סיסמת גלריה</label>
+                  <div className="relative">
+                    <input 
+                      className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all pr-10" 
+                      placeholder="הזן סיסמה..." 
+                      type="password"
+                      value={state.password}
+                      onChange={(e) => updateState('password', e.target.value)}
+                    />
+                    <Key className="absolute right-3 top-1/2 -translate-y-1/2 text-[#48464c] w-5 h-5" />
+                  </div>
                 </div>
-                <Switch
-                  checked={state.allowDownloadPreview}
-                  onCheckedChange={(checked) =>
-                    updateState('allowDownloadPreview', checked)
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium">הורדת מקור</p>
-                  <p className="text-sm text-[--muted]">לאפשר הורדת קבצי מקור</p>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">תאריך תפוגה</label>
+                  <div className="relative">
+                    <input 
+                      className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all pr-10" 
+                      type="date"
+                      value={state.expiresAt}
+                      onChange={(e) => updateState('expiresAt', e.target.value)}
+                    />
+                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-[#48464c] w-5 h-5" />
+                  </div>
                 </div>
-                <Switch
-                  checked={state.allowDownloadOriginal}
-                  onCheckedChange={(checked) =>
-                    updateState('allowDownloadOriginal', checked)
-                  }
-                />
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <p className="mt-4 text-sm text-[#48464c] italic">לאחר תאריך התפוגה, הגישה לגלריה תיחסם אוטומטית.</p>
+            </section>
+            
+            {/* Limits Section */}
+            <section className="col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Zap className="w-5 h-5 text-[#7D3A52]" />
+                <h2 className="text-base font-semibold text-[#100d1f]">מגבלות אלבום</h2>
+              </div>
+              <div className="space-y-6">
                 <div>
-                  <p className="text-sm font-medium">שליחה ללקוח</p>
-                  <p className="text-sm text-[--muted]">
-                    סמן כנשלח — מייל יתווסף בשלב 12
-                  </p>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">מקסימום תמונות בגלריה</label>
+                  <input 
+                    className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all" 
+                    placeholder="ללא הגבלה" 
+                    type="number"
+                    value={state.maxAlbumSelection}
+                    onChange={(e) => updateState('maxAlbumSelection', e.target.value)}
+                  />
                 </div>
-                <Switch
-                  checked={state.sendToClient}
-                  onCheckedChange={(checked) =>
-                    updateState('sendToClient', checked)
-                  }
-                />
+                <div>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">מקסימום תמונות לעריכה</label>
+                  <input 
+                    className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all" 
+                    placeholder="50" 
+                    type="number"
+                    value={state.maxEditSelection}
+                    onChange={(e) => updateState('maxEditSelection', e.target.value)}
+                  />
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </section>
+            
+            {/* Content & Watermark Section */}
+            <section className="col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 overflow-hidden relative">
+              <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#e5dff9] opacity-10 rounded-full blur-3xl"></div>
+              <div className="flex items-center gap-2 mb-6">
+                <Droplets className="w-5 h-5 text-[#7D3A52]" />
+                <h2 className="text-base font-semibold text-[#100d1f]">תוכן וסימן מים</h2>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">טקסט לסימן מים</label>
+                  <input 
+                    className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all" 
+                    placeholder="הזן טקסט למיתוג..." 
+                    type="text"
+                    value={state.watermarkText}
+                    onChange={(e) => updateState('watermarkText', e.target.value)}
+                  />
+                </div>
+              </div>
+            </section>
+            
+            {/* Download Permissions Section */}
+            <section className="col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Download className="w-5 h-5 text-[#7D3A52]" />
+                <h2 className="text-base font-semibold text-[#100d1f]">הרשאות הורדה</h2>
+              </div>
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-base font-semibold text-[#100d1f]">אפשר הורדת תצוגה מקדימה</h4>
+                    <p className="text-sm text-[#48464c]">הורדת תמונות ברזולוציה נמוכה עם סימן מים</p>
+                  </div>
+                  <Switch
+                    checked={state.allowDownloadPreview}
+                    onCheckedChange={(checked) => updateState('allowDownloadPreview', checked)}
+                  />
+                </div>
+                <div className="h-[1px] w-full bg-[#c9c5cd] opacity-50"></div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-base font-semibold text-[#100d1f]">אפשר הורדת קבצי מקור</h4>
+                    <p className="text-sm text-[#48464c]">הורדת קבצי Full HD ללא סימן מים (ללקוחות משלמים בלבד)</p>
+                  </div>
+                  <Switch
+                    checked={state.allowDownloadOriginal}
+                    onCheckedChange={(checked) => updateState('allowDownloadOriginal', checked)}
+                  />
+                </div>
+              </div>
+            </section>
+          </form>
+        </div>
       ) : null}
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-4 pt-4">
         <Button
           type="button"
           variant="outline"
+          size="lg"
           onClick={handleBack}
           disabled={step === 1 || isPending}
+          className="border-2 hover:bg-[#fdf8fa] h-12 px-8"
         >
           חזרה
         </Button>
 
         {step < WIZARD_STEPS.length ? (
-          <Button type="button" onClick={handleNext} disabled={isPending}>
-            המשך
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleNext}
+            disabled={isPending || !canContinue()}
+            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+          >
+            הבא
           </Button>
         ) : (
-          <Button type="button" onClick={handlePublish} disabled={isPending}>
+          <Button
+            type="button"
+            size="lg"
+            onClick={handlePublish}
+            disabled={isPending}
+            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+          >
             {isPending ? (
-              'יוצר גלריה...'
+              'שומר גלריה...'
             ) : (
               <>
-                <Send className="h-4 w-4" />
-                {state.sendToClient ? 'צור ושלח' : 'צור גלריה'}
+                <Send className="h-5 w-5 ml-2" />
+                שמור גלריה והמשך להעלאת תמונות
               </>
             )}
           </Button>

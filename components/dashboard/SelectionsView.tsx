@@ -1,8 +1,8 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useTransition, useState } from 'react'
 import Image from 'next/image'
-import { Download } from 'lucide-react'
+import { Download, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
 import { createDownloadJob } from '@/lib/actions/download.actions'
 import { Button } from '@/components/ui/button'
@@ -45,6 +45,8 @@ export function SelectionsView({
   editPhotos,
 }: SelectionsViewProps) {
   const [isPending, startTransition] = useTransition()
+  const [albumExpanded, setAlbumExpanded] = useState(false)
+  const [editExpanded, setEditExpanded] = useState(false)
 
   function handleDownload(type: 'preview' | 'original') {
     const downloadWindow = window.open('', '_blank')
@@ -96,26 +98,38 @@ export function SelectionsView({
           title="אלבום"
           count={albumPhotos.length}
           photos={albumPhotos}
+          expanded={albumExpanded}
+          onToggle={() => setAlbumExpanded(!albumExpanded)}
         />
         <SelectionColumn
           title="לעיבוד"
           count={editPhotos.length}
           photos={editPhotos}
+          expanded={editExpanded}
+          onToggle={() => setEditExpanded(!editExpanded)}
         />
       </div>
     </div>
   )
 }
 
+type SelectionColumnProps = {
+  title: string
+  count: number
+  photos: SelectionPhoto[]
+  expanded: boolean
+  onToggle: () => void
+}
+
 function SelectionColumn({
   title,
   count,
   photos,
-}: {
-  title: string
-  count: number
-  photos: SelectionPhoto[]
-}) {
+  expanded,
+  onToggle,
+}: SelectionColumnProps) {
+  const hasMorePhotos = photos.length > 6
+
   return (
     <Card>
       <CardHeader>
@@ -129,23 +143,52 @@ function SelectionColumn({
         {photos.length === 0 ? (
           <p className="text-sm text-[--muted]">אין בחירות עדיין</p>
         ) : (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {photos.map((photo) => (
-              <div
-                key={photo.id}
-                className="relative aspect-square overflow-hidden rounded-lg border border-[--border]"
-              >
-                {photo.preview_signed_url ? (
-                  <Image
-                    src={photo.preview_signed_url}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="150px"
-                  />
-                ) : null}
+          <div className="relative">
+            <div
+              className={`transition-all duration-500 ease-in-out ${
+                expanded ? 'max-h-none' : 'max-h-[300px] overflow-hidden'
+              }`}
+            >
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="relative aspect-square overflow-hidden rounded-lg border border-[--border]"
+                  >
+                    {photo.preview_signed_url ? (
+                      <Image
+                        src={photo.preview_signed_url}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="150px"
+                      />
+                    ) : null}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            {hasMorePhotos && (
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center justify-center pt-8 pb-4 bg-gradient-to-t from-white via-white to-transparent">
+                <Button
+                  variant="outline"
+                  onClick={onToggle}
+                  className="bg-white hover:bg-[#f7f2f4] border-[#c9c5cd] shadow-sm"
+                >
+                  {expanded ? (
+                    <>
+                      <ChevronUp className="h-4 w-4 ml-2" />
+                      הסתר תמונות / כווץ תצוגה
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                      הצג את כל התמונות ({photos.length})
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

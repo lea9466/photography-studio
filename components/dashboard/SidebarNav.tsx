@@ -3,13 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { 
+import {
   LayoutDashboard,
   Image as ImageIcon,
   Users,
   Package,
   Settings,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react'
 
 type NavItem = {
@@ -57,15 +59,42 @@ type SidebarNavProps = {
   studioName?: string
   logoUrl?: string | null
   onSignOut?: () => void
+  isCollapsed?: boolean
+  onToggleCollapse?: () => void
 }
 
-export function SidebarNav({ userName, studioName, logoUrl, onSignOut }: SidebarNavProps) {
+export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollapsed = false, onToggleCollapse }: SidebarNavProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed right-0 top-0 h-full w-72 bg-white dark:bg-zinc-900 z-40 flex flex-col border-l border-[--border] hidden md:flex">
+    <>
+      <aside
+        className={cn(
+          "fixed right-0 top-0 h-full bg-white dark:bg-zinc-900 z-40 flex flex-col border-l border-[--border] hidden md:flex transition-all duration-300 ease-in-out",
+          isCollapsed ? "w-16" : "w-72"
+        )}
+      >
+      {/* Toggle Button - Inside sidebar when open */}
+      <button
+        onClick={onToggleCollapse}
+        className={cn(
+          "absolute p-2 rounded-lg bg-[--background] border border-[--border] shadow-md hover:bg-[--accent]/10 transition-all duration-200 flex items-center justify-center",
+          isCollapsed ? "right-2 top-4" : "left-4 top-4"
+        )}
+        aria-label={isCollapsed ? 'פתח תפריט' : 'סגור תפריט'}
+      >
+        {isCollapsed ? (
+          <Menu className="h-5 w-5 text-[--foreground]" />
+        ) : (
+          <X className="h-5 w-5 text-[--foreground]" />
+        )}
+      </button>
+
       {/* Logo Section */}
-      <div className="p-6 flex items-center gap-4">
+      <div className={cn(
+        "p-6 flex items-center gap-4 transition-all duration-300",
+        isCollapsed ? "opacity-0 w-0 overflow-hidden p-0" : "opacity-100"
+      )}>
         <div className="w-12 h-12 rounded-xl bg-[--foreground] flex items-center justify-center text-white overflow-hidden border border-[--border]">
           {logoUrl ? (
             <img 
@@ -88,7 +117,10 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut }: Sidebar
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 mt-4 px-4 space-y-1">
+      <nav className={cn(
+        "flex-1 mt-4 px-4 space-y-1 transition-all duration-300",
+        isCollapsed ? "opacity-0 w-0 overflow-hidden px-0" : "opacity-100"
+      )}>
         {NAV_ITEMS.map((item) => {
           const active = item.isActive(pathname)
           return (
@@ -110,25 +142,35 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut }: Sidebar
       </nav>
 
       {/* User Section */}
-      <div className="mt-auto p-4 border-t border-[--border]">
-        <div className="flex items-center gap-3 mb-3">
+      <div className={cn(
+        "mt-auto border-t border-[--border] transition-all duration-300",
+        isCollapsed ? "p-2 flex justify-center" : "p-4"
+      )}>
+        {isCollapsed ? (
           <div className="w-10 h-10 rounded-full bg-[--accent]/10 flex items-center justify-center text-[--accent] font-semibold border border-[--border]">
             {userName?.charAt(0) || 'U'}
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-[--foreground]">{userName || 'משתמש'}</p>
-            <p className="text-xs text-[--accent] font-medium">מחובר</p>
+        ) : (
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-[--accent]/10 flex items-center justify-center text-[--accent] font-semibold border border-[--border]">
+              {userName?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[--foreground]">{userName || 'משתמש'}</p>
+              <p className="text-xs text-[--accent] font-medium">מחובר</p>
+            </div>
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="p-2 rounded-lg hover:bg-red-50 text-[--muted] hover:text-red-600 transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
           </div>
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              className="p-2 rounded-lg hover:bg-red-50 text-[--muted] hover:text-red-600 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-          )}
-        </div>
+        )}
       </div>
     </aside>
+    </>
   )
 }

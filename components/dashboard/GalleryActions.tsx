@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useTransition } from 'react'
-import { ExternalLink, Mail, Send, Truck } from 'lucide-react'
+import { ExternalLink, Mail, Send, Truck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   resendGalleryEmail,
@@ -21,6 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card'
 
 type GalleryActionsProps = {
   galleryId: string
@@ -69,102 +73,128 @@ export function GalleryActions({
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
-      <Button variant="outline" size="sm" asChild>
-        <Link href={clientLink} target="_blank">
-          <ExternalLink className="h-4 w-4" />
-          {clientLink.startsWith('/portfolio') ? 'תצוגה ציבורית' : 'תצוגת לקוח'}
-        </Link>
-      </Button>
+    <Card className="border-[#c9c5cd] shadow-sm">
+      <CardContent className="p-6 space-y-6">
+        {/* Section: Client Communication */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-[#48464c]">תקשורת עם לקוח</h3>
+          <div className="flex flex-wrap gap-2">
+            {status === 'draft' ? (
+              <Button
+                size="sm"
+                disabled={isPending}
+                onClick={() =>
+                  run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
+                }
+                className="bg-[#6b2d43] hover:bg-[#5a2538]"
+              >
+                <Send className="h-4 w-4" />
+                שלח ללקוח
+              </Button>
+            ) : null}
 
-      {status === 'draft' ? (
-        <Button
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
-          }
-        >
-          <Send className="h-4 w-4" />
-          שלח ללקוח
-        </Button>
-      ) : null}
+            {status === 'sent' ? (
+              <Button
+                size="sm"
+                disabled={isPending}
+                onClick={() =>
+                  run(
+                    () => updateGalleryStatus(galleryId, 'selection'),
+                    'מצב בחירה נפתח'
+                  )
+                }
+                className="bg-[#6b2d43] hover:bg-[#5a2538]"
+              >
+                פתח בחירה
+              </Button>
+            ) : null}
 
-      {status === 'sent' ? (
-        <Button
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(
-              () => updateGalleryStatus(galleryId, 'selection'),
-              'מצב בחירה נפתח'
-            )
-          }
-        >
-          פתח בחירה
-        </Button>
-      ) : null}
+            {status === 'editing' ? (
+              <Button
+                size="sm"
+                disabled={isPending}
+                onClick={() =>
+                  run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
+                }
+                className="bg-[#6b2d43] hover:bg-[#5a2538]"
+              >
+                <Truck className="h-4 w-4" />
+                סמן מוכן למסירה
+              </Button>
+            ) : null}
 
-      {status === 'editing' ? (
-        <Button
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
-          }
-        >
-          <Truck className="h-4 w-4" />
-          סמן מוכן למסירה
-        </Button>
-      ) : null}
+            {resendLabel ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={() =>
+                  run(
+                    () => resendGalleryEmail(galleryId),
+                    resendSuccessMessage(status)
+                  )
+                }
+                className="border-[#c9c5cd] hover:bg-[#f7f2f4]"
+              >
+                <Mail className="h-4 w-4" />
+                {resendLabel}
+              </Button>
+            ) : null}
+          </div>
+        </div>
 
-      {resendLabel ? (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isPending}
-          onClick={() =>
-            run(
-              () => resendGalleryEmail(galleryId),
-              resendSuccessMessage(status)
-            )
-          }
-        >
-          <Mail className="h-4 w-4" />
-          {resendLabel}
-        </Button>
-      ) : null}
+        {/* Section: View Actions */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-[#48464c]">תצוגה</h3>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild className="border-[#c9c5cd] hover:bg-[#f7f2f4]">
+              <Link href={clientLink} target="_blank">
+                <ExternalLink className="h-4 w-4" />
+                {clientLink.startsWith('/portfolio') ? 'תצוגה ציבורית' : 'תצוגת לקוח'}
+              </Link>
+            </Button>
+          </div>
+        </div>
 
-      <Select
-        value={status}
-        disabled={isPending}
-        onValueChange={(value) => {
-          const nextStatus = value as GalleryStatus
-          if (nextStatus === status) return
-          run(
-            () => updateGalleryStatus(galleryId, nextStatus),
-            `הסטטוס עודכן ל־${GALLERY_STATUS_LABELS[nextStatus]}`
-          )
-        }}
-      >
-        <SelectTrigger className="h-9 w-auto min-w-[9rem]">
-          <SelectValue placeholder="סטטוס" />
-        </SelectTrigger>
-        <SelectContent>
-          {(
-            Object.entries(GALLERY_STATUS_LABELS) as [GalleryStatus, string][]
-          ).map(([value, label]) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+        {/* Section: Status Management */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-[#48464c]">ניהול סטטוס</h3>
+          <Select
+            value={status}
+            disabled={isPending}
+            onValueChange={(value) => {
+              const nextStatus = value as GalleryStatus
+              if (nextStatus === status) return
+              run(
+                () => updateGalleryStatus(galleryId, nextStatus),
+                `הסטטוס עודכן ל־${GALLERY_STATUS_LABELS[nextStatus]}`
+              )
+            }}
+          >
+            <SelectTrigger className="h-10 w-full border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] flex-row-reverse">
+              <SelectValue placeholder="סטטוס" />
+            </SelectTrigger>
+            <SelectContent>
+              {(
+                Object.entries(GALLERY_STATUS_LABELS) as [GalleryStatus, string][]
+              ).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      <DeleteGalleryButton
-        galleryId={galleryId}
-        galleryTitle={galleryTitle}
-      />
-    </div>
+        {/* Section: Dangerous Actions */}
+        <div className="space-y-3 pt-4 border-t border-[#c9c5cd]">
+          <h3 className="text-sm font-semibold text-[#48464c]">פעולות מסוכנות</h3>
+          <DeleteGalleryButton
+            galleryId={galleryId}
+            galleryTitle={galleryTitle}
+          />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
