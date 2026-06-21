@@ -2,8 +2,7 @@ import type { GalleryStatus } from '@/lib/types/database.types'
 import { Badge } from '@/components/ui/badge'
 
 const MESSAGES: Record<GalleryStatus, string> = {
-  sent: 'ברוכים הבאים! התחילו לבחור תמונות',
-  selection: 'הבחירה פתוחה – בחרו את התמונות האהובות עליכם',
+  selection: 'ברוכים הבאים! התחילו לבחור תמונות',
   editing: 'הבחירה הסתיימה – התמונות בעיבוד',
   delivery_ready: 'התמונות המעובדות מוכנות להורדה!',
   locked: 'הגלריה סגורה',
