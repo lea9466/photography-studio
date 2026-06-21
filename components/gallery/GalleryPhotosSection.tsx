@@ -293,11 +293,11 @@ export function GalleryPhotosSection({
   function handlePublishGallery() {
     startTransition(async () => {
       try {
-        await updateGalleryStatus(galleryId, 'published')
-        toast.success('הגלריה פורסמה בהצלחה!')
+        await updateGalleryStatus(galleryId, 'selection')
+        toast.success('הגלריה נשלחה ללקוח!')
         router.push('/dashboard/galleries')
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'פרסום הגלריה נכשל')
+        toast.error(error instanceof Error ? error.message : 'שליחת הגלריה נכשלה')
       }
     })
   }
