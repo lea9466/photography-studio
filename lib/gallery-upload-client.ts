@@ -212,7 +212,7 @@ class BatchPipeline {
   private readonly files: File[]
   private readonly callbacks?: GalleryUploadCallbacks
   private readonly total: number
-  private readonly isProcessed: boolean
+  public readonly isProcessed: boolean
 
   private reservedUpTo = 0
   private urlsFetchedUpTo = 0
