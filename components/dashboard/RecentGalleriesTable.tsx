@@ -42,6 +42,8 @@ export type GalleryWithDetails = Gallery & {
 
 type GalleryRowProps = {
   gallery: GalleryWithDetails
+  selected: boolean
+  onSelect: (id: string) => void
 }
 
 function getStatusBadge(status: string) {
@@ -62,7 +64,7 @@ function getStatusBadge(status: string) {
   )
 }
 
-function GalleryRow({ gallery }: GalleryRowProps) {
+function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -122,6 +124,14 @@ function GalleryRow({ gallery }: GalleryRowProps) {
   return (
     <>
       <tr className="hover:bg-[--background] transition-colors">
+        <td className="px-6 py-4">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onSelect(gallery.id)}
+            className="h-4 w-4"
+          />
+        </td>
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-[--background] border border-[--border]">
@@ -236,6 +246,9 @@ type RecentGalleriesTableProps = {
 }
 
 export function RecentGalleriesTable({ galleries, filter, title = 'גלריות אחרונות' }: RecentGalleriesTableProps) {
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isPending, startTransition] = useTransition()
+
   const filteredGalleries = filter && filter !== 'all'
     ? galleries.filter(gallery => {
         if (filter === 'draft') return gallery.status === 'draft'
@@ -252,15 +265,72 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
         return true
       })
     : galleries
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filteredGalleries.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredGalleries.map((g) => g.id)))
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`למחוק ${selectedIds.size} גלריות?`)) {
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        await Promise.all(Array.from(selectedIds).map((id) => deleteGallery(id)))
+        toast.success('הגלריות נמחקו')
+        setSelectedIds(new Set())
+        window.location.reload()
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
   return (
     <section className="bg-white dark:bg-zinc-900 border border-[--border] rounded-xl overflow-hidden mb-6">
-      <div className="p-6 border-b border-[--border]">
+      <div className="p-6 border-b border-[--border] flex items-center justify-between">
         <h3 className="font-semibold text-lg text-[--foreground]">{title}</h3>
+        {selectedIds.size > 0 && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            disabled={isPending}
+          >
+            <Trash2 className="h-4 w-4 ml-2" />
+            מחק נבחרים ({selectedIds.size})
+          </Button>
+        )}
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-right border-collapse">
           <thead>
             <tr className="bg-[--background] text-[--muted]">
+              <th className="px-6 py-3 text-sm font-medium w-10">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filteredGalleries.length && filteredGalleries.length > 0}
+                  onChange={toggleSelectAll}
+                  className="h-4 w-4"
+                />
+              </th>
               <th className="px-6 py-3 text-sm font-medium">שם גלריה</th>
               <th className="px-6 py-3 text-sm font-medium">לקוח</th>
               <th className="px-6 py-3 text-sm font-medium">סטטוס</th>
@@ -271,11 +341,11 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
           <tbody className="divide-y divide-[--border]">
             {filteredGalleries.length > 0 ? (
               filteredGalleries.map((gallery) => (
-                <GalleryRow key={gallery.id} gallery={gallery} />
+                <GalleryRow key={gallery.id} gallery={gallery} selected={selectedIds.has(gallery.id)} onSelect={toggleSelect} />
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-[--muted]">
+                <td colSpan={6} className="px-6 py-8 text-center text-[--muted]">
                   אין גלריות עדיין
                 </td>
               </tr>

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Pencil, Plus, Trash2, Mail, Phone } from 'lucide-react'
+import { Pencil, Plus, Trash2, Mail, Phone, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createClientRecord,
   updateClientRecord,
+  deleteClientRecord,
 } from '@/lib/actions/client.actions'
 import type { Client } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,7 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClientFormState>(EMPTY_FORM)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   function openCreateDialog() {
     setEditingId(null)
@@ -99,11 +101,50 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
 
     startTransition(async () => {
       try {
-        // Note: You'll need to add a deleteClientRecord action if you want this functionality
-        toast.error('פונקציית מחיקה טרם מומשה')
+        await deleteClientRecord(clientId)
+        setClients((current) => current.filter((c) => c.id !== clientId))
+        toast.success('הלקוח נמחק')
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
       }
+    })
+  }
+
+  function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`למחוק ${selectedIds.size} לקוחות?`)) {
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        await Promise.all(Array.from(selectedIds).map((id) => deleteClientRecord(id)))
+        setClients((current) => current.filter((c) => !selectedIds.has(c.id)))
+        setSelectedIds(new Set())
+        toast.success('הלקוחות נמחקו')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === clients.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(clients.map((c) => c.id)))
+    }
+  }
+
+  function toggleSelect(clientId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(clientId)) {
+        next.delete(clientId)
+      } else {
+        next.add(clientId)
+      }
+      return next
     })
   }
 
@@ -115,10 +156,24 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
             ? 'עדיין אין לקוחות — הוסיפי את הראשון'
             : `${clients.length} לקוחות`}
         </p>
-        <Button type="button" onClick={openCreateDialog}>
-          <Plus className="h-4 w-4" />
-          לקוח חדש
-        </Button>
+        <div className="flex gap-2">
+          {selectedIds.size > 0 && (
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={handleBulkDelete}
+              disabled={isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              מחק נבחרים ({selectedIds.size})
+            </Button>
+          )}
+          <Button type="button" onClick={openCreateDialog}>
+            <Plus className="h-4 w-4" />
+            לקוח חדש
+          </Button>
+        </div>
       </div>
 
       {clients.length === 0 ? (
@@ -130,6 +185,14 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
           <table className="w-full">
             <thead className="bg-[--background] border-b border-[--border]">
               <tr>
+                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted] w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === clients.length && clients.length > 0}
+                    onChange={toggleSelectAll}
+                    className="h-4 w-4"
+                  />
+                </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-[--muted]">
                   שם
                 </th>
@@ -147,6 +210,14 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
             <tbody>
               {clients.map((client) => (
                 <tr key={client.id} className="border-b border-[--border] last:border-0">
+                  <td className="px-4 py-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(client.id)}
+                      onChange={() => toggleSelect(client.id)}
+                      className="h-4 w-4"
+                    />
+                  </td>
                   <td className="px-4 py-3 text-sm font-medium text-[--foreground]">
                     {client.name}
                   </td>

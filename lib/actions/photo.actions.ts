@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
+import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
 
@@ -252,6 +253,14 @@ export async function setPhotosProcessedBulk(
 
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath(`/dashboard/galleries/${galleryId}`)
+}
+
+export async function signPreviewUrls(previewUrls: (string | null)[]) {
+  const filteredUrls = previewUrls.filter((url): url is string => url !== null)
+  if (filteredUrls.length === 0) {
+    return {}
+  }
+  return signStoragePaths('previews', filteredUrls)
 }
 
 export async function prepareGalleryForDelivery(galleryId: string) {

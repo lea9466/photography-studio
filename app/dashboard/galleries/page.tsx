@@ -6,6 +6,7 @@ import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { Button } from '@/components/ui/button'
+import { signPreviewUrls } from '@/lib/actions/photo.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
 export default function GalleriesPage() {
@@ -24,20 +25,59 @@ export default function GalleriesPage() {
           .select(`
             *,
             client:clients(name),
-            photos(count),
-            first_photo:photos(preview_url)
+            photos(count)
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
+
+        // Fetch first photo for each gallery using a more efficient query
+        const galleryIds = (galleries || []).map((g: any) => g.id)
+        const firstPhotoMap = new Map<string, string>()
+
+        if (galleryIds.length > 0) {
+          // Use a subquery-like approach: fetch photos with LIMIT 1 per gallery
+          for (const galleryId of galleryIds) {
+            const { data: firstPhoto } = await supabase
+              .from('photos')
+              .select('preview_url')
+              .eq('gallery_id', galleryId)
+              .order('sort_order', { ascending: true })
+              .limit(1)
+              .maybeSingle()
+
+            if (firstPhoto && firstPhoto.preview_url) {
+              firstPhotoMap.set(galleryId, firstPhoto.preview_url)
+            }
+          }
+        }
 
         // Transform the data to match the expected format
         const transformedGalleries = (galleries || []).map((gallery: any) => ({
           ...gallery,
           client: gallery.client,
           photo_count: gallery.photos?.[0]?.count || 0,
-          first_photo_url: gallery.first_photo?.[0]?.preview_url || null,
+          first_photo_url: firstPhotoMap.get(gallery.id) || null,
         }))
-        setRecentGalleries(transformedGalleries)
+
+        // Sign preview URLs using server action
+        const allPreviewUrls = transformedGalleries
+          .map((g) => g.first_photo_url)
+          .filter((url): url is string => url !== null)
+
+        let galleriesWithSignedUrls = transformedGalleries
+        if (allPreviewUrls.length > 0) {
+          try {
+            const signedUrls = await signPreviewUrls(allPreviewUrls)
+            galleriesWithSignedUrls = transformedGalleries.map((gallery) => ({
+              ...gallery,
+              first_photo_url: gallery.first_photo_url ? (signedUrls[gallery.first_photo_url] || gallery.first_photo_url) : null,
+            }))
+          } catch (error) {
+            console.warn('Failed to sign preview URLs:', error)
+          }
+        }
+
+        setRecentGalleries(galleriesWithSignedUrls)
       }
       setLoading(false)
     }
