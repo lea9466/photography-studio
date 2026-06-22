@@ -68,6 +68,7 @@ export function GalleryPhotosSection({
   const objectUrlsRef = useRef<string[]>([])
   const [pendingPhotos, setPendingPhotos] = useState<PendingGalleryPhoto[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [processedSelectedIds, setProcessedSelectedIds] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [galleryTitle, setGalleryTitle] = useState<string>('')
@@ -76,7 +77,8 @@ export function GalleryPhotosSection({
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<GalleryUploadProgress | null>(null)
   const [showAllPhotos, setShowAllPhotos] = useState(false)
-  const [viewFilter, setViewFilter] = useState<'all' | 'processed'>('all')
+  const [activeTab, setActiveTab] = useState<'regular' | 'processed'>('regular')
+  const activeTabRef = useRef<'regular' | 'processed'>('regular')
 
   useEffect(() => {
     return () => {
@@ -169,13 +171,15 @@ export function GalleryPhotosSection({
           phase: 'preparing',
         })
 
+        console.log('👉 About to upload photos, activeTab:', activeTab, 'activeTabRef:', activeTabRef.current, 'isProcessed:', activeTabRef.current === 'processed')
         const result = await uploadGalleryPhotosWithQueue(
           galleryId,
           userId,
           selected,
           watermarkText,
           setUploadProgress,
-          uploadCallbacks
+          uploadCallbacks,
+          activeTabRef.current === 'processed'
         )
 
         if (result.ok) {
@@ -207,25 +211,39 @@ export function GalleryPhotosSection({
     (photo) => photo.status !== 'failed'
   ).length
 
-  const visiblePhotoIds = useMemo(
-    () => photos.map((photo) => photo.id),
+  const regularPhotos = useMemo(
+    () => photos.filter(photo => !photo.is_processed),
     [photos]
+  )
+
+  const processedPhotos = useMemo(
+    () => photos.filter(photo => photo.is_processed),
+    [photos]
+  )
+
+  const currentPhotos = activeTab === 'regular' ? regularPhotos : processedPhotos
+  const currentSelectedIds = activeTab === 'regular' ? selectedIds : processedSelectedIds
+  const setCurrentSelectedIds = activeTab === 'regular' ? setSelectedIds : setProcessedSelectedIds
+
+  const visiblePhotoIds = useMemo(
+    () => currentPhotos.map((photo) => photo.id),
+    [currentPhotos]
   )
 
   const allSelected =
     visiblePhotoIds.length > 0 &&
-    visiblePhotoIds.every((id) => selectedIds.has(id))
+    visiblePhotoIds.every((id) => currentSelectedIds.has(id))
 
   function toggleSelectAll() {
     if (allSelected) {
-      setSelectedIds(new Set())
+      setCurrentSelectedIds(new Set())
       return
     }
-    setSelectedIds(new Set(visiblePhotoIds))
+    setCurrentSelectedIds(new Set(visiblePhotoIds))
   }
 
   function togglePhotoSelected(photoId: string) {
-    setSelectedIds((prev) => {
+    setCurrentSelectedIds((prev) => {
       const next = new Set(prev)
       if (next.has(photoId)) next.delete(photoId)
       else next.add(photoId)
@@ -234,7 +252,7 @@ export function GalleryPhotosSection({
   }
 
   function bulkSetVisibility(visible: boolean) {
-    const ids = Array.from(selectedIds)
+    const ids = Array.from(currentSelectedIds)
     if (ids.length === 0) {
       toast.error('בחרי תמונות קודם')
       return
@@ -244,7 +262,7 @@ export function GalleryPhotosSection({
       try {
         await setPhotosVisibilityBulk(galleryId, ids, visible)
         toast.success(visible ? 'התמונות גלויות ללקוח' : 'התמונות הוסתרו מהלקוח')
-        setSelectedIds(new Set())
+        setCurrentSelectedIds(new Set())
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
       }
@@ -252,7 +270,7 @@ export function GalleryPhotosSection({
   }
 
   function bulkSetProcessed(processed: boolean) {
-    const ids = Array.from(selectedIds)
+    const ids = Array.from(currentSelectedIds)
     if (ids.length === 0) {
       toast.error('בחרי תמונות קודם')
       return
@@ -262,7 +280,7 @@ export function GalleryPhotosSection({
       try {
         await setPhotosProcessedBulk(galleryId, ids, processed)
         toast.success(processed ? 'התמונות סומנו כמעובדות' : 'התמונות סומנו כרגילות')
-        setSelectedIds(new Set())
+        setCurrentSelectedIds(new Set())
         router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
@@ -271,7 +289,7 @@ export function GalleryPhotosSection({
   }
 
   function deleteSelectedPhotos() {
-    const ids = Array.from(selectedIds)
+    const ids = Array.from(currentSelectedIds)
     if (ids.length === 0) {
       toast.error('בחרי תמונות קודם')
       return
@@ -281,7 +299,7 @@ export function GalleryPhotosSection({
       try {
         await deletePhotosBulk(galleryId, ids)
         toast.success(`${ids.length} תמונות נמחקו`)
-        setSelectedIds(new Set())
+        setCurrentSelectedIds(new Set())
         router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
@@ -342,18 +360,9 @@ export function GalleryPhotosSection({
   const storagePercentage = (storageUsage / 10240) * 100 // 10GB = 10240MB
 
   // Calculate which photos to show based on limit and state
-  const displayPhotos = showAllPhotos ? photos : photos.slice(0, initialPhotoLimit)
-  const hasMorePhotos = photos.length > initialPhotoLimit
-  const shouldShowToggleButton = photos.length > 0
-
-  // Filter photos based on view filter
-  const filteredPhotos = useMemo(() => {
-    if (viewFilter === 'processed') {
-      return photos.filter(photo => photo.is_processed)
-    }
-    return photos
-  }, [photos, viewFilter])
-  const displayFilteredPhotos = showAllPhotos ? filteredPhotos : filteredPhotos.slice(0, initialPhotoLimit)
+  const displayPhotos = showAllPhotos ? currentPhotos : currentPhotos.slice(0, initialPhotoLimit)
+  const hasMorePhotos = currentPhotos.length > initialPhotoLimit
+  const shouldShowToggleButton = currentPhotos.length > 0
 
   return (
     <div className="min-h-screen bg-[#fdf8fa]">
@@ -452,8 +461,13 @@ export function GalleryPhotosSection({
 
           {/* Upload Grid */}
           <div className="space-y-4">
+            {activeTab === 'regular' && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+                <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב "מעובדות" למטה
+              </div>
+            )}
             <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-[#100d1f]">תמונות שהועלו ({totalPhotos})</h4>
+              <h4 className="text-base font-semibold text-[#100d1f]">תמונות {activeTab === 'regular' ? 'רגילות' : 'מעובדות'} ({currentPhotos.length})</h4>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -463,23 +477,23 @@ export function GalleryPhotosSection({
                 >
                   {allSelected ? 'בטל בחירה' : 'בחר הכל'}
                 </Button>
-                {selectedIds.size > 0 && (
+                {currentSelectedIds.size > 0 && (
                   <>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => bulkSetProcessed(true)}
+                      onClick={() => bulkSetVisibility(true)}
                       className="border-green-300 hover:bg-green-50 text-green-600 text-xs"
                     >
-                      סמן כמעובד
+                      הצג ללקוח
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => bulkSetProcessed(false)}
+                      onClick={() => bulkSetVisibility(false)}
                       className="border-blue-300 hover:bg-blue-50 text-blue-600 text-xs"
                     >
-                      סמן כרגיל
+                      הסתר מלקוח
                     </Button>
                     <Button
                       variant="outline"
@@ -487,27 +501,36 @@ export function GalleryPhotosSection({
                       onClick={() => setDeleteDialogOpen(true)}
                       className="border-red-300 hover:bg-red-50 text-red-600 text-xs"
                     >
-                      מחק נבחרים ({selectedIds.size})
+                      מחק נבחרים ({currentSelectedIds.size})
                     </Button>
                   </>
                 )}
                 <div className="flex items-center gap-2 border-r border-[#c9c5cd] pr-2">
-                  <span className="text-xs text-[#48464c]">צפה:</span>
+                  <span className="text-xs text-[#48464c]">טאבים:</span>
                   <Button
-                    variant={viewFilter === 'all' ? 'default' : 'ghost'}
+                    variant={activeTab === 'regular' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewFilter('all')}
-                    className={viewFilter === 'all' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
+                    onClick={() => {
+                      console.log('👉 Clicking regular tab')
+                      setActiveTab('regular')
+                      activeTabRef.current = 'regular'
+                    }}
+                    className={activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
                   >
-                    הכל
+                    רגילות ({regularPhotos.length})
                   </Button>
                   <Button
-                    variant={viewFilter === 'processed' ? 'default' : 'ghost'}
+                    variant={activeTab === 'processed' ? 'default' : 'ghost'}
                     size="sm"
-                    onClick={() => setViewFilter('processed')}
-                    className={viewFilter === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
+                    onClick={() => {
+                      console.log('👉 Clicking processed tab, current activeTab:', activeTab)
+                      setActiveTab('processed')
+                      activeTabRef.current = 'processed'
+                      console.log('👉 After setActiveTab, next render should show activeTab as processed')
+                    }}
+                    className={activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
                   >
-                    מעובד
+                    מעובדות ({processedPhotos.length})
                   </Button>
                 </div>
               </div>
@@ -519,10 +542,10 @@ export function GalleryPhotosSection({
                 }`}
               >
                 <GalleryGrid
-                  photos={displayFilteredPhotos}
+                  photos={displayPhotos}
                   signedUrls={signedUrls}
                   pendingPhotos={pendingPhotos}
-                  selectedIds={selectedIds}
+                  selectedIds={currentSelectedIds}
                   onToggleSelect={togglePhotoSelected}
                 />
                 {!showAllPhotos && (
@@ -536,7 +559,7 @@ export function GalleryPhotosSection({
                     onClick={() => setShowAllPhotos(true)}
                     className="bg-white hover:bg-[#f7f2f4] border-[#c9c5cd] shadow-sm"
                   >
-                    הצג את כל התמונות ({filteredPhotos.length})
+                    הצג את כל התמונות ({currentPhotos.length})
                   </Button>
                 </div>
               )}

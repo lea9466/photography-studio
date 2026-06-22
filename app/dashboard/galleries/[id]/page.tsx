@@ -297,24 +297,6 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           albumPhotos={albumPhotos}
           editPhotos={editPhotos}
         />
-
-        {['editing', 'delivery_ready'].includes(gallery.status) ? (
-          <Card className="border-[#c9c5cd] shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-[#100d1f]">העלאת תמונות מעובדות</CardTitle>
-              <CardDescription className="text-[#48464c]">
-                גררי את כל התמונות המעובדות — הן ישויכו לבחירות הלקוח
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UploadEdited
-                galleryId={gallery.id}
-                userId={user.id}
-                selectedPhotos={editPhotos}
-              />
-            </CardContent>
-          </Card>
-        ) : null}
       </section>
 
       {/* Section 5: Upload and Management */}

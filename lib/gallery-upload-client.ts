@@ -212,6 +212,7 @@ class BatchPipeline {
   private readonly files: File[]
   private readonly callbacks?: GalleryUploadCallbacks
   private readonly total: number
+  private readonly isProcessed: boolean
 
   private reservedUpTo = 0
   private urlsFetchedUpTo = 0
@@ -226,13 +227,15 @@ class BatchPipeline {
     userId: string,
     galleryId: string,
     files: File[],
-    callbacks?: GalleryUploadCallbacks
+    callbacks?: GalleryUploadCallbacks,
+    isProcessed = false
   ) {
     this.userId = userId
     this.galleryId = galleryId
     this.files = files
     this.callbacks = callbacks
     this.total = files.length
+    this.isProcessed = isProcessed
   }
 
   async ensureReserved(fileIndex: number): Promise<void> {
@@ -250,7 +253,7 @@ class BatchPipeline {
     const from = this.reservedUpTo
     if (from >= this.total) return
     const count = Math.min(RESERVATION_BATCH_SIZE, this.total - from)
-    const reserved = await reservePhotosBatch(this.galleryId, count)
+    const reserved = await reservePhotosBatch(this.galleryId, count, this.isProcessed)
 
     for (let i = 0; i < count; i++) {
       const fileIndex = from + i
@@ -351,7 +354,8 @@ export async function uploadGalleryPhotosWithQueue(
   files: File[],
   watermarkText: string | null | undefined,
   onProgress: (progress: GalleryUploadProgress) => void,
-  callbacks?: GalleryUploadCallbacks
+  callbacks?: GalleryUploadCallbacks,
+  isProcessed = false
 ): Promise<GalleryUploadResult> {
   console.log('👉 CLIENT 0. uploadGalleryPhotosWithQueue START', { galleryId, fileCount: files.length })
   const total = files.length
@@ -359,7 +363,7 @@ export async function uploadGalleryPhotosWithQueue(
 
   const releaseWakeLock = await requestUploadWakeLock()
 
-  const pipeline = new BatchPipeline(userId, galleryId, files, callbacks)
+  const pipeline = new BatchPipeline(userId, galleryId, files, callbacks, isProcessed)
   console.log('👉 CLIENT 0.5. BatchPipeline created')
 
   let nextFileIndex = 0
@@ -463,7 +467,7 @@ export async function uploadGalleryPhotosWithQueue(
       reportProgress('registering')
       for (let offset = 0; offset < successes.length; offset += COMPLETE_BATCH_SIZE) {
         const chunk = successes.slice(offset, offset + COMPLETE_BATCH_SIZE)
-        await completePhotosBatch(galleryId, chunk)
+        await completePhotosBatch(galleryId, chunk, pipeline.isProcessed)
         onProgress({
           completed: Math.min(offset + chunk.length, successes.length),
           staged: 0,

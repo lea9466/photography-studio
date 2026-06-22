@@ -87,9 +87,14 @@ export function PhotoCard({
 
       {showActions ? (
         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-[--foreground]/60 p-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <Badge variant="muted">
-            {photo.is_visible_to_client ? 'גלוי' : 'מוסתר'}
-          </Badge>
+          <div className="flex gap-1">
+            <Badge variant="muted">
+              {photo.is_visible_to_client ? 'גלוי' : 'מוסתר'}
+            </Badge>
+            <Badge variant={photo.is_processed ? 'default' : 'muted'}>
+              {photo.is_processed ? 'מעובד' : 'רגיל'}
+            </Badge>
+          </div>
           <div className="flex gap-1">
             <Button
               size="icon"
