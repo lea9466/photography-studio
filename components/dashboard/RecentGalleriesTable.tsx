@@ -11,8 +11,7 @@ import {
   Archive,
   Trash2,
   Copy,
-  Check,
-  Upload
+  Check
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -158,12 +157,6 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
         <td className="px-6 py-4 text-left">
           <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm" className="h-8 px-3" asChild>
-              <Link href={`/dashboard/galleries/${gallery.id}/photos`}>
-                <Upload className="h-4 w-4 ml-2" />
-                העלאת תמונות
-              </Link>
-            </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
               <Link href={`/dashboard/galleries/${gallery.id}`}>
                 <Edit className="h-4 w-4" />
@@ -252,8 +245,8 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
   const filteredGalleries = filter && filter !== 'all'
     ? galleries.filter(gallery => {
         if (filter === 'draft') return gallery.status === 'draft'
-        if (filter === 'waiting') return gallery.status === 'selection' || gallery.status === 'editing'
-        if (filter === 'sent') return gallery.status === 'selection'
+        if (filter === 'selection') return gallery.status === 'selection'
+        if (filter === 'editing') return gallery.status === 'editing'
         if (filter === 'expired') {
           // Include locked galleries and expired galleries
           if (gallery.status === 'locked') return true

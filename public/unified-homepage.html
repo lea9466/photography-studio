@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he" data-theme="elegant">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>סטודיו גלריה - צילום מקצועי</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <style>
+        /* Base CSS Variables - Theme Specific */
+        :root {
+            /* Default Elegant Theme */
+            --primary: #B8953F;
+            --background: #FAFAF8;
+            --surface: #fdf8f7;
+            --on-surface: #1c1b1b;
+            --on-surface-variant: #464742;
+            --outline: #767871;
+        }
+
+        /* Theme Definitions */
+        [data-theme="elegant"] {
+            --primary: #B8953F;
+            --background: #FAFAF8;
+            --surface: #fdf8f7;
+            --on-surface: #1c1b1b;
+            --on-surface-variant: #464742;
+            --outline: #767871;
+        }
+
+        [data-theme="modern"] {
+            --primary: #6366F1;
+            --background: #F8FAFC;
+            --surface: #ffffff;
+            --on-surface: #0F172A;
+            --on-surface-variant: #475569;
+            --outline: #94a3b8;
+        }
+
+        [data-theme="dark"] {
+            --primary: #D81B60;
+            --background: #121217;
+            --surface: #1A1A22;
+            --on-surface: #F5F5F0;
+            --on-surface-variant: #B8B8C0;
+            --outline: #F5F5F0;
+        }
+
+        [data-theme="classic"] {
+            --primary: #B5816A;
+            --background: #FAF7F4;
+            --surface: #FAF7F4;
+            --on-surface: #2d2825;
+            --on-surface-variant: #5a504a;
+            --outline: #8a7d75;
+        }
+
+        /* Derived Palette using color-mix() */
+        :root {
+            --primary-hover: color-mix(in srgb, var(--primary) 85%, black);
+            --primary-light: color-mix(in srgb, var(--primary) 12%, white);
+            --primary-subtle: color-mix(in srgb, var(--primary) 5%, white);
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--on-surface);
+            font-family: 'Heebo', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Reveal on Scroll Animation */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reveal-on-scroll.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Image Reveal Animation */
+        .image-reveal {
+            overflow: hidden;
+            position: relative;
+        }
+        .image-reveal img {
+            transition: transform 1.8s cubic-bezier(0.2, 0, 0.2, 1);
+            transform: scale(1.15);
+        }
+        .image-reveal.active img {
+            transform: scale(1);
+        }
+
+        /* Magnetic Button Effect */
+        .btn-magnetic {
+            transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-magnetic:active {
+            transform: scale(0.96);
+        }
+
+        /* Glassmorphism */
+        .glass-hero {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-glass {
+            background: rgba(var(--background), 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Theme-specific styles */
+        [data-theme="elegant"] .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        [data-theme="elegant"] .font-serif-hebrew {
+            font-family: 'Frank Ruhl Libre', serif;
+        }
+        [data-theme="modern"] .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        [data-theme="dark"] .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        [data-theme="classic"] .font-headline {
+            font-family: 'Frank Ruhl Libre', serif;
+        }
+
+        /* Dark mode specific */
+        [data-theme="dark"] body {
+            -webkit-font-smoothing: antialiased;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar {
+            width: 4px;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-track {
+            background: #121217;
+        }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb {
+            background: #D81B60;
+        }
+
+        /* Classic theme overlay */
+        [data-theme="classic"] .classic-overlay {
+            background: linear-gradient(to top, rgba(181, 129, 106, 0.6) 0%, rgba(181, 129, 106, 0) 100%);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .tablet-stack {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "var(--primary)",
+                        "primary-hover": "var(--primary-hover)",
+                        "primary-light": "var(--primary-light)",
+                        "primary-subtle": "var(--primary-subtle)",
+                        background: "var(--background)",
+                        "on-surface": "var(--on-surface)",
+                        "on-surface-variant": "var(--on-surface-variant)",
+                        outline: "var(--outline)",
+                        surface: "var(--surface)",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0px",
+                        lg: "0px",
+                        xl: "0px",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        lg: "24px",
+                        md: "16px",
+                        xl: "32px",
+                        xxl: "80px",
+                        gutter: "24px"
+                    },
+                    fontFamily: {
+                        display: ["Playfair Display", "serif"],
+                        body: ["Heebo", "sans-serif"],
+                        "serif-hebrew": ["Frank Ruhl Libre", "serif"],
+                        headline: ["Space Grotesk", "sans-serif"],
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="selection:bg-[var(--primary)] selection:text-white">
+    <!-- Theme Switcher (for demo purposes) -->
+    <div class="fixed bottom-4 left-4 z-50 bg-white/90 backdrop-blur-md p-2 rounded-lg shadow-lg border border-outline-variant">
+        <div class="flex gap-2">
+            <button onclick="setTheme('elegant')" class="px-3 py-1 text-xs rounded hover:bg-primary-light transition-colors" data-theme-btn="elegant">Elegant</button>
+            <button onclick="setTheme('modern')" class="px-3 py-1 text-xs rounded hover:bg-primary-light transition-colors" data-theme-btn="modern">Modern</button>
+            <button onclick="setTheme('dark')" class="px-3 py-1 text-xs rounded hover:bg-primary-light transition-colors" data-theme-btn="dark">Dark</button>
+            <button onclick="setTheme('classic')" class="px-3 py-1 text-xs rounded hover:bg-primary-light transition-colors" data-theme-btn="classic">Classic</button>
+        </div>
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 px-lg py-md flex flex-row-reverse justify-between items-center left-0 right-0 max-w-[1440px] mx-auto" id="navbar">
+        <div class="font-display text-2xl uppercase tracking-[0.2em] font-medium text-on-surface">
+            סטודיו גלריה
+        </div>
+        <div class="hidden md:flex flex-row-reverse gap-xl items-center">
+            <a class="text-on-surface-variant hover:text-primary transition-colors text-sm uppercase tracking-widest" href="#home">בית</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors text-sm uppercase tracking-widest" href="#about">אודות</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors text-sm uppercase tracking-widest" href="#galleries">גלריות</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors text-sm uppercase tracking-widest" href="#pricing">חבילות צילום</a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors text-sm uppercase tracking-widest" href="#testimonials">המלצות</a>
+        </div>
+        <button class="bg-[var(--on-surface)] text-white px-8 py-2 text-xs uppercase tracking-widest hover:bg-primary transition-all active:scale-95 btn-magnetic">
+            צור קשר
+        </button>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative h-screen flex items-center justify-center overflow-hidden px-md md:px-16 reveal-on-scroll" id="home">
+            <div class="absolute inset-0 z-0 image-reveal active">
+                <img alt="סטודיו יוקרתי" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw"/>
+            </div>
+            <div class="relative z-10 glass-hero p-xl md:p-24 max-w-4xl text-center backdrop-blur-md">
+                <h1 class="font-display text-4xl md:text-7xl mb-6 leading-[1.1] text-on-surface">
+                    אמנות הרגע <br/>
+                    <span class="text-primary italic font-light">באוצרות אישית</span>
+                </h1>
+                <p class="font-body text-lg md:text-xl text-on-surface/70 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+                    סטודיו לצילום יוקרה המוקדש לנשים מובילות, המשלב אסתטיקה מינימליסטית עם רגש עמוק.
+                </p>
+                <div class="flex justify-center">
+                    <button class="bg-[var(--on-surface)] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-primary transition-all duration-300 btn-magnetic">
+                        צפי בגלריה
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="px-4 md:px-16 py-20 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-xl border-y border-outline-variant/10 reveal-on-scroll">
+            <div class="text-center">
+                <span class="font-display text-5xl md:text-6xl text-primary block mb-2">12</span>
+                <span class="text-xs uppercase tracking-widest opacity-60">שנות ניסיון</span>
+            </div>
+            <div class="text-center">
+                <span class="font-display text-5xl md:text-6xl text-primary block mb-2">450+</span>
+                <span class="text-xs uppercase tracking-widest opacity-60">סיפורי לקוחות</span>
+            </div>
+            <div class="text-center">
+                <span class="font-display text-5xl md:text-6xl text-primary block mb-2">15</span>
+                <span class="text-xs uppercase tracking-widest opacity-60">פרסי צילום</span>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="px-4 md:px-16 py-32 max-w-7xl mx-auto reveal-on-scroll" id="about">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+                <div class="order-2 lg:order-1">
+                    <h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">החזון שלנו</h2>
+                    <p class="font-body text-lg mb-6 leading-relaxed opacity-80">
+                        ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.
+                    </p>
+                    <p class="font-body text-base mb-10 opacity-60 leading-relaxed">
+                        אנו לא רק מצלמים תמונות; אנו יוצרים חוויות. מהרגע שנכנסת לסטודיו ועד לקבלת האלבום היוקרתי, כל פרט מעוצב כדי לגרום לך להרגיש הגרסה הבטוחה והיפה ביותר של עצמך.
+                    </p>
+                    <button class="border border-[var(--on-surface)] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[var(--on-surface)] hover:text-white transition-all duration-300 btn-magnetic">
+                        הכירי את הצוות
+                    </button>
+                </div>
+                <div class="order-1 lg:order-2 image-reveal aspect-[4/5] shadow-2xl">
+                    <img alt="צילום פורטרט" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc"/>
+                </div>
+            </div>
+        </section>
+
+        <!-- Portfolio Gallery -->
+        <section class="px-4 md:px-16 py-24 bg-white" id="galleries">
+            <div class="max-w-7xl mx-auto">
+                <div class="flex flex-row-reverse justify-between items-end mb-16 reveal-on-scroll">
+                    <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">קולקציות נבחרות</h2>
+                    <a class="text-xs uppercase tracking-widest text-primary border-b border-primary pb-1 hover:opacity-70 transition-opacity" href="#">לכל הגלריות</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 tablet-stack">
+                    <div class="md:col-span-8 group overflow-hidden reveal-on-scroll">
+                        <div class="image-reveal aspect-video cursor-pointer">
+                            <img alt="קולקציית חתונה" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw"/>
+                        </div>
+                        <div class="py-6">
+                            <h3 class="font-display text-2xl mb-1">חתונות יוקרה</h3>
+                            <p class="text-xs uppercase tracking-widest opacity-40">2024 • דוקומנטרי אומנותי</p>
+                        </div>
+                    </div>
+                    <div class="md:col-span-4 group overflow-hidden reveal-on-scroll" style="transition-delay: 200ms;">
+                        <div class="image-reveal aspect-[3/4] cursor-pointer">
+                            <img alt="קולקציית פורטרט" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIKLd4TEm5-aK2PQ8TjipU-gAp-wtMSt36ZkdNRqHWzM8KTocP-xyYLFpkUUzawBSYHMgV_XVJ1Tg7PqsXQke5L7AJil1upYn7Y6RlzTR5k8V302iKnIujaHu64JtBr2cKAvXdaeIfMWWxgA-AXoNmLs4Zoyakg1FaVMOt1FCxIzZiOwSh9MNCrR_cOV3CkWaRHi_y4w9UflZrUMmn8lIsY8r4iUv7PTkJUSoz343U-58JXRfslDekI6F0EQoEy9l1IugJtWoOzu4"/>
+                        </div>
+                        <div class="py-6">
+                            <h3 class="font-display text-2xl mb-1">פורטרט אישי</h3>
+                            <p class="text-xs uppercase tracking-widest opacity-40">קולקציית סטודיו</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="bg-[var(--surface)] py-32 px-4 md:px-16" id="pricing">
+            <div class="mx-auto max-w-7xl">
+                <div class="text-center mb-16 reveal-on-scroll">
+                    <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">חבילות שירות</h2>
+                    <p class="font-body opacity-60 italic">השקעה בזיכרונות שיישארו לנצח</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Essential -->
+                    <div class="bg-white border border-outline-variant p-10 flex flex-col h-full reveal-on-scroll">
+                        <div class="text-center mb-8">
+                            <h3 class="font-display text-3xl mb-2">חבילת בסיס</h3>
+                            <div class="text-lg tracking-widest text-primary">₪2,800</div>
+                        </div>
+                        <div class="border-t border-outline-variant/10 pt-8 mb-10 flex-grow">
+                            <ul class="space-y-4 font-body text-base opacity-80">
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>שעתיים צילום בסטודיו</span></li>
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>30 תמונות בעריכה אומנותית</span></li>
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>גלריה דיגיטלית פרטית</span></li>
+                            </ul>
+                        </div>
+                        <div class="mt-auto">
+                            <button class="w-full border border-[var(--on-surface)] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[var(--on-surface)] hover:text-white transition-all btn-magnetic">תיאום שיחת ייעוץ</button>
+                        </div>
+                    </div>
+                    <!-- Signature -->
+                    <div class="bg-white border border-outline-variant p-10 flex flex-col h-full reveal-on-scroll" style="transition-delay: 100ms;">
+                        <div class="text-center mb-8">
+                            <h3 class="font-display text-3xl mb-2">חבילת חתימה</h3>
+                            <div class="text-lg tracking-widest text-primary">₪4,500</div>
+                        </div>
+                        <div class="border-t border-outline-variant/10 pt-8 mb-10 flex-grow">
+                            <ul class="space-y-4 font-body text-base opacity-80">
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>יום צילום מלא (6 שעות)</span></li>
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>80 תמונות בעריכה מתקדמת</span></li>
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>אלבום פרימיום בעבודת יד</span></li>
+                                <li class="flex flex-row-reverse items-center gap-4"><span class="material-symbols-outlined text-xl text-primary">check</span> <span>ליווי סטיילינג ואיפור</span></li>
+                            </ul>
+                        </div>
+                        <div class="mt-auto">
+                            <button class="w-full border border-[var(--on-surface)] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[var(--on-surface)] hover:text-white transition-all btn-magnetic">תיאום שיחת ייעוץ</button>
+                        </div>
+                    </div>
+                    <!-- Editorial -->
+                    <div class="bg-white border border-outline-variant p-10 flex flex-col h-full reveal-on-scroll" style="transition-delay: 200ms;">
+                        <div class="text-center mb-8">
+                            <h3 class="font-display text-3xl mb-2">חבילת הפקה</h3>
+                            <div class="text-lg tracking-widest text-primary">החל מ-₪7,000</div>
+                        </div>
+                        <div class="border-t border-outline-variant/10 pt-8 mb-10 flex-grow">
+                            <p class="font-body text-base opacity-60 leading-relaxed text-center">חבילה בהתאמה אישית מלאה עבור מותגים, קמפיינים וצילומי תדמית. כולל צוות הפקה מלא, בחירת לוקיישן וקריאייטיב.</p>
+                        </div>
+                        <div class="mt-auto">
+                            <button class="w-full border border-[var(--on-surface)] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[var(--on-surface)] hover:text-white transition-all btn-magnetic">צור קשר להצעה</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section class="py-32 px-4 md:px-16 max-w-7xl mx-auto" id="testimonials">
+            <div class="text-center mb-16 reveal-on-scroll">
+                <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">מה לקוחות אומרות</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+                <!-- Review 1 -->
+                <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll">
+                    <div>
+                        <div class="flex flex-row-reverse gap-1 text-primary mb-6">
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                        </div>
+                        <p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"חוויה מעצימה ומדהימה. הרגשתי בנוח מהרגע הראשון, והתוצאות עלו על כל דמיון. התמונות הן יצירת אמנות של ממש."</p>
+                    </div>
+                    <div>
+                        <h4 class="font-display text-xl mb-1">דניאל כהן</h4>
+                        <p class="text-xs uppercase tracking-widest opacity-40">צילומי פורטרט</p>
+                    </div>
+                </div>
+                <!-- Review 2 -->
+                <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll" style="transition-delay: 150ms;">
+                    <div>
+                        <div class="flex flex-row-reverse gap-1 text-primary mb-6">
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                        </div>
+                        <p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"הדיוק, הסבלנות והעין האמנותית של הסטודיו הם נדירים. החתונה שלנו הונצחה בצורה המרגשת והיפה ביותר שיכולנו לבקש."</p>
+                    </div>
+                    <div>
+                        <h4 class="font-display text-xl mb-1">רונית לוי</h4>
+                        <p class="text-xs uppercase tracking-widest opacity-40">צילומי חתונה</p>
+                    </div>
+                </div>
+                <!-- Review 3 -->
+                <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll" style="transition-delay: 300ms;">
+                    <div>
+                        <div class="flex flex-row-reverse gap-1 text-primary mb-6">
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                            <span class="material-symbols-outlined fill-1">star</span>
+                        </div>
+                        <p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"מקצועיות ללא פשרות. כל פריים מספר סיפור. הצוות בסטודיו פשוט מבריק בלתפוס את הרגעים הכי אמיתיים."</p>
+                    </div>
+                    <div>
+                        <h4 class="font-display text-xl mb-1">מיה ארד</h4>
+                        <p class="text-xs uppercase tracking-widest opacity-40">צילומי קמפיין</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Form Section -->
+        <section class="py-32 px-4 md:px-16 bg-[var(--on-surface)] text-white reveal-on-scroll pb-48" id="contact">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="font-serif-hebrew text-4xl md:text-5xl mb-4">צרי קשר</h2>
+                    <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
+                </div>
+                <form class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">שם מלא</label>
+                        <input class="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none py-3 px-1 transition-colors font-body text-white" placeholder="השם שלך" type="text"/>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">אימייל</label>
+                        <input class="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none py-3 px-1 transition-colors font-body text-white" placeholder="your@email.com" type="email"/>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">טלפון</label>
+                        <input class="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none py-3 px-1 transition-colors font-body text-white" placeholder="050-0000000" type="tel"/>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">נושא הפנייה</label>
+                        <select class="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none py-3 px-1 transition-colors font-body text-white/60">
+                            <option class="bg-[var(--on-surface)]">צילומי פורטרט</option>
+                            <option class="bg-[var(--on-surface)]">צילומי חתונה</option>
+                            <option class="bg-[var(--on-surface)]">צילומי קמפיין</option>
+                            <option class="bg-[var(--on-surface)]">אחר</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">הודעה</label>
+                        <textarea class="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none" placeholder="איך נוכל לעזור?"></textarea>
+                    </div>
+                    <div class="md:col-span-2 flex justify-center mt-6">
+                        <button class="bg-primary text-white px-16 py-4 text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300 btn-magnetic">
+                            שליחת הודעה
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white py-12 px-4 md:px-16 border-t border-outline-variant pb-32">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
+            <div class="font-display text-xl uppercase tracking-widest text-on-surface">
+                סטודיו גלריה
+            </div>
+            <div class="flex flex-row-reverse gap-8 text-xs uppercase tracking-widest opacity-40">
+                <a class="hover:text-primary transition-colors" href="#">תקנון</a>
+                <a class="hover:text-primary transition-colors" href="#">פרטיות</a>
+                <a class="hover:text-primary transition-colors" href="#">נגישות</a>
+            </div>
+            <div class="text-[10px] uppercase tracking-widest opacity-40">
+                © 2024 סטודיו גלריה. כל הזכויות שמורות.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Switching Function
+        function setTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('preferred-theme', themeName);
+            
+            // Update active state on buttons
+            document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                if (btn.getAttribute('data-theme-btn') === themeName) {
+                    btn.classList.add('bg-primary', 'text-white');
+                }
+            });
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('preferred-theme') || 'elegant';
+            setTheme(savedTheme);
+        });
+
+        // Scroll Reveal Logic
+        const observerOptions = {
+            threshold: 0.15,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    const imgReveal = entry.target.querySelector('.image-reveal');
+                    if (imgReveal) imgReveal.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-on-scroll').forEach(el => {
+            revealObserver.observe(el);
+        });
+
+        // Navigation Background Change on Scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 100) {
+                nav.classList.add('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
+                nav.classList.remove('bg-transparent', 'py-md');
+            } else {
+                nav.classList.remove('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
+                nav.classList.add('bg-transparent', 'py-md');
+            }
+        });
+
+        // Subtle Image Parallax Effect
+        window.addEventListener('scroll', () => {
+            const images = document.querySelectorAll('.image-reveal img');
+            images.forEach(img => {
+                const rect = img.parentElement.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    const shift = (window.innerHeight - rect.top) * 0.05;
+                    img.style.transform = `scale(1.1) translateY(${shift}px)`;
+                    if (img.parentElement.classList.contains('active')) {
+                        img.style.transform = `scale(1) translateY(${shift}px)`;
+                    }
+                }
+            });
+        });
+
+        // Magnetic Button Effect
+        document.querySelectorAll('.btn-magnetic').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                btn.style.transform = `translate(${x * 0.12}px, ${y * 0.12}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = `translate(0px, 0px)`;
+            });
+        });
+    </script>
+</body>
+</html>

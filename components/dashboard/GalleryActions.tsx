@@ -104,7 +104,7 @@ export function GalleryActions({
                 className="bg-[#6b2d43] hover:bg-[#5a2538]"
               >
                 <Truck className="h-4 w-4" />
-                סמן מוכן למסירה
+                שלח מייל ללקוח עם תמונות מעובדות
               </Button>
             ) : null}
 

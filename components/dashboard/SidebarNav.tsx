@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react'
 
 type NavItem = {
@@ -58,19 +59,20 @@ type SidebarNavProps = {
   userName?: string
   studioName?: string
   logoUrl?: string | null
+  portfolioSlug?: string | null
   onSignOut?: () => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
 }
 
-export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollapsed = false, onToggleCollapse }: SidebarNavProps) {
+export function SidebarNav({ userName, studioName, logoUrl, portfolioSlug, onSignOut, isCollapsed = false, onToggleCollapse }: SidebarNavProps) {
   const pathname = usePathname()
 
   return (
     <>
       <aside
         className={cn(
-          "fixed right-0 top-0 h-full bg-white dark:bg-zinc-900 z-40 flex flex-col border-l border-[--border] hidden md:flex transition-all duration-300 ease-in-out",
+          "fixed right-0 top-0 h-full bg-[--dashboard-background] z-40 flex flex-col border-l border-[--dashboard-border] hidden md:flex transition-all duration-300 ease-in-out",
           isCollapsed ? "w-16" : "w-72"
         )}
       >
@@ -78,15 +80,15 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollaps
       <button
         onClick={onToggleCollapse}
         className={cn(
-          "absolute p-2 rounded-lg bg-[--background] border border-[--border] shadow-md hover:bg-[--accent]/10 transition-all duration-200 flex items-center justify-center",
+          "absolute p-2 rounded-lg bg-[--dashboard-surface] border border-[--dashboard-border] shadow-md hover:bg-[--dashboard-accent]/10 transition-all duration-200 flex items-center justify-center",
           isCollapsed ? "right-2 top-4" : "left-4 top-4"
         )}
         aria-label={isCollapsed ? 'פתח תפריט' : 'סגור תפריט'}
       >
         {isCollapsed ? (
-          <Menu className="h-5 w-5 text-[--foreground]" />
+          <Menu className="h-5 w-5 text-[--dashboard-foreground]" />
         ) : (
-          <X className="h-5 w-5 text-[--foreground]" />
+          <X className="h-5 w-5 text-[--dashboard-foreground]" />
         )}
       </button>
 
@@ -95,7 +97,7 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollaps
         "p-6 flex items-center gap-4 transition-all duration-300",
         isCollapsed ? "opacity-0 w-0 overflow-hidden p-0" : "opacity-100"
       )}>
-        <div className="w-12 h-12 rounded-xl bg-[--foreground] flex items-center justify-center text-white overflow-hidden border border-[--border]">
+        <div className="w-12 h-12 rounded-xl bg-[--dashboard-foreground] flex items-center justify-center text-white overflow-hidden border border-[--dashboard-border]">
           {logoUrl ? (
             <img 
               alt="Logo" 
@@ -109,10 +111,10 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollaps
           )}
         </div>
         <div>
-          <h2 className="font-semibold text-lg text-[--foreground]">
+          <h2 className="font-semibold text-lg text-[--dashboard-foreground]">
             {studioName || 'סטודיו לצילום'}
           </h2>
-          <p className="text-sm text-[--muted]">ניהול מערכת</p>
+          <p className="text-sm text-[--dashboard-muted]">ניהול מערכת</p>
         </div>
       </div>
 
@@ -130,8 +132,8 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollaps
               className={cn(
                 'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
                 active
-                  ? 'bg-[--accent]/10 text-[--accent] font-semibold border-r-4 border-[--accent] pr-3'
-                  : 'text-[--muted] hover:text-[--foreground] hover:bg-[--background] pr-4'
+                  ? 'bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border-r-4 border-[--dashboard-accent] pr-3'
+                  : 'text-[--dashboard-muted] hover:text-[--dashboard-foreground] hover:bg-[--dashboard-surface] pr-4'
               )}
             >
               {item.icon}
@@ -143,31 +145,46 @@ export function SidebarNav({ userName, studioName, logoUrl, onSignOut, isCollaps
 
       {/* User Section */}
       <div className={cn(
-        "mt-auto border-t border-[--border] transition-all duration-300",
+        "mt-auto border-t border-[--dashboard-border] transition-all duration-300",
         isCollapsed ? "p-2 flex justify-center" : "p-4"
       )}>
         {isCollapsed ? (
-          <div className="w-10 h-10 rounded-full bg-[--accent]/10 flex items-center justify-center text-[--accent] font-semibold border border-[--border]">
+          <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
             {userName?.charAt(0) || 'U'}
           </div>
         ) : (
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-[--accent]/10 flex items-center justify-center text-[--accent] font-semibold border border-[--border]">
-              {userName?.charAt(0) || 'U'}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-[--foreground]">{userName || 'משתמש'}</p>
-              <p className="text-xs text-[--accent] font-medium">מחובר</p>
-            </div>
-            {onSignOut && (
-              <button
-                onClick={onSignOut}
-                className="p-2 rounded-lg hover:bg-red-50 text-[--muted] hover:text-red-600 transition-colors"
+          <>
+            {/* View My Site Button */}
+            {portfolioSlug && (
+              <a
+                href={`/${portfolioSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200 mb-3"
               >
-                <LogOut className="h-5 w-5" />
-              </button>
+                <ExternalLink className="h-5 w-5" />
+                <span className="text-sm">צפי באתר שלי</span>
+              </a>
             )}
-          </div>
+
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
+                {userName?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-[--dashboard-foreground]">{userName || 'משתמש'}</p>
+                <p className="text-xs text-[--dashboard-accent] font-medium">מחובר</p>
+              </div>
+              {onSignOut && (
+                <button
+                  onClick={onSignOut}
+                  className="p-2 rounded-lg hover:bg-red-50 text-[--dashboard-muted] hover:text-red-600 transition-colors"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </aside>

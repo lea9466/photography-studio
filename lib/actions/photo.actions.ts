@@ -266,38 +266,13 @@ export async function signPreviewUrls(previewUrls: (string | null)[]) {
 export async function prepareGalleryForDelivery(galleryId: string) {
   const { supabase } = await assertGalleryOwner(galleryId)
 
-  const { data: selections, error: selectionsError } = await supabase
-    .from('photo_selections')
-    .select('photo_id')
-    .eq('gallery_id', galleryId)
-    .or('selected_album.eq.true,selected_edit.eq.true')
-
-  if (selectionsError) throw new Error(selectionsError.message)
-
-  const keepVisible = new Set(
-    ((selections ?? []) as { photo_id: string }[]).map((row) => row.photo_id)
-  )
-
-  const { data: photos, error: photosError } = await supabase
+  // Ensure all photos are visible to client
+  const { error } = await supabase
     .from('photos')
-    .select('id')
+    .update({ is_visible_to_client: true } as never)
     .eq('gallery_id', galleryId)
 
-  if (photosError) throw new Error(photosError.message)
-
-  const toHide = ((photos ?? []) as { id: string }[])
-    .map((photo) => photo.id)
-    .filter((id) => !keepVisible.has(id))
-
-  if (toHide.length > 0) {
-    const { error } = await supabase
-      .from('photos')
-      .update({ is_visible_to_client: false } as never)
-      .eq('gallery_id', galleryId)
-      .in('id', toHide)
-
-    if (error) throw new Error(error.message)
-  }
+  if (error) throw new Error(error.message)
 
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath(`/g/${galleryId}`)

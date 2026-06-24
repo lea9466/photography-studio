@@ -21,18 +21,9 @@ import { ClientEditForm } from '@/components/dashboard/ClientEditForm'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { UploadEdited } from '@/components/gallery/UploadEdited'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
+import { GalleryEditForm } from '@/components/dashboard/GalleryEditForm'
 import { Upload, Image as ImageIcon, Settings, Lock, Link as LinkIcon, Zap, Droplets, Download, UserCheck, Eye, ImageIcon as ImageIcon2, Rocket, User, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 
@@ -206,77 +197,16 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
             <CardTitle className="text-[#100d1f]">עריכת הגדרות</CardTitle>
             <CardDescription className="text-[#48464c]">שינויים נשמרים בלחיצה על &quot;שמור הגדרות&quot;</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
-                <Input
-                  id="title"
-                  defaultValue={gallery.title}
-                  placeholder="למשל: חתונה של דנה ואבי"
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="watermark" className="text-[#100d1f]">סימן מים</Label>
-                <Input
-                  id="watermark"
-                  defaultValue={settings?.watermark_text ?? ''}
-                  placeholder="למשל: © שם הסטודיו"
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#100d1f]">סיסמה</Label>
-                <Input
-                  id="password"
-                  dir="ltr"
-                  defaultValue={gallery.password ?? ''}
-                  placeholder="הכנס סיסמה"
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expires" className="text-[#100d1f]">תפוגה</Label>
-                <Input
-                  id="expires"
-                  type="date"
-                  defaultValue={gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''}
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-album" className="text-[#100d1f]">מקסימום אלבום</Label>
-                <Input
-                  id="max-album"
-                  type="number"
-                  defaultValue={settings?.max_album_selection?.toString() ?? ''}
-                  placeholder="למשל: 50"
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-edit" className="text-[#100d1f]">מקסימום עיבוד</Label>
-                <Input
-                  id="max-edit"
-                  type="number"
-                  defaultValue={settings?.max_edit_selection?.toString() ?? ''}
-                  placeholder="למשל: 30"
-                  className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4]">
-              <div className="flex items-center justify-between">
-                <Label className="text-[#100d1f]">הורדת preview</Label>
-                <Switch defaultChecked={settings?.allow_download_preview ?? false} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-[#100d1f]">הורדת מקור</Label>
-                <Switch defaultChecked={settings?.allow_download_original ?? false} />
-              </div>
-            </div>
+          <CardContent>
+            <GalleryEditForm
+              gallery={{
+                id: gallery.id,
+                title: gallery.title,
+                password: gallery.password,
+                expires_at: gallery.expires_at,
+              }}
+              settings={settings}
+            />
           </CardContent>
         </Card>
       </section>
@@ -322,14 +252,14 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
         />
       </section>
 
-      {/* Bottom Action Bar */}
-      <footer className="mt-12 px-10 py-6 flex items-center justify-end gap-4 sticky bottom-0 z-10 bg-white/80 backdrop-blur-md">
+      {/* Floating Save Button */}
+      <div className="fixed bottom-8 left-8 z-50">
         <Button
           className="bg-[#6b2d43] text-white px-12 py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-[#5a2538] active:scale-[0.98] transition-all"
         >
           שמור הגדרות
         </Button>
-      </footer>
+      </div>
     </div>
   )
 }

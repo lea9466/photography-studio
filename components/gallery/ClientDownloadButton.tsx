@@ -3,12 +3,12 @@
 import { useTransition } from 'react'
 import { Download } from 'lucide-react'
 import { toast } from 'sonner'
-import { createClientEditedDownload } from '@/lib/actions/download.actions'
+import { createClientDownload } from '@/lib/actions/download.actions'
 import { Button } from '@/components/ui/button'
 
-type ClientEditedDownloadButtonProps = {
+type ClientDownloadButtonProps = {
   galleryId: string
-  hasProcessed: boolean
+  type: 'watermarked' | 'original'
 }
 
 function triggerBrowserDownload(url: string) {
@@ -21,10 +21,10 @@ function triggerBrowserDownload(url: string) {
   document.body.removeChild(anchor)
 }
 
-export function ClientEditedDownloadButton({
+export function ClientDownloadButton({
   galleryId,
-  hasProcessed,
-}: ClientEditedDownloadButtonProps) {
+  type,
+}: ClientDownloadButtonProps) {
   const [isPending, startTransition] = useTransition()
 
   function handleDownload() {
@@ -33,7 +33,7 @@ export function ClientEditedDownloadButton({
 
     startTransition(async () => {
       try {
-        const { downloadUrl } = await createClientEditedDownload(galleryId)
+        const { downloadUrl } = await createClientDownload(galleryId, type)
 
         if (downloadWindow && !downloadWindow.closed) {
           downloadWindow.location.href = downloadUrl
@@ -49,16 +49,17 @@ export function ClientEditedDownloadButton({
     })
   }
 
+  const label = type === 'watermarked' ? 'הורד עם סימן מים (ZIP)' : 'הורד מקור (ZIP)'
+
   return (
     <Button
       variant="outline"
       size="sm"
-      disabled={isPending || !hasProcessed}
+      disabled={isPending}
       onClick={handleDownload}
-      title={!hasProcessed ? 'אין תמונות מעובדות להורדה' : undefined}
     >
       <Download className="h-4 w-4" />
-      {isPending ? 'מכין ZIP...' : 'הורד מעובדות (ZIP)'}
+      {isPending ? 'מכין ZIP...' : label}
     </Button>
   )
 }

@@ -89,20 +89,20 @@ function StatCard({ title, value, subtitle, icon, variant = 'default', isActive 
 
 type StatsCardsProps = {
   drafts?: number
-  waiting?: number
-  sent?: number
+  selection?: number
+  editing?: number
   expired?: number
   activeFilter?: string
   onFilterChange?: (filter: string) => void
 }
 
-export function StatsCards({ 
-  drafts = 0, 
-  waiting = 0, 
-  sent = 0, 
+export function StatsCards({
+  drafts = 0,
+  selection = 0,
+  editing = 0,
   expired = 0,
   activeFilter = 'all',
-  onFilterChange 
+  onFilterChange
 }: StatsCardsProps) {
   return (
     <section className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-6 mb-6 md:mb-8">
@@ -117,28 +117,28 @@ export function StatsCards({
         badgeColor="bg-orange-100 text-orange-700"
       />
       <StatCard
-        title="נשלחו ללקוחות"
-        value={sent}
-        subtitle="החודש האחרון"
+        title="ממתין לבחירה"
+        value={selection}
+        subtitle="נשלח ללקוח"
         icon={<Send className="h-6 w-6" />}
-        isActive={activeFilter === 'sent'}
+        isActive={activeFilter === 'selection'}
         onClick={() => onFilterChange?.('selection')}
-        badge="נשלח"
+        badge="בחירה"
         badgeColor="bg-green-100 text-green-700"
       />
       <StatCard
-        title="ממתינות לעיבוד"
-        value={waiting}
+        title="בעריכה"
+        value={editing}
         subtitle="דורש תשומת לב מיידית"
         icon={<AlertCircle className="h-6 w-6" />}
         variant="urgent"
-        isActive={activeFilter === 'waiting'}
-        onClick={() => onFilterChange?.('waiting')}
-        badge="ממתין"
+        isActive={activeFilter === 'editing'}
+        onClick={() => onFilterChange?.('editing')}
+        badge="עריכה"
         badgeColor="bg-pink-100 text-pink-700"
       />
       <StatCard
-        title="ארכיון"
+        title="פג תוקף"
         value={expired}
         subtitle="גלריות שפג תוקפן"
         icon={<Archive className="h-6 w-6" />}

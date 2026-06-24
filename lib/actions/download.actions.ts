@@ -68,33 +68,40 @@ async function buildZip(
 
   let fileCount = 0
 
-  if (type === 'preview' || type === 'original') {
-    const { data: selections } = await admin
-      .from('photo_selections')
-      .select('photo_id, selected_album, selected_edit, photos(original_url, preview_url)')
+  if (type === 'preview' || type === 'original' || type === 'watermarked') {
+    const { data: photos } = await admin
+      .from('photos')
+      .select('id, original_url, preview_url, watermarked_preview_url, is_visible_to_client')
       .eq('gallery_id', galleryId)
-      .or('selected_album.eq.true,selected_edit.eq.true')
+      .eq('is_visible_to_client', true)
 
-    type SelectionRow = {
-      photo_id: string
-      selected_album: boolean
-      selected_edit: boolean
-      photos: {
-        original_url: string | null
-        preview_url: string | null
-      } | { original_url: string | null; preview_url: string | null }[] | null
+    type PhotoRow = {
+      id: string
+      original_url: string | null
+      preview_url: string | null
+      watermarked_preview_url: string | null
+      is_visible_to_client: boolean
     }
 
-    for (const row of (selections ?? []) as SelectionRow[]) {
-      const photo = Array.isArray(row.photos) ? row.photos[0] : row.photos
-      const path =
-        type === 'original' ? photo?.original_url : photo?.preview_url
-      const bucket = type === 'original' ? 'originals' : 'previews'
+    for (const photo of (photos ?? []) as PhotoRow[]) {
+      let path: string | null = null
+      let bucket: 'originals' | 'previews' | 'watermarked' = 'previews'
+
+      if (type === 'original') {
+        path = photo.original_url
+        bucket = 'originals'
+      } else if (type === 'watermarked') {
+        path = photo.watermarked_preview_url
+        bucket = 'watermarked'
+      } else {
+        path = photo.preview_url
+        bucket = 'previews'
+      }
+
       if (!path) continue
 
       const file = await downloadMediaObject(bucket, path)
-      const prefix = row.selected_album ? 'album' : 'edit'
-      zip.file(`${prefix}/${path.split('/').pop()}`, file)
+      zip.file(path.split('/').pop()!, file)
       fileCount++
     }
   }
@@ -179,6 +186,52 @@ export async function createClientEditedDownload(galleryId: string) {
   const fileUrl = await buildZip(galleryId, 'edited', gallery.user_id)
   const downloadUrl = await createPresignedDownloadUrl('zips', fileUrl, 3600, {
     filename: `${gallery.title}-edited.zip`.replace(/[^\w\u0590-\u05FF.-]+/g, '_'),
+  })
+
+  return { downloadUrl }
+}
+
+export async function createClientDownload(galleryId: string, type: 'watermarked' | 'original') {
+  const allowed = await hasGallerySession(galleryId)
+  if (!allowed) throw new Error('גישה נדחתה')
+
+  const admin = createAdminClient()
+  const { data: galleryData } = await admin
+    .from('galleries')
+    .select('id, status, user_id, title, gallery_settings(allow_download_preview, allow_download_original)')
+    .eq('id', galleryId)
+    .single()
+
+  type GalleryRow = {
+    id: string
+    status: string
+    user_id: string
+    title: string
+    gallery_settings: {
+      allow_download_preview: boolean
+      allow_download_original: boolean
+    } | { allow_download_preview: boolean; allow_download_original: boolean }[] | null
+  }
+
+  const gallery = galleryData as GalleryRow | null
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+
+  const settings = Array.isArray(gallery.gallery_settings)
+    ? gallery.gallery_settings[0]
+    : gallery.gallery_settings
+
+  if (type === 'watermarked' && !settings?.allow_download_preview) {
+    throw new Error('הורדת תמונות עם סימן מים לא מורשית')
+  }
+
+  if (type === 'original' && !settings?.allow_download_original) {
+    throw new Error('הורדת תמונות מקור לא מורשית')
+  }
+
+  const downloadType = type === 'watermarked' ? 'watermarked' : 'original'
+  const fileUrl = await buildZip(galleryId, downloadType, gallery.user_id)
+  const downloadUrl = await createPresignedDownloadUrl('zips', fileUrl, 3600, {
+    filename: `${gallery.title}-${type}.zip`.replace(/[^\w\u0590-\u05FF.-]+/g, '_'),
   })
 
   return { downloadUrl }

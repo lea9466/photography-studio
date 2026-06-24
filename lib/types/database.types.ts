@@ -15,7 +15,7 @@ export type GalleryStatus =
 
 export type GalleryType = 'selection' | 'delivery' | 'portfolio'
 
-export type DownloadJobType = 'preview' | 'original' | 'edited'
+export type DownloadJobType = 'preview' | 'original' | 'edited' | 'watermarked'
 
 export type DownloadJobStatus = 'pending' | 'processing' | 'ready' | 'failed'
 

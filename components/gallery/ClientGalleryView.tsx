@@ -12,6 +12,7 @@ import { StatusBanner } from '@/components/gallery/StatusBanner'
 import { Lightbox } from '@/components/gallery/Lightbox'
 import { SelectionBar } from '@/components/gallery/SelectionBar'
 import { ClientEditedDownloadButton } from '@/components/gallery/ClientEditedDownloadButton'
+import { ClientDownloadButton } from '@/components/gallery/ClientDownloadButton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   canToggleSelection,
@@ -69,9 +70,9 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const showEdited = items.some((p) => p.edited_signed_url)
   const [tab, setTab] = useState(() => {
     if (['delivery_ready', 'locked'].includes(gallery.status)) {
-      return photos.some((p) => p.edited_signed_url) ? 'edited' : 'album'
+      return photos.some((p) => p.edited_signed_url) ? 'processed' : 'album'
     }
-    return 'all'
+    return 'regular'
   })
 
   useEffect(() => {
@@ -131,10 +132,11 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         return items.filter((p) => p.selected_album)
       case 'edit':
         return items.filter((p) => p.selected_edit)
-      case 'edited':
+      case 'processed':
         return items.filter((p) => p.edited_signed_url)
+      case 'regular':
       default:
-        return items
+        return items.filter((p) => !p.edited_signed_url)
     }
   }, [items, tab])
 
@@ -226,21 +228,21 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         <Tabs value={tab} onValueChange={setTab}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <TabsList>
-              {!isDelivered ? (
-                <TabsTrigger value="all">כל התמונות</TabsTrigger>
-              ) : null}
+              <TabsTrigger value="regular">תמונות רגילות</TabsTrigger>
+              <TabsTrigger value="edit">לעיבוד</TabsTrigger>
               <TabsTrigger value="album">אלבום</TabsTrigger>
-              {!isDelivered ? (
-                <TabsTrigger value="edit">לעיבוד</TabsTrigger>
-              ) : null}
-              {showEdited ? (
-                <TabsTrigger value="edited">מעובדות</TabsTrigger>
-              ) : null}
+              <TabsTrigger value="processed">מעובדות</TabsTrigger>
             </TabsList>
 
-            {isDelivered && showEdited ? (
-              <ClientEditedDownloadButton galleryId={gallery.id} />
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              {gallery.allow_download_preview && (
+                <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
+              )}
+              {gallery.allow_download_original && (
+                <ClientDownloadButton galleryId={gallery.id} type="original" />
+              )}
+              <ClientEditedDownloadButton galleryId={gallery.id} hasProcessed={showEdited} />
+            </div>
           </div>
 
           <TabsContent value={tab}>
@@ -253,7 +255,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
                 photos={filtered.map((photo) => ({
                   id: photo.id,
                   src:
-                    isDelivered || tab === 'edited'
+                    tab === 'processed'
                       ? photo.edited_signed_url ?? photo.preview_signed_url
                       : photo.preview_signed_url,
                   selected_album: photo.selected_album,

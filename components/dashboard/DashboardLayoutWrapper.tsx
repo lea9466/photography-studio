@@ -32,6 +32,7 @@ export function DashboardLayoutWrapper({
         userName={userName}
         studioName={studioName}
         logoUrl={logoUrl}
+        portfolioSlug={portfolioSlug}
         onSignOut={onSignOut}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -48,7 +49,7 @@ export function DashboardLayoutWrapper({
       
       {/* Main Content */}
       <main className={cn(
-        "p-4 md:p-10 min-h-screen pt-20 md:pt-10 pb-24 md:pb-10 transition-all duration-300 ease-in-out",
+        "p-4 md:p-10 min-h-screen pt-20 md:pt-10 pb-24 md:pb-10 transition-all duration-300 ease-in-out bg-[--dashboard-background]",
         isSidebarCollapsed ? "md:mr-16" : "md:mr-72"
       )}>
         {children}

@@ -450,9 +450,9 @@ export function GalleryWizard({
                 <div>
                   <label className="block text-xs font-semibold text-[#48464c] mb-2">סיסמת גלריה</label>
                   <div className="relative">
-                    <input 
-                      className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all pr-10" 
-                      placeholder="הזן סיסמה..." 
+                    <input
+                      className="w-full bg-white border border-[#ebebe8] rounded-xl px-4 py-3 focus:outline-none focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all pr-10"
+                      placeholder="הזן סיסמה... (אם לא תזין, תיווצר אוטומטית)"
                       type="password"
                       value={state.password}
                       onChange={(e) => updateState('password', e.target.value)}
@@ -561,29 +561,33 @@ export function GalleryWizard({
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between gap-4 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="lg"
-          onClick={handleBack}
-          disabled={step === 1 || isPending}
-          className="border-2 hover:bg-[#fdf8fa] h-12 px-8"
-        >
-          חזרה
-        </Button>
-
-        {step < WIZARD_STEPS.length ? (
+      {step < WIZARD_STEPS.length ? (
+        <div className="flex items-center justify-between gap-4 pt-4">
           <Button
             type="button"
+            variant="outline"
             size="lg"
-            onClick={handleNext}
-            disabled={isPending || !canContinue()}
-            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+            onClick={handleBack}
+            disabled={step === 1 || isPending}
+            className="border-2 hover:bg-[#fdf8fa] h-12 px-8"
           >
-            הבא
+            חזרה
           </Button>
-        ) : (
+
+          {step < WIZARD_STEPS.length ? (
+            <Button
+              type="button"
+              size="lg"
+              onClick={handleNext}
+              disabled={isPending || !canContinue()}
+              className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+            >
+              הבא
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <div className="fixed bottom-8 left-8 z-50">
           <Button
             type="button"
             size="lg"
@@ -600,8 +604,8 @@ export function GalleryWizard({
               </>
             )}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

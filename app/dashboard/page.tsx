@@ -99,8 +99,8 @@ export default function DashboardPage() {
 
   // Calculate stats
   const drafts = recentGalleries.filter(g => g.status === 'draft').length
-  const waiting = recentGalleries.filter(g => g.status === 'selection' || g.status === 'editing').length
-  const sent = recentGalleries.filter(g => g.status === 'selection').length
+  const selection = recentGalleries.filter(g => g.status === 'selection').length
+  const editing = recentGalleries.filter(g => g.status === 'editing').length
   const expired = recentGalleries.filter(g => {
     if (g.status === 'locked') return true
     if (g.expires_at) {
@@ -143,10 +143,10 @@ export default function DashboardPage() {
       </header>
 
       {/* Stats Grid */}
-      <StatsCards 
+      <StatsCards
         drafts={drafts}
-        waiting={waiting}
-        sent={sent}
+        selection={selection}
+        editing={editing}
         expired={expired}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}

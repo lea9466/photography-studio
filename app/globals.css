@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap');
 @import 'tailwindcss';
 
+/* Dashboard-specific CSS variables - FIXED, never change with themes */
+:root {
+  --dashboard-background: #ffffff;
+  --dashboard-foreground: #09090b;
+  --dashboard-accent: #7c3aed;
+  --dashboard-muted: #737373;
+  --dashboard-border: #e5e5e5;
+  --dashboard-surface: #fafafa;
+}
+
+/* Public theme CSS variables - These can change based on photographer's theme */
 :root {
   --background: #fafafa;
   --foreground: #171717;

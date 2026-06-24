@@ -367,6 +367,7 @@ export async function updateGallerySettings(
     watermarkText?: string | null
   }
 ) {
+  console.log('updateGallerySettings called with:', { galleryId, input })
   const supabase = await createClient()
   const {
     data: { user },
@@ -387,6 +388,7 @@ export async function updateGallerySettings(
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
 
   if (Object.keys(galleryUpdate).length > 0) {
+    console.log('Updating gallery:', galleryUpdate)
     const { error } = await supabase
       .from('galleries')
       .update(galleryUpdate as never)
@@ -408,6 +410,7 @@ export async function updateGallerySettings(
   if (input.watermarkText !== undefined)
     settingsUpdate.watermark_text = input.watermarkText
 
+  console.log('Updating settings:', settingsUpdate)
   if (Object.keys(settingsUpdate).length > 0) {
     const { error } = await supabase
       .from('gallery_settings')
