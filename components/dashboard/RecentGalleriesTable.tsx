@@ -11,7 +11,8 @@ import {
   Archive,
   Trash2,
   Copy,
-  Check
+  Check,
+  Globe
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,8 +29,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { deleteGallery } from '@/lib/actions/gallery.actions'
+import { deleteGallery, updateGallerySettings } from '@/lib/actions/gallery.actions'
 import type { Gallery, Client } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
@@ -37,6 +39,7 @@ export type GalleryWithDetails = Gallery & {
   photo_count?: number
   cover_image?: string | null
   first_photo_url?: string | null
+  is_public?: boolean
 }
 
 type GalleryRowProps = {
@@ -68,6 +71,7 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
+  const [isPublic, setIsPublic] = useState(gallery.is_public || false)
   const [isPending, startTransition] = useTransition()
 
   const handleShare = async () => {
@@ -79,6 +83,18 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
     await navigator.clipboard.writeText(galleryLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleTogglePublic = (checked: boolean) => {
+    startTransition(async () => {
+      try {
+        await updateGallerySettings(gallery.id, { isPublic: checked })
+        setIsPublic(checked)
+        toast.success(checked ? 'הגלריה תוצג באתר הציבורי' : 'הגלריה לא תוצג באתר הציבורי')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה בעדכון')
+      }
+    })
   }
 
   const handleArchive = () => {
@@ -155,8 +171,18 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
           {getStatusBadge(gallery.status)}
         </td>
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
-        <td className="px-6 py-4 text-left">
-          <div className="flex items-center justify-end gap-2">
+        <td className="px-6 py-4">
+          <div className="flex items-center justify-end gap-3">
+            <div className="flex items-center gap-2" title="הצג באתר הציבורי">
+              <Globe className="h-4 w-4 text-[--muted]" />
+              <Switch
+                checked={isPublic}
+                onCheckedChange={handleTogglePublic}
+                disabled={isPending}
+                className="scale-75"
+              />
+            </div>
+            <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
               <Link href={`/dashboard/galleries/${gallery.id}`}>
                 <Edit className="h-4 w-4" />
@@ -182,6 +208,7 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </div>
         </td>
       </tr>

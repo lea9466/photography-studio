@@ -50,7 +50,7 @@ import { Switch } from '@/components/ui/switch'
 
 const WIZARD_STEPS = ['בחירת לקוח', 'סוג גלריה', 'הגדרות מתקדמות']
 
-const GALLERY_TYPES: GalleryType[] = ['selection', 'delivery', 'portfolio']
+const GALLERY_TYPES: GalleryType[] = ['selection', 'portfolio']
 
 type GalleryWizardProps = {
   clients: Client[]
@@ -58,7 +58,7 @@ type GalleryWizardProps = {
 }
 
 type WizardState = {
-  clientMode: 'existing' | 'new'
+  clientMode: 'existing' | 'new' | 'public'
   clientId: string
   newClientName: string
   newClientEmail: string
@@ -73,6 +73,9 @@ type WizardState = {
   allowDownloadOriginal: boolean
   watermarkText: string
   sendToClient: boolean
+  isPublic: boolean
+  coverImage: string
+  coverImageFile: File | null
 }
 
 const initialState: WizardState = {
@@ -91,6 +94,9 @@ const initialState: WizardState = {
   allowDownloadOriginal: false,
   watermarkText: '',
   sendToClient: false,
+  isPublic: false,
+  coverImage: '',
+  coverImageFile: null,
 }
 
 export function GalleryWizard({
@@ -116,6 +122,9 @@ export function GalleryWizard({
 
   function canContinue() {
     if (step === 1) {
+      if (state.clientMode === 'public') {
+        return true
+      }
       if (state.clientMode === 'existing') {
         return Boolean(state.clientId)
       }
@@ -150,7 +159,7 @@ export function GalleryWizard({
 
     startTransition(async () => {
       try {
-        let clientId = state.clientId
+        let clientId: string | null = state.clientId
 
         if (state.clientMode === 'new') {
           const client = await createClientRecord({
@@ -161,13 +170,43 @@ export function GalleryWizard({
           clientId = client.id
         }
 
-        if (!clientId) {
+        if (state.clientMode === 'public') {
+          clientId = null
+        }
+
+        if (!clientId && state.clientMode !== 'public') {
           throw new Error('יש לבחור או ליצור לקוח')
+        }
+
+        // Upload cover image if file is selected
+        let coverImageUrl: string | undefined = undefined
+        if (state.coverImageFile) {
+          try {
+            const formData = new FormData()
+            formData.append('file', state.coverImageFile)
+            formData.append('type', 'cover')
+            
+            const uploadResponse = await fetch('/api/upload-cover', {
+              method: 'POST',
+              body: formData,
+            })
+            
+            if (!uploadResponse.ok) {
+              throw new Error('העלאת תמונת השער נכשלה')
+            }
+            
+            const uploadData = await uploadResponse.json()
+            coverImageUrl = uploadData.url
+          } catch (error) {
+            console.error('Error uploading cover image:', error)
+            toast.error('העלאת תמונת השער נכשלה')
+            return
+          }
         }
 
         const gallery = await createGallery({
           title: state.title,
-          clientId,
+          clientId: clientId,
           galleryType: state.galleryType,
           password: state.password || undefined,
           expiresAt: state.expiresAt || undefined,
@@ -180,11 +219,15 @@ export function GalleryWizard({
           allowDownloadPreview: state.allowDownloadPreview,
           allowDownloadOriginal: state.allowDownloadOriginal,
           watermarkText: state.watermarkText || undefined,
-          sendToClient: state.sendToClient,
+          sendToClient: state.clientMode === 'public' ? false : state.sendToClient,
+          isPublic: state.clientMode === 'public' ? true : state.isPublic,
+          coverImage: coverImageUrl,
         })
 
         toast.success(
-          state.sendToClient
+          state.clientMode === 'public'
+            ? 'גלריה ציבורית נוצרה בהצלחה'
+            : state.sendToClient
             ? 'הגלריה נוצרה וסומנה כנשלחה'
             : 'הגלריה נוצרה בהצלחה'
         )
@@ -255,9 +298,42 @@ export function GalleryWizard({
             </button>
           </div>
           
-          {/* Client Grid - Show when clientMode is 'existing' */}
-          {state.clientMode === 'existing' && (
+          {/* Client Grid - Show when clientMode is 'existing' or 'public' */}
+          {state.clientMode !== 'new' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Public Showcase Option - Always at the top */}
+              <label className="relative cursor-pointer">
+                <input
+                  type="radio"
+                  name="client_selection"
+                  value="public"
+                  checked={state.clientMode === 'public'}
+                  onChange={() => {
+                    updateState('clientMode', 'public')
+                    updateState('isPublic', true)
+                  }}
+                  className="sr-only client-card-radio"
+                />
+                <div className={`client-card-inner h-full p-6 bg-white border border-[#c9c5cd] rounded-xl transition-all duration-200 hover:border-[#7D3A52] hover:shadow-sm flex items-center gap-4 ${
+                  state.clientMode === 'public'
+                    ? 'border-[#7D3A52] bg-[#f1edef]'
+                    : ''
+                }`}>
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg bg-gradient-to-br from-[#7D3A52] to-[#5a2f44] text-white">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div className="flex-grow overflow-hidden">
+                    <h4 className="font-semibold text-base text-[#100d1f]">ללא לקוח (גלריה ציבורית לתיק עבודות)</h4>
+                    <p className="text-sm text-[#48464c] truncate">No Client (Public Showcase)</p>
+                  </div>
+                  {state.clientMode === 'public' && (
+                    <div className="check-icon absolute top-3 left-3 w-6 h-6 rounded-full bg-[#7D3A52] text-white items-center justify-center flex">
+                      <Check className="w-4 h-4" />
+                    </div>
+                  )}
+                </div>
+              </label>
+
               {clients.map((client, index) => {
                 const colors = [
                   { bg: '#e5dff9', text: '#100d1f' },
@@ -277,12 +353,16 @@ export function GalleryWizard({
                       type="radio"
                       name="client_selection"
                       value={client.id}
-                      checked={state.clientId === client.id}
-                      onChange={(e) => updateState('clientId', e.target.value)}
+                      checked={state.clientId === client.id && state.clientMode === 'existing'}
+                      onChange={(e) => {
+                        updateState('clientId', e.target.value)
+                        updateState('clientMode', 'existing')
+                        updateState('isPublic', false)
+                      }}
                       className="sr-only client-card-radio"
                     />
                     <div className={`client-card-inner h-full p-6 bg-white border border-[#c9c5cd] rounded-xl transition-all duration-200 hover:border-[#7D3A52] hover:shadow-sm flex items-center gap-4 ${
-                      state.clientId === client.id
+                      state.clientId === client.id && state.clientMode === 'existing'
                         ? 'border-[#7D3A52] bg-[#f1edef]'
                         : ''
                     }`}>
@@ -293,7 +373,7 @@ export function GalleryWizard({
                         <h4 className="font-semibold text-base text-[#100d1f] truncate">{client.name}</h4>
                         <p className="text-sm text-[#48464c] truncate">{client.email || 'אין אימייל'}</p>
                       </div>
-                      {state.clientId === client.id && (
+                      {state.clientId === client.id && state.clientMode === 'existing' && (
                         <div className="check-icon absolute top-3 left-3 w-6 h-6 rounded-full bg-[#7D3A52] text-white items-center justify-center flex">
                           <Check className="w-4 h-4" />
                         </div>
@@ -408,8 +488,6 @@ export function GalleryWizard({
                     }`}>
                       {type === 'selection' ? (
                         <UserCheck className="w-5 h-5" />
-                      ) : type === 'delivery' ? (
-                        <ImageIcon className="w-5 h-5" />
                       ) : (
                         <Eye className="w-5 h-5" />
                       )}
@@ -418,13 +496,11 @@ export function GalleryWizard({
                     <p className="text-sm text-[#48464c] leading-relaxed">
                       {type === 'selection'
                         ? 'אידיאלי לתהליכי עבודה. הלקוח יכול לסמן לבבות על תמונות נבחרות לצורך עריכה או הדפסה.'
-                        : type === 'delivery'
-                          ? 'למסירת תמונות סופיות. הלקוח מקבל גישה להורדה ברזולוציה גבוהה ושיתוף עם משפחה וחברים.'
-                          : 'גלריה ציבורית להצגת מיטב העבודות שלך. מותאם לקידום מכירות והצגה מרהיבה לקהל הרחב.'}
+                        : 'גלריה ציבורית להצגת מיטב העבודות שלך. מותאם לקידום מכירות והצגה מרהיבה לקהל הרחב.'}
                     </p>
                     <div className="mt-auto pt-4 flex items-center gap-2 text-[#7D3A52] font-semibold text-sm">
                       <span>
-                        {type === 'selection' ? 'הוסף לשלב העריכה' : type === 'delivery' ? 'מוכן למשלוח' : 'הצגה לציבור'}
+                        {type === 'selection' ? 'הוסף לשלב העריכה' : 'הצגה לציבור'}
                       </span>
                       <ArrowLeft className="w-4 h-4" />
                     </div>
@@ -523,6 +599,64 @@ export function GalleryWizard({
                     value={state.watermarkText}
                     onChange={(e) => updateState('watermarkText', e.target.value)}
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[#48464c] mb-2">
+                    תמונת שער לאתר הציבורי
+                    <span className="text-[#7D3A52] font-normal mr-1">(מוצג רק כאשר הגלריה מופיעה באתר הציבורי)</span>
+                  </label>
+                  <div className="space-y-3">
+                    {state.coverImageFile ? (
+                      <div className="relative aspect-video rounded-lg overflow-hidden border border-[#ebebe8]">
+                        <img
+                          src={URL.createObjectURL(state.coverImageFile)}
+                          alt="תמונת שער"
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            updateState('coverImageFile', null)
+                            updateState('coverImage', '')
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-6 text-center hover:border-[#7D3A52] transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              updateState('coverImageFile', file)
+                              updateState('coverImage', URL.createObjectURL(file))
+                            }
+                          }}
+                          className="hidden"
+                          id="cover-image-upload"
+                        />
+                        <label
+                          htmlFor="cover-image-upload"
+                          className="cursor-pointer flex flex-col items-center gap-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#48464c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-[#48464c]">לחץ לבחירת תמונה</span>
+                          <span className="text-xs text-[#48464c]">או גרור קובץ לכאן</span>
+                        </label>
+                      </div>
+                    )}
+                    <p className="text-xs text-[#48464c]">
+                      אם לא תוזן, תוצג התמונה הראשונה מהגלריה
+                    </p>
+                  </div>
                 </div>
               </div>
             </section>

@@ -48,7 +48,7 @@ create table public.galleries (
   status text not null default 'draft'
     check (status in ('draft', 'sent', 'selection', 'editing', 'delivery_ready', 'locked')),
   gallery_type text not null default 'selection'
-    check (gallery_type in ('selection', 'delivery', 'portfolio')),
+    check (gallery_type in ('selection', 'portfolio')),
   password text,
   expires_at timestamptz,
   created_at timestamptz not null default now()

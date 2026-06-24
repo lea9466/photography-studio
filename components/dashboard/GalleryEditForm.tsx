@@ -14,6 +14,7 @@ type GalleryEditFormProps = {
     title: string
     password: string | null
     expires_at: string | null
+    cover_image: string | null
   }
   settings: {
     watermark_text: string | null
@@ -29,6 +30,9 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
   const [title, setTitle] = useState(gallery.title)
   const [password, setPassword] = useState(gallery.password ?? '')
   const [expiresAt, setExpiresAt] = useState(gallery.expires_at ? gallery.expires_at.slice(0, 10) : '')
+  const [coverImage, setCoverImage] = useState(gallery.cover_image ?? '')
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
+  const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [watermark, setWatermark] = useState(settings?.watermark_text ?? '')
   const [maxAlbum, setMaxAlbum] = useState(settings?.max_album_selection?.toString() ?? '')
   const [maxEdit, setMaxEdit] = useState(settings?.max_edit_selection?.toString() ?? '')
@@ -38,10 +42,40 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
   function handleSave() {
     startTransition(async () => {
       try {
+        // Upload cover image if file is selected
+        let finalCoverImage = coverImage
+        if (coverImageFile) {
+          setIsUploadingCover(true)
+          try {
+            const formData = new FormData()
+            formData.append('file', coverImageFile)
+            formData.append('type', 'cover')
+            
+            const uploadResponse = await fetch('/api/upload-cover', {
+              method: 'POST',
+              body: formData,
+            })
+            
+            if (!uploadResponse.ok) {
+              throw new Error('העלאת תמונת השער נכשלה')
+            }
+            
+            const uploadData = await uploadResponse.json()
+            finalCoverImage = uploadData.url
+          } catch (error) {
+            console.error('Error uploading cover image:', error)
+            toast.error('העלאת תמונת השער נכשלה')
+            setIsUploadingCover(false)
+            return
+          }
+          setIsUploadingCover(false)
+        }
+
         const payload = {
           title,
           password: password || undefined,
           expiresAt: expiresAt || undefined,
+          coverImage: finalCoverImage || undefined,
           watermarkText: watermark || undefined,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit) : undefined,
@@ -86,6 +120,65 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             placeholder="למשל: © שם הסטודיו"
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cover-image" className="text-[#100d1f]">
+            תמונת שער לאתר הציבורי
+            <span className="text-[#6b2d43] font-normal mr-1">(מוצג רק כאשר הגלריה מופיעה באתר הציבורי)</span>
+          </Label>
+          <div className="space-y-3">
+            {(coverImageFile || coverImage) ? (
+              <div className="relative aspect-video rounded-lg overflow-hidden border border-[#c9c5cd]">
+                <img
+                  src={coverImageFile ? URL.createObjectURL(coverImageFile) : coverImage}
+                  alt="תמונת שער"
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverImageFile(null)
+                    setCoverImage('')
+                  }}
+                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                  disabled={isUploadingCover}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-6 text-center hover:border-[#6b2d43] transition-colors">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setCoverImageFile(file)
+                    }
+                  }}
+                  className="hidden"
+                  id="cover-image-upload"
+                  disabled={isUploadingCover}
+                />
+                <label
+                  htmlFor="cover-image-upload"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#48464c]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-sm text-[#48464c]">{isUploadingCover ? 'מעלה...' : 'לחץ לבחירת תמונה'}</span>
+                  <span className="text-xs text-[#48464c]">או גרור קובץ לכאן</span>
+                </label>
+              </div>
+            )}
+            <p className="text-xs text-[#48464c]">
+              אם לא תוזן, תוצג התמונה הראשונה מהגלריה
+            </p>
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="password" className="text-[#100d1f]">סיסמה</Label>

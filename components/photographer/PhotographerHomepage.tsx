@@ -104,15 +104,21 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const statsYears = stat_experience_years || 12
 
   // Generate dynamic galleries HTML
-  const galleriesHTML = galleries.length > 0 
-    ? galleries.map((g, i) => `
+  const galleriesHTML = galleries.length > 0
+    ? galleries.map((g, i) => {
+        const year = new Date(g.created_at).getFullYear()
+        return `
         <div class="group relative overflow-hidden cursor-pointer">
-          <img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url || heroImage}"/>
+          <img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
           <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-            <p class="text-white font-headline text-2xl translate-y-4 group-hover:translate-y-0 transition-transform duration-300">${g.title}</p>
+            <div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+              <p class="text-white font-headline text-2xl">${g.title}</p>
+              <p class="text-white/80 text-sm mt-1">${year}</p>
+            </div>
           </div>
         </div>
-      `).join('')
+      `
+      }).join('')
     : ''
 
   // Generate dynamic packages HTML for each theme
@@ -376,36 +382,19 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 <a class="text-xs uppercase tracking-widest elegant-accent border-b border-accent pb-1 hover:opacity-70 transition-opacity" href="#">לכל הגלריות</a>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter tablet-stack">
-${galleries.length > 0 ? galleries.map((g, i) => `
+${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
+  const year = new Date(g.created_at).getFullYear()
+  return `
 <div class="${i === 0 ? 'md:col-span-8' : 'md:col-span-4'} group overflow-hidden reveal-on-scroll" style="transition-delay: ${i * 200}ms;">
 <div class="image-reveal ${i === 0 ? 'aspect-video' : 'aspect-[3/4]'} cursor-pointer">
-<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url || heroImage}"/>
+<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
 </div>
 <div class="py-6">
 <h3 class="font-display text-2xl mb-1">${g.title}</h3>
-<p class="text-xs uppercase tracking-widest opacity-40">2024 • דוקומנטרי אומנותי</p>
+<p class="text-xs uppercase tracking-widest opacity-40">${year} • דוקומנטרי אומנותי</p>
 </div>
-</div>
-`).join('') : `
-<div class="md:col-span-8 group overflow-hidden reveal-on-scroll">
-<div class="image-reveal aspect-video cursor-pointer">
-<img alt="קולקציית חתונה" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${heroImage}"/>
-</div>
-<div class="py-6">
-<h3 class="font-display text-2xl mb-1">חתונות יוקרה</h3>
-<p class="text-xs uppercase tracking-widest opacity-40">2024 • דוקומנטרי אומנותי</p>
-</div>
-</div>
-<div class="md:col-span-4 group overflow-hidden reveal-on-scroll" style="transition-delay: 200ms;">
-<div class="image-reveal aspect-[3/4] cursor-pointer">
-<img alt="קולקציית פורטרט" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${aboutImage}"/>
-</div>
-<div class="py-6">
-<h3 class="font-display text-2xl mb-1">פורטרט אישי</h3>
-<p class="text-xs uppercase tracking-widest opacity-40">קולקציית סטודיו</p>
-</div>
-</div>
-`}
+</div>`
+}).join('') : ''}
 </div>
 </div>
 </section>
@@ -732,29 +721,32 @@ ${email ? `
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-md items-start">
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-md h-full">
-${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => `
+${galleries.length > 1 ? galleries.slice(1, 4).map((g, i) => {
+  const year = new Date(g.created_at).getFullYear()
+  return `
 <div class="${i === 2 ? 'col-span-1 sm:col-span-2 aspect-video' : 'aspect-square'} rounded-xl overflow-hidden group relative animate-reveal" style="animation-delay: ${i * 100}ms;">
-<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${g.preview_url || heroImage}"/>
+<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${g.preview_url}"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+<p class="text-white font-headline text-xl">${g.title}</p>
+<p class="text-white/80 text-sm mt-1">${year}</p>
 </div>
-`).join('') : `
-<div class="aspect-square rounded-xl overflow-hidden group relative animate-reveal">
-<img alt="נוף אדריכלי מינימליסטי" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${heroImage}"/>
 </div>
-<div class="aspect-square rounded-xl overflow-hidden group relative animate-reveal delay-100">
-<img alt="פורטרט מעוצב" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${aboutImage}"/>
-</div>
-<div class="col-span-1 sm:col-span-2 aspect-video rounded-xl overflow-hidden group relative animate-reveal delay-200">
-<img alt="נוף טבע" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${heroImage}"/>
-</div>
-`}
+</div>`
+}).join('') : ''}
 </div>
 <div class="h-full animate-reveal delay-300">
+${galleries.length > 0 ? `
 <div class="rounded-xl overflow-hidden h-[400px] md:h-[600px] group relative">
-<img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${galleries.length > 0 ? galleries[0]?.preview_url || heroImage : heroImage}"/>
+<img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${galleries[0]?.preview_url}"/>
 <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-<p class="text-white font-headline text-2xl translate-y-4 group-hover:translate-y-0 transition-transform duration-300">${galleries.length > 0 ? galleries[0].title : 'חתונת שיש מודרנית'}</p>
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+<p class="text-white font-headline text-2xl">${galleries[0].title}</p>
+<p class="text-white/80 text-sm mt-1">${new Date(galleries[0].created_at).getFullYear()}</p>
 </div>
 </div>
+</div>
+` : ''}
 </div>
 </div>
 </section>
@@ -1092,33 +1084,19 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => `
 <p class="font-body-md text-body-md text-on-surface-variant mt-sm">מבט אל הרגעים שהפכו לנצח</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => `
+${galleries.length > 3 ? galleries.slice(3, 6).map((g, i) => {
+  const year = new Date(g.created_at).getFullYear()
+  return `
 <div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
-<img alt="${g.title}" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url || heroImage}"/>
+<img alt="${g.title}" class="w-full aspect-[3/4] object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
 <div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">${g.title}</span>
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+<span class="text-white font-headline-sm text-headline-sm">${g.title}</span>
+<span class="text-white/80 text-xs block mt-1">${year}</span>
 </div>
 </div>
-`).join('') : `
-<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
-<img alt="צילומי ניובורן" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="${heroImage}"/>
-<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי ניובורן</span>
-</div>
-</div>
-<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
-<img alt="צילומי משפחה" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="${aboutImage}"/>
-<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי משפחה</span>
-</div>
-</div>
-<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
-<img alt="צילומי חתונה" class="w-full aspect-square object-cover transition-transform duration-1000 group-hover:scale-105" src="${heroImage}"/>
-<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<span class="text-white font-headline-sm text-headline-sm translate-y-4 group-hover:translate-y-0 transition-transform duration-700">צילומי חתונות</span>
-</div>
-</div>
-`}
+</div>`
+}).join('') : ''}
 </div>
 </div>
 </section>
@@ -1433,10 +1411,14 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => `
 <p class="font-body-md text-on-surface-variant mb-xl">
                         הגישה שלנו מבוססת על יוקרה מאופקת ודיוק טכני, במטרה להעניק לכל לקוח חוויה אמנותית ייחודית ותוצאות שמעבר לציפיות.
                     </p>
-<div class="grid grid-cols-2 gap-lg border-t border-white/10 pt-xl">
+<div class="grid grid-cols-3 gap-lg border-t border-white/10 pt-xl">
 <div>
 <div class="text-primary font-headline-sm mb-xs">${statsProjects}+</div>
 <div class="font-label-sm uppercase tracking-widest text-on-surface/60">פרויקטים</div>
+</div>
+<div>
+<div class="text-primary font-headline-sm mb-xs">${statsClients}+</div>
+<div class="font-label-sm uppercase tracking-widest text-on-surface/60">לקוחות</div>
 </div>
 <div>
 <div class="text-primary font-headline-sm mb-xs">${statsYears}</div>
@@ -1460,24 +1442,50 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => `
 </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md md:gap-lg sm:h-auto lg:h-[900px]">
+${galleries.length > 0 ? `
 <div class="sm:col-span-2 sm:row-span-2 relative group overflow-hidden bg-surface min-h-[400px] sm:min-h-[500px] lg:min-h-full">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="High-contrast cinematic portrait" src="${galleries.length > 0 ? galleries[0]?.preview_url || heroImage : heroImage}"/>
+<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="High-contrast cinematic portrait" src="${galleries[0]?.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
 <div class="translate-y-4 group-hover:translate-y-0 transition-transform">
-<h3 class="font-headline-sm text-on-primary mb-xs">${galleries.length > 0 ? galleries[0].title : 'פורטרטים אמנותיים'}</h3>
-<p class="font-body-md text-on-primary/80">דיוק ורגש עם סטייל בלתי מתפשר.</p>
+<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[0].title}</h3>
+<p class="font-body-md text-on-primary/80">${new Date(galleries[0].created_at).getFullYear()}</p>
 </div>
 </div>
 </div>
+${galleries.length > 1 ? `
 <div class="sm:col-span-2 lg:col-span-2 relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale brightness-75 transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist architectural photograph" src="${galleries.length > 1 ? galleries[1]?.preview_url || heroImage : heroImage}"/>
+<img class="w-full h-full object-cover grayscale brightness-75 transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist architectural photograph" src="${galleries[1]?.preview_url}"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[1].title}</h3>
+<p class="font-body-md text-on-primary/80">${new Date(galleries[1].created_at).getFullYear()}</p>
 </div>
+</div>
+</div>
+` : ''}
+${galleries.length > 2 ? `
 <div class="relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Camera lens detail" src="${galleries.length > 2 ? galleries[2]?.preview_url || heroImage : heroImage}"/>
+<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Camera lens detail" src="${galleries[2]?.preview_url}"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[2].title}</h3>
+<p class="font-body-md text-on-primary/80">${new Date(galleries[2].created_at).getFullYear()}</p>
 </div>
+</div>
+</div>
+` : ''}
+${galleries.length > 3 ? `
 <div class="relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist landscape" src="${galleries.length > 3 ? galleries[3]?.preview_url || heroImage : heroImage}"/>
+<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist landscape" src="${galleries[3]?.preview_url}"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[3].title}</h3>
+<p class="font-body-md text-on-primary/80">${new Date(galleries[3].created_at).getFullYear()}</p>
 </div>
+</div>
+</div>
+` : ''}
+` : ''}
 </div>
 </section>
 <section class="section-transition-light py-xl md:py-xxl reveal-on-scroll" id="pricing">

@@ -234,6 +234,12 @@ export async function updateGalleryStatus(
 export async function sendGallery(galleryId: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
+  // Bypass email sending for public galleries (no client)
+  if (!gallery.clients || (Array.isArray(gallery.clients) && gallery.clients.length === 0)) {
+    await updateGalleryStatus(galleryId, 'selection')
+    return
+  }
+
   await updateGalleryStatus(galleryId, 'selection')
   await sendInviteEmailForGallery(gallery)
 }
@@ -244,7 +250,7 @@ export async function archiveGallery(galleryId: string) {
 
 export type CreateGalleryInput = {
   title: string
-  clientId: string
+  clientId?: string | null
   galleryType: Database['public']['Tables']['galleries']['Row']['gallery_type']
   password?: string
   expiresAt?: string
@@ -254,6 +260,8 @@ export type CreateGalleryInput = {
   allowDownloadOriginal?: boolean
   watermarkText?: string
   sendToClient?: boolean
+  isPublic?: boolean
+  coverImage?: string
 }
 
 function generatePassword() {
@@ -291,12 +299,14 @@ export async function createGallery(input: CreateGalleryInput) {
 
   const galleryPayload: Database['public']['Tables']['galleries']['Insert'] = {
     user_id: user.id,
-    client_id: input.clientId,
+    client_id: input.clientId || null,
     title,
     gallery_type: input.galleryType,
     password: input.password?.trim() || generatePassword(),
     expires_at: input.expiresAt || null,
     status: 'draft',
+    is_public: input.isPublic || false,
+    cover_image: input.coverImage || null,
     ...(input.galleryType === 'portfolio'
       ? { slug: portfolioSlug(title) }
       : {}),
@@ -365,6 +375,8 @@ export async function updateGallerySettings(
     allowDownloadPreview?: boolean
     allowDownloadOriginal?: boolean
     watermarkText?: string | null
+    isPublic?: boolean
+    coverImage?: string | null
   }
 ) {
   console.log('updateGallerySettings called with:', { galleryId, input })
@@ -386,6 +398,8 @@ export async function updateGallerySettings(
   const galleryUpdate: GalleriesUpdate = {}
   if (input.password !== undefined) galleryUpdate.password = input.password
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
+  if (input.isPublic !== undefined) galleryUpdate.is_public = input.isPublic
+  if (input.coverImage !== undefined) galleryUpdate.cover_image = input.coverImage
 
   if (Object.keys(galleryUpdate).length > 0) {
     console.log('Updating gallery:', galleryUpdate)
@@ -421,6 +435,7 @@ export async function updateGallerySettings(
 
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}/settings`)
+  revalidatePath('/dashboard')
 }
 
 export async function ensurePortfolioSlug(

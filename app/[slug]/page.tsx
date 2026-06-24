@@ -46,17 +46,34 @@ export default async function PhotographerPage({ params }: PageProps) {
       notFound()
     }
 
-    // Fetch public portfolio galleries
+    // Fetch public portfolio galleries (all galleries with is_public = true)
     const { data: galleries } = await supabase
       .from('galleries')
-      .select('id, title, slug, created_at')
+      .select('id, title, slug, created_at, cover_image')
       .eq('user_id', photographer.id)
-      .eq('gallery_type', 'portfolio')
+      .eq('is_public', true)
       .order('created_at', { ascending: false })
 
-    // Fetch first photo for each gallery
+    // Fetch first photo for each gallery (prefer edited photos for public display)
     const galleriesWithPhotos = await Promise.all(
       (galleries || []).map(async (gallery: any) => {
+        // Use cover_image if available (only for public galleries)
+        if (gallery.cover_image) {
+          return {
+            ...gallery,
+            preview_url: gallery.cover_image,
+          }
+        }
+
+        // Try to get edited photo first for public display
+        const { data: editedPhoto } = await supabase
+          .from('edited_photos')
+          .select('final_url')
+          .eq('gallery_id', gallery.id)
+          .limit(1)
+          .maybeSingle()
+
+        // If no edited photo, fall back to regular photo
         const { data: firstPhoto } = await supabase
           .from('photos')
           .select('preview_url')
@@ -67,7 +84,7 @@ export default async function PhotographerPage({ params }: PageProps) {
 
         return {
           ...gallery,
-          preview_url: firstPhoto?.preview_url || null,
+          preview_url: editedPhoto?.final_url || firstPhoto?.preview_url || null,
         }
       })
     )

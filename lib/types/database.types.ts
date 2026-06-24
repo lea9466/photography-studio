@@ -13,7 +13,7 @@ export type GalleryStatus =
   | 'delivery_ready'
   | 'locked'
 
-export type GalleryType = 'selection' | 'delivery' | 'portfolio'
+export type GalleryType = 'selection' | 'portfolio'
 
 export type DownloadJobType = 'preview' | 'original' | 'edited' | 'watermarked'
 

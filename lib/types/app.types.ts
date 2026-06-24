@@ -10,7 +10,6 @@ export const GALLERY_STATUS_LABELS: Record<GalleryStatus, string> = {
 
 export const GALLERY_TYPE_LABELS: Record<GalleryType, string> = {
   selection: 'בחירה',
-  delivery: 'מסירה',
   portfolio: 'תיק עבודות',
 }
 
