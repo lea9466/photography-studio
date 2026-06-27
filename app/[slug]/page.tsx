@@ -54,7 +54,7 @@ export default async function PhotographerPage({ params }: PageProps) {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
-    // Fetch first photo for each gallery (prefer edited photos for public display)
+    // Fetch first photo for each gallery with smart fallback logic
     const galleriesWithPhotos = await Promise.all(
       (galleries || []).map(async (gallery: any) => {
         // Use cover_image if available (only for public galleries)
@@ -65,26 +65,40 @@ export default async function PhotographerPage({ params }: PageProps) {
           }
         }
 
-        // Try to get edited photo first for public display
-        const { data: editedPhoto } = await supabase
+        // Check if gallery has any edited photos
+        const { data: editedPhotos } = await supabase
           .from('edited_photos')
           .select('final_url')
           .eq('gallery_id', gallery.id)
           .limit(1)
-          .maybeSingle()
 
-        // If no edited photo, fall back to regular photo
-        const { data: firstPhoto } = await supabase
-          .from('photos')
-          .select('preview_url')
-          .eq('gallery_id', gallery.id)
-          .order('sort_order', { ascending: true })
-          .limit(1)
-          .maybeSingle()
+        let previewUrl: string | null = null
+
+        if (editedPhotos && editedPhotos.length > 0) {
+          // Use edited photos if available (protects client raw files)
+          const { data: firstEditedPhoto } = await supabase
+            .from('edited_photos')
+            .select('final_url')
+            .eq('gallery_id', gallery.id)
+            .limit(1)
+            .maybeSingle()
+          previewUrl = firstEditedPhoto?.final_url || null
+        } else {
+          // Fall back to regular photos if no edited photos exist (portfolio showcase)
+          const { data: firstPhoto } = await supabase
+            .from('photos')
+            .select('preview_url')
+            .eq('gallery_id', gallery.id)
+            .eq('is_visible_to_client', true)
+            .order('sort_order', { ascending: true })
+            .limit(1)
+            .maybeSingle()
+          previewUrl = firstPhoto?.preview_url || null
+        }
 
         return {
           ...gallery,
-          preview_url: editedPhoto?.final_url || firstPhoto?.preview_url || null,
+          preview_url: previewUrl,
         }
       })
     )
@@ -118,6 +132,7 @@ export default async function PhotographerPage({ params }: PageProps) {
     const galleriesWithSignedUrls = await Promise.all(
       galleriesWithPhotos.map(async (gallery: any) => ({
         ...gallery,
+        photographer_slug: slug,
         preview_url: gallery.preview_url?.startsWith('http')
           ? gallery.preview_url
           : gallery.preview_url ? await resolveMediaUrl('previews', gallery.preview_url) : null,
@@ -127,11 +142,24 @@ export default async function PhotographerPage({ params }: PageProps) {
     console.log('Photographer with resolved URLs:', photographerWithUrls)
 
     return (
-      <PhotographerHomepage
-        photographer={photographerWithUrls}
-        galleries={galleriesWithSignedUrls}
-        packages={packages || []}
-      />
+      <>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.addEventListener('message', (event) => {
+                if (event.data.type === 'navigate' && event.data.url) {
+                  window.location.href = event.data.url;
+                }
+              });
+            `,
+          }}
+        />
+        <PhotographerHomepage
+          photographer={photographerWithUrls}
+          galleries={galleriesWithSignedUrls}
+          packages={packages || []}
+        />
+      </>
     )
   } catch (error) {
     console.error('Error loading photographer page:', error)

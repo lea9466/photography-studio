@@ -52,7 +52,7 @@ export async function createPresignedDownloadUrl(
   return getSignedUrl(getR2Client(), command, { expiresIn })
 }
 
-export async function resolveMediaUrl(bucket: MediaBucket, path: string | null) {
+export async function resolveMediaUrl(bucket: MediaBucket, path: string | null, galleryId?: string) {
   if (!path) return null
 
   const { publicUrl } = getR2Config()
@@ -61,7 +61,7 @@ export async function resolveMediaUrl(bucket: MediaBucket, path: string | null) 
     return `${publicUrl}/${key}`
   }
   if (canUsePublicUrl(bucket) && !publicUrl) {
-    return galleryMediaProxyUrl(key)
+    return galleryMediaProxyUrl(key, galleryId)
   }
 
   return createPresignedDownloadUrl(bucket, path)
@@ -69,14 +69,15 @@ export async function resolveMediaUrl(bucket: MediaBucket, path: string | null) 
 
 export async function signMediaPaths(
   bucket: MediaBucket,
-  paths: (string | null)[]
+  paths: (string | null)[],
+  galleryId?: string
 ) {
   const unique = [...new Set(paths.filter(Boolean))] as string[]
   const map: Record<string, string> = {}
 
   await Promise.all(
     unique.map(async (path) => {
-      const url = await resolveMediaUrl(bucket, path)
+      const url = await resolveMediaUrl(bucket, path, galleryId)
       if (url) map[path] = url
     })
   )

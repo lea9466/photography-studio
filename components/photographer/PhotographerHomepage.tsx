@@ -25,6 +25,7 @@ interface Gallery {
   slug: string | null
   preview_url: string | null
   created_at: string
+  photographer_slug: string
 }
 
 interface Package {
@@ -54,6 +55,7 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
       'modern': 'modern',
       'classic': 'classic',
       'bold': 'dark',
+      'dark': 'dark',
     }
 
     const theme = themeMap[photographer.selected_theme] || 'elegant'
@@ -107,13 +109,17 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const galleriesHTML = galleries.length > 0
     ? galleries.map((g, i) => {
         const year = new Date(g.created_at).getFullYear()
+        const galleryUrl = `/public-gallery/${g.id}`
         return `
-        <div class="group relative overflow-hidden cursor-pointer">
+        <div class="group relative overflow-hidden">
           <img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
-          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-            <div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+          <div class="absolute inset-0 bg-black/40 flex items-end p-lg">
+            <div class="w-full">
               <p class="text-white font-headline text-2xl">${g.title}</p>
               <p class="text-white/80 text-sm mt-1">${year}</p>
+              <button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-4 bg-white text-black px-6 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+                צפה בגלריה
+              </button>
             </div>
           </div>
         </div>
@@ -384,6 +390,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 <div class="grid grid-cols-1 md:grid-cols-12 gap-gutter tablet-stack">
 ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
   const year = new Date(g.created_at).getFullYear()
+  const galleryUrl = `/public-gallery/${g.id}`
   return `
 <div class="${i === 0 ? 'md:col-span-8' : 'md:col-span-4'} group overflow-hidden reveal-on-scroll" style="transition-delay: ${i * 200}ms;">
 <div class="image-reveal ${i === 0 ? 'aspect-video' : 'aspect-[3/4]'} cursor-pointer">
@@ -392,6 +399,9 @@ ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
 <div class="py-6">
 <h3 class="font-display text-2xl mb-1">${g.title}</h3>
 <p class="text-xs uppercase tracking-widest opacity-40">${year} • דוקומנטרי אומנותי</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 text-xs uppercase tracking-widest border-b border-current pb-1 hover:opacity-70 transition-opacity">
+צפה בגלריה
+</button>
 </div>
 </div>`
 }).join('') : ''}
@@ -723,13 +733,17 @@ ${email ? `
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-md h-full">
 ${galleries.length > 1 ? galleries.slice(1, 4).map((g, i) => {
   const year = new Date(g.created_at).getFullYear()
+  const galleryUrl = `/public-gallery/${g.id}`
   return `
 <div class="${i === 2 ? 'col-span-1 sm:col-span-2 aspect-video' : 'aspect-square'} rounded-xl overflow-hidden group relative animate-reveal" style="animation-delay: ${i * 100}ms;">
 <img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${g.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300 w-full">
 <p class="text-white font-headline text-xl">${g.title}</p>
 <p class="text-white/80 text-sm mt-1">${year}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>`
@@ -1084,15 +1098,19 @@ ${galleries.length > 0 ? `
 <p class="font-body-md text-body-md text-on-surface-variant mt-sm">מבט אל הרגעים שהפכו לנצח</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-${galleries.length > 3 ? galleries.slice(3, 6).map((g, i) => {
+${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
   const year = new Date(g.created_at).getFullYear()
+  const galleryUrl = `/public-gallery/${g.id}`
   return `
 <div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
 <img alt="${g.title}" class="w-full aspect-[3/4] object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
 <div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-700 w-full">
 <span class="text-white font-headline-sm text-headline-sm">${g.title}</span>
 <span class="text-white/80 text-xs block mt-1">${year}</span>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>`
@@ -1446,9 +1464,12 @@ ${galleries.length > 0 ? `
 <div class="sm:col-span-2 sm:row-span-2 relative group overflow-hidden bg-surface min-h-[400px] sm:min-h-[500px] lg:min-h-full">
 <img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="High-contrast cinematic portrait" src="${galleries[0]?.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
 <h3 class="font-headline-sm text-on-primary mb-xs">${galleries[0].title}</h3>
 <p class="font-body-md text-on-primary/80">${new Date(galleries[0].created_at).getFullYear()}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[0].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>
@@ -1456,9 +1477,12 @@ ${galleries.length > 1 ? `
 <div class="sm:col-span-2 lg:col-span-2 relative group overflow-hidden bg-surface min-h-[300px]">
 <img class="w-full h-full object-cover grayscale brightness-75 transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist architectural photograph" src="${galleries[1]?.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
 <h3 class="font-headline-sm text-on-primary mb-xs">${galleries[1].title}</h3>
 <p class="font-body-md text-on-primary/80">${new Date(galleries[1].created_at).getFullYear()}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[1].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>
@@ -1467,9 +1491,12 @@ ${galleries.length > 2 ? `
 <div class="relative group overflow-hidden bg-surface min-h-[300px]">
 <img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Camera lens detail" src="${galleries[2]?.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
 <h3 class="font-headline-sm text-on-primary mb-xs">${galleries[2].title}</h3>
 <p class="font-body-md text-on-primary/80">${new Date(galleries[2].created_at).getFullYear()}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[2].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>
@@ -1478,9 +1505,12 @@ ${galleries.length > 3 ? `
 <div class="relative group overflow-hidden bg-surface min-h-[300px]">
 <img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist landscape" src="${galleries[3]?.preview_url}"/>
 <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform">
+<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
 <h3 class="font-headline-sm text-on-primary mb-xs">${galleries[3].title}</h3>
 <p class="font-body-md text-on-primary/80">${new Date(galleries[3].created_at).getFullYear()}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[3].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
+צפה בגלריה
+</button>
 </div>
 </div>
 </div>

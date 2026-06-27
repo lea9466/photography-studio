@@ -103,6 +103,8 @@ export type Database = {
           gallery_type: GalleryType
           password: string | null
           expires_at: string | null
+          is_public: boolean
+          cover_image: string | null
           created_at: string
         }
         Insert: {
@@ -115,6 +117,8 @@ export type Database = {
           gallery_type?: GalleryType
           password?: string | null
           expires_at?: string | null
+          is_public?: boolean
+          cover_image?: string | null
           created_at?: string
         }
         Update: {
@@ -127,6 +131,8 @@ export type Database = {
           gallery_type?: GalleryType
           password?: string | null
           expires_at?: string | null
+          is_public?: boolean
+          cover_image?: string | null
           created_at?: string
         }
         Relationships: [

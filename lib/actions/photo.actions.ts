@@ -428,9 +428,10 @@ export async function deletePhoto(photoId: string) {
 
 export async function getSignedPhotoUrl(
   bucket: MediaBucket,
-  path: string
+  path: string,
+  galleryId?: string
 ) {
-  const url = await resolveMediaUrl(bucket, path)
+  const url = await resolveMediaUrl(bucket, path, galleryId)
   if (!url) throw new Error('לא ניתן ליצור קישור לתמונה')
   return url
 }

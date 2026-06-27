@@ -58,15 +58,15 @@ export type ClientGalleryData = {
   allow_download_original: boolean
 }
 
-async function signPath(bucket: MediaBucket, path: string | null) {
-  return resolveMediaUrl(bucket, path)
+async function signPath(bucket: MediaBucket, path: string | null, galleryId?: string) {
+  return resolveMediaUrl(bucket, path, galleryId)
 }
 
 export async function getClientGalleryPublicMeta(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
-    .select('id, title, status, gallery_type, users(studio_name), clients(email)')
+    .select('id, title, status, gallery_type, is_public, users(studio_name), clients(email)')
     .eq('id', galleryId)
     .single()
 
@@ -75,13 +75,15 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     title: string
     status: GalleryStatus
     gallery_type: string
+    is_public: boolean
     users: { studio_name: string | null } | { studio_name: string | null }[] | null
     clients: { email: string | null } | { email: string | null }[] | null
   }
 
   const gallery = data as Row | null
   if (!gallery) return null
-  if (gallery.gallery_type === 'portfolio') return null
+  // Allow portfolio galleries if they are public
+  if (gallery.gallery_type === 'portfolio' && !gallery.is_public) return null
 
   const user = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
   const client = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
@@ -91,6 +93,8 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     id: gallery.id,
     title: gallery.title,
     status: gallery.status,
+    gallery_type: gallery.gallery_type,
+    is_public: gallery.is_public,
     studio_name: user?.studio_name ?? null,
     emailHint,
   }
@@ -185,9 +189,11 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
   return { success: true }
 }
 
-export async function getClientGallery(galleryId: string) {
-  const allowed = await hasGallerySession(galleryId)
-  if (!allowed) return null
+export async function getClientGallery(galleryId: string, skipSessionCheck = false) {
+  if (!skipSessionCheck) {
+    const allowed = await hasGallerySession(galleryId)
+    if (!allowed) return null
+  }
 
   const admin = createAdminClient()
 
@@ -288,12 +294,13 @@ export async function getClientGallery(galleryId: string) {
         selected_album: selection?.selected_album ?? false,
         selected_edit: selection?.selected_edit ?? false,
         edited_url: editedPath,
-        preview_signed_url: await signPath(gridBucket, gridPath),
+        preview_signed_url: await signPath(gridBucket, gridPath, galleryId),
         lightbox_signed_url: await signPath(
           isDelivered && editedPath ? 'edited' : useWatermarked ? 'watermarked' : 'previews',
-          lightboxPath
+          lightboxPath,
+          galleryId
         ),
-        edited_signed_url: await signPath('edited', editedPath),
+        edited_signed_url: await signPath('edited', editedPath, galleryId),
       }
     })
   )
@@ -321,6 +328,88 @@ export async function getClientGallery(galleryId: string) {
   }
 
   return { gallery: meta, photos: clientPhotos }
+}
+
+export async function getPublicPortfolioGallery(galleryId: string) {
+  const admin = createAdminClient()
+
+  const { data: galleryData } = await admin
+    .from('galleries')
+    .select(
+      `
+      id, title, created_at, gallery_type,
+      users (studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url)
+    `
+    )
+    .eq('id', galleryId)
+    .eq('gallery_type', 'portfolio')
+    .eq('is_public', true)
+    .single()
+
+  if (!galleryData) return null
+
+  type PortfolioGalleryDetail = {
+    id: string
+    title: string
+    created_at: string
+    gallery_type: string
+    users: {
+      studio_name: string | null
+      logo_url: string | null
+      accent_color: string
+      selected_theme: string
+      hero_desktop_url: string | null
+      hero_mobile_url: string | null
+    } | {
+      studio_name: string | null
+      logo_url: string | null
+      accent_color: string
+      selected_theme: string
+      hero_desktop_url: string | null
+      hero_mobile_url: string | null
+    }[] | null
+  }
+
+  const gallery = galleryData as PortfolioGalleryDetail
+  const user = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
+
+  const { data: photos } = await admin
+    .from('photos')
+    .select('id, preview_url, watermarked_preview_url')
+    .eq('gallery_id', galleryId)
+    .eq('is_visible_to_client', true)
+    .order('sort_order', { ascending: true })
+
+  type PhotoRow = {
+    id: string
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const portfolioPhotos = await Promise.all(
+    ((photos ?? []) as PhotoRow[]).map(async (photo) => {
+      const previewPath = photo.watermarked_preview_url || photo.preview_url
+      return {
+        id: photo.id,
+        preview_signed_url: previewPath ? await signPath('watermarked', previewPath, galleryId) : null,
+      }
+    })
+  )
+
+  const heroPath = user?.hero_desktop_url || user?.hero_mobile_url
+  const heroImageUrl = heroPath ? await signPath('branding', heroPath) : null
+  const logoImageUrl = user?.logo_url ? await signPath('branding', user.logo_url) : null
+
+  return {
+    title: gallery.title,
+    studioName: user?.studio_name ?? null,
+    createdAt: gallery.created_at,
+    photos: portfolioPhotos,
+    accentColor: user?.accent_color ?? '#7c3aed',
+    selectedTheme: user?.selected_theme ?? 'classic',
+    heroImageUrl,
+    logoImageUrl,
+  }
 }
 
 export async function completeClientSelection(

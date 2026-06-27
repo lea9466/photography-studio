@@ -3,7 +3,8 @@ import type { MediaBucket } from '@/lib/r2/types'
 
 export async function signStoragePaths(
   bucket: MediaBucket,
-  paths: (string | null)[]
+  paths: (string | null)[],
+  galleryId?: string
 ) {
-  return signMediaPaths(bucket, paths)
+  return signMediaPaths(bucket, paths, galleryId)
 }

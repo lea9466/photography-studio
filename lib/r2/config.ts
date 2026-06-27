@@ -24,9 +24,13 @@ export function r2PublicBaseUrl() {
   )
 }
 
-export function galleryMediaProxyUrl(key: string) {
+export function galleryMediaProxyUrl(key: string, galleryId?: string) {
   const normalizedKey = key.replace(/^\/+/, '')
-  return `/api/gallery-media?key=${encodeURIComponent(normalizedKey)}`
+  const url = `/api/gallery-media?key=${encodeURIComponent(normalizedKey)}`
+  if (galleryId) {
+    return `${url}&galleryId=${encodeURIComponent(galleryId)}`
+  }
+  return url
 }
 
 export function getR2Config() {

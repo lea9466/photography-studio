@@ -1,6 +1,8 @@
 import { downloadMediaObject } from '@/lib/r2/storage'
 import { isR2Configured } from '@/lib/r2/config'
 import type { MediaBucket } from '@/lib/r2/types'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { hasGallerySession } from '@/lib/gallery-session'
 
 const ALLOWED_PREFIXES = [
   'originals/',
@@ -38,13 +40,35 @@ function bucketFromKey(key: string): MediaBucket | null {
   return null
 }
 
+async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
+  const admin = createAdminClient()
+
+  const { data } = await admin
+    .from('galleries')
+    .select('id, is_public, gallery_type')
+    .eq('id', galleryId)
+    .single()
+
+  if (!data) return false
+
+  const gallery = data as { id: string; is_public: boolean; gallery_type: string }
+
+  if (gallery.is_public && gallery.gallery_type === 'portfolio') {
+    return true
+  }
+
+  return await hasGallerySession(galleryId)
+}
+
 export async function GET(request: Request) {
   if (!isR2Configured()) {
     return textResponse('אחסון תמונות לא מוגדר', 503)
   }
 
   const key = new URL(request.url).searchParams.get('key')?.trim() ?? ''
+  const galleryId = new URL(request.url).searchParams.get('galleryId')?.trim() ?? ''
   const normalizedKey = key.replace(/^\/+/, '')
+  
   if (!isAllowedGalleryMediaKey(normalizedKey)) {
     return textResponse('לא נמצא', 404)
   }
@@ -52,6 +76,13 @@ export async function GET(request: Request) {
   const bucket = bucketFromKey(normalizedKey)
   if (!bucket) {
     return textResponse('לא נמצא', 404)
+  }
+
+  if (galleryId) {
+    const hasAccess = await verifyGalleryAccess(galleryId)
+    if (!hasAccess) {
+      return textResponse('גישה נדחתה', 403)
+    }
   }
 
   const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)

@@ -17,12 +17,13 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
 
   const { data } = await supabase
     .from('galleries')
-    .select('id, title, user_id')
+    .select('id, title, user_id, is_public')
     .eq('slug', slug)
     .eq('gallery_type', 'portfolio')
+    .eq('is_public', true)
     .single()
 
-  type GalleryRow = { id: string; title: string; user_id: string }
+  type GalleryRow = { id: string; title: string; user_id: string; is_public: boolean }
   const gallery = data as GalleryRow | null
   if (!gallery) notFound()
 
@@ -57,19 +58,38 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const statClients = profile?.stat_clients ?? 0
   const statExperienceYears = profile?.stat_experience_years ?? 0
 
-  const { data: photos } = await admin
-    .from('photos')
-    .select('id, preview_url')
+  // Smart fallback logic: prefer edited photos for public display
+  const { data: editedPhotos } = await admin
+    .from('edited_photos')
+    .select('photo_id, final_url')
     .eq('gallery_id', gallery.id)
-    .eq('is_visible_to_client', true)
-    .order('sort_order')
 
-  const previewPaths = ((photos ?? []) as { id: string; preview_url: string | null }[]).map(
-    (photo) => photo.preview_url
-  )
-  const signedUrls = await signStoragePaths('previews', previewPaths)
+  let photosToDisplay: { id: string; preview_url: string | null }[] = []
+  let bucket: 'previews' | 'edited' = 'previews'
 
-  const signed = ((photos ?? []) as { id: string; preview_url: string | null }[]).map(
+  if (editedPhotos && editedPhotos.length > 0) {
+    // Use edited photos if available (protects client raw files)
+    photosToDisplay = editedPhotos.map((ep) => ({
+      id: ep.photo_id,
+      preview_url: ep.final_url,
+    }))
+    bucket = 'edited'
+  } else {
+    // Fall back to all photos if no edited photos exist (portfolio showcase)
+    const { data: regularPhotos } = await admin
+      .from('photos')
+      .select('id, preview_url')
+      .eq('gallery_id', gallery.id)
+      .eq('is_visible_to_client', true)
+      .order('sort_order')
+    
+    photosToDisplay = (regularPhotos ?? []) as { id: string; preview_url: string | null }[]
+  }
+
+  const previewPaths = photosToDisplay.map((photo) => photo.preview_url)
+  const signedUrls = await signStoragePaths(bucket, previewPaths, gallery.id)
+
+  const signed = photosToDisplay.map(
     (photo) => ({
       ...photo,
       url: photo.preview_url ? signedUrls[photo.preview_url] ?? null : null,
@@ -220,4 +240,41 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
       </main>
     </div>
   )
+}
+
+export async function generateMetadata({ params }: PortfolioPageProps) {
+  const { slug } = await params
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from('galleries')
+    .select('id, title, is_public, user_id')
+    .eq('slug', slug)
+    .eq('gallery_type', 'portfolio')
+    .eq('is_public', true)
+    .single()
+
+  type GalleryRow = { id: string; title: string; is_public: boolean; user_id: string }
+  const gallery = data as GalleryRow | null
+
+  if (!gallery) {
+    return {
+      title: 'גלריה לא נמצאה',
+    }
+  }
+
+  const admin = createAdminClient()
+  const { data: user } = await admin
+    .from('users')
+    .select('studio_name')
+    .eq('id', gallery.user_id)
+    .single()
+
+  type UserRow = { studio_name: string | null }
+  const profile = user as UserRow | null
+
+  return {
+    title: `${gallery.title} | ${profile?.studio_name || 'Studio Gallery'}`,
+    description: `תיק עבודות מאת ${profile?.studio_name || 'Studio Gallery'}`,
+  }
 }

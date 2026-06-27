@@ -124,7 +124,8 @@ body {
   --border: #262626;
 }
 
-[data-theme='bold'] {
+[data-theme='bold'],
+[data-theme='dark'] {
   --background: #1c1917;
   --foreground: #fafafa;
   --border: #44403c;
