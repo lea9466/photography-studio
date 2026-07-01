@@ -16,6 +16,11 @@ export function MarketingHome() {
       <Nav />
       <Hero />
 
+      <section className="mx-auto max-w-6xl px-4 py-16" id="galleries">
+        <h2 className="mb-6 text-2xl font-semibold">גלריות</h2>
+        <p className="text-[--muted] mb-4">גלריות ציבוריות מתעדכנות בקרוב</p>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 py-16" id="about">
         <h2 className="mb-6 text-2xl font-semibold">למה Studio Gallery?</h2>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -36,9 +41,9 @@ export function MarketingHome() {
         </div>
       </section>
 
-      <section className="border-y border-[--border] bg-[--background] px-4 py-16">
+      <section className="border-y border-[--border] bg-[--background] px-4 py-16" id="pricing">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-6 text-2xl font-semibold">מחירים</h2>
+          <h2 className="mb-6 text-2xl font-semibold">חבילות צילום</h2>
           <Card className="max-w-md">
             <CardHeader>
               <CardTitle>Starter</CardTitle>
@@ -56,6 +61,7 @@ export function MarketingHome() {
       </section>
 
       <section className="mx-auto max-w-xl px-4 py-16" id="contact">
+        <h2 className="mb-6 text-2xl font-semibold text-center">יצירת קשר</h2>
         <ContactForm />
       </section>
 

@@ -34,6 +34,20 @@ export type Database = {
           theme_primary: string
           theme_secondary: string
           created_at: string
+          about_text: string | null
+          about_title: string | null
+          about_subtitle: string | null
+          about_description: string | null
+          contact_card_title: string | null
+          contact_card_description: string | null
+          stat_projects: number | null
+          stat_clients: number | null
+          stat_experience_years: number | null
+          accent_color: string | null
+          selected_theme: string | null
+          hero_desktop_url: string | null
+          hero_mobile_url: string | null
+          about_image_url: string | null
         }
         Insert: {
           id: string
@@ -44,6 +58,20 @@ export type Database = {
           theme_primary?: string
           theme_secondary?: string
           created_at?: string
+          about_text?: string | null
+          about_title?: string | null
+          about_subtitle?: string | null
+          about_description?: string | null
+          contact_card_title?: string | null
+          contact_card_description?: string | null
+          stat_projects?: number | null
+          stat_clients?: number | null
+          stat_experience_years?: number | null
+          accent_color?: string | null
+          selected_theme?: string | null
+          hero_desktop_url?: string | null
+          hero_mobile_url?: string | null
+          about_image_url?: string | null
         }
         Update: {
           id?: string
@@ -54,6 +82,20 @@ export type Database = {
           theme_primary?: string
           theme_secondary?: string
           created_at?: string
+          about_text?: string | null
+          about_title?: string | null
+          about_subtitle?: string | null
+          about_description?: string | null
+          contact_card_title?: string | null
+          contact_card_description?: string | null
+          stat_projects?: number | null
+          stat_clients?: number | null
+          stat_experience_years?: number | null
+          accent_color?: string | null
+          selected_theme?: string | null
+          hero_desktop_url?: string | null
+          hero_mobile_url?: string | null
+          about_image_url?: string | null
         }
         Relationships: []
       }

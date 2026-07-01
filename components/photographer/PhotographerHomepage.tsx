@@ -8,6 +8,11 @@ interface Photographer {
   studio_name: string
   logo_url: string | null
   about_text: string | null
+  about_title: string | null
+  about_subtitle: string | null
+  about_description: string | null
+  contact_card_title: string | null
+  contact_card_description: string | null
   stat_projects: number
   stat_clients: number
   stat_experience_years: number
@@ -83,7 +88,13 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[]): string {
   const {
     studio_name,
+    logo_url,
     about_text,
+    about_title,
+    about_subtitle,
+    about_description,
+    contact_card_title,
+    contact_card_description,
     stat_projects,
     stat_clients,
     stat_experience_years,
@@ -96,10 +107,16 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 
   const primaryColor = accent_color || '#B8953F'
   const heroImage = hero_desktop_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw'
+  const heroMobileImage = hero_mobile_url || heroImage
   const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
 
   const studioName = studio_name || 'סטודיו גלריה'
   const aboutText = about_text || 'ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.'
+  const aboutTitle = about_title || ''
+  const aboutSubtitle = about_subtitle || ''
+  const aboutDescription = about_description || ''
+  const contactCardTitle = contact_card_title || ''
+  const contactCardDescription = contact_card_description || ''
 
   const statsProjects = stat_projects || 450
   const statsClients = stat_clients || 2000
@@ -137,66 +154,74 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       
       if (currentTheme === 'elegant') {
         return `
-        <div class="${isFeatured ? 'bg-white border-2 border-[--primary-accent]' : 'bg-white border border-outline-variant'} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: right !important;">
-          ${isFeatured ? '<div class="absolute -top-3 right-4 bg-[--primary-accent] text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-          <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="direction: rtl !important; text-align: right !important;">
-            <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: right !important; color: ${isFeatured ? 'var(--primary-accent)' : '#0F0F0D'};">${pkg.name}</h3>
-            <div class="text-lg tracking-widest elegant-accent" style="direction: rtl !important; text-align: right !important; color: ${isFeatured ? 'var(--primary-accent)' : 'inherit'};">₪${pkg.price_amount}</div>
+        <div class="${isFeatured ? 'bg-white border-2' : 'bg-white border border-outline-variant'} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
+          ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important; background-color: ${primaryColor};">הנמכרת ביותר</div>` : ''}
+          <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="direction: rtl !important; text-align: center !important;">
+            <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : '#0F0F0D'};">${pkg.name}</h3>
+            <div class="text-lg tracking-widest elegant-accent" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : 'inherit'};">₪${pkg.price_amount}</div>
           </div>
-          <div class="border-t ${isFeatured ? 'border-[--primary-accent]/20' : 'hairline-border'} pt-8 mb-10 flex-grow" style="direction: rtl !important; text-align: right !important;">
-            <ul class="space-y-4 font-body text-base ${isFeatured ? 'text-on-surface-variant' : 'opacity-80'}" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${isFeatured ? 'var(--primary-accent)' : 'inherit'};">check</span> <span>${item}</span></li>`).join('')}
-            </ul>
+          <div class="border-t pt-8 mb-10 flex-grow" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor}20;` : 'border-color: rgba(15, 15, 13, 0.1);'}">
+            <div class="mx-auto w-fit" style="direction: rtl !important;">
+              <ul class="space-y-4 font-body text-base ${isFeatured ? 'text-on-surface-variant' : 'opacity-80'}" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+                ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${isFeatured ? primaryColor : 'inherit'};">check</span> <span>${item}</span></li>`).join('')}
+              </ul>
+            </div>
           </div>
-          <div class="mt-auto" style="direction: rtl !important; text-align: right !important;">
-            <button class="w-full border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="direction: rtl !important; text-align: right !important;">תיאום שיחת ייעוץ</button>
+          <div class="mt-auto" style="direction: rtl !important; text-align: center !important;">
+            <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="direction: rtl !important; text-align: center !important;">תיאום שיחת ייעוץ</button>
           </div>
         </div>
       `;
       } else if (currentTheme === 'modern') {
         return `
-        <div class="bg-white p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: right !important;">
-          ${isFeatured ? '<div class="absolute -top-4 right-1/2 translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-          <div style="direction: rtl !important; text-align: right !important;">
-            <h3 class="font-headline text-2xl font-bold" style="direction: rtl !important; text-align: right !important;">${pkg.name}</h3>
-            <div class="flex items-baseline gap-xs mt-sm" style="direction: rtl !important; text-align: right !important;">
+        <div class="bg-white p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
+          ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
+          <div style="direction: rtl !important; text-align: center !important;">
+            <h3 class="font-headline text-2xl font-bold" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+            <div class="flex items-baseline gap-xs mt-sm justify-center" style="direction: rtl !important; text-align: center !important;">
               <span class="font-headline text-3xl font-bold text-primary" style="direction: rtl !important;">₪${pkg.price_amount}</span>
             </div>
           </div>
-          <ul class="flex flex-col gap-sm flex-grow" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-            ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-sm w-full text-md"><span class="material-symbols-outlined text-primary text-xl">check_circle</span> <span>${item}</span></li>`).join('')}
-          </ul>
-          <button class="w-full py-md ${isFeatured ? 'bg-primary text-white rounded-lg font-bold btn-magnetic shadow-lg shadow-indigo-100' : 'border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5'} transition-all" style="direction: rtl !important; text-align: right !important;">
+          <div class="mx-auto w-fit flex-grow my-lg" style="direction: rtl !important;">
+            <ul class="flex flex-col gap-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-sm text-md"><span class="material-symbols-outlined text-primary text-xl">check_circle</span> <span>${item}</span></li>`).join('')}
+            </ul>
+          </div>
+          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full py-md ${isFeatured ? 'bg-primary text-white rounded-lg font-bold btn-magnetic shadow-lg shadow-indigo-100' : 'border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5'} transition-all" style="direction: rtl !important; text-align: center !important;">
             הזמינו עכשיו
           </button>
         </div>
       `;
       } else if (currentTheme === 'dark') {
         return `
-        <div class="${isFeatured ? 'bg-background p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl' : 'bg-background p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10'}" style="direction: rtl !important; text-align: right !important;">
+        <div class="${isFeatured ? 'bg-background p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl' : 'bg-background p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10'}" style="direction: rtl !important; text-align: center !important;">
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-xs font-label-sm uppercase tracking-widest" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-          <span class="font-label-sm text-primary/60 mb-md tracking-widest uppercase" style="direction: rtl !important; text-align: right !important;">${isFeatured ? 'Professional' : 'Essential'}</span>
-          <h3 class="font-headline-sm mb-sm text-on-surface" style="direction: rtl !important; text-align: right !important;">${pkg.name}</h3>
-          <div class="text-[48px] lg:text-display-lg ${isFeatured ? 'text-primary' : 'text-on-surface'} mb-xl" style="direction: rtl !important; text-align: right !important;">₪${pkg.price_amount}</div>
-          <ul class="space-y-md mb-xl w-full text-on-surface-variant font-body-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-            ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="w-full border-b border-white/10 pb-sm">${item}</li>`).join('')}
-          </ul>
-          <button class="mt-auto w-full ${isFeatured ? 'bg-primary text-on-primary py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition' : 'border border-on-surface text-on-surface py-md font-label-sm uppercase tracking-widest hover:bg-on-surface hover:text-background btn-fuchsia-transition'}" style="direction: rtl !important; text-align: right !important;">
+          <span class="font-label-sm text-primary/60 mb-md tracking-widest uppercase" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'Professional' : 'Essential'}</span>
+          <h3 class="font-headline-sm mb-sm text-on-surface" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+          <div class="text-[48px] lg:text-display-lg ${isFeatured ? 'text-primary' : 'text-on-surface'} mb-xl" style="direction: rtl !important; text-align: center !important;">₪${pkg.price_amount}</div>
+          <div class="mx-auto w-fit mb-xl" style="direction: rtl !important;">
+            <ul class="space-y-md text-on-surface-variant font-body-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-md w-full border-b border-white/10 pb-sm"><span class="material-symbols-outlined text-primary">check_circle</span> <span>${item}</span></li>`).join('')}
+            </ul>
+          </div>
+          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="mt-auto w-full ${isFeatured ? 'bg-primary text-on-primary py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition' : 'border border-on-surface text-on-surface py-md font-label-sm uppercase tracking-widest hover:bg-on-surface hover:text-background btn-fuchsia-transition'}" style="direction: rtl !important; text-align: center !important;">
             ${isFeatured ? 'לבחירת החבילה' : 'הזמן עכשיו'}
           </button>
         </div>
       `;
       } else if (currentTheme === 'classic') {
         return `
-        <div class="${isFeatured ? 'bg-surface-container-low border border-primary/30 p-xl flex flex-col items-center rounded-sm shadow-xl relative scale-105 z-10' : 'bg-surface border border-outline-variant/30 p-xl flex flex-col items-center rounded-sm hover:border-primary/50 transition-colors duration-500'}" style="direction: rtl !important; text-align: right !important;">
-          ${isFeatured ? '<div class="absolute -top-3 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs" style="direction: rtl !important; text-align: right !important;">${pkg.name}</h3>
-          <p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg" style="direction: rtl !important; text-align: right !important;">${isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים'}</p>
-          <div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1" dir="ltr" style="direction: ltr !important;"><span class="text-lg font-normal">₪</span>${pkg.price_amount}</div>
-          <ul class="space-y-md mb-xl w-full border-t ${isFeatured ? 'border-primary/10' : 'border-outline-variant/20'} pt-lg" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-            ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-start justify-start gap-md w-full"><span class="material-symbols-outlined text-primary mt-1">${isFeatured ? 'check_circle' : 'check'}</span> <span class="font-body-md text-body-md text-on-surface-variant">${item}</span></li>`).join('')}
-          </ul>
-          <button class="w-full mt-auto ${isFeatured ? 'bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all duration-300 shadow-md' : 'border border-primary/40 text-primary py-sm rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300'}" style="direction: rtl !important; text-align: right !important;">
+        <div class="${isFeatured ? 'bg-surface-container-low border border-primary/30 p-xl flex flex-col items-center rounded-sm shadow-xl relative scale-105 z-10' : 'bg-surface border border-outline-variant/30 p-xl flex flex-col items-center rounded-sm hover:border-primary/50 transition-colors duration-500'}" style="direction: rtl !important; text-align: center !important;">
+          ${isFeatured ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
+          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+          <p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים'}</p>
+          <div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1 justify-center" dir="ltr" style="direction: ltr !important;"><span class="text-lg font-normal">₪</span>${pkg.price_amount}</div>
+          <div class="mx-auto w-fit mb-xl border-t ${isFeatured ? 'border-primary/10' : 'border-outline-variant/20'} pt-lg" style="direction: rtl !important;">
+            <ul class="space-y-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-md w-full"><span class="material-symbols-outlined text-primary">${isFeatured ? 'check_circle' : 'check'}</span> <span class="font-body-md text-body-md text-on-surface-variant">${item}</span></li>`).join('')}
+            </ul>
+          </div>
+          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full mt-auto ${isFeatured ? 'bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all duration-300 shadow-md' : 'border border-primary/40 text-primary py-md rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300'}" style="direction: rtl !important; text-align: center !important;">
             ${isFeatured ? 'בחירה בחבילה' : 'הזמנת חבילה'}
           </button>
         </div>
@@ -209,7 +234,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   // ELEGANT THEME - EXACT COPY FROM SOURCE WITH DYNAMIC DATA
   const ElegantTheme = () => `
 <!DOCTYPE html>
-<html class="scroll-smooth" dir="rtl" lang="he">
+<html class="scroll-smooth" dir="rtl" lang="he" style="scroll-behavior: smooth;">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -270,10 +295,27 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         .elegant-bg-accent { background-color: ${primaryColor}; }
         .elegant-border-accent { border-color: ${primaryColor}; }
         
+        .glass-hero-wrapper {
+            position: relative;
+        }
         .glass-hero {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 11px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            animation: gentleFloat 6s ease-in-out infinite;
+        }
+        @keyframes gentleFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(0.5deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(3px) rotate(-0.5deg); }
+        }
+        .gallery-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .hairline-border {
@@ -314,26 +356,46 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">
-<nav class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 px-lg py-md flex flex-row-reverse justify-between items-center left-0 right-0 max-w-[1440px] mx-auto">
-<div class="font-display text-2xl uppercase tracking-[0.2em] font-medium text-on-surface">
-        ${studioName}
-    </div>
+<nav class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 px-lg py-md flex flex-row-reverse justify-between items-center left-0 right-0">
+<div class="flex items-center gap-sm">
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-[0.2em] font-medium text-on-surface">${studioName}</div>`}
+</div>
+<button onclick="toggleMobileMenuElegant()" class="md:hidden p-2 text-on-surface hover:text-accent transition-colors">
+<span class="material-symbols-outlined text-3xl" id="menu-icon-elegant">menu</span>
+</button>
 <div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest" href="#about">אודות</a>
-<a class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest" href="#gallery">גלריות</a>
-<a class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest" href="#pricing">מחירון</a>
-<a class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest" href="#testimonials">המלצות</a>
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">בית</a>
+<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">יצירת קשר</a>
 </div>
-<button class="bg-[#0F0F0D] text-white px-8 py-2 text-xs uppercase tracking-widest hover:bg-accent transition-all active:scale-95">
-        צור קשר
-    </button>
 </nav>
-<main>
-<section class="relative h-screen flex items-center justify-center overflow-hidden px-md md:px-margin-desktop reveal-on-scroll">
-<div class="absolute inset-0 z-0 image-reveal active">
-<img alt="סטודיו יוקרתי" class="w-full h-full object-cover" src="${heroImage}"/>
+<div id="mobile-menu-elegant" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#0F0F0D]/10">
+<div class="flex flex-col gap-md px-lg py-md">
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">בית</a>
+<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">יצירת קשר</a>
 </div>
-<div class="relative z-10 glass-hero p-xl md:p-24 max-w-4xl text-center backdrop-blur-md">
+</div>
+<script>
+function toggleMobileMenuElegant() {
+const menu = document.getElementById('mobile-menu-elegant');
+const icon = document.getElementById('menu-icon-elegant');
+menu.classList.toggle('hidden');
+icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
+}
+</script>
+<main>
+<section class="relative h-screen overflow-hidden reveal-on-scroll">
+<div class="absolute inset-0 z-0 image-reveal active">
+<picture>
+<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
+<img alt="סטודיו יוקרתי" class="w-full h-full object-cover" src="${heroImage}"/>
+</picture>
+</div>
+<div class="relative z-[100] glass-hero-wrapper absolute top-[55%] -translate-y-1/2 left-4 md:left-4 md:top-[55%] top-[75%]">
+<div class="glass-hero p-xl md:p-24 max-w-md text-center backdrop-blur-md">
 <h1 class="font-display text-4xl md:text-7xl mb-6 leading-[1.1] text-on-surface">
                 אמנות הרגע <br/>
 <span class="elegant-accent italic font-light">באוצרות אישית</span>
@@ -347,8 +409,9 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
                 </button>
 </div>
 </div>
+</div>
 </section>
-<section class="px-margin-mobile md:px-margin-desktop py-20 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-xl border-y hairline-border reveal-on-scroll">
+<section class="px-margin-mobile md:px-margin-desktop py-20 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-xl reveal-on-scroll">
 <div class="text-center">
 <span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${statsYears}</span>
 <span class="text-xs uppercase tracking-widest opacity-60">שנות ניסיון</span>
@@ -362,16 +425,13 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 <span class="text-xs uppercase tracking-widest opacity-60">פרסי צילום</span>
 </div>
 </section>
+${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="px-margin-mobile md:px-margin-desktop py-32 max-w-7xl mx-auto reveal-on-scroll" id="about">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
 <div class="order-2 lg:order-1">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">החזון שלנו</h2>
-<p class="font-body text-lg mb-6 leading-relaxed opacity-80">
-                    ${aboutText}
-                </p>
-<p class="font-body text-base mb-10 opacity-60 leading-relaxed">
-                    אנו לא רק מצלמים תמונות; אנו יוצרים חוויות. מהרגע שנכנסת לסטודיו ועד לקבלת האלבום היוקרתי, כל פרט מעוצב כדי לגרום לך להרגיש הגרסה הבטוחה והיפה ביותר של עצמך.
-                </p>
+${aboutTitle ? `<h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">${aboutTitle}</h2>` : ''}
+${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 <button class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
                     הכירי את הצוות
                 </button>
@@ -381,27 +441,33 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 </div>
 </div>
 </section>
+` : ''}
 <section class="px-margin-mobile md:px-margin-desktop py-24 bg-white" id="gallery">
 <div class="max-w-7xl mx-auto">
 <div class="flex flex-row-reverse justify-between items-end mb-16 reveal-on-scroll">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">קולקציות נבחרות</h2>
 <a class="text-xs uppercase tracking-widest elegant-accent border-b border-accent pb-1 hover:opacity-70 transition-opacity" href="#">לכל הגלריות</a>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter tablet-stack">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
 ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
   const year = new Date(g.created_at).getFullYear()
   const galleryUrl = `/public-gallery/${g.id}`
+  const isLarge = i === 0
+  const isVertical = i === 1
+  const isMedium = i === 3
+  const colSpan = isLarge ? 'md:col-span-8' : isVertical ? 'md:col-span-4' : isMedium ? 'md:col-span-8' : 'md:col-span-4'
+  const aspectRatio = isLarge ? 'aspect-[16/9]' : isVertical ? 'aspect-[3/4]' : isMedium ? 'aspect-[21/9]' : 'aspect-square'
   return `
-<div class="${i === 0 ? 'md:col-span-8' : 'md:col-span-4'} group overflow-hidden reveal-on-scroll" style="transition-delay: ${i * 200}ms;">
-<div class="image-reveal ${i === 0 ? 'aspect-video' : 'aspect-[3/4]'} cursor-pointer">
-<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
-</div>
-<div class="py-6">
-<h3 class="font-display text-2xl mb-1">${g.title}</h3>
-<p class="text-xs uppercase tracking-widest opacity-40">${year} • דוקומנטרי אומנותי</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 text-xs uppercase tracking-widest border-b border-current pb-1 hover:opacity-70 transition-opacity">
+<div class="${colSpan} group relative overflow-hidden reveal-on-scroll" style="transition-delay: ${i * 100}ms;">
+<div class="image-reveal cursor-pointer ${aspectRatio} w-full bg-[#eae8e5] overflow-hidden">
+<img alt="${g.title}" class="gallery-img w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-start justify-end p-lg">
+<h3 class="font-display text-2xl mb-1 text-white">${g.title}</h3>
+<p class="text-xs uppercase tracking-widest text-white/80 mb-4">${year}</p>
+<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="bg-white text-black px-6 py-2 text-xs font-semibold uppercase tracking-widest hover:bg-gray-200 transition-colors">
 צפה בגלריה
 </button>
+</div>
 </div>
 </div>`
 }).join('') : ''}
@@ -517,9 +583,7 @@ ${email ? `
 </main>
 <footer class="bg-white py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant pb-32">
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
-<div class="font-display text-xl uppercase tracking-widest text-on-surface">
-            ${studioName}
-        </div>
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${studioName}</div>`}
 <div class="flex flex-row-reverse gap-8 text-xs uppercase tracking-widest opacity-40">
 <a class="hover:text-accent transition-colors" href="#">תקנון</a>
 <a class="hover:text-accent transition-colors" href="#">פרטיות</a>
@@ -552,6 +616,22 @@ ${email ? `
             nav.classList.add('bg-transparent', 'py-md');
         }
     });
+    
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
 </script>
 </body>
 </html>
@@ -560,7 +640,7 @@ ${email ? `
   // MODERN THEME - EXACT COPY FROM SOURCE WITH DYNAMIC DATA
   const ModernTheme = () => `
 <!DOCTYPE html>
-<html class="light" dir="rtl" lang="he">
+<html class="light" dir="rtl" lang="he" style="scroll-behavior: smooth;">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -659,32 +739,47 @@ ${email ? `
     </script>
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">
-<nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent" id="navbar">
+<nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-background/95 backdrop-blur-sm" id="navbar">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 <div class="flex items-center gap-sm">
-<span class="font-headline text-2xl font-bold text-on-surface">${studioName}</span>
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-xl font-bold text-on-surface">${studioName}</span>`}
 </div>
+<button onclick="toggleMobileMenu()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl" id="menu-icon">menu</span>
+</button>
 <div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#about">אודות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#portfolio">גלריות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium" href="#pricing">מחירון</a>
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">בית</a>
+<a onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">יצירת קשר</a>
 </div>
-<a class="bg-primary text-white px-lg py-sm rounded-lg text-sm font-bold btn-magnetic hover:shadow-lg transition-all" href="#contact">
-            צור קשר
-        </a>
+</div>
+<div id="mobile-menu" class="hidden md:hidden bg-background border-b border-outline-variant">
+<div class="flex flex-col gap-md px-lg py-md">
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">בית</a>
+<a onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">יצירת קשר</a>
+</div>
 </div>
 </nav>
+<script>
+function toggleMobileMenu() {
+const menu = document.getElementById('mobile-menu');
+const icon = document.getElementById('menu-icon');
+menu.classList.toggle('hidden');
+icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
+}
+</script>
 <main class="pt-xxl">
+${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center" id="about">
 <div class="flex flex-col gap-md order-2 md:order-1 animate-reveal">
-<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">
-                אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span>
-</h1>
-<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed">
-                ${aboutText}
-            </p>
+${aboutTitle ? `<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">${aboutTitle}</h1>` : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
+${aboutSubtitle ? `<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 <div class="flex flex-wrap gap-md pt-md">
-<button class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
+<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
                     התחילו עכשיו
                 </button>
 <button class="border border-outline text-on-surface px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-surface-variant transition-all">
@@ -694,7 +789,10 @@ ${email ? `
 </div>
 <div class="relative order-1 md:order-2 animate-reveal delay-100">
 <div class="aspect-square rounded-2xl overflow-hidden modern-shadow hover-scale group">
+<picture>
+<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
 <img alt="סטודיו לצילום מקצועי" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${heroImage}"/>
+</picture>
 </div>
 <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10"></div>
 </div>
@@ -816,19 +914,19 @@ ${galleries.length > 0 ? `
 <form class="flex flex-col gap-md w-full">
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
 <div class="relative">
-<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
+<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
 </div>
 <div class="relative">
-<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
+<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
 </div>
 </div>
 <div class="relative">
-<input class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
+<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
 </div>
 <div class="relative">
-<textarea class="w-full bg-white/10 border border-white/20 rounded-lg px-lg py-md text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
+<textarea class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
 </div>
-<button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl self-start transition-all" type="submit">
+<button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl w-full transition-all" type="submit">
                         שליחת הודעה
                     </button>
 </form>
@@ -839,7 +937,7 @@ ${galleries.length > 0 ? `
 <footer class="bg-surface-container border-t border-outline-variant w-full py-xl pb-[120px]">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
 <div class="flex flex-col items-center md:items-end gap-xs">
-<span class="font-headline text-2xl font-bold text-primary">${studioName}</span>
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${studioName}</span>`}
 <p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
 </div>
 <div class="flex flex-col sm:flex-row-reverse gap-lg items-center">
@@ -862,8 +960,8 @@ ${galleries.length > 0 ? `
 </footer>
 <script>
     const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
-    const revealObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+    const revealObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-reveal');
                 entry.target.style.opacity = "1";
@@ -872,7 +970,7 @@ ${galleries.length > 0 ? `
         });
     }, observerOptions);
     document.querySelectorAll('.animate-reveal').forEach(el => revealObserver.observe(el));
-    window.addEventListener('scroll', () => {
+    window.addEventListener('scroll', function() {
         const nav = document.getElementById('navbar');
         if (window.scrollY > 20) {
             nav.classList.add('nav-glass', 'shadow-sm', 'border-outline-variant');
@@ -882,15 +980,32 @@ ${galleries.length > 0 ? `
             nav.classList.add('border-transparent');
         }
     });
-    document.querySelectorAll('.btn-magnetic').forEach(btn => {
-        btn.addEventListener('mousemove', (e) => {
+    
+    // Smooth scroll for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+    
+    document.querySelectorAll('.btn-magnetic').forEach(function(btn) {
+        btn.addEventListener('mousemove', function(e) {
             const rect = btn.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
             const y = e.clientY - rect.top - rect.height / 2;
-            btn.style.transform = \`translate(\${x * 0.12}px, \${y * 0.12}px)\`;
+            btn.style.transform = 'translate(' + (x * 0.12) + 'px, ' + (y * 0.12) + 'px)';
         });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = \`translate(0px, 0px)\`;
+        btn.addEventListener('mouseleave', function() {
+            btn.style.transform = 'translate(0px, 0px)';
         });
     });
 </script>
@@ -901,7 +1016,7 @@ ${galleries.length > 0 ? `
   // CLASSIC THEME - EXACT COPY FROM SOURCE WITH DYNAMIC DATA
   const ClassicTheme = () => `
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html dir="rtl" lang="he"
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -1037,36 +1152,55 @@ ${galleries.length > 0 ? `
     </script>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">
-<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-b border-transparent" id="main-nav">
+<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-b border-transparent bg-surface/95 backdrop-blur-sm" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-<div class="font-headline-sm text-headline-sm text-on-surface tracking-tight">
-                ${studioName}
-            </div>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#about">אודות</a>
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#galleries">גלריות</a>
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#pricing">חבילות</a>
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors" href="#testimonials">המלצות</a>
+<div class="flex items-center gap-sm">
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">${studioName}</span>`}
 </div>
-<button class="bg-primary text-on-primary px-lg py-sm rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all active:scale-95 shadow-sm">
-                צור קשר
-            </button>
+<button onclick="toggleMobileMenuClassic()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
+</button>
+<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">בית</a>
+<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">יצירת קשר</a>
+</div>
+</div>
+<div id="mobile-menu-classic" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant/10">
+<div class="flex flex-col gap-md px-lg py-md">
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">בית</a>
+<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">יצירת קשר</a>
+</div>
 </div>
 </nav>
+<script>
+function toggleMobileMenuClassic() {
+const menu = document.getElementById('mobile-menu-classic');
+const icon = document.getElementById('menu-icon-classic');
+menu.classList.toggle('hidden');
+icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
+}
+</script>
 <section class="relative h-screen w-full flex items-center justify-center overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0 scale-105">
+<picture>
+<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
 <img alt="סטודיו צילום קלאסי" class="w-full h-full object-cover" src="${heroImage}"/>
-<div class="absolute inset-0 bg-black/40"></div>
+</picture>
 </div>
 <div class="relative z-10 text-center px-md max-w-4xl text-white">
 <span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">הבית לרגעים יפים</span>
 <h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-md leading-tight">אמנות הצילום במיטבה</h1>
 <p class="font-body-lg text-body-lg text-white/90 mb-xl max-w-2xl mx-auto">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
-<a class="inline-block bg-primary text-on-primary px-xxl py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95" href="#contact">
+<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="inline-block bg-primary text-on-primary px-xxl py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95">
                 תיאום פגישה
-            </a>
+            </button>
 </div>
 </section>
+${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="about">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
 <div class="order-2 md:order-1 transform transition-transform duration-700">
@@ -1074,14 +1208,10 @@ ${galleries.length > 0 ? `
 </div>
 <div class="order-1 md:order-2 space-y-lg">
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">סיפור אישי</span>
-<h2 class="font-headline-md text-headline-md text-on-surface">אודות הסטודיו</h2>
+${aboutTitle ? `<h2 class="font-headline-md text-headline-md text-on-surface">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md text-on-surface">אודות הסטודיו</h2>'}
 <div class="w-16 h-0.5 bg-primary/40"></div>
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-                    ${aboutText}
-                </p>
-<p class="font-body-md text-body-md text-on-surface-variant">
-                    בסטודיו שלנו אנו יוצרים סביבה רגועה ונינוחה שמאפשרת לכם להיות מי שאתם באמת. התוצאה? זיכרונות ויזואליים שיישארו איתכם לנצח.
-                </p>
+${aboutSubtitle ? `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="font-body-md text-body-md text-on-surface-variant" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 <div class="pt-md">
 <a class="font-label-sm text-label-sm text-primary flex items-center gap-2 group flex-row-reverse justify-end" href="#galleries">
 <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_back</span>
@@ -1091,6 +1221,7 @@ ${galleries.length > 0 ? `
 </div>
 </div>
 </section>
+` : ''}
 <section class="bg-surface-container-low py-xxl reveal" id="galleries">
 <div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl">
@@ -1203,7 +1334,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 <footer class="bg-surface-container-highest border-t border-outline-variant/20 py-xl pb-xxl">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
 <div class="font-headline-md text-headline-md text-primary tracking-tight">
-                ${studioName}
+                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `${studioName}`}
             </div>
 <div class="flex flex-row-reverse gap-lg">
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
@@ -1226,6 +1357,23 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
                 nav.classList.add('py-md', 'border-transparent');
             }
         });
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+        
         const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -1254,7 +1402,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 <html class="dark" dir="rtl" lang="he">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, in" style="scroll-behavior: smooth;itial-scale=1.0" name="viewport"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -1376,24 +1524,42 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 <body class="bg-background text-on-surface">
 <nav class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-white/10">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-<div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
-                STUDIO <span class="text-primary font-light">GALLERY</span>
+<div class="flex items-center gap-sm">
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">STUDIO <span class="text-primary font-light">GALLERY</span></span>`}
 </div>
+<button onclick="toggleMobileMenuDark()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
+</button>
 <div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition" href="#about">אודות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition" href="#gallery">גלריות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition" href="#pricing">מחירון</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition" href="#testimonials">המלצות</a>
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">בית</a>
+<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">יצירת קשר</a>
 </div>
-<button class="bg-primary text-on-primary px-lg py-sm font-label-sm text-label-sm border border-primary hover:bg-transparent hover:text-primary btn-fuchsia-transition active:scale-95">
-                צור קשר
-            </button>
+</div>
+<div id="mobile-menu-dark" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-white/10">
+<div class="flex flex-col gap-md px-lg py-md">
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">בית</a>
+<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">יצירת קשר</a>
+</div>
 </div>
 </nav>
-<main class="pt-20">
+<script>
+function toggleMobileMenuDark() {
+const menu = document.getElementById('mobile-menu-dark');
+const icon = document.getElementById('menu-icon-dark');
+menu.classList.toggle('hidden');
+icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
+}
+</script>
 <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
 <div class="absolute inset-0 z-0">
+<picture>
+<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
 <img class="w-full h-full object-cover grayscale opacity-40 scale-110 transition-transform duration-[3s] ease-out" data-alt="High-end architectural photograph of a minimalist space" id="hero-img" src="${heroImage}"/>
+</picture>
 <div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background"></div>
 </div>
 <div class="relative z-10 container mx-auto px-lg text-center overflow-hidden">
@@ -1414,6 +1580,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 </div>
 </div>
 </section>
+${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="about">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center">
 <div class="relative group">
@@ -1422,13 +1589,9 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 </div>
 <div class="lg:pr-xl">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Legacy</span>
-<h2 class="font-headline-md text-headline-md mb-lg">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>
-<p class="font-body-md text-on-surface-variant mb-lg">
-                        ${aboutText}
-                    </p>
-<p class="font-body-md text-on-surface-variant mb-xl">
-                        הגישה שלנו מבוססת על יוקרה מאופקת ודיוק טכני, במטרה להעניק לכל לקוח חוויה אמנותית ייחודית ותוצאות שמעבר לציפיות.
-                    </p>
+${aboutTitle ? `<h2 class="font-headline-md text-headline-md mb-lg">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md mb-lg">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
+${aboutSubtitle ? `<p class="font-body-md text-on-surface-variant mb-lg" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="font-body-md text-on-surface-variant mb-xl" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 <div class="grid grid-cols-3 gap-lg border-t border-white/10 pt-xl">
 <div>
 <div class="text-primary font-headline-sm mb-xs">${statsProjects}+</div>
@@ -1446,6 +1609,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 </div>
 </div>
 </section>
+` : ''}
 <section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="gallery">
 <div class="flex flex-row-reverse justify-between items-end mb-lg md:mb-xxl">
 <div>
@@ -1583,7 +1747,7 @@ ${galleries.length > 3 ? `
                 }
             </style>
 </section>
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll">
+<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="contact">
 <div class="max-w-4xl mx-auto text-center">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
 <h2 class="font-headline-md text-headline-md mb-md">בואו ניצור משהו בלתי נשכח</h2>
@@ -1616,7 +1780,7 @@ ${galleries.length > 3 ? `
 <footer class="bg-surface-dim border-t border-white/5 py-xl mt-xxl">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-lg max-w-7xl mx-auto w-full">
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
-                STUDIO <span class="text-primary font-light">GALLERY</span>
+                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `STUDIO <span class="text-primary font-light">GALLERY</span>`}
 </div>
 <div class="flex flex-row-reverse gap-md lg:gap-xl">
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
@@ -1664,6 +1828,22 @@ ${galleries.length > 3 ? `
                 });
             };
             revealOnScroll();
+        });
+        
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
         });
     </script>
 </body>

@@ -25,6 +25,11 @@ type ProfileFormProps = {
     studio_name: string | null
     theme_primary: string
     about_text: string | null
+    about_title: string | null
+    about_subtitle: string | null
+    about_description: string | null
+    contact_card_title: string | null
+    contact_card_description: string | null
     stat_projects: number
     stat_clients: number
     stat_experience_years: number
@@ -51,6 +56,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [name, setName] = useState(profile?.name ?? '')
   const [studioName, setStudioName] = useState(profile?.studio_name ?? '')
   const [aboutText, setAboutText] = useState(profile?.about_text ?? '')
+  const [aboutTitle, setAboutTitle] = useState(profile?.about_title ?? '')
+  const [aboutSubtitle, setAboutSubtitle] = useState(profile?.about_subtitle ?? '')
+  const [aboutDescription, setAboutDescription] = useState(profile?.about_description ?? '')
+  const [contactCardTitle, setContactCardTitle] = useState(profile?.contact_card_title ?? '')
+  const [contactCardDescription, setContactCardDescription] = useState(profile?.contact_card_description ?? '')
   const [statProjects, setStatProjects] = useState(profile?.stat_projects ?? 0)
   const [statClients, setStatClients] = useState(profile?.stat_clients ?? 0)
   const [statExperienceYears, setStatExperienceYears] = useState(profile?.stat_experience_years ?? 0)
@@ -98,6 +108,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           studio_name: studioName,
           theme_primary: accentColor,
           about_text: aboutText,
+          about_title: aboutTitle,
+          about_subtitle: aboutSubtitle,
+          about_description: aboutDescription,
+          contact_card_title: contactCardTitle,
+          contact_card_description: contactCardDescription,
           stat_projects: statProjects,
           stat_clients: statClients,
           stat_experience_years: statExperienceYears,
@@ -112,7 +127,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         })
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
-        document.documentElement.setAttribute('data-theme', selectedTheme)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
       }
@@ -350,6 +364,78 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 4: About Me Settings */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+          <Globe className="h-6 w-6 text-[--foreground]" />
+          <h2 className="text-lg font-semibold text-[--foreground]">הגדרות אודותי</h2>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="about-title">כותרת</Label>
+            <Input
+              id="about-title"
+              value={aboutTitle}
+              onChange={(e) => setAboutTitle(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
+              placeholder="לדוגמה: צלמת מקצועית"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="about-subtitle">כותרת משנה</Label>
+            <Input
+              id="about-subtitle"
+              value={aboutSubtitle}
+              onChange={(e) => setAboutSubtitle(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
+              placeholder="לדוגמה: מתמחה בצילום פורטרטים"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="about-description">תיאור</Label>
+            <Textarea
+              id="about-description"
+              value={aboutDescription}
+              onChange={(e) => setAboutDescription(e.target.value)}
+              rows={6}
+              className="bg-white dark:bg-zinc-900 border-[--border] resize-y"
+              placeholder="ספרי על עצמך ועל הסטודיו שלך..."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Section 5: Gallery Contact Card Settings */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+          <Palette className="h-6 w-6 text-[--foreground]" />
+          <h2 className="text-lg font-semibold text-[--foreground]">הגדרות כרטיס יצירת קשר בגלריה</h2>
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="contact-card-title">כותרת כרטיס</Label>
+            <Input
+              id="contact-card-title"
+              value={contactCardTitle}
+              onChange={(e) => setContactCardTitle(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
+              placeholder="לדוגמה: תיאום צילום"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact-card-description">תיאור כרטיס</Label>
+            <Textarea
+              id="contact-card-description"
+              value={contactCardDescription}
+              onChange={(e) => setContactCardDescription(e.target.value)}
+              rows={4}
+              className="bg-white dark:bg-zinc-900 border-[--border] resize-y"
+              placeholder="לדוגמה: לתיאום צילום או שאלות, צרו קשר..."
+            />
           </div>
         </div>
       </section>

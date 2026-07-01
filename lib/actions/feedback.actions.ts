@@ -35,6 +35,11 @@ export async function updateProfile(input: {
   studio_name?: string
   theme_primary?: string
   about_text?: string
+  about_title?: string
+  about_subtitle?: string
+  about_description?: string
+  contact_card_title?: string
+  contact_card_description?: string
   stat_projects?: number
   stat_clients?: number
   stat_experience_years?: number

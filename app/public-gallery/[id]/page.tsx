@@ -25,6 +25,8 @@ type UserData = {
   accent_color: string | null
   selected_theme: string | null
   email: string | null
+  contact_card_title: string | null
+  contact_card_description: string | null
 }
 
 type PhotoData = {
@@ -55,7 +57,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const admin = createAdminClient()
   const { data: user } = await admin
     .from('users')
-    .select('studio_name, logo_url, accent_color, selected_theme, email')
+    .select('studio_name, logo_url, accent_color, selected_theme, email, contact_card_title, contact_card_description')
     .eq('id', galleryData.user_id)
     .single()
 
@@ -116,29 +118,31 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   // Render the appropriate theme
   switch (selectedTheme) {
     case 'modern':
-      return ModernGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl })
+      return ModernGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl, contactCardTitle: userData?.contact_card_title ?? null, contactCardDescription: userData?.contact_card_description ?? null })
     case 'elegant':
-      return ElegantGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl })
+      return ElegantGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl, contactCardTitle: userData?.contact_card_title ?? null, contactCardDescription: userData?.contact_card_description ?? null })
     case 'classic':
-      return ClassicGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl })
+      return ClassicGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl, contactCardTitle: userData?.contact_card_title ?? null, contactCardDescription: userData?.contact_card_description ?? null })
     case 'dark':
     case 'bold':
-      return DarkGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl })
+      return DarkGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl, contactCardTitle: userData?.contact_card_title ?? null, contactCardDescription: userData?.contact_card_description ?? null })
     default:
-      return ModernGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl })
+      return ModernGalleryView({ galleryData, userData, photos, photoCount, galleryDate, accentColor, studioName, logoUrl, contactCardTitle: userData?.contact_card_title ?? null, contactCardDescription: userData?.contact_card_description ?? null })
   }
 }
 
 // MODERN THEME VIEW
-function ModernGalleryView({ 
-  galleryData, 
-  photos, 
-  photoCount, 
-  galleryDate, 
-  accentColor, 
+function ModernGalleryView({
+  galleryData,
+  photos,
+  photoCount,
+  galleryDate,
+  accentColor,
   studioName,
-  logoUrl 
-}: { 
+  logoUrl,
+  contactCardTitle,
+  contactCardDescription
+}: {
   galleryData: GalleryData
   userData: UserData | null
   photos: PhotoData[]
@@ -147,6 +151,8 @@ function ModernGalleryView({
   accentColor: string
   studioName: string
   logoUrl: string | null
+  contactCardTitle: string | null
+  contactCardDescription: string | null
 }) {
   return (
     <div dir="rtl" lang="he" className="min-h-screen bg-[#F8FAFC]" style={{ direction: 'rtl', textAlign: 'right' }}>
@@ -196,24 +202,28 @@ function ModernGalleryView({
         </section>
 
         {/* CTA Section */}
-        <section className="max-w-[1280px] mx-auto px-[24px] mb-[80px]">
-          <div className="relative bg-[#2D2825] text-white rounded-xl p-[32px] overflow-hidden shadow-lg">
-            <div className="relative z-10 max-w-2xl">
-              <h2 className="text-[24px] md:text-[32px] mb-[12px]" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.02em' }}>מוכנים ליצור משהו יוצא דופן?</h2>
-              <p className="text-[14px] text-[#e5e2df] mb-[32px] opacity-80" style={{ fontFamily: 'Heebo, sans-serif' }}>
-                אנחנו משלבים טכנולוגיה מתקדמת עם ראייה אמנותית כדי להפוך את החזון שלכם למציאות ויזואלית מרהיבה.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-[12px]">
-                <button className="text-white px-[32px] py-[10px] rounded-[8px] text-[12px] font-medium shadow-md hover:scale-105 transition-transform" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }}>
-                  התחילו פרויקט חדש
-                </button>
-                <button className="border border-white/30 text-white px-[32px] py-[10px] rounded-[8px] text-[12px] font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-[8px]" style={{ fontFamily: 'Heebo, sans-serif' }}>
-                  <span>צפו בסיפור שלנו</span>
-                </button>
+        {contactCardTitle || contactCardDescription ? (
+          <section className="max-w-[1280px] mx-auto px-[24px] mb-[80px]">
+            <div className="relative bg-[#2D2825] text-white rounded-xl p-[32px] overflow-hidden shadow-lg">
+              <div className="relative z-10 max-w-2xl">
+                <h2 className="text-[24px] md:text-[32px] mb-[12px]" style={{ fontFamily: 'Space Grotesk, sans-serif', letterSpacing: '-0.02em' }}>
+                  {contactCardTitle || 'מוכנים ליצור משהו יוצא דופן?'}
+                </h2>
+                <p className="text-[14px] text-[#e5e2df] mb-[32px] opacity-80" style={{ fontFamily: 'Heebo, sans-serif', whiteSpace: 'pre-line' }}>
+                  {contactCardDescription || 'אנחנו משלבים טכנולוגיה מתקדמת עם ראייה אמנותית כדי להפוך את החזון שלכם למציאות ויזואלית מרהיבה.'}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-[12px]">
+                  <button className="text-white px-[32px] py-[10px] rounded-[8px] text-[12px] font-medium shadow-md hover:scale-105 transition-transform" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }}>
+                    התחילו פרויקט חדש
+                  </button>
+                  <button className="border border-white/30 text-white px-[32px] py-[10px] rounded-[8px] text-[12px] font-medium hover:bg-white/10 transition-all flex items-center justify-center gap-[8px]" style={{ fontFamily: 'Heebo, sans-serif' }}>
+                    <span>צפו בסיפור שלנו</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </main>
       <Footer />
     </div>
@@ -221,15 +231,17 @@ function ModernGalleryView({
 }
 
 // ELEGANT THEME VIEW
-function ElegantGalleryView({ 
-  galleryData, 
-  photos, 
-  photoCount, 
-  galleryDate, 
-  accentColor, 
+function ElegantGalleryView({
+  galleryData,
+  photos,
+  photoCount,
+  galleryDate,
+  accentColor,
   studioName,
-  logoUrl 
-}: { 
+  logoUrl,
+  contactCardTitle,
+  contactCardDescription
+}: {
   galleryData: GalleryData
   userData: UserData | null
   photos: PhotoData[]
@@ -238,6 +250,8 @@ function ElegantGalleryView({
   accentColor: string
   studioName: string
   logoUrl: string | null
+  contactCardTitle: string | null
+  contactCardDescription: string | null
 }) {
   return (
     <div dir="rtl" lang="he" className="min-h-screen bg-[#FAFAF8]" style={{ direction: 'rtl', textAlign: 'right' }}>
@@ -302,22 +316,26 @@ function ElegantGalleryView({
         </section>
 
         {/* CTA Section */}
-        <section className="py-[80px] bg-[#f6f3f0] border-y border-[#d6c3bb]/20">
-          <div className="max-w-[1280px] mx-auto px-[24px] text-center">
-            <h2 className="text-[36px] mb-[24px]" style={{ fontFamily: 'Playfair Display, serif', fontWeight: 600, lineHeight: '1.3' }}>מוכנים ליצור משהו יוצא דופן?</h2>
-            <p className="text-[16px] text-[#5A504A] mb-[48px] max-w-xl mx-auto" style={{ fontFamily: 'Heebo, sans-serif', lineHeight: '1.6' }}>
-              אנחנו מזמינים אתכם לפגישת ייעוץ אישית בסטודיו שלנו, בה נוכל לתכנן יחד את הפרויקט הבא שלכם.
-            </p>
-            <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
-              <a className="text-white px-[48px] py-[16px] shadow-lg text-[13px] font-medium hover:opacity-90 transition-all" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }} href="#">
-                תיאום פגישה
-              </a>
-              <a className="border text-[13px] font-medium hover:bg-[--primary] hover:text-white transition-all px-[48px] py-[16px]" style={{ fontFamily: 'Heebo, sans-serif', borderColor: accentColor, color: accentColor }} href="#">
-                צרו קשר בוואטסאפ
-              </a>
+        {contactCardTitle || contactCardDescription ? (
+          <section className="py-[80px] bg-[#f6f3f0] border-y border-[#d6c3bb]/20">
+            <div className="max-w-[1280px] mx-auto px-[24px] text-center">
+              <h2 className="text-[36px] mb-[24px]" style={{ fontFamily: 'Playfair Display, serif', fontWeight: 600, lineHeight: '1.3' }}>
+                {contactCardTitle || 'מוכנים ליצור משהו יוצא דופן?'}
+              </h2>
+              <p className="text-[16px] text-[#5A504A] mb-[48px] max-w-xl mx-auto" style={{ fontFamily: 'Heebo, sans-serif', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                {contactCardDescription || 'אנחנו מזמינים אתכם לפגישת ייעוץ אישית בסטודיו שלנו, בה נוכל לתכנן יחד את הפרויקט הבא שלכם.'}
+              </p>
+              <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
+                <a className="text-white px-[48px] py-[16px] shadow-lg text-[13px] font-medium hover:opacity-90 transition-all" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }} href="#">
+                  תיאום פגישה
+                </a>
+                <a className="border text-[13px] font-medium hover:bg-[--primary] hover:text-white transition-all px-[48px] py-[16px]" style={{ fontFamily: 'Heebo, sans-serif', borderColor: accentColor, color: accentColor }} href="#">
+                  צרו קשר בוואטסאפ
+                </a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </main>
       <Footer />
     </div>
@@ -325,15 +343,17 @@ function ElegantGalleryView({
 }
 
 // CLASSIC THEME VIEW
-function ClassicGalleryView({ 
-  galleryData, 
-  photos, 
-  photoCount, 
-  galleryDate, 
-  accentColor, 
+function ClassicGalleryView({
+  galleryData,
+  photos,
+  photoCount,
+  galleryDate,
+  accentColor,
   studioName,
-  logoUrl 
-}: { 
+  logoUrl,
+  contactCardTitle,
+  contactCardDescription
+}: {
   galleryData: GalleryData
   userData: UserData | null
   photos: PhotoData[]
@@ -342,6 +362,8 @@ function ClassicGalleryView({
   accentColor: string
   studioName: string
   logoUrl: string | null
+  contactCardTitle: string | null
+  contactCardDescription: string | null
 }) {
   return (
     <div dir="rtl" lang="he" className="min-h-screen bg-[#FAFAF8]" style={{ direction: 'rtl', textAlign: 'right' }}>
@@ -389,22 +411,26 @@ function ClassicGalleryView({
         </section>
 
         {/* CTA Section */}
-        <section className="py-[80px] bg-[#f6f3f0] border-y border-[#d6c3bb]/20">
-          <div className="max-w-[1280px] mx-auto px-[24px] text-center">
-            <h2 className="text-[36px] mb-[24px]" style={{ fontFamily: 'Playfair Display, serif', fontWeight: 600, lineHeight: '1.3' }}>אהבתם את הסגנון?</h2>
-            <p className="text-[16px] text-[#5A504A] mb-[48px] max-w-xl mx-auto" style={{ fontFamily: 'Heebo, sans-serif', lineHeight: '1.6' }}>
-              אנחנו זמינים לצילום פרויקטים מיוחדים בארץ ובעולם. בואו נתכנן יחד את הסיפור הבא שלכם.
-            </p>
-            <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
-              <a className="text-white px-[48px] py-[16px] shadow-lg text-[13px] font-medium hover:opacity-90 transition-all" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }} href="#">
-                הזמנת סשן דומה
-              </a>
-              <a className="border text-[13px] font-medium hover:bg-[--primary] hover:text-white transition-all px-[48px] py-[16px]" style={{ fontFamily: 'Heebo, sans-serif', borderColor: accentColor, color: accentColor }} href="#">
-                צרו קשר בוואטסאפ
-              </a>
+        {contactCardTitle || contactCardDescription ? (
+          <section className="py-[80px] bg-[#f6f3f0] border-y border-[#d6c3bb]/20">
+            <div className="max-w-[1280px] mx-auto px-[24px] text-center">
+              <h2 className="text-[36px] mb-[24px]" style={{ fontFamily: 'Playfair Display, serif', fontWeight: 600, lineHeight: '1.3' }}>
+                {contactCardTitle || 'אהבתם את הסגנון?'}
+              </h2>
+              <p className="text-[16px] text-[#5A504A] mb-[48px] max-w-xl mx-auto" style={{ fontFamily: 'Heebo, sans-serif', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                {contactCardDescription || 'אנחנו זמינים לצילום פרויקטים מיוחדים בארץ ובעולם. בואו נתכנן יחד את הסיפור הבא שלכם.'}
+              </p>
+              <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
+                <a className="text-white px-[48px] py-[16px] shadow-lg text-[13px] font-medium hover:opacity-90 transition-all" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor }} href="#">
+                  הזמנת סשן דומה
+                </a>
+                <a className="border text-[13px] font-medium hover:bg-[--primary] hover:text-white transition-all px-[48px] py-[16px]" style={{ fontFamily: 'Heebo, sans-serif', borderColor: accentColor, color: accentColor }} href="#">
+                  צרו קשר בוואטסאפ
+                </a>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
       </main>
       <Footer />
     </div>
@@ -412,15 +438,17 @@ function ClassicGalleryView({
 }
 
 // DARK THEME VIEW
-function DarkGalleryView({ 
-  galleryData, 
-  photos, 
-  photoCount, 
-  galleryDate, 
-  accentColor, 
+function DarkGalleryView({
+  galleryData,
+  photos,
+  photoCount,
+  galleryDate,
+  accentColor,
   studioName,
-  logoUrl 
-}: { 
+  logoUrl,
+  contactCardTitle,
+  contactCardDescription
+}: {
   galleryData: GalleryData
   userData: UserData | null
   photos: PhotoData[]
@@ -429,6 +457,8 @@ function DarkGalleryView({
   accentColor: string
   studioName: string
   logoUrl: string | null
+  contactCardTitle: string | null
+  contactCardDescription: string | null
 }) {
   return (
     <div dir="rtl" lang="he" className="min-h-screen" style={{ backgroundColor: '#0A0A0A', direction: 'rtl', textAlign: 'right' }}>
@@ -451,7 +481,7 @@ function DarkGalleryView({
       <main className="mt-[80px]">
         {/* Hero Section */}
         <section className="relative min-h-[200px] flex items-center justify-start overflow-hidden py-[24px]">
-          <div className="relative z-10 text-right px-[24px]">
+          <div className="relative z-10 text-right px-[24px] max-w-[1280px] mx-auto">
             <h1 className="mb-[8px]" style={{ fontSize: '48px', fontFamily: 'Frank Ruhl Libre, serif', fontWeight: 700, letterSpacing: '-0.01em', color: '#F3F0ED', lineHeight: '1.1' }}>
               {galleryData.title}
             </h1>
@@ -498,15 +528,18 @@ function DarkGalleryView({
         </section>
 
         {/* CTA Section */}
-        <section style={{ backgroundColor: '#1A1A1A', padding: '80px 0' }}>
-          <div className="max-w-[1280px] mx-auto px-[24px] text-center">
-            <h2 className="mb-[24px]" style={{ fontSize: '36px', fontFamily: 'Frank Ruhl Libre, serif', fontWeight: 600, color: '#F3F0ED' }}>הסיפור שלכם מתחיל כאן</h2>
-            <p className="mb-[48px] max-w-xl mx-auto" style={{ fontSize: '16px', fontFamily: 'Heebo, sans-serif', color: '#A0A0A0' }}>
-              אנחנו מחפשים את הרגעים שמעבר למילים. בואו ניצור יחד משהו בלתי נשכח שיישאר איתכם לנצח.
-            </p>
-            <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
-              <button className="px-[48px] py-[8px] text-[13px] uppercase tracking-widest rounded-sm hover:shadow-xl transition-all shadow-lg transform hover:-translate-y-1" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor, color: '#0A0A0A' }}>
-                תאמו פגישה
+        {contactCardTitle || contactCardDescription ? (
+          <section style={{ backgroundColor: '#1A1A1A', padding: '80px 0' }}>
+            <div className="max-w-[1280px] mx-auto px-[24px] text-center">
+              <h2 className="mb-[24px]" style={{ fontSize: '36px', fontFamily: 'Frank Ruhl Libre, serif', fontWeight: 600, color: '#F3F0ED' }}>
+                {contactCardTitle || 'הסיפור שלכם מתחיל כאן'}
+              </h2>
+              <p className="mb-[48px] max-w-xl mx-auto" style={{ fontSize: '16px', fontFamily: 'Heebo, sans-serif', color: '#A0A0A0', whiteSpace: 'pre-line' }}>
+                {contactCardDescription || 'אנחנו מחפשים את הרגעים שמעבר למילים. בואו ניצור יחד משהו בלתי נשכח שיישאר איתכם לנצח.'}
+              </p>
+              <div className="flex flex-col md:flex-row gap-[24px] justify-center items-center">
+                <button className="px-[48px] py-[8px] text-[13px] uppercase tracking-widest rounded-sm hover:shadow-xl transition-all shadow-lg transform hover:-translate-y-1" style={{ fontFamily: 'Heebo, sans-serif', backgroundColor: accentColor, color: '#0A0A0A' }}>
+                  תאמו פגישה
               </button>
               <button className="border text-[13px] uppercase tracking-widest rounded-sm hover:bg-[--primary]/10 transition-all px-[48px] py-[8px]" style={{ fontFamily: 'Heebo, sans-serif', borderColor: accentColor, color: accentColor }}>
                 צפו בחבילות
@@ -514,6 +547,7 @@ function DarkGalleryView({
             </div>
           </div>
         </section>
+        ) : null}
       </main>
       <Footer />
     </div>
