@@ -51,11 +51,14 @@ export default async function PhotographerPage({ params }: PageProps) {
       notFound()
     }
 
+    // Type assertion to fix TypeScript inference
+    const typedPhotographer = photographer as any
+
     // Fetch public portfolio galleries (all galleries with is_public = true)
     const { data: galleries } = await supabase
       .from('galleries')
       .select('id, title, slug, created_at, cover_image')
-      .eq('user_id', photographer.id)
+      .eq('user_id', typedPhotographer.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
 
@@ -87,7 +90,7 @@ export default async function PhotographerPage({ params }: PageProps) {
             .eq('gallery_id', gallery.id)
             .limit(1)
             .maybeSingle()
-          previewUrl = firstEditedPhoto?.final_url || null
+          previewUrl = (firstEditedPhoto as any)?.final_url || null
         } else {
           // Fall back to regular photos if no edited photos exist (portfolio showcase)
           const { data: firstPhoto } = await supabase
@@ -98,7 +101,7 @@ export default async function PhotographerPage({ params }: PageProps) {
             .order('sort_order', { ascending: true })
             .limit(1)
             .maybeSingle()
-          previewUrl = firstPhoto?.preview_url || null
+          previewUrl = (firstPhoto as any)?.preview_url || null
         }
 
         return {
@@ -112,25 +115,25 @@ export default async function PhotographerPage({ params }: PageProps) {
     const { data: packages } = await supabase
       .from('photography_packages')
       .select('id, name, price_amount, duration_text, includes, sort_order, is_featured')
-      .eq('user_id', photographer.id)
+      .eq('user_id', typedPhotographer.id)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
     // Resolve R2 paths to signed URLs (only if not already a full URL)
     const photographerWithUrls = {
-      ...photographer,
-      hero_desktop_url: photographer.hero_desktop_url?.startsWith('http')
-        ? photographer.hero_desktop_url
-        : photographer.hero_desktop_url ? await resolveMediaUrl('branding', photographer.hero_desktop_url) : null,
-      hero_mobile_url: photographer.hero_mobile_url?.startsWith('http')
-        ? photographer.hero_mobile_url
-        : photographer.hero_mobile_url ? await resolveMediaUrl('branding', photographer.hero_mobile_url) : null,
-      about_image_url: photographer.about_image_url?.startsWith('http')
-        ? photographer.about_image_url
-        : photographer.about_image_url ? await resolveMediaUrl('branding', photographer.about_image_url) : null,
-      logo_url: photographer.logo_url?.startsWith('http')
-        ? photographer.logo_url
-        : photographer.logo_url ? await resolveMediaUrl('branding', photographer.logo_url) : null,
+      ...typedPhotographer,
+      hero_desktop_url: typedPhotographer.hero_desktop_url?.startsWith('http')
+        ? typedPhotographer.hero_desktop_url
+        : typedPhotographer.hero_desktop_url ? await resolveMediaUrl('branding', typedPhotographer.hero_desktop_url) : null,
+      hero_mobile_url: typedPhotographer.hero_mobile_url?.startsWith('http')
+        ? typedPhotographer.hero_mobile_url
+        : typedPhotographer.hero_mobile_url ? await resolveMediaUrl('branding', typedPhotographer.hero_mobile_url) : null,
+      about_image_url: typedPhotographer.about_image_url?.startsWith('http')
+        ? typedPhotographer.about_image_url
+        : typedPhotographer.about_image_url ? await resolveMediaUrl('branding', typedPhotographer.about_image_url) : null,
+      logo_url: typedPhotographer.logo_url?.startsWith('http')
+        ? typedPhotographer.logo_url
+        : typedPhotographer.logo_url ? await resolveMediaUrl('branding', typedPhotographer.logo_url) : null,
     }
 
     // Resolve gallery preview URLs (only if not already a full URL)
@@ -191,9 +194,11 @@ export async function generateMetadata({ params }: PageProps) {
       }
     }
 
+    const typedPhotographer = photographer as any
+
     return {
-      title: `${photographer.studio_name || photographer.name} | סטודיו גלריה`,
-      description: photographer.about_text || 'סטודיו לצילום מקצועי',
+      title: `${typedPhotographer.studio_name || typedPhotographer.name} | סטודיו גלריה`,
+      description: typedPhotographer.about_text || 'סטודיו לצילום מקצועי',
     }
   } catch (error) {
     return {

@@ -3,11 +3,11 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     const supabase = await createClient()
-    const { slug } = params
+    const { slug } = await params
 
     console.log('Fetching photographer with slug:', slug)
 
@@ -43,17 +43,20 @@ export async function GET(
       )
     }
 
+    // Type assertion to fix TypeScript inference
+    const typedPhotographer = photographer as any
+
     // Fetch public portfolio galleries
     const { data: galleries } = await supabase
       .from('galleries')
       .select('id, title, slug, created_at')
-      .eq('user_id', photographer.id)
+      .eq('user_id', typedPhotographer.id)
       .eq('gallery_type', 'portfolio')
       .order('created_at', { ascending: false })
 
     // Fetch first photo for each gallery
     const galleriesWithPhotos = await Promise.all(
-      (galleries || []).map(async (gallery) => {
+      (galleries || []).map(async (gallery: any) => {
         const { data: firstPhoto } = await supabase
           .from('photos')
           .select('preview_url')
@@ -64,7 +67,7 @@ export async function GET(
 
         return {
           ...gallery,
-          preview_url: firstPhoto?.preview_url || null,
+          preview_url: (firstPhoto as any)?.preview_url || null,
         }
       })
     )
@@ -73,12 +76,12 @@ export async function GET(
     const { data: packages } = await supabase
       .from('photography_packages')
       .select('id, name, price_amount, duration_text, includes, sort_order')
-      .eq('user_id', photographer.id)
+      .eq('user_id', typedPhotographer.id)
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
     return NextResponse.json({
-      ...photographer,
+      ...typedPhotographer,
       galleries: galleriesWithPhotos,
       packages: packages || [],
     })

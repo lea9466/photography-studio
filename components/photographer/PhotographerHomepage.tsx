@@ -775,9 +775,9 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center" id="about">
 <div class="flex flex-col gap-md order-2 md:order-1 animate-reveal">
-${aboutTitle ? `<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">${aboutTitle}</h1>` : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
-${aboutSubtitle ? `<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
-${aboutDescription ? `<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
+${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
+${aboutSubtitle ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
+${aboutDescription ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutDescription + '</p>' : ''}
 <div class="flex flex-wrap gap-md pt-md">
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
                     התחילו עכשיו
@@ -797,6 +797,7 @@ ${aboutDescription ? `<p class="text-lg md:text-xl text-on-surface-variant max-w
 <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10"></div>
 </div>
 </section>
+` : ''}
 <section class="max-w-7xl mx-auto px-lg py-xxl">
 <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
 <div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal hover-scale">
@@ -831,34 +832,14 @@ ${aboutDescription ? `<p class="text-lg md:text-xl text-on-surface-variant max-w
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-md h-full">
 ${galleries.length > 1 ? galleries.slice(1, 4).map((g, i) => {
   const year = new Date(g.created_at).getFullYear()
-  const galleryUrl = `/public-gallery/${g.id}`
-  return `
-<div class="${i === 2 ? 'col-span-1 sm:col-span-2 aspect-video' : 'aspect-square'} rounded-xl overflow-hidden group relative animate-reveal" style="animation-delay: ${i * 100}ms;">
-<img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${g.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300 w-full">
-<p class="text-white font-headline text-xl">${g.title}</p>
-<p class="text-white/80 text-sm mt-1">${year}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
-</div>
-</div>
-</div>`
+  const galleryUrl = '/public-gallery/' + g.id
+  const aspectClass = i === 2 ? 'col-span-1 sm:col-span-2 aspect-video' : 'aspect-square'
+  const animationDelay = i * 100
+  return '<div class="' + aspectClass + ' rounded-xl overflow-hidden group relative animate-reveal" style="animation-delay: ' + animationDelay + 'ms;"><img alt="' + g.title + '" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="' + g.preview_url + '"/><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg"><div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300 w-full"><p class="text-white font-headline text-xl">' + g.title + '</p><p class="text-white/80 text-sm mt-1">' + year + '</p><button onclick="window.parent.postMessage({type: \'navigate\', url: \'' + galleryUrl + '\'}, \'*\')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">צפה בגלריה</button></div></div></div>'
 }).join('') : ''}
 </div>
 <div class="h-full animate-reveal delay-300">
-${galleries.length > 0 ? `
-<div class="rounded-xl overflow-hidden h-[400px] md:h-[600px] group relative">
-<img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="${galleries[0]?.preview_url}"/>
-<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-<p class="text-white font-headline text-2xl">${galleries[0].title}</p>
-<p class="text-white/80 text-sm mt-1">${new Date(galleries[0].created_at).getFullYear()}</p>
-</div>
-</div>
-</div>
-` : ''}
+${galleries.length > 0 ? '<div class="rounded-xl overflow-hidden h-[400px] md:h-[600px] group relative"><img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="' + galleries[0]?.preview_url + '"/><div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg"><div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300"><p class="text-white font-headline text-2xl">' + galleries[0].title + '</p><p class="text-white/80 text-sm mt-1">' + new Date(galleries[0].created_at).getFullYear() + '</p></div></div></div>' : ''}
 </div>
 </div>
 </section>
@@ -958,57 +939,6 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
 </div>
 </div>
 </footer>
-<script>
-    const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
-    const revealObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate-reveal');
-                entry.target.style.opacity = "1";
-                revealObserver.unobserve(entry.target);
-            }
-        });
-    }, observerOptions);
-    document.querySelectorAll('.animate-reveal').forEach(el => revealObserver.observe(el));
-    window.addEventListener('scroll', function() {
-        const nav = document.getElementById('navbar');
-        if (window.scrollY > 20) {
-            nav.classList.add('nav-glass', 'shadow-sm', 'border-outline-variant');
-            nav.classList.remove('border-transparent');
-        } else {
-            nav.classList.remove('nav-glass', 'shadow-sm', 'border-outline-variant');
-            nav.classList.add('border-transparent');
-        }
-    });
-    
-    // Smooth scroll for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (targetId === '#') {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-        });
-    });
-    
-    document.querySelectorAll('.btn-magnetic').forEach(function(btn) {
-        btn.addEventListener('mousemove', function(e) {
-            const rect = btn.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-            btn.style.transform = 'translate(' + (x * 0.12) + 'px, ' + (y * 0.12) + 'px)';
-        });
-        btn.addEventListener('mouseleave', function() {
-            btn.style.transform = 'translate(0px, 0px)';
-        });
-    });
-</script>
 </body>
 </html>
   `;
@@ -1016,7 +946,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
   // CLASSIC THEME - EXACT COPY FROM SOURCE WITH DYNAMIC DATA
   const ClassicTheme = () => `
 <!DOCTYPE html>
-<html dir="rtl" lang="he"
+<html dir="rtl" lang="he">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
