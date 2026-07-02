@@ -1106,15 +1106,31 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             0%, 100% { transform: translateY(0px); }
             50% { transform: translateY(-6px); }
         }
-        @keyframes float-vertical {
-            0%, 100% { margin-top: 0px; }
-            50% { margin-top: -4px; }
+        @keyframes verticalLabelFloat {
+            0%, 100% {
+                transform: rotate(180deg) translateY(0);
+                opacity: 0.78;
+            }
+            50% {
+                transform: rotate(180deg) translateY(-16px);
+                opacity: 0.95;
+            }
         }
         .glass-card-float {
             animation: float 5s ease-in-out infinite;
         }
-        .vertical-text-float {
-            animation: float-vertical 6s ease-in-out infinite;
+        .vertical-text-label {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 1.2rem;
+            font-weight: 500;
+            letter-spacing: 0.38em;
+            color: rgba(255, 255, 255, 0.78);
+            text-shadow:
+                0 2px 18px rgba(0, 0, 0, 0.42),
+                0 0 28px rgba(255, 255, 255, 0.14),
+                0 1px 2px rgba(0, 0, 0, 0.25);
+            animation: verticalLabelFloat 5.5s ease-in-out infinite;
         }
         .glass-card-frame {
             position: relative;
@@ -1136,6 +1152,140 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             border: 1px solid rgba(255, 255, 255, 0.75);
             border-radius: 0;
             box-shadow: none;
+        }
+        .hero-glass-container {
+            position: absolute;
+            z-index: 10;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transform: none;
+            width: 100%;
+            max-width: none;
+            padding: 0 1rem 1rem;
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .hero-glass-container {
+                padding: 0 1.25rem 1.25rem;
+            }
+            .hero-glass-inner {
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 1.25rem;
+            }
+            .hero-glass-copy {
+                text-align: center;
+                flex: none;
+                width: 100%;
+            }
+            .hero-glass-copy h1 {
+                font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+                margin-bottom: 0.75rem;
+            }
+            .hero-glass-copy p {
+                font-size: 1rem;
+                margin-bottom: 0;
+                max-width: 36rem;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .hero-glass-actions {
+                flex-direction: row;
+                flex-shrink: 0;
+                align-self: center;
+                justify-content: center;
+                width: auto;
+                max-width: 100%;
+            }
+            .hero-glass-card {
+                width: 100%;
+                padding: 1.75rem 2rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            .hero-glass-container {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                transform: none;
+                width: auto;
+                max-width: none;
+                padding: 0 0 4rem 8rem;
+            }
+            .hero-glass-inner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .hero-glass-copy {
+                text-align: right;
+            }
+            .hero-glass-actions {
+                flex-direction: row;
+            }
+            .hero-glass-copy p {
+                margin-bottom: 2rem;
+            }
+        }
+        .hero-glass-card {
+            width: 100%;
+        }
+        .hero-glass-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+        .hero-glass-copy {
+            text-align: center;
+        }
+        .hero-glass-actions {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            width: 100%;
+        }
+        @media (min-width: 640px) and (max-width: 767px) {
+            .hero-glass-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
+        }
+        .classic-nav .classic-nav-brand,
+        .classic-nav .classic-nav-link,
+        .classic-nav .classic-nav-menu-btn {
+            color: #ffffff;
+            transition: color 0.7s ease;
+        }
+        .classic-nav .classic-nav-link:hover,
+        .classic-nav .classic-nav-menu-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .classic-nav .classic-nav-logo {
+            transition: filter 0.7s ease;
+        }
+        .classic-nav:not(.nav-scrolled) .classic-nav-logo {
+            filter: brightness(0) invert(1);
+        }
+        .classic-nav.nav-scrolled .classic-nav-brand {
+            color: #2d2825;
+        }
+        .classic-nav.nav-scrolled .classic-nav-link {
+            color: ${primaryColor};
+        }
+        .classic-nav.nav-scrolled .classic-nav-link:hover {
+            color: ${primaryColor};
+            opacity: 0.8;
+        }
+        .classic-nav.nav-scrolled .classic-nav-menu-btn {
+            color: #2d2825;
+        }
+        .classic-nav.nav-scrolled .classic-nav-menu-btn:hover {
+            color: ${primaryColor};
+        }
+        .classic-nav.nav-scrolled .classic-nav-logo {
+            filter: none;
         }
         .about-section-label {
             font-family: 'Heebo', sans-serif;
@@ -1325,19 +1475,19 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
     </script>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">
-<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
+<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 <div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">${studioName}</span>`}
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="classic-nav-logo h-10 w-auto object-contain" />` : `<span class="classic-nav-brand font-headline-sm text-headline-sm tracking-tight">${studioName}</span>`}
 </div>
-<button onclick="toggleMobileMenuClassic()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+<button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
 </button>
 <div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">בית</a>
-<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="font-label-sm text-label-sm text-primary hover:text-primary transition-colors cursor-pointer">יצירת קשר</a>
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">בית</a>
+<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">יצירת קשר</a>
 </div>
 </div>
 <div id="mobile-menu-classic" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant/10">
@@ -1364,36 +1514,32 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 <img alt="סטודיו צילום קלאסי" class="w-full h-full object-cover" src="${heroImage}"/>
 </picture>
 </div>
-<div class="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none z-20 hidden lg:block vertical-text-float">
-<div class="text-base font-medium tracking-widest text-white/50 whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+<div class="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none z-20 hidden lg:block">
+<div class="vertical-text-label whitespace-nowrap">
 ${studioName} · ${photographerName}
 </div>
 </div>
-<div class="relative z-10 hidden lg:block pl-32 pb-16">
-<div class="glass-card-frame">
-<div class="glass-card glass-card-float pt-24 pb-28 px-12 w-[450px] m-5">
-<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-6 uppercase">${studioName}</span>
-<h1 class="font-display-lg text-4xl md:text-5xl mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
-<p class="font-body-lg text-body-lg text-white/90 mb-8 leading-relaxed">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
-<div class="flex gap-4">
-<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-xl py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95">
+<div class="hero-glass-container">
+<div class="glass-card-frame w-full lg:w-auto">
+<div class="glass-card glass-card-float hero-glass-card pt-8 pb-8 px-6 lg:pt-24 lg:pb-28 lg:px-12 lg:w-[450px] lg:m-5">
+<div class="hero-glass-inner">
+<div class="hero-glass-copy">
+<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase">${studioName}</span>
+<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
+<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
+</div>
+<div class="hero-glass-actions">
+<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95 whitespace-nowrap">
                         תיאום פגישה
                     </button>
-<button onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all">
+<button onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
                         לצפייה בגלריות
                     </button>
 </div>
 </div>
-<span class="glass-card-accent-line" aria-hidden="true"></span>
 </div>
+<span class="glass-card-accent-line hidden lg:block" aria-hidden="true"></span>
 </div>
-<div class="lg:hidden relative z-10 text-center px-md max-w-4xl text-white">
-<span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">${studioName}</span>
-<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-md leading-tight">${photographerName || 'אפרת כהן'} | צילום</h1>
-<p class="font-body-lg text-body-lg text-white/90 mb-xl max-w-2xl mx-auto">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
-<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="inline-block bg-primary text-on-primary px-xxl py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95">
-                תיאום פגישה
-            </button>
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
@@ -1563,10 +1709,10 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
         window.addEventListener('scroll', () => {
             const nav = document.getElementById('main-nav');
             if (window.scrollY > 80) {
-                nav.classList.add('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
+                nav.classList.add('nav-scrolled', 'bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
                 nav.classList.remove('py-md', 'border-none', 'bg-transparent');
             } else {
-                nav.classList.remove('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
+                nav.classList.remove('nav-scrolled', 'bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
                 nav.classList.add('py-md', 'border-none', 'bg-transparent');
             }
         });
