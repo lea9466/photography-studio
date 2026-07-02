@@ -204,6 +204,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
                 title: gallery.title,
                 password: gallery.password,
                 expires_at: gallery.expires_at,
+                cover_image: gallery.cover_image,
               }}
               settings={settings}
             />
