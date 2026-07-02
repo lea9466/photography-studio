@@ -87,6 +87,7 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
 function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[]): string {
   const {
+    name,
     studio_name,
     logo_url,
     about_text,
@@ -111,6 +112,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
 
   const studioName = studio_name || 'סטודיו גלריה'
+  const photographerName = name || 'אפרת כהן'
   const aboutText = about_text || 'ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.'
   const aboutTitle = about_title || ''
   const aboutSubtitle = about_subtitle || ''
@@ -993,6 +995,28 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
         .stagger-item:nth-child(1) { transition-delay: 0.1s; }
         .stagger-item:nth-child(2) { transition-delay: 0.2s; }
         .stagger-item:nth-child(3) { transition-delay: 0.3s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes float-vertical {
+            0%, 100% { margin-top: 0px; }
+            50% { margin-top: -4px; }
+        }
+        .glass-card-float {
+            animation: float 5s ease-in-out infinite;
+        }
+        .vertical-text-float {
+            animation: float-vertical 6s ease-in-out infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1118,16 +1142,36 @@ menu.classList.toggle('hidden');
 icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 }
 </script>
-<section class="relative h-screen w-full flex items-center justify-center overflow-hidden reveal" id="hero">
+<section class="relative h-screen w-full flex items-end justify-start overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0 scale-105">
 <picture>
 <source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
 <img alt="סטודיו צילום קלאסי" class="w-full h-full object-cover" src="${heroImage}"/>
 </picture>
 </div>
-<div class="relative z-10 text-center px-md max-w-4xl text-white">
-<span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">הבית לרגעים יפים</span>
-<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-md leading-tight">אמנות הצילום במיטבה</h1>
+<div class="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none z-20 hidden lg:block vertical-text-float">
+<div class="text-base font-medium tracking-widest text-white/50 whitespace-nowrap" style="writing-mode: vertical-rl; transform: rotate(180deg);">
+${studioName} · ${photographerName}
+</div>
+</div>
+<div class="relative z-10 hidden lg:block pl-32 pb-16">
+<div class="glass-card glass-card-float pt-24 pb-28 px-12 w-[450px] m-5">
+<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-6 uppercase">${studioName}</span>
+<h1 class="font-display-lg text-4xl md:text-5xl mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
+<p class="font-body-lg text-body-lg text-white/90 mb-8 leading-relaxed">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
+<div class="flex gap-4">
+<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-xl py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95">
+                        תיאום פגישה
+                    </button>
+<button onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all">
+                        לצפייה בגלריות
+                    </button>
+</div>
+</div>
+</div>
+<div class="lg:hidden relative z-10 text-center px-md max-w-4xl text-white">
+<span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">${studioName}</span>
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg mb-md leading-tight">${photographerName || 'אפרת כהן'} | צילום</h1>
 <p class="font-body-lg text-body-lg text-white/90 mb-xl max-w-2xl mx-auto">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="inline-block bg-primary text-on-primary px-xxl py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95">
                 תיאום פגישה

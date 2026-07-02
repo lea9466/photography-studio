@@ -1,12 +1,30 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { uploadMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
-import { r2ObjectKey } from '@/lib/r2/keys'
-import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isR2Configured } from '@/lib/r2/config'
+import { createPresignedUploadUrl, resolveMediaUrl } from '@/lib/r2/storage'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
+const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
+
+type BrandingImageType = 'logo' | 'hero_desktop' | 'hero_mobile' | 'about'
+
+function validateBrandingFile(contentType: string, fileSize: number) {
+  if (!ALLOWED_TYPES.includes(contentType)) {
+    throw new Error('סוג הקובץ לא נתמך')
+  }
+  if (fileSize > MAX_FILE_SIZE) {
+    throw new Error('גודל הקובץ חורג מ-20 MB')
+  }
+}
+
+function brandingPathForUser(userId: string, type: BrandingImageType, fileName: string) {
+  const extension = fileName.split('.').pop()
+  return `${userId}/${type}_${Date.now()}.${extension}`
+}
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
 
@@ -35,7 +53,16 @@ async function createUntypedClient() {
   )
 }
 
-export async function uploadBrandingImage(formData: FormData) {
+export async function prepareBrandingUpload(input: {
+  type: BrandingImageType
+  fileName: string
+  contentType: string
+  fileSize: number
+}) {
+  if (!isR2Configured()) {
+    throw new Error('אחסון תמונות לא מוגדר')
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -43,38 +70,25 @@ export async function uploadBrandingImage(formData: FormData) {
 
   if (!user) throw new Error('יש להתחבר מחדש')
 
-  const file = formData.get('file') as File
-  const type = formData.get('type') as 'logo' | 'hero_desktop' | 'hero_mobile' | 'about'
+  validateBrandingFile(input.contentType, input.fileSize)
 
-  if (!file) throw new Error('לא נבחר קובץ')
-  if (!type) throw new Error('סוג הקובץ לא צוין')
+  const path = brandingPathForUser(user.id, input.type, input.fileName)
+  const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
-  // Validate file type
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('סוג הקובץ לא נתמך')
+  return { uploadUrl, path }
+}
+
+export async function finalizeBrandingUpload(type: BrandingImageType, path: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+  if (!path.startsWith(`${user.id}/`)) {
+    throw new Error('נתיב קובץ לא תקין')
   }
 
-  // File size limit: 15 MB (enforced by storage bucket)
-  const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 MB
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error('גודל הקובץ חורג מ-15 MB')
-  }
-
-  // Generate unique filename
-  const timestamp = Date.now()
-  const extension = file.name.split('.').pop()
-  const filename = `${type}_${timestamp}.${extension}`
-  const path = `${user.id}/${filename}`
-
-  // Upload to R2
-  const bytes = await file.arrayBuffer()
-  await uploadMediaObject('branding', path, new Uint8Array(bytes), file.type)
-
-  // Get the public URL
-  const url = await resolveMediaUrl('branding', path)
-
-  // Update user profile with the new image URL
   const updateData: Record<string, string> = {}
   if (type === 'logo') updateData.logo_url = path
   if (type === 'hero_desktop') updateData.hero_desktop_url = path
@@ -89,7 +103,8 @@ export async function uploadBrandingImage(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  return { success: true, url }
+  const url = await resolveMediaUrl('branding', path)
+  return { success: true, url, path }
 }
 
 export async function updateBrandingSettings(data: {

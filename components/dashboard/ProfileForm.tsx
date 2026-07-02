@@ -4,7 +4,8 @@ import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
-import { uploadBrandingImage } from '@/lib/actions/branding.actions'
+import { finalizeBrandingUpload, prepareBrandingUpload } from '@/lib/actions/branding.actions'
+import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -83,13 +84,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
     setIsUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('type', type)
+      const { uploadUrl, path } = await prepareBrandingUpload({
+        type,
+        fileName: file.name,
+        contentType: file.type,
+        fileSize: file.size,
+      })
 
-      const result = await uploadBrandingImage(formData)
+      await putToPresignedUrl(uploadUrl, file)
+
+      const result = await finalizeBrandingUpload(type, path)
       if (result.success && result.url) {
-        // Update the appropriate URL state
         if (type === 'logo') setLogoUrl(result.url)
         if (type === 'hero_desktop') setHeroDesktopUrl(result.url)
         if (type === 'hero_mobile') setHeroMobileUrl(result.url)
@@ -100,10 +105,22 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
     } finally {
       setIsUploading(false)
+      e.target.value = ''
     }
   }
 
-  function handleSave() {
+  // Helper to extract R2 storage path from a public URL
+  const extractPathFromUrl = (url: string | null) => {
+    if (!url) return null
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      return url
+    }
+    const match = url.match(/\/branding\/([^?]+)/)
+    return match ? match[1] : null
+  }
+
+  function handleSave(e: React.FormEvent) {
+    e.preventDefault()
     startTransition(async () => {
       try {
         await updateProfile({
@@ -121,10 +138,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           stat_experience_years: statExperienceYears,
           accent_color: accentColor,
           selected_theme: selectedTheme,
-          logo_url: logoUrl || undefined,
-          hero_desktop_url: heroDesktopUrl || undefined,
-          hero_mobile_url: heroMobileUrl || undefined,
-          about_image_url: aboutImageUrl || undefined,
+          logo_url: extractPathFromUrl(logoUrl) || undefined,
+          hero_desktop_url: extractPathFromUrl(heroDesktopUrl) || undefined,
+          hero_mobile_url: extractPathFromUrl(heroMobileUrl) || undefined,
+          about_image_url: extractPathFromUrl(aboutImageUrl) || undefined,
           email,
           slug,
           should_color_logo: shouldColorLogo,
@@ -136,6 +153,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       }
     })
   }
+
 
   return (
     <div className="space-y-10">
@@ -196,14 +214,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   src={heroDesktopUrl}
                   alt="Hero desktop preview"
                   fill
-                  className="object-cover"
+                  className="object-cover pointer-events-none"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[--muted]">
                   <Upload className="h-8 w-8" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <span className="text-white text-sm font-medium">החלף תמונה</span>
               </div>
               <input
@@ -212,7 +230,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'hero_desktop')}
                 disabled={isUploading}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="absolute inset-0 z-10 opacity-0 cursor-pointer"
               />
             </div>
           </div>
@@ -225,14 +243,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   src={heroMobileUrl}
                   alt="Hero mobile preview"
                   fill
-                  className="object-cover"
+                  className="object-cover pointer-events-none"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-[--muted]">
                   <Upload className="h-8 w-8" />
                 </div>
               )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 <span className="text-white text-sm font-medium">החלף תמונה</span>
               </div>
               <input
@@ -241,7 +259,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'hero_mobile')}
                 disabled={isUploading}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="absolute inset-0 z-10 opacity-0 cursor-pointer"
               />
             </div>
           </div>
