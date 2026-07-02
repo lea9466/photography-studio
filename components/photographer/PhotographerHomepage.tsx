@@ -1082,7 +1082,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
     </script>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">
-<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-b border-transparent bg-surface/95 backdrop-blur-sm" id="main-nav">
+<nav class="fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 <div class="flex items-center gap-sm">
 ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">${studioName}</span>`}
@@ -1281,10 +1281,10 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
             const nav = document.getElementById('main-nav');
             if (window.scrollY > 80) {
                 nav.classList.add('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
-                nav.classList.remove('py-md', 'border-transparent');
+                nav.classList.remove('py-md', 'border-none', 'bg-transparent');
             } else {
                 nav.classList.remove('bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-outline-variant/20', 'shadow-sm');
-                nav.classList.add('py-md', 'border-transparent');
+                nav.classList.add('py-md', 'border-none', 'bg-transparent');
             }
         });
         

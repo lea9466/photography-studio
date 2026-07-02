@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-4 py-20 text-center">
+    <section className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-4 pb-20 text-center">
       <div
         className="absolute inset-0 bg-[--foreground]/5"
         aria-hidden

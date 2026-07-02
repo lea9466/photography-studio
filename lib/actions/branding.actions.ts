@@ -55,7 +55,11 @@ export async function uploadBrandingImage(formData: FormData) {
     throw new Error('סוג הקובץ לא נתמך')
   }
 
-  // No file size limit for branding images
+  // File size limit: 15 MB (enforced by storage bucket)
+  const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15 MB
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('גודל הקובץ חורג מ-15 MB')
+  }
 
   // Generate unique filename
   const timestamp = Date.now()
