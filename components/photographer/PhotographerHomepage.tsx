@@ -85,6 +85,17 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
   )
 }
 
+function underlineLastWord(text: string) {
+  const trimmed = text.trim()
+  if (!trimmed) return trimmed
+  const words = trimmed.split(/\s+/)
+  if (words.length === 1) {
+    return `<span class="about-title-underline">${trimmed}</span>`
+  }
+  const lastWord = words.pop()!
+  return `${words.join(' ')} <span class="about-title-underline">${lastWord}</span>`
+}
+
 function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[]): string {
   const {
     name,
@@ -1009,13 +1020,97 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
         .vertical-text-float {
             animation: float-vertical 6s ease-in-out infinite;
         }
+        .glass-card-frame {
+            position: relative;
+            display: inline-block;
+        }
+        .glass-card-accent-line {
+            position: absolute;
+            bottom: -18px;
+            right: 40px;
+            width: 56px;
+            height: 2px;
+            background: ${primaryColor};
+            pointer-events: none;
+        }
         .glass-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .about-section-label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: rgba(45, 40, 37, 0.5);
+        }
+        .about-title {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: clamp(2rem, 3.8vw, 3.1rem);
+            line-height: 1.28;
+            font-weight: 700;
+            color: #2d2825;
+        }
+        .about-title-underline {
+            border-bottom: 2px solid ${primaryColor};
+            padding-bottom: 6px;
+        }
+        .about-body-primary {
+            font-family: 'Heebo', sans-serif;
+            font-size: 18px;
+            line-height: 1.9;
+            color: rgba(45, 40, 37, 0.82);
+        }
+        .about-body-secondary {
+            font-family: 'Heebo', sans-serif;
+            font-size: 16px;
+            line-height: 1.85;
+            color: rgba(45, 40, 37, 0.65);
+        }
+        .about-stat-number {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: clamp(2rem, 3vw, 2.75rem);
+            line-height: 1;
+            font-weight: 400;
+            color: #2d2825;
+        }
+        .about-stat-label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(45, 40, 37, 0.42);
+            margin-top: 10px;
+        }
+        .about-image-quote {
+            background: rgba(255, 255, 255, 0.96);
+            padding: 22px 26px;
+            box-shadow: 0 16px 40px rgba(45, 40, 37, 0.08);
+        }
+        .about-image-quote-text {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: 1.05rem;
+            line-height: 1.65;
+            font-style: italic;
+            color: #2d2825;
+            text-align: right;
+        }
+        .about-image-quote-line {
+            width: 36px;
+            height: 1px;
+            background: ${primaryColor};
+            margin: 14px 0 10px auto;
+        }
+        .about-image-quote-name {
+            font-family: 'Heebo', sans-serif;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            color: rgba(45, 40, 37, 0.5);
+            text-align: left;
         }
     </style>
 <script id="tailwind-config">
@@ -1155,6 +1250,7 @@ ${studioName} · ${photographerName}
 </div>
 </div>
 <div class="relative z-10 hidden lg:block pl-32 pb-16">
+<div class="glass-card-frame">
 <div class="glass-card glass-card-float pt-24 pb-28 px-12 w-[450px] m-5">
 <span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-6 uppercase">${studioName}</span>
 <h1 class="font-display-lg text-4xl md:text-5xl mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
@@ -1168,6 +1264,8 @@ ${studioName} · ${photographerName}
                     </button>
 </div>
 </div>
+<span class="glass-card-accent-line" aria-hidden="true"></span>
+</div>
 </div>
 <div class="lg:hidden relative z-10 text-center px-md max-w-4xl text-white">
 <span class="block font-label-sm text-label-sm text-white/80 tracking-widest mb-md uppercase">${studioName}</span>
@@ -1180,36 +1278,34 @@ ${studioName} · ${photographerName}
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="py-xxl max-w-7xl mx-auto px-lg reveal relative" id="about">
-<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center relative z-10">
-<div class="order-2 md:order-1 transform transition-transform duration-700">
-<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover rounded-sm shadow-xl" src="${aboutImage}"/>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
+<div class="order-1 space-y-8 md:pr-8">
+<span class="about-section-label block">About — קצת עליי</span>
+${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title">${underlineLastWord('אודות הסטודיו')}</h2>`}
+<div class="space-y-6">
+${aboutSubtitle ? `<p class="about-body-primary" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 </div>
-<div class="order-1 md:order-2 space-y-lg">
-<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
-${aboutTitle ? `<h2 class="font-headline-md text-headline-md text-on-surface">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md text-on-surface">אודות הסטודיו</h2>'}
-<div class="w-16 h-0.5 bg-primary/40"></div>
-${aboutSubtitle ? `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
-${aboutDescription ? `<p class="font-body-md text-body-md text-on-surface-variant" style="white-space: pre-line">${aboutDescription}</p>` : ''}
-<div class="pt-md">
-<a class="font-label-sm text-label-sm text-primary flex items-center gap-2 group flex-row-reverse justify-end" href="#galleries">
-<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_back</span>
-                        לצפייה בגלריות
-                    </a>
-</div>
-<div class="grid grid-cols-3 gap-lg border-t border-outline-variant/20 pt-xl mt-xl">
+<div class="grid grid-cols-3 gap-md md:gap-lg border-t border-outline-variant/15 pt-10 mt-4">
 <div class="text-right">
-<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsYears}+</div>
-<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">שנות ניסיון</div>
-</div>
-<div class="text-right border-l border-r border-outline-variant/20 pl-lg pr-lg">
-<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsProjects}+</div>
-<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">פרויקטים</div>
+<div class="about-stat-number">${statsClients}+</div>
+<div class="about-stat-label">לקוחות מרוצים</div>
 </div>
 <div class="text-right">
-<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsClients}+</div>
-<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">לקוחות מרוצים</div>
+<div class="about-stat-number">${statsProjects}+</div>
+<div class="about-stat-label">תיקי עבודות</div>
 </div>
+<div class="text-right">
+<div class="about-stat-number">${statsYears}+</div>
+<div class="about-stat-label">שנות ניסיון</div>
+</div>
+</div>
+</div>
+<div class="order-2 relative">
+<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${aboutImage}"/>
+<div class="about-image-quote absolute -bottom-8 -left-6 md:-bottom-10 md:-left-10 max-w-[260px] hidden md:block">
+<div class="about-image-quote-line"></div>
+<p class="about-image-quote-name">— ${photographerName}</p>
 </div>
 </div>
 </div>

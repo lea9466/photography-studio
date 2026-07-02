@@ -488,9 +488,10 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          client_name: string
+          title: string
           content: string
           shoot_type: string | null
+          review_date: string | null
           created_at: string
           is_featured: boolean
           sort_order: number
@@ -498,9 +499,10 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          client_name: string
+          title: string
           content: string
           shoot_type?: string | null
+          review_date?: string | null
           created_at?: string
           is_featured?: boolean
           sort_order?: number
@@ -508,9 +510,10 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          client_name?: string
+          title?: string
           content?: string
           shoot_type?: string | null
+          review_date?: string | null
           created_at?: string
           is_featured?: boolean
           sort_order?: number
@@ -552,6 +555,7 @@ export type GallerySettings = Database['public']['Tables']['gallery_settings']['
 export type Feedback = Database['public']['Tables']['feedback']['Row']
 export type PhotographyPackage =
   Database['public']['Tables']['photography_packages']['Row']
+export type Testimonial = Database['public']['Tables']['testimonials']['Row']
 
 export type GalleryWithSettings = Gallery & {
   gallery_settings: GallerySettings | null
