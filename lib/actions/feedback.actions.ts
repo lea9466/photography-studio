@@ -52,6 +52,7 @@ export async function updateProfile(input: {
   phone?: string
   email?: string
   slug?: string
+  should_color_logo?: boolean
 }) {
   const supabase = await createClient()
   const {

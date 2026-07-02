@@ -14,6 +14,7 @@ import {
   X,
   ExternalLink
 } from 'lucide-react'
+import { Logo } from './Logo'
 
 type NavItem = {
   href: string
@@ -63,9 +64,11 @@ type SidebarNavProps = {
   onSignOut?: () => void
   isCollapsed?: boolean
   onToggleCollapse?: () => void
+  accentColor?: string
+  shouldColorLogo?: boolean
 }
 
-export function SidebarNav({ userName, studioName, logoUrl, portfolioSlug, onSignOut, isCollapsed = false, onToggleCollapse }: SidebarNavProps) {
+export function SidebarNav({ userName, studioName, logoUrl, portfolioSlug, onSignOut, isCollapsed = false, onToggleCollapse, accentColor, shouldColorLogo }: SidebarNavProps) {
   const pathname = usePathname()
 
   return (
@@ -98,17 +101,11 @@ export function SidebarNav({ userName, studioName, logoUrl, portfolioSlug, onSig
         isCollapsed ? "opacity-0 w-0 overflow-hidden p-0" : "opacity-100"
       )}>
         <div className="w-12 h-12 rounded-xl bg-[--dashboard-foreground] flex items-center justify-center text-white overflow-hidden border border-[--dashboard-border]">
-          {logoUrl ? (
-            <img 
-              alt="Logo" 
-              className="w-full h-full object-cover" 
-              src={logoUrl}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <span className="text-2xl">📷</span>
-            </div>
-          )}
+          <Logo 
+            logoUrl={logoUrl}
+            accentColor={accentColor}
+            shouldColorLogo={shouldColorLogo}
+          />
         </div>
         <div>
           <h2 className="font-semibold text-lg text-[--dashboard-foreground]">

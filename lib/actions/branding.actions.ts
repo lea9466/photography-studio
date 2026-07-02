@@ -71,6 +71,7 @@ export async function updateBrandingSettings(data: {
   heroDesktopUrl?: string
   heroMobileUrl?: string
   aboutImageUrl?: string
+  shouldColorLogo?: boolean
 }) {
   const supabase = await createClient()
   const {
@@ -91,6 +92,7 @@ export async function updateBrandingSettings(data: {
   if (data.heroDesktopUrl !== undefined) updateData.hero_desktop_url = data.heroDesktopUrl
   if (data.heroMobileUrl !== undefined) updateData.hero_mobile_url = data.heroMobileUrl
   if (data.aboutImageUrl !== undefined) updateData.about_image_url = data.aboutImageUrl
+  if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
   const { error } = await supabase
     .from('users')

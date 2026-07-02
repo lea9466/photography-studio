@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { BrandingEditForm } from '@/components/dashboard/BrandingEditForm'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
+import type { User } from '@/lib/types/database.types'
 
 export default async function BrandingPage() {
   const supabase = await createClient()
@@ -33,15 +34,17 @@ export default async function BrandingPage() {
     .eq('id', user.id)
     .single()
 
-  if (!userData) {
+  const typedUserData = userData as User | null
+
+  if (!typedUserData) {
     redirect('/dashboard')
   }
 
   return (
     <DashboardLayoutWrapper
-      userName={userData.name || undefined}
-      studioName={userData.studio_name || undefined}
-      logoUrl={userData.logo_url || undefined}
+      userName={typedUserData.name || undefined}
+      studioName={typedUserData.studio_name || undefined}
+      logoUrl={typedUserData.logo_url || undefined}
     >
       <div className="max-w-4xl">
         <div className="mb-8">
@@ -52,16 +55,17 @@ export default async function BrandingPage() {
         <div className="bg-white rounded-2xl border border-[#c9c5cd] p-6 md:p-8">
           <BrandingEditForm
             branding={{
-              studio_name: userData.studio_name,
-              about_text: userData.about_text,
-              stat_projects: userData.stat_projects || 0,
-              stat_clients: userData.stat_clients || 0,
-              stat_experience_years: userData.stat_experience_years || 0,
-              accent_color: userData.accent_color || '#B8953F',
-              selected_theme: userData.selected_theme || 'elegant',
-              hero_desktop_url: userData.hero_desktop_url,
-              hero_mobile_url: userData.hero_mobile_url,
-              about_image_url: userData.about_image_url,
+              studio_name: typedUserData.studio_name,
+              about_text: typedUserData.about_text,
+              stat_projects: typedUserData.stat_projects || 0,
+              stat_clients: typedUserData.stat_clients || 0,
+              stat_experience_years: typedUserData.stat_experience_years || 0,
+              accent_color: typedUserData.accent_color || '#B8953F',
+              selected_theme: typedUserData.selected_theme || 'elegant',
+              hero_desktop_url: typedUserData.hero_desktop_url,
+              hero_mobile_url: typedUserData.hero_mobile_url,
+              about_image_url: typedUserData.about_image_url,
+              should_color_logo: false,
             }}
           />
         </div>
@@ -73,7 +77,7 @@ export default async function BrandingPage() {
           </p>
           <div className="bg-white p-4 rounded-lg border border-[#c9c5cd]">
             <code className="text-sm text-[#6b2d43]">
-              {process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/{userData.studio_name || 'your-studio-name'}
+              {process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/{typedUserData.studio_name || 'your-studio-name'}
             </code>
           </div>
         </div>

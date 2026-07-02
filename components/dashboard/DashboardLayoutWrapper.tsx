@@ -13,6 +13,8 @@ type DashboardLayoutWrapperProps = {
   portfolioSlug?: string | null
   onSignOut?: () => void
   children: React.ReactNode
+  accentColor?: string
+  shouldColorLogo?: boolean
 }
 
 export function DashboardLayoutWrapper({
@@ -22,6 +24,8 @@ export function DashboardLayoutWrapper({
   portfolioSlug,
   onSignOut,
   children,
+  accentColor,
+  shouldColorLogo,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
@@ -36,12 +40,16 @@ export function DashboardLayoutWrapper({
         onSignOut={onSignOut}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        accentColor={accentColor}
+        shouldColorLogo={shouldColorLogo}
       />
       
       {/* Mobile Header */}
       <MobileHeader
         studioName={studioName}
         logoUrl={logoUrl || undefined}
+        accentColor={accentColor}
+        shouldColorLogo={shouldColorLogo}
       />
       
       {/* Mobile Bottom Navigation */}

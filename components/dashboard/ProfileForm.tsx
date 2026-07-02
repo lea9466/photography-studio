@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Card,
   CardContent,
@@ -41,6 +42,7 @@ type ProfileFormProps = {
     about_image_url: string | null
     email: string | null
     slug: string | null
+    should_color_logo: boolean
   } | null
 }
 
@@ -72,6 +74,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
   const [email, setEmail] = useState(profile?.email ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
+  const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
   const [isUploading, setIsUploading] = useState(false)
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about') {
@@ -124,6 +127,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           about_image_url: aboutImageUrl || undefined,
           email,
           slug,
+          should_color_logo: shouldColorLogo,
         })
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
@@ -365,6 +369,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               />
             </div>
           </div>
+        </div>
+        {/* Logo Coloring Toggle */}
+        <div className="space-y-3 pt-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="should-color-logo">צביעת הלוגו בצבע המותג שלי</Label>
+            <Switch
+              id="should-color-logo"
+              checked={shouldColorLogo}
+              onCheckedChange={setShouldColorLogo}
+            />
+          </div>
+          <p className="text-xs text-[--muted]">מתאים לקובצי SVG בלבד. אם תעלי לוגו כקובץ תמונה רגיל (PNG), הוא יוצג בצבעיו המקוריים.</p>
         </div>
       </section>
 

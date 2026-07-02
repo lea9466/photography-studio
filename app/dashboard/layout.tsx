@@ -13,15 +13,15 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser()
 
-  let profile: Pick<User, 'name' | 'studio_name' | 'logo_url'> | null = null
+  let profile: any = null
 
   if (user) {
     const { data } = await supabase
       .from('users')
-      .select('name, studio_name, logo_url')
+      .select('name, studio_name, logo_url, accent_color, should_color_logo')
       .eq('id', user.id)
       .single()
-    profile = data as Pick<User, 'name' | 'studio_name' | 'logo_url'> | null
+    profile = data
   }
 
   return (
@@ -30,6 +30,8 @@ export default async function DashboardLayout({
       studioName={profile?.studio_name || undefined}
       logoUrl={profile?.logo_url || undefined}
       portfolioSlug={profile?.studio_name || null}
+      accentColor={profile?.accent_color || undefined}
+      shouldColorLogo={profile?.should_color_logo || false}
       onSignOut={async () => {
         'use server'
         await signOut()

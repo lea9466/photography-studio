@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 
 type BrandingEditFormProps = {
   branding: {
@@ -20,6 +21,7 @@ type BrandingEditFormProps = {
     hero_desktop_url: string | null
     hero_mobile_url: string | null
     about_image_url: string | null
+    should_color_logo: boolean
   }
 }
 
@@ -42,6 +44,7 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
   const [heroDesktopUrl, setHeroDesktopUrl] = useState(branding.hero_desktop_url ?? '')
   const [heroMobileUrl, setHeroMobileUrl] = useState(branding.hero_mobile_url ?? '')
   const [aboutImageUrl, setAboutImageUrl] = useState(branding.about_image_url ?? '')
+  const [shouldColorLogo, setShouldColorLogo] = useState(branding.should_color_logo ?? false)
 
   function handleSave() {
     startTransition(async () => {
@@ -57,6 +60,7 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
           heroDesktopUrl: heroDesktopUrl || undefined,
           heroMobileUrl: heroMobileUrl || undefined,
           aboutImageUrl: aboutImageUrl || undefined,
+          shouldColorLogo,
         }
         
         await updateBrandingSettings(payload)
@@ -176,6 +180,19 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
             />
           </div>
           <p className="text-xs text-gray-500">הצבע הראשי שיופיע בכפתורים, קישורים ואלמנטים מודגשים</p>
+        </div>
+
+        {/* Logo Coloring */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="should-color-logo" className="text-[#100d1f]">צביעת הלוגו בצבע המותג שלי</Label>
+            <Switch
+              id="should-color-logo"
+              checked={shouldColorLogo}
+              onCheckedChange={setShouldColorLogo}
+            />
+          </div>
+          <p className="text-xs text-gray-500">מתאים לקובצי SVG בלבד. אם תעלי לוגו כקובץ תמונה רגיל (PNG), הוא יוצג בצבעיו המקוריים.</p>
         </div>
 
         {/* Images */}
