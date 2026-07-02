@@ -27,9 +27,10 @@ import { Card } from '@/components/ui/card'
 type Testimonial = {
   id: string
   user_id: string
-  client_name: string
+  title: string
   content: string
   shoot_type: string | null
+  review_date: string | null
   created_at: string
   is_featured: boolean
   sort_order: number
@@ -40,24 +41,27 @@ type TestimonialsManagerProps = {
 }
 
 type TestimonialFormState = {
-  clientName: string
+  title: string
   content: string
   shootType: string
+  reviewDate: string
   isFeatured: boolean
 }
 
 const EMPTY_FORM: TestimonialFormState = {
-  clientName: '',
+  title: '',
   content: '',
   shootType: '',
+  reviewDate: '',
   isFeatured: false,
 }
 
 function testimonialToForm(testimonial: Testimonial): TestimonialFormState {
   return {
-    clientName: testimonial.client_name,
+    title: testimonial.title,
     content: testimonial.content,
     shootType: testimonial.shoot_type ?? '',
+    reviewDate: testimonial.review_date ?? '',
     isFeatured: testimonial.is_featured,
   }
 }
@@ -95,9 +99,10 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
       try {
         if (editingId) {
           await updateTestimonial(editingId, {
-            clientName: form.clientName,
+            title: form.title,
             content: form.content,
             shootType: form.shootType || undefined,
+            reviewDate: form.reviewDate || undefined,
             isFeatured: form.isFeatured,
           })
           setTestimonials((current) =>
@@ -105,9 +110,10 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
               t.id === editingId
                 ? {
                     ...t,
-                    client_name: form.clientName,
+                    title: form.title,
                     content: form.content,
                     shoot_type: form.shootType || null,
+                    review_date: form.reviewDate || null,
                     is_featured: form.isFeatured,
                   }
                 : t
@@ -116,9 +122,10 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
           toast.success('התגובה עודכנה')
         } else {
           await createTestimonial({
-            clientName: form.clientName,
+            title: form.title,
             content: form.content,
             shootType: form.shootType || undefined,
+            reviewDate: form.reviewDate || undefined,
             isFeatured: form.isFeatured,
           })
           // Refresh the list
@@ -175,7 +182,7 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{testimonial.client_name}</span>
+                    <span className="font-semibold">{testimonial.title}</span>
                     {testimonial.is_featured && (
                       <Badge variant="default" className="gap-1">
                         <Star className="h-3 w-3" />
@@ -186,7 +193,7 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
                       <Badge variant="outline">{testimonial.shoot_type}</Badge>
                     )}
                     <span className="text-xs text-[--muted]">
-                      {formatDate(testimonial.created_at)}
+                      {formatDate(testimonial.review_date ?? testimonial.created_at)}
                     </span>
                   </div>
                   <p className="text-sm leading-relaxed">{testimonial.content}</p>
@@ -224,33 +231,47 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
               {editingId ? 'עריכת תגובה' : 'תגובה חדשה'}
             </DialogTitle>
             <DialogDescription>
-              שם הלקוח, תוכן התגובה וסוג הצילום
+              כותרת, תוכן התגובה, תאריך וסוג הצילום
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="client-name">שם הלקוח</Label>
+              <Label htmlFor="title">כותרת</Label>
               <Input
-                id="client-name"
-                value={form.clientName}
+                id="title"
+                value={form.title}
                 onChange={(e) =>
-                  setForm((current) => ({ ...current, clientName: e.target.value }))
+                  setForm((current) => ({ ...current, title: e.target.value }))
                 }
-                placeholder="דנה כהן"
+                placeholder="חוויה מדהימה!"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="shoot-type">סוג צילום (אופציונלי)</Label>
-              <Input
-                id="shoot-type"
-                value={form.shootType}
-                onChange={(e) =>
-                  setForm((current) => ({ ...current, shootType: e.target.value }))
-                }
-                placeholder="חתונה, פורטרטים, משפחה..."
-              />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="shoot-type">סוג צילום (אופציונלי)</Label>
+                <Input
+                  id="shoot-type"
+                  value={form.shootType}
+                  onChange={(e) =>
+                    setForm((current) => ({ ...current, shootType: e.target.value }))
+                  }
+                  placeholder="חתונה, פורטרטים, משפחה..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="review-date">תאריך (אופציונלי)</Label>
+                <Input
+                  id="review-date"
+                  type="date"
+                  value={form.reviewDate}
+                  onChange={(e) =>
+                    setForm((current) => ({ ...current, reviewDate: e.target.value }))
+                  }
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

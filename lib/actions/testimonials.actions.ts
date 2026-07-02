@@ -50,9 +50,10 @@ export async function getTestimonials() {
 }
 
 export async function createTestimonial(data: {
-  clientName: string
+  title: string
   content: string
   shootType?: string
+  reviewDate?: string
   isFeatured?: boolean
 }) {
   const supabase = await createClient()
@@ -65,9 +66,10 @@ export async function createTestimonial(data: {
   const untypedClient = await createUntypedClient()
   const { error } = await untypedClient.from('testimonials').insert({
     user_id: user.id,
-    client_name: data.clientName,
+    title: data.title,
     content: data.content,
     shoot_type: data.shootType || null,
+    review_date: data.reviewDate || null,
     is_featured: data.isFeatured || false,
   })
 
@@ -77,9 +79,10 @@ export async function createTestimonial(data: {
 }
 
 export async function updateTestimonial(id: string, data: {
-  clientName?: string
+  title?: string
   content?: string
   shootType?: string
+  reviewDate?: string
   isFeatured?: boolean
   sortOrder?: number
 }) {
@@ -92,9 +95,10 @@ export async function updateTestimonial(id: string, data: {
 
   const updateData: Record<string, any> = {}
 
-  if (data.clientName !== undefined) updateData.client_name = data.clientName
+  if (data.title !== undefined) updateData.title = data.title
   if (data.content !== undefined) updateData.content = data.content
-  if (data.shootType !== undefined) updateData.shoot_type = data.shootType
+  if (data.shootType !== undefined) updateData.shoot_type = data.shootType || null
+  if (data.reviewDate !== undefined) updateData.review_date = data.reviewDate || null
   if (data.isFeatured !== undefined) updateData.is_featured = data.isFeatured
   if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder
 
@@ -163,6 +167,7 @@ export async function getPublicTestimonials(userId: string) {
     .eq('user_id', userId)
     .order('is_featured', { ascending: false })
     .order('sort_order', { ascending: true })
+    .order('review_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)

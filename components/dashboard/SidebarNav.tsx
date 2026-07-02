@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   X,
-  ExternalLink
+  ExternalLink,
+  MessageSquareQuote
 } from 'lucide-react'
 import { Logo } from './Logo'
 
@@ -47,6 +48,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'חבילות צילום',
     icon: <Package className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
+  },
+  {
+    href: '/dashboard/reviews',
+    label: 'תגובות',
+    icon: <MessageSquareQuote className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
   },
   {
     href: '/dashboard/settings',

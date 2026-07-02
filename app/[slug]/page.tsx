@@ -119,6 +119,16 @@ export default async function PhotographerPage({ params }: PageProps) {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
+    // Fetch client testimonials/reviews (public)
+    const { data: testimonials } = await supabase
+      .from('testimonials')
+      .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order')
+      .eq('user_id', typedPhotographer.id)
+      .order('is_featured', { ascending: false })
+      .order('sort_order', { ascending: true })
+      .order('review_date', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+
     // Resolve R2 paths to signed URLs (only if not already a full URL)
     const photographerWithUrls = {
       ...typedPhotographer,
@@ -166,6 +176,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           photographer={photographerWithUrls}
           galleries={galleriesWithSignedUrls}
           packages={packages || []}
+          testimonials={(testimonials as any) || []}
         />
       </>
     )

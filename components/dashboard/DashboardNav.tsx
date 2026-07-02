@@ -24,6 +24,11 @@ const NAV_ITEMS: NavItem[] = [
     isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
   },
   {
+    href: '/dashboard/reviews',
+    label: 'תגובות',
+    isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+  },
+  {
     href: '/dashboard/settings',
     label: 'הגדרות',
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),

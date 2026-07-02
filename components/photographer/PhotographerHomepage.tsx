@@ -43,13 +43,25 @@ interface Package {
   is_featured: boolean
 }
 
+interface Testimonial {
+  id: string
+  title: string
+  content: string
+  shoot_type: string | null
+  review_date: string | null
+  created_at: string
+  is_featured: boolean
+  sort_order: number
+}
+
 interface PhotographerHomepageProps {
   photographer: Photographer
   galleries?: Gallery[]
   packages?: Package[]
+  testimonials?: Testimonial[]
 }
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [] }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [] }: PhotographerHomepageProps) {
   const [mounted, setMounted] = useState(false)
   const [html, setHtml] = useState('')
 
@@ -64,9 +76,9 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
     }
 
     const theme = themeMap[photographer.selected_theme] || 'elegant'
-    const generatedHtml = generateHomepageHTML(photographer, theme, galleries, packages)
+    const generatedHtml = generateHomepageHTML(photographer, theme, galleries, packages, testimonials)
     setHtml(generatedHtml)
-  }, [photographer, galleries, packages])
+  }, [photographer, galleries, packages, testimonials])
 
   if (!mounted) {
     return <div style={{ padding: '20px' }}>Loading...</div>
@@ -96,7 +108,7 @@ function underlineLastWord(text: string) {
   return `${words.join(' ')} <span class="about-title-underline">${lastWord}</span>`
 }
 
-function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[]): string {
+function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[], testimonials: Testimonial[] = []): string {
   const {
     name,
     studio_name,
@@ -237,6 +249,90 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
           <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full mt-auto ${isFeatured ? 'bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all duration-300 shadow-md' : 'border border-primary/40 text-primary py-md rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300'}" style="direction: rtl !important; text-align: center !important;">
             ${isFeatured ? 'בחירה בחבילה' : 'הזמנת חבילה'}
           </button>
+        </div>
+      `;
+      }
+      return '';
+    }).join('');
+  };
+
+  // Escape user-generated text before injecting into the iframe HTML
+  const escapeHtml = (value: string) =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+
+  const formatReviewDate = (t: Testimonial) => {
+    const raw = t.review_date || t.created_at
+    if (!raw) return ''
+    const d = new Date(raw)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleDateString('he-IL', { year: 'numeric', month: 'long' })
+  }
+
+  // Build the "meta" subtitle line (shoot type · date) for a testimonial
+  const testimonialMeta = (t: Testimonial) => {
+    const shoot = t.shoot_type ? escapeHtml(t.shoot_type) : ''
+    const date = formatReviewDate(t)
+    return [shoot, date].filter(Boolean).join(' · ')
+  }
+
+  // Generate dynamic testimonials HTML for each theme.
+  // Falls back to the built-in demo markup when the photographer has no reviews yet,
+  // so the section keeps its original design.
+  const generateTestimonialsHTML = (currentTheme: string, demoHtml: string) => {
+    if (testimonials.length === 0) return demoHtml
+
+    return testimonials.map((t, i) => {
+      const title = escapeHtml(t.title)
+      const content = escapeHtml(t.content)
+      const meta = testimonialMeta(t)
+      const firstLetter = escapeHtml((t.title || '').trim().charAt(0) || '"')
+
+      if (currentTheme === 'elegant') {
+        const delay = i > 0 ? ` style="transition-delay: ${i * 150}ms;"` : ''
+        return `
+        <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll"${delay}>
+          <div>
+            <div class="flex flex-row-reverse gap-1 text-accent mb-6">
+              <span class="material-symbols-outlined fill-1">star</span>
+              <span class="material-symbols-outlined fill-1">star</span>
+              <span class="material-symbols-outlined fill-1">star</span>
+              <span class="material-symbols-outlined fill-1">star</span>
+              <span class="material-symbols-outlined fill-1">star</span>
+            </div>
+            <p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"${content}"</p>
+          </div>
+          <div>
+            <h4 class="font-display text-xl mb-1">${title}</h4>
+            ${meta ? `<p class="text-xs uppercase tracking-widest opacity-40">${meta}</p>` : ''}
+          </div>
+        </div>
+      `;
+      } else if (currentTheme === 'classic') {
+        return `
+        <div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
+          <span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
+          ${title ? `<h4 class="font-headline-sm text-headline-sm text-on-surface mb-md not-italic">${title}</h4>` : ''}
+          <p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">"${content}"</p>
+          ${meta ? `<div class="font-label-sm text-label-sm text-primary font-bold not-italic">${meta}</div>` : ''}
+        </div>
+      `;
+      } else if (currentTheme === 'dark') {
+        return `
+        <div class="p-lg bg-surface border border-white/5 relative">
+          <span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
+          <p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"${content}"</p>
+          <div class="flex items-center gap-md">
+            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary">${firstLetter}</div>
+            <div>
+              <div class="font-label-sm uppercase tracking-widest">${title}</div>
+              ${meta ? `<div class="text-[10px] text-on-surface-variant">${meta}</div>` : ''}
+            </div>
+          </div>
         </div>
       `;
       }
@@ -502,7 +598,7 @@ ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
 <div class="text-center mb-16 reveal-on-scroll">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">מה לקוחות אומרות</h2>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-12">${generateTestimonialsHTML('elegant', `
 <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll">
 <div>
 <div class="flex flex-row-reverse gap-1 text-accent mb-6">
@@ -551,7 +647,7 @@ ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
 <p class="text-xs uppercase tracking-widest opacity-40">צילומי קמפיין</p>
 </div>
 </div>
-</div>
+`)}</div>
 </section>
 <section class="py-32 px-margin-mobile md:px-margin-desktop bg-[#1c1b1b] text-white reveal-on-scroll pb-48">
 <div class="max-w-4xl mx-auto">
@@ -1112,6 +1208,30 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             color: rgba(45, 40, 37, 0.5);
             text-align: left;
         }
+        .about-glow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 9999px;
+        }
+        .about-glow-left {
+            top: 0;
+            left: 0;
+            width: 440px;
+            height: 440px;
+            transform: translate(-58%, -28%);
+            filter: blur(58px);
+            opacity: 0.72;
+        }
+        .about-glow-right {
+            top: 0;
+            right: 0;
+            width: 480px;
+            height: 480px;
+            transform: translate(58%, -28%);
+            filter: blur(64px);
+            opacity: 0.78;
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1277,7 +1397,10 @@ ${studioName} · ${photographerName}
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="py-xxl max-w-7xl mx-auto px-lg reveal relative" id="about">
+<section class="relative w-full py-xxl reveal overflow-hidden" id="about">
+<div class="about-glow about-glow-left" style="background: radial-gradient(circle, ${primaryColor}70 0%, ${primaryColor}45 24%, ${primaryColor}22 46%, transparent 72%);"></div>
+<div class="about-glow about-glow-right" style="background: radial-gradient(circle, ${primaryColor}80 0%, ${primaryColor}50 26%, ${primaryColor}28 48%, transparent 74%);"></div>
+<div class="max-w-7xl mx-auto px-lg relative z-10">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
 <div class="order-1 space-y-8 md:pr-8">
 <span class="about-section-label block">About — קצת עליי</span>
@@ -1306,6 +1429,7 @@ ${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-li
 <div class="about-image-quote absolute -bottom-8 -left-6 md:-bottom-10 md:-left-10 max-w-[260px] hidden md:block">
 <div class="about-image-quote-line"></div>
 <p class="about-image-quote-name">— ${photographerName}</p>
+</div>
 </div>
 </div>
 </div>
@@ -1351,7 +1475,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 <div class="text-center mb-xl">
 <h2 class="font-headline-md text-headline-md text-on-surface">לקוחות מספרים</h2>
 </div>
-<div class="space-y-lg">
+<div class="space-y-lg">${generateTestimonialsHTML('classic', `
 <div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
 <span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
 <p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
@@ -1366,7 +1490,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
                     </p>
 <div class="font-label-sm text-label-sm text-primary font-bold">מיכל ורוני, ירושלים</div>
 </div>
-</div>
+`)}</div>
 </div>
 </section>
 <section class="bg-surface-container-low py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl" id="contact">
@@ -1787,7 +1911,7 @@ ${galleries.length > 3 ? `
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Kind Words</span>
 <h2 class="font-headline-md text-headline-md">מה הלקוחות שלנו אומרים</h2>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">${generateTestimonialsHTML('dark', `
 <div class="p-lg bg-surface border border-white/5 relative">
 <span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
 <p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"החוויה בסטודיו הייתה יוצאת דופן. המקצועיות והעין החדה לפרטים יצרו תמונות שלא האמנתי שניתן להפיק. פשוט וואו!"</p>
@@ -1821,7 +1945,7 @@ ${galleries.length > 3 ? `
 </div>
 </div>
 </div>
-</div>
+`)}</div>
 </section>
 <section class="py-md md:py-lg bg-background text-on-surface overflow-hidden whitespace-nowrap border-y border-white/10">
 <div class="inline-block animate-marquee font-headline-sm text-[20px] md:text-headline-sm uppercase tracking-[0.2em] opacity-30">
