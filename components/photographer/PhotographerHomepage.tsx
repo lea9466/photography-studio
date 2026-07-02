@@ -426,9 +426,11 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="px-margin-mobile md:px-margin-desktop py-32 max-w-7xl mx-auto reveal-on-scroll" id="about">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
+<section class="px-margin-mobile md:px-margin-desktop py-32 max-w-7xl mx-auto reveal-on-scroll relative" id="about">
+<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
 <div class="order-2 lg:order-1">
+<span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? `<h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">${aboutTitle}</h2>` : ''}
 ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
@@ -773,8 +775,10 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 </script>
 <main class="pt-xxl">
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center" id="about">
-<div class="flex flex-col gap-md order-2 md:order-1 animate-reveal">
+<section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center relative" id="about">
+<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
+<div class="flex flex-col gap-md order-2 md:order-1 animate-reveal relative z-10">
+<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
 ${aboutSubtitle ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
 ${aboutDescription ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutDescription + '</p>' : ''}
@@ -1131,13 +1135,14 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="about">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
+<section class="py-xxl max-w-7xl mx-auto px-lg reveal relative" id="about">
+<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center relative z-10">
 <div class="order-2 md:order-1 transform transition-transform duration-700">
 <img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover rounded-sm shadow-xl" src="${aboutImage}"/>
 </div>
 <div class="order-1 md:order-2 space-y-lg">
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">סיפור אישי</span>
+<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? `<h2 class="font-headline-md text-headline-md text-on-surface">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md text-on-surface">אודות הסטודיו</h2>'}
 <div class="w-16 h-0.5 bg-primary/40"></div>
 ${aboutSubtitle ? `<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
@@ -1147,6 +1152,20 @@ ${aboutDescription ? `<p class="font-body-md text-body-md text-on-surface-varian
 <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_back</span>
                         לצפייה בגלריות
                     </a>
+</div>
+<div class="grid grid-cols-3 gap-lg border-t border-outline-variant/20 pt-xl mt-xl">
+<div class="text-right">
+<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsYears}+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">שנות ניסיון</div>
+</div>
+<div class="text-right border-l border-r border-outline-variant/20 pl-lg pr-lg">
+<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsProjects}+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">פרויקטים</div>
+</div>
+<div class="text-right">
+<div class="font-headline-sm text-headline-sm text-primary mb-xs">${statsClients}+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant/60 uppercase tracking-widest">לקוחות מרוצים</div>
+</div>
 </div>
 </div>
 </div>
@@ -1511,14 +1530,15 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="about">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center">
+<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll relative" id="about">
+<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center relative z-10">
 <div class="relative group">
 <div class="absolute -top-4 -right-4 w-full h-full border border-primary/30 z-0"></div>
 <img class="relative z-10 w-full aspect-[4/5] object-cover grayscale brightness-90 hover:grayscale-0 transition-all duration-700" src="${aboutImage}"/>
 </div>
 <div class="lg:pr-xl">
-<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Legacy</span>
+<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? `<h2 class="font-headline-md text-headline-md mb-lg">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md mb-lg">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
 ${aboutSubtitle ? `<p class="font-body-md text-on-surface-variant mb-lg" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="font-body-md text-on-surface-variant mb-xl" style="white-space: pre-line">${aboutDescription}</p>` : ''}

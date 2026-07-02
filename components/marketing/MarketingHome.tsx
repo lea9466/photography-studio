@@ -22,7 +22,7 @@ export function MarketingHome() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16" id="about">
-        <h2 className="mb-6 text-2xl font-semibold">למה Studio Gallery?</h2>
+        <h2 className="mb-6 text-2xl font-semibold"><span className="text-[--primary]">About</span> · קצת עליי</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             ['בחירת לקוח', '❤️ לאלבום ו-✨ לעיבוד — עם הגבלות וסיום בחירה'],
