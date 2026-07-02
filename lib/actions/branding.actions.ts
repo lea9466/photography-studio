@@ -5,8 +5,35 @@ import { uploadMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
 import { r2ObjectKey } from '@/lib/r2/keys'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
+
+// Create a non-typed client for dynamic updates
+async function createUntypedClient() {
+  const cookieStore = await cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // setAll from Server Component — middleware handles refresh
+          }
+        },
+      },
+    }
+  )
+}
 
 export async function uploadBrandingImage(formData: FormData) {
   const supabase = await createClient()
@@ -50,9 +77,10 @@ export async function uploadBrandingImage(formData: FormData) {
   if (type === 'hero_mobile') updateData.hero_mobile_url = path
   if (type === 'about') updateData.about_image_url = path
 
-  const { error } = await supabase
+  const untypedClient = await createUntypedClient()
+  const { error } = await untypedClient
     .from('users')
-    .update(updateData as never)
+    .update(updateData)
     .eq('id', user.id)
 
   if (error) throw new Error(error.message)
@@ -80,7 +108,7 @@ export async function updateBrandingSettings(data: {
 
   if (!user) throw new Error('יש להתחבר מחדש')
 
-  const updateData: any = {}
+  const updateData: Record<string, any> = {}
 
   if (data.studioName !== undefined) updateData.studio_name = data.studioName
   if (data.aboutText !== undefined) updateData.about_text = data.aboutText
@@ -94,9 +122,10 @@ export async function updateBrandingSettings(data: {
   if (data.aboutImageUrl !== undefined) updateData.about_image_url = data.aboutImageUrl
   if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
-  const { error } = await supabase
+  const untypedClient = await createUntypedClient()
+  const { error } = await untypedClient
     .from('users')
-    .update(updateData as any)
+    .update(updateData)
     .eq('id', user.id)
 
   if (error) throw new Error(error.message)

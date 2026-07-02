@@ -48,6 +48,7 @@ export type Database = {
           hero_desktop_url: string | null
           hero_mobile_url: string | null
           about_image_url: string | null
+          should_color_logo: boolean
         }
         Insert: {
           id: string
@@ -72,6 +73,7 @@ export type Database = {
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           about_image_url?: string | null
+          should_color_logo?: boolean
         }
         Update: {
           id?: string
@@ -96,6 +98,7 @@ export type Database = {
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           about_image_url?: string | null
+          should_color_logo?: boolean
         }
         Relationships: []
       }
