@@ -57,8 +57,9 @@ export default function DashboardPage() {
               .limit(1)
               .maybeSingle()
 
-            if (firstPhoto && firstPhoto.preview_url) {
-              firstPhotoMap.set(galleryId, firstPhoto.preview_url)
+            const typedPhoto = firstPhoto as { preview_url: string | null } | null
+            if (typedPhoto && typedPhoto.preview_url) {
+              firstPhotoMap.set(galleryId, typedPhoto.preview_url)
             }
           }
         }
