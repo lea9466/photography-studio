@@ -48,6 +48,8 @@ export async function updateProfile(input: {
   logo_url?: string
   hero_desktop_url?: string
   hero_mobile_url?: string
+  hero_desktop_urls?: string[]
+  hero_mobile_urls?: string[]
   about_image_url?: string
   contact_desktop_url?: string
   contact_mobile_url?: string

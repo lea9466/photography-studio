@@ -196,6 +196,53 @@ export async function sendDeliveryReadyEmail(input: {
   })
 }
 
+export async function sendContactInquiryEmail(input: {
+  photographerEmail: string
+  photographerName: string
+  sitePath: string | null
+  clientName: string
+  clientEmail: string
+  clientPhone?: string
+  subject?: string
+  message: string
+}) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] contact inquiry', input)
+    return
+  }
+
+  const siteLink = input.sitePath
+    ? `<p><a href="${appUrl(input.sitePath)}">צפייה באתר שלך</a></p>`
+    : ''
+
+  const phoneRow = input.clientPhone
+    ? `<p><strong>טלפון:</strong> ${input.clientPhone}</p>`
+    : ''
+  const subjectRow = input.subject
+    ? `<p><strong>נושא:</strong> ${input.subject}</p>`
+    : ''
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.photographerEmail,
+    replyTo: input.clientEmail,
+    subject: `פנייה חדשה מהאתר שלך — ${input.clientName}`,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif;">
+        <h2>פנייה חדשה מהאתר של ${input.photographerName}</h2>
+        <p><strong>שם:</strong> ${input.clientName}</p>
+        <p><strong>אימייל:</strong> ${input.clientEmail}</p>
+        ${phoneRow}
+        ${subjectRow}
+        <p><strong>הודעה:</strong></p>
+        <p>${input.message.replace(/\n/g, '<br>')}</p>
+        ${siteLink}
+      </div>
+    `,
+  })
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

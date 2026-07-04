@@ -48,6 +48,8 @@ export type Database = {
           selected_theme: string | null
           hero_desktop_url: string | null
           hero_mobile_url: string | null
+          hero_desktop_urls: string[]
+          hero_mobile_urls: string[]
           about_image_url: string | null
           contact_desktop_url: string | null
           contact_mobile_url: string | null
@@ -76,6 +78,8 @@ export type Database = {
           selected_theme?: string | null
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
+          hero_desktop_urls?: string[]
+          hero_mobile_urls?: string[]
           about_image_url?: string | null
           contact_desktop_url?: string | null
           contact_mobile_url?: string | null
@@ -104,6 +108,8 @@ export type Database = {
           selected_theme?: string | null
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
+          hero_desktop_urls?: string[]
+          hero_mobile_urls?: string[]
           about_image_url?: string | null
           contact_desktop_url?: string | null
           contact_mobile_url?: string | null

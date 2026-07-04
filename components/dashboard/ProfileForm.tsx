@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Image from 'next/image'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
-import { finalizeBrandingUpload, prepareBrandingUpload } from '@/lib/actions/branding.actions'
+import { finalizeBrandingUpload, prepareBrandingUpload, removeHeroImageSlot } from '@/lib/actions/branding.actions'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
+import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,18 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Building2, ExternalLink, Globe, Palette, Upload } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Palette, Trash2, Upload } from 'lucide-react'
+
+const HERO_SLOT_COUNT = 3
+
+function initHeroSlots(urls: string[] | null | undefined, fallback: string | null) {
+  const slots: string[] = ['', '', '']
+  const source = urls?.length ? urls : fallback ? [fallback] : []
+  source.slice(0, HERO_SLOT_COUNT).forEach((url, index) => {
+    if (url) slots[index] = url
+  })
+  return slots
+}
 
 type ProfileFormProps = {
   profile: {
@@ -40,6 +51,8 @@ type ProfileFormProps = {
     logo_url: string | null
     hero_desktop_url: string | null
     hero_mobile_url: string | null
+    hero_desktop_urls?: string[] | null
+    hero_mobile_urls?: string[] | null
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
@@ -72,8 +85,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [accentColor, setAccentColor] = useState(profile?.accent_color ?? '#7c3aed')
   const [selectedTheme, setSelectedTheme] = useState(profile?.selected_theme ?? 'classic')
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url ?? '')
-  const [heroDesktopUrl, setHeroDesktopUrl] = useState(profile?.hero_desktop_url ?? '')
-  const [heroMobileUrl, setHeroMobileUrl] = useState(profile?.hero_mobile_url ?? '')
+  const [heroDesktopUrls, setHeroDesktopUrls] = useState<string[]>(() =>
+    initHeroSlots(profile?.hero_desktop_urls, profile?.hero_desktop_url ?? null)
+  )
+  const [heroMobileUrls, setHeroMobileUrls] = useState<string[]>(() =>
+    initHeroSlots(profile?.hero_mobile_urls, profile?.hero_mobile_url ?? null)
+  )
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
   const [contactDesktopUrl, setContactDesktopUrl] = useState(profile?.contact_desktop_url ?? '')
   const [contactMobileUrl, setContactMobileUrl] = useState(profile?.contact_mobile_url ?? '')
@@ -87,7 +104,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       ? `/${encodeURIComponent(studioName.trim())}`
       : null
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile') {
+  async function handleFileUpload(
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile',
+    slot?: number
+  ) {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -98,15 +119,28 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         fileName: file.name,
         contentType: file.type,
         fileSize: file.size,
+        slot,
       })
 
       await putToPresignedUrl(uploadUrl, file)
 
-      const result = await finalizeBrandingUpload(type, path)
+      const result = await finalizeBrandingUpload(type, path, slot)
       if (result.success && result.url) {
         if (type === 'logo') setLogoUrl(result.url)
-        if (type === 'hero_desktop') setHeroDesktopUrl(result.url)
-        if (type === 'hero_mobile') setHeroMobileUrl(result.url)
+        if (type === 'hero_desktop' && slot !== undefined) {
+          setHeroDesktopUrls((prev) => {
+            const next = [...prev]
+            next[slot] = result.url!
+            return next
+          })
+        }
+        if (type === 'hero_mobile' && slot !== undefined) {
+          setHeroMobileUrls((prev) => {
+            const next = [...prev]
+            next[slot] = result.url!
+            return next
+          })
+        }
         if (type === 'about') setAboutImageUrl(result.url)
         if (type === 'contact_desktop') setContactDesktopUrl(result.url)
         if (type === 'contact_mobile') setContactMobileUrl(result.url)
@@ -117,6 +151,31 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     } finally {
       setIsUploading(false)
       e.target.value = ''
+    }
+  }
+
+  async function handleRemoveHeroSlot(variant: 'desktop' | 'mobile', slot: number) {
+    setIsUploading(true)
+    try {
+      await removeHeroImageSlot({ variant, slot })
+      if (variant === 'desktop') {
+        setHeroDesktopUrls((prev) => {
+          const next = [...prev]
+          next[slot] = ''
+          return next
+        })
+      } else {
+        setHeroMobileUrls((prev) => {
+          const next = [...prev]
+          next[slot] = ''
+          return next
+        })
+      }
+      toast.success('התמונה הוסרה')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -150,8 +209,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           accent_color: accentColor,
           selected_theme: selectedTheme,
           logo_url: extractPathFromUrl(logoUrl) || undefined,
-          hero_desktop_url: extractPathFromUrl(heroDesktopUrl) || undefined,
-          hero_mobile_url: extractPathFromUrl(heroMobileUrl) || undefined,
+          hero_desktop_url: extractPathFromUrl(heroDesktopUrls.find(Boolean) ?? null) || undefined,
+          hero_mobile_url: extractPathFromUrl(heroMobileUrls.find(Boolean) ?? null) || undefined,
+          hero_desktop_urls: heroDesktopUrls
+            .map((url) => extractPathFromUrl(url) ?? '')
+            .slice(0, 3),
+          hero_mobile_urls: heroMobileUrls
+            .map((url) => extractPathFromUrl(url) ?? '')
+            .slice(0, 3),
           about_image_url: extractPathFromUrl(aboutImageUrl) || undefined,
           contact_desktop_url: extractPathFromUrl(contactDesktopUrl) || undefined,
           contact_mobile_url: extractPathFromUrl(contactMobileUrl) || undefined,
@@ -228,74 +293,107 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <Globe className="h-6 w-6 text-[--foreground]" />
           <h2 className="text-lg font-semibold text-[--foreground]">תוכן האתר</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Hero Desktop */}
+        <div className="space-y-8">
           <div className="space-y-3">
-            <Label htmlFor="hero-desktop">תמונת הירו (דסקטופ)</Label>
-            <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-              {heroDesktopUrl ? (
-                <Image
-                  src={heroDesktopUrl}
-                  alt="Hero desktop preview"
-                  fill
-                  className="object-cover pointer-events-none"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                  <Upload className="h-8 w-8" />
+            <Label>תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות</Label>
+            <p className="text-sm text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {heroDesktopUrls.map((url, slot) => (
+                <div key={`hero-desktop-${slot}`} className="space-y-2">
+                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                    {url ? (
+                      <BrandingPreviewImage
+                        src={url}
+                        alt={`Hero desktop ${slot + 1}`}
+                        className="object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-white text-sm font-medium">{url ? 'החלף' : 'העלה'}</span>
+                    </div>
+                    {url ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroSlot('desktop', slot)}
+                        disabled={isUploading}
+                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                        aria-label="הסר תמונה"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'hero_desktop', slot)}
+                      disabled={isUploading}
+                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                    />
+                  </div>
                 </div>
-              )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-white text-sm font-medium">החלף תמונה</span>
-              </div>
-              <input
-                id="hero-desktop"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => handleFileUpload(e, 'hero_desktop')}
-                disabled={isUploading}
-                className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-              />
+              ))}
             </div>
           </div>
-          {/* Hero Mobile */}
+
           <div className="space-y-3">
-            <Label htmlFor="hero-mobile">תמונת הירו (מובייל)</Label>
-            <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
-              {heroMobileUrl ? (
-                <Image
-                  src={heroMobileUrl}
-                  alt="Hero mobile preview"
-                  fill
-                  className="object-cover pointer-events-none"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                  <Upload className="h-8 w-8" />
+            <Label>תמונות הירו (מובייל) — עד 3 תמונות מתחלפות</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {heroMobileUrls.map((url, slot) => (
+                <div key={`hero-mobile-${slot}`} className="space-y-2">
+                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <div className="relative group aspect-[9/16] max-w-[180px] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                    {url ? (
+                      <BrandingPreviewImage
+                        src={url}
+                        alt={`Hero mobile ${slot + 1}`}
+                        className="object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-white text-sm font-medium">{url ? 'החלף' : 'העלה'}</span>
+                    </div>
+                    {url ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroSlot('mobile', slot)}
+                        disabled={isUploading}
+                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                        aria-label="הסר תמונה"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'hero_mobile', slot)}
+                      disabled={isUploading}
+                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                    />
+                  </div>
                 </div>
-              )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-white text-sm font-medium">החלף תמונה</span>
-              </div>
-              <input
-                id="hero-mobile"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => handleFileUpload(e, 'hero_mobile')}
-                disabled={isUploading}
-                className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-              />
+              ))}
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-sm">
           {/* About Section Image */}
           <div className="space-y-3">
             <Label htmlFor="about-image">תמונת אודות</Label>
             <div className="relative group aspect-square bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
               {aboutImageUrl ? (
-                <Image
+                <BrandingPreviewImage
                   src={aboutImageUrl}
                   alt="About image preview"
-                  fill
                   className="object-cover"
                 />
               ) : (
@@ -327,10 +425,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <Label htmlFor="contact-desktop">רקע יצירת קשר (דסקטופ)</Label>
               <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
                 {contactDesktopUrl ? (
-                  <Image
+                  <BrandingPreviewImage
                     src={contactDesktopUrl}
                     alt="Contact desktop background preview"
-                    fill
                     className="object-cover pointer-events-none"
                   />
                 ) : (
@@ -355,10 +452,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <Label htmlFor="contact-mobile">רקע יצירת קשר (מובייל)</Label>
               <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
                 {contactMobileUrl ? (
-                  <Image
+                  <BrandingPreviewImage
                     src={contactMobileUrl}
                     alt="Contact mobile background preview"
-                    fill
                     className="object-cover pointer-events-none"
                   />
                 ) : (
@@ -391,6 +487,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             className="bg-white dark:bg-zinc-900 border-[--border] resize-none"
             placeholder="ספרי על עצמך ועל הסטודיו שלך..."
           />
+        </div>
         </div>
       </section>
 
@@ -450,10 +547,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <div className="p-6 text-center">
                 {logoUrl ? (
                   <div className="relative h-20 w-20 mb-2">
-                    <Image
+                    <BrandingPreviewImage
                       src={logoUrl}
                       alt="Logo preview"
-                      fill
                       className="object-contain"
                     />
                   </div>
@@ -527,6 +623,49 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               className="bg-white dark:bg-zinc-900 border-[--border] resize-y"
               placeholder="ספרי על עצמך ועל הסטודיו שלך..."
             />
+          </div>
+          <div className="space-y-3 pt-2 border-t border-[--border]">
+            <Label>נתונים לתצוגה באתר</Label>
+            <p className="text-sm text-[--muted]">
+              המספרים יוצגו באזור &quot;אודות&quot; בדף הבית (למשל: 10+ לקוחות מרוצים)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="stat-clients">לקוחות מרוצים</Label>
+                <Input
+                  id="stat-clients"
+                  type="number"
+                  min={0}
+                  value={statClients}
+                  onChange={(e) => setStatClients(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stat-projects">תיקי עבודות</Label>
+                <Input
+                  id="stat-projects"
+                  type="number"
+                  min={0}
+                  value={statProjects}
+                  onChange={(e) => setStatProjects(Math.max(0, parseInt(e.target.value, 10) || 0))}
+                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stat-experience">שנות ניסיון</Label>
+                <Input
+                  id="stat-experience"
+                  type="number"
+                  min={0}
+                  value={statExperienceYears}
+                  onChange={(e) =>
+                    setStatExperienceYears(Math.max(0, parseInt(e.target.value, 10) || 0))
+                  }
+                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>

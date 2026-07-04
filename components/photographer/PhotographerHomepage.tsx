@@ -1,6 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import {
+  generateHeroSlideshowHTML,
+  HERO_SLIDESHOW_CSS,
+  HERO_SLIDESHOW_INIT_SCRIPT,
+  normalizeHeroUrlList,
+} from '@/lib/hero-slideshow'
+import {
+  createSiteChromeConfig,
+  generateSiteFooter,
+  generateSiteNav,
+  generateSiteNavScrollScript,
+  type SiteChromeTheme,
+} from '@/lib/photographer-site-chrome'
 
 interface Photographer {
   id: string
@@ -20,6 +33,8 @@ interface Photographer {
   selected_theme: string
   hero_desktop_url: string | null
   hero_mobile_url: string | null
+  hero_desktop_urls?: string[] | null
+  hero_mobile_urls?: string[] | null
   about_image_url: string | null
   contact_desktop_url: string | null
   contact_mobile_url: string | null
@@ -214,7 +229,7 @@ function generateUnifiedGalleryGridHTML(
       const preview = g.preview_url || ''
 
       return `
-<a href="#" onclick="event.preventDefault(); window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="homepage-gallery-card group" style="border-radius: ${radius};">
+<a href="${galleryUrl}" target="_parent" class="homepage-gallery-card group" style="border-radius: ${radius};">
   <img alt="${title}" class="homepage-gallery-card-image${imgExtraClass}" src="${preview}" loading="lazy" />
   <div class="homepage-gallery-card-overlay"></div>
   <div class="homepage-gallery-card-content" dir="rtl">
@@ -293,8 +308,60 @@ function brandLastWord(text: string) {
   return `${words.join(' ')} <span class="text-primary font-light">${lastWord}</span>`
 }
 
+function contactFormSubmitScript(photographerId: string): string {
+  return `
+    (function() {
+      var form = document.querySelector('#contact form');
+      if (!form) return;
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var submitBtn = form.querySelector('button[type="submit"]');
+        var originalLabel = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'שולח...';
+        }
+        var fd = new FormData(form);
+        var payload = {
+          photographerId: '${photographerId}',
+          name: String(fd.get('name') || ''),
+          email: String(fd.get('email') || ''),
+          phone: String(fd.get('phone') || '') || undefined,
+          subject: String(fd.get('subject') || '') || undefined,
+          message: String(fd.get('message') || ''),
+        };
+        fetch('/api/contact-inquiry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        .then(function(res) {
+          return res.json().then(function(data) {
+            return { ok: res.ok, data: data };
+          });
+        })
+        .then(function(result) {
+          if (!result.ok) throw new Error(result.data.error || 'שגיאה בשליחה');
+          var section = document.querySelector('#contact .contact-section-content') || document.querySelector('#contact');
+          if (section) {
+            section.innerHTML = '<div class="text-center py-16"><p class="text-xl font-medium mb-2">הפנייה נשלחה בהצלחה ✓</p><p class="opacity-70">ניצור איתך קשר בהקדם.</p></div>';
+          }
+        })
+        .catch(function(err) {
+          alert(err.message || 'שגיאה בשליחה');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalLabel;
+          }
+        });
+      });
+    })();
+  `
+}
+
 function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[], testimonials: Testimonial[] = []): string {
   const {
+    id: photographerId,
     name,
     studio_name,
     logo_url,
@@ -310,6 +377,8 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     accent_color,
     hero_desktop_url,
     hero_mobile_url,
+    hero_desktop_urls,
+    hero_mobile_urls,
     about_image_url,
     contact_desktop_url,
     contact_mobile_url,
@@ -376,12 +445,43 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   }
 
   const primaryColor = accent_color || '#B8953F'
-  const heroImage = hero_desktop_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw'
-  const heroMobileImage = hero_mobile_url || heroImage
+  const desktopHeroImages = normalizeHeroUrlList(hero_desktop_urls, hero_desktop_url)
+  const mobileHeroImages = normalizeHeroUrlList(
+    hero_mobile_urls,
+    hero_mobile_url,
+    desktopHeroImages[0] ?? null
+  )
+  const heroSlideshowHtml = generateHeroSlideshowHTML({
+    desktopImages: desktopHeroImages,
+    mobileImages: mobileHeroImages,
+    alt: studio_name || 'סטודיו צילום',
+  })
+  const heroSlideshowModernHtml = generateHeroSlideshowHTML({
+    desktopImages: desktopHeroImages,
+    mobileImages: mobileHeroImages,
+    alt: studio_name || 'סטודיו צילום',
+    imgClass: 'transition-transform duration-700 group-hover:scale-105',
+  })
+  const heroSlideshowBoldHtml = generateHeroSlideshowHTML({
+    desktopImages: desktopHeroImages,
+    mobileImages: mobileHeroImages,
+    alt: studio_name || 'סטודיו צילום',
+    heroId: 'hero-slideshow-bold',
+    imgClass: 'bold-hero-image scale-110 transition-transform duration-[3s] ease-out',
+  })
   const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
 
   const studioName = studio_name || 'סטודיו גלריה'
   const photographerName = name || 'אפרת כהן'
+  const siteChrome = (themeKey: SiteChromeTheme) =>
+    createSiteChromeConfig({
+      theme: themeKey,
+      studioName,
+      logoUrl: logo_url,
+      primaryColor,
+      homepagePath: '/',
+      linkMode: 'scroll',
+    })
   const aboutText = about_text || 'ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.'
   const aboutTitle = about_title || ''
   const aboutSubtitle = about_subtitle || ''
@@ -389,9 +489,11 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const contactCardTitle = contact_card_title || ''
   const contactCardDescription = contact_card_description || ''
 
-  const statsProjects = stat_projects || 450
-  const statsClients = stat_clients || 2000
-  const statsYears = stat_experience_years || 12
+  const statsProjects = stat_projects ?? 0
+  const statsClients = stat_clients ?? 0
+  const statsYears = stat_experience_years ?? 0
+  const hasStats = statsProjects > 0 || statsClients > 0 || statsYears > 0
+  const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
   // Generate dynamic packages HTML for each theme
   const generatePackagesHTML = (currentTheme: string) => {
@@ -687,47 +789,16 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HERO_SLIDESHOW_CSS}
         ${contactBgCss}
     </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">
-<nav class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 px-lg py-md flex flex-row-reverse justify-between items-center left-0 right-0">
-<div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-[0.2em] font-medium text-on-surface">${studioName}</div>`}
-</div>
-<button onclick="toggleMobileMenuElegant()" class="md:hidden p-2 text-on-surface hover:text-accent transition-colors">
-<span class="material-symbols-outlined text-3xl" id="menu-icon-elegant">menu</span>
-</button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">בית</a>
-<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest cursor-pointer">יצירת קשר</a>
-</div>
-</nav>
-<div id="mobile-menu-elegant" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#0F0F0D]/10">
-<div class="flex flex-col gap-md px-lg py-md">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">בית</a>
-<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuElegant()" class="text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2 cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-<script>
-function toggleMobileMenuElegant() {
-const menu = document.getElementById('mobile-menu-elegant');
-const icon = document.getElementById('menu-icon-elegant');
-menu.classList.toggle('hidden');
-icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
-}
-</script>
+${generateSiteNav(siteChrome('elegant'))}
 <main>
 <section class="relative h-screen overflow-hidden reveal-on-scroll">
 <div class="absolute inset-0 z-0 image-reveal active">
-<picture>
-<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
-<img alt="סטודיו יוקרתי" class="w-full h-full object-cover" src="${heroImage}"/>
-</picture>
+${heroSlideshowHtml}
 </div>
 <div class="relative z-[100] glass-hero-wrapper absolute top-[55%] -translate-y-1/2 left-4 md:left-4 md:top-[55%] top-[75%]">
 <div class="glass-hero p-xl md:p-24 max-w-md text-center backdrop-blur-md">
@@ -746,20 +817,22 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 </div>
 </div>
 </section>
+${hasStats ? `
 <section class="px-margin-mobile md:px-margin-desktop py-20 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-xl reveal-on-scroll">
 <div class="text-center">
-<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${statsYears}</span>
+<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsYears)}</span>
 <span class="text-xs uppercase tracking-widest opacity-60">שנות ניסיון</span>
 </div>
 <div class="text-center">
-<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${statsClients}+</span>
-<span class="text-xs uppercase tracking-widest opacity-60">סיפורי לקוחות</span>
+<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsClients)}</span>
+<span class="text-xs uppercase tracking-widest opacity-60">לקוחות מרוצים</span>
 </div>
 <div class="text-center">
-<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${statsProjects}</span>
-<span class="text-xs uppercase tracking-widest opacity-60">פרסי צילום</span>
+<span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsProjects)}</span>
+<span class="text-xs uppercase tracking-widest opacity-60">תיקי עבודות</span>
 </div>
 </section>
+` : ''}
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="px-margin-mobile md:px-margin-desktop py-32 max-w-7xl mx-auto reveal-on-scroll relative" id="about">
 <div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
@@ -853,7 +926,7 @@ ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 </div>
 `)}</div>
 </section>
-<section id="contact" class="py-32 px-margin-mobile md:px-margin-desktop ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b]'} text-white reveal-on-scroll pb-48">
+<section id="contact" class="pt-32 pb-12 px-margin-mobile md:px-margin-desktop ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b]'} text-white reveal-on-scroll">
 ${contactBgLayers('#FAFAF8', '#1c1b1b')}
 <div class="max-w-4xl mx-auto contact-section-content">
 <div class="text-center mb-16">
@@ -861,14 +934,14 @@ ${contactBgLayers('#FAFAF8', '#1c1b1b')}
 <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
 </div>
 ${email ? `
-<form action="mailto:${email}" method="post" enctype="text/plain" class="grid grid-cols-1 md:grid-cols-2 gap-10">
+<form class="grid grid-cols-1 md:grid-cols-2 gap-10">
 <div class="space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">שם מלא</label>
-<input name="name" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="השם שלך" type="text"/>
+<input name="name" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="השם שלך" type="text"/>
 </div>
 <div class="space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">אימייל</label>
-<input name="email" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="your@email.com" type="email"/>
+<input name="email" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="your@email.com" type="email"/>
 </div>
 <div class="space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">טלפון</label>
@@ -885,7 +958,7 @@ ${email ? `
 </div>
 <div class="md:col-span-2 space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">הודעה</label>
-<textarea name="message" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none" placeholder="איך נוכל לעזור?"></textarea>
+<textarea name="message" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none" placeholder="איך נוכל לעזור?"></textarea>
 </div>
 <div class="md:col-span-2 flex justify-center mt-6">
 <button type="submit" class="elegant-bg-accent text-white px-16 py-4 text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300">
@@ -897,19 +970,7 @@ ${email ? `
 </div>
 </section>
 </main>
-<footer class="bg-white py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant pb-32">
-<div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${studioName}</div>`}
-<div class="flex flex-row-reverse gap-8 text-xs uppercase tracking-widest opacity-40">
-<a class="hover:text-accent transition-colors" href="#">תקנון</a>
-<a class="hover:text-accent transition-colors" href="#">פרטיות</a>
-<a class="hover:text-accent transition-colors" href="#">נגישות</a>
-</div>
-<div class="text-[10px] uppercase tracking-widest opacity-40">
-            © 2024 ${studioName}. כל הזכויות שמורות.
-        </div>
-</div>
-</footer>
+${generateSiteFooter(siteChrome('elegant'))}
 <script>
     const observerOptions = { threshold: 0.15, rootMargin: '0px 0px -50px 0px' };
     const revealObserver = new IntersectionObserver((entries) => {
@@ -922,16 +983,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
         });
     }, observerOptions);
     document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
-    window.addEventListener('scroll', () => {
-        const nav = document.querySelector('nav');
-        if (window.scrollY > 100) {
-            nav.classList.add('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
-            nav.classList.remove('bg-transparent', 'py-md');
-        } else {
-            nav.classList.remove('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
-            nav.classList.add('bg-transparent', 'py-md');
-        }
-    });
+    ${generateSiteNavScrollScript('elegant')}
     
     // Smooth scroll for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -949,6 +1001,8 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
         });
     });
 </script>
+<script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -1019,6 +1073,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             -webkit-backdrop-filter: blur(12px);
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HERO_SLIDESHOW_CSS}
         ${contactBgCss}
     </style>
 <script id="tailwind-config">
@@ -1057,38 +1112,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
     </script>
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">
-<nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-background/95 backdrop-blur-sm" id="navbar">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-<div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-xl font-bold text-on-surface">${studioName}</span>`}
-</div>
-<button onclick="toggleMobileMenu()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
-<span class="material-symbols-outlined text-3xl" id="menu-icon">menu</span>
-</button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">בית</a>
-<a onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors text-sm font-medium cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-<div id="mobile-menu" class="hidden md:hidden bg-background border-b border-outline-variant">
-<div class="flex flex-col gap-md px-lg py-md">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">בית</a>
-<a onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenu()" class="text-on-surface hover:text-primary transition-colors text-lg font-medium py-2 cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-</nav>
-<script>
-function toggleMobileMenu() {
-const menu = document.getElementById('mobile-menu');
-const icon = document.getElementById('menu-icon');
-menu.classList.toggle('hidden');
-icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
-}
-</script>
+${generateSiteNav(siteChrome('modern'))}
 <main class="pt-xxl">
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center relative" id="about">
@@ -1109,34 +1133,33 @@ ${aboutDescription ? '<p class="text-lg md:text-xl text-on-surface-variant max-w
 </div>
 <div class="relative order-1 md:order-2 animate-reveal delay-100">
 <div class="aspect-square rounded-2xl overflow-hidden modern-shadow hover-scale group">
-<picture>
-<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
-<img alt="סטודיו לצילום מקצועי" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="${heroImage}"/>
-</picture>
+${heroSlideshowModernHtml}
 </div>
 <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10"></div>
 </div>
 </section>
 ` : ''}
+${hasStats ? `
 <section class="max-w-7xl mx-auto px-lg py-xxl">
 <div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
 <div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal hover-scale">
 <span class="material-symbols-outlined text-primary text-5xl">photo_camera</span>
-<h3 class="font-headline text-4xl font-bold text-on-surface">${statsProjects}+</h3>
-<p class="text-on-surface-variant font-medium">פרויקטים שהושלמו</p>
+<h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsProjects)}</h3>
+<p class="text-on-surface-variant font-medium">תיקי עבודות</p>
 </div>
 <div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-100 hover-scale">
 <span class="material-symbols-outlined text-primary text-5xl">groups</span>
-<h3 class="font-headline text-4xl font-bold text-on-surface">${statsClients}+</h3>
+<h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsClients)}</h3>
 <p class="text-on-surface-variant font-medium">לקוחות מרוצים</p>
 </div>
 <div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-200 hover-scale">
 <span class="material-symbols-outlined text-primary text-5xl">military_tech</span>
-<h3 class="font-headline text-4xl font-bold text-on-surface">${statsYears}</h3>
-<p class="text-on-surface-variant font-medium">פרסי עיצוב וצילום</p>
+<h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsYears)}</h3>
+<p class="text-on-surface-variant font-medium">שנות ניסיון</p>
 </div>
 </div>
 </section>
+` : ''}
 <section class="homepage-gallery-section py-xxl" id="portfolio">
 <div class="homepage-gallery-header px-lg mb-xl">
 <div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
@@ -1178,7 +1201,7 @@ ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 </div>
 </div>
 </section>
-<section class="max-w-7xl mx-auto px-lg mb-xxl pb-[120px] ${hasContactBg ? 'contact-section-has-bg rounded-2xl' : ''}" id="contact">
+<section class="max-w-7xl mx-auto px-lg ${hasContactBg ? 'contact-section-has-bg rounded-2xl' : ''}" id="contact">
 ${contactBgLayers('#F8FAFC')}
 <div class="contact-section-content">
 <div class="${hasContactBg ? 'bg-primary/88 backdrop-blur-sm' : 'bg-primary'} rounded-2xl p-xl md:p-xxl text-white animate-reveal">
@@ -1204,17 +1227,17 @@ ${contactBgLayers('#F8FAFC')}
 <form class="flex flex-col gap-md w-full">
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
 <div class="relative">
-<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
+<input name="name" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
 </div>
 <div class="relative">
-<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
+<input name="email" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
 </div>
 </div>
 <div class="relative">
-<input class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
+<input name="phone" class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
 </div>
 <div class="relative">
-<textarea class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
+<textarea name="message" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
 </div>
 <button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl w-full transition-all" type="submit">
                         שליחת הודעה
@@ -1225,30 +1248,10 @@ ${contactBgLayers('#F8FAFC')}
 </div>
 </section>
 </main>
-<footer class="bg-surface-container border-t border-outline-variant w-full py-xl pb-[120px]">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
-<div class="flex flex-col items-center md:items-end gap-xs">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${studioName}</span>`}
-<p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
-</div>
-<div class="flex flex-col sm:flex-row-reverse gap-lg items-center">
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">נגישות</a>
-</div>
-<div class="text-on-surface-variant text-sm text-center">
-            © 2024 ${studioName}. כל הזכויות שמורות.
-        </div>
-<div class="flex gap-md">
-<a aria-label="שיתוף" class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all btn-magnetic" href="#">
-<span class="material-symbols-outlined text-xl">share</span>
-</a>
-<a aria-label="אימייל" class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all btn-magnetic" href="#">
-<span class="material-symbols-outlined text-xl">mail</span>
-</a>
-</div>
-</div>
-</footer>
+${generateSiteFooter(siteChrome('modern'))}
+<script>${generateSiteNavScrollScript('modern')}</script>
+<script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -1580,6 +1583,7 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             opacity: 0.78;
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HERO_SLIDESHOW_CSS}
         ${contactBgCss}
     </style>
 <script id="tailwind-config">
@@ -1674,44 +1678,10 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
     </script>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">
-<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-<div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="classic-nav-logo h-10 w-auto object-contain" />` : `<span class="classic-nav-brand font-headline-sm text-headline-sm tracking-tight">${studioName}</span>`}
-</div>
-<button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn md:hidden p-2 transition-colors">
-<span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
-</button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">בית</a>
-<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="classic-nav-link font-label-sm text-label-sm transition-colors cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-<div id="mobile-menu-classic" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant/10">
-<div class="flex flex-col gap-md px-lg py-md">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">בית</a>
-<a onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuClassic()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2 cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-</nav>
-<script>
-function toggleMobileMenuClassic() {
-const menu = document.getElementById('mobile-menu-classic');
-const icon = document.getElementById('menu-icon-classic');
-menu.classList.toggle('hidden');
-icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
-}
-</script>
+${generateSiteNav(siteChrome('classic'))}
 <section class="relative h-screen w-full flex items-end justify-start overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0 scale-105">
-<picture>
-<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
-<img alt="סטודיו צילום קלאסי" class="w-full h-full object-cover" src="${heroImage}"/>
-</picture>
+${heroSlideshowHtml}
 </div>
 <div class="absolute left-8 top-1/2 -translate-y-1/2 pointer-events-none z-20 hidden lg:block">
 <div class="vertical-text-label whitespace-nowrap">
@@ -1754,20 +1724,22 @@ ${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` :
 ${aboutSubtitle ? `<p class="about-body-primary" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 </div>
+${hasStats ? `
 <div class="grid grid-cols-3 gap-md md:gap-lg border-t border-outline-variant/15 pt-10 mt-4">
 <div class="text-right">
-<div class="about-stat-number">${statsClients}+</div>
+<div class="about-stat-number">${formatStat(statsClients)}</div>
 <div class="about-stat-label">לקוחות מרוצים</div>
 </div>
 <div class="text-right">
-<div class="about-stat-number">${statsProjects}+</div>
+<div class="about-stat-number">${formatStat(statsProjects)}</div>
 <div class="about-stat-label">תיקי עבודות</div>
 </div>
 <div class="text-right">
-<div class="about-stat-number">${statsYears}+</div>
+<div class="about-stat-number">${formatStat(statsYears)}</div>
 <div class="about-stat-label">שנות ניסיון</div>
 </div>
 </div>
+` : ''}
 </div>
 <div class="order-2 relative">
 <img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${aboutImage}"/>
@@ -1822,7 +1794,7 @@ ${generateUnifiedGalleryGridHTML(galleries, 'classic')}
 `)}</div>
 </div>
 </section>
-<section class="${hasContactBg ? 'contact-section-has-bg py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl' : 'bg-surface-container-low py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl'}" id="contact">
+<section class="${hasContactBg ? 'contact-section-has-bg pt-xxl pb-xl reveal border-t border-outline-variant/10' : 'bg-surface-container-low pt-xxl pb-xl reveal border-t border-outline-variant/10'}" id="contact">
 ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start lg:gap-xl lg:gap-xxl">
@@ -1850,20 +1822,20 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
 <div class="space-y-xs">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">שם מלא</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
+<input name="name" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
 </div>
 <div class="space-y-xs">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">טלפון ליצירת קשר</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" required="" type="tel"/>
+<input name="phone" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" type="tel"/>
 </div>
 </div>
 <div class="space-y-xs mb-lg">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">כתובת אימייל</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
+<input name="email" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
 </div>
 <div class="space-y-xs mb-xl">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">ספרו לי על האירוע שלכם</label>
-<textarea class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
+<textarea name="message" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
 </div>
 <button class="w-full bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-md" type="submit">
                         שלח פנייה
@@ -1874,32 +1846,9 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 </div>
 </div>
 </section>
-<footer class="bg-surface-container-highest border-t border-outline-variant/20 py-xl pb-xxl">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
-<div class="font-headline-md text-headline-md text-primary tracking-tight">
-                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `${studioName}`}
-            </div>
-<div class="flex flex-row-reverse gap-lg">
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">פרטיות</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">נגישות</a>
-</div>
-<div class="font-body-md text-body-md text-on-surface/60">
-                © 2024 ${studioName}. כל הזכויות שמורות.
-        </div>
-</div>
-</footer>
+${generateSiteFooter(siteChrome('classic'))}
 <script>
-        window.addEventListener('scroll', () => {
-            const nav = document.getElementById('main-nav');
-            if (window.scrollY > 80) {
-                nav.classList.add('nav-scrolled', 'bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
-                nav.classList.remove('py-md', 'border-none', 'bg-transparent');
-            } else {
-                nav.classList.remove('nav-scrolled', 'bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
-                nav.classList.add('py-md', 'border-none', 'bg-transparent');
-            }
-        });
+        ${generateSiteNavScrollScript('classic')}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -1935,6 +1884,8 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
             });
         });
     </script>
+<script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -2206,6 +2157,7 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HERO_SLIDESHOW_CSS}
         ${contactBgCss}
     </style>
 <script id="tailwind-config">
@@ -2260,44 +2212,10 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
     </script>
 </head>
 <body class="bg-background text-on-surface">
-<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-<div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="bold-nav-logo h-10 w-auto object-contain" />` : `<span class="bold-nav-brand font-headline-sm text-headline-sm tracking-tighter">${brandLastWord(studioName)}</span>`}
-</div>
-<button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn md:hidden p-2 transition-colors">
-<span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
-</button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">בית</a>
-<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-<div id="mobile-menu-dark" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-white/10">
-<div class="flex flex-col gap-md px-lg py-md">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">בית</a>
-<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'}); toggleMobileMenuDark()" class="text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2 cursor-pointer">יצירת קשר</a>
-</div>
-</div>
-</nav>
-<script>
-function toggleMobileMenuDark() {
-const menu = document.getElementById('mobile-menu-dark');
-const icon = document.getElementById('menu-icon-dark');
-menu.classList.toggle('hidden');
-icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
-}
-</script>
+${generateSiteNav(siteChrome('dark'))}
 <section class="relative min-h-[90vh] flex items-end overflow-hidden" id="hero">
 <div class="absolute inset-0 z-0">
-<picture>
-<source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
-<img class="bold-hero-image w-full h-full object-cover scale-110 transition-transform duration-[3s] ease-out" data-alt="High-end architectural photograph of a minimalist space" id="hero-img" src="${heroImage}"/>
-</picture>
+${heroSlideshowBoldHtml}
 <div class="bold-hero-overlay absolute inset-0"></div>
 <div class="bold-hero-bottom-merge"></div>
 </div>
@@ -2338,20 +2256,22 @@ ${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h
 ${aboutSubtitle ? `<p class="about-body-primary" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 </div>
+${hasStats ? `
 <div class="grid grid-cols-3 gap-lg pt-12 mt-4 max-w-xl">
 <div class="text-right">
-<div class="about-stat-number">${statsProjects}+</div>
-<div class="about-stat-label">פרויקטים</div>
+<div class="about-stat-number">${formatStat(statsClients)}</div>
+<div class="about-stat-label">לקוחות מרוצים</div>
 </div>
 <div class="text-right">
-<div class="about-stat-number">${statsClients}+</div>
-<div class="about-stat-label">לקוחות</div>
+<div class="about-stat-number">${formatStat(statsProjects)}</div>
+<div class="about-stat-label">תיקי עבודות</div>
 </div>
 <div class="text-right">
-<div class="about-stat-number">${statsYears}</div>
+<div class="about-stat-number">${formatStat(statsYears)}</div>
 <div class="about-stat-label">שנות ניסיון</div>
 </div>
 </div>
+` : ''}
 </div>
 </div>
 </div>
@@ -2435,7 +2355,7 @@ ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
                 }
             </style>
 </section>
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll ${hasContactBg ? 'contact-section-has-bg' : ''}" id="contact">
+<section class="pt-xl md:pt-xxl pb-xl container mx-auto px-lg reveal-on-scroll ${hasContactBg ? 'contact-section-has-bg' : ''}" id="contact">
 ${contactBgLayers('#120f0d', '#1a1614')}
 <div class="max-w-4xl mx-auto text-center contact-section-content">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
@@ -2443,22 +2363,22 @@ ${contactBgLayers('#120f0d', '#1a1614')}
 <p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או צילומים.</p>
 <form class="grid grid-cols-1 md:grid-cols-2 gap-lg max-w-2xl mx-auto text-right">
 <div class="border-b border-outline-variant">
-<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="שם מלא" required="" type="text"/>
+<input name="name" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="שם מלא" required="" type="text"/>
 </div>
 <div class="border-b border-outline-variant">
-<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="כתובת אימייל" required="" type="email"/>
+<input name="email" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="כתובת אימייל" required="" type="email"/>
 </div>
 <div class="border-b border-outline-variant">
-<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="טלפון" type="tel"/>
+<input name="phone" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="טלפון" type="tel"/>
 </div>
 <div class="border-b border-outline-variant">
-<input class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="נושא" type="text"/>
+<input name="subject" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="נושא" type="text"/>
 </div>
 <div class="md:col-span-2 border-b border-outline-variant">
-<textarea class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 min-h-[120px]" placeholder="ההודעה שלך"></textarea>
+<textarea name="message" required class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 min-h-[120px]" placeholder="ההודעה שלך"></textarea>
 </div>
 <div class="md:col-span-2 flex justify-center mt-md">
-<button class="bg-primary text-on-primary px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary/90 active:scale-95">
+<button type="submit" class="bg-primary text-on-primary px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary/90 active:scale-95">
             שלח הודעה
         </button>
 </div>
@@ -2466,28 +2386,13 @@ ${contactBgLayers('#120f0d', '#1a1614')}
 </div>
 </section>
 </main>
-<footer class="bg-surface-dim border-t border-white/5 py-xl mt-xxl">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-lg max-w-7xl mx-auto w-full">
-<div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
-                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(studioName)}`}
-</div>
-<div class="flex flex-row-reverse gap-md lg:gap-xl">
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">נגישות</a>
-</div>
-<div class="text-on-surface-variant font-body-md text-[10px] md:text-xs opacity-50">
-                © 2024 Studio Gallery. כל הזכויות שמורות.
-        </div>
-</div>
-</footer>
+${generateSiteFooter(siteChrome('dark'))}
 <script>
         window.addEventListener('load', () => {
-            const heroImg = document.getElementById('hero-img');
-            if(heroImg) {
-                heroImg.classList.remove('scale-110');
-                heroImg.classList.add('scale-100');
-            }
+            document.querySelectorAll('#hero-slideshow-bold .bold-hero-image.is-active').forEach(function(img) {
+                img.classList.remove('scale-110');
+                img.classList.add('scale-100');
+            });
             const revealOnScroll = () => {
                 const reveals = document.querySelectorAll('.reveal-on-scroll');
                 reveals.forEach(el => {
@@ -2502,19 +2407,9 @@ ${contactBgLayers('#120f0d', '#1a1614')}
         });
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
-            const nav = document.getElementById('main-nav');
-            if (nav) {
-                if (scrolled > 80) {
-                    nav.classList.add('nav-scrolled', 'bg-background/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-white/10', 'shadow-sm');
-                    nav.classList.remove('py-md', 'border-none', 'bg-transparent');
-                } else {
-                    nav.classList.remove('nav-scrolled', 'bg-background/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-white/10', 'shadow-sm');
-                    nav.classList.add('py-md', 'border-none', 'bg-transparent');
-                }
-            }
-            const heroImage = document.querySelector('section img');
+            const heroImage = document.querySelector('.hero-slideshow .hero-slide.is-active');
             if(heroImage) {
-                heroImage.style.transform = \`translateY(\${scrolled * 0.25}px)\`;
+                heroImage.style.transform = \`translateY(\${scrolled * 0.25}px) scale(1)\`;
             }
             const revealOnScroll = () => {
                 const reveals = document.querySelectorAll('.reveal-on-scroll');
@@ -2528,6 +2423,7 @@ ${contactBgLayers('#120f0d', '#1a1614')}
             };
             revealOnScroll();
         });
+        ${generateSiteNavScrollScript('dark')}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -2545,6 +2441,8 @@ ${contactBgLayers('#120f0d', '#1a1614')}
             });
         });
     </script>
+<script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;

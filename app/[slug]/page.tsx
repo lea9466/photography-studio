@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
+import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 
 interface PageProps {
@@ -109,24 +110,26 @@ export default async function PhotographerPage({ params }: PageProps) {
     // Resolve R2 paths to signed URLs (only if not already a full URL)
     const photographerWithUrls = {
       ...typedPhotographer,
-      hero_desktop_url: typedPhotographer.hero_desktop_url?.startsWith('http')
-        ? typedPhotographer.hero_desktop_url
-        : typedPhotographer.hero_desktop_url ? await resolveMediaUrl('branding', typedPhotographer.hero_desktop_url) : null,
-      hero_mobile_url: typedPhotographer.hero_mobile_url?.startsWith('http')
-        ? typedPhotographer.hero_mobile_url
-        : typedPhotographer.hero_mobile_url ? await resolveMediaUrl('branding', typedPhotographer.hero_mobile_url) : null,
-      about_image_url: typedPhotographer.about_image_url?.startsWith('http')
-        ? typedPhotographer.about_image_url
-        : typedPhotographer.about_image_url ? await resolveMediaUrl('branding', typedPhotographer.about_image_url) : null,
-      contact_desktop_url: typedPhotographer.contact_desktop_url?.startsWith('http')
-        ? typedPhotographer.contact_desktop_url
-        : typedPhotographer.contact_desktop_url ? await resolveMediaUrl('branding', typedPhotographer.contact_desktop_url) : null,
-      contact_mobile_url: typedPhotographer.contact_mobile_url?.startsWith('http')
-        ? typedPhotographer.contact_mobile_url
-        : typedPhotographer.contact_mobile_url ? await resolveMediaUrl('branding', typedPhotographer.contact_mobile_url) : null,
-      logo_url: typedPhotographer.logo_url?.startsWith('http')
-        ? typedPhotographer.logo_url
-        : typedPhotographer.logo_url ? await resolveMediaUrl('branding', typedPhotographer.logo_url) : null,
+      hero_desktop_url: await resolveBrandingPath(typedPhotographer.hero_desktop_url),
+      hero_mobile_url: await resolveBrandingPath(typedPhotographer.hero_mobile_url),
+      hero_desktop_urls: await resolveBrandingPaths(
+        typedPhotographer.hero_desktop_urls?.length
+          ? typedPhotographer.hero_desktop_urls
+          : typedPhotographer.hero_desktop_url
+            ? [typedPhotographer.hero_desktop_url]
+            : []
+      ),
+      hero_mobile_urls: await resolveBrandingPaths(
+        typedPhotographer.hero_mobile_urls?.length
+          ? typedPhotographer.hero_mobile_urls
+          : typedPhotographer.hero_mobile_url
+            ? [typedPhotographer.hero_mobile_url]
+            : []
+      ),
+      about_image_url: await resolveBrandingPath(typedPhotographer.about_image_url),
+      contact_desktop_url: await resolveBrandingPath(typedPhotographer.contact_desktop_url),
+      contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),
+      logo_url: await resolveBrandingPath(typedPhotographer.logo_url),
     }
 
     // Resolve gallery preview URLs (only if not already a full URL)
@@ -142,17 +145,6 @@ export default async function PhotographerPage({ params }: PageProps) {
 
     return (
       <>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.addEventListener('message', (event) => {
-                if (event.data.type === 'navigate' && event.data.url) {
-                  window.location.href = event.data.url;
-                }
-              });
-            `,
-          }}
-        />
         <PhotographerHomepage
           photographer={photographerWithUrls}
           galleries={galleriesWithSignedUrls}

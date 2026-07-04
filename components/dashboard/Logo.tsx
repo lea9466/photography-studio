@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Image from 'next/image'
+import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 
 type LogoProps = {
   logoUrl?: string | null
@@ -13,23 +13,23 @@ type LogoProps = {
 export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false, className = '' }: LogoProps) {
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [isSvg, setIsSvg] = useState(false)
+  const previewUrl = getBrandingPreviewUrl(logoUrl)
 
   useEffect(() => {
-    if (!logoUrl) {
+    if (!previewUrl) {
       setIsSvg(false)
       setSvgContent(null)
       return
     }
 
-    // Check if it's an SVG
-    const isSvgFile = logoUrl.toLowerCase().endsWith('.svg') || logoUrl.includes('image/svg+xml')
+    const isSvgFile =
+      previewUrl.toLowerCase().includes('.svg') || previewUrl.includes('image/svg+xml')
     setIsSvg(isSvgFile)
 
     if (isSvgFile && shouldColorLogo) {
-      // Fetch SVG content for inline rendering
-      fetch(logoUrl)
-        .then(res => res.text())
-        .then(content => {
+      fetch(previewUrl)
+        .then((res) => res.text())
+        .then((content) => {
           setSvgContent(content)
         })
         .catch(() => {
@@ -39,9 +39,9 @@ export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false
     } else {
       setSvgContent(null)
     }
-  }, [logoUrl, shouldColorLogo])
+  }, [previewUrl, shouldColorLogo])
 
-  if (!logoUrl) {
+  if (!previewUrl) {
     return (
       <div className={`w-full h-full flex items-center justify-center ${className}`}>
         <span className="text-2xl">📷</span>
@@ -67,12 +67,11 @@ export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false
     )
   }
 
-  // Render as regular image
   return (
     <img 
       alt="Logo" 
       className={`w-full h-full object-contain ${className}`}
-      src={logoUrl}
+      src={previewUrl}
     />
   )
 }

@@ -45,6 +45,16 @@ function bucketFromKey(key: string): MediaBucket | null {
   return null
 }
 
+function contentTypeFromKey(key: string) {
+  const lower = key.toLowerCase()
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg'
+  if (lower.endsWith('.png')) return 'image/png'
+  if (lower.endsWith('.webp')) return 'image/webp'
+  if (lower.endsWith('.svg')) return 'image/svg+xml'
+  if (lower.endsWith('.gif')) return 'image/gif'
+  return 'application/octet-stream'
+}
+
 async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
   const admin = createAdminClient()
 
@@ -117,7 +127,7 @@ export async function GET(request: Request) {
     const data = await downloadMediaObject(bucket, path)
     return new Response(Buffer.from(data), {
       headers: {
-        'Content-Type': 'application/octet-stream',
+        'Content-Type': contentTypeFromKey(normalizedKey),
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })

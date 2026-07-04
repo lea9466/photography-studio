@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
-import { resolveMediaUrl } from '@/lib/r2/storage'
+import { resolveBrandingPath, resolveBrandingPaths, padHeroUrlSlots } from '@/lib/branding-urls'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -13,16 +13,12 @@ export default async function SettingsPage() {
 
   const { data } = await supabase
     .from('users')
-    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo')
+    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo')
     .eq('id', user.id)
     .single()
 
   async function resolveBrandingUrl(pathOrUrl: string | null) {
-    if (!pathOrUrl) return null
-    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
-      return pathOrUrl
-    }
-    return resolveMediaUrl('branding', pathOrUrl)
+    return resolveBrandingPath(pathOrUrl)
   }
 
   const profile = data as {
@@ -43,6 +39,8 @@ export default async function SettingsPage() {
     logo_url: string | null
     hero_desktop_url: string | null
     hero_mobile_url: string | null
+    hero_desktop_urls: string[] | null
+    hero_mobile_urls: string[] | null
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
@@ -56,6 +54,24 @@ export default async function SettingsPage() {
     logo_url: await resolveBrandingUrl(profile.logo_url),
     hero_desktop_url: await resolveBrandingUrl(profile.hero_desktop_url),
     hero_mobile_url: await resolveBrandingUrl(profile.hero_mobile_url),
+    hero_desktop_urls: padHeroUrlSlots(
+      await resolveBrandingPaths(
+        profile.hero_desktop_urls?.length
+          ? profile.hero_desktop_urls
+          : profile.hero_desktop_url
+            ? [profile.hero_desktop_url]
+            : []
+      )
+    ),
+    hero_mobile_urls: padHeroUrlSlots(
+      await resolveBrandingPaths(
+        profile.hero_mobile_urls?.length
+          ? profile.hero_mobile_urls
+          : profile.hero_mobile_url
+            ? [profile.hero_mobile_url]
+            : []
+      )
+    ),
     about_image_url: await resolveBrandingUrl(profile.about_image_url),
     contact_desktop_url: await resolveBrandingUrl(profile.contact_desktop_url),
     contact_mobile_url: await resolveBrandingUrl(profile.contact_mobile_url),

@@ -19,6 +19,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   selected_theme,
   hero_desktop_url,
   hero_mobile_url,
+  hero_desktop_urls,
+  hero_mobile_urls,
   about_image_url,
   contact_desktop_url,
   contact_mobile_url,
