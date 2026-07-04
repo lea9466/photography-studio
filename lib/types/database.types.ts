@@ -30,6 +30,7 @@ export type Database = {
           email: string | null
           name: string | null
           studio_name: string | null
+          slug: string | null
           logo_url: string | null
           theme_primary: string
           theme_secondary: string
@@ -57,6 +58,7 @@ export type Database = {
           email?: string | null
           name?: string | null
           studio_name?: string | null
+          slug?: string | null
           logo_url?: string | null
           theme_primary?: string
           theme_secondary?: string
@@ -84,6 +86,7 @@ export type Database = {
           email?: string | null
           name?: string | null
           studio_name?: string | null
+          slug?: string | null
           logo_url?: string | null
           theme_primary?: string
           theme_secondary?: string
