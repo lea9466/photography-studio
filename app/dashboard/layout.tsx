@@ -18,7 +18,7 @@ export default async function DashboardLayout({
   if (user) {
     const { data } = await supabase
       .from('users')
-      .select('name, studio_name, logo_url, accent_color, should_color_logo')
+      .select('name, studio_name, slug, logo_url, accent_color, should_color_logo')
       .eq('id', user.id)
       .single()
     profile = data
@@ -29,7 +29,7 @@ export default async function DashboardLayout({
       userName={profile?.name || undefined}
       studioName={profile?.studio_name || undefined}
       logoUrl={profile?.logo_url || undefined}
-      portfolioSlug={profile?.studio_name || null}
+      portfolioSlug={profile?.slug || profile?.studio_name || null}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       onSignOut={async () => {

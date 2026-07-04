@@ -61,7 +61,9 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             }
             
             const uploadData = await uploadResponse.json()
-            finalCoverImage = uploadData.url
+            finalCoverImage = uploadData.path ?? uploadData.url
+            setCoverImage(finalCoverImage)
+            setCoverImageFile(null)
           } catch (error) {
             console.error('Error uploading cover image:', error)
             toast.error('העלאת תמונת השער נכשלה')
@@ -75,7 +77,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           title,
           password: password || undefined,
           expiresAt: expiresAt || undefined,
-          coverImage: finalCoverImage || undefined,
+          coverImage: finalCoverImage || null,
           watermarkText: watermark || undefined,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit) : undefined,
@@ -128,25 +130,50 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           </Label>
           <div className="space-y-3">
             {(coverImageFile || coverImage) ? (
-              <div className="relative aspect-video rounded-lg overflow-hidden border border-[#c9c5cd]">
-                <img
-                  src={coverImageFile ? URL.createObjectURL(coverImageFile) : coverImage}
-                  alt="תמונת שער"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCoverImageFile(null)
-                    setCoverImage('')
-                  }}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                  disabled={isUploadingCover}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+              <div className="space-y-3">
+                <div className="relative aspect-video rounded-lg overflow-hidden border border-[#c9c5cd]">
+                  <img
+                    src={
+                      coverImageFile
+                        ? URL.createObjectURL(coverImageFile)
+                        : coverImage.startsWith('http') || coverImage.startsWith('/')
+                          ? coverImage
+                          : `/api/gallery-media?key=${encodeURIComponent(`branding/${coverImage}`)}`
+                    }
+                    alt="תמונת שער"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) setCoverImageFile(file)
+                    }}
+                    className="hidden"
+                    id="cover-image-replace"
+                    disabled={isUploadingCover || isPending}
+                  />
+                  <label
+                    htmlFor="cover-image-replace"
+                    className="inline-flex cursor-pointer items-center rounded-lg border border-[#c9c5cd] px-4 py-2 text-sm text-[#100d1f] hover:border-[#6b2d43] transition-colors"
+                  >
+                    החלף תמונה
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCoverImageFile(null)
+                      setCoverImage('')
+                    }}
+                    className="inline-flex items-center rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    disabled={isUploadingCover || isPending}
+                  >
+                    הסר תמונה
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-6 text-center hover:border-[#6b2d43] transition-colors">

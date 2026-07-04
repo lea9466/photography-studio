@@ -1,5 +1,7 @@
 import { Resend } from 'resend'
 
+import { randomBytes } from 'node:crypto'
+
 function getResend() {
   const key = process.env.RESEND_API_KEY
   if (!key) return null
@@ -30,6 +32,33 @@ function emailFrom() {
   return (
     process.env.EMAIL_FROM ?? 'Studio Gallery <onboarding@resend.dev>'
   )
+}
+
+export async function sendPhotographerPasswordResetEmail(input: {
+  email: string
+  name: string
+  password: string
+}) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] photographer password reset', input)
+    return
+  }
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'סיסמה חדשה — Studio Gallery',
+    html: `
+      <div dir="rtl" style="font-family: sans-serif;">
+        <h2>שלום ${input.name},</h2>
+        <p>ביקשת לאפס את הסיסמה. הסיסמה החדשה שלך היא:</p>
+        <p style="font-size: 1.25rem;"><strong>${input.password}</strong></p>
+        <p><a href="${appUrl('/login')}">התחברות למערכת</a></p>
+        <p style="color: #666; font-size: 0.9rem;">מומלץ לשנות את הסיסמה אחרי ההתחברות.</p>
+      </div>
+    `,
+  })
 }
 
 export async function sendGalleryPasswordEmail(input: {

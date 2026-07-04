@@ -32,13 +32,22 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
   const isAuthRoute =
-    pathname.startsWith('/login') || pathname.startsWith('/register')
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password')
+  const isResetPasswordRoute = pathname.startsWith('/reset-password')
   const isProtectedRoute = pathname.startsWith('/dashboard')
 
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  if (!user && isResetPasswordRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/forgot-password'
     return NextResponse.redirect(url)
   }
 

@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getR2Client } from '@/lib/r2/client'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
-import { getR2Config } from '@/lib/r2/config'
+import { isR2Configured } from '@/lib/r2/config'
+import { resolveMediaUrl, uploadMediaObject } from '@/lib/r2/storage'
+
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_FILE_SIZE = 20 * 1024 * 1024
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isR2Configured()) {
+      return NextResponse.json({ error: 'אחסון תמונות לא מוגדר' }, { status: 503 })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },
@@ -16,45 +22,39 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData()
-    const file = formData.get('file') as File
+    const file = formData.get('file') as File | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 })
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: 'סוג הקובץ לא נתמך' }, { status: 400 })
     }
 
-    // Convert file to buffer
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: 'גודל הקובץ חורג מ-20 MB' }, { status: 400 })
+    }
+
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Generate unique filename
-    const timestamp = Date.now()
-    const filename = `cover-${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
+    const extension =
+      file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg'
+    const path = `${user.id}/gallery_cover_${Date.now()}.${extension}`
 
-    // Upload to R2
-    const r2Client = getR2Client()
-    const config = getR2Config()
+    await uploadMediaObject('branding', path, buffer, file.type)
 
-    const command = new PutObjectCommand({
-      Bucket: config.bucketName,
-      Key: `cover-images/${user.id}/${filename}`,
-      Body: buffer,
-      ContentType: file.type,
-    })
+    const url = await resolveMediaUrl('branding', path)
+    if (!url) {
+      return NextResponse.json({ error: 'לא ניתן ליצור כתובת לתמונה' }, { status: 500 })
+    }
 
-    await r2Client.send(command)
-
-    // Construct public URL
-    const publicUrl = `${config.publicUrl}/cover-images/${user.id}/${filename}`
-
-    return NextResponse.json({ url: publicUrl })
+    return NextResponse.json({ url, path })
   } catch (error) {
     console.error('Error uploading cover image:', error)
     return NextResponse.json(
-      { error: 'Failed to upload cover image' },
+      { error: error instanceof Error ? error.message : 'Failed to upload cover image' },
       { status: 500 }
     )
   }

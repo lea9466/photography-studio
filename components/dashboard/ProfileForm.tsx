@@ -19,7 +19,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Building2, Globe, Palette, Upload } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Palette, Upload } from 'lucide-react'
 
 type ProfileFormProps = {
   profile: {
@@ -41,6 +41,8 @@ type ProfileFormProps = {
     hero_desktop_url: string | null
     hero_mobile_url: string | null
     about_image_url: string | null
+    contact_desktop_url: string | null
+    contact_mobile_url: string | null
     email: string | null
     slug: string | null
     should_color_logo: boolean
@@ -73,12 +75,19 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [heroDesktopUrl, setHeroDesktopUrl] = useState(profile?.hero_desktop_url ?? '')
   const [heroMobileUrl, setHeroMobileUrl] = useState(profile?.hero_mobile_url ?? '')
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
+  const [contactDesktopUrl, setContactDesktopUrl] = useState(profile?.contact_desktop_url ?? '')
+  const [contactMobileUrl, setContactMobileUrl] = useState(profile?.contact_mobile_url ?? '')
   const [email, setEmail] = useState(profile?.email ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
   const [isUploading, setIsUploading] = useState(false)
+  const previewPath = slug.trim()
+    ? `/${slug.trim()}`
+    : studioName.trim()
+      ? `/${encodeURIComponent(studioName.trim())}`
+      : null
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about') {
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>, type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile') {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -99,6 +108,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         if (type === 'hero_desktop') setHeroDesktopUrl(result.url)
         if (type === 'hero_mobile') setHeroMobileUrl(result.url)
         if (type === 'about') setAboutImageUrl(result.url)
+        if (type === 'contact_desktop') setContactDesktopUrl(result.url)
+        if (type === 'contact_mobile') setContactMobileUrl(result.url)
         toast.success('התמונה הועלתה בהצלחה')
       }
     } catch (error) {
@@ -142,6 +153,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           hero_desktop_url: extractPathFromUrl(heroDesktopUrl) || undefined,
           hero_mobile_url: extractPathFromUrl(heroMobileUrl) || undefined,
           about_image_url: extractPathFromUrl(aboutImageUrl) || undefined,
+          contact_desktop_url: extractPathFromUrl(contactDesktopUrl) || undefined,
+          contact_mobile_url: extractPathFromUrl(contactMobileUrl) || undefined,
           email,
           slug,
           should_color_logo: shouldColorLogo,
@@ -184,6 +197,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 className="flex-1 border-none focus:ring-0"
               />
             </div>
+            {previewPath ? (
+              <a
+                href={previewPath}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-[--foreground]/70 hover:text-[--foreground] transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                צפייה באתר הציבורי
+              </a>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">אימייל רשמי</Label>
@@ -290,6 +314,70 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 disabled={isUploading}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3 pt-2 border-t border-[--border]">
+          <div>
+            <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
+            <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="contact-desktop">רקע יצירת קשר (דסקטופ)</Label>
+              <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                {contactDesktopUrl ? (
+                  <Image
+                    src={contactDesktopUrl}
+                    alt="Contact desktop background preview"
+                    fill
+                    className="object-cover pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                    <Upload className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="text-white text-sm font-medium">החלף תמונה</span>
+                </div>
+                <input
+                  id="contact-desktop"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileUpload(e, 'contact_desktop')}
+                  disabled={isUploading}
+                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="contact-mobile">רקע יצירת קשר (מובייל)</Label>
+              <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
+                {contactMobileUrl ? (
+                  <Image
+                    src={contactMobileUrl}
+                    alt="Contact mobile background preview"
+                    fill
+                    className="object-cover pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                    <Upload className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="text-white text-sm font-medium">החלף תמונה</span>
+                </div>
+                <input
+                  id="contact-mobile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileUpload(e, 'contact_mobile')}
+                  disabled={isUploading}
+                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                />
+              </div>
             </div>
           </div>
         </div>

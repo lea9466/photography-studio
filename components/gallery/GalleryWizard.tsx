@@ -196,7 +196,7 @@ export function GalleryWizard({
             }
             
             const uploadData = await uploadResponse.json()
-            coverImageUrl = uploadData.url
+            coverImageUrl = uploadData.path ?? uploadData.url
           } catch (error) {
             console.error('Error uploading cover image:', error)
             toast.error('העלאת תמונת השער נכשלה')

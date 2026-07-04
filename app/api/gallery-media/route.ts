@@ -1,5 +1,7 @@
+import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { downloadMediaObject } from '@/lib/r2/storage'
-import { isR2Configured } from '@/lib/r2/config'
+import { isR2Configured, getR2Config } from '@/lib/r2/config'
+import { getR2Client } from '@/lib/r2/client'
 import type { MediaBucket } from '@/lib/r2/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasGallerySession } from '@/lib/gallery-session'
@@ -10,6 +12,8 @@ const ALLOWED_PREFIXES = [
   'watermarked/',
   'edited/',
   'zips/',
+  'branding/',
+  'cover-images/',
 ] as const
 
 function textResponse(message: string, status: number) {
@@ -33,7 +37,8 @@ function bucketFromKey(key: string): MediaBucket | null {
     prefix === 'previews' ||
     prefix === 'watermarked' ||
     prefix === 'edited' ||
-    prefix === 'zips'
+    prefix === 'zips' ||
+    prefix === 'branding'
   ) {
     return prefix
   }
@@ -73,20 +78,42 @@ export async function GET(request: Request) {
     return textResponse('לא נמצא', 404)
   }
 
-  const bucket = bucketFromKey(normalizedKey)
-  if (!bucket) {
-    return textResponse('לא נמצא', 404)
-  }
-
-  if (galleryId) {
-    const hasAccess = await verifyGalleryAccess(galleryId)
-    if (!hasAccess) {
-      return textResponse('גישה נדחתה', 403)
-    }
-  }
-
-  const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
   try {
+    if (normalizedKey.startsWith('cover-images/')) {
+      const { bucketName } = getR2Config()
+      const response = await getR2Client().send(
+        new GetObjectCommand({
+          Bucket: bucketName,
+          Key: normalizedKey,
+        })
+      )
+
+      if (!response.Body) {
+        return textResponse('קובץ לא נמצא', 404)
+      }
+
+      const data = new Uint8Array(await response.Body.transformToByteArray())
+      return new Response(Buffer.from(data), {
+        headers: {
+          'Content-Type': response.ContentType || 'application/octet-stream',
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      })
+    }
+
+    const bucket = bucketFromKey(normalizedKey)
+    if (!bucket) {
+      return textResponse('לא נמצא', 404)
+    }
+
+    if (galleryId) {
+      const hasAccess = await verifyGalleryAccess(galleryId)
+      if (!hasAccess) {
+        return textResponse('גישה נדחתה', 403)
+      }
+    }
+
+    const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
     const data = await downloadMediaObject(bucket, path)
     return new Response(Buffer.from(data), {
       headers: {

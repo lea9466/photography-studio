@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 
 interface PageProps {
@@ -13,41 +14,11 @@ export default async function PhotographerPage({ params }: PageProps) {
   const { slug } = await params
 
   try {
-    const supabase = await createClient()
-
-    // Decode the slug (handles URL encoding like %20 for spaces)
+    const admin = createAdminClient()
     const decodedSlug = decodeURIComponent(slug)
-    console.log('Decoded slug:', decodedSlug)
+    const photographer = await findPhotographerBySlug(decodedSlug)
 
-    // Get photographer by studio_name slug
-    const { data: photographer, error } = await supabase
-      .from('users')
-      .select(`
-        id,
-        name,
-        studio_name,
-        logo_url,
-        about_text,
-        about_title,
-        about_subtitle,
-        about_description,
-        contact_card_title,
-        contact_card_description,
-        stat_projects,
-        stat_clients,
-        stat_experience_years,
-        accent_color,
-        selected_theme,
-        hero_desktop_url,
-        hero_mobile_url,
-        about_image_url,
-        email
-      `)
-      .eq('studio_name', decodedSlug)
-      .single()
-
-    if (error || !photographer) {
-      console.log('Photographer not found:', { slug: decodedSlug, error })
+    if (!photographer) {
       notFound()
     }
 
@@ -55,26 +26,32 @@ export default async function PhotographerPage({ params }: PageProps) {
     const typedPhotographer = photographer as any
 
     // Fetch public portfolio galleries (all galleries with is_public = true)
-    const { data: galleries } = await supabase
+    const { data: galleries } = await admin
       .from('galleries')
       .select('id, title, slug, created_at, cover_image')
       .eq('user_id', typedPhotographer.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
+      .limit(4)
 
     // Fetch first photo for each gallery with smart fallback logic
     const galleriesWithPhotos = await Promise.all(
       (galleries || []).map(async (gallery: any) => {
         // Use cover_image if available (only for public galleries)
         if (gallery.cover_image) {
+          const coverUrl = gallery.cover_image.startsWith('http')
+            ? gallery.cover_image
+            : gallery.cover_image.startsWith('cover-images/')
+              ? `/api/gallery-media?key=${encodeURIComponent(gallery.cover_image)}`
+              : await resolveMediaUrl('branding', gallery.cover_image)
           return {
             ...gallery,
-            preview_url: gallery.cover_image,
+            preview_url: coverUrl,
           }
         }
 
         // Check if gallery has any edited photos
-        const { data: editedPhotos } = await supabase
+        const { data: editedPhotos } = await admin
           .from('edited_photos')
           .select('final_url')
           .eq('gallery_id', gallery.id)
@@ -84,7 +61,7 @@ export default async function PhotographerPage({ params }: PageProps) {
 
         if (editedPhotos && editedPhotos.length > 0) {
           // Use edited photos if available (protects client raw files)
-          const { data: firstEditedPhoto } = await supabase
+          const { data: firstEditedPhoto } = await admin
             .from('edited_photos')
             .select('final_url')
             .eq('gallery_id', gallery.id)
@@ -93,7 +70,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           previewUrl = (firstEditedPhoto as any)?.final_url || null
         } else {
           // Fall back to regular photos if no edited photos exist (portfolio showcase)
-          const { data: firstPhoto } = await supabase
+          const { data: firstPhoto } = await admin
             .from('photos')
             .select('preview_url')
             .eq('gallery_id', gallery.id)
@@ -112,7 +89,7 @@ export default async function PhotographerPage({ params }: PageProps) {
     )
 
     // Fetch active photography packages
-    const { data: packages } = await supabase
+    const { data: packages } = await admin
       .from('photography_packages')
       .select('id, name, price_amount, duration_text, includes, sort_order, is_featured')
       .eq('user_id', typedPhotographer.id)
@@ -120,7 +97,7 @@ export default async function PhotographerPage({ params }: PageProps) {
       .order('sort_order', { ascending: true })
 
     // Fetch client testimonials/reviews (public)
-    const { data: testimonials } = await supabase
+    const { data: testimonials } = await admin
       .from('testimonials')
       .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order')
       .eq('user_id', typedPhotographer.id)
@@ -141,6 +118,12 @@ export default async function PhotographerPage({ params }: PageProps) {
       about_image_url: typedPhotographer.about_image_url?.startsWith('http')
         ? typedPhotographer.about_image_url
         : typedPhotographer.about_image_url ? await resolveMediaUrl('branding', typedPhotographer.about_image_url) : null,
+      contact_desktop_url: typedPhotographer.contact_desktop_url?.startsWith('http')
+        ? typedPhotographer.contact_desktop_url
+        : typedPhotographer.contact_desktop_url ? await resolveMediaUrl('branding', typedPhotographer.contact_desktop_url) : null,
+      contact_mobile_url: typedPhotographer.contact_mobile_url?.startsWith('http')
+        ? typedPhotographer.contact_mobile_url
+        : typedPhotographer.contact_mobile_url ? await resolveMediaUrl('branding', typedPhotographer.contact_mobile_url) : null,
       logo_url: typedPhotographer.logo_url?.startsWith('http')
         ? typedPhotographer.logo_url
         : typedPhotographer.logo_url ? await resolveMediaUrl('branding', typedPhotographer.logo_url) : null,
@@ -156,8 +139,6 @@ export default async function PhotographerPage({ params }: PageProps) {
           : gallery.preview_url ? await resolveMediaUrl('previews', gallery.preview_url) : null,
       }))
     )
-
-    console.log('Photographer with resolved URLs:', photographerWithUrls)
 
     return (
       <>
@@ -182,6 +163,14 @@ export default async function PhotographerPage({ params }: PageProps) {
     )
   } catch (error) {
     console.error('Error loading photographer page:', error)
+    if (
+      process.env.NODE_ENV === 'development' &&
+      error instanceof Error &&
+      (error.message.includes('SUPABASE_SERVICE_ROLE_KEY') ||
+        error.message.includes('Missing database permissions'))
+    ) {
+      throw error
+    }
     notFound()
   }
 }
@@ -190,14 +179,8 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
 
   try {
-    const supabase = await createClient()
     const decodedSlug = decodeURIComponent(slug)
-
-    const { data: photographer } = await supabase
-      .from('users')
-      .select('studio_name, name, about_text')
-      .eq('studio_name', decodedSlug)
-      .single()
+    const photographer = await findPhotographerBySlug(decodedSlug)
 
     if (!photographer) {
       return {

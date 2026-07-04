@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { NextResponse } from 'next/server'
 
 export async function GET(
@@ -6,58 +7,29 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const supabase = await createClient()
+    const admin = createAdminClient()
     const { slug } = await params
+    const photographer = await findPhotographerBySlug(decodeURIComponent(slug))
 
-    console.log('Fetching photographer with slug:', slug)
-
-    // Get photographer by studio_name slug
-    const { data: photographer, error } = await supabase
-      .from('users')
-      .select(`
-        id,
-        name,
-        studio_name,
-        logo_url,
-        about_text,
-        stat_projects,
-        stat_clients,
-        stat_experience_years,
-        accent_color,
-        selected_theme,
-        hero_desktop_url,
-        hero_mobile_url,
-        about_image_url,
-        email
-      `)
-      .eq('studio_name', slug)
-      .single()
-
-    console.log('Photographer query result:', { photographer, error })
-
-    if (error || !photographer) {
-      console.log('Photographer not found, returning 404')
+    if (!photographer) {
       return NextResponse.json(
         { error: 'Photographer not found', slug },
         { status: 404 }
       )
     }
 
-    // Type assertion to fix TypeScript inference
     const typedPhotographer = photographer as any
 
-    // Fetch public portfolio galleries
-    const { data: galleries } = await supabase
+    const { data: galleries } = await admin
       .from('galleries')
       .select('id, title, slug, created_at')
       .eq('user_id', typedPhotographer.id)
       .eq('gallery_type', 'portfolio')
       .order('created_at', { ascending: false })
 
-    // Fetch first photo for each gallery
     const galleriesWithPhotos = await Promise.all(
       (galleries || []).map(async (gallery: any) => {
-        const { data: firstPhoto } = await supabase
+        const { data: firstPhoto } = await admin
           .from('photos')
           .select('preview_url')
           .eq('gallery_id', gallery.id)
@@ -72,8 +44,7 @@ export async function GET(
       })
     )
 
-    // Fetch active photography packages
-    const { data: packages } = await supabase
+    const { data: packages } = await admin
       .from('photography_packages')
       .select('id, name, price_amount, duration_text, includes, sort_order')
       .eq('user_id', typedPhotographer.id)

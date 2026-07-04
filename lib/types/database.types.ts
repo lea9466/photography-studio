@@ -48,6 +48,8 @@ export type Database = {
           hero_desktop_url: string | null
           hero_mobile_url: string | null
           about_image_url: string | null
+          contact_desktop_url: string | null
+          contact_mobile_url: string | null
           should_color_logo: boolean
         }
         Insert: {
@@ -73,6 +75,8 @@ export type Database = {
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           about_image_url?: string | null
+          contact_desktop_url?: string | null
+          contact_mobile_url?: string | null
           should_color_logo?: boolean
         }
         Update: {
@@ -98,6 +102,8 @@ export type Database = {
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           about_image_url?: string | null
+          contact_desktop_url?: string | null
+          contact_mobile_url?: string | null
           should_color_logo?: boolean
         }
         Relationships: []

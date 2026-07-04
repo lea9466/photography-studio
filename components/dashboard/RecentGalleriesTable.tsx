@@ -324,7 +324,12 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
     })
   }
   return (
-    <section className="bg-white dark:bg-zinc-900 border border-[--border] rounded-xl overflow-hidden mb-6">
+    <>
+      <div className="mb-4 rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+        <span className="font-semibold">גלריות ציבוריות בדף הבית:</span>{' '}
+        עד 4 גלריות המסומנות כציבוריות יוצגו באתר. תמונת השער (אם הוגדרה) תופיע בכרטיס הגלריה.
+      </div>
+      <section className="bg-white dark:bg-zinc-900 border border-[--border] rounded-xl overflow-hidden mb-6">
       <div className="p-6 border-b border-[--border] flex items-center justify-between">
         <h3 className="font-semibold text-lg text-[--foreground]">{title}</h3>
         {selectedIds.size > 0 && (
@@ -374,5 +379,6 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
         </table>
       </div>
     </section>
+    </>
   )
 }

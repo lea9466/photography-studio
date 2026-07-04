@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
+import { randomBytes } from 'node:crypto'
 
 export type AuthActionState = {
   error?: string
@@ -206,6 +209,106 @@ export async function signOut() {
   await supabase.auth.signOut()
   revalidatePath('/', 'layout')
   redirect('/login')
+}
+
+function createTemporaryPassword() {
+  return randomBytes(9).toString('base64url')
+}
+
+export async function requestPasswordReset(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const email = String(formData.get('email') ?? '').trim()
+
+  if (!email) {
+    return { error: 'נא להזין אימייל' }
+  }
+
+  try {
+    const admin = createAdminClient()
+
+    const { data: profile } = await admin
+      .from('users')
+      .select('id, email, name')
+      .ilike('email', email)
+      .maybeSingle()
+
+    if (!profile?.email) {
+      return {
+        success:
+          'אם האימייל רשום במערכת, נשלח אליו סיסמה חדשה — בדקי את תיבת הדואר (גם ספאם)',
+      }
+    }
+
+    const newPassword = createTemporaryPassword()
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      profile.id,
+      { password: newPassword }
+    )
+
+    if (updateError) {
+      console.error('[password reset] updateUserById failed', updateError)
+      return { error: 'לא הצלחנו לאפס את הסיסמה — נסי שוב מאוחר יותר' }
+    }
+
+    await sendPhotographerPasswordResetEmail({
+      email: profile.email,
+      name: profile.name ?? profile.email.split('@')[0] ?? 'צלמת',
+      password: newPassword,
+    })
+  } catch (err) {
+    console.error('[password reset]', err)
+    return {
+      error:
+        err instanceof Error
+          ? err.message
+          : 'שליחת המייל נכשלה — נסי שוב מאוחר יותר',
+    }
+  }
+
+  return {
+    success:
+      'נשלח מייל עם סיסמה חדשה — בדקי את תיבת הדואר (גם בתיקיית הספאם)',
+  }
+}
+
+export async function updatePassword(
+  _prevState: AuthActionState,
+  formData: FormData
+): Promise<AuthActionState> {
+  const password = String(formData.get('password') ?? '')
+  const confirmPassword = String(formData.get('confirm_password') ?? '')
+
+  if (!password || !confirmPassword) {
+    return { error: 'נא למלא את שני שדות הסיסמה' }
+  }
+
+  if (password.length < 8) {
+    return { error: 'הסיסמה חייבת להכיל לפחות 8 תווים' }
+  }
+
+  if (password !== confirmPassword) {
+    return { error: 'הסיסמאות אינן תואמות' }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: 'קישור השחזור פג תוקף — בקשי מייל חדש' }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/dashboard')
 }
 
 export async function resendConfirmationEmail(

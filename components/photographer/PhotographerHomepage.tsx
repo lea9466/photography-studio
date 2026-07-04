@@ -21,6 +21,8 @@ interface Photographer {
   hero_desktop_url: string | null
   hero_mobile_url: string | null
   about_image_url: string | null
+  contact_desktop_url: string | null
+  contact_mobile_url: string | null
   email: string | null
 }
 
@@ -52,6 +54,178 @@ interface Testimonial {
   created_at: string
   is_featured: boolean
   sort_order: number
+}
+
+const UNIFIED_GALLERY_GRID_CSS = `
+  .homepage-gallery-section {
+    width: 100%;
+    overflow: hidden;
+  }
+  .homepage-gallery-header {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 768px) {
+    .homepage-gallery-header {
+      padding-inline: 2rem;
+    }
+  }
+  .homepage-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 2%;
+    background: var(--homepage-gallery-grid-bg, transparent);
+  }
+  @media (min-width: 768px) {
+    .homepage-gallery-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+  }
+  .homepage-gallery-card {
+    position: relative;
+    display: block;
+    aspect-ratio: 3 / 5;
+    overflow: hidden;
+    background: #eae8e5;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  @media (min-width: 768px) {
+    .homepage-gallery-card { aspect-ratio: 2 / 5; }
+  }
+  .homepage-gallery-card-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s ease-out;
+  }
+  .homepage-gallery-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 45%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .homepage-gallery-card-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.25rem 1rem;
+    color: #fff;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    pointer-events: none;
+    text-align: right;
+  }
+  .homepage-gallery-card-label {
+    font-size: 10px;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .homepage-gallery-card-title {
+    font-size: 1.35rem;
+    margin-top: 0.4rem;
+    line-height: 1.1;
+  }
+  @media (min-width: 768px) {
+    .homepage-gallery-card-title { font-size: 1.5rem; }
+  }
+  .homepage-gallery-card-subtitle {
+    font-size: 0.8125rem;
+    margin-top: 0.35rem;
+    opacity: 0.9;
+  }
+  .homepage-gallery-card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.85rem;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  .homepage-gallery-card-arrow {
+    transition: transform 0.4s ease;
+  }
+  .homepage-gallery-card:hover .homepage-gallery-card-overlay,
+  .homepage-gallery-card:focus-visible .homepage-gallery-card-overlay { opacity: 1; }
+  .homepage-gallery-card:hover .homepage-gallery-card-content,
+  .homepage-gallery-card:focus-visible .homepage-gallery-card-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .homepage-gallery-card:hover .homepage-gallery-card-image { transform: scale(1.05); }
+  .homepage-gallery-card:hover .homepage-gallery-card-arrow { transform: translateX(-4px); }
+`
+
+function fillGalleriesToFour(galleries: Gallery[]): Gallery[] {
+  if (galleries.length === 0) return []
+  if (galleries.length >= 4) return galleries.slice(0, 4)
+  const filled = [...galleries]
+  while (filled.length < 4) {
+    const source = galleries[filled.length % galleries.length]
+    filled.push({ ...source, id: `${source.id}-fill-${filled.length}` })
+  }
+  return filled
+}
+
+function galleryNavId(id: string) {
+  return id.replace(/-fill-\d+$/, '')
+}
+
+function generateUnifiedGalleryGridHTML(
+  galleries: Gallery[],
+  themeVariant: 'elegant' | 'modern' | 'classic' | 'dark'
+): string {
+  const display = fillGalleriesToFour(galleries)
+  if (display.length === 0) return ''
+
+  const radiusByTheme = {
+    elegant: '0px',
+    modern: '12px',
+    classic: '4px',
+    dark: '0px',
+  }
+  const radius = radiusByTheme[themeVariant]
+  const imgExtraClass = themeVariant === 'dark' ? ' grayscale group-hover:grayscale-0' : ''
+
+  return display
+    .map((g) => {
+      const year = new Date(g.created_at).getFullYear()
+      const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
+      const title = String(g.title)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      const preview = g.preview_url || ''
+
+      return `
+<a href="#" onclick="event.preventDefault(); window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="homepage-gallery-card group" style="border-radius: ${radius};">
+  <img alt="${title}" class="homepage-gallery-card-image${imgExtraClass}" src="${preview}" loading="lazy" />
+  <div class="homepage-gallery-card-overlay"></div>
+  <div class="homepage-gallery-card-content" dir="rtl">
+    <p class="homepage-gallery-card-label">סדרה</p>
+    <h3 class="homepage-gallery-card-title">${title}</h3>
+    <p class="homepage-gallery-card-subtitle">${year}</p>
+    <span class="homepage-gallery-card-cta"><span class="homepage-gallery-card-arrow">←</span> לצפייה בגלריה</span>
+  </div>
+</a>`
+    })
+    .join('')
 }
 
 interface PhotographerHomepageProps {
@@ -108,6 +282,17 @@ function underlineLastWord(text: string) {
   return `${words.join(' ')} <span class="about-title-underline">${lastWord}</span>`
 }
 
+function brandLastWord(text: string) {
+  const trimmed = text.trim()
+  if (!trimmed) return trimmed
+  const words = trimmed.split(/\s+/)
+  if (words.length === 1) {
+    return `<span class="text-primary font-light">${trimmed}</span>`
+  }
+  const lastWord = words.pop()!
+  return `${words.join(' ')} <span class="text-primary font-light">${lastWord}</span>`
+}
+
 function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[], testimonials: Testimonial[] = []): string {
   const {
     name,
@@ -126,8 +311,69 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     hero_desktop_url,
     hero_mobile_url,
     about_image_url,
+    contact_desktop_url,
+    contact_mobile_url,
     email,
   } = photographer
+
+  const contactDesktopUrl = contact_desktop_url || null
+  const contactMobileUrl = contact_mobile_url || null
+  const hasContactBg = !!(contactDesktopUrl || contactMobileUrl)
+
+  const contactBgCss = hasContactBg
+    ? `
+        .contact-section-has-bg { position: relative; overflow: hidden; }
+        .contact-section-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            pointer-events: none;
+        }
+        .contact-section-bg-desktop { display: none; opacity: 0.52; }
+        .contact-section-bg-mobile {
+            display: block;
+            opacity: 0.3;
+            filter: brightness(1.42) saturate(0.88);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 48%, transparent 88%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 48%, transparent 88%);
+        }
+        @media (min-width: 768px) {
+            .contact-section-bg-desktop { display: block; }
+            .contact-section-bg-mobile { display: none; }
+        }
+        .contact-section-bg-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @media (max-width: 767px) {
+            .contact-section-bg-overlay {
+                background: linear-gradient(to bottom, transparent 0%, var(--contact-fade, #FAFAF8) 86%);
+            }
+        }
+        @media (min-width: 768px) {
+            .contact-section-bg-overlay {
+                background: linear-gradient(to bottom, color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 38%, transparent), color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 80%, transparent));
+            }
+        }
+        .contact-section-content { position: relative; z-index: 1; }
+    `
+    : ''
+
+  const contactBgLayers = (mobileFade: string, desktopFade?: string) => {
+    if (!hasContactBg) return ''
+    const desktop = contactDesktopUrl || contactMobileUrl
+    const mobile = contactMobileUrl || contactDesktopUrl
+    const desktopFadeColor = desktopFade || mobileFade
+    return `
+      <div class="contact-section-bg contact-section-bg-desktop" style="background-image:url('${desktop}')"></div>
+      <div class="contact-section-bg contact-section-bg-mobile" style="background-image:url('${mobile}')"></div>
+      <div class="contact-section-bg-overlay" style="--contact-fade:${mobileFade};--contact-fade-desktop:${desktopFadeColor}"></div>
+    `
+  }
 
   const primaryColor = accent_color || '#B8953F'
   const heroImage = hero_desktop_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw'
@@ -146,28 +392,6 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const statsProjects = stat_projects || 450
   const statsClients = stat_clients || 2000
   const statsYears = stat_experience_years || 12
-
-  // Generate dynamic galleries HTML
-  const galleriesHTML = galleries.length > 0
-    ? galleries.map((g, i) => {
-        const year = new Date(g.created_at).getFullYear()
-        const galleryUrl = `/public-gallery/${g.id}`
-        return `
-        <div class="group relative overflow-hidden">
-          <img alt="${g.title}" class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
-          <div class="absolute inset-0 bg-black/40 flex items-end p-lg">
-            <div class="w-full">
-              <p class="text-white font-headline text-2xl">${g.title}</p>
-              <p class="text-white/80 text-sm mt-1">${year}</p>
-              <button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-4 bg-white text-black px-6 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-                צפה בגלריה
-              </button>
-            </div>
-          </div>
-        </div>
-      `
-      }).join('')
-    : ''
 
   // Generate dynamic packages HTML for each theme
   const generatePackagesHTML = (currentTheme: string) => {
@@ -462,6 +686,8 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
                 grid-template-columns: 1fr !important;
             }
         }
+        ${UNIFIED_GALLERY_GRID_CSS}
+        ${contactBgCss}
     </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">
@@ -553,36 +779,14 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
 </div>
 </section>
 ` : ''}
-<section class="px-margin-mobile md:px-margin-desktop py-24 bg-white" id="gallery">
-<div class="max-w-7xl mx-auto">
-<div class="flex flex-row-reverse justify-between items-end mb-16 reveal-on-scroll">
+<section class="homepage-gallery-section py-24 bg-white" id="gallery">
+<div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-16">
+<div class="flex flex-row-reverse justify-between items-end reveal-on-scroll">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">קולקציות נבחרות</h2>
-<a class="text-xs uppercase tracking-widest elegant-accent border-b border-accent pb-1 hover:opacity-70 transition-opacity" href="#">לכל הגלריות</a>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
-  const year = new Date(g.created_at).getFullYear()
-  const galleryUrl = `/public-gallery/${g.id}`
-  const isLarge = i === 0
-  const isVertical = i === 1
-  const isMedium = i === 3
-  const colSpan = isLarge ? 'md:col-span-8' : isVertical ? 'md:col-span-4' : isMedium ? 'md:col-span-8' : 'md:col-span-4'
-  const aspectRatio = isLarge ? 'aspect-[16/9]' : isVertical ? 'aspect-[3/4]' : isMedium ? 'aspect-[21/9]' : 'aspect-square'
-  return `
-<div class="${colSpan} group relative overflow-hidden reveal-on-scroll" style="transition-delay: ${i * 100}ms;">
-<div class="image-reveal cursor-pointer ${aspectRatio} w-full bg-[#eae8e5] overflow-hidden">
-<img alt="${g.title}" class="gallery-img w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-start justify-end p-lg">
-<h3 class="font-display text-2xl mb-1 text-white">${g.title}</h3>
-<p class="text-xs uppercase tracking-widest text-white/80 mb-4">${year}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="bg-white text-black px-6 py-2 text-xs font-semibold uppercase tracking-widest hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
 </div>
 </div>
-</div>`
-}).join('') : ''}
-</div>
+<div class="homepage-gallery-grid reveal-on-scroll">
+${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 </div>
 </section>
 <section class="bg-[#f2f1ef] py-32 px-margin-mobile md:px-margin-desktop" id="pricing">
@@ -649,8 +853,9 @@ ${galleries.length > 0 ? galleries.slice(0, 6).map((g, i) => {
 </div>
 `)}</div>
 </section>
-<section class="py-32 px-margin-mobile md:px-margin-desktop bg-[#1c1b1b] text-white reveal-on-scroll pb-48">
-<div class="max-w-4xl mx-auto">
+<section id="contact" class="py-32 px-margin-mobile md:px-margin-desktop ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b]'} text-white reveal-on-scroll pb-48">
+${contactBgLayers('#FAFAF8', '#1c1b1b')}
+<div class="max-w-4xl mx-auto contact-section-content">
 <div class="text-center mb-16">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl mb-4">צרי קשר</h2>
 <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
@@ -813,6 +1018,8 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+        ${UNIFIED_GALLERY_GRID_CSS}
+        ${contactBgCss}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -930,30 +1137,17 @@ ${aboutDescription ? '<p class="text-lg md:text-xl text-on-surface-variant max-w
 </div>
 </div>
 </section>
-<section class="py-xxl max-w-7xl mx-auto px-lg" id="portfolio">
-<div class="flex flex-row-reverse justify-between items-end mb-xl gap-md animate-reveal">
+<section class="homepage-gallery-section py-xxl" id="portfolio">
+<div class="homepage-gallery-header px-lg mb-xl">
+<div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
 <div class="text-right">
 <h2 class="font-headline text-4xl font-bold mb-xs">העבודות האחרונות שלנו</h2>
 <p class="text-on-surface-variant">מבט קצר אל הרגעים שתפסנו לאחרונה</p>
 </div>
-<button class="text-primary font-bold flex items-center gap-xs hover:gap-sm transition-all group">
-<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                כל הגלריות
-            </button>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-md items-start">
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-md h-full">
-${galleries.length > 1 ? galleries.slice(1, 4).map((g, i) => {
-  const year = new Date(g.created_at).getFullYear()
-  const galleryUrl = '/public-gallery/' + g.id
-  const aspectClass = i === 2 ? 'col-span-1 sm:col-span-2 aspect-video' : 'aspect-square'
-  const animationDelay = i * 100
-  return '<div class="' + aspectClass + ' rounded-xl overflow-hidden group relative animate-reveal" style="animation-delay: ' + animationDelay + 'ms;"><img alt="' + g.title + '" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="' + g.preview_url + '"/><div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg"><div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300 w-full"><p class="text-white font-headline text-xl">' + g.title + '</p><p class="text-white/80 text-sm mt-1">' + year + '</p><button onclick="window.parent.postMessage({type: \'navigate\', url: \'' + galleryUrl + '\'}, \'*\')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">צפה בגלריה</button></div></div></div>'
-}).join('') : ''}
 </div>
-<div class="h-full animate-reveal delay-300">
-${galleries.length > 0 ? '<div class="rounded-xl overflow-hidden h-[400px] md:h-[600px] group relative"><img alt="צילום חתונה" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" src="' + galleries[0]?.preview_url + '"/><div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-lg"><div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-300"><p class="text-white font-headline text-2xl">' + galleries[0].title + '</p><p class="text-white/80 text-sm mt-1">' + new Date(galleries[0].created_at).getFullYear() + '</p></div></div></div>' : ''}
-</div>
+<div class="homepage-gallery-grid animate-reveal">
+${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 </div>
 </section>
 <section class="bg-surface-dim py-xxl" id="pricing">
@@ -984,8 +1178,10 @@ ${galleries.length > 0 ? '<div class="rounded-xl overflow-hidden h-[400px] md:h-
 </div>
 </div>
 </section>
-<section class="max-w-7xl mx-auto px-lg mb-xxl pb-[120px]" id="contact">
-<div class="bg-primary rounded-2xl p-xl md:p-xxl text-white animate-reveal">
+<section class="max-w-7xl mx-auto px-lg mb-xxl pb-[120px] ${hasContactBg ? 'contact-section-has-bg rounded-2xl' : ''}" id="contact">
+${contactBgLayers('#F8FAFC')}
+<div class="contact-section-content">
+<div class="${hasContactBg ? 'bg-primary/88 backdrop-blur-sm' : 'bg-primary'} rounded-2xl p-xl md:p-xxl text-white animate-reveal">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
 <div class="max-w-md text-right">
 <h2 class="font-headline text-4xl font-bold mb-sm text-white">צרו איתנו קשר</h2>
@@ -1024,6 +1220,7 @@ ${galleries.length > 0 ? '<div class="rounded-xl overflow-hidden h-[400px] md:h-
                         שליחת הודעה
                     </button>
 </form>
+</div>
 </div>
 </div>
 </section>
@@ -1382,6 +1579,8 @@ ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto obje
             filter: blur(64px);
             opacity: 0.78;
         }
+        ${UNIFIED_GALLERY_GRID_CSS}
+        ${contactBgCss}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1581,31 +1780,15 @@ ${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-li
 </div>
 </section>
 ` : ''}
-<section class="bg-surface-container-low py-xxl reveal" id="galleries">
-<div class="max-w-7xl mx-auto px-lg">
-<div class="text-center mb-xl">
+<section class="homepage-gallery-section bg-surface-container-low py-xxl reveal" id="galleries">
+<div class="homepage-gallery-header px-lg mb-xl">
+<div class="text-center">
 <h2 class="font-headline-md text-headline-md text-on-surface">עבודות נבחרות</h2>
 <p class="font-body-md text-body-md text-on-surface-variant mt-sm">מבט אל הרגעים שהפכו לנצח</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
-  const year = new Date(g.created_at).getFullYear()
-  const galleryUrl = `/public-gallery/${g.id}`
-  return `
-<div class="group relative overflow-hidden rounded-sm cursor-pointer stagger-item shadow-sm transition-all duration-700">
-<img alt="${g.title}" class="w-full aspect-[3/4] object-cover transition-transform duration-1000 group-hover:scale-105" src="${g.preview_url}"/>
-<div class="absolute inset-0 classic-overlay opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-end p-lg">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform duration-700 w-full">
-<span class="text-white font-headline-sm text-headline-sm">${g.title}</span>
-<span class="text-white/80 text-xs block mt-1">${year}</span>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '${galleryUrl}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
 </div>
-</div>
-</div>`
-}).join('') : ''}
-</div>
+<div class="homepage-gallery-grid">
+${generateUnifiedGalleryGridHTML(galleries, 'classic')}
 </div>
 </section>
 <section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="pricing">
@@ -1639,8 +1822,9 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 `)}</div>
 </div>
 </section>
-<section class="bg-surface-container-low py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl" id="contact">
-<div class="max-w-7xl mx-auto px-lg">
+<section class="${hasContactBg ? 'contact-section-has-bg py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl' : 'bg-surface-container-low py-xxl reveal border-t border-outline-variant/10 pb-xxl pt-xxl mb-xl'}" id="contact">
+${contactBgLayers('#fdf8f7', '#f7f3f2')}
+<div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start lg:gap-xl lg:gap-xxl">
 <div class="lg:col-span-5 space-y-lg">
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">צרו קשר</span>
@@ -1662,24 +1846,24 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 </div>
 </div>
 <div class="lg:col-span-7">
-<form class="bg-surface p-xl lg:p-xxl rounded-sm shadow-xl border border-outline-variant/20 stagger-item">
+<form class="${hasContactBg ? 'bg-surface/50 backdrop-blur-sm' : 'bg-surface'} p-xl lg:p-xxl rounded-sm shadow-xl border border-outline-variant/20 stagger-item">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
 <div class="space-y-xs">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">שם מלא</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
 </div>
 <div class="space-y-xs">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">טלפון ליצירת קשר</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" required="" type="tel"/>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" required="" type="tel"/>
 </div>
 </div>
 <div class="space-y-xs mb-lg">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">כתובת אימייל</label>
-<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
+<input class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
 </div>
 <div class="space-y-xs mb-xl">
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">ספרו לי על האירוע שלכם</label>
-<textarea class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 bg-surface px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
+<textarea class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
 </div>
 <button class="w-full bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-md" type="submit">
                         שלח פנייה
@@ -1762,7 +1946,7 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, in" style="scroll-behavior: smooth;itial-scale=1.0" name="viewport"/>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <style>
@@ -1828,6 +2012,201 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
             opacity: 1;
             transform: translateY(0);
         }
+        .about-section-label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            color: color-mix(in srgb, ${primaryColor} 72%, #f5f5f0);
+        }
+        .about-title {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            line-height: 1.05;
+            font-weight: 400;
+            font-style: italic;
+            color: #F5F5F0;
+        }
+        .about-title-underline {
+            border-bottom: 2px solid ${primaryColor};
+            padding-bottom: 4px;
+        }
+        .about-body-primary {
+            font-family: 'Heebo', sans-serif;
+            font-size: 18px;
+            line-height: 1.9;
+            color: rgba(245, 245, 240, 0.82);
+        }
+        .about-body-secondary {
+            font-family: 'Heebo', sans-serif;
+            font-size: 16px;
+            line-height: 1.85;
+            color: rgba(245, 245, 240, 0.65);
+        }
+        .about-stat-number {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-size: clamp(2rem, 3vw, 2.75rem);
+            line-height: 1;
+            font-weight: 400;
+            color: #F5F5F0;
+        }
+        .about-stat-label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: rgba(245, 245, 240, 0.42);
+            margin-top: 10px;
+        }
+        .about-image-quote {
+            background: rgba(255, 255, 255, 0.97);
+            padding: 22px 26px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+        }
+        .about-image-quote-line {
+            width: 36px;
+            height: 1px;
+            background: ${primaryColor};
+            margin: 14px 0 10px auto;
+        }
+        .about-image-quote-name {
+            font-family: 'Heebo', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: ${primaryColor};
+            text-align: left;
+        }
+        .about-glow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 9999px;
+            filter: blur(58px);
+        }
+        .about-glow-left {
+            top: 0;
+            left: 0;
+            width: 440px;
+            height: 440px;
+            transform: translate(-58%, -28%);
+            opacity: 0.72;
+        }
+        #about .about-inner {
+            max-width: 80rem;
+            margin-inline: auto;
+            padding-inline: clamp(1.5rem, 5vw, 4rem);
+            width: 100%;
+        }
+        .bold-nav .bold-nav-brand,
+        .bold-nav .bold-nav-link,
+        .bold-nav .bold-nav-menu-btn {
+            color: #ffffff;
+            transition: color 0.7s ease;
+        }
+        .bold-nav .bold-nav-link:hover,
+        .bold-nav .bold-nav-menu-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .bold-nav .bold-nav-logo {
+            transition: filter 0.7s ease;
+        }
+        .bold-nav:not(.nav-scrolled) .bold-nav-logo {
+            filter: brightness(0) invert(1);
+        }
+        .bold-nav.nav-scrolled .bold-nav-brand {
+            color: #F5F5F0;
+        }
+        .bold-nav.nav-scrolled .bold-nav-link {
+            color: #B8B8C0;
+        }
+        .bold-nav.nav-scrolled .bold-nav-link:hover {
+            color: ${primaryColor};
+        }
+        .bold-nav.nav-scrolled .bold-nav-menu-btn {
+            color: #F5F5F0;
+        }
+        .bold-nav.nav-scrolled .bold-nav-menu-btn:hover {
+            color: ${primaryColor};
+        }
+        .bold-nav.nav-scrolled .bold-nav-logo {
+            filter: none;
+        }
+        .bold-nav .bold-nav-brand .text-primary {
+            color: ${primaryColor};
+        }
+        .bold-hero-image {
+            opacity: 0.72;
+            filter: grayscale(10%) brightness(1.14) contrast(1.04);
+        }
+        .bold-hero-overlay {
+            background: linear-gradient(
+                to top,
+                rgba(18, 18, 23, 0.78) 0%,
+                rgba(18, 18, 23, 0.06) 45%,
+                rgba(18, 18, 23, 0.42) 100%
+            );
+        }
+        .bold-hero-bottom-merge {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1;
+            height: min(28vh, 16rem);
+            pointer-events: none;
+            background: linear-gradient(
+                to bottom,
+                rgba(18, 18, 23, 0) 0%,
+                rgba(18, 18, 23, 0.65) 62%,
+                #121217 100%
+            );
+        }
+        .bold-hero-content {
+            position: absolute;
+            z-index: 10;
+            bottom: 0;
+            right: 0;
+            left: auto;
+            width: 100%;
+            max-width: 40rem;
+            padding: 1.5rem 1.5rem 3rem 1.5rem;
+            text-align: right;
+        }
+        .bold-hero-label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: ${primaryColor};
+        }
+        .bold-hero-title {
+            font-size: clamp(2.25rem, 5.5vw, 4.25rem);
+            line-height: 1.05;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .bold-hero-title .text-primary {
+            color: ${primaryColor};
+        }
+        .bold-hero-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+        @media (min-width: 640px) {
+            .bold-hero-actions {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+        @media (min-width: 768px) {
+            .bold-hero-content {
+                padding: 2rem 2.5rem 4rem 1.5rem;
+            }
+        }
+        ${UNIFIED_GALLERY_GRID_CSS}
+        ${contactBgCss}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1881,19 +2260,19 @@ ${galleries.length > 0 ? galleries.slice(0, 3).map((g, i) => {
     </script>
 </head>
 <body class="bg-background text-on-surface">
-<nav class="fixed top-0 w-full z-50 bg-background/90 backdrop-blur-md border-b border-white/10">
+<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 <div class="flex items-center gap-sm">
-${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">STUDIO <span class="text-primary font-light">GALLERY</span></span>`}
+${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="bold-nav-logo h-10 w-auto object-contain" />` : `<span class="bold-nav-brand font-headline-sm text-headline-sm tracking-tighter">${brandLastWord(studioName)}</span>`}
 </div>
-<button onclick="toggleMobileMenuDark()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+<button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
 </button>
 <div class="hidden md:flex flex-row-reverse gap-xl items-center">
-<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">בית</a>
-<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">גלריות</a>
-<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">חבילות צילום</a>
-<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="text-on-surface-variant hover:text-primary transition-colors font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">יצירת קשר</a>
+<a onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">בית</a>
+<a onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">גלריות</a>
+<a onclick="document.querySelector('#pricing').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">חבילות צילום</a>
+<a onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition cursor-pointer">יצירת קשר</a>
 </div>
 </div>
 <div id="mobile-menu-dark" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-white/10">
@@ -1913,133 +2292,82 @@ menu.classList.toggle('hidden');
 icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 }
 </script>
-<section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+<section class="relative min-h-[90vh] flex items-end overflow-hidden" id="hero">
 <div class="absolute inset-0 z-0">
 <picture>
 <source media="(max-width: 768px)" srcset="${heroMobileImage}"/>
-<img class="w-full h-full object-cover grayscale opacity-40 scale-110 transition-transform duration-[3s] ease-out" data-alt="High-end architectural photograph of a minimalist space" id="hero-img" src="${heroImage}"/>
+<img class="bold-hero-image w-full h-full object-cover scale-110 transition-transform duration-[3s] ease-out" data-alt="High-end architectural photograph of a minimalist space" id="hero-img" src="${heroImage}"/>
 </picture>
-<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background"></div>
+<div class="bold-hero-overlay absolute inset-0"></div>
+<div class="bold-hero-bottom-merge"></div>
 </div>
-<div class="relative z-10 container mx-auto px-lg text-center overflow-hidden">
-<span class="text-primary font-label-sm uppercase tracking-[0.3em] mb-lg block opacity-0 reveal-up">Premium Photography</span>
-<h1 class="hero-clamp font-extrabold uppercase text-on-surface mb-md opacity-0 reveal-up reveal-delay-1">
-                    CAPTURING <br/> <span class="text-primary italic font-bold">GLAMOUR</span> REALITY
+<div class="bold-hero-content">
+<span class="bold-hero-label mb-lg block opacity-0 reveal-up">Premium Studio</span>
+<h1 class="bold-hero-title text-on-surface mb-md opacity-0 reveal-up reveal-delay-1">
+                    ${brandLastWord(studioName)}
                 </h1>
-<p class="font-body-md text-body-md max-w-2xl mx-auto mb-xl opacity-0 reveal-up reveal-delay-2 text-on-surface-variant">
+<p class="font-body-md text-body-md max-w-xl mb-xl opacity-0 reveal-up reveal-delay-2 text-on-surface-variant leading-relaxed">
                     ${aboutText}
                 </p>
-<div class="flex flex-col sm:flex-row-reverse gap-lg justify-center items-center opacity-0 reveal-up reveal-delay-2">
-<button class="bg-primary text-on-primary px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary/90">
+<div class="bold-hero-actions flex flex-col sm:flex-row gap-lg opacity-0 reveal-up reveal-delay-2">
+<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-primary text-primary bg-transparent px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary">
                         צפו בגלריה
                     </button>
-<button class="text-on-surface font-label-sm uppercase tracking-widest border-b border-on-surface/30 hover:border-primary btn-fuchsia-transition py-xs">
+<button onclick="document.querySelector('#about').scrollIntoView({behavior: 'smooth'})" class="text-on-surface font-label-sm uppercase tracking-widest border-b border-on-surface/30 hover:border-primary btn-fuchsia-transition py-xs">
                         הסיפור שלנו
                     </button>
 </div>
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll relative" id="about">
-<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-xl items-center relative z-10">
-<div class="relative group">
-<div class="absolute -top-4 -right-4 w-full h-full border border-primary/30 z-0"></div>
-<img class="relative z-10 w-full aspect-[4/5] object-cover grayscale brightness-90 hover:grayscale-0 transition-all duration-700" src="${aboutImage}"/>
+<section class="relative w-full py-xl md:py-xxl reveal-on-scroll overflow-hidden" id="about">
+<div class="about-glow about-glow-left" style="background: radial-gradient(circle, ${primaryColor}70 0%, ${primaryColor}45 24%, ${primaryColor}22 46%, transparent 72%);"></div>
+<div class="about-inner relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-xxl items-center">
+<div class="lg:col-span-5 relative">
+<img alt="דיוקן צלמת" class="w-full aspect-[4/5] object-cover" src="${aboutImage}"/>
+<div class="about-image-quote absolute -bottom-10 -right-6 md:-right-12 max-w-[260px] hidden md:block">
+<div class="about-image-quote-line"></div>
+<p class="about-image-quote-name">— ${photographerName}</p>
 </div>
-<div class="lg:pr-xl">
-<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
-${aboutTitle ? `<h2 class="font-headline-md text-headline-md mb-lg">${aboutTitle}</h2>` : '<h2 class="font-headline-md text-headline-md mb-lg">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
-${aboutSubtitle ? `<p class="font-body-md text-on-surface-variant mb-lg" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
-${aboutDescription ? `<p class="font-body-md text-on-surface-variant mb-xl" style="white-space: pre-line">${aboutDescription}</p>` : ''}
-<div class="grid grid-cols-3 gap-lg border-t border-white/10 pt-xl">
-<div>
-<div class="text-primary font-headline-sm mb-xs">${statsProjects}+</div>
-<div class="font-label-sm uppercase tracking-widest text-on-surface/60">פרויקטים</div>
 </div>
-<div>
-<div class="text-primary font-headline-sm mb-xs">${statsClients}+</div>
-<div class="font-label-sm uppercase tracking-widest text-on-surface/60">לקוחות</div>
+<div class="lg:col-span-7">
+<span class="about-section-label block mb-6">About · קצת עליי</span>
+${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h2>` : '<h2 class="about-title mb-8">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
+<div class="space-y-5">
+${aboutSubtitle ? `<p class="about-body-primary" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
+${aboutDescription ? `<p class="about-body-secondary" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 </div>
-<div>
-<div class="text-primary font-headline-sm mb-xs">${statsYears}</div>
-<div class="font-label-sm uppercase tracking-widest text-on-surface/60">שנות ניסיון</div>
+<div class="grid grid-cols-3 gap-lg pt-12 mt-4 max-w-xl">
+<div class="text-right">
+<div class="about-stat-number">${statsProjects}+</div>
+<div class="about-stat-label">פרויקטים</div>
+</div>
+<div class="text-right">
+<div class="about-stat-number">${statsClients}+</div>
+<div class="about-stat-label">לקוחות</div>
+</div>
+<div class="text-right">
+<div class="about-stat-number">${statsYears}</div>
+<div class="about-stat-label">שנות ניסיון</div>
+</div>
 </div>
 </div>
 </div>
 </div>
 </section>
 ` : ''}
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="gallery">
-<div class="flex flex-row-reverse justify-between items-end mb-lg md:mb-xxl">
+<section class="homepage-gallery-section py-xl md:py-xxl reveal-on-scroll" id="gallery">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl">
+<div class="flex flex-row-reverse justify-between items-end">
 <div>
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Portfolio</span>
 <h2 class="font-headline-md text-headline-md">תיק עבודות נבחר</h2>
 </div>
-<div class="hidden sm:block">
-<button class="flex items-center gap-sm font-label-sm group text-on-surface-variant hover:text-primary btn-fuchsia-transition uppercase tracking-widest">
-                        כל הגלריות
-                        <span class="material-symbols-outlined group-hover:translate-x-[-8px] transition-transform">arrow_back</span>
-</button>
 </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-md md:gap-lg sm:h-auto lg:h-[900px]">
-${galleries.length > 0 ? `
-<div class="sm:col-span-2 sm:row-span-2 relative group overflow-hidden bg-surface min-h-[400px] sm:min-h-[500px] lg:min-h-full">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="High-contrast cinematic portrait" src="${galleries[0]?.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
-<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[0].title}</h3>
-<p class="font-body-md text-on-primary/80">${new Date(galleries[0].created_at).getFullYear()}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[0].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
-</div>
-</div>
-</div>
-${galleries.length > 1 ? `
-<div class="sm:col-span-2 lg:col-span-2 relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale brightness-75 transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist architectural photograph" src="${galleries[1]?.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
-<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[1].title}</h3>
-<p class="font-body-md text-on-primary/80">${new Date(galleries[1].created_at).getFullYear()}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[1].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
-</div>
-</div>
-</div>
-` : ''}
-${galleries.length > 2 ? `
-<div class="relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Camera lens detail" src="${galleries[2]?.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
-<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[2].title}</h3>
-<p class="font-body-md text-on-primary/80">${new Date(galleries[2].created_at).getFullYear()}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[2].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
-</div>
-</div>
-</div>
-` : ''}
-${galleries.length > 3 ? `
-<div class="relative group overflow-hidden bg-surface min-h-[300px]">
-<img class="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:scale-105 group-hover:grayscale-0" data-alt="Minimalist landscape" src="${galleries[3]?.preview_url}"/>
-<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-xl">
-<div class="translate-y-4 group-hover:translate-y-0 transition-transform w-full">
-<h3 class="font-headline-sm text-on-primary mb-xs">${galleries[3].title}</h3>
-<p class="font-body-md text-on-primary/80">${new Date(galleries[3].created_at).getFullYear()}</p>
-<button onclick="window.parent.postMessage({type: 'navigate', url: '/public-gallery/${galleries[3].id}'}, '*')" class="mt-3 bg-white text-black px-4 py-2 text-sm font-semibold hover:bg-gray-200 transition-colors">
-צפה בגלריה
-</button>
-</div>
-</div>
-</div>
-` : ''}
-` : ''}
+<div class="homepage-gallery-grid">
+${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 </div>
 </section>
 <section class="section-transition-light py-xl md:py-xxl reveal-on-scroll" id="pricing">
@@ -2107,8 +2435,9 @@ ${galleries.length > 3 ? `
                 }
             </style>
 </section>
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="contact">
-<div class="max-w-4xl mx-auto text-center">
+<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll ${hasContactBg ? 'contact-section-has-bg' : ''}" id="contact">
+${contactBgLayers('#120f0d', '#1a1614')}
+<div class="max-w-4xl mx-auto text-center contact-section-content">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
 <h2 class="font-headline-md text-headline-md mb-md">בואו ניצור משהו בלתי נשכח</h2>
 <p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או צילומים.</p>
@@ -2140,7 +2469,7 @@ ${galleries.length > 3 ? `
 <footer class="bg-surface-dim border-t border-white/5 py-xl mt-xxl">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-lg max-w-7xl mx-auto w-full">
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
-                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `STUDIO <span class="text-primary font-light">GALLERY</span>`}
+                ${logo_url ? `<img src="${logo_url}" alt="${studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(studioName)}`}
 </div>
 <div class="flex flex-row-reverse gap-md lg:gap-xl">
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
@@ -2173,6 +2502,16 @@ ${galleries.length > 3 ? `
         });
         window.addEventListener('scroll', () => {
             const scrolled = window.pageYOffset;
+            const nav = document.getElementById('main-nav');
+            if (nav) {
+                if (scrolled > 80) {
+                    nav.classList.add('nav-scrolled', 'bg-background/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-white/10', 'shadow-sm');
+                    nav.classList.remove('py-md', 'border-none', 'bg-transparent');
+                } else {
+                    nav.classList.remove('nav-scrolled', 'bg-background/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-white/10', 'shadow-sm');
+                    nav.classList.add('py-md', 'border-none', 'bg-transparent');
+                }
+            }
             const heroImage = document.querySelector('section img');
             if(heroImage) {
                 heroImage.style.transform = \`translateY(\${scrolled * 0.25}px)\`;

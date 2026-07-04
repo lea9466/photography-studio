@@ -93,6 +93,17 @@ export function AuthForm({ mode, action, next }: AuthFormProps) {
             />
           </div>
 
+          {isLogin ? (
+            <p className="text-left text-sm">
+              <Link
+                href="/forgot-password"
+                className="text-[--muted] underline underline-offset-4 hover:text-[--foreground]"
+              >
+                שכחתי סיסמה
+              </Link>
+            </p>
+          ) : null}
+
           {state.error ? (
             <p className="text-sm text-[--foreground]" role="alert">
               {state.error}

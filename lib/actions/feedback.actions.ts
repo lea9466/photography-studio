@@ -49,6 +49,8 @@ export async function updateProfile(input: {
   hero_desktop_url?: string
   hero_mobile_url?: string
   about_image_url?: string
+  contact_desktop_url?: string
+  contact_mobile_url?: string
   phone?: string
   email?: string
   slug?: string
@@ -69,4 +71,5 @@ export async function updateProfile(input: {
   revalidatePath('/dashboard')
   revalidatePath('/g/[id]', 'page')
   revalidatePath('/portfolio/[slug]', 'page')
+  revalidatePath('/[slug]', 'page')
 }

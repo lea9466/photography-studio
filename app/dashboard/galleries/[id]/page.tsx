@@ -23,7 +23,6 @@ import { UploadEdited } from '@/components/gallery/UploadEdited'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { GalleryEditForm } from '@/components/dashboard/GalleryEditForm'
 import { Upload, Image as ImageIcon, Settings, Lock, Link as LinkIcon, Zap, Droplets, Download, UserCheck, Eye, ImageIcon as ImageIcon2, Rocket, User, Info } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 
@@ -252,15 +251,6 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           initialPhotoLimit={20}
         />
       </section>
-
-      {/* Floating Save Button */}
-      <div className="fixed bottom-8 left-8 z-50">
-        <Button
-          className="bg-[#6b2d43] text-white px-12 py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-[#5a2538] active:scale-[0.98] transition-all"
-        >
-          שמור הגדרות
-        </Button>
-      </div>
     </div>
   )
 }

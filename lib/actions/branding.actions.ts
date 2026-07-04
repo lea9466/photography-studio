@@ -10,7 +10,7 @@ import { createPresignedUploadUrl, resolveMediaUrl } from '@/lib/r2/storage'
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
 
-type BrandingImageType = 'logo' | 'hero_desktop' | 'hero_mobile' | 'about'
+type BrandingImageType = 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile'
 
 function validateBrandingFile(contentType: string, fileSize: number) {
   if (!ALLOWED_TYPES.includes(contentType)) {
@@ -94,6 +94,8 @@ export async function finalizeBrandingUpload(type: BrandingImageType, path: stri
   if (type === 'hero_desktop') updateData.hero_desktop_url = path
   if (type === 'hero_mobile') updateData.hero_mobile_url = path
   if (type === 'about') updateData.about_image_url = path
+  if (type === 'contact_desktop') updateData.contact_desktop_url = path
+  if (type === 'contact_mobile') updateData.contact_mobile_url = path
 
   const untypedClient = await createUntypedClient()
   const { error } = await untypedClient
@@ -118,6 +120,8 @@ export async function updateBrandingSettings(data: {
   heroDesktopUrl?: string
   heroMobileUrl?: string
   aboutImageUrl?: string
+  contactDesktopUrl?: string
+  contactMobileUrl?: string
   shouldColorLogo?: boolean
 }) {
   const supabase = await createClient()
@@ -139,6 +143,8 @@ export async function updateBrandingSettings(data: {
   if (data.heroDesktopUrl !== undefined) updateData.hero_desktop_url = data.heroDesktopUrl
   if (data.heroMobileUrl !== undefined) updateData.hero_mobile_url = data.heroMobileUrl
   if (data.aboutImageUrl !== undefined) updateData.about_image_url = data.aboutImageUrl
+  if (data.contactDesktopUrl !== undefined) updateData.contact_desktop_url = data.contactDesktopUrl
+  if (data.contactMobileUrl !== undefined) updateData.contact_mobile_url = data.contactMobileUrl
   if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
   const untypedClient = await createUntypedClient()
