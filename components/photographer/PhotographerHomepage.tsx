@@ -94,6 +94,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
   .homepage-gallery-grid {
     display: flex;
     flex-wrap: wrap;
+    align-items: stretch;
     gap: 3px;
     width: 100%;
     max-width: 100%;
@@ -105,6 +106,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
     .homepage-gallery-grid {
       flex-wrap: nowrap;
       gap: 4px;
+      aspect-ratio: 16 / 9;
     }
   }
   .homepage-gallery-card {
@@ -112,8 +114,8 @@ const UNIFIED_GALLERY_GRID_CSS = `
     display: block;
     flex: 1 1 calc(50% - 1.5px);
     min-width: 0;
+    height: calc((100vw * 0.96 - 3px) / 2 * 3 / 2);
     transition: flex 0.5s ease;
-    aspect-ratio: 2 / 3;
     overflow: hidden;
     background: #eae8e5;
     text-decoration: none;
@@ -126,7 +128,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
   @media (min-width: 768px) {
     .homepage-gallery-card {
       flex: 1 1 0;
-      aspect-ratio: 4 / 9;
+      height: 100%;
     }
   }
   .homepage-gallery-card-image {
