@@ -11,6 +11,7 @@ import {
 import {
   applyWatermarkToBlob,
   buildPhotoStoragePaths,
+  readImageDimensions,
 } from '@/lib/images/process'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 
@@ -41,6 +42,8 @@ type UploadSuccess = {
   originalPath: string
   previewPath: string
   watermarkedPath: string
+  width: number | null
+  height: number | null
 }
 
 type UploadFailure = {
@@ -160,11 +163,29 @@ async function uploadReservedPhoto(
   watermarkText: string | null | undefined,
   uploadUrls: string[]
 ): Promise<
-  | { ok: true; id: string; originalPath: string; previewPath: string; watermarkedPath: string }
+  | {
+      ok: true
+      id: string
+      originalPath: string
+      previewPath: string
+      watermarkedPath: string
+      width: number | null
+      height: number | null
+    }
   | { ok: false; message: string; paths: ReturnType<typeof buildPhotoStoragePaths> }
 > {
   const paths = buildPhotoStoragePaths(userId, galleryId, job.photoId)
   const originalContentType = job.file.type || 'image/jpeg'
+
+  let width: number | null = null
+  let height: number | null = null
+  try {
+    const dims = await readImageDimensions(job.file)
+    width = dims.width
+    height = dims.height
+  } catch {
+    // Dimensions are optional — homepage falls back to random selection.
+  }
 
   let previewBlob: Blob
   try {
@@ -201,6 +222,8 @@ async function uploadReservedPhoto(
     originalPath: paths.originalPath,
     previewPath: paths.previewPath,
     watermarkedPath: paths.watermarkedPath,
+    width,
+    height,
   }
 }
 
@@ -428,6 +451,8 @@ export async function uploadGalleryPhotosWithQueue(
               originalPath: result.originalPath,
               previewPath: result.previewPath,
               watermarkedPath: result.watermarkedPath,
+              width: result.width,
+              height: result.height,
             })
             completed++
             callbacks?.onPhotoUploaded?.(job.photoId)

@@ -82,6 +82,8 @@ export async function completePhotosBatch(
     originalPath: string
     previewPath: string
     watermarkedPath: string
+    width?: number | null
+    height?: number | null
   }[],
   isProcessed = false
 ) {
@@ -107,6 +109,9 @@ export async function completePhotosBatch(
             preview_url: item.previewPath,
             watermarked_preview_url: item.watermarkedPath,
             is_processed: isProcessed,
+            ...(item.width != null && item.height != null
+              ? { width: item.width, height: item.height }
+              : {}),
           } as never)
           .eq('id', item.id)
           .eq('gallery_id', galleryId)

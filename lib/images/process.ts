@@ -98,6 +98,16 @@ export function resolveWatermarkText(
 export type ProcessedImages = {
   preview: Blob
   watermarked: Blob
+  width: number
+  height: number
+}
+
+export async function readImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  const img = await loadImage(file)
+  return {
+    width: img.naturalWidth || img.width,
+    height: img.naturalHeight || img.height,
+  }
 }
 
 export async function processImageFile(
@@ -105,6 +115,8 @@ export async function processImageFile(
   watermarkText?: string
 ): Promise<ProcessedImages> {
   const img = await loadImage(file)
+  const width = img.naturalWidth || img.width
+  const height = img.naturalHeight || img.height
   const previewCanvas = resizeCanvas(img, MAX_PREVIEW_SIZE)
   const preview = await canvasToBlob(previewCanvas, PREVIEW_QUALITY)
   previewCanvas.width = 0
@@ -118,7 +130,7 @@ export async function processImageFile(
   watermarkedCanvas.width = 0
   watermarkedCanvas.height = 0
 
-  return { preview, watermarked }
+  return { preview, watermarked, width, height }
 }
 
 export function buildStoragePath(

@@ -228,6 +228,8 @@ export type Database = {
           is_visible_to_client: boolean
           is_processed: boolean
           sort_order: number
+          width: number | null
+          height: number | null
           created_at: string
         }
         Insert: {
@@ -239,6 +241,8 @@ export type Database = {
           is_visible_to_client?: boolean
           is_processed?: boolean
           sort_order?: number
+          width?: number | null
+          height?: number | null
           created_at?: string
         }
         Update: {
@@ -250,6 +254,8 @@ export type Database = {
           is_visible_to_client?: boolean
           is_processed?: boolean
           sort_order?: number
+          width?: number | null
+          height?: number | null
           created_at?: string
         }
         Relationships: [

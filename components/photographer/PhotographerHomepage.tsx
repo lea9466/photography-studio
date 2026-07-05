@@ -5,7 +5,6 @@ import {
   generateHeroSlideshowHTML,
   generateModernHeroFilmBeltHTML,
   HERO_SLIDESHOW_CSS,
-  HERO_SLIDESHOW_FILM_INIT_SCRIPT,
   HERO_SLIDESHOW_INIT_SCRIPT,
   MODERN_HERO_FILM_BELT_CSS,
   MODERN_HERO_FILM_INIT_SCRIPT,
@@ -214,11 +213,14 @@ const RECENT_PHOTOS_GRID_CSS = `
   .recent-photos-section {
     width: 100%;
     overflow: hidden;
-    padding-top: 0 !important;
+    padding-top: 2rem !important;
     padding-bottom: 2.5rem !important;
   }
   @media (min-width: 768px) {
-    .recent-photos-section { padding-bottom: 3.5rem !important; }
+    .recent-photos-section {
+      padding-top: 3rem !important;
+      padding-bottom: 3.5rem !important;
+    }
   }
   .recent-photos-header {
     width: 100%;
@@ -232,15 +234,28 @@ const RECENT_PHOTOS_GRID_CSS = `
   }
   .recent-photos-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 3px;
     width: 100%;
     max-width: 100%;
     margin-inline: 0;
     padding-inline: 2%;
   }
+  @media (min-width: 640px) {
+    .recent-photos-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+    }
+  }
   @media (min-width: 768px) {
-    .recent-photos-grid { gap: 4px; }
+    .recent-photos-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 1024px) {
+    .recent-photos-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
   .recent-photo-cell {
     position: relative;
@@ -742,12 +757,21 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 
   const sectionBgCss = hasContactBg || hasPackagesBg
     ? `
-        .contact-section-has-bg { position: relative; overflow: hidden; width: 100%; }
+        .contact-section-has-bg {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            max-width: none !important;
+        }
         .contact-section-bg {
             position: absolute;
-            inset: 0;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 100vw;
+            max-width: 100vw;
+            margin-left: -50vw;
             z-index: 0;
-            width: 100%;
             height: 100%;
             background-size: cover;
             background-position: center;
@@ -772,9 +796,13 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         }
         .contact-section-bg-overlay {
             position: absolute;
-            inset: 0;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 100vw;
+            max-width: 100vw;
+            margin-left: -50vw;
             z-index: 0;
-            width: 100%;
             height: 100%;
             pointer-events: none;
         }
@@ -839,7 +867,6 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     mobileImages: mobileHeroImages,
     alt: studio_name || 'סטודיו צילום',
     heroId: 'hero-slideshow-bold',
-    transition: 'film',
     imgClass: 'bold-hero-image',
   })
   const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
@@ -1373,9 +1400,9 @@ ${hasTestimonials ? `
 <div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
 </section>
 ` : ''}
-<section id="contact" class="pt-32 pb-12 px-margin-mobile md:px-margin-desktop ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b]'} text-white reveal-on-scroll">
+<section id="contact" class="pt-32 pb-12 ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b] px-margin-mobile md:px-margin-desktop'} text-white reveal-on-scroll">
 ${contactBgLayers('#FAFAF8', '#1c1b1b')}
-<div class="max-w-4xl mx-auto contact-section-content">
+<div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop">
 <div class="text-center mb-16">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl mb-4">צרי קשר</h2>
 <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
@@ -1724,9 +1751,9 @@ ${hasTestimonials ? `
 <div class="testimonials-section-grid">${generateTestimonialsHTML('modern')}</div>
 </section>
 ` : ''}
-<section class="max-w-7xl mx-auto px-lg ${hasContactBg ? 'contact-section-has-bg rounded-2xl' : ''}" id="contact">
+<section class="w-full ${hasContactBg ? 'contact-section-has-bg py-xxl' : 'max-w-7xl mx-auto px-lg'}" id="contact">
 ${contactBgLayers('#F8FAFC')}
-<div class="contact-section-content">
+<div class="contact-section-content${hasContactBg ? ' max-w-7xl mx-auto px-lg' : ''}">
 <div class="${hasContactBg ? 'bg-primary/88 backdrop-blur-sm' : 'bg-primary'} rounded-2xl p-xl md:p-xxl text-white animate-reveal">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
 <div class="max-w-md text-right">
@@ -2539,33 +2566,32 @@ ${generateSiteFooter(siteChrome('classic'))}
             background-color: #ffffff;
             color: var(--deep-charcoal);
         }
-        @keyframes revealUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        @keyframes revealScale {
-            from { transform: scale(1.1); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .reveal-up {
-            animation: revealUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        .stagger-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
         }
-        .reveal-delay-1 { animation-delay: 0.2s; }
-        .reveal-delay-2 { animation-delay: 0.4s; }
+        .reveal.active .stagger-item {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .stagger-item:nth-child(1) { transition-delay: 0.1s; }
+        .stagger-item:nth-child(2) { transition-delay: 0.2s; }
+        .stagger-item:nth-child(3) { transition-delay: 0.3s; }
         .stagger-grid-item {
             transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .btn-fuchsia-transition {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .reveal-on-scroll {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .reveal-on-scroll.active {
-            opacity: 1;
-            transform: translateY(0);
         }
         .about-section-label {
             font-family: 'Heebo', sans-serif;
@@ -2843,21 +2869,21 @@ ${generateSiteFooter(siteChrome('classic'))}
 </head>
 <body class="bg-background text-on-surface">
 ${generateSiteNav(siteChrome('dark'))}
-<section class="relative min-h-[90vh] flex items-end overflow-hidden" id="hero">
+<section class="relative h-screen w-full flex items-end overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0">
 ${heroSlideshowBoldHtml}
 <div class="bold-hero-overlay absolute inset-0"></div>
 <div class="bold-hero-bottom-merge"></div>
 </div>
 <div class="bold-hero-content">
-<span class="bold-hero-label mb-lg block opacity-0 reveal-up">Premium Studio</span>
-<h1 class="bold-hero-title text-on-surface mb-md opacity-0 reveal-up reveal-delay-1">
+<span class="bold-hero-label mb-lg block">Premium Studio</span>
+<h1 class="bold-hero-title text-on-surface mb-md">
                     ${brandLastWord(studioName)}
                 </h1>
-<p class="font-body-md text-body-md max-w-xl mb-xl opacity-0 reveal-up reveal-delay-2 text-on-surface-variant leading-relaxed">
+<p class="font-body-md text-body-md max-w-xl mb-xl text-on-surface-variant leading-relaxed">
                     ${aboutText}
                 </p>
-<div class="bold-hero-actions flex flex-col sm:flex-row gap-lg opacity-0 reveal-up reveal-delay-2">
+<div class="bold-hero-actions flex flex-col sm:flex-row gap-lg">
 <button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-primary text-primary bg-transparent px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary">
                         צפו בגלריה
                     </button>
@@ -2868,7 +2894,7 @@ ${heroSlideshowBoldHtml}
 </div>
 </section>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="relative w-full py-xl md:py-xxl reveal-on-scroll overflow-hidden" id="about">
+<section class="relative w-full py-xl md:py-xxl reveal overflow-hidden" id="about">
 <div class="about-glow about-glow-left" style="background: radial-gradient(circle, ${primaryColor}70 0%, ${primaryColor}45 24%, ${primaryColor}22 46%, transparent 72%);"></div>
 <div class="about-inner relative z-10">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-xxl items-center">
@@ -2907,13 +2933,11 @@ ${hasStats ? `
 </div>
 </section>
 ` : ''}
-<section class="homepage-gallery-section py-xl md:py-xxl reveal-on-scroll" id="gallery">
-<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl">
-<div class="flex flex-row-reverse justify-between items-end">
+<section class="homepage-gallery-section py-xl md:py-xxl reveal" id="gallery">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-left">
 <div>
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Portfolio</span>
 <h2 class="font-headline-md text-headline-md">תיק עבודות נבחר</h2>
-</div>
 </div>
 </div>
 <div class="homepage-gallery-grid">
@@ -2922,12 +2946,10 @@ ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 </section>
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 <section class="recent-photos-section" id="recent-photos">
-<div class="recent-photos-header">
-<div class="flex flex-row-reverse justify-between items-end">
+<div class="recent-photos-header text-left">
 <div>
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
 <h2 class="font-headline-md text-headline-md">תמונות אחרונות</h2>
-</div>
 </div>
 </div>
 <div class="recent-photos-grid recent-photos-grid--dark">
@@ -2936,7 +2958,7 @@ ${generateRecentPhotosGridHTML(galleries, 'dark')}
 </section>
 ` : ''}
 ${hasPackages ? (hasPackagesBg ? `
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll contact-section-has-bg" id="pricing">
+<section class="py-xl md:py-xxl container mx-auto px-lg reveal contact-section-has-bg" id="pricing">
 ${packagesBgLayers('#ffffff', '#ffffff')}
 <div class="contact-section-content">
 <div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
@@ -2948,7 +2970,7 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 </div>
 </section>
 ` : `
-<section class="section-transition-light py-xl md:py-xxl reveal-on-scroll" id="pricing">
+<section class="section-transition-light py-xl md:py-xxl reveal" id="pricing">
 <div class="container mx-auto px-lg">
 <div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
@@ -2960,7 +2982,7 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 </section>
 `) : ''}
 ${hasTestimonials ? `
-<section class="testimonials-section py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="testimonials">
+<section class="testimonials-section py-xl md:py-xxl container mx-auto px-lg reveal" id="testimonials">
 <div class="text-center mb-xl md:mb-xxl">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Kind Words</span>
 <h2 class="font-headline-md text-headline-md">מה הלקוחות שלנו אומרים</h2>
@@ -2982,9 +3004,9 @@ ${hasTestimonials ? `
                 }
             </style>
 </section>
-<section class="pt-xl md:pt-xxl pb-xl container mx-auto px-lg reveal-on-scroll ${hasContactBg ? 'contact-section-has-bg' : ''}" id="contact">
+<section class="w-full pt-xl md:pt-xxl pb-xl reveal ${hasContactBg ? 'contact-section-has-bg' : 'container mx-auto px-lg'}" id="contact">
 ${contactBgLayers('#120f0d', '#1a1614')}
-<div class="max-w-4xl mx-auto text-center contact-section-content">
+<div class="max-w-4xl mx-auto text-center contact-section-content${hasContactBg ? ' container px-lg' : ''}">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
 <h2 class="font-headline-md text-headline-md mb-md">בואו ניצור משהו בלתי נשכח</h2>
 <p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או צילומים.</p>
@@ -3015,34 +3037,24 @@ ${contactBgLayers('#120f0d', '#1a1614')}
 </main>
 ${generateSiteFooter(siteChrome('dark'))}
 <script>
+        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+        document.querySelectorAll('.reveal').forEach(el => { observer.observe(el); });
         window.addEventListener('load', () => {
-            const revealOnScroll = () => {
-                const reveals = document.querySelectorAll('.reveal-on-scroll');
-                reveals.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    const windowHeight = window.innerHeight;
-                    if (rect.top < windowHeight * 0.85) {
-                        el.classList.add('active');
-                    }
-                });
-            };
-            revealOnScroll();
-        });
-        window.addEventListener('scroll', () => {
-            const revealOnScroll = () => {
-                const reveals = document.querySelectorAll('.reveal-on-scroll');
-                reveals.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    const windowHeight = window.innerHeight;
-                    if (rect.top < windowHeight * 0.85) {
-                        el.classList.add('active');
-                    }
-                });
-            };
-            revealOnScroll();
+            document.querySelectorAll('.reveal').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight) {
+                    el.classList.add('active');
+                }
+            });
         });
         ${generateSiteNavScrollScript('dark')}
-        ${HERO_SLIDESHOW_FILM_INIT_SCRIPT}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {

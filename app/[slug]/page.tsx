@@ -6,6 +6,10 @@ import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import { resolveTestimonialImageUrl } from '@/lib/testimonial-image-url'
+import {
+  buildLandscapePreferredPool,
+  type PhotoCandidate,
+} from '@/lib/homepage-photo-pool'
 
 interface PageProps {
   params: Promise<{
@@ -147,47 +151,44 @@ export default async function PhotographerPage({ params }: PageProps) {
       }))
     )
 
-    // Build a pool of photos per gallery for the "recent photos" grid.
-    // Each gallery becomes one row of 4 randomly-selected photos.
-    const shuffle = <T,>(arr: T[]): T[] => {
-      const a = [...arr]
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[a[i], a[j]] = [a[j], a[i]]
-      }
-      return a
-    }
-
+    // Build a pool of photos per public gallery for the "recent photos" grid.
+    // Prefer landscape photos (width > height), swapping portraits when possible.
     const galleriesWithPools = await Promise.all(
       galleriesWithSignedUrls.map(async (gallery: any) => {
         let bucket: 'previews' | 'edited' = 'previews'
-        let rawPaths: string[] = []
+        let candidates: PhotoCandidate[] = []
 
         const { data: editedPhotos } = await admin
           .from('edited_photos')
-          .select('final_url')
+          .select('final_url, photos(width, height)')
           .eq('gallery_id', gallery.id)
 
         if (editedPhotos && editedPhotos.length > 0) {
           bucket = 'edited'
-          rawPaths = (editedPhotos as any[])
-            .map((p) => p.final_url)
-            .filter(Boolean)
+          candidates = (editedPhotos as any[])
+            .map((p) => ({
+              path: p.final_url as string,
+              width: (p.photos as { width: number | null; height: number | null } | null)?.width ?? null,
+              height: (p.photos as { width: number | null; height: number | null } | null)?.height ?? null,
+            }))
+            .filter((p) => Boolean(p.path))
         } else {
           const { data: regularPhotos } = await admin
             .from('photos')
-            .select('preview_url')
+            .select('preview_url, width, height')
             .eq('gallery_id', gallery.id)
             .eq('is_visible_to_client', true)
-          rawPaths = (regularPhotos as any[] | null)
-            ?.map((p) => p.preview_url)
-            .filter(Boolean) ?? []
+          candidates =
+            (regularPhotos as any[] | null)?.map((p) => ({
+              path: p.preview_url as string,
+              width: p.width ?? null,
+              height: p.height ?? null,
+            })).filter((p) => Boolean(p.path)) ?? []
         }
 
-        // Randomize, then cap the pool so we don't sign hundreds of URLs.
-        const pool = shuffle(rawPaths).slice(0, 16)
-        const signed = await signStoragePaths(bucket, pool, gallery.id)
-        const photoPool = pool
+        const poolPaths = buildLandscapePreferredPool(candidates)
+        const signed = await signStoragePaths(bucket, poolPaths, gallery.id)
+        const photoPool = poolPaths
           .map((path) =>
             path?.startsWith('http') ? path : signed[path] ?? null
           )
