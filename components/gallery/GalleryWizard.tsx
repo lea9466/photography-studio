@@ -501,7 +501,7 @@ export function GalleryWizard({
                     <p className="text-sm text-[#48464c] leading-relaxed">
                       {type === 'selection'
                         ? 'אידיאלי לתהליכי עבודה. הלקוח יכול לסמן לבבות על תמונות נבחרות לצורך עריכה או הדפסה.'
-                        : 'גלריה ציבורית להצגת מיטב העבודות שלך. מותאם לקידום מכירות והצגה מרהיבה לקהל הרחב.'}
+                        : 'גלריה ציבורית להצגת מיטב העבודות שלך. בדף הבית — עד 4 גלריות: כרטיס עם תמונת שער + 4 תמונות בסקשן "תמונות אחרונות".'}
                     </p>
                     <div className="mt-auto pt-4 flex items-center gap-2 text-[#7D3A52] font-semibold text-sm">
                       <span>

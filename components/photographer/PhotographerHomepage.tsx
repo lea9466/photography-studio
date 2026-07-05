@@ -3,9 +3,12 @@
 import { useEffect, useState } from 'react'
 import {
   generateHeroSlideshowHTML,
+  generateModernHeroFilmBeltHTML,
   HERO_SLIDESHOW_CSS,
   HERO_SLIDESHOW_FILM_INIT_SCRIPT,
   HERO_SLIDESHOW_INIT_SCRIPT,
+  MODERN_HERO_FILM_BELT_CSS,
+  MODERN_HERO_FILM_INIT_SCRIPT,
   normalizeHeroUrlList,
 } from '@/lib/hero-slideshow'
 import {
@@ -51,6 +54,7 @@ interface Gallery {
   preview_url: string | null
   created_at: string
   photographer_slug: string
+  photo_pool?: string[] | null
 }
 
 interface Package {
@@ -79,15 +83,20 @@ const UNIFIED_GALLERY_GRID_CSS = `
   .homepage-gallery-section {
     width: 100%;
     overflow: hidden;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
   .homepage-gallery-header {
     width: 100%;
     max-width: 80rem;
     margin-inline: auto;
+    margin-bottom: 1rem !important;
+    padding-top: 1.5rem;
     padding-inline: 1rem;
   }
   @media (min-width: 768px) {
     .homepage-gallery-header {
+      padding-top: 2rem;
       padding-inline: 2rem;
     }
   }
@@ -106,7 +115,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
     .homepage-gallery-grid {
       flex-wrap: nowrap;
       gap: 4px;
-      aspect-ratio: 16 / 9;
+      height: clamp(360px, calc(100svh - 14rem + 30px), 760px);
     }
   }
   .homepage-gallery-card {
@@ -115,6 +124,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
     flex: 1 1 calc(50% - 1.5px);
     min-width: 0;
     height: calc((100vw * 0.96 - 3px) / 2 * 3 / 2);
+    max-height: calc(100svh - 14rem + 30px);
     transition: flex 0.5s ease;
     overflow: hidden;
     background: #eae8e5;
@@ -129,6 +139,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
     .homepage-gallery-card {
       flex: 1 1 0;
       height: 100%;
+      max-height: none;
     }
   }
   .homepage-gallery-card-image {
@@ -137,7 +148,6 @@ const UNIFIED_GALLERY_GRID_CSS = `
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 1.2s ease-out;
   }
   .homepage-gallery-card-overlay {
     position: absolute;
@@ -197,8 +207,99 @@ const UNIFIED_GALLERY_GRID_CSS = `
     opacity: 1;
     transform: translateY(0);
   }
-  .homepage-gallery-card:hover .homepage-gallery-card-image { transform: scale(1.05); }
   .homepage-gallery-card:hover .homepage-gallery-card-arrow { transform: translateX(-4px); }
+`
+
+const RECENT_PHOTOS_GRID_CSS = `
+  .recent-photos-section {
+    width: 100%;
+    overflow: hidden;
+    padding-top: 0 !important;
+    padding-bottom: 2.5rem !important;
+  }
+  @media (min-width: 768px) {
+    .recent-photos-section { padding-bottom: 3.5rem !important; }
+  }
+  .recent-photos-header {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    margin-bottom: 1rem;
+    padding-inline: 1rem;
+  }
+  @media (min-width: 768px) {
+    .recent-photos-header { padding-inline: 2rem; }
+  }
+  .recent-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding-inline: 2%;
+  }
+  @media (min-width: 768px) {
+    .recent-photos-grid { gap: 4px; }
+  }
+  .recent-photo-cell {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: #eae8e5;
+    text-decoration: none;
+    opacity: 0;
+    transform: scale(0.82);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  .recent-photo-cell.is-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  .recent-photo-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1s ease-out;
+  }
+  .recent-photo-cell:hover .recent-photo-img { transform: scale(1.06); }
+  /* Theme radius variants (mirror the gallery cards) */
+  .recent-photos-grid--elegant .recent-photo-cell { border-radius: 0px; }
+  .recent-photos-grid--modern .recent-photo-cell { border-radius: 12px; }
+  .recent-photos-grid--classic .recent-photo-cell { border-radius: 4px; }
+  .recent-photos-grid--dark .recent-photo-cell { border-radius: 0px; }
+`
+
+const RECENT_PHOTOS_REVEAL_SCRIPT = `
+(function initRecentPhotosReveal() {
+  function boot() {
+    var cells = [].slice.call(document.querySelectorAll('.recent-photo-cell'));
+    if (!cells.length) return;
+    if (!('IntersectionObserver' in window)) {
+      cells.forEach(function(c) { c.classList.add('is-visible'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var cell = entry.target;
+        var delay = parseInt(cell.getAttribute('data-reveal-delay') || '0', 10);
+        setTimeout(function() { cell.classList.add('is-visible'); }, delay);
+        observer.unobserve(cell);
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
+    cells.forEach(function(c) { observer.observe(c); });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
 `
 
 const TESTIMONIAL_THUMB_CARD_CSS = `
@@ -231,6 +332,12 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
     .classic-testimonials-carousel .testimonials-row {
       flex-wrap: nowrap;
       gap: 2.5rem;
+    }
+    .testimonials-section-grid > .testimonial-thumb-card,
+    .testimonials-row > .testimonial-thumb-card {
+      flex: 0 0 calc((100% - 6rem) / 3);
+      max-width: calc((100% - 6rem) / 3);
+      min-width: 0;
     }
   }
   .testimonial-thumb-card {
@@ -429,6 +536,59 @@ function generateUnifiedGalleryGridHTML(
     .join('')
 }
 
+function pickRowPhotos(pool: string[], offset: number, count: number): string[] {
+  if (pool.length === 0) return []
+  const result: string[] = []
+  for (let i = 0; i < count; i++) {
+    result.push(pool[(offset + i) % pool.length])
+  }
+  return result
+}
+
+function generateRecentPhotosGridHTML(
+  galleries: Gallery[],
+  themeVariant: 'elegant' | 'modern' | 'classic' | 'dark'
+): string {
+  const withPhotos = galleries.filter((g) => (g.photo_pool?.length ?? 0) > 0)
+  if (withPhotos.length === 0) return ''
+
+  const rows = fillGalleriesToFour(withPhotos)
+  // Track how many times each real gallery was used so duplicated rows
+  // pull a different slice of photos from the same pool.
+  const usage: Record<string, number> = {}
+
+  let cellIndex = 0
+  const rowsHtml = rows
+    .map((g) => {
+      const pool = g.photo_pool ?? []
+      const baseId = galleryNavId(g.id)
+      const galleryUrl = `/public-gallery/${baseId}`
+      const used = usage[baseId] ?? 0
+      usage[baseId] = used + 1
+      const photos = pickRowPhotos(pool, used * 4, 4)
+      const title = String(g.title)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
+      return photos
+        .map((src) => {
+          const delay = (cellIndex % 4) * 90
+          cellIndex++
+          return `
+<a href="${galleryUrl}" target="_parent" class="recent-photo-cell" data-reveal-delay="${delay}" aria-label="${title}">
+  <img alt="${title}" class="recent-photo-img" src="${src}" loading="lazy" decoding="async" />
+</a>`
+        })
+        .join('')
+    })
+    .join('')
+
+  return rowsHtml
+}
+
 interface PhotographerHomepageProps {
   photographer: Photographer
   galleries?: Gallery[]
@@ -594,13 +754,17 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             background-repeat: no-repeat;
             pointer-events: none;
         }
-        .contact-section-bg-desktop { display: none; opacity: 0.52; }
+        .contact-section-bg-desktop {
+            display: none;
+            opacity: 0.4;
+            filter: brightness(1.45) saturate(0.68) contrast(0.9);
+        }
         .contact-section-bg-mobile {
             display: block;
-            opacity: 0.3;
-            filter: brightness(1.42) saturate(0.88);
-            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 48%, transparent 88%);
-            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.15) 48%, transparent 88%);
+            opacity: 0.22;
+            filter: brightness(1.65) saturate(0.62) contrast(0.88);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.06) 52%, transparent 84%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.06) 52%, transparent 84%);
         }
         @media (min-width: 768px) {
             .contact-section-bg-desktop { display: block; }
@@ -616,12 +780,12 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         }
         @media (max-width: 767px) {
             .contact-section-bg-overlay {
-                background: linear-gradient(to bottom, transparent 0%, var(--contact-fade, #FAFAF8) 86%);
+                background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--contact-fade, #FAFAF8) 55%, transparent) 62%, var(--contact-fade, #FAFAF8) 94%);
             }
         }
         @media (min-width: 768px) {
             .contact-section-bg-overlay {
-                background: linear-gradient(to bottom, color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 38%, transparent), color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 80%, transparent));
+                background: linear-gradient(to bottom, color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 58%, transparent), color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 96%, transparent));
             }
         }
         .contact-section-content { position: relative; z-index: 1; }
@@ -664,7 +828,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     mobileImages: mobileHeroImages,
     alt: studio_name || 'סטודיו צילום',
   })
-  const heroSlideshowModernHtml = generateHeroSlideshowHTML({
+  const heroSlideshowModernHtml = generateModernHeroFilmBeltHTML({
     desktopImages: desktopHeroImages,
     mobileImages: mobileHeroImages,
     alt: studio_name || 'סטודיו צילום',
@@ -1102,6 +1266,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
@@ -1176,6 +1341,18 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
 ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 </div>
 </section>
+${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
+<section class="recent-photos-section" id="recent-photos">
+<div class="recent-photos-header">
+<div class="flex flex-row-reverse justify-between items-end">
+<h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">תמונות אחרונות</h2>
+</div>
+</div>
+<div class="recent-photos-grid recent-photos-grid--elegant">
+${generateRecentPhotosGridHTML(galleries, 'elegant')}
+</div>
+</section>
+` : ''}
 ${hasPackages ? `
 <section class="py-32 px-margin-mobile md:px-margin-desktop ${hasPackagesBg ? 'contact-section-has-bg' : 'bg-[#f2f1ef]'}" id="pricing">
 ${packagesBgLayers('#f2f1ef', '#f2f1ef')}
@@ -1273,6 +1450,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
 </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+<script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -1381,33 +1559,10 @@ ${generateSiteFooter(siteChrome('elegant'))}
         .modern-nav.nav-scrolled .modern-nav-logo {
             filter: none;
         }
-        .modern-about-overlay {
-            background: linear-gradient(
-                to left,
-                rgba(15, 23, 42, 0.55) 0%,
-                rgba(15, 23, 42, 0.22) 30%,
-                transparent 55%
-            );
-            pointer-events: none;
-        }
         .modern-about-content {
             color: #ffffff;
             text-align: right;
             position: relative;
-        }
-        .modern-about-content::before {
-            content: '';
-            position: absolute;
-            inset: -1.5rem -1.5rem -1.5rem -3rem;
-            background: linear-gradient(
-                to left,
-                rgba(15, 23, 42, 0.82) 0%,
-                rgba(15, 23, 42, 0.45) 55%,
-                transparent 100%
-            );
-            border-radius: 1rem;
-            z-index: -1;
-            pointer-events: none;
         }
         .modern-about-content h1,
         .modern-about-content p,
@@ -1423,8 +1578,9 @@ ${generateSiteFooter(siteChrome('elegant'))}
             color: rgba(255, 255, 255, 0.82);
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
-        ${HERO_SLIDESHOW_CSS}
+        ${MODERN_HERO_FILM_BELT_CSS}
         ${sectionBgCss}
     </style>
 <script id="tailwind-config">
@@ -1469,7 +1625,6 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="relative min-h-screen w-full overflow-hidden" id="about">
 <div class="absolute inset-0 z-0">
 ${heroSlideshowModernHtml}
-<div class="modern-about-overlay absolute inset-0"></div>
 </div>
 <div class="relative z-10 min-h-screen flex items-center pt-[80px]">
 <div class="w-full max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center min-h-[calc(100vh-80px)]">
@@ -1526,6 +1681,21 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 </div>
 </section>
+${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
+<section class="recent-photos-section" id="recent-photos">
+<div class="recent-photos-header">
+<div class="flex flex-row-reverse justify-between items-end gap-md">
+<div class="text-right">
+<h2 class="font-headline text-4xl font-bold mb-xs">תמונות אחרונות</h2>
+<p class="text-on-surface-variant">רגעים נבחרים מהעבודות שלנו</p>
+</div>
+</div>
+</div>
+<div class="recent-photos-grid recent-photos-grid--modern">
+${generateRecentPhotosGridHTML(galleries, 'modern')}
+</div>
+</section>
+` : ''}
 ${hasPackages ? (hasPackagesBg ? `
 <section class="max-w-7xl mx-auto px-lg contact-section-has-bg rounded-2xl py-xxl" id="pricing">
 ${packagesBgLayers('#F8FAFC')}
@@ -1603,8 +1773,9 @@ ${contactBgLayers('#F8FAFC')}
 </main>
 ${generateSiteFooter(siteChrome('modern'))}
 <script>${generateSiteNavScrollScript('modern')}</script>
-<script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${MODERN_HERO_FILM_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+<script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -1975,6 +2146,7 @@ ${generateSiteFooter(siteChrome('modern'))}
             background: ${primaryColor};
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
@@ -2156,6 +2328,19 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'classic')}
 </div>
 </section>
+${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
+<section class="recent-photos-section" id="recent-photos">
+<div class="recent-photos-header">
+<div class="text-center">
+<h2 class="font-headline-md text-headline-md text-on-surface">תמונות אחרונות</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-sm">רגעים נבחרים מהעבודות שלנו</p>
+</div>
+</div>
+<div class="recent-photos-grid recent-photos-grid--classic">
+${generateRecentPhotosGridHTML(galleries, 'classic')}
+</div>
+</section>
+` : ''}
 ${hasPackages ? `
 <section class="py-xxl reveal ${hasPackagesBg ? 'contact-section-has-bg border-t border-outline-variant/10' : ''}" id="pricing">
 ${packagesBgLayers('#fdf8f7', '#f7f3f2')}
@@ -2303,6 +2488,7 @@ ${generateSiteFooter(siteChrome('classic'))}
     </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+<script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -2575,6 +2761,7 @@ ${generateSiteFooter(siteChrome('classic'))}
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
@@ -2582,17 +2769,24 @@ ${generateSiteFooter(siteChrome('classic'))}
         #contact.contact-section-has-bg .contact-section-bg-mobile,
         #pricing.contact-section-has-bg .contact-section-bg-desktop,
         #pricing.contact-section-has-bg .contact-section-bg-mobile {
-            opacity: 0.72;
-            filter: grayscale(10%) brightness(1.14) contrast(1.04);
+            opacity: 0.48;
+            filter: grayscale(6%) brightness(1.42) contrast(0.9) saturate(0.66);
             -webkit-mask-image: none;
             mask-image: none;
         }
         #contact.contact-section-has-bg .contact-section-bg-overlay {
             background: linear-gradient(
                 to top,
-                rgba(18, 18, 23, 0.78) 0%,
-                rgba(18, 18, 23, 0.06) 45%,
-                rgba(18, 18, 23, 0.42) 100%
+                rgba(18, 18, 23, 0.5) 0%,
+                rgba(18, 18, 23, 0.02) 42%,
+                rgba(18, 18, 23, 0.18) 100%
+            );
+        }
+        #pricing.contact-section-has-bg .contact-section-bg-overlay {
+            background: linear-gradient(
+                to bottom,
+                color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fdf8f7)) 62%, transparent),
+                color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fdf8f7)) 97%, transparent)
             );
         }
     </style>
@@ -2726,6 +2920,21 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 </div>
 </section>
+${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
+<section class="recent-photos-section" id="recent-photos">
+<div class="recent-photos-header">
+<div class="flex flex-row-reverse justify-between items-end">
+<div>
+<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
+<h2 class="font-headline-md text-headline-md">תמונות אחרונות</h2>
+</div>
+</div>
+</div>
+<div class="recent-photos-grid recent-photos-grid--dark">
+${generateRecentPhotosGridHTML(galleries, 'dark')}
+</div>
+</section>
+` : ''}
 ${hasPackages ? (hasPackagesBg ? `
 <section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll contact-section-has-bg" id="pricing">
 ${packagesBgLayers('#ffffff', '#ffffff')}
@@ -2853,6 +3062,7 @@ ${generateSiteFooter(siteChrome('dark'))}
     </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+<script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>

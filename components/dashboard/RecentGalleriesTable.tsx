@@ -90,7 +90,11 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
       try {
         await updateGallerySettings(gallery.id, { isPublic: checked })
         setIsPublic(checked)
-        toast.success(checked ? 'הגלריה תוצג באתר הציבורי' : 'הגלריה לא תוצג באתר הציבורי')
+        toast.success(
+          checked
+            ? 'הגלריה תוצג בדף הבית — כרטיס עם תמונת שער + 4 תמונות בסקשן "תמונות אחרונות"'
+            : 'הגלריה לא תוצג בדף הבית'
+        )
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה בעדכון')
       }
@@ -173,7 +177,10 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
         <td className="px-6 py-4">
           <div className="flex items-center justify-end gap-3">
-            <div className="flex items-center gap-2" title="הצג באתר הציבורי">
+            <div
+              className="flex items-center gap-2"
+              title="הצג בדף הבית — עד 4 גלריות ציבוריות; 4 תמונות מכל גלריה בסקשן תמונות אחרונות"
+            >
               <Globe className="h-4 w-4 text-[--muted]" />
               <Switch
                 checked={isPublic}
@@ -327,7 +334,7 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
     <>
       <div className="mb-4 rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
         <span className="font-semibold">גלריות ציבוריות בדף הבית:</span>{' '}
-        עד 4 גלריות המסומנות כציבוריות יוצגו באתר. תמונת השער (אם הוגדרה) תופיע בכרטיס הגלריה.
+        עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
       </div>
       <section className="bg-white dark:bg-zinc-900 border border-[--border] rounded-xl overflow-hidden mb-6">
       <div className="p-6 border-b border-[--border] flex items-center justify-between">

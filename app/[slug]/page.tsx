@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
+import { signStoragePaths } from '@/lib/storage'
 import { resolveTestimonialImageUrl } from '@/lib/testimonial-image-url'
 
 interface PageProps {
@@ -146,6 +147,59 @@ export default async function PhotographerPage({ params }: PageProps) {
       }))
     )
 
+    // Build a pool of photos per gallery for the "recent photos" grid.
+    // Each gallery becomes one row of 4 randomly-selected photos.
+    const shuffle = <T,>(arr: T[]): T[] => {
+      const a = [...arr]
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[a[i], a[j]] = [a[j], a[i]]
+      }
+      return a
+    }
+
+    const galleriesWithPools = await Promise.all(
+      galleriesWithSignedUrls.map(async (gallery: any) => {
+        let bucket: 'previews' | 'edited' = 'previews'
+        let rawPaths: string[] = []
+
+        const { data: editedPhotos } = await admin
+          .from('edited_photos')
+          .select('final_url')
+          .eq('gallery_id', gallery.id)
+
+        if (editedPhotos && editedPhotos.length > 0) {
+          bucket = 'edited'
+          rawPaths = (editedPhotos as any[])
+            .map((p) => p.final_url)
+            .filter(Boolean)
+        } else {
+          const { data: regularPhotos } = await admin
+            .from('photos')
+            .select('preview_url')
+            .eq('gallery_id', gallery.id)
+            .eq('is_visible_to_client', true)
+          rawPaths = (regularPhotos as any[] | null)
+            ?.map((p) => p.preview_url)
+            .filter(Boolean) ?? []
+        }
+
+        // Randomize, then cap the pool so we don't sign hundreds of URLs.
+        const pool = shuffle(rawPaths).slice(0, 16)
+        const signed = await signStoragePaths(bucket, pool, gallery.id)
+        const photoPool = pool
+          .map((path) =>
+            path?.startsWith('http') ? path : signed[path] ?? null
+          )
+          .filter((url): url is string => Boolean(url))
+
+        return {
+          ...gallery,
+          photo_pool: photoPool,
+        }
+      })
+    )
+
     const testimonialsWithUrls = await Promise.all(
       (testimonials || []).map(async (testimonial: any) => ({
         ...testimonial,
@@ -157,7 +211,7 @@ export default async function PhotographerPage({ params }: PageProps) {
       <>
         <PhotographerHomepage
           photographer={photographerWithUrls}
-          galleries={galleriesWithSignedUrls}
+          galleries={galleriesWithPools}
           packages={packages || []}
           testimonials={testimonialsWithUrls}
         />

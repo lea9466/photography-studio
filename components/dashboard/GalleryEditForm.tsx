@@ -131,7 +131,9 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         <div className="space-y-2">
           <Label htmlFor="cover-image" className="text-[#100d1f]">
             תמונת שער לאתר הציבורי
-            <span className="text-[#6b2d43] font-normal mr-1">(מוצג רק כאשר הגלריה מופיעה באתר הציבורי)</span>
+            <span className="text-[#6b2d43] font-normal mr-1">
+              (מוצגת בכרטיס הגלריה בדף הבית; בנוסף 4 תמונות מהגלריה יוצגו בסקשן &quot;תמונות אחרונות&quot;)
+            </span>
           </Label>
           <div className="space-y-3">
             {(coverImageFile || coverImage) ? (
