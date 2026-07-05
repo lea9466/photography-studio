@@ -1,4 +1,35 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Database } from '@/lib/types/database.types'
+
+export type PublicPhotographer = Pick<
+  Database['public']['Tables']['users']['Row'],
+  | 'id'
+  | 'name'
+  | 'studio_name'
+  | 'slug'
+  | 'logo_url'
+  | 'about_text'
+  | 'about_title'
+  | 'about_subtitle'
+  | 'about_description'
+  | 'contact_card_title'
+  | 'contact_card_description'
+  | 'stat_projects'
+  | 'stat_clients'
+  | 'stat_experience_years'
+  | 'accent_color'
+  | 'selected_theme'
+  | 'hero_desktop_url'
+  | 'hero_mobile_url'
+  | 'hero_desktop_urls'
+  | 'hero_mobile_urls'
+  | 'about_image_url'
+  | 'contact_desktop_url'
+  | 'contact_mobile_url'
+  | 'packages_desktop_url'
+  | 'packages_mobile_url'
+  | 'email'
+>
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   id,
@@ -55,7 +86,7 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
   )
 }
 
-export async function findPhotographerBySlug(decodedSlug: string) {
+export async function findPhotographerBySlug(decodedSlug: string): Promise<PublicPhotographer | null> {
   const normalizedSlug = decodedSlug.trim()
   if (!normalizedSlug || RESERVED_SLUGS.has(normalizedSlug)) {
     return null
@@ -66,8 +97,8 @@ export async function findPhotographerBySlug(decodedSlug: string) {
   const { data: bySlug, error: slugError } = await admin
     .from('users')
     .select(PHOTOGRAPHER_PUBLIC_FIELDS)
-    .eq('slug', normalizedSlug)
-    .maybeSingle()
+    .eq('slug' satisfies keyof Database['public']['Tables']['users']['Row'], normalizedSlug)
+    .maybeSingle<PublicPhotographer>()
 
   if (slugError) {
     if (slugError.code !== 'PGRST116') {
@@ -92,6 +123,7 @@ export async function findPhotographerBySlug(decodedSlug: string) {
     .select(PHOTOGRAPHER_PUBLIC_FIELDS)
     .eq('studio_name', normalizedSlug)
     .limit(1)
+    .returns<PublicPhotographer[]>()
 
   if (studioError) {
     console.error('[findPhotographerBySlug] studio_name lookup error:', formatDbError(studioError))

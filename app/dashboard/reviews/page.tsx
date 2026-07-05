@@ -13,7 +13,11 @@ export default async function ReviewsPage() {
   if (!user) redirect('/login')
 
   const [{ data: profile }, testimonials] = await Promise.all([
-    supabase.from('users').select('logo_url').eq('id', user.id).maybeSingle(),
+    supabase
+      .from('users')
+      .select('logo_url')
+      .eq('id', user.id)
+      .maybeSingle<{ logo_url: string | null }>(),
     getTestimonials() as Promise<Testimonial[]>,
   ])
 
