@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isR2Configured } from '@/lib/r2/config'
 import { resolveMediaUrl, uploadMediaObject } from '@/lib/r2/storage'
-
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const MAX_FILE_SIZE = 20 * 1024 * 1024
+import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,22 +16,23 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'יש להתחבר מחדש' }, { status: 401 })
     }
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return NextResponse.json({ error: 'לא נבחר קובץ' }, { status: 400 })
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: 'סוג הקובץ לא נתמך' }, { status: 400 })
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'גודל הקובץ חורג מ-20 MB' }, { status: 400 })
+    try {
+      validatePrimaryImageFile(file.type, file.size)
+    } catch (validationError) {
+      return NextResponse.json(
+        { error: validationError instanceof Error ? validationError.message : 'קובץ לא תקין' },
+        { status: 400 }
+      )
     }
 
     const bytes = await file.arrayBuffer()
@@ -54,7 +53,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error uploading cover image:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to upload cover image' },
+      { error: error instanceof Error ? error.message : 'העלאת תמונת השער נכשלה' },
       { status: 500 }
     )
   }

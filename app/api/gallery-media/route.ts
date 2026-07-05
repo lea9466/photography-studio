@@ -125,10 +125,13 @@ export async function GET(request: Request) {
 
     const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
     const data = await downloadMediaObject(bucket, path)
+    const cacheControl = normalizedKey.startsWith('branding/')
+      ? 'private, no-cache, must-revalidate'
+      : 'public, max-age=31536000, immutable'
     return new Response(Buffer.from(data), {
       headers: {
         'Content-Type': contentTypeFromKey(normalizedKey),
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cache-Control': cacheControl,
       },
     })
   } catch {

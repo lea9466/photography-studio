@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
 import { finalizeBrandingUpload, prepareBrandingUpload, removeHeroImageSlot } from '@/lib/actions/branding.actions'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
+import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,9 +20,33 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Building2, ExternalLink, Globe, Palette, Trash2, Upload } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Loader2, Palette, Trash2, Upload } from 'lucide-react'
 
 const HERO_SLOT_COUNT = 3
+
+type BrandingUploadType =
+  | 'logo'
+  | 'hero_desktop'
+  | 'hero_mobile'
+  | 'about'
+  | 'contact_desktop'
+  | 'contact_mobile'
+  | 'packages_desktop'
+  | 'packages_mobile'
+
+function uploadTargetKey(type: BrandingUploadType, slot?: number) {
+  return slot !== undefined ? `${type}:${slot}` : type
+}
+
+function UploadSpinnerOverlay({ show }: { show: boolean }) {
+  if (!show) return null
+
+  return (
+    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 pointer-events-none">
+      <Loader2 className="h-10 w-10 animate-spin text-white" />
+    </div>
+  )
+}
 
 function initHeroSlots(urls: string[] | null | undefined, fallback: string | null) {
   const slots: string[] = ['', '', '']
@@ -56,6 +81,8 @@ type ProfileFormProps = {
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
+    packages_desktop_url: string | null
+    packages_mobile_url: string | null
     email: string | null
     slug: string | null
     should_color_logo: boolean
@@ -94,68 +121,92 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
   const [contactDesktopUrl, setContactDesktopUrl] = useState(profile?.contact_desktop_url ?? '')
   const [contactMobileUrl, setContactMobileUrl] = useState(profile?.contact_mobile_url ?? '')
+  const [packagesDesktopUrl, setPackagesDesktopUrl] = useState(profile?.packages_desktop_url ?? '')
+  const [packagesMobileUrl, setPackagesMobileUrl] = useState(profile?.packages_mobile_url ?? '')
   const [email, setEmail] = useState(profile?.email ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
+  const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({})
+  const [previewVersions, setPreviewVersions] = useState<Record<string, number>>({})
+  const isUploading = uploadingTarget !== null
   const previewPath = slug.trim()
     ? `/${slug.trim()}`
     : studioName.trim()
       ? `/${encodeURIComponent(studioName.trim())}`
       : null
 
+  function brandingPreviewSrc(targetKey: string, storedPath: string) {
+    return localPreviews[targetKey] ?? storedPath
+  }
+
   async function handleFileUpload(
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile',
+    type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile' | 'packages_desktop' | 'packages_mobile',
     slot?: number
   ) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setIsUploading(true)
+    const targetKey = uploadTargetKey(type, slot)
+    const blobUrl = URL.createObjectURL(file)
+    setLocalPreviews((prev) => ({ ...prev, [targetKey]: blobUrl }))
+    setUploadingTarget(targetKey)
     try {
+      const uploadFile = await compressBrandingFile(file)
       const { uploadUrl, path } = await prepareBrandingUpload({
         type,
-        fileName: file.name,
-        contentType: file.type,
-        fileSize: file.size,
+        fileName: uploadFile.name,
+        contentType: uploadFile.type,
+        fileSize: uploadFile.size,
         slot,
       })
 
-      await putToPresignedUrl(uploadUrl, file)
+      await putToPresignedUrl(uploadUrl, uploadFile)
 
       const result = await finalizeBrandingUpload(type, path, slot)
-      if (result.success && result.url) {
-        if (type === 'logo') setLogoUrl(result.url)
+      if (result.success && result.path) {
+        const storedPath = result.path
+        if (type === 'logo') setLogoUrl(storedPath)
         if (type === 'hero_desktop' && slot !== undefined) {
           setHeroDesktopUrls((prev) => {
             const next = [...prev]
-            next[slot] = result.url!
+            next[slot] = storedPath
             return next
           })
         }
         if (type === 'hero_mobile' && slot !== undefined) {
           setHeroMobileUrls((prev) => {
             const next = [...prev]
-            next[slot] = result.url!
+            next[slot] = storedPath
             return next
           })
         }
-        if (type === 'about') setAboutImageUrl(result.url)
-        if (type === 'contact_desktop') setContactDesktopUrl(result.url)
-        if (type === 'contact_mobile') setContactMobileUrl(result.url)
+        if (type === 'about') setAboutImageUrl(storedPath)
+        if (type === 'contact_desktop') setContactDesktopUrl(storedPath)
+        if (type === 'contact_mobile') setContactMobileUrl(storedPath)
+        if (type === 'packages_desktop') setPackagesDesktopUrl(storedPath)
+        if (type === 'packages_mobile') setPackagesMobileUrl(storedPath)
+        setPreviewVersions((prev) => ({ ...prev, [targetKey]: Date.now() }))
         toast.success('התמונה הועלתה בהצלחה')
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
     } finally {
-      setIsUploading(false)
+      URL.revokeObjectURL(blobUrl)
+      setLocalPreviews((prev) => {
+        const next = { ...prev }
+        delete next[targetKey]
+        return next
+      })
+      setUploadingTarget(null)
       e.target.value = ''
     }
   }
 
   async function handleRemoveHeroSlot(variant: 'desktop' | 'mobile', slot: number) {
-    setIsUploading(true)
+    const targetKey = uploadTargetKey(variant === 'desktop' ? 'hero_desktop' : 'hero_mobile', slot)
+    setUploadingTarget(targetKey)
     try {
       await removeHeroImageSlot({ variant, slot })
       if (variant === 'desktop') {
@@ -175,7 +226,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
     } finally {
-      setIsUploading(false)
+      setUploadingTarget(null)
     }
   }
 
@@ -220,6 +271,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           about_image_url: extractPathFromUrl(aboutImageUrl) || undefined,
           contact_desktop_url: extractPathFromUrl(contactDesktopUrl) || undefined,
           contact_mobile_url: extractPathFromUrl(contactMobileUrl) || undefined,
+          packages_desktop_url: extractPathFromUrl(packagesDesktopUrl) || undefined,
+          packages_mobile_url: extractPathFromUrl(packagesMobileUrl) || undefined,
           email,
           slug,
           should_color_logo: shouldColorLogo,
@@ -298,13 +351,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <Label>תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות</Label>
             <p className="text-sm text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {heroDesktopUrls.map((url, slot) => (
+              {heroDesktopUrls.map((url, slot) => {
+                const targetKey = uploadTargetKey('hero_desktop', slot)
+                const previewSrc = brandingPreviewSrc(targetKey, url)
+                return (
                 <div key={`hero-desktop-${slot}`} className="space-y-2">
                   <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
                   <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-                    {url ? (
+                    {previewSrc ? (
                       <BrandingPreviewImage
-                        src={url}
+                        src={previewSrc}
+                        cacheKey={previewVersions[targetKey]}
                         alt={`Hero desktop ${slot + 1}`}
                         className="object-cover pointer-events-none"
                       />
@@ -314,9 +371,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <span className="text-white text-sm font-medium">{url ? 'החלף' : 'העלה'}</span>
+                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
                     </div>
-                    {url ? (
+                    <UploadSpinnerOverlay show={uploadingTarget === targetKey} />
+                    {previewSrc && url ? (
                       <button
                         type="button"
                         onClick={() => handleRemoveHeroSlot('desktop', slot)}
@@ -336,20 +394,24 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     />
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
           <div className="space-y-3">
             <Label>תמונות הירו (מובייל) — עד 3 תמונות מתחלפות</Label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {heroMobileUrls.map((url, slot) => (
+              {heroMobileUrls.map((url, slot) => {
+                const targetKey = uploadTargetKey('hero_mobile', slot)
+                const previewSrc = brandingPreviewSrc(targetKey, url)
+                return (
                 <div key={`hero-mobile-${slot}`} className="space-y-2">
                   <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
                   <div className="relative group aspect-[9/16] max-w-[180px] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-                    {url ? (
+                    {previewSrc ? (
                       <BrandingPreviewImage
-                        src={url}
+                        src={previewSrc}
+                        cacheKey={previewVersions[targetKey]}
                         alt={`Hero mobile ${slot + 1}`}
                         className="object-cover pointer-events-none"
                       />
@@ -359,9 +421,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                       </div>
                     )}
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <span className="text-white text-sm font-medium">{url ? 'החלף' : 'העלה'}</span>
+                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
                     </div>
-                    {url ? (
+                    <UploadSpinnerOverlay show={uploadingTarget === targetKey} />
+                    {previewSrc && url ? (
                       <button
                         type="button"
                         onClick={() => handleRemoveHeroSlot('mobile', slot)}
@@ -381,7 +444,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     />
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
 
@@ -390,9 +453,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <div className="space-y-3">
             <Label htmlFor="about-image">תמונת אודות</Label>
             <div className="relative group aspect-square bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-              {aboutImageUrl ? (
+              {brandingPreviewSrc('about', aboutImageUrl) ? (
                 <BrandingPreviewImage
-                  src={aboutImageUrl}
+                  src={brandingPreviewSrc('about', aboutImageUrl)}
+                  cacheKey={previewVersions.about}
                   alt="About image preview"
                   className="object-cover"
                 />
@@ -404,6 +468,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-white text-sm font-medium">החלף תמונה</span>
               </div>
+              <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('about')} />
               <input
                 id="about-image"
                 type="file"
@@ -424,9 +489,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <div className="space-y-3">
               <Label htmlFor="contact-desktop">רקע יצירת קשר (דסקטופ)</Label>
               <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-                {contactDesktopUrl ? (
+                {brandingPreviewSrc('contact_desktop', contactDesktopUrl) ? (
                   <BrandingPreviewImage
-                    src={contactDesktopUrl}
+                    src={brandingPreviewSrc('contact_desktop', contactDesktopUrl)}
+                    cacheKey={previewVersions.contact_desktop}
                     alt="Contact desktop background preview"
                     className="object-cover pointer-events-none"
                   />
@@ -438,6 +504,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
+                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_desktop')} />
                 <input
                   id="contact-desktop"
                   type="file"
@@ -451,9 +518,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             <div className="space-y-3">
               <Label htmlFor="contact-mobile">רקע יצירת קשר (מובייל)</Label>
               <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
-                {contactMobileUrl ? (
+                {brandingPreviewSrc('contact_mobile', contactMobileUrl) ? (
                   <BrandingPreviewImage
-                    src={contactMobileUrl}
+                    src={brandingPreviewSrc('contact_mobile', contactMobileUrl)}
+                    cacheKey={previewVersions.contact_mobile}
                     alt="Contact mobile background preview"
                     className="object-cover pointer-events-none"
                   />
@@ -465,11 +533,78 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
+                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_mobile')} />
                 <input
                   id="contact-mobile"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleFileUpload(e, 'contact_mobile')}
+                  disabled={isUploading}
+                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3 pt-2 border-t border-[--border]">
+          <div>
+            <h3 className="text-sm font-semibold text-[--foreground]">רקע חבילות צילום (דף הבית)</h3>
+            <p className="text-xs text-[--muted] mt-1">תמונת רקע לסקשן החבילות · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <Label htmlFor="packages-desktop">רקע חבילות (דסקטופ)</Label>
+              <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                {brandingPreviewSrc('packages_desktop', packagesDesktopUrl) ? (
+                  <BrandingPreviewImage
+                    src={brandingPreviewSrc('packages_desktop', packagesDesktopUrl)}
+                    cacheKey={previewVersions.packages_desktop}
+                    alt="Packages desktop background preview"
+                    className="object-cover pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                    <Upload className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="text-white text-sm font-medium">החלף תמונה</span>
+                </div>
+                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_desktop')} />
+                <input
+                  id="packages-desktop"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileUpload(e, 'packages_desktop')}
+                  disabled={isUploading}
+                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="space-y-3">
+              <Label htmlFor="packages-mobile">רקע חבילות (מובייל)</Label>
+              <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
+                {brandingPreviewSrc('packages_mobile', packagesMobileUrl) ? (
+                  <BrandingPreviewImage
+                    src={brandingPreviewSrc('packages_mobile', packagesMobileUrl)}
+                    cacheKey={previewVersions.packages_mobile}
+                    alt="Packages mobile background preview"
+                    className="object-cover pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                    <Upload className="h-8 w-8" />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  <span className="text-white text-sm font-medium">החלף תמונה</span>
+                </div>
+                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_mobile')} />
+                <input
+                  id="packages-mobile"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(e) => handleFileUpload(e, 'packages_mobile')}
                   disabled={isUploading}
                   className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                 />
@@ -543,12 +678,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="logo">לוגו סטודיו</Label>
-            <div className="relative h-full min-h-[160px] flex flex-col items-center justify-center bg-white dark:bg-zinc-900 border-2 border-dashed border-[--border] hover:border-[--foreground] transition-colors cursor-pointer group">
+            <div className="relative h-full min-h-[160px] flex flex-col items-center justify-center bg-white dark:bg-zinc-900 border-2 border-dashed border-[--border] hover:border-[--foreground] transition-colors cursor-pointer group overflow-hidden">
               <div className="p-6 text-center">
-                {logoUrl ? (
-                  <div className="relative h-20 w-20 mb-2">
+                {brandingPreviewSrc('logo', logoUrl) ? (
+                  <div className="relative h-20 w-20 mb-2 mx-auto">
                     <BrandingPreviewImage
-                      src={logoUrl}
+                      src={brandingPreviewSrc('logo', logoUrl)}
+                      cacheKey={previewVersions.logo}
                       alt="Logo preview"
                       className="object-contain"
                     />
@@ -561,6 +697,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   </>
                 )}
               </div>
+              <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('logo')} />
               <input
                 id="logo"
                 type="file"

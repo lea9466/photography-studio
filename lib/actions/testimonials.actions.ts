@@ -3,6 +3,13 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { isR2Configured } from '@/lib/r2/config'
+import { createPresignedUploadUrl } from '@/lib/r2/storage'
+import {
+  formatTestimonialImageRef,
+  getTestimonialImagePreviewUrl,
+} from '@/lib/testimonial-image-url'
+import { PRIMARY_IMAGE_MAX_BYTES, validatePrimaryImageFile } from '@/lib/media-upload-limits'
 
 // Create a non-typed client for dynamic operations
 async function createUntypedClient() {
@@ -49,12 +56,99 @@ export async function getTestimonials() {
   return data
 }
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_SIZE = PRIMARY_IMAGE_MAX_BYTES
+
+export async function prepareTestimonialImageUpload(input: {
+  fileName: string
+  contentType: string
+  fileSize: number
+}) {
+  if (!isR2Configured()) {
+    throw new Error('אחסון תמונות לא מוגדר')
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) {
+    throw new Error('סוג הקובץ לא נתמך')
+  }
+  validatePrimaryImageFile(input.contentType, input.fileSize)
+
+  const extension = input.fileName.split('.').pop() || 'jpg'
+  const path = `${user.id}/testimonials_${Date.now()}.${extension}`
+  const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
+
+  return {
+    uploadUrl,
+    storageRef: formatTestimonialImageRef('branding', path),
+  }
+}
+
+export type TestimonialPhotoOption = {
+  id: string
+  galleryTitle: string
+  storageRef: string
+  previewUrl: string
+}
+
+export async function getTestimonialPhotoOptions(): Promise<TestimonialPhotoOption[]> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const untypedClient = await createUntypedClient()
+  const { data: galleries, error: galleriesError } = await untypedClient
+    .from('galleries')
+    .select('id, title')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (galleriesError) throw new Error(galleriesError.message)
+
+  const options: TestimonialPhotoOption[] = []
+
+  for (const gallery of galleries || []) {
+    const { data: photos, error: photosError } = await untypedClient
+      .from('photos')
+      .select('id, preview_url')
+      .eq('gallery_id', gallery.id)
+      .not('preview_url', 'is', null)
+      .order('sort_order', { ascending: true })
+      .limit(60)
+
+    if (photosError) throw new Error(photosError.message)
+
+    for (const photo of photos || []) {
+      if (!photo.preview_url) continue
+      const storageRef = formatTestimonialImageRef('previews', photo.preview_url)
+      options.push({
+        id: photo.id,
+        galleryTitle: gallery.title,
+        storageRef,
+        previewUrl: getTestimonialImagePreviewUrl(storageRef) || '',
+      })
+    }
+  }
+
+  return options
+}
+
 export async function createTestimonial(data: {
   title: string
   content: string
   shootType?: string
   reviewDate?: string
   isFeatured?: boolean
+  imageUrl?: string | null
 }) {
   const supabase = await createClient()
   const {
@@ -71,6 +165,7 @@ export async function createTestimonial(data: {
     shoot_type: data.shootType || null,
     review_date: data.reviewDate || null,
     is_featured: data.isFeatured || false,
+    image_url: data.imageUrl || null,
   })
 
   if (error) throw new Error(error.message)
@@ -85,6 +180,7 @@ export async function updateTestimonial(id: string, data: {
   reviewDate?: string
   isFeatured?: boolean
   sortOrder?: number
+  imageUrl?: string | null
 }) {
   const supabase = await createClient()
   const {
@@ -101,6 +197,7 @@ export async function updateTestimonial(id: string, data: {
   if (data.reviewDate !== undefined) updateData.review_date = data.reviewDate || null
   if (data.isFeatured !== undefined) updateData.is_featured = data.isFeatured
   if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder
+  if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl || null
 
   const untypedClient = await createUntypedClient()
   const { error } = await untypedClient

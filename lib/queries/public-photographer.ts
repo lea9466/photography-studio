@@ -24,6 +24,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   about_image_url,
   contact_desktop_url,
   contact_mobile_url,
+  packages_desktop_url,
+  packages_mobile_url,
   email
 `
 
@@ -45,7 +47,12 @@ function formatDbError(error: { message?: string; details?: string; hint?: strin
 function isMissingColumnError(error: { message?: string; code?: string }) {
   if (error.code === '42703' || error.code === 'PGRST204') return true
   const message = error.message?.toLowerCase() ?? ''
-  return message.includes('contact_desktop_url') || message.includes('contact_mobile_url')
+  return (
+    message.includes('contact_desktop_url') ||
+    message.includes('contact_mobile_url') ||
+    message.includes('packages_desktop_url') ||
+    message.includes('packages_mobile_url')
+  )
 }
 
 export async function findPhotographerBySlug(decodedSlug: string) {

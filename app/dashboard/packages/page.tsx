@@ -18,7 +18,7 @@ export default async function PackagesPage() {
       <div>
         <h1 className="text-2xl font-semibold">חבילות צילום</h1>
         <p className="mt-1 text-sm text-[--muted]">
-          הגדירי חבילות עם מחיר ורשימת &quot;מה כלול&quot; — יוצגו בדף הציבורי
+          הגדירי חבילות עם מחיר ורשימת &quot;מה כלול&quot;. רק חבילות פעילות מוצגות בדף הבית — אם אין חבילות פעילות, סקשן החבילות לא יופיע באתר.
         </p>
       </div>
       <PackagesManager initialPackages={packages} />

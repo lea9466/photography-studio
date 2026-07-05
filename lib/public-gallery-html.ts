@@ -77,10 +77,9 @@ function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChrom
       }
 
       const rounded = theme === 'modern' ? 'rounded-[12px]' : 'rounded-sm'
-      const grayscale = theme === 'dark' ? ' grayscale group-hover:grayscale-0' : ''
       return `
 <div class="group relative overflow-hidden ${rounded} aspect-[4/5] bg-[#eae8e5] shadow-sm hover:shadow-xl transition-all duration-500">
-  <img src="${photo.url}" alt="${alt}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105${grayscale}" loading="lazy" />
+  <img src="${photo.url}" alt="${alt}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
 </div>`
     })
     .join('')

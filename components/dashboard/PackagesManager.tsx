@@ -130,6 +130,9 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">
+        סקשן החבילות מוצג בדף הבית הציבורי רק כשיש לפחות חבילה פעילה אחת. חבילות מוסתרות לא נספרות.
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[--muted]">
           {packages.length === 0
@@ -144,7 +147,8 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
 
       {packages.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[--border] px-6 py-12 text-center text-sm text-[--muted]">
-          לדוגמה: חבילת פרימיום, ₪2,400, שעתיים צילום, ורשימת &quot;מה כלול&quot;
+          <p>עדיין אין חבילות — בינתיים סקשן החבילות לא יופיע בדף הבית.</p>
+          <p className="mt-2">לדוגמה: חבילת פרימיום, ₪2,400, שעתיים צילום, ורשימת &quot;מה כלול&quot;</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

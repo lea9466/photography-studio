@@ -109,7 +109,7 @@ ${brandLink(cfg, logoBlock(cfg, { textClass: 'font-display text-xl uppercase tra
 <button onclick="toggleMobileMenuElegant()" class="md:hidden p-2 text-on-surface hover:text-accent transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-elegant">menu</span>
 </button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest')}
 </div>
 </nav>
@@ -129,17 +129,17 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'modern':
       return `
-<nav class="fixed top-0 w-full z-50 transition-all duration-300 border-b border-transparent bg-background/95 backdrop-blur-sm" id="navbar">
+<nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-${brandLink(cfg, logoBlock(cfg, { textClass: 'font-headline text-xl font-bold text-on-surface' }))}
-<button onclick="toggleMobileMenu()" class="md:hidden p-2 text-on-surface hover:text-primary transition-colors">
+${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
+<button onclick="toggleMobileMenu()" class="modern-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon">menu</span>
 </button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
-${navItems(cfg, 'text-on-surface-variant hover:text-primary transition-colors text-sm font-medium')}
+<div class="hidden md:flex flex-row gap-xl items-center">
+${navItems(cfg, 'modern-nav-link text-sm font-medium transition-colors')}
 </div>
 </div>
-<div id="mobile-menu" class="hidden md:hidden bg-background border-b border-outline-variant">
+<div id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-[#F8FAFC]/95 backdrop-blur-md border-b border-outline-variant/20">
 <div class="flex flex-col gap-md px-lg py-md">
 ${navItems(cfg, 'text-on-surface hover:text-primary transition-colors text-lg font-medium py-2', 'toggleMobileMenu()')}
 </div>
@@ -162,7 +162,7 @@ ${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo h-10 w-auto object
 <button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
 </button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'classic-nav-link font-label-sm text-label-sm transition-colors')}
 </div>
 </div>
@@ -189,7 +189,7 @@ ${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo h-10 w-auto object-co
 <button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
 </button>
-<div class="hidden md:flex flex-row-reverse gap-xl items-center">
+<div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition')}
 </div>
 </div>
@@ -216,7 +216,7 @@ export function generateSiteFooter(cfg: SiteChromeConfig): string {
   switch (cfg.theme) {
     case 'elegant':
       return `
-<footer class="bg-white py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant pb-32">
+<footer class="bg-background py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant/20 pb-32">
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${cfg.studioName}</div>`}
 <div class="flex flex-row-reverse gap-8 text-xs uppercase tracking-widest opacity-40">
@@ -232,7 +232,7 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 
     case 'modern':
       return `
-<footer class="bg-surface-container border-t border-outline-variant w-full py-xl pb-[120px]">
+<footer class="bg-background border-t border-outline-variant/20 w-full py-xl pb-[120px]">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
 <div class="flex flex-col items-center md:items-end gap-xs">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${cfg.studioName}</span>`}
@@ -259,7 +259,7 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 
     case 'classic':
       return `
-<footer class="bg-surface-container-highest border-t border-outline-variant/20 py-xl pb-xxl">
+<footer class="bg-background border-t border-outline-variant/20 py-xl pb-xxl">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
 <div class="font-headline-md text-headline-md text-primary tracking-tight">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${cfg.studioName}`}
@@ -277,7 +277,7 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 
     case 'dark':
       return `
-<footer class="bg-surface-dim border-t border-white/5 py-xl">
+<footer class="bg-background border-t border-outline-variant/20 py-xl">
 <div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-lg max-w-7xl mx-auto w-full">
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(cfg.studioName)}`}
@@ -314,12 +314,14 @@ window.addEventListener('scroll', () => {
     case 'modern':
       return `
 window.addEventListener('scroll', () => {
-    const nav = document.getElementById('navbar');
+    const nav = document.getElementById('main-nav');
     if (!nav) return;
     if (window.scrollY > 80) {
-        nav.classList.add('nav-glass', 'shadow-sm');
+        nav.classList.add('nav-scrolled', 'bg-[#F8FAFC]/95', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
+        nav.classList.remove('py-md', 'border-none', 'bg-transparent');
     } else {
-        nav.classList.remove('nav-glass', 'shadow-sm');
+        nav.classList.remove('nav-scrolled', 'bg-[#F8FAFC]/95', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
+        nav.classList.add('py-md', 'border-none', 'bg-transparent');
     }
 });`
 
@@ -387,6 +389,48 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: ${primaryColor};
         }
         .classic-nav.nav-scrolled .classic-nav-logo {
+            filter: none;
+        }`
+  }
+
+  if (theme === 'modern') {
+    return `
+        .modern-nav .modern-nav-brand,
+        .modern-nav .modern-nav-link,
+        .modern-nav .modern-nav-menu-btn {
+            color: #ffffff;
+            transition: color 0.7s ease;
+        }
+        .modern-nav:not(.nav-scrolled) {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+        }
+        .modern-nav .modern-nav-link:hover,
+        .modern-nav .modern-nav-menu-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .modern-nav .modern-nav-logo {
+            transition: filter 0.7s ease;
+        }
+        .modern-nav:not(.nav-scrolled) .modern-nav-logo {
+            filter: brightness(0) invert(1);
+        }
+        .modern-nav.nav-scrolled .modern-nav-brand {
+            color: #0F172A;
+        }
+        .modern-nav.nav-scrolled .modern-nav-link {
+            color: #475569;
+        }
+        .modern-nav.nav-scrolled .modern-nav-link:hover,
+        .modern-nav.nav-scrolled .modern-nav-menu-btn:hover {
+            color: ${primaryColor};
+        }
+        .modern-nav.nav-scrolled .modern-nav-menu-btn {
+            color: #0F172A;
+        }
+        .modern-nav.nav-scrolled .modern-nav-logo {
             filter: none;
         }`
   }

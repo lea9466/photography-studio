@@ -1,13 +1,20 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { Pencil, Plus, Trash2, Star } from 'lucide-react'
+import { useEffect, useState, useTransition } from 'react'
+import { ImageIcon, Pencil, Plus, Trash2, Star, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createTestimonial,
   deleteTestimonial,
+  getTestimonialPhotoOptions,
+  prepareTestimonialImageUpload,
   updateTestimonial,
+  type TestimonialPhotoOption,
 } from '@/lib/actions/testimonials.actions'
+import { compressBrandingFile } from '@/lib/branding-upload-client'
+import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
+import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
+import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,10 +41,12 @@ type Testimonial = {
   created_at: string
   is_featured: boolean
   sort_order: number
+  image_url: string | null
 }
 
 type TestimonialsManagerProps = {
   initialTestimonials: Testimonial[]
+  photographerLogoUrl?: string | null
 }
 
 type TestimonialFormState = {
@@ -46,6 +55,7 @@ type TestimonialFormState = {
   shootType: string
   reviewDate: string
   isFeatured: boolean
+  imageUrl: string
 }
 
 const EMPTY_FORM: TestimonialFormState = {
@@ -54,6 +64,7 @@ const EMPTY_FORM: TestimonialFormState = {
   shootType: '',
   reviewDate: '',
   isFeatured: false,
+  imageUrl: '',
 }
 
 function testimonialToForm(testimonial: Testimonial): TestimonialFormState {
@@ -63,6 +74,7 @@ function testimonialToForm(testimonial: Testimonial): TestimonialFormState {
     shootType: testimonial.shoot_type ?? '',
     reviewDate: testimonial.review_date ?? '',
     isFeatured: testimonial.is_featured,
+    imageUrl: testimonial.image_url ?? '',
   }
 }
 
@@ -75,12 +87,37 @@ function formatDate(dateString: string): string {
   })
 }
 
-export function TestimonialsManager({ initialTestimonials }: TestimonialsManagerProps) {
+function previewForImageRef(imageRef: string, logoUrl?: string | null) {
+  if (imageRef) return getTestimonialImagePreviewUrl(imageRef)
+  if (logoUrl) return getBrandingPreviewUrl(logoUrl)
+  return null
+}
+
+export function TestimonialsManager({
+  initialTestimonials,
+  photographerLogoUrl,
+}: TestimonialsManagerProps) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [isPending, startTransition] = useTransition()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<TestimonialFormState>(EMPTY_FORM)
+  const [photoOptions, setPhotoOptions] = useState<TestimonialPhotoOption[]>([])
+  const [loadingPhotos, setLoadingPhotos] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  useEffect(() => {
+    if (!pickerOpen) return
+
+    setLoadingPhotos(true)
+    getTestimonialPhotoOptions()
+      .then(setPhotoOptions)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'שגיאה בטעינת תמונות')
+      })
+      .finally(() => setLoadingPhotos(false))
+  }, [pickerOpen])
 
   function openCreateDialog() {
     setEditingId(null)
@@ -94,9 +131,35 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
     setDialogOpen(true)
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const uploadFile = await compressBrandingFile(file)
+      const { uploadUrl, storageRef } = await prepareTestimonialImageUpload({
+        fileName: uploadFile.name,
+        contentType: uploadFile.type,
+        fileSize: uploadFile.size,
+      })
+
+      await putToPresignedUrl(uploadUrl, uploadFile)
+      setForm((current) => ({ ...current, imageUrl: storageRef }))
+      toast.success('התמונה הועלתה')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
+
   function handleSubmit() {
     startTransition(async () => {
       try {
+        const imagePayload = form.imageUrl || null
+
         if (editingId) {
           await updateTestimonial(editingId, {
             title: form.title,
@@ -104,6 +167,7 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
             shootType: form.shootType || undefined,
             reviewDate: form.reviewDate || undefined,
             isFeatured: form.isFeatured,
+            imageUrl: imagePayload,
           })
           setTestimonials((current) =>
             current.map((t) =>
@@ -115,6 +179,7 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
                     shoot_type: form.shootType || null,
                     review_date: form.reviewDate || null,
                     is_featured: form.isFeatured,
+                    image_url: imagePayload,
                   }
                 : t
             )
@@ -127,8 +192,8 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
             shootType: form.shootType || undefined,
             reviewDate: form.reviewDate || undefined,
             isFeatured: form.isFeatured,
+            imageUrl: imagePayload,
           })
-          // Refresh the list
           const response = await fetch('/api/testimonials')
           const data = await response.json()
           setTestimonials(data)
@@ -157,8 +222,14 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
     })
   }
 
+  const formPreviewSrc = previewForImageRef(form.imageUrl, photographerLogoUrl)
+
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">
+        סקשן התגובות מוצג בדף הבית הציבורי רק כשיש לפחות תגובה אחת. לכל תגובה אפשר לבחור תמונה
+        מהאלבום — אם לא נבחרה תמונה, יוצג הלוגו שלך.
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[--muted]">
           {testimonials.length === 0
@@ -173,65 +244,85 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
 
       {testimonials.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[--border] px-6 py-12 text-center text-sm text-[--muted]">
-          לדוגמה: &quot;הצילומים יצאו פשוט מדהימים! ממליצה בחום&quot; — דנה, חתונה
+          <p>עדיין אין תגובות — בינתיים סקשן התגובות לא יופיע בדף הבית.</p>
+          <p className="mt-2">לדוגמה: &quot;הצילומים יצאו פשוט מדהימים! ממליצה בחום&quot; — דנה, חתונה</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {testimonials.map((testimonial) => (
-            <Card key={testimonial.id} className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{testimonial.title}</span>
-                    {testimonial.is_featured && (
-                      <Badge variant="default" className="gap-1">
-                        <Star className="h-3 w-3" />
-                        מומלצת
-                      </Badge>
-                    )}
-                    {testimonial.shoot_type && (
-                      <Badge variant="outline">{testimonial.shoot_type}</Badge>
-                    )}
-                    <span className="text-xs text-[--muted]">
-                      {formatDate(testimonial.review_date ?? testimonial.created_at)}
-                    </span>
+          {testimonials.map((testimonial) => {
+            const thumbSrc = previewForImageRef(
+              testimonial.image_url ?? '',
+              photographerLogoUrl
+            )
+
+            return (
+              <Card key={testimonial.id} className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  {thumbSrc ? (
+                    <div className="h-16 w-16 shrink-0 overflow-hidden border border-[--border] bg-[--dashboard-surface]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={thumbSrc}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-dashed border-[--border] bg-[--dashboard-surface] text-[--muted]">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold">{testimonial.title}</span>
+                      {testimonial.is_featured && (
+                        <Badge variant="default" className="gap-1">
+                          <Star className="h-3 w-3" />
+                          מומלצת
+                        </Badge>
+                      )}
+                      {testimonial.shoot_type && (
+                        <Badge variant="outline">{testimonial.shoot_type}</Badge>
+                      )}
+                      <span className="text-xs text-[--muted]">
+                        {formatDate(testimonial.review_date ?? testimonial.created_at)}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed">{testimonial.content}</p>
                   </div>
-                  <p className="text-sm leading-relaxed">{testimonial.content}</p>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditDialog(testimonial)}
+                      disabled={isPending}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(testimonial.id)}
+                      disabled={isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditDialog(testimonial)}
-                    disabled={isPending}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(testimonial.id)}
-                    disabled={isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            )
+          })}
         </div>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg bg-white max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingId ? 'עריכת תגובה' : 'תגובה חדשה'}
-            </DialogTitle>
+            <DialogTitle>{editingId ? 'עריכת תגובה' : 'תגובה חדשה'}</DialogTitle>
             <DialogDescription>
-              כותרת, תוכן התגובה, תאריך וסוג הצילום
+              כותרת, תוכן, תאריך, סוג הצילום ותמונה מהאלבום
             </DialogDescription>
           </DialogHeader>
 
@@ -287,6 +378,70 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
               />
             </div>
 
+            <div className="space-y-3 rounded-lg border border-[--border] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <Label>תמונה לתגובה</Label>
+                  <p className="text-xs text-[--muted]">
+                    תמונה קטנה משמאל למטה. בלי תמונה — יוצג הלוגו.
+                  </p>
+                </div>
+                {form.imageUrl ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setForm((current) => ({ ...current, imageUrl: '' }))}
+                  >
+                    <X className="h-4 w-4" />
+                    הסר
+                  </Button>
+                ) : null}
+              </div>
+
+              <div className="flex items-end gap-4">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-[--border] bg-[--dashboard-surface]">
+                  {formPreviewSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={formPreviewSrc}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-[--muted]">
+                      <ImageIcon className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPickerOpen(true)}
+                    disabled={uploadingImage}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    בחרי מהאלבום
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" asChild disabled={uploadingImage}>
+                    <label className="cursor-pointer">
+                      <Upload className="h-4 w-4" />
+                      {uploadingImage ? 'מעלה...' : 'העלאה מהמחשב'}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="sr-only"
+                        onChange={handleImageUpload}
+                        disabled={uploadingImage}
+                      />
+                    </label>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
               <div>
                 <Label htmlFor="testimonial-featured">מומלצת</Label>
@@ -312,10 +467,55 @@ export function TestimonialsManager({ initialTestimonials }: TestimonialsManager
             >
               ביטול
             </Button>
-            <Button type="button" onClick={handleSubmit} disabled={isPending}>
+            <Button type="button" onClick={handleSubmit} disabled={isPending || uploadingImage}>
               {isPending ? 'שומר...' : editingId ? 'שמור שינויים' : 'צור תגובה'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-2xl bg-white max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>בחירת תמונה מהאלבום</DialogTitle>
+            <DialogDescription>בחרי תמונה מהגלריות שלך לתצוגה בתגובה</DialogDescription>
+          </DialogHeader>
+
+          {loadingPhotos ? (
+            <p className="py-8 text-center text-sm text-[--muted]">טוען תמונות...</p>
+          ) : photoOptions.length === 0 ? (
+            <p className="py-8 text-center text-sm text-[--muted]">
+              אין תמונות בגלריות. אפשר להעלות תמונה מהמחשב בטופס התגובה.
+            </p>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {photoOptions.map((photo) => (
+                <button
+                  key={photo.id}
+                  type="button"
+                  className={`group relative aspect-square overflow-hidden border-2 transition ${
+                    form.imageUrl === photo.storageRef
+                      ? 'border-[--primary]'
+                      : 'border-transparent hover:border-[--border]'
+                  }`}
+                  onClick={() => {
+                    setForm((current) => ({ ...current, imageUrl: photo.storageRef }))
+                    setPickerOpen(false)
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={photo.previewUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                  <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1 py-1 text-[10px] text-white truncate">
+                    {photo.galleryTitle}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -53,6 +53,8 @@ export type Database = {
           about_image_url: string | null
           contact_desktop_url: string | null
           contact_mobile_url: string | null
+          packages_desktop_url: string | null
+          packages_mobile_url: string | null
           should_color_logo: boolean
         }
         Insert: {
@@ -83,6 +85,8 @@ export type Database = {
           about_image_url?: string | null
           contact_desktop_url?: string | null
           contact_mobile_url?: string | null
+          packages_desktop_url?: string | null
+          packages_mobile_url?: string | null
           should_color_logo?: boolean
         }
         Update: {
@@ -113,6 +117,8 @@ export type Database = {
           about_image_url?: string | null
           contact_desktop_url?: string | null
           contact_mobile_url?: string | null
+          packages_desktop_url?: string | null
+          packages_mobile_url?: string | null
           should_color_logo?: boolean
         }
         Relationships: []
@@ -510,6 +516,7 @@ export type Database = {
           created_at: string
           is_featured: boolean
           sort_order: number
+          image_url: string | null
         }
         Insert: {
           id?: string
@@ -521,6 +528,7 @@ export type Database = {
           created_at?: string
           is_featured?: boolean
           sort_order?: number
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -532,6 +540,7 @@ export type Database = {
           created_at?: string
           is_featured?: boolean
           sort_order?: number
+          image_url?: string | null
         }
         Relationships: [
           {

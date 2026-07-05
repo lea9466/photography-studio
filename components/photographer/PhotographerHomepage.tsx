@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import {
   generateHeroSlideshowHTML,
   HERO_SLIDESHOW_CSS,
+  HERO_SLIDESHOW_FILM_INIT_SCRIPT,
   HERO_SLIDESHOW_INIT_SCRIPT,
   normalizeHeroUrlList,
 } from '@/lib/hero-slideshow'
@@ -38,6 +39,8 @@ interface Photographer {
   about_image_url: string | null
   contact_desktop_url: string | null
   contact_mobile_url: string | null
+  packages_desktop_url: string | null
+  packages_mobile_url: string | null
   email: string | null
 }
 
@@ -69,6 +72,7 @@ interface Testimonial {
   created_at: string
   is_featured: boolean
   sort_order: number
+  image_url: string | null
 }
 
 const UNIFIED_GALLERY_GRID_CSS = `
@@ -106,14 +110,14 @@ const UNIFIED_GALLERY_GRID_CSS = `
   .homepage-gallery-card {
     position: relative;
     display: block;
-    aspect-ratio: 3 / 5;
+    aspect-ratio: 2 / 3;
     overflow: hidden;
     background: #eae8e5;
     text-decoration: none;
     cursor: pointer;
   }
   @media (min-width: 768px) {
-    .homepage-gallery-card { aspect-ratio: 2 / 5; }
+    .homepage-gallery-card { aspect-ratio: 4 / 9; }
   }
   .homepage-gallery-card-image {
     position: absolute;
@@ -185,6 +189,176 @@ const UNIFIED_GALLERY_GRID_CSS = `
   .homepage-gallery-card:hover .homepage-gallery-card-arrow { transform: translateX(-4px); }
 `
 
+const TESTIMONIAL_THUMB_CARD_CSS = `
+  .testimonials-section {
+    background: transparent !important;
+  }
+  .testimonials-section-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.25rem 2.75rem;
+    justify-content: center;
+    align-items: stretch;
+    padding-top: 1rem;
+    padding-bottom: 1.5rem;
+    padding-inline: 1.25rem;
+    overflow: visible;
+  }
+  .testimonials-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.25rem 2.75rem;
+    justify-content: center;
+    align-items: stretch;
+    width: 100%;
+  }
+  .classic-testimonials-slide .testimonials-row {
+    justify-content: center;
+  }
+  @media (min-width: 768px) {
+    .classic-testimonials-carousel .testimonials-row {
+      flex-wrap: nowrap;
+      gap: 2.5rem;
+    }
+  }
+  .testimonial-thumb-card {
+    position: relative;
+    background: #ffffff;
+    width: fit-content;
+    max-width: min(100%, 24rem);
+    min-width: 14rem;
+    min-height: 8.5rem;
+    align-self: stretch;
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 2.15rem 1.5rem 2.15rem 5.25rem;
+    margin-top: 0.85rem;
+    box-sizing: border-box;
+  }
+  .testimonial-thumb-card__quote {
+    position: absolute;
+    top: 0;
+    right: 1.35rem;
+    left: auto;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    padding: 0 0.75rem;
+    line-height: 1;
+    z-index: 3;
+    opacity: 0.42;
+    font-size: 2.35rem;
+    pointer-events: none;
+  }
+  .testimonial-thumb-card__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+    margin-top: 0.35rem;
+    min-height: 0;
+  }
+  .testimonial-thumb-card__text {
+    flex: 1 1 auto;
+  }
+  .testimonial-thumb-card__footer {
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+  .testimonial-thumb-card__thumb {
+    position: absolute;
+    left: -1.15rem;
+    bottom: -0.85rem;
+    width: 4.5rem;
+    height: 4.5rem;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+    z-index: 2;
+    background: #f3f0ed;
+  }
+  .testimonial-thumb-card__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .testimonial-thumb-card--classic {
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(45, 40, 37, 0.08);
+    border: 1px solid rgba(121, 116, 126, 0.2);
+  }
+  .testimonial-thumb-card--elegant {
+    border: 1px solid rgba(121, 116, 126, 0.35);
+  }
+  .testimonial-thumb-card--modern {
+    border-radius: 1rem;
+    border: 1px solid rgba(121, 116, 126, 0.25);
+    box-shadow: 0 10px 30px rgba(45, 40, 37, 0.08);
+  }
+  .testimonial-thumb-card--dark {
+    background: #1c1c26;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .testimonial-thumb-card--dark .testimonial-thumb-card__quote {
+    background: #1c1c26;
+    opacity: 0.88;
+    font-size: 2.85rem;
+  }
+  .testimonial-thumb-card--dark .testimonial-thumb-card__thumb {
+    border-color: #1c1c26;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+    background: #12121b;
+  }
+  .testimonial-thumb-card--dark .text-on-surface,
+  .testimonial-thumb-card--dark .text-on-surface-variant {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .testimonial-thumb-card--dark .text-on-surface-variant {
+    opacity: 0.62;
+  }
+`
+
+const TESTIMONIALS_EQUAL_HEIGHT_SCRIPT = `
+(function() {
+  function equalizeTestimonialHeights() {
+    var section = document.getElementById('testimonials');
+    if (!section) return;
+    var cards = section.querySelectorAll('.testimonial-thumb-card');
+    if (!cards.length) return;
+    for (var i = 0; i < cards.length; i++) {
+      cards[i].style.minHeight = '';
+    }
+    var max = 0;
+    for (var j = 0; j < cards.length; j++) {
+      var h = cards[j].getBoundingClientRect().height;
+      if (h > max) max = h;
+    }
+    max = Math.ceil(max);
+    for (var k = 0; k < cards.length; k++) {
+      cards[k].style.minHeight = max + 'px';
+    }
+  }
+  var resizeTimer;
+  function scheduleEqualize() {
+    if (resizeTimer) clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(equalizeTestimonialHeights, 120);
+  }
+  window.addEventListener('load', equalizeTestimonialHeights);
+  window.addEventListener('resize', scheduleEqualize);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(equalizeTestimonialHeights);
+  }
+})();
+`
+
 function fillGalleriesToFour(galleries: Gallery[]): Gallery[] {
   if (galleries.length === 0) return []
   if (galleries.length >= 4) return galleries.slice(0, 4)
@@ -214,7 +388,7 @@ function generateUnifiedGalleryGridHTML(
     dark: '0px',
   }
   const radius = radiusByTheme[themeVariant]
-  const imgExtraClass = themeVariant === 'dark' ? ' grayscale group-hover:grayscale-0' : ''
+  const imgExtraClass = ''
 
   return display
     .map((g) => {
@@ -382,22 +556,30 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     about_image_url,
     contact_desktop_url,
     contact_mobile_url,
+    packages_desktop_url,
+    packages_mobile_url,
     email,
   } = photographer
 
   const contactDesktopUrl = contact_desktop_url || null
   const contactMobileUrl = contact_mobile_url || null
   const hasContactBg = !!(contactDesktopUrl || contactMobileUrl)
+  const packagesDesktopUrl = packages_desktop_url || null
+  const packagesMobileUrl = packages_mobile_url || null
+  const hasPackagesBg = !!(packagesDesktopUrl || packagesMobileUrl)
 
-  const contactBgCss = hasContactBg
+  const sectionBgCss = hasContactBg || hasPackagesBg
     ? `
-        .contact-section-has-bg { position: relative; overflow: hidden; }
+        .contact-section-has-bg { position: relative; overflow: hidden; width: 100%; }
         .contact-section-bg {
             position: absolute;
             inset: 0;
             z-index: 0;
+            width: 100%;
+            height: 100%;
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             pointer-events: none;
         }
         .contact-section-bg-desktop { display: none; opacity: 0.52; }
@@ -416,6 +598,8 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             position: absolute;
             inset: 0;
             z-index: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
         }
         @media (max-width: 767px) {
@@ -432,10 +616,16 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     `
     : ''
 
-  const contactBgLayers = (mobileFade: string, desktopFade?: string) => {
-    if (!hasContactBg) return ''
-    const desktop = contactDesktopUrl || contactMobileUrl
-    const mobile = contactMobileUrl || contactDesktopUrl
+  const sectionBgLayers = (
+    enabled: boolean,
+    desktopUrl: string | null,
+    mobileUrl: string | null,
+    mobileFade: string,
+    desktopFade?: string
+  ) => {
+    if (!enabled) return ''
+    const desktop = desktopUrl || mobileUrl
+    const mobile = mobileUrl || desktopUrl
     const desktopFadeColor = desktopFade || mobileFade
     return `
       <div class="contact-section-bg contact-section-bg-desktop" style="background-image:url('${desktop}')"></div>
@@ -443,6 +633,12 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       <div class="contact-section-bg-overlay" style="--contact-fade:${mobileFade};--contact-fade-desktop:${desktopFadeColor}"></div>
     `
   }
+
+  const contactBgLayers = (mobileFade: string, desktopFade?: string) =>
+    sectionBgLayers(hasContactBg, contactDesktopUrl, contactMobileUrl, mobileFade, desktopFade)
+
+  const packagesBgLayers = (mobileFade: string, desktopFade?: string) =>
+    sectionBgLayers(hasPackagesBg, packagesDesktopUrl, packagesMobileUrl, mobileFade, desktopFade)
 
   const primaryColor = accent_color || '#B8953F'
   const desktopHeroImages = normalizeHeroUrlList(hero_desktop_urls, hero_desktop_url)
@@ -460,14 +656,15 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     desktopImages: desktopHeroImages,
     mobileImages: mobileHeroImages,
     alt: studio_name || 'סטודיו צילום',
-    imgClass: 'transition-transform duration-700 group-hover:scale-105',
+    heroId: 'hero-slideshow-modern',
   })
   const heroSlideshowBoldHtml = generateHeroSlideshowHTML({
     desktopImages: desktopHeroImages,
     mobileImages: mobileHeroImages,
     alt: studio_name || 'סטודיו צילום',
     heroId: 'hero-slideshow-bold',
-    imgClass: 'bold-hero-image scale-110 transition-transform duration-[3s] ease-out',
+    transition: 'film',
+    imgClass: 'bold-hero-image',
   })
   const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
 
@@ -493,9 +690,14 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const statsClients = stat_clients ?? 0
   const statsYears = stat_experience_years ?? 0
   const hasStats = statsProjects > 0 || statsClients > 0 || statsYears > 0
+  const hasPackages = packages.length > 0
+  const hasTestimonials = testimonials.length > 0
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
   // Generate dynamic packages HTML for each theme
+  const packageCardBg = (solidClass: string) =>
+    hasPackagesBg ? `${solidClass}/55 backdrop-blur-sm` : solidClass
+
   const generatePackagesHTML = (currentTheme: string) => {
     if (packages.length === 0) return ''
     
@@ -505,7 +707,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       
       if (currentTheme === 'elegant') {
         return `
-        <div class="${isFeatured ? 'bg-white border-2' : 'bg-white border border-outline-variant'} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
+        <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
           ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important; background-color: ${primaryColor};">הנמכרת ביותר</div>` : ''}
           <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="direction: rtl !important; text-align: center !important;">
             <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : '#0F0F0D'};">${pkg.name}</h3>
@@ -525,7 +727,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       `;
       } else if (currentTheme === 'modern') {
         return `
-        <div class="bg-white p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
+        <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
           <div style="direction: rtl !important; text-align: center !important;">
             <h3 class="font-headline text-2xl font-bold" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
@@ -545,7 +747,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       `;
       } else if (currentTheme === 'dark') {
         return `
-        <div class="${isFeatured ? 'bg-background p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl' : 'bg-background p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10'}" style="direction: rtl !important; text-align: center !important;">
+        <div class="${isFeatured ? `${packageCardBg('bg-background')} p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl` : `${packageCardBg('bg-background')} p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10`}" style="direction: rtl !important; text-align: center !important;">
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-xs font-label-sm uppercase tracking-widest" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
           <span class="font-label-sm text-primary/60 mb-md tracking-widest uppercase" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'Professional' : 'Essential'}</span>
           <h3 class="font-headline-sm mb-sm text-on-surface" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
@@ -562,7 +764,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       `;
       } else if (currentTheme === 'classic') {
         return `
-        <div class="${isFeatured ? 'bg-surface-container-low border border-primary/30 p-xl flex flex-col items-center rounded-sm shadow-xl relative scale-105 z-10' : 'bg-surface border border-outline-variant/30 p-xl flex flex-col items-center rounded-sm hover:border-primary/50 transition-colors duration-500'}" style="direction: rtl !important; text-align: center !important;">
+        <div class="${packageCardBg('bg-surface')} ${isFeatured ? 'border-2' : 'border border-outline-variant/30 hover:border-primary/50 transition-colors duration-500'} p-xl flex flex-col items-center rounded-sm relative" style="direction: rtl !important; text-align: center !important;${isFeatured ? ` border-color: ${primaryColor};` : ''}">
           ${isFeatured ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
           <h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
           <p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים'}</p>
@@ -607,64 +809,163 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   }
 
   // Generate dynamic testimonials HTML for each theme.
-  // Falls back to the built-in demo markup when the photographer has no reviews yet,
-  // so the section keeps its original design.
-  const generateTestimonialsHTML = (currentTheme: string, demoHtml: string) => {
-    if (testimonials.length === 0) return demoHtml
+  const testimonialThumbSrc = (t: Testimonial) => escapeHtml(t.image_url || logo_url || '')
 
-    return testimonials.map((t, i) => {
-      const title = escapeHtml(t.title)
-      const content = escapeHtml(t.content)
-      const meta = testimonialMeta(t)
-      const firstLetter = escapeHtml((t.title || '').trim().charAt(0) || '"')
+  const generateTestimonialThumbCard = (
+    t: Testimonial,
+    variant: 'classic' | 'elegant' | 'modern' | 'dark',
+    options?: { delayAttr?: string; extraClass?: string }
+  ) => {
+    const title = escapeHtml(t.title)
+    const content = escapeHtml(t.content)
+    const meta = testimonialMeta(t)
+    const thumbSrc = testimonialThumbSrc(t)
+    const delayAttr = options?.delayAttr ?? ''
+    const extraClass = options?.extraClass ?? ''
 
-      if (currentTheme === 'elegant') {
-        const delay = i > 0 ? ` style="transition-delay: ${i * 150}ms;"` : ''
-        return `
-        <div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll"${delay}>
-          <div>
-            <div class="flex flex-row-reverse gap-1 text-accent mb-6">
-              <span class="material-symbols-outlined fill-1">star</span>
-              <span class="material-symbols-outlined fill-1">star</span>
-              <span class="material-symbols-outlined fill-1">star</span>
-              <span class="material-symbols-outlined fill-1">star</span>
-              <span class="material-symbols-outlined fill-1">star</span>
-            </div>
-            <p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"${content}"</p>
-          </div>
-          <div>
-            <h4 class="font-display text-xl mb-1">${title}</h4>
-            ${meta ? `<p class="text-xs uppercase tracking-widest opacity-40">${meta}</p>` : ''}
+    const thumbHtml = thumbSrc
+      ? `<div class="testimonial-thumb-card__thumb"><img src="${thumbSrc}" alt="" loading="lazy"/></div>`
+      : ''
+
+    const quoteHtml = `<span class="testimonial-thumb-card__quote material-symbols-outlined" style="color: ${primaryColor};">format_quote</span>`
+
+    if (variant === 'classic') {
+      return `
+        <div class="testimonial-thumb-card testimonial-thumb-card--classic classic-testimonial-card italic${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+          ${quoteHtml}
+          ${thumbHtml}
+          <div class="testimonial-thumb-card__content">
+            ${title ? `<h4 class="font-headline-sm text-headline-sm text-on-surface mb-md not-italic">${title}</h4>` : ''}
+            <p class="testimonial-thumb-card__text font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">${content}</p>
+            ${meta ? `<div class="testimonial-thumb-card__footer font-label-sm text-label-sm text-primary font-bold not-italic">${meta}</div>` : ''}
           </div>
         </div>
-      `;
-      } else if (currentTheme === 'classic') {
-        return `
-        <div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
-          <span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
-          ${title ? `<h4 class="font-headline-sm text-headline-sm text-on-surface mb-md not-italic">${title}</h4>` : ''}
-          <p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">"${content}"</p>
-          ${meta ? `<div class="font-label-sm text-label-sm text-primary font-bold not-italic">${meta}</div>` : ''}
-        </div>
-      `;
-      } else if (currentTheme === 'dark') {
-        return `
-        <div class="p-lg bg-surface border border-white/5 relative">
-          <span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
-          <p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"${content}"</p>
-          <div class="flex items-center gap-md">
-            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary">${firstLetter}</div>
+      `
+    }
+
+    if (variant === 'elegant') {
+      return `
+        <div class="testimonial-thumb-card testimonial-thumb-card--elegant flex flex-col justify-between reveal-on-scroll${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+          ${quoteHtml}
+          ${thumbHtml}
+          <div class="testimonial-thumb-card__content">
             <div>
-              <div class="font-label-sm uppercase tracking-widest">${title}</div>
+              <div class="flex flex-row-reverse gap-1 text-accent mb-6">
+                <span class="material-symbols-outlined fill-1">star</span>
+                <span class="material-symbols-outlined fill-1">star</span>
+                <span class="material-symbols-outlined fill-1">star</span>
+                <span class="material-symbols-outlined fill-1">star</span>
+                <span class="material-symbols-outlined fill-1">star</span>
+              </div>
+              <p class="testimonial-thumb-card__text font-body text-lg italic opacity-80 leading-relaxed mb-8">${content}</p>
+            </div>
+            <div class="testimonial-thumb-card__footer">
+              <h4 class="font-display text-xl mb-1">${title}</h4>
+              ${meta ? `<p class="text-xs uppercase tracking-widest opacity-40">${meta}</p>` : ''}
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+    if (variant === 'modern') {
+      return `
+        <div class="testimonial-thumb-card testimonial-thumb-card--modern italic text-lg animate-reveal hover-scale modern-shadow${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+          ${quoteHtml}
+          ${thumbHtml}
+          <div class="testimonial-thumb-card__content">
+            <p class="testimonial-thumb-card__text">${content}</p>
+            <div class="testimonial-thumb-card__footer not-italic">
+              <div class="mt-md font-bold text-on-surface">${title}</div>
+              ${meta ? `<div class="text-on-surface-variant text-sm mt-1">${meta}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      `
+    }
+
+    return `
+        <div class="testimonial-thumb-card testimonial-thumb-card--dark relative${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+          ${quoteHtml}
+          ${thumbHtml}
+          <div class="testimonial-thumb-card__content">
+            <p class="testimonial-thumb-card__text font-body-md text-on-surface-variant mb-xl relative z-10 italic">${content}</p>
+            <div class="testimonial-thumb-card__footer relative z-10">
+              <div class="font-label-sm uppercase tracking-widest text-on-surface">${title}</div>
               ${meta ? `<div class="text-[10px] text-on-surface-variant">${meta}</div>` : ''}
             </div>
           </div>
         </div>
-      `;
+      `
+  }
+
+  const generateTestimonialsHTML = (currentTheme: string) => {
+    if (testimonials.length === 0) return ''
+
+    return testimonials.map((t, i) => {
+      if (currentTheme === 'elegant') {
+        const delay = i > 0 ? ` style="transition-delay: ${i * 150}ms;"` : ''
+        return generateTestimonialThumbCard(t, 'elegant', { delayAttr: delay })
+      } else if (currentTheme === 'classic') {
+        return ''
+      } else if (currentTheme === 'modern') {
+        const delayClass = i > 0 ? ` delay-${Math.min(i * 100, 300)}` : ''
+        return generateTestimonialThumbCard(t, 'modern', { extraClass: delayClass })
+      } else if (currentTheme === 'dark') {
+        return generateTestimonialThumbCard(t, 'dark')
       }
       return '';
     }).join('');
   };
+
+  function generateClassicTestimonialCard(t: Testimonial) {
+    return generateTestimonialThumbCard(t, 'classic')
+  }
+
+  function generateClassicTestimonialsSection() {
+    if (testimonials.length === 0) return ''
+
+    const cardsHtml = testimonials.map((t) => generateClassicTestimonialCard(t)).join('')
+
+    if (testimonials.length <= 3) {
+      return `
+    <div class="testimonials-row">
+      ${cardsHtml}
+    </div>`
+    }
+
+    const slides: Testimonial[][] = []
+    for (let i = 0; i < testimonials.length; i += 3) {
+      slides.push(testimonials.slice(i, i + 3))
+    }
+
+    const slidesHtml = slides
+      .map(
+        (slide) => `
+    <div class="classic-testimonials-slide">
+      <div class="testimonials-row">
+        ${slide.map((t) => generateClassicTestimonialCard(t)).join('')}
+      </div>
+    </div>`
+      )
+      .join('')
+
+    const dotsHtml = `
+    <div class="classic-testimonials-dots">
+      ${slides
+        .map(
+          (_, i) =>
+            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
+        )
+        .join('')}
+    </div>`
+
+    return `
+    <div class="classic-testimonials-carousel" id="classic-testimonials-carousel">
+      <div class="classic-testimonials-track">${slidesHtml}</div>
+      ${dotsHtml}
+    </div>`
+  }
 
   // ELEGANT THEME - EXACT COPY FROM SOURCE WITH DYNAMIC DATA
   const ElegantTheme = () => `
@@ -789,8 +1090,9 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
-        ${contactBgCss}
+        ${sectionBgCss}
     </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">
@@ -862,8 +1164,10 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
 ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 </div>
 </section>
-<section class="bg-[#f2f1ef] py-32 px-margin-mobile md:px-margin-desktop" id="pricing">
-<div class="mx-auto max-w-7xl">
+${hasPackages ? `
+<section class="py-32 px-margin-mobile md:px-margin-desktop ${hasPackagesBg ? 'contact-section-has-bg' : 'bg-[#f2f1ef]'}" id="pricing">
+${packagesBgLayers('#f2f1ef', '#f2f1ef')}
+<div class="mx-auto max-w-7xl contact-section-content">
 <div class="text-center mb-16 reveal-on-scroll">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">חבילות שירות</h2>
 <p class="font-body opacity-60 italic">השקעה בזיכרונות שיישארו לנצח</p>
@@ -871,61 +1175,15 @@ ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${generatePackagesHTML('elegant')}</div>
 </div>
 </section>
-<section class="py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto" id="testimonials">
+` : ''}
+${hasTestimonials ? `
+<section class="testimonials-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto" id="testimonials">
 <div class="text-center mb-16 reveal-on-scroll">
 <h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">מה לקוחות אומרות</h2>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-12">${generateTestimonialsHTML('elegant', `
-<div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll">
-<div>
-<div class="flex flex-row-reverse gap-1 text-accent mb-6">
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-</div>
-<p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"חוויה מעצימה ומדהימה. הרגשתי בנוח מהרגע הראשון, והתוצאות עלו על כל דמיון."</p>
-</div>
-<div>
-<h4 class="font-display text-xl mb-1">דניאל כהן</h4>
-<p class="text-xs uppercase tracking-widest opacity-40">צילומי פורטרט</p>
-</div>
-</div>
-<div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll" style="transition-delay: 150ms;">
-<div>
-<div class="flex flex-row-reverse gap-1 text-accent mb-6">
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-</div>
-<p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"הדיוק, הסבלנות והעין האמנותית של הסטודיו הם נדירים."</p>
-</div>
-<div>
-<h4 class="font-display text-xl mb-1">רונית לוי</h4>
-<p class="text-xs uppercase tracking-widest opacity-40">צילומי חתונה</p>
-</div>
-</div>
-<div class="p-10 border border-outline-variant flex flex-col justify-between reveal-on-scroll" style="transition-delay: 300ms;">
-<div>
-<div class="flex flex-row-reverse gap-1 text-accent mb-6">
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-<span class="material-symbols-outlined fill-1">star</span>
-</div>
-<p class="font-body text-lg italic opacity-80 leading-relaxed mb-8">"מקצועיות ללא פשרות. כל פריים מספר סיפור."</p>
-</div>
-<div>
-<h4 class="font-display text-xl mb-1">מיה ארד</h4>
-<p class="text-xs uppercase tracking-widest opacity-40">צילומי קמפיין</p>
-</div>
-</div>
-`)}</div>
+<div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
 </section>
+` : ''}
 <section id="contact" class="pt-32 pb-12 px-margin-mobile md:px-margin-desktop ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b]'} text-white reveal-on-scroll">
 ${contactBgLayers('#FAFAF8', '#1c1b1b')}
 <div class="max-w-4xl mx-auto contact-section-content">
@@ -1002,6 +1260,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
     });
 </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -1072,9 +1331,89 @@ ${generateSiteFooter(siteChrome('elegant'))}
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
         }
+        .modern-nav .modern-nav-brand,
+        .modern-nav .modern-nav-link,
+        .modern-nav .modern-nav-menu-btn {
+            color: #ffffff;
+            transition: color 0.7s ease;
+        }
+        .modern-nav:not(.nav-scrolled) {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+        }
+        .modern-nav .modern-nav-link:hover,
+        .modern-nav .modern-nav-menu-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .modern-nav .modern-nav-logo {
+            transition: filter 0.7s ease;
+        }
+        .modern-nav:not(.nav-scrolled) .modern-nav-logo {
+            filter: brightness(0) invert(1);
+        }
+        .modern-nav.nav-scrolled .modern-nav-brand {
+            color: #0F172A;
+        }
+        .modern-nav.nav-scrolled .modern-nav-link {
+            color: #475569;
+        }
+        .modern-nav.nav-scrolled .modern-nav-link:hover,
+        .modern-nav.nav-scrolled .modern-nav-menu-btn:hover {
+            color: ${primaryColor};
+        }
+        .modern-nav.nav-scrolled .modern-nav-menu-btn {
+            color: #0F172A;
+        }
+        .modern-nav.nav-scrolled .modern-nav-logo {
+            filter: none;
+        }
+        .modern-about-overlay {
+            background: linear-gradient(
+                to left,
+                rgba(15, 23, 42, 0.55) 0%,
+                rgba(15, 23, 42, 0.22) 30%,
+                transparent 55%
+            );
+            pointer-events: none;
+        }
+        .modern-about-content {
+            color: #ffffff;
+            text-align: right;
+            position: relative;
+        }
+        .modern-about-content::before {
+            content: '';
+            position: absolute;
+            inset: -1.5rem -1.5rem -1.5rem -3rem;
+            background: linear-gradient(
+                to left,
+                rgba(15, 23, 42, 0.82) 0%,
+                rgba(15, 23, 42, 0.45) 55%,
+                transparent 100%
+            );
+            border-radius: 1rem;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .modern-about-content h1,
+        .modern-about-content p,
+        .modern-about-content .modern-about-actions {
+            width: 100%;
+            max-width: 36rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 1rem;
+        }
+        .modern-about-content .modern-about-muted {
+            color: rgba(255, 255, 255, 0.82);
+        }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
-        ${contactBgCss}
+        ${sectionBgCss}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1113,29 +1452,31 @@ ${generateSiteFooter(siteChrome('elegant'))}
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">
 ${generateSiteNav(siteChrome('modern'))}
-<main class="pt-xxl">
+<main${aboutTitle || aboutSubtitle || aboutDescription ? '' : ' class="pt-xxl"'}>
 ${aboutTitle || aboutSubtitle || aboutDescription ? `
-<section class="max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center relative" id="about">
-<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
-<div class="flex flex-col gap-md order-2 md:order-1 animate-reveal relative z-10">
+<section class="relative min-h-screen w-full overflow-hidden" id="about">
+<div class="absolute inset-0 z-0">
+${heroSlideshowModernHtml}
+<div class="modern-about-overlay absolute inset-0"></div>
+</div>
+<div class="relative z-10 min-h-screen flex items-center pt-[80px]">
+<div class="w-full max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center min-h-[calc(100vh-80px)]">
+<div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-start">
 <span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
-${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
-${aboutSubtitle ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
-${aboutDescription ? '<p class="text-lg md:text-xl text-on-surface-variant max-w-xl leading-relaxed" style="white-space: pre-line">' + aboutDescription + '</p>' : ''}
-<div class="flex flex-wrap gap-md pt-md">
+${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
+${aboutSubtitle ? '<p class="text-lg md:text-xl modern-about-muted leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
+${aboutDescription ? '<p class="text-lg md:text-xl modern-about-muted leading-relaxed" style="white-space: pre-line">' + aboutDescription + '</p>' : ''}
+<div class="modern-about-actions pt-md">
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
                     התחילו עכשיו
                 </button>
-<button class="border border-outline text-on-surface px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-surface-variant transition-all">
+<button onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'})" class="border border-white/40 text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-white/10 transition-all">
                     לצפייה בגלריה
                 </button>
 </div>
 </div>
-<div class="relative order-1 md:order-2 animate-reveal delay-100">
-<div class="aspect-square rounded-2xl overflow-hidden modern-shadow hover-scale group">
-${heroSlideshowModernHtml}
+<div class="hidden md:block" aria-hidden="true"></div>
 </div>
-<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary/10 rounded-2xl -z-10"></div>
 </div>
 </section>
 ` : ''}
@@ -1173,7 +1514,19 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 </div>
 </section>
-<section class="bg-surface-dim py-xxl" id="pricing">
+${hasPackages ? (hasPackagesBg ? `
+<section class="max-w-7xl mx-auto px-lg contact-section-has-bg rounded-2xl py-xxl" id="pricing">
+${packagesBgLayers('#F8FAFC')}
+<div class="contact-section-content">
+<div class="text-center mb-xl animate-reveal">
+<h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
+<p class="text-on-surface-variant">בחרו את החבילה המתאימה ליותר עבורכם</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
+</div>
+</section>
+` : `
+<section class="py-xxl bg-surface-dim" id="pricing">
 <div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl animate-reveal">
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
@@ -1182,25 +1535,13 @@ ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
 </div>
 </section>
-<section class="py-xxl max-w-7xl mx-auto px-lg">
+`) : ''}
+${hasTestimonials ? `
+<section class="testimonials-section py-xxl max-w-7xl mx-auto px-lg" id="testimonials">
 <h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">מה הלקוחות אומרים</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-<div class="bg-white p-xl rounded-2xl border border-outline-variant italic text-lg flex gap-md animate-reveal hover-scale modern-shadow">
-<span class="material-symbols-outlined text-primary text-5xl opacity-30">format_quote</span>
-<div>
-                    "החוויה עם סטודיו גלרי הייתה מדהימה. הם הצליחו לתפוס את האווירה בדיוק כפי שחלמנו. התמונות פשוט יצאו מושלמות."
-                    <div class="not-italic mt-md font-bold text-on-surface">מיכל ורוני אברהם</div>
-</div>
-</div>
-<div class="bg-white p-xl rounded-2xl border border-outline-variant italic text-lg flex gap-md animate-reveal delay-100 hover-scale modern-shadow">
-<span class="material-symbols-outlined text-primary text-5xl opacity-30">format_quote</span>
-<div>
-                    "סטודיו מקצועי ברמות הגבוהות ביותר. השירות היה אדיב והתוצאה הסופית עלתה על כל הציפיות שלנו. מומלץ בחום!"
-                    <div class="not-italic mt-md font-bold text-on-surface">יונתן כהן, הייטקיסט</div>
-</div>
-</div>
-</div>
+<div class="testimonials-section-grid">${generateTestimonialsHTML('modern')}</div>
 </section>
+` : ''}
 <section class="max-w-7xl mx-auto px-lg ${hasContactBg ? 'contact-section-has-bg rounded-2xl' : ''}" id="contact">
 ${contactBgLayers('#F8FAFC')}
 <div class="contact-section-content">
@@ -1251,6 +1592,7 @@ ${contactBgLayers('#F8FAFC')}
 ${generateSiteFooter(siteChrome('modern'))}
 <script>${generateSiteNavScrollScript('modern')}</script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -1582,9 +1924,48 @@ ${generateSiteFooter(siteChrome('modern'))}
             filter: blur(64px);
             opacity: 0.78;
         }
+        .classic-testimonials-carousel {
+            overflow: hidden;
+            width: 100%;
+            padding-bottom: 1rem;
+            padding-left: 1.15rem;
+        }
+        .classic-testimonials-track {
+            display: flex;
+            transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            direction: ltr;
+        }
+        .classic-testimonials-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            box-sizing: border-box;
+            direction: rtl;
+        }
+        .classic-testimonials-dots {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        .classic-testimonials-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: rgba(45, 40, 37, 0.22);
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            transition: all 0.35s ease;
+        }
+        .classic-testimonials-dot.is-active {
+            width: 28px;
+            background: ${primaryColor};
+        }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
-        ${contactBgCss}
+        ${sectionBgCss}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -1763,37 +2144,30 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'classic')}
 </div>
 </section>
-<section class="py-xxl max-w-7xl mx-auto px-lg reveal" id="pricing">
+${hasPackages ? `
+<section class="py-xxl reveal ${hasPackagesBg ? 'contact-section-has-bg border-t border-outline-variant/10' : ''}" id="pricing">
+${packagesBgLayers('#fdf8f7', '#f7f3f2')}
+<div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="text-center mb-xl">
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">השקעה ברגעי קסם</span>
 <h2 class="font-headline-md text-headline-md text-on-surface">חבילות צילום</h2>
 <div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('classic')}</div>
+</div>
 </section>
-<section class="bg-surface-container-high py-xxl reveal" id="testimonials">
-<div class="max-w-4xl mx-auto px-lg">
+` : ''}
+${hasTestimonials ? `
+<section class="testimonials-section py-xxl reveal" id="testimonials">
+<div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl">
 <h2 class="font-headline-md text-headline-md text-on-surface">לקוחות מספרים</h2>
 </div>
-<div class="space-y-lg">${generateTestimonialsHTML('classic', `
-<div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
-<span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
-<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
-                        "החוויה בסטודיו הייתה מדהימה. ידעת להוציא מאיתנו את המיטב גם כשהיינו נבוכים מול המצלמה. התמונות יצאו פשוט עוצרות נשימה!"
-                    </p>
-<div class="font-label-sm text-label-sm text-primary font-bold">משפחת כהן, תל אביב</div>
+<div class="testimonials-section-grid">${generateClassicTestimonialsSection()}
 </div>
-<div class="bg-surface p-xl rounded-sm shadow-sm border border-outline-variant/20 text-center relative italic stagger-item">
-<span class="material-symbols-outlined absolute -top-4 right-8 text-primary text-4xl opacity-30">format_quote</span>
-<p class="font-body-lg text-body-lg text-on-surface-variant mb-lg leading-relaxed">
-                        "צילומים ביום החתונה יכולים להיות מלחיצים, אבל איתך הכל הרגיש כל כך טבעי וזורם. תודה על הזיכרונות הכי יפים של החיים שלנו."
-                    </p>
-<div class="font-label-sm text-label-sm text-primary font-bold">מיכל ורוני, ירושלים</div>
-</div>
-`)}</div>
 </div>
 </section>
+` : ''}
 <section class="${hasContactBg ? 'contact-section-has-bg pt-xxl pb-xl reveal border-t border-outline-variant/10' : 'bg-surface-container-low pt-xxl pb-xl reveal border-t border-outline-variant/10'}" id="contact">
 ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
@@ -1883,8 +2257,40 @@ ${generateSiteFooter(siteChrome('classic'))}
                 }
             });
         });
+
+        (function() {
+            var carousel = document.getElementById('classic-testimonials-carousel');
+            if (!carousel) return;
+            var track = carousel.querySelector('.classic-testimonials-track');
+            var dots = carousel.querySelectorAll('.classic-testimonials-dot');
+            var slides = carousel.querySelectorAll('.classic-testimonials-slide');
+            if (!track || slides.length <= 1) return;
+            var index = 0;
+            var timer;
+            function goTo(i) {
+                index = ((i % slides.length) + slides.length) % slides.length;
+                track.style.transform = 'translateX(-' + (index * 100) + '%)';
+                dots.forEach(function(dot, dotIndex) {
+                    dot.classList.toggle('is-active', dotIndex === index);
+                });
+            }
+            function next() { goTo(index + 1); }
+            function resetTimer() {
+                if (timer) clearInterval(timer);
+                timer = setInterval(next, 5000);
+            }
+            dots.forEach(function(dot, dotIndex) {
+                dot.addEventListener('click', function() {
+                    goTo(dotIndex);
+                    resetTimer();
+                });
+            });
+            goTo(0);
+            resetTimer();
+        })();
     </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
@@ -2157,8 +2563,26 @@ ${generateSiteFooter(siteChrome('classic'))}
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${TESTIMONIAL_THUMB_CARD_CSS}
         ${HERO_SLIDESHOW_CSS}
-        ${contactBgCss}
+        ${sectionBgCss}
+        #contact.contact-section-has-bg .contact-section-bg-desktop,
+        #contact.contact-section-has-bg .contact-section-bg-mobile,
+        #pricing.contact-section-has-bg .contact-section-bg-desktop,
+        #pricing.contact-section-has-bg .contact-section-bg-mobile {
+            opacity: 0.72;
+            filter: grayscale(10%) brightness(1.14) contrast(1.04);
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+        #contact.contact-section-has-bg .contact-section-bg-overlay {
+            background: linear-gradient(
+                to top,
+                rgba(18, 18, 23, 0.78) 0%,
+                rgba(18, 18, 23, 0.06) 45%,
+                rgba(18, 18, 23, 0.42) 100%
+            );
+        }
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -2290,6 +2714,19 @@ ${hasStats ? `
 ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 </div>
 </section>
+${hasPackages ? (hasPackagesBg ? `
+<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll contact-section-has-bg" id="pricing">
+${packagesBgLayers('#ffffff', '#ffffff')}
+<div class="contact-section-content">
+<div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
+<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
+<h2 class="font-headline-md text-headline-md mb-md text-background">חבילות וצילום</h2>
+<p class="text-background/60 font-body-md">אנחנו מציעים מגוון אפשרויות שיתאימו לצרכים האישיים והעסקיים שלכם, עם דגש על איכות בלתי מתפשרת.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('dark')}</div>
+</div>
+</section>
+` : `
 <section class="section-transition-light py-xl md:py-xxl reveal-on-scroll" id="pricing">
 <div class="container mx-auto px-lg">
 <div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
@@ -2300,47 +2737,16 @@ ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 <div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('dark')}</div>
 </div>
 </section>
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="testimonials">
+`) : ''}
+${hasTestimonials ? `
+<section class="testimonials-section py-xl md:py-xxl container mx-auto px-lg reveal-on-scroll" id="testimonials">
 <div class="text-center mb-xl md:mb-xxl">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Kind Words</span>
 <h2 class="font-headline-md text-headline-md">מה הלקוחות שלנו אומרים</h2>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">${generateTestimonialsHTML('dark', `
-<div class="p-lg bg-surface border border-white/5 relative">
-<span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
-<p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"החוויה בסטודיו הייתה יוצאת דופן. המקצועיות והעין החדה לפרטים יצרו תמונות שלא האמנתי שניתן להפיק. פשוט וואו!"</p>
-<div class="flex items-center gap-md">
-<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary">מ</div>
-<div>
-<div class="font-label-sm uppercase tracking-widest">מיכל כהן</div>
-<div class="text-[10px] text-on-surface-variant">מעצבת אופנה</div>
-</div>
-</div>
-</div>
-<div class="p-lg bg-surface border border-white/5 relative">
-<span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
-<p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"חיפשתי סטודיו שידע להעביר את המסר העסקי שלי בצורה יוקרתית ונקייה. התוצאה הייתה מדויקת ומרשימה. ממליץ בחום."</p>
-<div class="flex items-center gap-md">
-<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary">א</div>
-<div>
-<div class="font-label-sm uppercase tracking-widest">אביב לוי</div>
-<div class="text-[10px] text-on-surface-variant">מנכ"ל טכנולוגיה</div>
-</div>
-</div>
-</div>
-<div class="p-lg bg-surface border border-white/5 relative">
-<span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute top-4 left-4">format_quote</span>
-<p class="font-body-md text-on-surface-variant mb-xl relative z-10 italic">"הדיוק והאסתטיקה הם ברמה אחרת מכל מה שהכרתי. התמונות שקיבלתי הן יצירות אמנות של ממש."</p>
-<div class="flex items-center gap-md">
-<div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center font-bold text-primary">ד</div>
-<div>
-<div class="font-label-sm uppercase tracking-widest">דנה שרון</div>
-<div class="text-[10px] text-on-surface-variant">אמנית חזותית</div>
-</div>
-</div>
-</div>
-`)}</div>
+<div class="testimonials-section-grid">${generateTestimonialsHTML('dark')}</div>
 </section>
+` : ''}
 <section class="py-md md:py-lg bg-background text-on-surface overflow-hidden whitespace-nowrap border-y border-white/10">
 <div class="inline-block animate-marquee font-headline-sm text-[20px] md:text-headline-sm uppercase tracking-[0.2em] opacity-30">
                 ${studioName}   •   Fashion Editorial   •   Glamour Reality   •   High-End Photography   •   Visual Art   •   ${studioName}   •   Fashion Editorial   •   Glamour Reality   •
@@ -2389,10 +2795,6 @@ ${contactBgLayers('#120f0d', '#1a1614')}
 ${generateSiteFooter(siteChrome('dark'))}
 <script>
         window.addEventListener('load', () => {
-            document.querySelectorAll('#hero-slideshow-bold .bold-hero-image.is-active').forEach(function(img) {
-                img.classList.remove('scale-110');
-                img.classList.add('scale-100');
-            });
             const revealOnScroll = () => {
                 const reveals = document.querySelectorAll('.reveal-on-scroll');
                 reveals.forEach(el => {
@@ -2406,11 +2808,6 @@ ${generateSiteFooter(siteChrome('dark'))}
             revealOnScroll();
         });
         window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const heroImage = document.querySelector('.hero-slideshow .hero-slide.is-active');
-            if(heroImage) {
-                heroImage.style.transform = \`translateY(\${scrolled * 0.25}px) scale(1)\`;
-            }
             const revealOnScroll = () => {
                 const reveals = document.querySelectorAll('.reveal-on-scroll');
                 reveals.forEach(el => {
@@ -2424,6 +2821,7 @@ ${generateSiteFooter(siteChrome('dark'))}
             revealOnScroll();
         });
         ${generateSiteNavScrollScript('dark')}
+        ${HERO_SLIDESHOW_FILM_INIT_SCRIPT}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -2442,6 +2840,7 @@ ${generateSiteFooter(siteChrome('dark'))}
         });
     </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+<script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>

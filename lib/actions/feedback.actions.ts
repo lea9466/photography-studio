@@ -53,6 +53,8 @@ export async function updateProfile(input: {
   about_image_url?: string
   contact_desktop_url?: string
   contact_mobile_url?: string
+  packages_desktop_url?: string
+  packages_mobile_url?: string
   phone?: string
   email?: string
   slug?: string

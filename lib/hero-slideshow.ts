@@ -3,6 +3,9 @@ const DEFAULT_HERO =
 
 export const HERO_SLIDESHOW_INTERVAL_MS = 3000
 export const HERO_SLIDESHOW_FADE_MS = 2000
+export const HERO_SLIDESHOW_FILM_SECONDS_PER_IMAGE = 12
+
+export type HeroSlideshowTransition = 'fade' | 'film'
 
 export const HERO_SLIDESHOW_CSS = `
   .hero-slideshow {
@@ -56,12 +59,106 @@ export const HERO_SLIDESHOW_CSS = `
     transition: none;
     z-index: 1;
   }
+  .hero-slideshow--film {
+    background: transparent;
+  }
+  .hero-slideshow--film .hero-slideshow-layer {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-slideshow--film .hero-film-track {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0;
+    height: 100%;
+    will-change: transform;
+  }
+  .hero-slideshow--film .hero-film-track.is-ready {
+    animation: heroFilmScroll calc(var(--film-frames) * ${HERO_SLIDESHOW_FILM_SECONDS_PER_IMAGE}s) linear infinite;
+  }
+  .hero-slideshow--film .hero-film-slide {
+    flex: 0 0 var(--film-slide-width, 100vw);
+    width: var(--film-slide-width, 100vw);
+    min-width: var(--film-slide-width, 100vw);
+    max-width: var(--film-slide-width, 100vw);
+    height: 100%;
+    overflow: hidden;
+    line-height: 0;
+  }
+  .hero-slideshow--film .hero-film-frame {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    pointer-events: none;
+  }
+  .hero-slideshow--film .hero-slide--static {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  @keyframes heroFilmScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+`
+
+export const HERO_SLIDESHOW_FILM_INIT_SCRIPT = `
+(function initHeroFilmStrips() {
+  function syncFilmStrip(layer) {
+    var track = layer.querySelector('.hero-film-track');
+    if (!track) return true;
+    if (getComputedStyle(layer).display === 'none') return true;
+    var width = Math.round(layer.getBoundingClientRect().width);
+    if (!width) return false;
+    var slides = track.querySelectorAll('.hero-film-slide');
+    if (!slides.length) return true;
+    layer.style.setProperty('--film-slide-width', width + 'px');
+    slides.forEach(function(slide) {
+      slide.style.width = width + 'px';
+      slide.style.flex = '0 0 ' + width + 'px';
+      slide.style.minWidth = width + 'px';
+      slide.style.maxWidth = width + 'px';
+    });
+    track.style.width = (slides.length * width) + 'px';
+    track.classList.add('is-ready');
+    return true;
+  }
+  function syncAll() {
+    document.querySelectorAll('.hero-slideshow--film .hero-slideshow-layer').forEach(syncFilmStrip);
+  }
+  function boot() {
+    var pending = false;
+    document.querySelectorAll('.hero-slideshow--film .hero-slideshow-layer').forEach(function(layer) {
+      if (!syncFilmStrip(layer)) pending = true;
+    });
+    if (pending) requestAnimationFrame(boot);
+  }
+  boot();
+  window.addEventListener('resize', syncAll);
+  window.addEventListener('load', syncAll);
+  document.querySelectorAll('.hero-slideshow--film .hero-film-frame').forEach(function(img) {
+    if (img.complete) return;
+    img.addEventListener('load', syncAll);
+    img.addEventListener('error', syncAll);
+  });
+  if (typeof ResizeObserver !== 'undefined') {
+    document.querySelectorAll('.hero-slideshow--film .hero-slideshow-layer').forEach(function(layer) {
+      new ResizeObserver(syncAll).observe(layer);
+    });
+  }
+})();
 `
 
 export const HERO_SLIDESHOW_INIT_SCRIPT = `
 (function initHeroSlideshow() {
-  var fadeMs = ${HERO_SLIDESHOW_FADE_MS};
   document.querySelectorAll('[data-hero-slideshow]').forEach(function(root) {
+    if (root.getAttribute('data-transition') === 'film') return;
+    var transitionMs = parseInt(root.getAttribute('data-transition-ms') || '${HERO_SLIDESHOW_FADE_MS}', 10);
     var interval = parseInt(root.getAttribute('data-interval') || '${HERO_SLIDESHOW_INTERVAL_MS}', 10);
     ['desktop', 'mobile'].forEach(function(layer) {
       var container = root.querySelector('.hero-slideshow-layer--' + layer);
@@ -87,7 +184,7 @@ export const HERO_SLIDESHOW_INIT_SCRIPT = `
         setTimeout(function() {
           current.classList.remove('is-exiting');
           transitioning = false;
-        }, fadeMs);
+        }, transitionMs);
         index = nextIndex;
       }, interval);
     });
@@ -115,12 +212,24 @@ export function normalizeHeroUrlList(
   return [defaultImage]
 }
 
+function hasFilmMotion(
+  transition: HeroSlideshowTransition,
+  desktopImages: string[],
+  mobileImages: string[]
+): boolean {
+  if (transition !== 'film') return false
+  return desktopImages.length > 1 || mobileImages.length > 1
+}
+
 export function generateHeroSlideshowHTML(options: {
   desktopImages: string[]
   mobileImages: string[]
   imgClass?: string
   heroId?: string
   alt?: string
+  transition?: HeroSlideshowTransition
+  intervalMs?: number
+  transitionMs?: number
 }): string {
   const {
     desktopImages,
@@ -128,6 +237,9 @@ export function generateHeroSlideshowHTML(options: {
     imgClass = '',
     heroId = 'hero-slideshow',
     alt = 'סטודיו צילום',
+    transition = 'fade',
+    intervalMs = HERO_SLIDESHOW_INTERVAL_MS,
+    transitionMs = HERO_SLIDESHOW_FADE_MS,
   } = options
 
   const desktop = uniqueImages(
@@ -139,14 +251,20 @@ export function generateHeroSlideshowHTML(options: {
   const extraClass = imgClass.trim()
   const desktopAnimate = desktop.length > 1
   const mobileAnimate = mobile.length > 1
+  const useFilmMotion = hasFilmMotion(transition, desktop, mobile)
+  const slideshowClass = useFilmMotion
+    ? 'hero-slideshow hero-slideshow--film'
+    : 'hero-slideshow'
 
-  if (!desktopAnimate && !mobileAnimate) {
+  if (transition === 'film' ? !useFilmMotion : !desktopAnimate && !mobileAnimate) {
     const desktopSrc = desktop[0] ?? mobile[0] ?? DEFAULT_HERO
     const mobileSrc = mobile[0] ?? desktopSrc
-    return `<picture>
+    return `<div class="${slideshowClass}" id="${heroId}">
+<picture class="block w-full h-full">
 <source media="(max-width: 768px)" srcset="${mobileSrc}"/>
-<img alt="${alt}" class="w-full h-full object-cover ${extraClass}" src="${desktopSrc}"/>
-</picture>`
+<img alt="${alt}" class="hero-slide hero-slide--static w-full h-full object-cover ${extraClass}" src="${desktopSrc}"/>
+</picture>
+</div>`
   }
 
   const renderLayer = (
@@ -161,6 +279,27 @@ export function generateHeroSlideshowHTML(options: {
 </div>`
     }
 
+    if (transition === 'film') {
+      if (images.length <= 1) {
+        return `<div class="hero-slideshow-layer hero-slideshow-layer--${layer}">
+<img src="${src}" alt="${alt}" class="hero-slide hero-slide--static ${extraClass}" loading="eager" decoding="async" />
+</div>`
+      }
+
+      const frameCount = images.length
+      const loopImages = [...images, ...images]
+      return `<div class="hero-slideshow-layer hero-slideshow-layer--${layer}">
+<div class="hero-film-track" style="--film-frames: ${frameCount};">
+${loopImages
+  .map(
+    (imageSrc) =>
+      `<div class="hero-film-slide"><img src="${imageSrc}" alt="${alt}" class="hero-film-frame ${extraClass}" loading="eager" decoding="async" /></div>`
+  )
+  .join('\n')}
+</div>
+</div>`
+    }
+
     return `<div class="hero-slideshow-layer hero-slideshow-layer--${layer}">
 ${images
   .map(
@@ -171,7 +310,7 @@ ${images
 </div>`
   }
 
-  return `<div class="hero-slideshow" id="${heroId}" data-hero-slideshow data-interval="${HERO_SLIDESHOW_INTERVAL_MS}">
+  return `<div class="${slideshowClass}" id="${heroId}"${useFilmMotion ? ` data-transition="film"` : ` data-hero-slideshow data-transition="${transition}" data-interval="${intervalMs}" data-transition-ms="${transitionMs}"`}>
 ${renderLayer(desktop, 'desktop', desktopAnimate)}
 ${renderLayer(mobile, 'mobile', mobileAnimate)}
 </div>`

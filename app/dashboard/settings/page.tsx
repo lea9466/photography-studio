@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   const { data } = await supabase
     .from('users')
-    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo')
+    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, packages_desktop_url, packages_mobile_url, email, slug, should_color_logo')
     .eq('id', user.id)
     .single()
 
@@ -44,6 +44,8 @@ export default async function SettingsPage() {
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
+    packages_desktop_url: string | null
+    packages_mobile_url: string | null
     email: string | null
     slug: string | null
     should_color_logo: boolean
@@ -75,6 +77,8 @@ export default async function SettingsPage() {
     about_image_url: await resolveBrandingUrl(profile.about_image_url),
     contact_desktop_url: await resolveBrandingUrl(profile.contact_desktop_url),
     contact_mobile_url: await resolveBrandingUrl(profile.contact_mobile_url),
+    packages_desktop_url: await resolveBrandingUrl(profile.packages_desktop_url),
+    packages_mobile_url: await resolveBrandingUrl(profile.packages_mobile_url),
   } : null
 
   return (

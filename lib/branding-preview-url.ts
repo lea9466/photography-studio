@@ -14,15 +14,12 @@ export function getBrandingPreviewUrl(pathOrUrl: string | null | undefined): str
   if (!pathOrUrl?.trim()) return null
 
   const trimmed = pathOrUrl.trim()
+  if (trimmed.startsWith('blob:')) return trimmed
   if (trimmed.startsWith('/api/gallery-media')) return trimmed
 
   const storagePath = extractBrandingStoragePath(trimmed)
   if (storagePath) {
     return `/api/gallery-media?key=${encodeURIComponent(`branding/${storagePath}`)}`
-  }
-
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
-    return trimmed
   }
 
   return `/api/gallery-media?key=${encodeURIComponent(`branding/${trimmed}`)}`

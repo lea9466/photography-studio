@@ -55,18 +55,23 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
               method: 'POST',
               body: formData,
             })
-            
+
+            const uploadData = await uploadResponse.json().catch(() => ({}))
+
             if (!uploadResponse.ok) {
-              throw new Error('העלאת תמונת השער נכשלה')
+              throw new Error(
+                typeof uploadData.error === 'string'
+                  ? uploadData.error
+                  : 'העלאת תמונת השער נכשלה'
+              )
             }
-            
-            const uploadData = await uploadResponse.json()
+
             finalCoverImage = uploadData.path ?? uploadData.url
             setCoverImage(finalCoverImage)
             setCoverImageFile(null)
           } catch (error) {
             console.error('Error uploading cover image:', error)
-            toast.error('העלאת תמונת השער נכשלה')
+            toast.error(error instanceof Error ? error.message : 'העלאת תמונת השער נכשלה')
             setIsUploadingCover(false)
             return
           }

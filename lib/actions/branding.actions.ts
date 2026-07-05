@@ -6,10 +6,12 @@ import type { Database } from '@/lib/types/database.types'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { isR2Configured } from '@/lib/r2/config'
-import { createPresignedUploadUrl, resolveMediaUrl } from '@/lib/r2/storage'
+import { createPresignedUploadUrl } from '@/lib/r2/storage'
+import {
+  PRIMARY_IMAGE_MAX_BYTES,
+  validatePrimaryImageFile,
+} from '@/lib/media-upload-limits'
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20 MB
 const HERO_SLOT_COUNT = 3
 
 type BrandingImageType =
@@ -19,14 +21,11 @@ type BrandingImageType =
   | 'about'
   | 'contact_desktop'
   | 'contact_mobile'
+  | 'packages_desktop'
+  | 'packages_mobile'
 
 function validateBrandingFile(contentType: string, fileSize: number) {
-  if (!ALLOWED_TYPES.includes(contentType)) {
-    throw new Error('סוג הקובץ לא נתמך')
-  }
-  if (fileSize > MAX_FILE_SIZE) {
-    throw new Error('גודל הקובץ חורג מ-20 MB')
-  }
+  validatePrimaryImageFile(contentType, fileSize)
 }
 
 function validateHeroSlot(slot: number | undefined) {
@@ -176,6 +175,8 @@ export async function finalizeBrandingUpload(
   if (type === 'about') updateData.about_image_url = path
   if (type === 'contact_desktop') updateData.contact_desktop_url = path
   if (type === 'contact_mobile') updateData.contact_mobile_url = path
+  if (type === 'packages_desktop') updateData.packages_desktop_url = path
+  if (type === 'packages_mobile') updateData.packages_mobile_url = path
 
   if (type === 'hero_desktop' || type === 'hero_mobile') {
     const heroSlot = coerceHeroSlot(slot)
@@ -225,8 +226,7 @@ export async function finalizeBrandingUpload(
     throw new Error(error.message)
   }
 
-  const url = await resolveMediaUrl('branding', path)
-  return { success: true, url, path, slot }
+  return { success: true, path, slot }
 }
 
 export async function removeHeroImageSlot(input: {
@@ -288,6 +288,8 @@ export async function updateBrandingSettings(data: {
   aboutImageUrl?: string
   contactDesktopUrl?: string
   contactMobileUrl?: string
+  packagesDesktopUrl?: string
+  packagesMobileUrl?: string
   shouldColorLogo?: boolean
 }) {
   const supabase = await createClient()
@@ -324,6 +326,10 @@ export async function updateBrandingSettings(data: {
     updateData.contact_desktop_url = data.contactDesktopUrl
   if (data.contactMobileUrl !== undefined)
     updateData.contact_mobile_url = data.contactMobileUrl
+  if (data.packagesDesktopUrl !== undefined)
+    updateData.packages_desktop_url = data.packagesDesktopUrl
+  if (data.packagesMobileUrl !== undefined)
+    updateData.packages_mobile_url = data.packagesMobileUrl
   if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
   const untypedClient = await createUntypedClient()

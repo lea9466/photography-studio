@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
+import { resolveTestimonialImageUrl } from '@/lib/testimonial-image-url'
 
 interface PageProps {
   params: Promise<{
@@ -100,7 +101,7 @@ export default async function PhotographerPage({ params }: PageProps) {
     // Fetch client testimonials/reviews (public)
     const { data: testimonials } = await admin
       .from('testimonials')
-      .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order')
+      .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order, image_url')
       .eq('user_id', typedPhotographer.id)
       .order('is_featured', { ascending: false })
       .order('sort_order', { ascending: true })
@@ -129,6 +130,8 @@ export default async function PhotographerPage({ params }: PageProps) {
       about_image_url: await resolveBrandingPath(typedPhotographer.about_image_url),
       contact_desktop_url: await resolveBrandingPath(typedPhotographer.contact_desktop_url),
       contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),
+      packages_desktop_url: await resolveBrandingPath(typedPhotographer.packages_desktop_url),
+      packages_mobile_url: await resolveBrandingPath(typedPhotographer.packages_mobile_url),
       logo_url: await resolveBrandingPath(typedPhotographer.logo_url),
     }
 
@@ -143,13 +146,20 @@ export default async function PhotographerPage({ params }: PageProps) {
       }))
     )
 
+    const testimonialsWithUrls = await Promise.all(
+      (testimonials || []).map(async (testimonial: any) => ({
+        ...testimonial,
+        image_url: await resolveTestimonialImageUrl(testimonial.image_url),
+      }))
+    )
+
     return (
       <>
         <PhotographerHomepage
           photographer={photographerWithUrls}
           galleries={galleriesWithSignedUrls}
           packages={packages || []}
-          testimonials={(testimonials as any) || []}
+          testimonials={testimonialsWithUrls}
         />
       </>
     )
