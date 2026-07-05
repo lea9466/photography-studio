@@ -92,8 +92,8 @@ const UNIFIED_GALLERY_GRID_CSS = `
     }
   }
   .homepage-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 3px;
     width: 100%;
     max-width: 100%;
@@ -103,21 +103,31 @@ const UNIFIED_GALLERY_GRID_CSS = `
   }
   @media (min-width: 768px) {
     .homepage-gallery-grid {
-      grid-template-columns: repeat(4, 1fr);
+      flex-wrap: nowrap;
       gap: 4px;
     }
   }
   .homepage-gallery-card {
     position: relative;
     display: block;
+    flex: 1 1 calc(50% - 1.5px);
+    min-width: 0;
+    transition: flex 0.5s ease;
     aspect-ratio: 2 / 3;
     overflow: hidden;
     background: #eae8e5;
     text-decoration: none;
     cursor: pointer;
   }
+  .homepage-gallery-card:hover,
+  .homepage-gallery-card:focus-visible {
+    flex: 2.5 1 0;
+  }
   @media (min-width: 768px) {
-    .homepage-gallery-card { aspect-ratio: 4 / 9; }
+    .homepage-gallery-card {
+      flex: 1 1 0;
+      aspect-ratio: 4 / 9;
+    }
   }
   .homepage-gallery-card-image {
     position: absolute;
