@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
@@ -232,7 +233,7 @@ export default async function PhotographerPage({ params }: PageProps) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
 
   try {
@@ -241,19 +242,30 @@ export async function generateMetadata({ params }: PageProps) {
 
     if (!photographer) {
       return {
-        title: 'סטודיו גלריה',
+        title: 'סטודיו לא נמצא | סטודיו גלריה',
+        description: 'הסטודיו המבוקש אינו קיים.',
       }
     }
 
     const typedPhotographer = photographer as any
+    const studioName = typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
+    const description =
+      typedPhotographer.about_text ||
+      `הפורטפוליו והעבודות של ${studioName}. צילום מקצועי, שירות אישי ותוצאות ברמה הגבוהה ביותר.`
 
     return {
-      title: `${typedPhotographer.studio_name || typedPhotographer.name} | סטודיו גלריה`,
-      description: typedPhotographer.about_text || 'סטודיו לצילום מקצועי',
+      title: `${studioName} - צילום מקצועי`,
+      description,
+      openGraph: {
+        title: `${studioName} - צילום מקצועי`,
+        description,
+        type: 'website',
+      },
     }
   } catch (error) {
     return {
       title: 'סטודיו גלריה',
+      description: 'סטודיו לצילום מקצועי',
     }
   }
 }
