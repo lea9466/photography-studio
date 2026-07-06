@@ -9,6 +9,8 @@ export type SiteChromeConfig = {
   primaryColor: string
   homepagePath: string
   linkMode: SiteChromeLinkMode
+  hasFaq?: boolean
+  hasPackages?: boolean
 }
 
 export function brandLastWord(text: string) {
@@ -59,17 +61,18 @@ function generateStudioSignupFooterCta(theme: SiteChromeTheme): string {
   }
 }
 
-type NavTarget = 'home' | 'gallery' | 'pricing' | 'contact'
+type NavTarget = 'home' | 'gallery' | 'pricing' | 'faq' | 'contact'
+
+function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
+  if (target === 'gallery') return gallerySectionId(cfg.theme)
+  if (target === 'pricing') return 'pricing'
+  if (target === 'faq') return 'faq'
+  return 'contact'
+}
 
 function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'home') return cfg.homepagePath
-  const section =
-    target === 'gallery'
-      ? gallerySectionId(cfg.theme)
-      : target === 'pricing'
-        ? 'pricing'
-        : 'contact'
-  return `${cfg.homepagePath}#${section}`
+  return `${cfg.homepagePath}#${navSectionId(cfg, target)}`
 }
 
 function parentNavTarget(cfg: SiteChromeConfig) {
@@ -84,13 +87,7 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
   if (target === 'home') {
     return `onclick="window.scrollTo({top: 0, behavior: 'smooth'})${close}"`
   }
-  const section =
-    target === 'gallery'
-      ? gallerySectionId(cfg.theme)
-      : target === 'pricing'
-        ? 'pricing'
-        : 'contact'
-  return `onclick="document.querySelector('#${section}').scrollIntoView({behavior: 'smooth'})${close}"`
+  return `onclick="document.querySelector('#${navSectionId(cfg, target)}').scrollIntoView({behavior: 'smooth'})${close}"`
 }
 
 function logoBlock(cfg: SiteChromeConfig, options: { imgClass?: string; textClass: string }) {
@@ -112,9 +109,15 @@ function navItems(
     home: 'בית',
     gallery: 'גלריות',
     pricing: 'חבילות צילום',
+    faq: 'שאלות נפוצות',
     contact: 'יצירת קשר',
   }
-  return (['home', 'gallery', 'pricing', 'contact'] as NavTarget[])
+  const targets: NavTarget[] = ['home', 'gallery']
+  if (cfg.hasPackages) targets.push('pricing')
+  if (cfg.hasFaq) targets.push('faq')
+  targets.push('contact')
+
+  return targets
     .map((target) => {
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
@@ -133,6 +136,23 @@ function brandLink(cfg: SiteChromeConfig, inner: string) {
     return `<a href="${cfg.homepagePath}" class="flex items-center gap-sm"${parentNavTarget(cfg)}>${inner}</a>`
   }
   return `<div class="flex items-center gap-sm">${inner}</div>`
+}
+
+function navInitialClasses(theme: SiteChromeTheme, linkMode: SiteChromeLinkMode): string {
+  if (linkMode !== 'href') {
+    return 'border-none bg-transparent py-md'
+  }
+
+  switch (theme) {
+    case 'modern':
+      return 'nav-scrolled bg-[#F8FAFC]/95 backdrop-blur-md py-sm border-b border-outline-variant/20 shadow-sm'
+    case 'classic':
+      return 'nav-scrolled bg-surface/90 backdrop-blur-md py-sm border-b border-outline-variant/20 shadow-sm'
+    case 'dark':
+      return 'nav-scrolled bg-background/90 backdrop-blur-md py-sm border-b border-white/10 shadow-sm'
+    default:
+      return 'bg-transparent py-md'
+  }
 }
 
 export function generateSiteNav(cfg: SiteChromeConfig): string {
@@ -164,7 +184,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'modern':
       return `
-<nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
+<nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('modern', cfg.linkMode)}" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
 <button onclick="toggleMobileMenu()" class="modern-nav-menu-btn md:hidden p-2 transition-colors">
@@ -191,7 +211,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'classic':
       return `
-<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
+<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('classic', cfg.linkMode)}" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo h-10 w-auto object-contain', textClass: 'classic-nav-brand font-headline-sm text-headline-sm tracking-tight' }))}
 <button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn md:hidden p-2 transition-colors">
@@ -218,7 +238,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'dark':
       return `
-<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 border-none bg-transparent" id="main-nav">
+<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('dark', cfg.linkMode)}" id="main-nav">
 <div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo h-10 w-auto object-contain', textClass: 'bold-nav-brand font-headline-sm text-headline-sm tracking-tighter' }))}
 <button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn md:hidden p-2 transition-colors">
@@ -340,7 +360,12 @@ ${generateStudioSignupFooterCta('dark')}
   }
 }
 
-export function generateSiteNavScrollScript(theme: SiteChromeTheme): string {
+export function generateSiteNavScrollScript(
+  theme: SiteChromeTheme,
+  linkMode: SiteChromeLinkMode = 'scroll',
+): string {
+  if (linkMode === 'href') return ''
+
   switch (theme) {
     case 'elegant':
       return `
@@ -466,11 +491,11 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: #0F172A;
         }
         .modern-nav.nav-scrolled .modern-nav-link {
-            color: #475569;
+            color: ${primaryColor};
         }
         .modern-nav.nav-scrolled .modern-nav-link:hover,
         .modern-nav.nav-scrolled .modern-nav-menu-btn:hover {
-            color: ${primaryColor};
+            opacity: 0.85;
         }
         .modern-nav.nav-scrolled .modern-nav-menu-btn {
             color: #0F172A;
@@ -530,6 +555,8 @@ export function createSiteChromeConfig(options: {
   primaryColor: string
   homepagePath: string
   linkMode?: SiteChromeLinkMode
+  hasFaq?: boolean
+  hasPackages?: boolean
 }): SiteChromeConfig {
   return {
     theme: options.theme,
@@ -538,5 +565,7 @@ export function createSiteChromeConfig(options: {
     primaryColor: options.primaryColor,
     homepagePath: options.homepagePath,
     linkMode: options.linkMode ?? 'scroll',
+    hasFaq: options.hasFaq ?? false,
+    hasPackages: options.hasPackages ?? false,
   }
 }

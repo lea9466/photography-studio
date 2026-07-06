@@ -29,6 +29,7 @@ export type PublicPhotographer = Pick<
   | 'packages_desktop_url'
   | 'packages_mobile_url'
   | 'email'
+  | 'faq_items'
 >
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
@@ -57,7 +58,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   contact_mobile_url,
   packages_desktop_url,
   packages_mobile_url,
-  email
+  email,
+  faq_items
 `
 
 const RESERVED_SLUGS = new Set(['favicon.ico', 'robots.txt', 'sitemap.xml'])

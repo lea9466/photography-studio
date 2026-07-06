@@ -5,6 +5,7 @@ import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
+import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
 
 type PublicGalleryPageProps = {
@@ -27,6 +28,7 @@ type UserData = {
   selected_theme: string | null
   contact_card_title: string | null
   contact_card_description: string | null
+  faq_items: unknown
 }
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
@@ -45,15 +47,24 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const galleryData = gallery as GalleryData
   const admin = createAdminClient()
 
-  const { data: user } = await admin
-    .from('users')
-    .select(
-      'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description'
-    )
-    .eq('id', galleryData.user_id)
-    .single()
+  const [{ data: user }, { count: packageCount }] = await Promise.all([
+    admin
+      .from('users')
+      .select(
+        'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, faq_items'
+      )
+      .eq('id', galleryData.user_id)
+      .single(),
+    admin
+      .from('photography_packages')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', galleryData.user_id)
+      .eq('is_active', true),
+  ])
 
   const userData = user as UserData | null
+  const hasFaq = sanitizeFaqItems(parseFaqItems(userData?.faq_items)).length > 0
+  const hasPackages = (packageCount ?? 0) > 0
   const accentColor = userData?.accent_color ?? '#7c3aed'
   const siteTheme = normalizeSiteTheme(userData?.selected_theme)
   const studioName = userData?.studio_name ?? 'Studio Gallery'
@@ -104,6 +115,8 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     studioName,
     logoUrl,
     homepagePath,
+    hasFaq,
+    hasPackages,
     gallery: {
       title: galleryData.title,
       photoCount: photos.length,

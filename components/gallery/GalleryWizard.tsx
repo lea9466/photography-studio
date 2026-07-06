@@ -78,14 +78,17 @@ type WizardState = {
   coverImageFile: File | null
 }
 
+// MVP: Public-only mode. Private/client gallery flows are frozen (not deleted).
+const PUBLIC_ONLY_MVP = true
+
 const initialState: WizardState = {
-  clientMode: 'existing',
+  clientMode: 'public',
   clientId: '',
   newClientName: '',
   newClientEmail: '',
   newClientPhone: '',
   title: '',
-  galleryType: 'selection',
+  galleryType: 'portfolio',
   password: '',
   expiresAt: '',
   maxAlbumSelection: '',
@@ -94,7 +97,7 @@ const initialState: WizardState = {
   allowDownloadOriginal: false,
   watermarkText: '',
   sendToClient: false,
-  isPublic: false,
+  isPublic: true,
   coverImage: '',
   coverImageFile: null,
 }
@@ -104,11 +107,19 @@ export function GalleryWizard({
   defaultWatermarkText = '',
 }: GalleryWizardProps) {
   const router = useRouter()
-  const [step, setStep] = useState(1)
+  // MVP: Step 1 (client selection) is skipped. Start on the gallery-type step.
+  const [step, setStep] = useState(PUBLIC_ONLY_MVP ? 2 : 1)
   const [state, setState] = useState<WizardState>({
     ...initialState,
     clientId: clients[0]?.id ?? '',
-    clientMode: clients.length > 0 ? 'existing' : 'new',
+    // MVP: force "No Client (Public Showcase)" as the default state.
+    clientMode: PUBLIC_ONLY_MVP
+      ? 'public'
+      : clients.length > 0
+      ? 'existing'
+      : 'new',
+    galleryType: PUBLIC_ONLY_MVP ? 'portfolio' : initialState.galleryType,
+    isPublic: PUBLIC_ONLY_MVP ? true : initialState.isPublic,
     watermarkText: defaultWatermarkText,
   })
   const [isPending, startTransition] = useTransition()
@@ -148,7 +159,8 @@ export function GalleryWizard({
   }
 
   function handleBack() {
-    setStep((prev) => Math.max(prev - 1, 1))
+    // MVP: never return to the frozen client-selection step.
+    setStep((prev) => Math.max(prev - 1, PUBLIC_ONLY_MVP ? 2 : 1))
   }
 
   function handlePublish() {
@@ -249,19 +261,24 @@ export function GalleryWizard({
     <div className="w-full max-w-7xl mx-auto p-8 space-y-8">
       {/* Progress Stepper - Visible on all steps */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-            step === 1 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-          }`}>1</div>
-          <span className={`font-medium transition-colors ${
-            step === 1 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
-          }`}>בחירת לקוח</span>
-        </div>
-        <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
+        {/* MVP: client-selection step is frozen and hidden */}
+        {!PUBLIC_ONLY_MVP && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+                step === 1 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
+              }`}>1</div>
+              <span className={`font-medium transition-colors ${
+                step === 1 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
+              }`}>בחירת לקוח</span>
+            </div>
+            <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
+          </>
+        )}
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 2 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-          }`}>2</div>
+          }`}>{PUBLIC_ONLY_MVP ? '1' : '2'}</div>
           <span className={`font-medium transition-colors ${
             step === 2 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>סוג גלריה</span>
@@ -270,7 +287,7 @@ export function GalleryWizard({
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 3 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-          }`}>3</div>
+          }`}>{PUBLIC_ONLY_MVP ? '2' : '3'}</div>
           <span className={`font-medium transition-colors ${
             step === 3 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>הגדרות מתקדמות</span>
@@ -453,7 +470,7 @@ export function GalleryWizard({
               <input 
                 className="w-full bg-[#f7f2f4] border border-[#c9c5cd] rounded-xl px-6 py-4 text-lg focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20 transition-all outline-none" 
                 id="gallery-name" 
-                placeholder="למשל: חתונה של דנה ואבי" 
+                placeholder="למשל: ניו בורן/צילומי חוץ" 
                 type="text"
                 value={state.title}
                 onChange={(e) => updateState('title', e.target.value)}
@@ -471,14 +488,26 @@ export function GalleryWizard({
               <p className="text-base text-[#48464c]/70">איך הלקוח יתקשר עם התמונות שלך?</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              {GALLERY_TYPES.map((type) => (
-                <label key={type} className="cursor-pointer">
+              {GALLERY_TYPES.map((type) => {
+                // MVP: private "selection" gallery is frozen (coming soon).
+                const isFrozen = PUBLIC_ONLY_MVP && type === 'selection'
+                return (
+                <label
+                  key={type}
+                  className={`relative ${isFrozen ? 'opacity-40 pointer-events-none cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  {isFrozen && (
+                    <span className="absolute top-3 left-3 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white pointer-events-none">
+                      בקרוב
+                    </span>
+                  )}
                   <input 
                     className="hidden peer" 
                     name="gallery_type" 
                     type="radio" 
                     value={type}
                     checked={state.galleryType === type}
+                    disabled={isFrozen}
                     onChange={() => updateState('galleryType', type)}
                   />
                   <div className={`selection-card h-full p-8 rounded-xl border border-[#c9c5cd] flex flex-col gap-4 text-right peer-checked:border-[#7D3A52] peer-checked:bg-[#7D3A52]/[0.03] peer-checked:ring-1 peer-checked:ring-[#7D3A52] group transition-all duration-300 ${
@@ -511,7 +540,8 @@ export function GalleryWizard({
                     </div>
                   </div>
                 </label>
-              ))}
+                )
+              })}
             </div>
           </section>
         </div>
@@ -521,8 +551,8 @@ export function GalleryWizard({
         <div className="max-w-7xl mx-auto">
           {/* Bento Grid Layout for Sections */}
           <form className="grid grid-cols-12 gap-6">
-            {/* Security Section */}
-            <section className="col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8">
+            {/* Security Section — MVP: frozen for public-only */}
+            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">אבטחה ופרטיות</h2>
@@ -557,8 +587,8 @@ export function GalleryWizard({
               <p className="mt-4 text-sm text-[#48464c] italic">לאחר תאריך התפוגה, הגישה לגלריה תיחסם אוטומטית.</p>
             </section>
             
-            {/* Limits Section */}
-            <section className="col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8">
+            {/* Limits Section — MVP: frozen for public-only */}
+            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Zap className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">מגבלות אלבום</h2>
@@ -666,8 +696,8 @@ export function GalleryWizard({
               </div>
             </section>
             
-            {/* Download Permissions Section */}
-            <section className="col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8">
+            {/* Download Permissions Section — MVP: frozen for public-only */}
+            <section className={`col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Download className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">הרשאות הורדה</h2>

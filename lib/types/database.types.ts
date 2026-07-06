@@ -8,6 +8,7 @@ export type Json =
 
 export type GalleryStatus =
   | 'draft'
+  | 'public'
   | 'selection'
   | 'editing'
   | 'delivery_ready'
@@ -56,6 +57,7 @@ export type Database = {
           packages_desktop_url: string | null
           packages_mobile_url: string | null
           should_color_logo: boolean
+          faq_items: Json
         }
         Insert: {
           id: string
@@ -88,6 +90,7 @@ export type Database = {
           packages_desktop_url?: string | null
           packages_mobile_url?: string | null
           should_color_logo?: boolean
+          faq_items?: Json
         }
         Update: {
           id?: string
@@ -120,6 +123,7 @@ export type Database = {
           packages_desktop_url?: string | null
           packages_mobile_url?: string | null
           should_color_logo?: boolean
+          faq_items?: Json
         }
         Relationships: []
       }

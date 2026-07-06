@@ -17,6 +17,7 @@ import {
   generateSiteNavScrollScript,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
+import { parseFaqItems, sanitizeFaqItems, type FaqItem } from '@/lib/faq'
 
 interface Photographer {
   id: string
@@ -44,6 +45,7 @@ interface Photographer {
   packages_desktop_url: string | null
   packages_mobile_url: string | null
   email: string | null
+  faq_items?: FaqItem[] | unknown
 }
 
 interface Gallery {
@@ -316,6 +318,212 @@ const RECENT_PHOTOS_REVEAL_SCRIPT = `
   }
 })();
 `
+
+const FAQ_ACCORDION_CSS = `
+  .faq-section {
+    width: 100%;
+  }
+  .faq-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 42rem;
+    margin-inline: auto;
+    interpolate-size: allow-keywords;
+  }
+  .faq-item {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #ffffff;
+  }
+  .faq-item summary {
+    cursor: pointer;
+    padding: 1rem 1.25rem;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-weight: 500;
+    text-align: right;
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-item summary::after {
+    content: '+';
+    font-size: 1.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+  }
+  .faq-item[open] summary::after {
+    content: '−';
+  }
+  /* Modern browsers: smoothly animate the collapsible height */
+  .faq-item::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition: block-size 0.35s ease, content-visibility 0.35s ease allow-discrete;
+  }
+  .faq-item[open]::details-content {
+    block-size: auto;
+  }
+  /* Fallback (and complement): fade + slide the answer in on open */
+  @keyframes faqAnswerReveal {
+    from {
+      opacity: 0;
+      transform: translateY(-0.5rem);
+    }
+    to {
+      opacity: 0.85;
+      transform: translateY(0);
+    }
+  }
+  .faq-item[open] .faq-answer {
+    animation: faqAnswerReveal 0.35s ease both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq-item::details-content,
+    .faq-item summary::after {
+      transition: none;
+    }
+    .faq-item[open] .faq-answer {
+      animation: none;
+    }
+  }
+  .faq-answer {
+    padding: 0 1.25rem 1rem;
+    line-height: 1.7;
+    white-space: pre-line;
+    opacity: 0.85;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding-top: 0.75rem;
+    margin: 0 1.25rem 1rem;
+  }
+  .faq-item--dark {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .faq-item--dark .faq-answer {
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+`
+
+function elegantFaqSectionCss(primaryColor: string) {
+  return `
+  .faq-grid-elegant {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 56rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 640px) {
+    .faq-grid-elegant {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .faq-grid-elegant {
+      gap: 1.5rem 2rem;
+      max-width: 64rem;
+    }
+  }
+  .faq-card-elegant {
+    background: #ffffff;
+    border-radius: 0.375rem;
+    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.875rem;
+    min-height: clamp(10.5rem, 28vw, 14rem);
+    box-shadow: 0 4px 20px rgba(15, 15, 13, 0.08);
+    border: 1px solid rgba(15, 15, 13, 0.06);
+  }
+  .faq-card-elegant__question {
+    font-family: 'Heebo', sans-serif;
+    font-size: clamp(1rem, 2.4vw, 1.125rem);
+    font-weight: 400;
+    line-height: 1.55;
+    color: ${primaryColor};
+    margin: 0;
+  }
+  .faq-card-elegant__answer {
+    font-family: 'Heebo', sans-serif;
+    font-size: clamp(0.8125rem, 2.1vw, 0.975rem);
+    font-weight: 300;
+    line-height: 1.75;
+    color: ${primaryColor};
+    opacity: 0.9;
+    margin: 0;
+    white-space: pre-line;
+  }`
+}
+
+function classicFaqSectionCss(primaryColor: string) {
+  return `
+  .faq-grid-classic {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 56rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 640px) {
+    .faq-grid-classic {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .faq-grid-classic {
+      gap: 1.5rem 2rem;
+      max-width: 64rem;
+    }
+  }
+  .faq-card-classic {
+    background: #ffffff;
+    border-radius: 4px;
+    padding: clamp(1.5rem, 4vw, 2rem) clamp(1.25rem, 3vw, 1.75rem);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: clamp(10.5rem, 28vw, 14rem);
+    border: 1px solid rgba(209, 198, 180, 0.45);
+    box-shadow: 0 2px 16px rgba(45, 40, 37, 0.06);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .faq-card-classic:hover {
+    border-color: ${primaryColor}40;
+    box-shadow: 0 4px 20px rgba(45, 40, 37, 0.08);
+  }
+  .faq-card-classic__question {
+    font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
+    font-size: clamp(1rem, 2.3vw, 1.2rem);
+    font-weight: 600;
+    line-height: 1.45;
+    color: ${primaryColor};
+    margin: 0;
+  }
+  .faq-card-classic__answer {
+    font-family: 'Heebo', sans-serif;
+    font-size: clamp(0.875rem, 2vw, 1rem);
+    font-weight: 400;
+    line-height: 1.7;
+    color: #5a504a;
+    margin: 0;
+    white-space: pre-line;
+  }`
+}
 
 const TESTIMONIAL_THUMB_CARD_CSS = `
   .testimonials-section {
@@ -891,6 +1099,9 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 
   const studioName = studio_name || 'סטודיו גלריה'
   const photographerName = name || 'אפרת כהן'
+  const validFaqItems = sanitizeFaqItems(parseFaqItems(photographer.faq_items))
+  const hasFaq = validFaqItems.length > 0
+
   const siteChrome = (themeKey: SiteChromeTheme) =>
     createSiteChromeConfig({
       theme: themeKey,
@@ -899,6 +1110,8 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       primaryColor,
       homepagePath: '/',
       linkMode: 'scroll',
+      hasFaq,
+      hasPackages: packages.length > 0,
     })
   const aboutText = about_text || 'ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.'
   const aboutTitle = about_title || ''
@@ -1037,6 +1250,86 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         <h2 class="elegant-section-heading__title text-3xl md:text-4xl${titleClass ? ` ${titleClass}` : ''}">${escapeHtml(title)}</h2>
       </div>
     `
+  }
+
+  const generateFaqAccordionHTML = (currentTheme: string) =>
+    validFaqItems
+      .map((item) => {
+        const darkClass = currentTheme === 'dark' ? ' faq-item--dark' : ''
+        return `<details class="faq-item${darkClass}">
+<summary>${escapeHtml(item.question)}</summary>
+<div class="faq-answer">${escapeHtml(item.answer)}</div>
+</details>`
+      })
+      .join('')
+
+  const generateElegantFaqCardsHTML = () =>
+    validFaqItems
+      .map(
+        (item, index) => `<article class="faq-card-elegant reveal-on-scroll" style="transition-delay: ${index * 80}ms">
+<h3 class="faq-card-elegant__question">${escapeHtml(item.question)}</h3>
+<p class="faq-card-elegant__answer">${escapeHtml(item.answer)}</p>
+</article>`
+      )
+      .join('')
+
+  const generateClassicFaqCardsHTML = () =>
+    validFaqItems
+      .map(
+        (item, index) => `<article class="faq-card-classic reveal" style="transition-delay: ${index * 80}ms">
+<h3 class="faq-card-classic__question">${escapeHtml(item.question)}</h3>
+<p class="faq-card-classic__answer">${escapeHtml(item.answer)}</p>
+</article>`
+      )
+      .join('')
+
+  const generateFaqSectionHTML = (currentTheme: string) => {
+    if (!hasFaq) return ''
+
+    const accordion = `<div class="faq-accordion">${generateFaqAccordionHTML(currentTheme)}</div>`
+
+    if (currentTheme === 'elegant') {
+      return `<section class="faq-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto reveal-on-scroll" id="faq">
+<div class="text-center mb-10 md:mb-16 reveal-on-scroll">
+${elegantSectionHeading('שאלות נפוצות', 'FAQ', { center: true, titleClass: 'mb-4' })}
+<p class="font-body opacity-60 italic mt-3">מצאו תשובות לשאלות הנפוצות ביותר</p>
+</div>
+<div class="faq-grid-elegant">${generateElegantFaqCardsHTML()}</div>
+</section>`
+    }
+
+    if (currentTheme === 'modern') {
+      return `<section class="faq-section py-xxl max-w-7xl mx-auto px-lg reveal-on-scroll" id="faq">
+<div class="text-center mb-xl animate-reveal">
+<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">שאלות נפוצות</h2>
+<p class="modern-section-subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
+</div>
+${accordion}
+</section>`
+    }
+
+    if (currentTheme === 'classic') {
+      return `<section class="faq-section py-xxl reveal" id="faq">
+<div class="max-w-7xl mx-auto px-lg">
+<div class="text-center mb-xl">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">FAQ</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">שאלות נפוצות</h2>
+<div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
+<p class="font-body-md text-body-md text-on-surface-variant mt-md max-w-xl mx-auto">מצאו תשובות לשאלות הנפוצות ביותר</p>
+</div>
+<div class="faq-grid-classic">${generateClassicFaqCardsHTML()}</div>
+</div>
+</section>`
+    }
+
+    return `<section class="faq-section py-xl md:py-xxl container mx-auto px-lg reveal" id="faq">
+<div class="text-center mb-xl md:mb-xxl">
+<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">FAQ</span>
+<h2 class="font-headline-md text-headline-md">שאלות נפוצות</h2>
+<p class="font-body-md text-on-surface-variant opacity-70 mt-md">מצאו תשובות לשאלות הנפוצות ביותר</p>
+</div>
+${accordion}
+</section>`
   }
 
   const formatReviewDate = (t: Testimonial) => {
@@ -1431,6 +1724,8 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
+        ${FAQ_ACCORDION_CSS}
+        ${elegantFaqSectionCss(primaryColor)}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
     </style>
@@ -1535,6 +1830,7 @@ ${elegantSectionHeading('מה לקוחות אומרות', 'RECOMMEND', { center:
 <div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
 </section>
 ` : ''}
+${generateFaqSectionHTML('elegant')}
 <section id="contact" class="pt-32 pb-12 ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b] px-margin-mobile md:px-margin-desktop'} text-white reveal-on-scroll">
 ${contactBgLayers('#FAFAF8', '#1c1b1b')}
 <div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop">
@@ -1643,6 +1939,9 @@ ${generateSiteFooter(siteChrome('elegant'))}
         .modern-shadow {
             box-shadow: 0px 4px 20px rgba(15, 23, 42, 0.05);
         }
+        .modern-section-subtitle {
+            color: ${primaryColor};
+        }
         
         @keyframes revealUp {
             from { opacity: 0; transform: translateY(24px); }
@@ -1704,11 +2003,11 @@ ${generateSiteFooter(siteChrome('elegant'))}
             color: #0F172A;
         }
         .modern-nav.nav-scrolled .modern-nav-link {
-            color: #475569;
+            color: ${primaryColor};
         }
         .modern-nav.nav-scrolled .modern-nav-link:hover,
         .modern-nav.nav-scrolled .modern-nav-menu-btn:hover {
-            color: ${primaryColor};
+            opacity: 0.85;
         }
         .modern-nav.nav-scrolled .modern-nav-menu-btn {
             color: #0F172A;
@@ -1778,6 +2077,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
+        ${FAQ_ACCORDION_CSS}
         ${MODERN_HERO_FILM_BELT_CSS}
         ${sectionBgCss}
     </style>
@@ -1871,7 +2171,7 @@ ${hasStats ? `
 <div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
 <div class="text-right">
 <h2 class="font-headline text-4xl font-bold mb-xs">העבודות האחרונות שלנו</h2>
-<p class="text-on-surface-variant">מבט קצר אל הרגעים שתפסנו לאחרונה</p>
+<p class="modern-section-subtitle">מבט קצר אל הרגעים שתפסנו לאחרונה</p>
 </div>
 </div>
 </div>
@@ -1885,7 +2185,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 <div class="flex flex-row-reverse justify-between items-end gap-md">
 <div class="text-right">
 <h2 class="font-headline text-4xl font-bold mb-xs">תמונות אחרונות</h2>
-<p class="text-on-surface-variant">רגעים נבחרים מהעבודות שלנו</p>
+<p class="modern-section-subtitle">רגעים נבחרים מהעבודות שלנו</p>
 </div>
 </div>
 </div>
@@ -1900,7 +2200,7 @@ ${packagesBgLayers('#F8FAFC')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="text-center mb-xl animate-reveal">
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
-<p class="text-on-surface-variant">בחרו את החבילה המתאימה ליותר עבורכם</p>
+<p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
 </div>
@@ -1910,7 +2210,7 @@ ${packagesBgLayers('#F8FAFC')}
 <div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl animate-reveal">
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
-<p class="text-on-surface-variant">בחרו את החבילה המתאימה ליותר עבורכם</p>
+<p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
 </div>
@@ -1922,6 +2222,7 @@ ${hasTestimonials ? `
 <div class="testimonials-section-grid">${generateTestimonialsHTML('modern')}</div>
 </section>
 ` : ''}
+${generateFaqSectionHTML('modern')}
 <section class="w-full ${hasContactBg ? 'contact-section-has-bg py-xxl' : 'max-w-7xl mx-auto px-lg'}" id="contact">
 ${contactBgLayers('#F8FAFC')}
 <div class="contact-section-content${hasContactBg ? ' max-w-7xl mx-auto px-lg' : ''}">
@@ -2346,6 +2647,8 @@ ${generateSiteFooter(siteChrome('modern'))}
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
+        ${FAQ_ACCORDION_CSS}
+        ${classicFaqSectionCss(primaryColor)}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
     </style>
@@ -2563,6 +2866,7 @@ ${hasTestimonials ? `
 </div>
 </section>
 ` : ''}
+${generateFaqSectionHTML('classic')}
 <section class="${hasContactBg ? 'contact-section-has-bg pt-xxl pb-xl reveal border-t border-outline-variant/10' : 'bg-surface-container-low pt-xxl pb-xl reveal border-t border-outline-variant/10'}" id="contact">
 ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
@@ -2960,6 +3264,7 @@ ${generateSiteFooter(siteChrome('classic'))}
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
+        ${FAQ_ACCORDION_CSS}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
         #contact.contact-section-has-bg .contact-section-bg-desktop,
@@ -3161,6 +3466,7 @@ ${hasTestimonials ? `
 <div class="testimonials-section-grid">${generateTestimonialsHTML('dark')}</div>
 </section>
 ` : ''}
+${generateFaqSectionHTML('dark')}
 <section class="py-md md:py-lg bg-background text-on-surface overflow-hidden whitespace-nowrap border-y border-white/10">
 <div class="inline-block animate-marquee font-headline-sm text-[20px] md:text-headline-sm uppercase tracking-[0.2em] opacity-30">
                 ${studioName}   •   Fashion Editorial   •   Glamour Reality   •   High-End Photography   •   Visual Art   •   ${studioName}   •   Fashion Editorial   •   Glamour Reality   •

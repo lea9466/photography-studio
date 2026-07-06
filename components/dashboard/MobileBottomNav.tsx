@@ -6,9 +6,8 @@ import { cn } from '@/lib/utils'
 import { 
   LayoutDashboard,
   Image as ImageIcon,
-  Package,
   Settings,
-  MessageSquareQuote
+  CircleHelp,
 } from 'lucide-react'
 
 type NavItem = {
@@ -32,16 +31,10 @@ const NAV_ITEMS: NavItem[] = [
     isActive: (pathname) => pathname.startsWith('/dashboard/galleries'),
   },
   {
-    href: '/dashboard/packages',
-    label: 'חבילות',
-    icon: <Package className="h-6 w-6" />,
-    isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
-  },
-  {
-    href: '/dashboard/reviews',
-    label: 'תגובות',
-    icon: <MessageSquareQuote className="h-6 w-6" />,
-    isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+    href: '/dashboard/faq',
+    label: 'שאלות נפוצות',
+    icon: <CircleHelp className="h-6 w-6" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/faq'),
   },
   {
     href: '/dashboard/settings',

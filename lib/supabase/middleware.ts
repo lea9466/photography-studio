@@ -1,6 +1,11 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/lib/types/database.types'
+import {
+  MVP_DEFAULT_DASHBOARD_PATH,
+  isMvpBlockedDashboardRoute,
+  resolveMvpDashboardPath,
+} from '@/lib/types/app.types'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -38,22 +43,28 @@ export async function updateSession(request: NextRequest) {
   const isResetPasswordRoute = pathname.startsWith('/reset-password')
   const isProtectedRoute = pathname.startsWith('/dashboard')
 
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = MVP_DEFAULT_DASHBOARD_PATH
+    return NextResponse.redirect(url)
+  }
+
+  if (user && isMvpBlockedDashboardRoute(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = MVP_DEFAULT_DASHBOARD_PATH
+    return NextResponse.redirect(url)
+  }
+
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    url.searchParams.set('next', pathname)
+    url.searchParams.set('next', resolveMvpDashboardPath(pathname))
     return NextResponse.redirect(url)
   }
 
   if (!user && isResetPasswordRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/forgot-password'
-    return NextResponse.redirect(url)
-  }
-
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 

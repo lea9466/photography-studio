@@ -408,6 +408,8 @@ export function generatePublicGalleryPageHTML(options: {
   logoUrl: string | null
   homepagePath: string
   gallery: PublicGalleryPageData
+  hasFaq?: boolean
+  hasPackages?: boolean
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.gallery.accentColor
@@ -418,6 +420,8 @@ export function generatePublicGalleryPageHTML(options: {
     primaryColor,
     homepagePath: options.homepagePath,
     linkMode: 'href',
+    hasFaq: options.hasFaq ?? false,
+    hasPackages: options.hasPackages ?? false,
   })
 
   return `<!DOCTYPE html>
@@ -427,7 +431,7 @@ ${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
 ${galleryBody(options.gallery, chromeTheme)}
 ${generateSiteFooter(chrome)}
-<script>${generateSiteNavScrollScript(chromeTheme)}</script>
+<script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${masonryRevealScript}</script>
 </body>
 </html>`

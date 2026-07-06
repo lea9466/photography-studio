@@ -7,6 +7,7 @@ import type { MediaBucket } from '@/lib/r2/types'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
+import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS } from '@/lib/types/app.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -304,8 +305,12 @@ export async function createGallery(input: CreateGalleryInput) {
     gallery_type: input.galleryType,
     password: input.password?.trim() || generatePassword(),
     expires_at: input.expiresAt || null,
-    status: 'draft',
-    is_public: input.isPublic || false,
+    status: PUBLIC_ONLY_MVP
+      ? MVP_GALLERY_DB_STATUS
+      : input.isPublic || input.galleryType === 'portfolio'
+      ? 'public'
+      : 'draft',
+    is_public: PUBLIC_ONLY_MVP ? true : input.isPublic || false,
     cover_image: input.coverImage || null,
     ...(input.galleryType === 'portfolio'
       ? { slug: portfolioSlug(title) }
@@ -398,7 +403,12 @@ export async function updateGallerySettings(
   const galleryUpdate: GalleriesUpdate = {}
   if (input.password !== undefined) galleryUpdate.password = input.password
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
-  if (input.isPublic !== undefined) galleryUpdate.is_public = input.isPublic
+  if (input.isPublic !== undefined) {
+    galleryUpdate.is_public = input.isPublic
+    if (input.isPublic) {
+      galleryUpdate.status = PUBLIC_ONLY_MVP ? MVP_GALLERY_DB_STATUS : 'public'
+    }
+  }
   if (input.coverImage !== undefined) galleryUpdate.cover_image = input.coverImage
 
   if (Object.keys(galleryUpdate).length > 0) {

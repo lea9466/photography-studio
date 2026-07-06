@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
-import { GALLERY_STATUS_LABELS, GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
+import { GALLERY_STATUS_LABELS, GALLERY_TYPE_LABELS, getGalleryStatusLabel } from '@/lib/types/app.types'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -46,7 +46,7 @@ export default async function GalleryLayout({
             <p className="mt-1 text-sm text-[--muted]">{clientName}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="muted">
-                {GALLERY_STATUS_LABELS[gallery.status]}
+                {getGalleryStatusLabel(gallery.status)}
               </Badge>
               <Badge variant="outline">
                 {GALLERY_TYPE_LABELS[gallery.gallery_type]}
@@ -55,7 +55,7 @@ export default async function GalleryLayout({
           </div>
 
           <Button variant="outline" size="sm" asChild className="shrink-0">
-            <Link href="/dashboard">
+            <Link href="/dashboard/galleries">
               <ChevronRight className="h-4 w-4" />
               חזרה לרשימה
             </Link>

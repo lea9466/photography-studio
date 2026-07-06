@@ -32,7 +32,8 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { deleteGallery, updateGallerySettings } from '@/lib/actions/gallery.actions'
-import type { Gallery, Client } from '@/lib/types/database.types'
+import { getDisplayGalleryStatus } from '@/lib/types/app.types'
+import type { Gallery, Client, GalleryStatus } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
   client?: Client | null
@@ -49,15 +50,17 @@ type GalleryRowProps = {
 }
 
 function getStatusBadge(status: string) {
+  const displayStatus = getDisplayGalleryStatus(status as GalleryStatus)
   const statusConfig: Record<string, { label: string; className: string }> = {
     draft: { label: 'טיוטה', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
+    public: { label: 'ציבורי', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' },
     selection: { label: 'ממתין לבחירה', className: 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-200' },
     editing: { label: 'בעריכה', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' },
     delivery_ready: { label: 'מוכן למסירה', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
     locked: { label: 'נעול', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
   }
 
-  const config = statusConfig[status] || { label: status, className: 'bg-gray-100 text-gray-800' }
+  const config = statusConfig[displayStatus] || { label: displayStatus, className: 'bg-gray-100 text-gray-800' }
   
   return (
     <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider whitespace-nowrap', config.className)}>
@@ -279,6 +282,7 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
   const filteredGalleries = filter && filter !== 'all'
     ? galleries.filter(gallery => {
         if (filter === 'draft') return gallery.status === 'draft'
+        if (filter === 'public') return gallery.status === 'public'
         if (filter === 'selection') return gallery.status === 'selection'
         if (filter === 'editing') return gallery.status === 'editing'
         if (filter === 'expired') {

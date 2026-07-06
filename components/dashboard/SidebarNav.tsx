@@ -13,7 +13,8 @@ import {
   Menu,
   X,
   ExternalLink,
-  MessageSquareQuote
+  MessageSquareQuote,
+  CircleHelp,
 } from 'lucide-react'
 import { Logo } from './Logo'
 
@@ -22,7 +23,12 @@ type NavItem = {
   label: string
   icon: React.ReactNode
   isActive: (pathname: string) => boolean
+  /** MVP: frozen nav items show a "בקרוב" tooltip and are not clickable */
+  frozen?: boolean
 }
+
+// MVP: public-only — dashboard overview and client management are coming soon.
+const PUBLIC_ONLY_MVP = true
 
 const NAV_ITEMS: NavItem[] = [
   {
@@ -30,18 +36,20 @@ const NAV_ITEMS: NavItem[] = [
     label: 'לוח בקרה',
     icon: <LayoutDashboard className="h-5 w-5" />,
     isActive: (pathname) => pathname === '/dashboard',
-  },
-  {
-    href: '/dashboard/galleries',
-    label: 'גלריות',
-    icon: <ImageIcon className="h-5 w-5" />,
-    isActive: (pathname) => pathname.startsWith('/dashboard/galleries'),
+    frozen: PUBLIC_ONLY_MVP,
   },
   {
     href: '/dashboard/clients',
     label: 'לקוחות',
     icon: <Users className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/clients'),
+    frozen: PUBLIC_ONLY_MVP,
+  },
+  {
+    href: '/dashboard/galleries',
+    label: 'גלריות',
+    icon: <ImageIcon className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/galleries'),
   },
   {
     href: '/dashboard/packages',
@@ -54,6 +62,12 @@ const NAV_ITEMS: NavItem[] = [
     label: 'תגובות',
     icon: <MessageSquareQuote className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+  },
+  {
+    href: '/dashboard/faq',
+    label: 'שאלות נפוצות',
+    icon: <CircleHelp className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/faq'),
   },
   {
     href: '/dashboard/settings',
@@ -129,6 +143,27 @@ export function SidebarNav({ userName, studioName, logoUrl, portfolioSlug, onSig
       )}>
         {NAV_ITEMS.map((item) => {
           const active = item.isActive(pathname)
+
+          if (item.frozen) {
+            return (
+              <span
+                key={item.href}
+                aria-disabled="true"
+                className={cn(
+                  'relative flex items-center gap-3 px-4 py-3 rounded-xl border border-[#c9c5cd] transition-all duration-200',
+                  'opacity-40 cursor-not-allowed select-none',
+                  'text-[--dashboard-muted] pr-4'
+                )}
+              >
+                <span className="absolute top-1.5 left-2 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+                  בקרוב
+                </span>
+                {item.icon}
+                <span className="text-sm">{item.label}</span>
+              </span>
+            )
+          }
+
           return (
             <Link
               key={item.href}

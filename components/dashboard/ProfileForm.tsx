@@ -20,6 +20,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Building2, ExternalLink, Globe, Loader2, Palette, Trash2, Upload } from 'lucide-react'
 
 const HERO_SLOT_COUNT = 3
@@ -94,7 +101,19 @@ const THEMES = [
   { id: 'modern', name: 'מודרני', background: '#ffffff', foreground: '#09090b' },
   { id: 'elegant', name: 'אלגנטי', background: '#0a0a0a', foreground: '#fafafa' },
   { id: 'bold', name: 'נועז', background: '#1c1917', foreground: '#fafafa' },
-]
+] as const
+
+function normalizeThemeId(theme: string | null | undefined) {
+  const normalized = theme === 'dark' ? 'bold' : theme
+  if (normalized && THEMES.some((item) => item.id === normalized)) {
+    return normalized
+  }
+  return THEMES[0].id
+}
+
+function themeLabel(themeId: string) {
+  return THEMES.find((item) => item.id === themeId)?.name ?? THEMES[0].name
+}
 
 export function ProfileForm({ profile }: ProfileFormProps) {
   const [isPending, startTransition] = useTransition()
@@ -110,7 +129,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [statClients, setStatClients] = useState(profile?.stat_clients ?? 0)
   const [statExperienceYears, setStatExperienceYears] = useState(profile?.stat_experience_years ?? 0)
   const [accentColor, setAccentColor] = useState(profile?.accent_color ?? '#7c3aed')
-  const [selectedTheme, setSelectedTheme] = useState(profile?.selected_theme ?? 'classic')
+  const [selectedTheme, setSelectedTheme] = useState(() =>
+    normalizeThemeId(profile?.selected_theme)
+  )
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url ?? '')
   const [heroDesktopUrls, setHeroDesktopUrls] = useState<string[]>(() =>
     initHeroSlots(profile?.hero_desktop_urls, profile?.hero_desktop_url ?? null)
@@ -287,7 +308,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 pb-28 md:pb-24">
       {/* Section 1: Business Details */}
       <section className="space-y-6">
         <div className="flex items-center gap-2 border-b border-[--border] pb-2">
@@ -662,18 +683,28 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="theme">ערכת נושא מועדפת</Label>
-              <select
-                id="theme"
-                value={selectedTheme}
-                onChange={(e) => setSelectedTheme(e.target.value)}
-                className="w-full bg-white dark:bg-zinc-900 border-[--border] rounded-lg px-4 py-3 appearance-none"
-              >
-                {THEMES.map((theme) => (
-                  <option key={theme.id} value={theme.id}>
-                    {theme.name}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedTheme} onValueChange={setSelectedTheme}>
+                <SelectTrigger
+                  id="theme"
+                  className="h-11 rounded-lg border-[--border] bg-white dark:bg-zinc-900"
+                >
+                  <SelectValue>{themeLabel(selectedTheme)}</SelectValue>
+                </SelectTrigger>
+                <SelectContent
+                  dir="rtl"
+                  className="rounded-lg border border-[--border] bg-white opacity-100 shadow-lg animate-none dark:bg-zinc-900"
+                >
+                  {THEMES.map((theme) => (
+                    <SelectItem
+                      key={theme.id}
+                      value={theme.id}
+                      className="cursor-pointer bg-white focus:bg-zinc-100 dark:bg-zinc-900 dark:focus:bg-zinc-800"
+                    >
+                      {theme.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">
@@ -838,10 +869,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </div>
       </section>
 
-      {/* Save Button */}
-      <Button onClick={handleSave} disabled={isPending} size="lg" className="w-full">
-        {isPending ? 'שומר...' : 'שמור שינויים'}
-      </Button>
+      <div className="fixed bottom-20 left-4 z-50 md:bottom-8 md:left-8">
+        <Button
+          onClick={handleSave}
+          disabled={isPending}
+          size="lg"
+          className="min-w-[168px] bg-[#7D3A52] px-8 font-semibold text-white shadow-lg shadow-[#7D3A52]/35 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40"
+        >
+          {isPending ? 'שומר...' : 'שמור שינויים'}
+        </Button>
+      </div>
     </div>
   )
 }

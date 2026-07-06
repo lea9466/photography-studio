@@ -9,7 +9,7 @@ export function GalleryBreadcrumb({ galleryTitle }: GalleryBreadcrumbProps) {
   return (
     <nav aria-label="מיקום בדשבורד" className="flex flex-wrap items-center gap-1.5 text-sm">
       <Link
-        href="/dashboard"
+        href="/dashboard/galleries"
         className="text-[--muted] transition-colors hover:text-[--foreground]"
       >
         הגלריות שלי

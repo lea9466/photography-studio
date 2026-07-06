@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { MarketingHome } from '@/components/marketing/MarketingHome'
+import { MVP_DEFAULT_DASHBOARD_PATH } from '@/lib/types/app.types'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -9,7 +9,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
 
   if (user) {
-    redirect('/dashboard')
+    redirect(MVP_DEFAULT_DASHBOARD_PATH)
   }
 
   return <MarketingHome />

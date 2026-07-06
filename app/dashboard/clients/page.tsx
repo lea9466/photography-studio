@@ -2,8 +2,16 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { ClientsManager } from '@/components/dashboard/ClientsManager'
+import {
+  MVP_DEFAULT_DASHBOARD_PATH,
+  PUBLIC_ONLY_MVP,
+} from '@/lib/types/app.types'
 
 export default async function ClientsPage() {
+  if (PUBLIC_ONLY_MVP) {
+    redirect(MVP_DEFAULT_DASHBOARD_PATH)
+  }
+
   const supabase = await createClient()
   const {
     data: { user },

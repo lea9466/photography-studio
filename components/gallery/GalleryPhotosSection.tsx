@@ -7,7 +7,6 @@ import {
   CloudUpload,
   Filter,
   Plus,
-  Info,
   ArrowRight,
   Rocket,
   CheckCircle2,
@@ -28,6 +27,7 @@ import {
 } from '@/lib/gallery-upload-client'
 import { deletePhotosBulk, setPhotosVisibilityBulk, setPhotosProcessedBulk } from '@/lib/actions/photo.actions'
 import { updateGalleryStatus } from '@/lib/actions/gallery.actions'
+import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
@@ -41,7 +41,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { Photo } from '@/lib/types/database.types'
-import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 
 type GalleryPhotosSectionProps = {
   galleryId: string
@@ -71,14 +70,17 @@ export function GalleryPhotosSection({
   const [processedSelectedIds, setProcessedSelectedIds] = useState<Set<string>>(new Set())
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
-  const [galleryTitle, setGalleryTitle] = useState<string>('')
-  const [galleryDate, setGalleryDate] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<GalleryUploadProgress | null>(null)
   const [showAllPhotos, setShowAllPhotos] = useState(false)
-  const [activeTab, setActiveTab] = useState<'regular' | 'processed'>('regular')
-  const activeTabRef = useRef<'regular' | 'processed'>('regular')
+  // MVP: public-only — force uploads to "מעובדות" (final/public) photos only.
+  const [activeTab, setActiveTab] = useState<'regular' | 'processed'>(
+    PUBLIC_ONLY_MVP ? 'processed' : 'regular'
+  )
+  const activeTabRef = useRef<'regular' | 'processed'>(
+    PUBLIC_ONLY_MVP ? 'processed' : 'regular'
+  )
 
   useEffect(() => {
     return () => {
@@ -86,22 +88,6 @@ export function GalleryPhotosSection({
       objectUrlsRef.current = []
     }
   }, [])
-
-  // Fetch gallery details for sidebar
-  useEffect(() => {
-    const fetchGalleryInfo = async () => {
-      try {
-        const galleryData = await fetchGalleryDetail(galleryId)
-        if (galleryData) {
-          setGalleryTitle(galleryData.title || '')
-          setGalleryDate(galleryData.created_at ? new Date(galleryData.created_at).toLocaleDateString('he-IL') : '')
-        }
-      } catch (error) {
-        console.error('Failed to fetch gallery details:', error)
-      }
-    }
-    fetchGalleryInfo()
-  }, [galleryId])
 
   const clearPending = useCallback(() => {
     objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
@@ -207,10 +193,6 @@ export function GalleryPhotosSection({
     [galleryId, userId, watermarkText, uploadCallbacks, router]
   )
 
-  const activePendingCount = pendingPhotos.filter(
-    (photo) => photo.status !== 'failed'
-  ).length
-
   const regularPhotos = useMemo(
     () => photos.filter(photo => !photo.is_processed),
     [photos]
@@ -311,8 +293,11 @@ export function GalleryPhotosSection({
   function handlePublishGallery() {
     startTransition(async () => {
       try {
-        await updateGalleryStatus(galleryId, 'selection')
-        toast.success('הגלריה נשלחה ללקוח!')
+        await updateGalleryStatus(
+          galleryId,
+          PUBLIC_ONLY_MVP ? MVP_GALLERY_DB_STATUS : 'selection'
+        )
+        toast.success(PUBLIC_ONLY_MVP ? 'הגלריה פורסמה!' : 'הגלריה נשלחה ללקוח!')
         router.push('/dashboard/galleries')
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שליחת הגלריה נכשלה')
@@ -354,10 +339,6 @@ export function GalleryPhotosSection({
       }
     })
   }
-
-  const totalPhotos = photos.length + activePendingCount
-  const storageUsage = Math.round((totalPhotos * 5.9) / 1024 * 10) / 10 // Approximate 5.9MB per photo
-  const storagePercentage = (storageUsage / 10240) * 100 // 10GB = 10240MB
 
   // Calculate which photos to show based on limit and state
   const displayPhotos = showAllPhotos ? currentPhotos : currentPhotos.slice(0, initialPhotoLimit)
@@ -406,9 +387,8 @@ export function GalleryPhotosSection({
         </header>
       )}
 
-      <section className="flex-1 p-10 grid grid-cols-1 xl:grid-cols-12 gap-8 max-w-[1600px] mx-auto w-full">
-        {/* Left Column: Upload Area & Grid (Main) */}
-        <div className="xl:col-span-9 space-y-8">
+      <section className="flex-1 p-10 max-w-[1600px] mx-auto w-full">
+        <div className="space-y-8">
           {/* Drag & Drop Zone */}
           <div
             className="border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-16 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[#f7f2f4] transition-all duration-300 group"
@@ -510,12 +490,13 @@ export function GalleryPhotosSection({
                   <Button
                     variant={activeTab === 'regular' ? 'default' : 'ghost'}
                     size="sm"
+                    disabled={PUBLIC_ONLY_MVP}
                     onClick={() => {
-                      console.log('👉 Clicking regular tab')
+                      if (PUBLIC_ONLY_MVP) return
                       setActiveTab('regular')
                       activeTabRef.current = 'regular'
                     }}
-                    className={activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
+                    className={`${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'} ${PUBLIC_ONLY_MVP ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''}`}
                   >
                     רגילות ({regularPhotos.length})
                   </Button>
@@ -577,59 +558,6 @@ export function GalleryPhotosSection({
             </div>
           </div>
         </div>
-
-        {/* Right Column: Sidebar / Summary */}
-        <aside className="xl:col-span-3 space-y-6">
-          {/* Status Card */}
-          <div className="bg-white rounded-xl border border-[#c9c5cd] p-6 shadow-sm">
-            <h5 className="text-base font-semibold text-[#100d1f] mb-4">סיכום העלאה</h5>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-base">
-                <span className="text-[#48464c]">סה"כ תמונות:</span>
-                <span className="font-bold">{totalPhotos}</span>
-              </div>
-              <div className="flex justify-between items-center text-base">
-                <span className="text-[#48464c]">נפח אחסון:</span>
-                <span className="font-bold">{storageUsage} MB</span>
-              </div>
-              <div className="pt-4 border-t border-[#c9c5cd]">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs font-semibold">ניצול אחסון (חבילת פרימיום)</span>
-                  <span className="text-xs text-[#48464c]">{storageUsage}MB / 10GB</span>
-                </div>
-                <div className="w-full bg-[#ebe7e9] h-2 rounded-full overflow-hidden">
-                  <div className="bg-[#7D3A52] h-full" style={{width: `${storagePercentage}%`}}></div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 bg-[#f7f2f4] p-4 rounded-lg">
-                <Info className="w-5 h-5 text-[#7D3A52]" />
-                <p className="text-xs text-[#48464c]">זכור: פרסום הגלריה ישלח הודעת עדכון ללקוח המקושר אוטומטית.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Gallery Details Quick View */}
-          <div className="bg-white rounded-xl border border-[#c9c5cd] p-6 shadow-sm">
-            <h5 className="text-base font-semibold text-[#100d1f] mb-4">פרטי גלריה</h5>
-            <div className="space-y-3">
-              <div className="flex flex-col">
-                <span className="text-xs text-[#48464c]">שם הגלריה</span>
-                <span className="text-base font-semibold">{galleryTitle || 'לא צוין'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-[#48464c]">תאריך אירוע</span>
-                <span className="text-base font-semibold">{galleryDate || 'לא צוין'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs text-[#48464c]">סטטוס נוכחי</span>
-                <span className="inline-flex items-center gap-2 text-xs font-bold text-[#7D3A52]">
-                  <span className="w-2 h-2 rounded-full bg-[#7D3A52]"></span>
-                  טיוטה
-                </span>
-              </div>
-            </div>
-          </div>
-        </aside>
       </section>
 
       {/* Fixed Bottom Action Bar */}
@@ -640,7 +568,7 @@ export function GalleryPhotosSection({
             className="px-6 py-3 border border-[#c9c5cd] text-[#100d1f] rounded-xl font-bold flex items-center gap-2 hover:bg-[#f7f2f4] transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
-            חזרה לדאשבורד
+            חזרה לרשימה
           </button>
           <div className="flex items-center gap-4">
             <button

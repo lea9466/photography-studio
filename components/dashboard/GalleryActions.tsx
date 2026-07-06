@@ -80,17 +80,20 @@ export function GalleryActions({
           <h3 className="text-sm font-semibold text-[#48464c]">תקשורת עם לקוח</h3>
           <div className="flex flex-wrap gap-2">
             {status === 'draft' ? (
-              <Button
-                size="sm"
-                disabled={isPending}
-                onClick={() =>
-                  run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
-                }
-                className="bg-[#6b2d43] hover:bg-[#5a2538]"
-              >
-                <Send className="h-4 w-4" />
-                שלח ללקוח
-              </Button>
+              // MVP: private client sending is frozen (public-only)
+              <span className="opacity-35 pointer-events-none select-none">
+                <Button
+                  size="sm"
+                  disabled
+                  onClick={() =>
+                    run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
+                  }
+                  className="bg-[#6b2d43] hover:bg-[#5a2538]"
+                >
+                  <Send className="h-4 w-4" />
+                  שלח ללקוח
+                </Button>
+              </span>
             ) : null}
 
 

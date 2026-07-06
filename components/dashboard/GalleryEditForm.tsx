@@ -214,7 +214,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             </p>
           </div>
         </div>
-        <div className="space-y-2">
+        {/* MVP: private-only fields below are frozen for public-only */}
+        <div className="space-y-2 opacity-35 pointer-events-none select-none">
           <Label htmlFor="password" className="text-[#100d1f]">סיסמה</Label>
           <Input
             id="password"
@@ -225,7 +226,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 opacity-35 pointer-events-none select-none">
           <Label htmlFor="expires" className="text-[#100d1f]">תפוגה</Label>
           <Input
             id="expires"
@@ -235,7 +236,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 opacity-35 pointer-events-none select-none">
           <Label htmlFor="max-album" className="text-[#100d1f]">מקסימום אלבום</Label>
           <Input
             id="max-album"
@@ -246,7 +247,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 opacity-35 pointer-events-none select-none">
           <Label htmlFor="max-edit" className="text-[#100d1f]">מקסימום עיבוד</Label>
           <Input
             id="max-edit"
@@ -259,7 +260,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         </div>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4]">
+      {/* MVP: download permissions frozen for public-only */}
+      <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4] opacity-35 pointer-events-none select-none">
         <div className="flex items-center justify-between">
           <Label className="text-[#100d1f]">הורדת preview</Label>
           <Switch

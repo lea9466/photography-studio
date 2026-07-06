@@ -12,6 +12,7 @@ import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
 import {
   GALLERY_STATUS_LABELS,
   GALLERY_TYPE_LABELS,
+  getGalleryStatusLabel,
   type GalleryListItem,
 } from '@/lib/types/app.types'
 import { Badge } from '@/components/ui/badge'
@@ -141,7 +142,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="muted">{GALLERY_STATUS_LABELS[gallery.status]}</Badge>
+          <Badge variant="muted">{getGalleryStatusLabel(gallery.status)}</Badge>
           <Badge variant="outline">
             {GALLERY_TYPE_LABELS[gallery.gallery_type]}
           </Badge>

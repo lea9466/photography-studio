@@ -217,8 +217,8 @@ export function GalleryEditForm({
         </CardContent>
       </Card>
 
-      {/* Download Permissions Section */}
-      <Card>
+      {/* Download Permissions Section — MVP: frozen for public-only */}
+      <Card className="opacity-35 pointer-events-none select-none">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-[#7D3A52]" />

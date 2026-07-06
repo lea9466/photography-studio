@@ -19,7 +19,7 @@ export default async function ClientGalleryPage({
   const { id } = await params
   const meta = await getClientGalleryPublicMeta(id)
 
-  if (!meta || meta.status === 'draft') {
+  if (!meta || (meta.status === 'draft' && !meta.is_public)) {
     notFound()
   }
 
