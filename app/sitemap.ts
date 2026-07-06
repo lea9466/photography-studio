@@ -32,19 +32,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       return staticRoutes
     }
 
-    const photographerRoutes: MetadataRoute.Sitemap = (photographers ?? [])
-      .map((photographer) => {
+    const photographerRoutes: MetadataRoute.Sitemap = (photographers ?? []).flatMap(
+      (photographer) => {
         const path = getPublicSitePath(photographer.slug, photographer.studio_name)
-        if (!path) return null
+        if (!path) return []
 
-        return {
-          url: `${BASE_URL}${path}`,
-          lastModified: photographer.created_at ? new Date(photographer.created_at) : new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.8,
-        }
-      })
-      .filter((route): route is MetadataRoute.Sitemap[number] => route !== null)
+        return [
+          {
+            url: `${BASE_URL}${path}`,
+            lastModified: photographer.created_at ? new Date(photographer.created_at) : new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+          },
+        ]
+      }
+    )
 
     return [...staticRoutes, ...photographerRoutes]
   } catch (error) {
