@@ -27,6 +27,64 @@ function toChromeTheme(theme: PhotographerSiteTheme): SiteChromeTheme {
   return theme === 'bold' ? 'dark' : theme
 }
 
+const MASONRY_STYLES = `
+<style>
+.pg-masonry {
+  column-count: 1;
+  column-gap: 12px;
+}
+@media (min-width: 640px) { .pg-masonry { column-count: 2; } }
+@media (min-width: 1024px) { .pg-masonry { column-count: 3; } }
+@media (min-width: 1280px) { .pg-masonry { column-count: 4; } }
+.pg-masonry-cell {
+  break-inside: avoid;
+  margin-bottom: 12px;
+  opacity: 0;
+  transform: scale(0.82);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+.pg-masonry-cell.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.pg-masonry-cell img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.7s ease-out;
+}
+.pg-masonry-cell:hover img { transform: scale(1.03); }
+</style>`
+
+const masonryRevealScript = `
+(function initMasonryReveal() {
+  function boot() {
+    var cells = [].slice.call(document.querySelectorAll('.pg-masonry-cell'));
+    if (!cells.length) return;
+    if (!('IntersectionObserver' in window)) {
+      cells.forEach(function(c) { c.classList.add('is-visible'); });
+      return;
+    }
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) return;
+        var cell = entry.target;
+        var delay = parseInt(cell.getAttribute('data-reveal-delay') || '0', 10);
+        setTimeout(function() { cell.classList.add('is-visible'); }, delay);
+        observer.unobserve(cell);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    cells.forEach(function(c) { observer.observe(c); });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+`
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -36,50 +94,23 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
 }
 
+const MASONRY_CELL_STYLE: Record<SiteChromeTheme, { radius: string; bg: string; extra: string }> = {
+  elegant: { radius: '0px', bg: '#eae8e5', extra: '' },
+  classic: { radius: '4px', bg: '#eae8e5', extra: '' },
+  modern: { radius: '12px', bg: '#eae8e5', extra: 'box-shadow: 0 1px 3px rgba(0,0,0,0.08);' },
+  dark: { radius: '2px', bg: '#1A1A22', extra: '' },
+}
+
 function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChromeTheme) {
+  const cfg = MASONRY_CELL_STYLE[theme]
   return photos
     .map((photo, index) => {
       if (!photo.url) return ''
       const alt = escapeHtml(`${title} - ${index + 1}`)
-      if (theme === 'elegant') {
-        const isLarge = index === 0
-        const isVertical = index === 1
-        const isMedium = index === 3
-        const colClass = isLarge
-          ? 'md:col-span-8'
-          : isVertical
-            ? 'md:col-span-4'
-            : isMedium
-              ? 'md:col-span-8'
-              : 'md:col-span-4'
-        const aspect = isLarge
-          ? 'aspect-[16/9]'
-          : isVertical
-            ? 'aspect-[3/4]'
-            : isMedium
-              ? 'aspect-[21/9]'
-              : 'aspect-square'
-        return `
-<div class="group relative overflow-hidden ${colClass}">
-  <div class="${aspect} w-full bg-[#eae8e5] overflow-hidden">
-    <img src="${photo.url}" alt="${alt}" class="w-full h-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105" loading="lazy" />
-  </div>
-</div>`
-      }
-
-      if (theme === 'classic') {
-        return `
-<div class="break-inside-avoid mb-[32px]">
-  <div class="bg-[#eae8e5] overflow-hidden">
-    <img src="${photo.url}" alt="${alt}" class="w-full h-auto transition-transform duration-[1.2s] hover:scale-105" loading="lazy" />
-  </div>
-</div>`
-      }
-
-      const rounded = theme === 'modern' ? 'rounded-[12px]' : 'rounded-sm'
+      const delay = (index % 4) * 90
       return `
-<div class="group relative overflow-hidden ${rounded} aspect-[4/5] bg-[#eae8e5] shadow-sm hover:shadow-xl transition-all duration-500">
-  <img src="${photo.url}" alt="${alt}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105" loading="lazy" />
+<div class="pg-masonry-cell group" style="border-radius:${cfg.radius};background:${cfg.bg};overflow:hidden;${cfg.extra}" data-reveal-delay="${delay}">
+  <img src="${photo.url}" alt="${alt}" loading="lazy" />
 </div>`
     })
     .join('')
@@ -146,7 +177,7 @@ function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme) {
 <div class="w-16 h-px mx-auto mb-[24px] elegant-bg-accent"></div>
 <p class="font-body text-[18px] text-on-surface-variant max-w-2xl mx-auto">${meta}</p>
 </header>
-<section class="grid grid-cols-1 md:grid-cols-12 gap-[24px] mb-[80px]">
+<section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 ${ctaSection(data, theme)}
@@ -164,7 +195,7 @@ ${ctaSection(data, theme)}
 <div class="w-12 h-px mx-auto mb-[24px] bg-primary"></div>
 <p class="font-body-md text-body-md text-on-surface-variant italic">${meta}</p>
 </header>
-<section class="columns-1 md:columns-2 gap-[32px] mb-[80px]">
+<section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 ${ctaSection(data, theme)}
@@ -181,7 +212,7 @@ ${ctaSection(data, theme)}
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
 <p class="font-body-md text-body-md text-on-surface-variant">${meta}</p>
 </header>
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-[80px]">
+<section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 ${ctaSection(data, theme)}
@@ -196,7 +227,7 @@ ${ctaSection(data, theme)}
 <h1 class="font-headline text-[48px] md:text-[64px] font-bold text-on-surface leading-tight mb-[8px]">${title}</h1>
 <p class="font-body text-[16px] text-on-surface-variant">${meta}</p>
 </header>
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[24px] mb-[80px]">
+<section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 ${ctaSection(data, theme)}
@@ -392,10 +423,12 @@ export function generatePublicGalleryPageHTML(options: {
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he" style="scroll-behavior: smooth;">
 ${themeHead(chromeTheme, options.studioName, primaryColor)}
+${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
 ${galleryBody(options.gallery, chromeTheme)}
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme)}</script>
+<script>${masonryRevealScript}</script>
 </body>
 </html>`
 }

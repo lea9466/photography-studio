@@ -343,15 +343,33 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
   .classic-testimonials-slide .testimonials-row {
     justify-content: center;
   }
-  @media (min-width: 768px) {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .classic-testimonials-carousel .testimonials-row {
+      flex-wrap: nowrap;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+    .testimonials-section-grid > .testimonial-thumb-card,
+    .testimonials-row > .testimonial-thumb-card {
+      flex: 0 1 15.5rem;
+      max-width: 15.5rem;
+      width: 15.5rem;
+      min-width: 0;
+    }
+    .testimonial-thumb-card {
+      padding: 1.85rem 1.25rem 1.85rem 4.75rem;
+    }
+  }
+  @media (min-width: 1024px) {
     .classic-testimonials-carousel .testimonials-row {
       flex-wrap: nowrap;
       gap: 2.5rem;
     }
     .testimonials-section-grid > .testimonial-thumb-card,
     .testimonials-row > .testimonial-thumb-card {
-      flex: 0 0 calc((100% - 6rem) / 3);
-      max-width: calc((100% - 6rem) / 3);
+      flex: 0 1 calc((100% - 5.5rem) / 3);
+      max-width: min(24rem, calc((100% - 5.5rem) / 3));
+      width: auto;
       min-width: 0;
     }
   }
@@ -996,6 +1014,31 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;')
 
+  const elegantSectionHeading = (
+    title: string,
+    watermark: string,
+    opts?: { center?: boolean; onDark?: boolean; titleClass?: string; wrapperClass?: string }
+  ) => {
+    const center = opts?.center ?? false
+    const onDark = opts?.onDark ?? false
+    const titleClass = opts?.titleClass ?? ''
+    const wrapperClass = opts?.wrapperClass ?? ''
+    const classes = [
+      'elegant-section-heading',
+      center ? 'elegant-section-heading--center' : '',
+      onDark ? 'elegant-section-heading--on-dark' : '',
+      wrapperClass,
+    ]
+      .filter(Boolean)
+      .join(' ')
+    return `
+      <div class="${classes}">
+        <span class="elegant-section-heading__watermark" aria-hidden="true">${escapeHtml(watermark)}</span>
+        <h2 class="elegant-section-heading__title text-3xl md:text-4xl${titleClass ? ` ${titleClass}` : ''}">${escapeHtml(title)}</h2>
+      </div>
+    `
+  }
+
   const formatReviewDate = (t: Testimonial) => {
     const raw = t.review_date || t.created_at
     if (!raw) return ''
@@ -1233,6 +1276,87 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         .elegant-accent { color: ${primaryColor}; }
         .elegant-bg-accent { background-color: ${primaryColor}; }
         .elegant-border-accent { border-color: ${primaryColor}; }
+
+        .elegant-section-heading {
+            display: inline-grid;
+            justify-items: center;
+            align-items: last baseline;
+            max-width: 100%;
+        }
+        .elegant-section-heading--center {
+            display: grid;
+            width: 100%;
+            text-align: center;
+        }
+        .elegant-section-heading__watermark,
+        .elegant-section-heading__title {
+            grid-area: 1 / 1;
+            margin: 0;
+            padding: 0;
+            line-height: 1;
+        }
+        .elegant-section-heading__watermark {
+            font-family: 'Heebo', sans-serif;
+            font-size: clamp(1.5rem, 5.4vw, 4rem);
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: ${primaryColor};
+            opacity: 0.14;
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+        .elegant-section-heading__title {
+            position: relative;
+            z-index: 1;
+            font-family: 'Heebo', sans-serif;
+            font-weight: 500;
+        }
+        .elegant-section-heading--on-dark .elegant-section-heading__watermark {
+            opacity: 0.2;
+        }
+        @media (max-width: 767px) {
+            .elegant-section-heading {
+                display: grid;
+                width: 100%;
+                text-align: center;
+            }
+            .elegant-section-heading__watermark {
+                font-size: clamp(2.35rem, 9vw, 4rem);
+                letter-spacing: 0.03em;
+            }
+            .homepage-gallery-header > div,
+            .recent-photos-header > div {
+                justify-content: center !important;
+                align-items: center !important;
+                display: flex;
+                flex-direction: column;
+            }
+            #about .grid {
+                justify-items: center;
+                text-align: center;
+            }
+            #about .grid > div {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+            }
+            #about .grid > div.order-1 {
+                width: calc(100vw - 1.25rem);
+                max-width: calc(100vw - 1.25rem);
+                margin-inline: calc(50% - 50vw + 0.625rem);
+            }
+            #about .image-reveal {
+                width: 100%;
+                max-width: none;
+                aspect-ratio: 3 / 4;
+                min-height: 72vw;
+            }
+        }
         
         .glass-hero-wrapper {
             position: relative;
@@ -1244,6 +1368,18 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
             border-radius: 11px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
             animation: gentleFloat 6s ease-in-out infinite;
+            max-width: calc(28rem - 30px);
+        }
+        @media (max-width: 767px) {
+            #contact.contact-section-has-bg .contact-section-bg-mobile {
+                opacity: 0.4;
+                filter: brightness(1.45) saturate(0.68) contrast(0.9);
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+            #contact.contact-section-has-bg .contact-section-bg-overlay {
+                background: linear-gradient(to bottom, color-mix(in srgb, var(--contact-fade-desktop, #1c1b1b) 58%, transparent), color-mix(in srgb, var(--contact-fade-desktop, #1c1b1b) 96%, transparent));
+            }
         }
         @keyframes gentleFloat {
             0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -1307,17 +1443,16 @@ ${generateSiteNav(siteChrome('elegant'))}
 ${heroSlideshowHtml}
 </div>
 <div class="relative z-[100] glass-hero-wrapper absolute top-[55%] -translate-y-1/2 left-4 md:left-4 md:top-[55%] top-[75%]">
-<div class="glass-hero p-xl md:p-24 max-w-md text-center backdrop-blur-md">
+<div class="glass-hero px-[12px] py-[2px] md:px-[76px] md:py-[66px] text-center backdrop-blur-md">
 <h1 class="font-display text-4xl md:text-7xl mb-6 leading-[1.1] text-on-surface">
-                אמנות הרגע <br/>
-<span class="elegant-accent italic font-light">באוצרות אישית</span>
+                ${brandLastWord(studioName)}
 </h1>
 <p class="font-body text-lg md:text-xl text-on-surface/70 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
                 ${aboutText}
             </p>
 <div class="flex justify-center">
-<button class="bg-[#0F0F0D] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-accent transition-all duration-300">
-                    צפי בגלריה
+<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bg-[#0F0F0D] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-accent transition-all duration-300">
+                    לצפייה בגלריות
                 </button>
 </div>
 </div>
@@ -1345,7 +1480,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
 <div class="order-2 lg:order-1">
 <span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
-${aboutTitle ? `<h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">${aboutTitle}</h2>` : ''}
+${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-8' }) : ''}
 ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 <button class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
@@ -1361,7 +1496,7 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
 <section class="homepage-gallery-section py-24 bg-white" id="gallery">
 <div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-16">
 <div class="flex flex-row-reverse justify-between items-end reveal-on-scroll">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">קולקציות נבחרות</h2>
+${elegantSectionHeading('קולקציות נבחרות', 'COLLECTIONS')}
 </div>
 </div>
 <div class="homepage-gallery-grid reveal-on-scroll">
@@ -1372,7 +1507,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 <section class="recent-photos-section" id="recent-photos">
 <div class="recent-photos-header">
 <div class="flex flex-row-reverse justify-between items-end">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium">תמונות אחרונות</h2>
+${elegantSectionHeading('תמונות אחרונות', 'LATEST')}
 </div>
 </div>
 <div class="recent-photos-grid recent-photos-grid--elegant">
@@ -1385,7 +1520,7 @@ ${hasPackages ? `
 ${packagesBgLayers('#f2f1ef', '#f2f1ef')}
 <div class="mx-auto max-w-7xl contact-section-content">
 <div class="text-center mb-16 reveal-on-scroll">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">חבילות שירות</h2>
+${elegantSectionHeading('חבילות שירות', 'PACKAGES', { center: true, titleClass: 'mb-4' })}
 <p class="font-body opacity-60 italic">השקעה בזיכרונות שיישארו לנצח</p>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">${generatePackagesHTML('elegant')}</div>
@@ -1395,7 +1530,7 @@ ${packagesBgLayers('#f2f1ef', '#f2f1ef')}
 ${hasTestimonials ? `
 <section class="testimonials-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto" id="testimonials">
 <div class="text-center mb-16 reveal-on-scroll">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl font-medium mb-4">מה לקוחות אומרות</h2>
+${elegantSectionHeading('מה לקוחות אומרות', 'RECOMMEND', { center: true, titleClass: 'mb-4' })}
 </div>
 <div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
 </section>
@@ -1404,7 +1539,7 @@ ${hasTestimonials ? `
 ${contactBgLayers('#FAFAF8', '#1c1b1b')}
 <div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop">
 <div class="text-center mb-16">
-<h2 class="font-serif-hebrew text-4xl md:text-5xl mb-4">צרי קשר</h2>
+${elegantSectionHeading('צרי קשר', 'CONTACT', { center: true, onDark: true, titleClass: 'mb-4' })}
 <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
 </div>
 ${email ? `
@@ -1423,12 +1558,7 @@ ${email ? `
 </div>
 <div class="space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">נושא הפנייה</label>
-<select name="subject" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white/60">
-<option class="bg-[#1c1b1b]">צילומי פורטרט</option>
-<option class="bg-[#1c1b1b]">צילומי חתונה</option>
-<option class="bg-[#1c1b1b]">צילומי קמפיין</option>
-<option class="bg-[#1c1b1b]">אחר</option>
-</select>
+<input name="subject" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="נושא הפנייה" type="text"/>
 </div>
 <div class="md:col-span-2 space-y-2">
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">הודעה</label>
