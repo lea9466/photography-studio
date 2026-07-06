@@ -28,6 +28,37 @@ function gallerySectionId(theme: SiteChromeTheme) {
   return 'gallery'
 }
 
+const STUDIO_SIGNUP_PATH = '/register'
+
+function generateStudioSignupFooterCta(theme: SiteChromeTheme): string {
+  const question = 'אהבתם את הסטודיו?'
+  const btn = 'לפתיחת סטודיו משלכם'
+  const wrap = 'inline-flex flex-row items-center gap-2 shrink-0'
+
+  switch (theme) {
+    case 'elegant':
+      return `<div class="${wrap}">
+<span class="text-[10px] uppercase tracking-wider opacity-40 text-on-surface whitespace-nowrap">${question}</span>
+<a href="${STUDIO_SIGNUP_PATH}" target="_parent" class="text-[10px] uppercase tracking-wider border border-on-surface/15 px-2 py-0.5 text-on-surface/55 hover:border-on-surface/35 hover:text-on-surface transition-colors whitespace-nowrap">${btn}</a>
+</div>`
+    case 'modern':
+      return `<div class="${wrap}">
+<span class="text-[11px] text-on-surface-variant/70 whitespace-nowrap">${question}</span>
+<a href="${STUDIO_SIGNUP_PATH}" target="_parent" class="text-[11px] font-medium text-primary border border-primary/25 rounded-md px-2 py-0.5 hover:bg-primary/10 transition-colors whitespace-nowrap">${btn}</a>
+</div>`
+    case 'classic':
+      return `<div class="${wrap}">
+<span class="text-[11px] text-on-surface-variant whitespace-nowrap">${question}</span>
+<a href="${STUDIO_SIGNUP_PATH}" target="_parent" class="text-[11px] border border-primary/30 text-primary rounded-sm px-2 py-0.5 hover:bg-primary/5 transition-colors whitespace-nowrap">${btn}</a>
+</div>`
+    case 'dark':
+      return `<div class="${wrap}">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant/60 whitespace-nowrap">${question}</span>
+<a href="${STUDIO_SIGNUP_PATH}" target="_parent" class="text-[10px] uppercase tracking-wider border border-primary/35 text-primary/90 rounded-sm px-2 py-0.5 hover:bg-primary/10 transition-colors whitespace-nowrap">${btn}</a>
+</div>`
+  }
+}
+
 type NavTarget = 'home' | 'gallery' | 'pricing' | 'contact'
 
 function navHref(cfg: SiteChromeConfig, target: NavTarget) {
@@ -39,6 +70,10 @@ function navHref(cfg: SiteChromeConfig, target: NavTarget) {
         ? 'pricing'
         : 'contact'
   return `${cfg.homepagePath}#${section}`
+}
+
+function parentNavTarget(cfg: SiteChromeConfig) {
+  return cfg.linkMode === 'href' ? ' target="_parent"' : ''
 }
 
 function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string) {
@@ -86,7 +121,7 @@ function navItems(
         cfg.linkMode === 'href' && closeMenu ? ` onclick="${closeMenu}"` : ''
       if (cfg.linkMode === 'href') {
         const href = navHref(cfg, target)
-        return `<a href="${href}" class="${cls}"${closeAttr}>${labels[target]}</a>`
+        return `<a href="${href}" class="${cls}"${parentNavTarget(cfg)}${closeAttr}>${labels[target]}</a>`
       }
       return `<a ${action} class="${cls}">${labels[target]}</a>`
     })
@@ -95,7 +130,7 @@ function navItems(
 
 function brandLink(cfg: SiteChromeConfig, inner: string) {
   if (cfg.linkMode === 'href') {
-    return `<a href="${cfg.homepagePath}" class="flex items-center gap-sm">${inner}</a>`
+    return `<a href="${cfg.homepagePath}" class="flex items-center gap-sm"${parentNavTarget(cfg)}>${inner}</a>`
   }
   return `<div class="flex items-center gap-sm">${inner}</div>`
 }
@@ -227,13 +262,15 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <div class="text-[10px] uppercase tracking-widest opacity-40">
             © ${year} ${cfg.studioName}. כל הזכויות שמורות.
         </div>
+${generateStudioSignupFooterCta('elegant')}
 </div>
 </footer>`
 
     case 'modern':
       return `
 <footer class="bg-background border-t border-outline-variant/20 w-full py-xl pb-[120px]">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
+<div class="max-w-7xl mx-auto w-full px-lg">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-md w-full">
 <div class="flex flex-col items-center md:items-end gap-xs">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${cfg.studioName}</span>`}
 <p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
@@ -254,13 +291,16 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <span class="material-symbols-outlined text-xl">mail</span>
 </a>
 </div>
+${generateStudioSignupFooterCta('modern')}
+</div>
 </div>
 </footer>`
 
     case 'classic':
       return `
 <footer class="bg-background border-t border-outline-variant/20 py-xl pb-xxl">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-md max-w-7xl mx-auto w-full">
+<div class="max-w-7xl mx-auto w-full px-lg">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-md w-full">
 <div class="font-headline-md text-headline-md text-primary tracking-tight">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${cfg.studioName}`}
             </div>
@@ -272,13 +312,16 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <div class="font-body-md text-body-md text-on-surface/60">
                 © ${year} ${cfg.studioName}. כל הזכויות שמורות.
         </div>
+${generateStudioSignupFooterCta('classic')}
+</div>
 </div>
 </footer>`
 
     case 'dark':
       return `
 <footer class="bg-background border-t border-outline-variant/20 py-xl">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center px-lg gap-lg max-w-7xl mx-auto w-full">
+<div class="max-w-7xl mx-auto w-full px-lg">
+<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-lg w-full">
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(cfg.studioName)}`}
 </div>
@@ -290,6 +333,8 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <div class="text-on-surface-variant font-body-md text-[10px] md:text-xs opacity-50">
                 © ${year} ${cfg.studioName}. כל הזכויות שמורות.
         </div>
+${generateStudioSignupFooterCta('dark')}
+</div>
 </div>
 </footer>`
   }

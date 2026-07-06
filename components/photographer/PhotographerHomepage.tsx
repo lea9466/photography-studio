@@ -90,12 +90,12 @@ const UNIFIED_GALLERY_GRID_CSS = `
     max-width: 80rem;
     margin-inline: auto;
     margin-bottom: 1rem !important;
-    padding-top: 1.5rem;
+    padding-top: calc(1.5rem + 150px);
     padding-inline: 1rem;
   }
   @media (min-width: 768px) {
     .homepage-gallery-header {
-      padding-top: 2rem;
+      padding-top: calc(2rem + 150px);
       padding-inline: 2rem;
     }
   }
@@ -213,12 +213,12 @@ const RECENT_PHOTOS_GRID_CSS = `
   .recent-photos-section {
     width: 100%;
     overflow: hidden;
-    padding-top: 2rem !important;
+    padding-top: calc(2rem + 50px) !important;
     padding-bottom: 2.5rem !important;
   }
   @media (min-width: 768px) {
     .recent-photos-section {
-      padding-top: 3rem !important;
+      padding-top: calc(3rem + 50px) !important;
       padding-bottom: 3.5rem !important;
     }
   }
@@ -1604,6 +1604,47 @@ ${generateSiteFooter(siteChrome('elegant'))}
         .modern-about-content .modern-about-muted {
             color: rgba(255, 255, 255, 0.82);
         }
+        .modern-homepage-gallery-section {
+            padding-top: calc(clamp(3.5rem, 9vw, 6rem) + 250px) !important;
+            padding-bottom: clamp(2.5rem, 6vw, 4rem) !important;
+        }
+        .modern-recent-photos-section.recent-photos-section {
+            padding-top: calc(clamp(3.5rem, 8vw, 5.5rem) + 50px) !important;
+            padding-bottom: clamp(2.5rem, 6vw, 4rem) !important;
+        }
+        #pricing.contact-section-has-bg .contact-section-bg-desktop,
+        #contact.contact-section-has-bg .contact-section-bg-desktop {
+            opacity: 0.68;
+            filter: brightness(1.18) saturate(0.92) contrast(0.96);
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+        #pricing.contact-section-has-bg .contact-section-bg-mobile,
+        #contact.contact-section-has-bg .contact-section-bg-mobile {
+            opacity: 0.52;
+            filter: brightness(1.28) saturate(0.88) contrast(0.94);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 58%, rgba(0,0,0,0.12) 100%);
+            mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 58%, rgba(0,0,0,0.12) 100%);
+        }
+        #pricing.contact-section-has-bg .contact-section-bg-overlay,
+        #contact.contact-section-has-bg .contact-section-bg-overlay {
+            background: linear-gradient(
+                to bottom,
+                color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #F8FAFC)) 18%, transparent) 0%,
+                color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #F8FAFC)) 42%, transparent) 100%
+            ) !important;
+        }
+        @media (max-width: 767px) {
+            #pricing.contact-section-has-bg .contact-section-bg-overlay,
+            #contact.contact-section-has-bg .contact-section-bg-overlay {
+                background: linear-gradient(
+                    to bottom,
+                    transparent 0%,
+                    color-mix(in srgb, var(--contact-fade, #F8FAFC) 28%, transparent) 58%,
+                    color-mix(in srgb, var(--contact-fade, #F8FAFC) 72%, transparent) 100%
+                ) !important;
+            }
+        }
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
@@ -1695,7 +1736,7 @@ ${hasStats ? `
 </div>
 </section>
 ` : ''}
-<section class="homepage-gallery-section py-xxl" id="portfolio">
+<section class="homepage-gallery-section modern-homepage-gallery-section" id="portfolio">
 <div class="homepage-gallery-header px-lg mb-xl">
 <div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
 <div class="text-right">
@@ -1709,7 +1750,7 @@ ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 </div>
 </section>
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
-<section class="recent-photos-section" id="recent-photos">
+<section class="recent-photos-section modern-recent-photos-section" id="recent-photos">
 <div class="recent-photos-header">
 <div class="flex flex-row-reverse justify-between items-end gap-md">
 <div class="text-right">
@@ -1724,9 +1765,9 @@ ${generateRecentPhotosGridHTML(galleries, 'modern')}
 </section>
 ` : ''}
 ${hasPackages ? (hasPackagesBg ? `
-<section class="max-w-7xl mx-auto px-lg contact-section-has-bg rounded-2xl py-xxl" id="pricing">
+<section class="w-full contact-section-has-bg py-xxl" id="pricing">
 ${packagesBgLayers('#F8FAFC')}
-<div class="contact-section-content">
+<div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="text-center mb-xl animate-reveal">
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
 <p class="text-on-surface-variant">בחרו את החבילה המתאימה ליותר עבורכם</p>
