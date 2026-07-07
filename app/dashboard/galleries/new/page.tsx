@@ -34,7 +34,7 @@ export default async function NewGalleryPage() {
           </p>
         </div>
         <Button variant="outline" size="sm" asChild>
-          <Link href="/dashboard">ביטול</Link>
+          <Link href="/dashboard/galleries">ביטול</Link>
         </Button>
       </div>
 

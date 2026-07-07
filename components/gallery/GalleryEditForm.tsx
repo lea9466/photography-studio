@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
+import { GALLERY_TYPE_LABELS, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import { Lock, Zap, Droplets, Download, UserCheck, Eye, ImageIcon } from 'lucide-react'
 
 type GalleryEditFormProps = {
@@ -54,6 +54,9 @@ export function GalleryEditForm({
     settings?.max_edit_selection?.toString() ?? ''
   )
   const [watermark, setWatermark] = useState(settings?.watermark_text ?? '')
+  const [autoApplyWatermark, setAutoApplyWatermark] = useState(
+    settings?.auto_apply_watermark ?? true
+  )
   const [allowPreview, setAllowPreview] = useState(
     settings?.allow_download_preview ?? false
   )
@@ -71,6 +74,7 @@ export function GalleryEditForm({
           maxAlbumSelection: maxAlbum ? Number(maxAlbum) : null,
           maxEditSelection: maxEdit ? Number(maxEdit) : null,
           watermarkText: watermark || null,
+          autoApplyWatermark,
           allowDownloadPreview: allowPreview,
           allowDownloadOriginal: allowOriginal,
         })
@@ -123,7 +127,7 @@ export function GalleryEditForm({
       </Card>
 
       {/* Security Section */}
-      <Card>
+      <Card className={PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="w-5 h-5 text-[#7D3A52]" />
@@ -161,7 +165,7 @@ export function GalleryEditForm({
       </Card>
 
       {/* Limits Section */}
-      <Card>
+      <Card className={PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-[#7D3A52]" />
@@ -205,6 +209,18 @@ export function GalleryEditForm({
           <CardDescription>הגדרות סימן מים ומיתוג</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label>החל סימן מים אוטומטי</Label>
+              <p className="text-sm text-[--muted] mt-1">
+                בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה הציבורית
+              </p>
+            </div>
+            <Switch
+              checked={autoApplyWatermark}
+              onCheckedChange={setAutoApplyWatermark}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="watermark">טקסט לסימן מים</Label>
             <Input
@@ -217,8 +233,8 @@ export function GalleryEditForm({
         </CardContent>
       </Card>
 
-      {/* Download Permissions Section — MVP: frozen for public-only */}
-      <Card className="opacity-35 pointer-events-none select-none">
+      {/* Download Permissions Section */}
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-[#7D3A52]" />
@@ -256,6 +272,7 @@ export function GalleryEditForm({
             galleryId={gallery.id}
             userId={gallery.user_id}
             watermarkText={watermark}
+            applyAutoWatermark={autoApplyWatermark}
             photos={[]}
             signedUrls={{}}
           />

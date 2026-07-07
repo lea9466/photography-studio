@@ -8,6 +8,7 @@ import { ClientPhotoMasonry } from '@/components/gallery/ClientPhotoMasonry'
 type PublicPortfolioPhoto = {
   id: string
   preview_signed_url: string | null
+  lightbox_signed_url: string | null
 }
 
 type PublicPortfolioGalleryViewProps = {
@@ -33,6 +34,7 @@ export function PublicPortfolioGalleryView({
 }: PublicPortfolioGalleryViewProps) {
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxActiveSrc, setLightboxActiveSrc] = useState<string | null>(null)
 
   const date = new Date(createdAt).toLocaleDateString('he-IL', {
     year: 'numeric',
@@ -40,8 +42,9 @@ export function PublicPortfolioGalleryView({
     day: 'numeric',
   })
 
-  function openLightbox(index: number) {
+  function openLightbox(index: number, lightboxSrc: string | null) {
     setLightboxIndex(index)
+    setLightboxActiveSrc(lightboxSrc)
     setLightboxOpen(true)
   }
 
@@ -106,6 +109,8 @@ export function PublicPortfolioGalleryView({
             photos={photos.map((photo) => ({
               id: photo.id,
               src: photo.preview_signed_url,
+              lightboxSrc:
+                photo.lightbox_signed_url ?? photo.preview_signed_url,
               selected_album: false,
               selected_edit: false,
             }))}
@@ -128,13 +133,17 @@ export function PublicPortfolioGalleryView({
           selected_edit: false,
           edited_url: null,
           preview_signed_url: p.preview_signed_url,
-          lightbox_signed_url: p.preview_signed_url,
+          lightbox_signed_url: p.lightbox_signed_url ?? p.preview_signed_url,
           edited_signed_url: null,
         }))}
         index={lightboxIndex}
         open={lightboxOpen}
+        activeSrc={lightboxActiveSrc}
         onOpenChange={setLightboxOpen}
-        onNavigate={setLightboxIndex}
+        onNavigate={(nextIndex) => {
+          setLightboxIndex(nextIndex)
+          setLightboxActiveSrc(null)
+        }}
         canSelect={false}
         isLimitedQuality={false}
         onToggleAlbum={() => {}}

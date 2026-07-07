@@ -161,6 +161,7 @@ async function uploadReservedPhoto(
   galleryId: string,
   job: ActiveJob,
   watermarkText: string | null | undefined,
+  applyAutoWatermark: boolean,
   uploadUrls: string[]
 ): Promise<
   | {
@@ -195,7 +196,11 @@ async function uploadReservedPhoto(
   }
 
   const resolvedWatermark = watermarkText?.trim() || 'Studio Gallery'
-  const watermarkedBlob = await applyWatermarkToBlob(previewBlob, resolvedWatermark)
+  const watermarkedBlob = await applyWatermarkToBlob(
+    previewBlob,
+    resolvedWatermark,
+    applyAutoWatermark
+  )
 
   const [originalUrl, previewUrl, watermarkedUrl] = uploadUrls
   if (!originalUrl || !previewUrl || !watermarkedUrl) {
@@ -378,7 +383,8 @@ export async function uploadGalleryPhotosWithQueue(
   watermarkText: string | null | undefined,
   onProgress: (progress: GalleryUploadProgress) => void,
   callbacks?: GalleryUploadCallbacks,
-  isProcessed = false
+  isProcessed = false,
+  applyAutoWatermark = true
 ): Promise<GalleryUploadResult> {
   console.log('👉 CLIENT 0. uploadGalleryPhotosWithQueue START', { galleryId, fileCount: files.length })
   const total = files.length
@@ -440,7 +446,7 @@ export async function uploadGalleryPhotosWithQueue(
 
         try {
           const result = await withTimeout(
-            uploadReservedPhoto(userId, galleryId, job, watermarkText, urls),
+            uploadReservedPhoto(userId, galleryId, job, watermarkText, applyAutoWatermark, urls),
             PER_FILE_TIMEOUT_MS,
             `${job.file.name}: פג תוקף ההעלאה (${PER_FILE_TIMEOUT_MS / 1000} שניות)`
           )

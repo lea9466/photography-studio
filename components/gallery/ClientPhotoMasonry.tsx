@@ -7,11 +7,12 @@ type ClientPhotoMasonryProps = {
   photos: Array<{
     id: string
     src: string | null
+    lightboxSrc?: string | null
     selected_album: boolean
     selected_edit: boolean
   }>
   canSelect: boolean
-  onOpen: (index: number) => void
+  onOpen: (index: number, lightboxSrc: string | null) => void
   onToggleAlbum: (id: string) => void
   onToggleEdit: (id: string) => void
   getGlobalIndex: (id: string) => number
@@ -35,7 +36,12 @@ export function ClientPhotoMasonry({
           <button
             type="button"
             className="relative block w-full"
-            onClick={() => onOpen(getGlobalIndex(photo.id))}
+            onClick={() =>
+              onOpen(
+                getGlobalIndex(photo.id),
+                photo.lightboxSrc ?? photo.src
+              )
+            }
           >
             {photo.src ? (
               <Image

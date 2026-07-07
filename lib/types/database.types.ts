@@ -401,6 +401,7 @@ export type Database = {
           max_edit_selection: number | null
           watermark_text: string | null
           watermark_position: string
+          auto_apply_watermark: boolean
           created_at: string
         }
         Insert: {
@@ -412,6 +413,7 @@ export type Database = {
           max_edit_selection?: number | null
           watermark_text?: string | null
           watermark_position?: string
+          auto_apply_watermark?: boolean
           created_at?: string
         }
         Update: {
@@ -423,6 +425,7 @@ export type Database = {
           max_edit_selection?: number | null
           watermark_text?: string | null
           watermark_position?: string
+          auto_apply_watermark?: boolean
           created_at?: string
         }
         Relationships: [

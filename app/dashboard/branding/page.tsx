@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { BrandingEditForm } from '@/components/dashboard/BrandingEditForm'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
+import { MVP_DEFAULT_DASHBOARD_PATH } from '@/lib/types/app.types'
 import type { User } from '@/lib/types/database.types'
 
 export default async function BrandingPage() {
@@ -37,7 +38,7 @@ export default async function BrandingPage() {
   const typedUserData = userData as User | null
 
   if (!typedUserData) {
-    redirect('/dashboard')
+    redirect(MVP_DEFAULT_DASHBOARD_PATH)
   }
 
   return (

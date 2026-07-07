@@ -17,6 +17,7 @@ type UploadDropzoneProps = {
   galleryId: string
   userId: string
   watermarkText?: string | null
+  applyAutoWatermark?: boolean
   uploadCallbacks?: GalleryUploadCallbacks
 }
 
@@ -24,6 +25,7 @@ export function UploadDropzone({
   galleryId,
   userId,
   watermarkText,
+  applyAutoWatermark = true,
   uploadCallbacks,
 }: UploadDropzoneProps) {
   const router = useRouter()
@@ -114,7 +116,9 @@ export function UploadDropzone({
           selected,
           watermarkText,
           setUploadProgress,
-          uploadCallbacks
+          uploadCallbacks,
+          false,
+          applyAutoWatermark
         )
 
         if (result.ok) {
@@ -139,7 +143,7 @@ export function UploadDropzone({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText] // Remove router and uploadCallbacks to prevent infinite loop
+    [galleryId, userId, watermarkText, applyAutoWatermark]
   )
 
   return (

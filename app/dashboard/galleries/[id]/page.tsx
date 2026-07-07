@@ -85,7 +85,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
   return (
     <div className="animate-fade-in space-y-12">
       {/* Section 1: Overview - Actions — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-40 pointer-events-none select-none">
+      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
         <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
           בקרוב
         </span>
@@ -108,7 +108,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       </section>
 
       {/* Section 2: Info and Actions - Details — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-40 pointer-events-none select-none">
+      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
         <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
           בקרוב
         </span>
@@ -218,7 +218,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       </section>
 
       {/* Section 4: Photos - Selections — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-40 pointer-events-none select-none">
+      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
         <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
           בקרוב
         </span>
@@ -253,6 +253,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           galleryId={gallery.id}
           userId={user.id}
           watermarkText={resolveWatermarkText(settings?.watermark_text, studioName)}
+          applyAutoWatermark={settings?.auto_apply_watermark ?? true}
           photos={photos as never}
           signedUrls={signedUrls}
           showWizardHeader={false}

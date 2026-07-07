@@ -7,6 +7,7 @@ import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -76,33 +77,52 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     .select('photo_id, final_url')
     .eq('gallery_id', galleryData.id)
 
-  let photosToDisplay: { id: string; preview_url: string | null }[] = []
-  let bucket: 'previews' | 'edited' = 'previews'
+  let photosToDisplay: { id: string; preview_url: string | null; watermarked_preview_url?: string | null }[] = []
+  let bucket: 'previews' | 'edited' | 'watermarked' = 'watermarked'
 
-  if (editedPhotos && editedPhotos.length > 0) {
+  if (!PUBLIC_ONLY_MVP && editedPhotos && editedPhotos.length > 0) {
     photosToDisplay = editedPhotos.map((ep) => ({
       id: ep.photo_id,
       preview_url: ep.final_url,
     }))
     bucket = 'edited'
-  } else {
-    const { data: regularPhotos } = await admin
+  } else if (!PUBLIC_ONLY_MVP) {
+    const { data: legacyPhotos } = await admin
       .from('photos')
       .select('id, preview_url')
       .eq('gallery_id', galleryData.id)
       .eq('is_visible_to_client', true)
       .order('sort_order')
 
-    photosToDisplay = (regularPhotos ?? []) as { id: string; preview_url: string | null }[]
+    photosToDisplay = (legacyPhotos ?? []) as { id: string; preview_url: string | null }[]
+    bucket = 'previews'
+  } else {
+    const { data: watermarkedPhotos } = await admin
+      .from('photos')
+      .select('id, watermarked_preview_url')
+      .eq('gallery_id', galleryData.id)
+      .eq('is_visible_to_client', true)
+      .order('sort_order')
+
+    photosToDisplay = (watermarkedPhotos ?? []) as {
+      id: string
+      watermarked_preview_url: string | null
+    }[]
+    bucket = 'watermarked'
   }
 
-  const previewPaths = photosToDisplay.map((photo) => photo.preview_url)
+  const previewPaths = photosToDisplay.map((photo) =>
+    PUBLIC_ONLY_MVP ? photo.watermarked_preview_url ?? null : photo.preview_url
+  )
   const signedUrls = await signStoragePaths(bucket, previewPaths, galleryData.id)
 
-  const photos = photosToDisplay.map((photo) => ({
-    id: photo.id,
-    url: photo.preview_url ? signedUrls[photo.preview_url] ?? null : null,
-  }))
+  const photos = photosToDisplay.map((photo) => {
+    const path = PUBLIC_ONLY_MVP ? photo.watermarked_preview_url : photo.preview_url
+    return {
+      id: photo.id,
+      url: path ? signedUrls[path] ?? null : null,
+    }
+  })
 
   const galleryDate = new Date(galleryData.created_at).toLocaleDateString('he-IL', {
     year: 'numeric',

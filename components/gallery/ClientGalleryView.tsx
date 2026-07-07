@@ -63,6 +63,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const [items, setItems] = useState(photos)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxActiveSrc, setLightboxActiveSrc] = useState<string | null>(null)
   const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
   const [logoImageUrl, setLogoImageUrl] = useState<string | null>(null)
   const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null)
@@ -164,8 +165,9 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
     )
   }
 
-  function openLightbox(index: number) {
+  function openLightbox(index: number, lightboxSrc: string | null) {
     setLightboxIndex(index)
+    setLightboxActiveSrc(lightboxSrc)
     setLightboxOpen(true)
   }
 
@@ -258,6 +260,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
                     tab === 'processed'
                       ? photo.edited_signed_url ?? photo.preview_signed_url
                       : photo.preview_signed_url,
+                  lightboxSrc:
+                    photo.lightbox_signed_url ?? photo.preview_signed_url,
                   selected_album: photo.selected_album,
                   selected_edit: photo.selected_edit,
                 }))}
@@ -342,8 +346,12 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         photos={items}
         index={lightboxIndex}
         open={lightboxOpen}
+        activeSrc={lightboxActiveSrc}
         onOpenChange={setLightboxOpen}
-        onNavigate={setLightboxIndex}
+        onNavigate={(nextIndex) => {
+          setLightboxIndex(nextIndex)
+          setLightboxActiveSrc(null)
+        }}
         canSelect={canSelect}
         isLimitedQuality={!['delivery_ready', 'locked'].includes(gallery.status)}
         onToggleAlbum={(id) => toggleField(id, 'selected_album')}

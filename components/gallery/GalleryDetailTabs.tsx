@@ -162,6 +162,7 @@ export function GalleryDetailTabs({
           galleryId={gallery.id}
           userId={userId}
           watermarkText={watermarkText}
+          applyAutoWatermark={settings?.auto_apply_watermark ?? true}
           photos={photos}
           signedUrls={signedUrls}
         />

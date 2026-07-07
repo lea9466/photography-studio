@@ -11,10 +11,13 @@ import { Button } from '@/components/ui/button'
 import { SelectionToggle } from '@/components/gallery/SelectionToggle'
 import type { ClientGalleryPhoto } from '@/lib/actions/client-gallery.actions'
 
+const LIGHTBOX_MAX_WIDTH = 1920
+
 type LightboxProps = {
   photos: ClientGalleryPhoto[]
   index: number
   open: boolean
+  activeSrc?: string | null
   onOpenChange: (open: boolean) => void
   onNavigate: (index: number) => void
   canSelect: boolean
@@ -27,6 +30,7 @@ export function Lightbox({
   photos,
   index,
   open,
+  activeSrc,
   onOpenChange,
   onNavigate,
   canSelect,
@@ -37,34 +41,37 @@ export function Lightbox({
   const photo = photos[index]
   if (!photo) return null
 
-  const src = photo.lightbox_signed_url ?? photo.preview_signed_url
+  const src =
+    activeSrc ?? photo.lightbox_signed_url ?? photo.preview_signed_url
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        overlayClassName="bg-black"
-        className="max-h-[96vh] w-[calc(100%-1rem)] max-w-7xl overflow-hidden border-none bg-black p-0 [&>button]:text-white [&>button]:hover:text-white/80"
+        overlayClassName="bg-black/95"
+        className="flex max-h-[98vh] w-[calc(100%-1rem)] max-w-[min(1920px,calc(100vw-1rem))] flex-col overflow-hidden border-none bg-black p-0 [&>button]:text-white [&>button]:hover:text-white/80"
       >
         <DialogTitle className="sr-only">
           תמונה {index + 1} מתוך {photos.length}
         </DialogTitle>
-        <div className="relative flex min-h-[82vh] flex-col">
-          <div className="relative min-h-[72vh] flex-1 bg-black">
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <div className="relative flex min-h-0 flex-1 items-center justify-center bg-black px-2 py-2 sm:px-4">
             {isLimitedQuality ? (
               <p className="absolute start-4 top-4 z-10 rounded-none border border-white/20 bg-black/80 px-2.5 py-1 text-xs text-white/80">
                 תצוגה מקדימה · איכות מוגבלת
               </p>
             ) : null}
             {src ? (
-              <Image
-                src={src}
-                alt=""
-                fill
-                unoptimized
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
+              <div className="relative h-[min(88vh,calc(100vw-2rem))] w-full max-w-[1920px]">
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  className="object-contain"
+                  sizes={`(max-width: 768px) 100vw, ${LIGHTBOX_MAX_WIDTH}px`}
+                  quality={90}
+                  priority
+                />
+              </div>
             ) : null}
           </div>
 

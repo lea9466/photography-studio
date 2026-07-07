@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
+import { MVP_DEFAULT_DASHBOARD_PATH, resolveMvpDashboardPath } from '@/lib/types/app.types'
 import { randomBytes } from 'node:crypto'
 
 export type AuthActionState = {
@@ -82,7 +83,7 @@ export async function signIn(
 ): Promise<AuthActionState> {
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
-  const next = String(formData.get('next') ?? '/dashboard')
+  const next = resolveMvpDashboardPath(String(formData.get('next') ?? MVP_DEFAULT_DASHBOARD_PATH))
 
   if (!email || !password) {
     return { error: 'נא למלא אימייל וסיסמה' }
@@ -110,7 +111,7 @@ export async function signIn(
   }
 
   revalidatePath('/', 'layout')
-  redirect(next.startsWith('/') ? next : '/dashboard')
+  redirect(resolveMvpDashboardPath(next))
 }
 
 export async function signUp(
@@ -201,7 +202,7 @@ export async function signUp(
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(MVP_DEFAULT_DASHBOARD_PATH)
 }
 
 export async function signOut() {
@@ -308,7 +309,7 @@ export async function updatePassword(
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect(MVP_DEFAULT_DASHBOARD_PATH)
 }
 
 export async function resendConfirmationEmail(

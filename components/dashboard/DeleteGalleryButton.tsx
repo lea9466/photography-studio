@@ -25,7 +25,7 @@ export function DeleteGalleryButton({
   galleryId,
   galleryTitle,
   variant = 'button',
-  redirectTo = '/dashboard',
+  redirectTo = '/dashboard/galleries',
 }: DeleteGalleryButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)

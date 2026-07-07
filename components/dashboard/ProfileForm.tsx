@@ -308,7 +308,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
 
   return (
-    <div className="space-y-10 pb-28 md:pb-24">
+    <div className="space-y-10 pb-10 md:pb-24">
       {/* Section 1: Business Details */}
       <section className="space-y-6">
         <div className="flex items-center gap-2 border-b border-[--border] pb-2">
@@ -869,7 +869,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </div>
       </section>
 
-      <div className="fixed bottom-20 left-4 z-50 md:bottom-8 md:left-8">
+      <div className="fixed bottom-8 left-4 z-50 md:bottom-8 md:left-8">
         <Button
           onClick={handleSave}
           disabled={isPending}

@@ -201,7 +201,7 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
     .from('galleries')
     .select(
       `
-      id, title, status, gallery_type, user_id,
+      id, title, status, gallery_type, user_id, is_public,
       users (studio_name, logo_url),
       gallery_settings (
         max_album_selection, max_edit_selection,
@@ -219,6 +219,7 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
     title: string
     status: GalleryStatus
     gallery_type: string
+    is_public: boolean
     users: { studio_name: string | null; logo_url: string | null } | { studio_name: string | null; logo_url: string | null }[] | null
     gallery_settings: {
       max_album_selection: number | null
@@ -258,6 +259,7 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
 
   const useWatermarked = !['delivery_ready', 'locked'].includes(gallery.status)
   const isDelivered = !useWatermarked
+  const forcePublicWatermarked = gallery.is_public
 
   const clientPhotos: ClientGalleryPhoto[] = await Promise.all(
     ((photos ?? []) as PhotoRow[]).map(async (photo) => {
@@ -269,20 +271,34 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
         : photo.edited_photos
 
       const editedPath = edited?.final_url ?? null
-      const lightboxPath = useWatermarked
-        ? photo.watermarked_preview_url
-        : editedPath ?? photo.preview_url
 
-      const gridPath =
-        isDelivered && editedPath
+      const lightboxPath = forcePublicWatermarked
+        ? photo.watermarked_preview_url
+        : useWatermarked
+          ? photo.watermarked_preview_url
+          : editedPath ?? photo.preview_url
+
+      const gridPath = forcePublicWatermarked
+        ? photo.watermarked_preview_url
+        : isDelivered && editedPath
           ? editedPath
           : useWatermarked && photo.watermarked_preview_url
             ? photo.watermarked_preview_url
             : photo.preview_url
-      const gridBucket: MediaBucket =
-        isDelivered && editedPath
+
+      const gridBucket: MediaBucket = forcePublicWatermarked
+        ? 'watermarked'
+        : isDelivered && editedPath
           ? 'edited'
           : useWatermarked && photo.watermarked_preview_url
+            ? 'watermarked'
+            : 'previews'
+
+      const lightboxBucket: MediaBucket = forcePublicWatermarked
+        ? 'watermarked'
+        : isDelivered && editedPath
+          ? 'edited'
+          : useWatermarked
             ? 'watermarked'
             : 'previews'
 
@@ -295,11 +311,7 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
         selected_edit: selection?.selected_edit ?? false,
         edited_url: editedPath,
         preview_signed_url: await signPath(gridBucket, gridPath, galleryId),
-        lightbox_signed_url: await signPath(
-          isDelivered && editedPath ? 'edited' : useWatermarked ? 'watermarked' : 'previews',
-          lightboxPath,
-          galleryId
-        ),
+        lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId),
         edited_signed_url: await signPath('edited', editedPath, galleryId),
       }
     })
@@ -388,10 +400,20 @@ export async function getPublicPortfolioGallery(galleryId: string) {
 
   const portfolioPhotos = await Promise.all(
     ((photos ?? []) as PhotoRow[]).map(async (photo) => {
-      const previewPath = photo.watermarked_preview_url || photo.preview_url
+      const watermarkedPath = photo.watermarked_preview_url
+      const previewPath = watermarkedPath ?? photo.preview_url
+      const previewBucket: MediaBucket = watermarkedPath ? 'watermarked' : 'previews'
+      const lightboxPath = watermarkedPath ?? photo.preview_url
+      const lightboxBucket: MediaBucket = watermarkedPath ? 'watermarked' : 'previews'
+
       return {
         id: photo.id,
-        preview_signed_url: previewPath ? await signPath('watermarked', previewPath, galleryId) : null,
+        preview_signed_url: previewPath
+          ? await signPath(previewBucket, previewPath, galleryId)
+          : null,
+        lightbox_signed_url: lightboxPath
+          ? await signPath(lightboxBucket, lightboxPath, galleryId)
+          : null,
       }
     })
   )

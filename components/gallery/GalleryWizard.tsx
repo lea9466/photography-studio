@@ -72,6 +72,7 @@ type WizardState = {
   allowDownloadPreview: boolean
   allowDownloadOriginal: boolean
   watermarkText: string
+  autoApplyWatermark: boolean
   sendToClient: boolean
   isPublic: boolean
   coverImage: string
@@ -80,6 +81,7 @@ type WizardState = {
 
 // MVP: Public-only mode. Private/client gallery flows are frozen (not deleted).
 const PUBLIC_ONLY_MVP = true
+const DOWNLOAD_PERMISSIONS_ENABLED = false
 
 const initialState: WizardState = {
   clientMode: 'public',
@@ -96,6 +98,7 @@ const initialState: WizardState = {
   allowDownloadPreview: false,
   allowDownloadOriginal: false,
   watermarkText: '',
+  autoApplyWatermark: true,
   sendToClient: false,
   isPublic: true,
   coverImage: '',
@@ -233,9 +236,14 @@ export function GalleryWizard({
           maxEditSelection: state.maxEditSelection
             ? Number(state.maxEditSelection)
             : undefined,
-          allowDownloadPreview: state.allowDownloadPreview,
-          allowDownloadOriginal: state.allowDownloadOriginal,
+          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED
+            ? state.allowDownloadPreview
+            : false,
+          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED
+            ? state.allowDownloadOriginal
+            : false,
           watermarkText: state.watermarkText || undefined,
+          autoApplyWatermark: state.autoApplyWatermark,
           sendToClient: state.clientMode === 'public' ? false : state.sendToClient,
           isPublic: state.clientMode === 'public' ? true : state.isPublic,
           coverImage: coverImageUrl,
@@ -494,7 +502,7 @@ export function GalleryWizard({
                 return (
                 <label
                   key={type}
-                  className={`relative ${isFrozen ? 'opacity-40 pointer-events-none cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`relative ${isFrozen ? 'opacity-35 pointer-events-none cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   {isFrozen && (
                     <span className="absolute top-3 left-3 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white pointer-events-none">
@@ -552,7 +560,7 @@ export function GalleryWizard({
           {/* Bento Grid Layout for Sections */}
           <form className="grid grid-cols-12 gap-6">
             {/* Security Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">אבטחה ופרטיות</h2>
@@ -588,7 +596,7 @@ export function GalleryWizard({
             </section>
             
             {/* Limits Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Zap className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">מגבלות אלבום</h2>
@@ -625,6 +633,18 @@ export function GalleryWizard({
                 <h2 className="text-base font-semibold text-[#100d1f]">תוכן וסימן מים</h2>
               </div>
               <div className="space-y-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold text-[#48464c]">החל סימן מים אוטומטי</p>
+                    <p className="text-xs text-[#48464c]/80 mt-1">
+                      בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה הציבורית
+                    </p>
+                  </div>
+                  <Switch
+                    checked={state.autoApplyWatermark}
+                    onCheckedChange={(checked) => updateState('autoApplyWatermark', checked)}
+                  />
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-[#48464c] mb-2">טקסט לסימן מים</label>
                   <input 
@@ -696,8 +716,13 @@ export function GalleryWizard({
               </div>
             </section>
             
-            {/* Download Permissions Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-30 pointer-events-none select-none' : ''}`}>
+            {/* Download Permissions Section */}
+            <section className={`relative col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+              {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+                <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
+                  לא זמין כרגע
+                </span>
+              ) : null}
               <div className="flex items-center gap-2 mb-6">
                 <Download className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">הרשאות הורדה</h2>
@@ -710,6 +735,7 @@ export function GalleryWizard({
                   </div>
                   <Switch
                     checked={state.allowDownloadPreview}
+                    disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
                     onCheckedChange={(checked) => updateState('allowDownloadPreview', checked)}
                   />
                 </div>
@@ -721,6 +747,7 @@ export function GalleryWizard({
                   </div>
                   <Switch
                     checked={state.allowDownloadOriginal}
+                    disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
                     onCheckedChange={(checked) => updateState('allowDownloadOriginal', checked)}
                   />
                 </div>

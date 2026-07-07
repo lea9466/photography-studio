@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { MVP_DEFAULT_DASHBOARD_PATH, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -11,12 +13,21 @@ import { signPreviewUrls } from '@/lib/actions/photo.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [userName, setUserName] = useState('משתמש')
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
   const [activeFilter, setActiveFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (PUBLIC_ONLY_MVP) {
+      router.replace(MVP_DEFAULT_DASHBOARD_PATH)
+      return
+    }
+  }, [router])
+
+  useEffect(() => {
+    if (PUBLIC_ONLY_MVP) return
     async function fetchData() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()

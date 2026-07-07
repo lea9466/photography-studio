@@ -260,6 +260,7 @@ export type CreateGalleryInput = {
   allowDownloadPreview?: boolean
   allowDownloadOriginal?: boolean
   watermarkText?: string
+  autoApplyWatermark?: boolean
   sendToClient?: boolean
   isPublic?: boolean
   coverImage?: string
@@ -349,6 +350,7 @@ export async function createGallery(input: CreateGalleryInput) {
       allow_download_preview: input.allowDownloadPreview ?? false,
       allow_download_original: input.allowDownloadOriginal ?? false,
       watermark_text: watermarkText,
+      auto_apply_watermark: input.autoApplyWatermark ?? true,
     }
 
   const { error: settingsError } = await supabase
@@ -380,6 +382,7 @@ export async function updateGallerySettings(
     allowDownloadPreview?: boolean
     allowDownloadOriginal?: boolean
     watermarkText?: string | null
+    autoApplyWatermark?: boolean
     isPublic?: boolean
     coverImage?: string | null
   }
@@ -433,6 +436,8 @@ export async function updateGallerySettings(
     settingsUpdate.allow_download_original = input.allowDownloadOriginal
   if (input.watermarkText !== undefined)
     settingsUpdate.watermark_text = input.watermarkText
+  if (input.autoApplyWatermark !== undefined)
+    settingsUpdate.auto_apply_watermark = input.autoApplyWatermark
 
   console.log('Updating settings:', settingsUpdate)
   if (Object.keys(settingsUpdate).length > 0) {

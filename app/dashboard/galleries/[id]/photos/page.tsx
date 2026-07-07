@@ -49,6 +49,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
       galleryId={id}
       userId={user.id}
       watermarkText={resolveWatermarkText(settings?.watermark_text, studioName)}
+      applyAutoWatermark={settings?.auto_apply_watermark ?? true}
       photos={photos as never}
       signedUrls={signedUrls}
     />

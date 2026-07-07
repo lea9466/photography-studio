@@ -46,6 +46,7 @@ type GalleryPhotosSectionProps = {
   galleryId: string
   userId: string
   watermarkText?: string | null
+  applyAutoWatermark?: boolean
   photos: Photo[]
   signedUrls: Record<string, string>
   showWizardHeader?: boolean
@@ -57,6 +58,7 @@ export function GalleryPhotosSection({
   galleryId,
   userId,
   watermarkText,
+  applyAutoWatermark = true,
   photos,
   signedUrls,
   showWizardHeader = true,
@@ -165,7 +167,8 @@ export function GalleryPhotosSection({
           watermarkText,
           setUploadProgress,
           uploadCallbacks,
-          activeTabRef.current === 'processed'
+          activeTabRef.current === 'processed',
+          applyAutoWatermark
         )
 
         if (result.ok) {
@@ -190,7 +193,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, uploadCallbacks, router]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router]
   )
 
   const regularPhotos = useMemo(
@@ -441,7 +444,7 @@ export function GalleryPhotosSection({
 
           {/* Upload Grid */}
           <div className="space-y-4">
-            {activeTab === 'regular' && (
+            {activeTab === 'regular' && !PUBLIC_ONLY_MVP && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
                 <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב "מעובדות" למטה
               </div>
@@ -496,7 +499,7 @@ export function GalleryPhotosSection({
                       setActiveTab('regular')
                       activeTabRef.current = 'regular'
                     }}
-                    className={`${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'} ${PUBLIC_ONLY_MVP ? 'opacity-40 pointer-events-none cursor-not-allowed' : ''}`}
+                    className={`${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'} ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none cursor-not-allowed' : ''}`}
                   >
                     רגילות ({regularPhotos.length})
                   </Button>
@@ -504,10 +507,8 @@ export function GalleryPhotosSection({
                     variant={activeTab === 'processed' ? 'default' : 'ghost'}
                     size="sm"
                     onClick={() => {
-                      console.log('👉 Clicking processed tab, current activeTab:', activeTab)
                       setActiveTab('processed')
                       activeTabRef.current = 'processed'
-                      console.log('👉 After setActiveTab, next render should show activeTab as processed')
                     }}
                     className={activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
                   >

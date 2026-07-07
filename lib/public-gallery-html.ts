@@ -53,8 +53,81 @@ const MASONRY_STYLES = `
   width: 100%;
   height: auto;
   transition: transform 0.7s ease-out;
+  cursor: zoom-in;
 }
 .pg-masonry-cell:hover img { transform: scale(1.03); }
+.pg-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.95);
+  padding: 1rem;
+}
+.pg-lightbox.is-open { display: flex; }
+.pg-lightbox__stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(1920px, calc(100vw - 2rem));
+  height: min(88vh, calc(100vw - 2rem));
+  max-width: 100%;
+}
+.pg-lightbox__image {
+  display: block;
+  max-width: 100%;
+  max-height: min(88vh, calc(100vw - 2rem));
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+.pg-lightbox__close,
+.pg-lightbox__nav {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.pg-lightbox__close:hover,
+.pg-lightbox__nav:hover { background: rgba(0, 0, 0, 0.85); }
+.pg-lightbox__close {
+  top: 1rem;
+  inset-inline-end: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.pg-lightbox__nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.pg-lightbox__nav--prev { inset-inline-start: 1rem; }
+.pg-lightbox__nav--next { inset-inline-end: 1rem; }
+.pg-lightbox__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pg-lightbox__counter {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.875rem;
+}
 </style>`
 
 const masonryRevealScript = `
@@ -76,6 +149,98 @@ const masonryRevealScript = `
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
     cells.forEach(function(c) { observer.observe(c); });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+`
+
+const lightboxMarkup = `
+<div id="pg-lightbox" class="pg-lightbox" aria-hidden="true">
+  <button type="button" class="pg-lightbox__close" aria-label="סגור">&times;</button>
+  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--prev" aria-label="תמונה קודמת">&#8250;</button>
+  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--next" aria-label="תמונה הבאה">&#8249;</button>
+  <div class="pg-lightbox__stage">
+    <img id="pg-lightbox-image" class="pg-lightbox__image" alt="" />
+  </div>
+  <p id="pg-lightbox-counter" class="pg-lightbox__counter"></p>
+</div>`
+
+const lightboxScript = `
+(function initPublicGalleryLightbox() {
+  function boot() {
+    var photos = [].slice.call(document.querySelectorAll('.pg-masonry-cell img[data-lightbox-src]'))
+      .map(function(img) { return img.getAttribute('data-lightbox-src'); })
+      .filter(Boolean);
+    if (!photos.length) return;
+
+    var lightbox = document.getElementById('pg-lightbox');
+    var image = document.getElementById('pg-lightbox-image');
+    var counter = document.getElementById('pg-lightbox-counter');
+    var closeBtn = lightbox && lightbox.querySelector('.pg-lightbox__close');
+    var prevBtn = lightbox && lightbox.querySelector('.pg-lightbox__nav--prev');
+    var nextBtn = lightbox && lightbox.querySelector('.pg-lightbox__nav--next');
+    if (!lightbox || !image || !counter || !closeBtn || !prevBtn || !nextBtn) return;
+
+    var currentIndex = 0;
+
+    function render() {
+      image.src = photos[currentIndex];
+      counter.textContent = (currentIndex + 1) + ' / ' + photos.length;
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex >= photos.length - 1;
+    }
+
+    function open(index) {
+      currentIndex = index;
+      render();
+      lightbox.classList.add('is-open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      image.removeAttribute('src');
+      document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.pg-masonry-cell img[data-lightbox-src]').forEach(function(img, index) {
+      img.addEventListener('click', function() { open(index); });
+    });
+
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', function(event) {
+      if (event.target === lightbox) close();
+    });
+    prevBtn.addEventListener('click', function() {
+      if (currentIndex > 0) {
+        currentIndex -= 1;
+        render();
+      }
+    });
+    nextBtn.addEventListener('click', function() {
+      if (currentIndex < photos.length - 1) {
+        currentIndex += 1;
+        render();
+      }
+    });
+    document.addEventListener('keydown', function(event) {
+      if (!lightbox.classList.contains('is-open')) return;
+      if (event.key === 'Escape') close();
+      if (event.key === 'ArrowRight' && currentIndex > 0) {
+        currentIndex -= 1;
+        render();
+      }
+      if (event.key === 'ArrowLeft' && currentIndex < photos.length - 1) {
+        currentIndex += 1;
+        render();
+      }
+    });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
@@ -107,10 +272,11 @@ function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChrom
     .map((photo, index) => {
       if (!photo.url) return ''
       const alt = escapeHtml(`${title} - ${index + 1}`)
+      const url = escapeHtml(photo.url)
       const delay = (index % 4) * 90
       return `
 <div class="pg-masonry-cell group" style="border-radius:${cfg.radius};background:${cfg.bg};overflow:hidden;${cfg.extra}" data-reveal-delay="${delay}">
-  <img src="${photo.url}" alt="${alt}" loading="lazy" />
+  <img src="${url}" data-lightbox-src="${url}" alt="${alt}" loading="lazy" />
 </div>`
     })
     .join('')
@@ -430,9 +596,11 @@ ${themeHead(chromeTheme, options.studioName, primaryColor)}
 ${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
 ${galleryBody(options.gallery, chromeTheme)}
+${lightboxMarkup}
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${masonryRevealScript}</script>
+<script>${lightboxScript}</script>
 </body>
 </html>`
 }

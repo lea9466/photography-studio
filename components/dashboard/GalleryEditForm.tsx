@@ -18,6 +18,7 @@ type GalleryEditFormProps = {
   }
   settings: {
     watermark_text: string | null
+    auto_apply_watermark?: boolean
     max_album_selection: number | null
     max_edit_selection: number | null
     allow_download_preview: boolean
@@ -34,6 +35,9 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
   const [isUploadingCover, setIsUploadingCover] = useState(false)
   const [watermark, setWatermark] = useState(settings?.watermark_text ?? '')
+  const [autoApplyWatermark, setAutoApplyWatermark] = useState(
+    settings?.auto_apply_watermark ?? true
+  )
   const [maxAlbum, setMaxAlbum] = useState(settings?.max_album_selection?.toString() ?? '')
   const [maxEdit, setMaxEdit] = useState(settings?.max_edit_selection?.toString() ?? '')
   const [allowDownloadPreview, setAllowDownloadPreview] = useState(settings?.allow_download_preview ?? false)
@@ -84,6 +88,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           expiresAt: expiresAt || undefined,
           coverImage: finalCoverImage || null,
           watermarkText: watermark || undefined,
+          autoApplyWatermark,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit) : undefined,
           allowDownloadPreview,
@@ -127,6 +132,20 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             placeholder="למשל: © שם הסטודיו"
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#c9c5cd] px-4 py-3 bg-white">
+            <div>
+              <Label className="text-[#100d1f]">החל סימן מים אוטומטי</Label>
+              <p className="text-xs text-[#48464c] mt-1">
+                בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה הציבורית
+              </p>
+            </div>
+            <Switch
+              checked={autoApplyWatermark}
+              onCheckedChange={setAutoApplyWatermark}
+            />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="cover-image" className="text-[#100d1f]">
@@ -260,8 +279,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         </div>
       </div>
 
-      {/* MVP: download permissions frozen for public-only */}
-      <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4] opacity-35 pointer-events-none select-none">
+      {/* MVP: download permissions remain active in public-only mode */}
+      <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4]">
         <div className="flex items-center justify-between">
           <Label className="text-[#100d1f]">הורדת preview</Label>
           <Switch

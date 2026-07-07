@@ -31,8 +31,8 @@ export function StatusFilter({ current }: StatusFilterProps) {
             <Link
               href={
                 option.value === 'all'
-                  ? '/dashboard'
-                  : `/dashboard?status=${option.value}`
+                  ? '/dashboard/galleries'
+                  : `/dashboard/galleries?status=${option.value}`
               }
               className={cn(current === option.value && 'pointer-events-none')}
             >
