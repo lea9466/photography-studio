@@ -1,6 +1,14 @@
 'use server'
 
 import { assertGalleryOwner } from '@/lib/auth/gallery-owner'
+import {
+  generateGalleryPassword,
+  hashGalleryPassword,
+} from '@/lib/gallery-password'
+import {
+  galleryHasPassword,
+  rotateGalleryPassword,
+} from '@/lib/gallery-password-store'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
@@ -134,14 +142,22 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
   return gallery
 }
 
-async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
+async function sendInviteEmailForGallery(
+  gallery: GalleryEmailRow,
+  plainPassword?: string
+) {
   const client = Array.isArray(gallery.clients)
     ? gallery.clients[0]
     : gallery.clients
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
 
   if (!client?.email) throw new Error('לא נמצא מייל ללקוח')
-  if (!gallery.password) throw new Error('לא הוגדרה סיסמה לגלריה')
+  if (!galleryHasPassword(gallery.password)) {
+    throw new Error('לא הוגדרה סיסמה לגלריה')
+  }
+
+  const passwordToEmail =
+    plainPassword ?? (await rotateGalleryPassword(gallery.id))
 
   await sendGalleryInviteEmail({
     galleryId: gallery.id,
@@ -149,7 +165,7 @@ async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
     clientEmail: client.email,
     clientName: client.name,
     studioName: profile?.studio_name ?? 'Studio Gallery',
-    password: gallery.password,
+    password: passwordToEmail,
     expiresAt: gallery.expires_at,
   })
 }
@@ -221,7 +237,7 @@ export async function updateGalleryStatus(
   revalidatePath('/dashboard')
 }
 
-export async function sendGallery(galleryId: string) {
+export async function sendGallery(galleryId: string, plainPasswordForEmail?: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
   // Bypass email sending for public galleries (no client)
@@ -231,7 +247,7 @@ export async function sendGallery(galleryId: string) {
   }
 
   await updateGalleryStatus(galleryId, 'selection')
-  await sendInviteEmailForGallery(gallery)
+  await sendInviteEmailForGallery(gallery, plainPasswordForEmail)
 }
 
 export async function archiveGallery(galleryId: string) {
@@ -256,7 +272,7 @@ export type CreateGalleryInput = {
 }
 
 function generatePassword() {
-  return Math.random().toString(36).slice(2, 10)
+  return generateGalleryPassword()
 }
 
 function slugifyPortfolioTitle(title: string) {
@@ -305,12 +321,15 @@ export async function createGallery(input: CreateGalleryInput) {
     if (limitError) throw new Error(limitError)
   }
 
+  const plainPassword = input.password?.trim() || generatePassword()
+  const hashedPassword = await hashGalleryPassword(plainPassword)
+
   const galleryPayload: Database['public']['Tables']['galleries']['Insert'] = {
     user_id: user.id,
     client_id: input.clientId || null,
     title,
     gallery_type: input.galleryType,
-    password: input.password?.trim() || generatePassword(),
+    password: hashedPassword,
     expires_at: input.expiresAt || null,
     status: PUBLIC_ONLY_MVP
       ? MVP_GALLERY_DB_STATUS
@@ -377,7 +396,7 @@ export async function createGallery(input: CreateGalleryInput) {
   }
 
   if (input.sendToClient) {
-    await sendGallery(gallery.id)
+    await sendGallery(gallery.id, plainPassword)
   }
 
   return { id: gallery.id }
@@ -416,7 +435,12 @@ export async function updateGallerySettings(
   }
 
   const galleryUpdate: GalleriesUpdate = {}
-  if (input.password !== undefined) galleryUpdate.password = input.password
+  if (input.password !== undefined) {
+    const trimmed = input.password.trim()
+    if (trimmed) {
+      galleryUpdate.password = await hashGalleryPassword(trimmed)
+    }
+  }
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
   if (input.isPublic !== undefined) {
     if (input.isPublic) {

@@ -29,7 +29,7 @@ type GalleryEditFormProps = {
 export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState(gallery.title)
-  const [password, setPassword] = useState(gallery.password ?? '')
+  const [password, setPassword] = useState('')
   const [expiresAt, setExpiresAt] = useState(gallery.expires_at ? gallery.expires_at.slice(0, 10) : '')
   const [coverImage, setCoverImage] = useState(gallery.cover_image ?? '')
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null)
@@ -241,7 +241,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             dir="ltr"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="הכנס סיסמה"
+            placeholder="השאירי ריק לשמירת הסיסמה הקיימת"
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
         </div>

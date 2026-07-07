@@ -22,6 +22,12 @@ export function Footer() {
           >
             מדיניות פרטיות
           </Link>
+          <Link
+            href="/terms"
+            className="text-[--muted] underline-offset-4 transition-colors hover:text-[--foreground] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--accent]"
+          >
+            תקנון ותנאי שימוש
+          </Link>
         </nav>
         <div className="flex w-full flex-col items-center justify-between gap-2 text-sm text-[--muted] sm:flex-row">
           <span>Studio Gallery</span>

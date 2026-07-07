@@ -43,7 +43,7 @@ export function GalleryEditForm({
   const [title, setTitle] = useState(gallery.title)
   const [galleryType, setGalleryType] = useState<GalleryType>(gallery.gallery_type)
   const [clientId, setClientId] = useState(client?.id ?? '')
-  const [password, setPassword] = useState(gallery.password ?? '')
+  const [password, setPassword] = useState('')
   const [expiresAt, setExpiresAt] = useState(
     gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
   )
@@ -145,7 +145,7 @@ export function GalleryEditForm({
                 dir="ltr"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="הזן סיסמה..."
+                placeholder="השאירי ריק לשמירת הסיסמה הקיימת"
               />
             </div>
             <div className="space-y-2">

@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -22,6 +23,16 @@ import {
   validateSelectionLimits,
   type ClientSelectionPayload,
 } from '@/lib/gallery-selection'
+import { verifyGalleryPassword as checkGalleryPassword } from '@/lib/gallery-password'
+import {
+  galleryHasPassword,
+  migrateLegacyGalleryPassword,
+  rotateGalleryPassword,
+} from '@/lib/gallery-password-store'
+import {
+  checkRateLimit,
+  resetRateLimit,
+} from '@/lib/rate-limit/gallery-password'
 
 export type ClientGalleryPhoto = {
   id: string
@@ -137,12 +148,14 @@ export async function requestGalleryPassword(galleryId: string) {
   if (!client?.email) {
     throw new Error('לא נמצא מייל ללקוח — פנו לצלם/ת')
   }
-  if (!gallery.password) {
+  if (!galleryHasPassword(gallery.password)) {
     throw new Error('לא הוגדרה סיסמה לגלריה')
   }
 
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
   const emailHint = getEmailHint(client.email)
+
+  const plainPassword = await rotateGalleryPassword(gallery.id)
 
   await sendGalleryPasswordEmail({
     galleryId: gallery.id,
@@ -150,7 +163,7 @@ export async function requestGalleryPassword(galleryId: string) {
     clientEmail: client.email,
     clientName: client.name,
     studioName: profile?.studio_name ?? 'Studio Gallery',
-    password: gallery.password,
+    password: plainPassword,
   })
 
   return {
@@ -160,6 +173,19 @@ export async function requestGalleryPassword(galleryId: string) {
 }
 
 export async function verifyGalleryPassword(galleryId: string, password: string) {
+  const headerStore = await headers()
+  const ip =
+    headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headerStore.get('x-real-ip')?.trim() ??
+    'unknown'
+  const rateKey = `gallery-pw:${galleryId}:${ip}`
+
+  const rate = checkRateLimit(rateKey)
+  if (!rate.allowed) {
+    const minutes = Math.max(1, Math.ceil((rate.retryAfterMs ?? 60_000) / 60_000))
+    throw new Error(`יותר מדי ניסיונות. נסו שוב בעוד ${minutes} דקות.`)
+  }
+
   const admin = createAdminClient()
 
   const { data } = await admin
@@ -181,10 +207,20 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
   if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
     throw new Error('פג תוקף הגלריה')
   }
-  if (gallery.password !== password.trim()) {
+
+  const { valid, needsRehash } = await checkGalleryPassword(
+    password,
+    gallery.password
+  )
+  if (!valid) {
     throw new Error('סיסמה שגויה')
   }
 
+  if (needsRehash) {
+    await migrateLegacyGalleryPassword(galleryId, password.trim(), gallery.password)
+  }
+
+  resetRateLimit(rateKey)
   await setGallerySession(galleryId)
   return { success: true }
 }

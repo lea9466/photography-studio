@@ -28,7 +28,7 @@ export function GallerySettingsForm({
 }: GallerySettingsFormProps) {
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState(gallery.title)
-  const [password, setPassword] = useState(gallery.password ?? '')
+  const [password, setPassword] = useState('')
   const [expiresAt, setExpiresAt] = useState(
     gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
   )
@@ -90,6 +90,7 @@ export function GallerySettingsForm({
               dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="השאירי ריק לשמירת הסיסמה הקיימת"
             />
           </div>
           <div className="space-y-2">

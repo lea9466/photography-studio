@@ -283,7 +283,7 @@ export function generateSiteFooter(cfg: SiteChromeConfig): string {
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${cfg.studioName}</div>`}
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest">
-<a class="text-on-surface-variant hover:text-accent transition-colors" href="#">תקנון</a>
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/terms">תקנון</a>
 <a class="text-on-surface-variant hover:text-accent transition-colors" href="/privacy">פרטיות</a>
 <a class="text-on-surface-variant hover:text-accent transition-colors" href="/accessibility">הצהרת נגישות</a>
 </div>
@@ -304,7 +304,7 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
 </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md sm:gap-lg items-center">
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">תקנון</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/terms">תקנון</a>
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/privacy">פרטיות</a>
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/accessibility">הצהרת נגישות</a>
 </div>
@@ -333,7 +333,7 @@ ${generateStudioSignupFooterCta('modern')}
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${cfg.studioName}`}
             </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-lg">
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/terms">תקנון</a>
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/privacy">פרטיות</a>
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/accessibility">הצהרת נגישות</a>
 </div>
@@ -354,7 +354,7 @@ ${generateStudioSignupFooterCta('classic')}
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(cfg.studioName)}`}
 </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md lg:gap-xl">
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/terms">תקנון</a>
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/privacy">פרטיות</a>
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/accessibility">הצהרת נגישות</a>
 </div>
