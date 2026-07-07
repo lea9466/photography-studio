@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
 import { finalizeBrandingUpload, prepareBrandingUpload, removeBrandingImage, removeHeroImageSlot } from '@/lib/actions/branding.actions'
@@ -153,6 +153,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [address, setAddress] = useState(profile?.address ?? '')
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
+  const [savedSlug, setSavedSlug] = useState(profile?.slug ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
   const [uploadingTargets, setUploadingTargets] = useState<ReadonlySet<string>>(() => new Set())
   const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({})
@@ -166,11 +167,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       return next
     })
   }
-  const previewPath = slug.trim()
-    ? `/${slug.trim()}`
-    : studioName.trim()
-      ? `/${encodeURIComponent(studioName.trim())}`
-      : null
+  useEffect(() => {
+    setSavedSlug(profile?.slug ?? '')
+  }, [profile?.slug])
+
+  const previewPath = savedSlug.trim() ? `/${savedSlug.trim()}` : null
 
   function brandingPreviewSrc(targetKey: string, storedPath: string) {
     return localPreviews[targetKey] ?? storedPath
@@ -334,6 +335,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           slug,
           should_color_logo: shouldColorLogo,
         })
+        setSavedSlug(slug.trim())
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
       } catch (error) {
