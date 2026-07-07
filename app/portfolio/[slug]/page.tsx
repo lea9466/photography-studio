@@ -6,6 +6,11 @@ import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { PackageCard } from '@/components/dashboard/PackageCard'
+import {
+  buildCanonicalUrl,
+  buildPublicOpenGraph,
+  resolveGalleryShareImage,
+} from '@/lib/seo/public-metadata'
 
 type PortfolioPageProps = {
   params: Promise<{ slug: string }>
@@ -248,13 +253,19 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
 
   const { data } = await supabase
     .from('galleries')
-    .select('id, title, is_public, user_id')
+    .select('id, title, is_public, user_id, cover_image')
     .eq('slug', slug)
     .eq('gallery_type', 'portfolio')
     .eq('is_public', true)
     .single()
 
-  type GalleryRow = { id: string; title: string; is_public: boolean; user_id: string }
+  type GalleryRow = {
+    id: string
+    title: string
+    is_public: boolean
+    user_id: string
+    cover_image: string | null
+  }
   const gallery = data as GalleryRow | null
 
   if (!gallery) {
@@ -272,9 +283,23 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
 
   type UserRow = { studio_name: string | null }
   const profile = user as UserRow | null
+  const studioName = profile?.studio_name || 'Studio Gallery'
+  const title = `${gallery.title} | ${studioName}`
+  const description = `תיק עבודות מאת ${studioName}`
+  const canonicalPath = `/portfolio/${slug}`
+  const shareImage = await resolveGalleryShareImage(gallery.id, gallery.cover_image)
 
   return {
-    title: `${gallery.title} | ${profile?.studio_name || 'Studio Gallery'}`,
-    description: `תיק עבודות מאת ${profile?.studio_name || 'Studio Gallery'}`,
+    title,
+    description,
+    alternates: {
+      canonical: buildCanonicalUrl(canonicalPath),
+    },
+    openGraph: buildPublicOpenGraph({
+      title,
+      description,
+      canonicalPath,
+      imageUrl: shareImage,
+    }),
   }
 }

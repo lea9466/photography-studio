@@ -1,11 +1,9 @@
 import type { Metadata } from 'next'
 import { Toaster } from 'sonner'
+import { buildMarketingMetadata } from '@/lib/seo/marketing-metadata'
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: 'Studio Gallery',
-  description: 'מערכת ניהול גלריות לצלמות',
-}
+export const metadata: Metadata = buildMarketingMetadata()
 
 export default function RootLayout({
   children,

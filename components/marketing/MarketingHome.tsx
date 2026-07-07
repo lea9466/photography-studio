@@ -3,6 +3,7 @@ import { Hero } from '@/components/marketing/Hero'
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { CTABanner } from '@/components/marketing/CTABanner'
 import { Footer } from '@/components/marketing/Footer'
+import { MarketingSeoFeatures } from '@/components/marketing/MarketingSeoFeatures'
 import {
   Card,
   CardContent,
@@ -12,13 +13,17 @@ import {
 
 export function MarketingHome() {
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen">
       <Nav />
       <Hero />
+      <MarketingSeoFeatures />
 
       <section className="mx-auto max-w-6xl px-4 py-16" id="galleries">
-        <h2 className="mb-6 text-2xl font-semibold">גלריות</h2>
-        <p className="text-[--muted] mb-4">גלריות ציבוריות מתעדכנות בקרוב</p>
+        <h2 className="mb-6 text-2xl font-semibold">גלריות דיגיטליות לצלמים</h2>
+        <p className="mb-4 max-w-3xl leading-relaxed text-[--muted]">
+          שתפי גלריות ציבוריות ופרטיות עם לקוחות, הציגי תיק עבודות מעוצב ונהלי את כל
+          תהליך בחירת התמונות לעיבוד — בממשק אחד נוח בעברית.
+        </p>
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16" id="about">
@@ -67,6 +72,6 @@ export function MarketingHome() {
 
       <CTABanner />
       <Footer />
-    </div>
+    </main>
   )
 }

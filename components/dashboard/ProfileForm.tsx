@@ -9,24 +9,11 @@ import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { LabelWithHelp } from '@/components/ui/label-with-help'
+import { HelpTooltip } from '@/components/ui/help-tooltip'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SITE_SETTINGS_HELP, THEME_HELP, THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
 import { Building2, ExternalLink, Globe, Loader2, Palette, Trash2, Upload } from 'lucide-react'
 
 const HERO_SLOT_COUNT = 3
@@ -96,12 +83,7 @@ type ProfileFormProps = {
   } | null
 }
 
-const THEMES = [
-  { id: 'classic', name: 'קלאסי', background: '#fafafa', foreground: '#171717' },
-  { id: 'modern', name: 'מודרני', background: '#ffffff', foreground: '#09090b' },
-  { id: 'elegant', name: 'אלגנטי', background: '#0a0a0a', foreground: '#fafafa' },
-  { id: 'bold', name: 'נועז', background: '#1c1917', foreground: '#fafafa' },
-] as const
+const THEMES = THEME_OPTIONS
 
 function normalizeThemeId(theme: string | null | undefined) {
   const normalized = theme === 'dark' ? 'bold' : theme
@@ -111,8 +93,24 @@ function normalizeThemeId(theme: string | null | undefined) {
   return THEMES[0].id
 }
 
-function themeLabel(themeId: string) {
-  return THEMES.find((item) => item.id === themeId)?.name ?? THEMES[0].name
+function SectionHeader({
+  icon: Icon,
+  title,
+  help,
+  where,
+}: {
+  icon: typeof Building2
+  title: string
+  help: string
+  where?: string
+}) {
+  return (
+    <div className="flex items-center gap-2 border-b border-[--border] pb-2">
+      <Icon className="h-6 w-6 text-[--foreground]" />
+      <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+      <HelpTooltip content={help} where={where} />
+    </div>
+  )
 }
 
 export function ProfileForm({ profile }: ProfileFormProps) {
@@ -311,13 +309,21 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     <div className="space-y-10 pb-10 md:pb-24">
       {/* Section 1: Business Details */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-          <Building2 className="h-6 w-6 text-[--foreground]" />
-          <h2 className="text-lg font-semibold text-[--foreground]">פרטי העסק</h2>
-        </div>
+        <SectionHeader
+          icon={Building2}
+          title="פרטי העסק"
+          help={SITE_SETTINGS_HELP.sections.business.content}
+          where={SITE_SETTINGS_HELP.sections.business.where}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="studio-name">שם העסק</Label>
+            <LabelWithHelp
+              htmlFor="studio-name"
+              help={SITE_SETTINGS_HELP.fields.studioName.content}
+              where={SITE_SETTINGS_HELP.fields.studioName.where}
+            >
+              שם העסק
+            </LabelWithHelp>
             <Input
               id="studio-name"
               value={studioName}
@@ -326,7 +332,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             />
           </div>
           <div className="space-y-2" dir="ltr">
-            <Label htmlFor="slug" className="text-right">כתובת אתר (Slug)</Label>
+            <LabelWithHelp
+              htmlFor="slug"
+              className="text-right"
+              help={SITE_SETTINGS_HELP.fields.slug.content}
+              where={SITE_SETTINGS_HELP.fields.slug.where}
+            >
+              כתובת אתר (Slug)
+            </LabelWithHelp>
             <div className="flex items-center bg-white dark:bg-zinc-900 border-[--border] rounded-lg overflow-hidden">
               <span className="bg-[--border]/30 px-3 py-3 text-[--muted] text-sm border-r border-[--border]">gallery.studio/</span>
               <Input
@@ -349,7 +362,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">אימייל רשמי</Label>
+            <LabelWithHelp
+              htmlFor="email"
+              help={SITE_SETTINGS_HELP.fields.email.content}
+              where={SITE_SETTINGS_HELP.fields.email.where}
+            >
+              אימייל רשמי
+            </LabelWithHelp>
             <Input
               id="email"
               type="email"
@@ -363,13 +382,20 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
       {/* Section 2: Website Content */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-          <Globe className="h-6 w-6 text-[--foreground]" />
-          <h2 className="text-lg font-semibold text-[--foreground]">תוכן האתר</h2>
-        </div>
+        <SectionHeader
+          icon={Globe}
+          title="תוכן האתר"
+          help={SITE_SETTINGS_HELP.sections.content.content}
+          where={SITE_SETTINGS_HELP.sections.content.where}
+        />
         <div className="space-y-8">
           <div className="space-y-3">
-            <Label>תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות</Label>
+            <LabelWithHelp
+              help={SITE_SETTINGS_HELP.fields.heroDesktop.content}
+              where={SITE_SETTINGS_HELP.fields.heroDesktop.where}
+            >
+              תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
+            </LabelWithHelp>
             <p className="text-sm text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {heroDesktopUrls.map((url, slot) => {
@@ -420,7 +446,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
 
           <div className="space-y-3">
-            <Label>תמונות הירו (מובייל) — עד 3 תמונות מתחלפות</Label>
+            <LabelWithHelp
+              help={SITE_SETTINGS_HELP.fields.heroMobile.content}
+              where={SITE_SETTINGS_HELP.fields.heroMobile.where}
+            >
+              תמונות הירו (מובייל) — עד 3 תמונות מתחלפות
+            </LabelWithHelp>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {heroMobileUrls.map((url, slot) => {
                 const targetKey = uploadTargetKey('hero_mobile', slot)
@@ -472,7 +503,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-sm">
           {/* About Section Image */}
           <div className="space-y-3">
-            <Label htmlFor="about-image">תמונת אודות</Label>
+            <LabelWithHelp
+              htmlFor="about-image"
+              help={SITE_SETTINGS_HELP.fields.aboutImage.content}
+              where={SITE_SETTINGS_HELP.fields.aboutImage.where}
+            >
+              תמונת אודות
+            </LabelWithHelp>
             <div className="relative group aspect-square bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
               {brandingPreviewSrc('about', aboutImageUrl) ? (
                 <BrandingPreviewImage
@@ -502,13 +539,26 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         </div>
         <div className="space-y-3 pt-2 border-t border-[--border]">
-          <div>
-            <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
-            <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+          <div className="flex items-start gap-1.5">
+            <div>
+              <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
+              <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+            </div>
+            <HelpTooltip
+              content={SITE_SETTINGS_HELP.fields.contactBgDesktop.content}
+              where={SITE_SETTINGS_HELP.fields.contactBgDesktop.where}
+              className="mt-0.5"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <Label htmlFor="contact-desktop">רקע יצירת קשר (דסקטופ)</Label>
+              <LabelWithHelp
+                htmlFor="contact-desktop"
+                help={SITE_SETTINGS_HELP.fields.contactBgDesktop.content}
+                where={SITE_SETTINGS_HELP.fields.contactBgDesktop.where}
+              >
+                רקע יצירת קשר (דסקטופ)
+              </LabelWithHelp>
               <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
                 {brandingPreviewSrc('contact_desktop', contactDesktopUrl) ? (
                   <BrandingPreviewImage
@@ -537,7 +587,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               </div>
             </div>
             <div className="space-y-3">
-              <Label htmlFor="contact-mobile">רקע יצירת קשר (מובייל)</Label>
+              <LabelWithHelp
+                htmlFor="contact-mobile"
+                help={SITE_SETTINGS_HELP.fields.contactBgMobile.content}
+                where={SITE_SETTINGS_HELP.fields.contactBgMobile.where}
+              >
+                רקע יצירת קשר (מובייל)
+              </LabelWithHelp>
               <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
                 {brandingPreviewSrc('contact_mobile', contactMobileUrl) ? (
                   <BrandingPreviewImage
@@ -568,13 +624,26 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         </div>
         <div className="space-y-3 pt-2 border-t border-[--border]">
-          <div>
-            <h3 className="text-sm font-semibold text-[--foreground]">רקע חבילות צילום (דף הבית)</h3>
-            <p className="text-xs text-[--muted] mt-1">תמונת רקע לסקשן החבילות · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+          <div className="flex items-start gap-1.5">
+            <div>
+              <h3 className="text-sm font-semibold text-[--foreground]">רקע חבילות צילום (דף הבית)</h3>
+              <p className="text-xs text-[--muted] mt-1">תמונת רקע לסקשן החבילות · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+            </div>
+            <HelpTooltip
+              content={SITE_SETTINGS_HELP.fields.packagesBgDesktop.content}
+              where={SITE_SETTINGS_HELP.fields.packagesBgDesktop.where}
+              className="mt-0.5"
+            />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <Label htmlFor="packages-desktop">רקע חבילות (דסקטופ)</Label>
+              <LabelWithHelp
+                htmlFor="packages-desktop"
+                help={SITE_SETTINGS_HELP.fields.packagesBgDesktop.content}
+                where={SITE_SETTINGS_HELP.fields.packagesBgDesktop.where}
+              >
+                רקע חבילות (דסקטופ)
+              </LabelWithHelp>
               <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
                 {brandingPreviewSrc('packages_desktop', packagesDesktopUrl) ? (
                   <BrandingPreviewImage
@@ -603,7 +672,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               </div>
             </div>
             <div className="space-y-3">
-              <Label htmlFor="packages-mobile">רקע חבילות (מובייל)</Label>
+              <LabelWithHelp
+                htmlFor="packages-mobile"
+                help={SITE_SETTINGS_HELP.fields.packagesBgMobile.content}
+                where={SITE_SETTINGS_HELP.fields.packagesBgMobile.where}
+              >
+                רקע חבילות (מובייל)
+              </LabelWithHelp>
               <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
                 {brandingPreviewSrc('packages_mobile', packagesMobileUrl) ? (
                   <BrandingPreviewImage
@@ -634,7 +709,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         </div>
         <div className="space-y-2 pt-4">
-          <Label htmlFor="about-text">טקסט אודות העסק</Label>
+          <LabelWithHelp
+            htmlFor="about-text"
+            help={SITE_SETTINGS_HELP.fields.aboutText.content}
+            where={SITE_SETTINGS_HELP.fields.aboutText.where}
+          >
+            טקסט אודות העסק
+          </LabelWithHelp>
           <Textarea
             id="about-text"
             value={aboutText}
@@ -649,14 +730,22 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
       {/* Section 3: Branding & Design */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-          <Palette className="h-6 w-6 text-[--foreground]" />
-          <h2 className="text-lg font-semibold text-[--foreground]">מיתוג ועיצוב</h2>
-        </div>
+        <SectionHeader
+          icon={Palette}
+          title="מיתוג ועיצוב"
+          help={SITE_SETTINGS_HELP.sections.branding.content}
+          where={SITE_SETTINGS_HELP.sections.branding.where}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">שם הצלם/ת</Label>
+              <LabelWithHelp
+                htmlFor="name"
+                help={SITE_SETTINGS_HELP.fields.photographerName.content}
+                where={SITE_SETTINGS_HELP.fields.photographerName.where}
+              >
+                שם הצלם/ת
+              </LabelWithHelp>
               <Input
                 id="name"
                 value={name}
@@ -665,7 +754,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="accent">צבע מותג ראשי</Label>
+              <LabelWithHelp
+                htmlFor="accent"
+                help={SITE_SETTINGS_HELP.fields.accentColor.content}
+                where={SITE_SETTINGS_HELP.fields.accentColor.where}
+              >
+                צבע מותג ראשי
+              </LabelWithHelp>
               <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border-[--border] rounded-lg px-4 py-2">
                 <Input
                   id="accent"
@@ -681,34 +776,85 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="theme">ערכת נושא מועדפת</Label>
-              <Select value={selectedTheme} onValueChange={setSelectedTheme}>
-                <SelectTrigger
-                  id="theme"
-                  className="h-11 rounded-lg border-[--border] bg-white dark:bg-zinc-900"
-                >
-                  <SelectValue>{themeLabel(selectedTheme)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent
-                  dir="rtl"
-                  className="rounded-lg border border-[--border] bg-white opacity-100 shadow-lg animate-none dark:bg-zinc-900"
-                >
-                  {THEMES.map((theme) => (
-                    <SelectItem
+            <div className="space-y-3">
+              <LabelWithHelp
+                help={SITE_SETTINGS_HELP.fields.theme.content}
+                where={SITE_SETTINGS_HELP.fields.theme.where}
+              >
+                ערכת נושא מועדפת
+              </LabelWithHelp>
+              <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="ערכת נושא מועדפת">
+                {THEMES.map((theme) => {
+                  const help = THEME_HELP[theme.id]
+                  const isSelected = selectedTheme === theme.id
+                  return (
+                    <div
                       key={theme.id}
-                      value={theme.id}
-                      className="cursor-pointer bg-white focus:bg-zinc-100 dark:bg-zinc-900 dark:focus:bg-zinc-800"
+                      role="radio"
+                      aria-checked={isSelected}
+                      tabIndex={0}
+                      onClick={() => setSelectedTheme(theme.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          setSelectedTheme(theme.id)
+                        }
+                      }}
+                      className={`relative rounded-xl border-2 p-4 text-right transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#7D3A52] bg-[#7D3A52]/5'
+                          : 'border-[--border] hover:border-[#7D3A52]/50'
+                      }`}
                     >
-                      {theme.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                          <div className="flex flex-col items-center gap-1">
+                            <span
+                              className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
+                              style={{ backgroundColor: theme.color1 }}
+                              title={theme.color1Label}
+                            />
+                            <span className="text-[10px] text-[--muted] leading-none">{theme.color1Label}</span>
+                          </div>
+                          <div className="flex flex-col items-center gap-1">
+                            <span
+                              className="h-6 w-6 rounded-full border border-black/10 shadow-sm"
+                              style={{ backgroundColor: theme.color2 }}
+                              title={theme.color2Label}
+                            />
+                            <span className="text-[10px] text-[--muted] leading-none">{theme.color2Label}</span>
+                          </div>
+                          <div className="flex flex-col items-center gap-1">
+                            <span
+                              className="h-6 w-6 rounded-full border-2 border-black/10 shadow-sm ring-1 ring-black/5"
+                              style={{ backgroundColor: accentColor }}
+                              title="צבע המותג שלך"
+                            />
+                            <span className="text-[10px] text-[--muted] leading-none">מותג</span>
+                          </div>
+                        </div>
+                        <HelpTooltip
+                          content={help.content}
+                          where={help.where}
+                          side="bottom"
+                        />
+                      </div>
+                      <div className="mt-2 font-medium text-[--foreground]">{theme.name}</div>
+                      <div className="text-xs text-[--muted] mt-0.5">{help.tagline}</div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="logo">לוגו סטודיו</Label>
+            <LabelWithHelp
+              htmlFor="logo"
+              help={SITE_SETTINGS_HELP.fields.logo.content}
+              where={SITE_SETTINGS_HELP.fields.logo.where}
+            >
+              לוגו סטודיו
+            </LabelWithHelp>
             <div className="relative h-full min-h-[160px] flex flex-col items-center justify-center bg-white dark:bg-zinc-900 border-2 border-dashed border-[--border] hover:border-[--foreground] transition-colors cursor-pointer group overflow-hidden">
               <div className="p-6 text-center">
                 {brandingPreviewSrc('logo', logoUrl) ? (
@@ -743,26 +889,39 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         {/* Logo Coloring Toggle */}
         <div className="space-y-3 pt-4">
           <div className="flex items-center justify-between">
-            <Label htmlFor="should-color-logo">צביעת הלוגו בצבע המותג שלי</Label>
+            <LabelWithHelp
+              htmlFor="should-color-logo"
+              help={SITE_SETTINGS_HELP.fields.shouldColorLogo.content}
+              where={SITE_SETTINGS_HELP.fields.shouldColorLogo.where}
+            >
+              צביעת הלוגו בצבע המותג שלי
+            </LabelWithHelp>
             <Switch
               id="should-color-logo"
               checked={shouldColorLogo}
               onCheckedChange={setShouldColorLogo}
             />
           </div>
-          <p className="text-xs text-[--muted]">מתאים לקובצי SVG בלבד. אם תעלי לוגו כקובץ תמונה רגיל (PNG), הוא יוצג בצבעיו המקוריים.</p>
         </div>
       </section>
 
       {/* Section 4: About Me Settings */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-          <Globe className="h-6 w-6 text-[--foreground]" />
-          <h2 className="text-lg font-semibold text-[--foreground]">הגדרות אודותי</h2>
-        </div>
+        <SectionHeader
+          icon={Globe}
+          title="הגדרות אודותי"
+          help={SITE_SETTINGS_HELP.sections.about.content}
+          where={SITE_SETTINGS_HELP.sections.about.where}
+        />
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="about-title">כותרת</Label>
+            <LabelWithHelp
+              htmlFor="about-title"
+              help={SITE_SETTINGS_HELP.fields.aboutTitle.content}
+              where={SITE_SETTINGS_HELP.fields.aboutTitle.where}
+            >
+              כותרת
+            </LabelWithHelp>
             <Input
               id="about-title"
               value={aboutTitle}
@@ -772,7 +931,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="about-subtitle">כותרת משנה</Label>
+            <LabelWithHelp
+              htmlFor="about-subtitle"
+              help={SITE_SETTINGS_HELP.fields.aboutSubtitle.content}
+              where={SITE_SETTINGS_HELP.fields.aboutSubtitle.where}
+            >
+              כותרת משנה
+            </LabelWithHelp>
             <Input
               id="about-subtitle"
               value={aboutSubtitle}
@@ -782,7 +947,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="about-description">תיאור</Label>
+            <LabelWithHelp
+              htmlFor="about-description"
+              help={SITE_SETTINGS_HELP.fields.aboutDescription.content}
+              where={SITE_SETTINGS_HELP.fields.aboutDescription.where}
+            >
+              תיאור
+            </LabelWithHelp>
             <Textarea
               id="about-description"
               value={aboutDescription}
@@ -793,13 +964,21 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             />
           </div>
           <div className="space-y-3 pt-2 border-t border-[--border]">
-            <Label>נתונים לתצוגה באתר</Label>
-            <p className="text-sm text-[--muted]">
-              המספרים יוצגו באזור &quot;אודות&quot; בדף הבית (למשל: 10+ לקוחות מרוצים)
-            </p>
+            <LabelWithHelp
+              help={SITE_SETTINGS_HELP.fields.stats.content}
+              where={SITE_SETTINGS_HELP.fields.stats.where}
+            >
+              נתונים לתצוגה באתר
+            </LabelWithHelp>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="stat-clients">לקוחות מרוצים</Label>
+                <LabelWithHelp
+                  htmlFor="stat-clients"
+                  help={SITE_SETTINGS_HELP.fields.statClients.content}
+                  where={SITE_SETTINGS_HELP.fields.statClients.where}
+                >
+                  לקוחות מרוצים
+                </LabelWithHelp>
                 <Input
                   id="stat-clients"
                   type="number"
@@ -810,7 +989,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stat-projects">תיקי עבודות</Label>
+                <LabelWithHelp
+                  htmlFor="stat-projects"
+                  help={SITE_SETTINGS_HELP.fields.statProjects.content}
+                  where={SITE_SETTINGS_HELP.fields.statProjects.where}
+                >
+                  תיקי עבודות
+                </LabelWithHelp>
                 <Input
                   id="stat-projects"
                   type="number"
@@ -821,7 +1006,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stat-experience">שנות ניסיון</Label>
+                <LabelWithHelp
+                  htmlFor="stat-experience"
+                  help={SITE_SETTINGS_HELP.fields.statExperience.content}
+                  where={SITE_SETTINGS_HELP.fields.statExperience.where}
+                >
+                  שנות ניסיון
+                </LabelWithHelp>
                 <Input
                   id="stat-experience"
                   type="number"
@@ -840,13 +1031,21 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
       {/* Section 5: Gallery Contact Card Settings */}
       <section className="space-y-6">
-        <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-          <Palette className="h-6 w-6 text-[--foreground]" />
-          <h2 className="text-lg font-semibold text-[--foreground]">הגדרות כרטיס יצירת קשר בגלריה</h2>
-        </div>
+        <SectionHeader
+          icon={Palette}
+          title="הגדרות כרטיס יצירת קשר בגלריה"
+          help={SITE_SETTINGS_HELP.sections.contactCard.content}
+          where={SITE_SETTINGS_HELP.sections.contactCard.where}
+        />
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="contact-card-title">כותרת כרטיס</Label>
+            <LabelWithHelp
+              htmlFor="contact-card-title"
+              help={SITE_SETTINGS_HELP.fields.contactCardTitle.content}
+              where={SITE_SETTINGS_HELP.fields.contactCardTitle.where}
+            >
+              כותרת כרטיס
+            </LabelWithHelp>
             <Input
               id="contact-card-title"
               value={contactCardTitle}
@@ -856,7 +1055,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="contact-card-description">תיאור כרטיס</Label>
+            <LabelWithHelp
+              htmlFor="contact-card-description"
+              help={SITE_SETTINGS_HELP.fields.contactCardDescription.content}
+              where={SITE_SETTINGS_HELP.fields.contactCardDescription.where}
+            >
+              תיאור כרטיס
+            </LabelWithHelp>
             <Textarea
               id="contact-card-description"
               value={contactCardDescription}

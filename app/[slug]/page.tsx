@@ -2,7 +2,12 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
+import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import {
+  buildCanonicalUrl,
+  buildPublicOpenGraph,
+  resolvePhotographerShareImage,
+} from '@/lib/seo/public-metadata'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
@@ -252,15 +257,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const description =
       typedPhotographer.about_text ||
       `הפורטפוליו והעבודות של ${studioName}. צילום מקצועי, שירות אישי ותוצאות ברמה הגבוהה ביותר.`
+    const title = `${studioName} - צילום מקצועי`
+    const canonicalPath =
+      getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
+    const shareImage = await resolvePhotographerShareImage(typedPhotographer)
 
     return {
-      title: `${studioName} - צילום מקצועי`,
+      title,
       description,
-      openGraph: {
-        title: `${studioName} - צילום מקצועי`,
-        description,
-        type: 'website',
+      alternates: {
+        canonical: buildCanonicalUrl(canonicalPath),
       },
+      openGraph: buildPublicOpenGraph({
+        title,
+        description,
+        canonicalPath,
+        imageUrl: shareImage,
+      }),
     }
   } catch (error) {
     return {

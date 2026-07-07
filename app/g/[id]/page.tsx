@@ -8,6 +8,12 @@ import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
 import { PublicPortfolioGalleryView } from '@/components/gallery/PublicPortfolioGalleryView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
+import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  buildCanonicalUrl,
+  buildPublicOpenGraph,
+  resolveGalleryShareImage,
+} from '@/lib/seo/public-metadata'
 
 type ClientGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -71,8 +77,33 @@ export async function generateMetadata({ params }: ClientGalleryPageProps) {
   }
 
   // Public portfolio galleries can be indexed
+  const admin = createAdminClient()
+  const { data: gallery } = await admin
+    .from('galleries')
+    .select('cover_image, slug')
+    .eq('id', id)
+    .single()
+
+  const galleryRow = gallery as { cover_image: string | null; slug: string | null } | null
+  const title = `${meta.title} | ${meta.studio_name || 'Studio Gallery'}`
+  const description = `תיק עבודות מאת ${meta.studio_name || 'Studio Gallery'}`
+  const canonicalPath =
+    galleryRow?.slug && meta.gallery_type === 'portfolio'
+      ? `/portfolio/${galleryRow.slug}`
+      : `/g/${id}`
+  const shareImage = await resolveGalleryShareImage(id, galleryRow?.cover_image ?? null)
+
   return {
-    title: `${meta.title} | ${meta.studio_name || 'Studio Gallery'}`,
-    description: `תיק עבודות מאת ${meta.studio_name || 'Studio Gallery'}`,
+    title,
+    description,
+    alternates: {
+      canonical: buildCanonicalUrl(canonicalPath),
+    },
+    openGraph: buildPublicOpenGraph({
+      title,
+      description,
+      canonicalPath,
+      imageUrl: shareImage,
+    }),
   }
 }

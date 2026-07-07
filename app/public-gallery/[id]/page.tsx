@@ -8,6 +8,11 @@ import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import {
+  buildCanonicalUrl,
+  buildPublicOpenGraph,
+  resolveGalleryShareImage,
+} from '@/lib/seo/public-metadata'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -164,12 +169,12 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 
   const { data } = await supabase
     .from('galleries')
-    .select('title, user_id')
+    .select('title, user_id, cover_image')
     .eq('id', id)
     .eq('is_public', true)
     .single()
 
-  const gallery = data as { title: string; user_id: string } | null
+  const gallery = data as { title: string; user_id: string; cover_image: string | null } | null
   if (!gallery) {
     return { title: 'גלריה לא נמצאה' }
   }
@@ -182,9 +187,22 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
     .single()
 
   const studioName = (user as { studio_name: string | null } | null)?.studio_name || 'Studio Gallery'
+  const title = `${gallery.title} | ${studioName}`
+  const description = `גלריה ציבורית מאת ${studioName}`
+  const canonicalPath = `/public-gallery/${id}`
+  const shareImage = await resolveGalleryShareImage(id, gallery.cover_image)
 
   return {
-    title: `${gallery.title} | ${studioName}`,
-    description: `גלריה ציבורית מאת ${studioName}`,
+    title,
+    description,
+    alternates: {
+      canonical: buildCanonicalUrl(canonicalPath),
+    },
+    openGraph: buildPublicOpenGraph({
+      title,
+      description,
+      canonicalPath,
+      imageUrl: shareImage,
+    }),
   }
 }
