@@ -470,6 +470,7 @@ export type Database = {
           email: string
           message: string
           studio: string | null
+          image_url: string | null
           created_at: string
         }
         Insert: {
@@ -479,6 +480,7 @@ export type Database = {
           email: string
           message: string
           studio?: string | null
+          image_url?: string | null
           created_at?: string
         }
         Update: {
@@ -488,6 +490,7 @@ export type Database = {
           email?: string
           message?: string
           studio?: string | null
+          image_url?: string | null
           created_at?: string
         }
         Relationships: []

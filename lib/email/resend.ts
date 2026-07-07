@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 
 import { randomBytes } from 'node:crypto'
 import { getFeedbackEmail } from '@/lib/feedback-email'
+import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
 
 function getResend() {
   const key = process.env.RESEND_API_KEY
@@ -273,12 +274,26 @@ export async function sendFeedbackEmail(input: {
   email: string
   message: string
   studio?: string
+  imageUrl?: string | null
 }) {
   const resend = getResend()
   if (!resend) {
     console.info('[email stub] feedback', input)
     return
   }
+
+  const imageHref = input.imageUrl
+    ? getTestimonialImagePreviewUrl(input.imageUrl)
+      ? appUrl(getTestimonialImagePreviewUrl(input.imageUrl)!)
+      : null
+    : null
+  const imageBlock = imageHref
+    ? `
+        <p><strong>תמונה מצורפת:</strong></p>
+        <p><a href="${imageHref}">פתיחת התמונה</a></p>
+        <p><img src="${imageHref}" alt="תמונה מצורפת" style="max-width: 100%; max-height: 480px; border-radius: 8px; border: 1px solid #ddd;" /></p>
+      `
+    : ''
 
   await resend.emails.send({
     from: emailFrom(),
@@ -289,6 +304,7 @@ export async function sendFeedbackEmail(input: {
         <p><strong>${input.name}</strong> (${input.email})</p>
         ${input.studio ? `<p>סטודיו: ${input.studio}</p>` : ''}
         <p>${input.message}</p>
+        ${imageBlock}
       </div>
     `,
   })

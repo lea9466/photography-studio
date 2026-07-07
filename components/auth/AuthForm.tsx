@@ -13,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton'
 
 type AuthFormProps = {
   mode: 'login' | 'register'
@@ -39,6 +40,16 @@ export function AuthForm({ mode, action, next }: AuthFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <GoogleLoginButton next={next} />
+
+        <div className="my-6 flex items-center gap-3">
+          <span className="h-px flex-1 bg-[--border]" aria-hidden="true" />
+          <span className="text-xs uppercase tracking-wide text-[--muted]">
+            או
+          </span>
+          <span className="h-px flex-1 bg-[--border]" aria-hidden="true" />
+        </div>
+
         <form action={formAction} className="flex flex-col gap-4">
           {next ? <input type="hidden" name="next" value={next} /> : null}
 

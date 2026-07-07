@@ -5,7 +5,44 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { recordSlugRedirect } from '@/lib/referral/slug-redirect'
 import { sendFeedbackEmail } from '@/lib/email/resend'
+import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
+import { isR2Configured } from '@/lib/r2/config'
+import { createPresignedUploadUrl } from '@/lib/r2/storage'
+import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 import type { FeedbackType } from '@/lib/types/database.types'
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+export async function prepareFeedbackImageUpload(input: {
+  fileName: string
+  contentType: string
+  fileSize: number
+}) {
+  if (!isR2Configured()) {
+    throw new Error('אחסון תמונות לא מוגדר')
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) {
+    throw new Error('סוג הקובץ לא נתמך — JPG, PNG או WebP')
+  }
+  validatePrimaryImageFile(input.contentType, input.fileSize)
+
+  const extension = input.fileName.split('.').pop() || 'jpg'
+  const path = `${user.id}/feedback_${Date.now()}.${extension}`
+  const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
+
+  return {
+    uploadUrl,
+    storageRef: formatTestimonialImageRef('branding', path),
+  }
+}
 
 export async function submitFeedback(input: {
   type: FeedbackType
@@ -13,8 +50,10 @@ export async function submitFeedback(input: {
   email: string
   message: string
   studio?: string
+  imageUrl?: string | null
 }) {
   const admin = createAdminClient()
+  const imageUrl = input.imageUrl?.trim() || null
 
   const { error } = await admin.from('feedback').insert({
     type: input.type,
@@ -22,11 +61,12 @@ export async function submitFeedback(input: {
     email: input.email.trim(),
     message: input.message.trim(),
     studio: input.studio?.trim() || null,
+    image_url: imageUrl,
   } as never)
 
   if (error) throw new Error(error.message)
 
-  await sendFeedbackEmail(input)
+  await sendFeedbackEmail({ ...input, imageUrl })
   revalidatePath('/')
   revalidatePath('/dashboard/contact')
   return { success: true }

@@ -2,7 +2,13 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { submitFeedback } from '@/lib/actions/feedback.actions'
+import {
+  prepareFeedbackImageUpload,
+  submitFeedback,
+} from '@/lib/actions/feedback.actions'
+import { compressBrandingFile } from '@/lib/branding-upload-client'
+import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
+import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import type { FeedbackType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bug, Lightbulb, MessageSquare, Mail } from 'lucide-react'
+import { Bug, ImageIcon, Lightbulb, MessageSquare, Mail, Upload, X } from 'lucide-react'
 
 const TYPES: { value: FeedbackType; label: string; description: string }[] = [
   { value: 'תקלה', label: 'דיווח על באג', description: 'משהו לא עובד כמו שצריך' },
@@ -38,8 +44,35 @@ export function DashboardContactForm({
   const [isPending, startTransition] = useTransition()
   const [sent, setSent] = useState(false)
   const [type, setType] = useState<FeedbackType>('משוב')
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   const selectedType = TYPES.find((item) => item.value === type)
+  const imagePreviewSrc = imageUrl ? getTestimonialImagePreviewUrl(imageUrl) : null
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const uploadFile = await compressBrandingFile(file)
+      const { uploadUrl, storageRef } = await prepareFeedbackImageUpload({
+        fileName: uploadFile.name,
+        contentType: uploadFile.type,
+        fileSize: uploadFile.size,
+      })
+
+      await putToPresignedUrl(uploadUrl, uploadFile)
+      setImageUrl(storageRef)
+      toast.success('התמונה הועלתה')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
+    } finally {
+      setUploadingImage(false)
+      e.target.value = ''
+    }
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -53,8 +86,10 @@ export function DashboardContactForm({
           email: String(form.get('email')),
           message: String(form.get('message')),
           studio: String(form.get('studio') || ''),
+          imageUrl,
         })
         setSent(true)
+        setImageUrl(null)
         toast.success('ההודעה נשלחה בהצלחה')
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה בשליחה')
@@ -169,10 +204,63 @@ export function DashboardContactForm({
           />
         </div>
 
+        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-[#fdf8f4] px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <Label>תמונה מצורפת (אופציונלי)</Label>
+              <p className="mt-1 text-xs text-[--muted]">
+                שימושי לצילום מסך של באג או להמחשת הבקשה
+              </p>
+            </div>
+            {imageUrl ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setImageUrl(null)}
+                disabled={uploadingImage || isPending}
+              >
+                <X className="h-4 w-4" />
+                הסר
+              </Button>
+            ) : null}
+          </div>
+
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-[#c9c5cd] bg-white">
+              {imagePreviewSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={imagePreviewSrc}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-[--muted]">
+                  <ImageIcon className="h-6 w-6" />
+                </div>
+              )}
+            </div>
+            <Button type="button" variant="outline" size="sm" asChild disabled={uploadingImage || isPending}>
+              <label className="cursor-pointer">
+                <Upload className="h-4 w-4" />
+                {uploadingImage ? 'מעלה...' : imageUrl ? 'החלפת תמונה' : 'העלאת תמונה'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="sr-only"
+                  onChange={handleImageUpload}
+                  disabled={uploadingImage || isPending}
+                />
+              </label>
+            </Button>
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || uploadingImage}
             className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] px-8"
           >
             {isPending ? 'שולח...' : 'שליחת הודעה'}

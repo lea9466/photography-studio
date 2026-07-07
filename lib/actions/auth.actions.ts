@@ -40,36 +40,88 @@ function mapSignUpError(message: string): string {
   return message
 }
 
-async function ensureUserProfile(
+function readOAuthDisplayName(user: User, metaName?: string) {
+  if (metaName?.trim()) return metaName.trim()
+
+  const metadata = user.user_metadata ?? {}
+  if (typeof metadata.name === 'string' && metadata.name.trim()) {
+    return metadata.name.trim()
+  }
+  if (typeof metadata.full_name === 'string' && metadata.full_name.trim()) {
+    return metadata.full_name.trim()
+  }
+
+  return user.email?.split('@')[0] ?? 'User'
+}
+
+function readOAuthAvatarUrl(user: User) {
+  const metadata = user.user_metadata ?? {}
+  if (typeof metadata.avatar_url === 'string' && metadata.avatar_url.trim()) {
+    return metadata.avatar_url.trim()
+  }
+  if (typeof metadata.picture === 'string' && metadata.picture.trim()) {
+    return metadata.picture.trim()
+  }
+  return null
+}
+
+export async function ensureUserProfile(
   user: User,
-  meta?: { name?: string; studio_name?: string | null }
+  meta?: { name?: string; studio_name?: string | null; logo_url?: string | null }
 ) {
   const supabase = await createClient()
-  const { data: existing } = await supabase
+  const { data: existingProfile } = await supabase
     .from('users')
-    .select('id')
+    .select('id, email, name, logo_url')
     .eq('id', user.id)
     .maybeSingle()
 
-  if (existing) return
+  const existing = existingProfile as {
+    id: string
+    email: string | null
+    name: string | null
+    logo_url: string | null
+  } | null
 
-  const name =
-    meta?.name ??
-    (typeof user.user_metadata?.name === 'string'
-      ? user.user_metadata.name
-      : user.email?.split('@')[0] ?? 'User')
-
+  const name = readOAuthDisplayName(user, meta?.name)
   const studioName =
     meta?.studio_name ??
     (typeof user.user_metadata?.studio_name === 'string'
       ? user.user_metadata.studio_name
       : null)
+  const logoUrl = meta?.logo_url ?? readOAuthAvatarUrl(user)
+
+  if (existing) {
+    const updates: {
+      email?: string | null
+      name?: string
+      logo_url?: string | null
+    } = {}
+
+    if (user.email && !existing.email) updates.email = user.email
+    if (name && !existing.name) updates.name = name
+    if (logoUrl && !existing.logo_url) updates.logo_url = logoUrl
+
+    if (Object.keys(updates).length === 0) return
+
+    const { error } = await supabase
+      .from('users')
+      .update(updates as never)
+      .eq('id', user.id)
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    return
+  }
 
   const { error } = await supabase.from('users').insert({
     id: user.id,
     email: user.email,
     name,
     studio_name: studioName,
+    logo_url: logoUrl,
     show_welcome_popup: true,
   } as never)
 
