@@ -73,7 +73,7 @@ export function SidebarNav({
 
       <div
         className={cn(
-          'flex-1 mt-4 px-4 transition-all duration-300',
+          'flex-1 mt-4 px-4 transition-all duration-300 min-h-0 overflow-y-auto',
           isCollapsed ? 'opacity-0 w-0 overflow-hidden px-0' : 'opacity-100'
         )}
       >
@@ -82,48 +82,46 @@ export function SidebarNav({
 
       <div
         className={cn(
-          'mt-auto border-t border-[--dashboard-border] transition-all duration-300',
-          isCollapsed ? 'p-2 flex justify-center' : 'p-4'
+          'mt-auto border-t border-[--dashboard-border] transition-all duration-300 space-y-3',
+          isCollapsed ? 'p-2 flex flex-col items-center gap-2' : 'p-4'
         )}
       >
+        {!isCollapsed && portfolioSlug ? (
+          <a
+            href={`/${portfolioSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200"
+          >
+            <ExternalLink className="h-5 w-5" />
+            <span className="text-sm">צפי באתר שלי</span>
+          </a>
+        ) : null}
+
         {isCollapsed ? (
           <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
             {userName?.charAt(0) || 'U'}
           </div>
         ) : (
-          <>
-            {portfolioSlug && (
-              <a
-                href={`/${portfolioSlug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200 mb-3"
-              >
-                <ExternalLink className="h-5 w-5" />
-                <span className="text-sm">צפי באתר שלי</span>
-              </a>
-            )}
-
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
-                {userName?.charAt(0) || 'U'}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-[--dashboard-foreground]">
-                  {userName || 'משתמש'}
-                </p>
-                <p className="text-xs text-[--dashboard-accent] font-medium">מחובר</p>
-              </div>
-              {onSignOut && (
-                <button
-                  onClick={onSignOut}
-                  className="p-2 rounded-lg hover:bg-red-50 text-[--dashboard-muted] hover:text-red-600 transition-colors"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              )}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
+              {userName?.charAt(0) || 'U'}
             </div>
-          </>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-[--dashboard-foreground]">
+                {userName || 'משתמש'}
+              </p>
+              <p className="text-xs text-[--dashboard-accent] font-medium">מחובר</p>
+            </div>
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                className="p-2 rounded-lg hover:bg-red-50 text-[--dashboard-muted] hover:text-red-600 transition-colors"
+              >
+                <LogOut className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         )}
       </div>
     </aside>

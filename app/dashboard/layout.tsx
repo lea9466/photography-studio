@@ -1,35 +1,25 @@
-import { createClient } from '@/lib/supabase/server'
 import { signOut } from '@/lib/actions/auth.actions'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
-import type { User } from '@/lib/types/database.types'
+import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  let profile: any = null
-
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('name, studio_name, slug, logo_url, accent_color, should_color_logo')
-      .eq('id', user.id)
-      .single()
-    profile = data
-  }
+  const profile = await getDashboardProfile()
+  const sitePath = profile
+    ? getPublicSitePath(profile.slug, profile.studio_name)
+    : null
 
   return (
     <DashboardLayoutWrapper
       userName={profile?.name || undefined}
       studioName={profile?.studio_name || undefined}
       logoUrl={profile?.logo_url || undefined}
-      portfolioSlug={profile?.slug || profile?.studio_name || null}
+      portfolioSlug={sitePath ? sitePath.replace(/^\//, '') : null}
+      showReferralPopup={profile?.show_referral_popup ?? false}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       onSignOut={async () => {

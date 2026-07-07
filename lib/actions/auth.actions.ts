@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
 import { MVP_DEFAULT_DASHBOARD_PATH, resolveMvpDashboardPath } from '@/lib/types/app.types'
+import { applyReferralOnSignup } from '@/lib/referral/referral'
 import { randomBytes } from 'node:crypto'
 
 export type AuthActionState = {
@@ -116,7 +117,8 @@ export async function signIn(
 
 export async function signUp(
   _prevState: AuthActionState,
-  formData: FormData
+  formData: FormData,
+  refFromRoute?: string
 ): Promise<AuthActionState> {
   const name = String(formData.get('name') ?? '').trim()
   const studioName = String(formData.get('studio_name') ?? '').trim()
@@ -198,6 +200,15 @@ export async function signUp(
         profileError instanceof Error
           ? profileError.message
           : 'שגיאה ביצירת פרופיל',
+    }
+  }
+
+  const ref = (refFromRoute ?? String(formData.get('ref') ?? '')).trim()
+  if (ref) {
+    try {
+      await applyReferralOnSignup(user.id, ref)
+    } catch (referralError) {
+      console.error('[signUp] referral apply failed', referralError)
     }
   }
 

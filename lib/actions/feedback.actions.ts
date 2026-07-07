@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { recordSlugRedirect } from '@/lib/referral/slug-redirect'
 import { sendFeedbackEmail } from '@/lib/email/resend'
 import type { FeedbackType } from '@/lib/types/database.types'
 
@@ -66,6 +67,21 @@ export async function updateProfile(input: {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) throw new Error('יש להתחבר מחדש')
+
+  if (input.slug !== undefined) {
+    const { data: current } = await supabase
+      .from('users')
+      .select('slug')
+      .eq('id', user.id)
+      .single()
+
+    const oldSlug = (current as { slug: string | null } | null)?.slug?.trim()
+    const newSlug = input.slug.trim()
+
+    if (oldSlug && newSlug && oldSlug !== newSlug) {
+      await recordSlugRedirect(oldSlug, newSlug)
+    }
+  }
 
   const { error } = await supabase
     .from('users')

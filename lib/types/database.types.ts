@@ -58,6 +58,11 @@ export type Database = {
           packages_mobile_url: string | null
           should_color_logo: boolean
           faq_items: Json
+          trial_end_date: string
+          referral_code: string | null
+          referred_by_user_id: string | null
+          has_triggered_referral_bonus: boolean
+          show_referral_popup: boolean
         }
         Insert: {
           id: string
@@ -91,6 +96,11 @@ export type Database = {
           packages_mobile_url?: string | null
           should_color_logo?: boolean
           faq_items?: Json
+          trial_end_date?: string
+          referral_code?: string | null
+          referred_by_user_id?: string | null
+          has_triggered_referral_bonus?: boolean
+          show_referral_popup?: boolean
         }
         Update: {
           id?: string
@@ -124,6 +134,11 @@ export type Database = {
           packages_mobile_url?: string | null
           should_color_logo?: boolean
           faq_items?: Json
+          trial_end_date?: string
+          referral_code?: string | null
+          referred_by_user_id?: string | null
+          has_triggered_referral_bonus?: boolean
+          show_referral_popup?: boolean
         }
         Relationships: []
       }
@@ -468,6 +483,27 @@ export type Database = {
         }
         Relationships: []
       }
+      slug_redirects: {
+        Row: {
+          id: number
+          old_slug: string
+          new_slug: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          old_slug: string
+          new_slug: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          old_slug?: string
+          new_slug?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       photography_packages: {
         Row: {
           id: string
@@ -590,6 +626,7 @@ export type EditedPhoto = Database['public']['Tables']['edited_photos']['Row']
 export type DownloadJob = Database['public']['Tables']['download_jobs']['Row']
 export type GallerySettings = Database['public']['Tables']['gallery_settings']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
+export type SlugRedirect = Database['public']['Tables']['slug_redirects']['Row']
 export type PhotographyPackage =
   Database['public']['Tables']['photography_packages']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']

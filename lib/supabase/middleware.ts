@@ -6,8 +6,28 @@ import {
   isMvpBlockedDashboardRoute,
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
+import {
+  parseStudioSlugPath,
+  resolveSlugRedirect,
+} from '@/lib/referral/slug-redirect'
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const studioSlug = parseStudioSlugPath(pathname)
+
+  if (studioSlug) {
+    try {
+      const newSlug = await resolveSlugRedirect(studioSlug)
+      if (newSlug) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${encodeURIComponent(newSlug)}`
+        return NextResponse.redirect(url, 301)
+      }
+    } catch {
+      // Continue to normal routing if redirect lookup fails
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient<Database, 'public'>(
@@ -35,7 +55,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
   const isAuthRoute =
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||

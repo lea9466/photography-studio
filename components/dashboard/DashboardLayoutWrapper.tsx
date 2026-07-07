@@ -4,12 +4,14 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SidebarNav } from './SidebarNav'
 import { MobileHeader } from './MobileHeader'
+import { ReferralSuccessModal } from './ReferralSuccessModal'
 
 type DashboardLayoutWrapperProps = {
   userName?: string
   studioName?: string
   logoUrl?: string | null
   portfolioSlug?: string | null
+  showReferralPopup?: boolean
   onSignOut?: () => void
   children: React.ReactNode
   accentColor?: string
@@ -21,6 +23,7 @@ export function DashboardLayoutWrapper({
   studioName,
   logoUrl,
   portfolioSlug,
+  showReferralPopup = false,
   onSignOut,
   children,
   accentColor,
@@ -30,6 +33,7 @@ export function DashboardLayoutWrapper({
 
   return (
     <div className="min-h-screen">
+      <ReferralSuccessModal open={showReferralPopup} />
       {/* Desktop Sidebar */}
       <SidebarNav
         userName={userName}
@@ -43,7 +47,6 @@ export function DashboardLayoutWrapper({
         shouldColorLogo={shouldColorLogo}
       />
       
-      {/* Mobile Header */}
       <MobileHeader
         studioName={studioName}
         logoUrl={logoUrl || undefined}

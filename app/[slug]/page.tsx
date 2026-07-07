@@ -1,8 +1,9 @@
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { resolveSlugRedirect } from '@/lib/referral/slug-redirect'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -32,6 +33,10 @@ export default async function PhotographerPage({ params }: PageProps) {
     const photographer = await findPhotographerBySlug(decodedSlug)
 
     if (!photographer) {
+      const redirectSlug = await resolveSlugRedirect(decodedSlug)
+      if (redirectSlug) {
+        permanentRedirect(`/${encodeURIComponent(redirectSlug)}`)
+      }
       notFound()
     }
 

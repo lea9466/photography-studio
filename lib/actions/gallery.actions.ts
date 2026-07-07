@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { processReferralBonusIfEligible } from '@/lib/referral/referral'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import { resolveBrandingPath } from '@/lib/branding-urls'
@@ -387,6 +388,12 @@ export async function createGallery(input: CreateGalleryInput) {
 
   revalidatePath('/dashboard')
   revalidatePath(`/dashboard/galleries/${gallery.id}`)
+
+  try {
+    await processReferralBonusIfEligible(user.id)
+  } catch (referralError) {
+    console.error('[createGallery] referral bonus failed', referralError)
+  }
 
   if (input.sendToClient) {
     await sendGallery(gallery.id)

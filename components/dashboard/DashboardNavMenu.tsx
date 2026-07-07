@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_NAV_ITEMS } from './dashboard-nav-config'
+import { SubscriptionPlanBadge } from './SubscriptionPlanBadge'
 
 type DashboardNavMenuProps = {
   onNavigate?: () => void
@@ -51,7 +52,8 @@ export function DashboardNavMenu({ onNavigate, className }: DashboardNavMenuProp
             )}
           >
             {item.icon}
-            <span className="text-sm">{item.label}</span>
+            <span className="text-sm flex-1">{item.label}</span>
+            {item.badge ? <SubscriptionPlanBadge plan={item.badge} /> : null}
           </Link>
         )
       })}

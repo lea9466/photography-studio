@@ -7,6 +7,7 @@ import {
   MessageSquareQuote,
   CircleHelp,
   Mail,
+  CreditCard,
 } from 'lucide-react'
 
 export type DashboardNavItem = {
@@ -15,6 +16,7 @@ export type DashboardNavItem = {
   icon: React.ReactNode
   isActive: (pathname: string) => boolean
   frozen?: boolean
+  badge?: 'free'
 }
 
 export const PUBLIC_ONLY_MVP = true
@@ -63,6 +65,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'הגדרות אתר',
     icon: <Settings className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+  },
+  {
+    href: '/dashboard/subscription',
+    label: 'מינוי',
+    icon: <CreditCard className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/subscription'),
+    badge: 'free',
   },
   {
     href: '/dashboard/contact',
