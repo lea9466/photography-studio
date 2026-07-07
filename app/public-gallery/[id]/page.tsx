@@ -77,7 +77,13 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     .select('photo_id, final_url')
     .eq('gallery_id', galleryData.id)
 
-  let photosToDisplay: { id: string; preview_url: string | null; watermarked_preview_url?: string | null }[] = []
+  type PublicGalleryPhotoRow = {
+    id: string
+    preview_url?: string | null
+    watermarked_preview_url?: string | null
+  }
+
+  let photosToDisplay: PublicGalleryPhotoRow[] = []
   let bucket: 'previews' | 'edited' | 'watermarked' = 'watermarked'
 
   if (!PUBLIC_ONLY_MVP && editedPhotos && editedPhotos.length > 0) {
@@ -104,20 +110,21 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
       .eq('is_visible_to_client', true)
       .order('sort_order')
 
-    photosToDisplay = (watermarkedPhotos ?? []) as {
-      id: string
-      watermarked_preview_url: string | null
-    }[]
+    photosToDisplay = (watermarkedPhotos ?? []) as PublicGalleryPhotoRow[]
     bucket = 'watermarked'
   }
 
   const previewPaths = photosToDisplay.map((photo) =>
-    PUBLIC_ONLY_MVP ? photo.watermarked_preview_url ?? null : photo.preview_url
+    PUBLIC_ONLY_MVP
+      ? photo.watermarked_preview_url ?? null
+      : photo.preview_url ?? null
   )
   const signedUrls = await signStoragePaths(bucket, previewPaths, galleryData.id)
 
   const photos = photosToDisplay.map((photo) => {
-    const path = PUBLIC_ONLY_MVP ? photo.watermarked_preview_url : photo.preview_url
+    const path = PUBLIC_ONLY_MVP
+      ? photo.watermarked_preview_url ?? null
+      : photo.preview_url ?? null
     return {
       id: photo.id,
       url: path ? signedUrls[path] ?? null : null,

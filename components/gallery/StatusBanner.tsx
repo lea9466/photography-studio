@@ -7,6 +7,7 @@ const MESSAGES: Record<GalleryStatus, string> = {
   delivery_ready: 'התמונות המעובדות מוכנות להורדה!',
   locked: 'הגלריה סגורה',
   draft: '',
+  public: '',
 }
 
 type StatusBannerProps = {
@@ -16,7 +17,7 @@ type StatusBannerProps = {
 }
 
 export function StatusBanner({ status, maxAlbum, maxEdit }: StatusBannerProps) {
-  if (status === 'draft') return null
+  if (status === 'draft' || status === 'public') return null
 
   let message = MESSAGES[status]
   if (status === 'selection') {
