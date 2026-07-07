@@ -41,6 +41,37 @@ export function getDisplayGalleryStatus(status: GalleryStatus): GalleryStatus {
   return PUBLIC_ONLY_MVP ? 'public' : status
 }
 
+/** Max public galleries per photographer account */
+export const MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER = 5
+
+/** Max photos in a single public gallery */
+export const MAX_PUBLIC_GALLERY_PHOTOS = 40
+
+export function getRemainingPublicGalleryPhotoSlots(currentCount: number): number {
+  return Math.max(0, MAX_PUBLIC_GALLERY_PHOTOS - currentCount)
+}
+
+export function buildPublicGalleryPhotoLimitError(
+  currentCount: number,
+  adding: number
+): string {
+  const remaining = getRemainingPublicGalleryPhotoSlots(currentCount)
+  if (remaining === 0) {
+    return `גלריה ציבורית מוגבלת ל-${MAX_PUBLIC_GALLERY_PHOTOS} תמונות`
+  }
+  if (currentCount + adding > MAX_PUBLIC_GALLERY_PHOTOS) {
+    return `ניתן להעלות עוד ${remaining} תמונות בלבד (מקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} בגלריה ציבורית)`
+  }
+  return ''
+}
+
+export function buildPublicGalleryCountLimitError(currentCount: number): string | null {
+  if (currentCount >= MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER) {
+    return `ניתן ליצור עד ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות ציבוריות לצלם/ת`
+  }
+  return null
+}
+
 export function getGalleryStatusLabel(status: GalleryStatus): string {
   return GALLERY_STATUS_LABELS[getDisplayGalleryStatus(status)]
 }

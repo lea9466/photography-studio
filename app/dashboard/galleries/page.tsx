@@ -8,6 +8,9 @@ import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTabl
 import { Button } from '@/components/ui/button'
 import { signPreviewUrls } from '@/lib/actions/photo.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
+import {
+  MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+} from '@/lib/types/app.types'
 
 export default function GalleriesPage() {
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
@@ -96,6 +99,9 @@ export default function GalleriesPage() {
     )
   }
 
+  const publicGalleryCount = recentGalleries.filter((gallery) => gallery.is_public).length
+  const canCreateGallery = publicGalleryCount < MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
+
   return (
     <div className="animate-fade-in space-y-8">
       {/* Header Section */}
@@ -105,18 +111,29 @@ export default function GalleriesPage() {
             כל הגלריות
           </h1>
           <p className="text-sm text-[--muted]">
-            {recentGalleries.length} גלריות סה״כ
+            {recentGalleries.length} גלריות סה״כ · {publicGalleryCount}/{MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות ציבוריות
           </p>
         </div>
-        <Button 
-          asChild 
-          className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg shadow-[#7D3A52]/20 px-6 py-3 text-base font-semibold"
-        >
-          <Link href="/dashboard/galleries/new">
+        {canCreateGallery ? (
+          <Button
+            asChild
+            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg shadow-[#7D3A52]/20 px-6 py-3 text-base font-semibold"
+          >
+            <Link href="/dashboard/galleries/new">
+              <Plus className="h-5 w-5 ml-2" />
+              גלריה חדשה
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            disabled
+            className="bg-[#7D3A52] text-white opacity-50 px-6 py-3 text-base font-semibold cursor-not-allowed"
+            title={`מקסימום ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות ציבוריות`}
+          >
             <Plus className="h-5 w-5 ml-2" />
             גלריה חדשה
-          </Link>
-        </Button>
+          </Button>
+        )}
       </header>
 
       {/* Galleries Table */}

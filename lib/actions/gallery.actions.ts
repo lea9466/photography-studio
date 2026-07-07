@@ -7,7 +7,12 @@ import type { MediaBucket } from '@/lib/r2/types'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
-import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS } from '@/lib/types/app.types'
+import {
+  PUBLIC_ONLY_MVP,
+  MVP_GALLERY_DB_STATUS,
+  buildPublicGalleryCountLimitError,
+  MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+} from '@/lib/types/app.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -299,6 +304,18 @@ export async function createGallery(input: CreateGalleryInput) {
     throw new Error('שם הגלריה הוא שדה חובה')
   }
 
+  const willBePublic = PUBLIC_ONLY_MVP ? true : Boolean(input.isPublic)
+  if (willBePublic) {
+    const { count: publicGalleryCount } = await supabase
+      .from('galleries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_public', true)
+
+    const limitError = buildPublicGalleryCountLimitError(publicGalleryCount ?? 0)
+    if (limitError) throw new Error(limitError)
+  }
+
   const galleryPayload: Database['public']['Tables']['galleries']['Insert'] = {
     user_id: user.id,
     client_id: input.clientId || null,
@@ -407,6 +424,27 @@ export async function updateGallerySettings(
   if (input.password !== undefined) galleryUpdate.password = input.password
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
   if (input.isPublic !== undefined) {
+    if (input.isPublic) {
+      const { data: existingGallery } = await supabase
+        .from('galleries')
+        .select('is_public')
+        .eq('id', galleryId)
+        .eq('user_id', user.id)
+        .single()
+
+      const wasPublic = (existingGallery as { is_public: boolean } | null)?.is_public ?? false
+      if (!wasPublic) {
+        const { count: publicGalleryCount } = await supabase
+          .from('galleries')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('is_public', true)
+
+        const limitError = buildPublicGalleryCountLimitError(publicGalleryCount ?? 0)
+        if (limitError) throw new Error(limitError)
+      }
+    }
+
     galleryUpdate.is_public = input.isPublic
     if (input.isPublic) {
       galleryUpdate.status = PUBLIC_ONLY_MVP ? MVP_GALLERY_DB_STATUS : 'public'
@@ -451,6 +489,29 @@ export async function updateGallerySettings(
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}/settings`)
   revalidatePath('/dashboard')
+}
+
+export async function getPublicGalleryQuota() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const { count } = await supabase
+    .from('galleries')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_public', true)
+
+  const galleryCount = count ?? 0
+
+  return {
+    galleryCount,
+    maxGalleries: MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+    canCreateGallery: galleryCount < MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+  }
 }
 
 export async function ensurePortfolioSlug(

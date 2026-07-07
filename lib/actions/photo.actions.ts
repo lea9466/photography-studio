@@ -6,6 +6,10 @@ import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
+import {
+  PUBLIC_ONLY_MVP,
+  buildPublicGalleryPhotoLimitError,
+} from '@/lib/types/app.types'
 
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
@@ -22,23 +26,33 @@ async function assertGalleryOwner(galleryId: string) {
 
   const { data: gallery } = await supabase
     .from('galleries')
-    .select('id')
+    .select('id, is_public')
     .eq('id', galleryId)
     .eq('user_id', user.id)
     .single()
 
   if (!gallery) throw new Error('גלריה לא נמצאה')
 
-  return { supabase, user }
+  return { supabase, user, gallery: gallery as { id: string; is_public: boolean } }
 }
 
 export async function reservePhotosBatch(galleryId: string, count: number, isProcessed = false) {
   console.log('👉 1. reservePhotosBatch START', { galleryId, count, isProcessed })
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, gallery } = await assertGalleryOwner(galleryId)
   console.log('👉 2. assertGalleryOwner done')
   if (count <= 0) {
     console.log('👉 3. count <= 0, returning early')
     return []
+  }
+
+  if (gallery.is_public || PUBLIC_ONLY_MVP) {
+    const { count: currentCount } = await supabase
+      .from('photos')
+      .select('id', { count: 'exact', head: true })
+      .eq('gallery_id', galleryId)
+
+    const limitError = buildPublicGalleryPhotoLimitError(currentCount ?? 0, count)
+    if (limitError) throw new Error(limitError)
   }
 
   console.log('👉 4. About to query last photo')

@@ -27,7 +27,7 @@ import {
 } from '@/lib/gallery-upload-client'
 import { deletePhotosBulk, setPhotosVisibilityBulk, setPhotosProcessedBulk } from '@/lib/actions/photo.actions'
 import { updateGalleryStatus } from '@/lib/actions/gallery.actions'
-import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS } from '@/lib/types/app.types'
+import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS, MAX_PUBLIC_GALLERY_PHOTOS, getRemainingPublicGalleryPhotoSlots, buildPublicGalleryPhotoLimitError } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
@@ -150,6 +150,12 @@ export function GalleryPhotosSection({
         return
       }
 
+      const limitError = buildPublicGalleryPhotoLimitError(photos.length, selected.length)
+      if (limitError) {
+        toast.error(limitError)
+        return
+      }
+
       try {
         setIsUploading(true)
         setUploadProgress({
@@ -193,7 +199,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, photos.length]
   )
 
   const regularPhotos = useMemo(
@@ -347,6 +353,8 @@ export function GalleryPhotosSection({
   const displayPhotos = showAllPhotos ? currentPhotos : currentPhotos.slice(0, initialPhotoLimit)
   const hasMorePhotos = currentPhotos.length > initialPhotoLimit
   const shouldShowToggleButton = currentPhotos.length > 0
+  const remainingPhotoSlots = getRemainingPublicGalleryPhotoSlots(photos.length)
+  const atPhotoLimit = remainingPhotoSlots === 0
 
   return (
     <div className="min-h-screen bg-[#fdf8fa]">
@@ -394,11 +402,19 @@ export function GalleryPhotosSection({
         <div className="space-y-8">
           {/* Drag & Drop Zone */}
           <div
-            className="border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-16 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[#f7f2f4] transition-all duration-300 group"
-            onClick={() => fileInputRef.current?.click()}
+            className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
+              atPhotoLimit || isUploading
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer hover:bg-[#f7f2f4]'
+            }`}
+            onClick={() => {
+              if (atPhotoLimit || isUploading) return
+              fileInputRef.current?.click()
+            }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault()
+              if (atPhotoLimit || isUploading) return
               uploadFiles(e.dataTransfer.files)
             }}
           >
@@ -412,14 +428,19 @@ export function GalleryPhotosSection({
             <h3 className="text-base font-semibold text-[#100d1f] mb-2">
               {isUploading ? 'מעלה תמונות...' : 'גררו תמונות לכאן או לחצו לבחירה'}
             </h3>
-            <p className="text-[#48464c] text-base max-w-sm">תמיכה בפורמטים JPG, PNG ו-RAW. ניתן להעלות עד 100 קבצים בו זמנית (מקסימום 50MB לקובץ).</p>
+            <p className="text-[#48464c] text-base max-w-sm">
+              {atPhotoLimit
+                ? `הגעת למקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בגלריה ציבורית`
+                : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} בגלריה).`}
+            </p>
             <button
               className="mt-6 px-8 py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={(e) => {
                 e.stopPropagation()
+                if (atPhotoLimit || isUploading) return
                 fileInputRef.current?.click()
               }}
-              disabled={isUploading}
+              disabled={isUploading || atPhotoLimit}
             >
               {isUploading ? 'מעלה...' : 'בחירת קבצים מהמחשב'}
             </button>
@@ -429,7 +450,7 @@ export function GalleryPhotosSection({
               accept="image/*"
               multiple
               className="hidden"
-              disabled={isUploading}
+              disabled={isUploading || atPhotoLimit}
               onChange={(e) => {
                 if (e.target.files?.length) uploadFiles(e.target.files)
                 e.target.value = ''
