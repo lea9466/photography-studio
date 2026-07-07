@@ -154,10 +154,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
-  const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
+  const [uploadingTargets, setUploadingTargets] = useState<ReadonlySet<string>>(() => new Set())
   const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({})
   const [previewVersions, setPreviewVersions] = useState<Record<string, number>>({})
-  const isUploading = uploadingTarget !== null
+
+  function setTargetUploading(targetKey: string, uploading: boolean) {
+    setUploadingTargets((prev) => {
+      const next = new Set(prev)
+      if (uploading) next.add(targetKey)
+      else next.delete(targetKey)
+      return next
+    })
+  }
   const previewPath = slug.trim()
     ? `/${slug.trim()}`
     : studioName.trim()
@@ -179,7 +187,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     const targetKey = uploadTargetKey(type, slot)
     const blobUrl = URL.createObjectURL(file)
     setLocalPreviews((prev) => ({ ...prev, [targetKey]: blobUrl }))
-    setUploadingTarget(targetKey)
+    setTargetUploading(targetKey, true)
     try {
       const uploadFile = await compressBrandingFile(file)
       const { uploadUrl, path } = await prepareBrandingUpload({
@@ -227,14 +235,14 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         delete next[targetKey]
         return next
       })
-      setUploadingTarget(null)
+      setTargetUploading(targetKey, false)
       e.target.value = ''
     }
   }
 
   async function handleRemoveHeroSlot(variant: 'desktop' | 'mobile', slot: number) {
     const targetKey = uploadTargetKey(variant === 'desktop' ? 'hero_desktop' : 'hero_mobile', slot)
-    setUploadingTarget(targetKey)
+    setTargetUploading(targetKey, true)
     try {
       await removeHeroImageSlot({ variant, slot })
       if (variant === 'desktop') {
@@ -254,13 +262,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
     } finally {
-      setUploadingTarget(null)
+      setTargetUploading(targetKey, false)
     }
   }
 
   async function handleRemoveBrandingImage(type: SingleBrandingImageType) {
     const targetKey = uploadTargetKey(type)
-    setUploadingTarget(targetKey)
+    setTargetUploading(targetKey, true)
     try {
       await removeBrandingImage(type)
       if (type === 'logo') setLogoUrl('')
@@ -273,7 +281,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
     } finally {
-      setUploadingTarget(null)
+      setTargetUploading(targetKey, false)
     }
   }
 
@@ -437,7 +445,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="למשל: תל אביב, רothschild 12"
               className="bg-white dark:bg-zinc-900 border-[--border]"
             />
           </div>
@@ -484,12 +491,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
                     </div>
-                    <UploadSpinnerOverlay show={uploadingTarget === targetKey} />
+                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
                     {previewSrc && url ? (
                       <button
                         type="button"
                         onClick={() => handleRemoveHeroSlot('desktop', slot)}
-                        disabled={isUploading}
+                        disabled={uploadingTargets.has(targetKey)}
                         className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                         aria-label="הסר תמונה"
                       >
@@ -500,7 +507,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={(e) => handleFileUpload(e, 'hero_desktop', slot)}
-                      disabled={isUploading}
+                      disabled={uploadingTargets.has(targetKey)}
                       className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                     />
                   </div>
@@ -539,12 +546,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                       <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
                     </div>
-                    <UploadSpinnerOverlay show={uploadingTarget === targetKey} />
+                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
                     {previewSrc && url ? (
                       <button
                         type="button"
                         onClick={() => handleRemoveHeroSlot('mobile', slot)}
-                        disabled={isUploading}
+                        disabled={uploadingTargets.has(targetKey)}
                         className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                         aria-label="הסר תמונה"
                       >
@@ -555,7 +562,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
                       onChange={(e) => handleFileUpload(e, 'hero_mobile', slot)}
-                      disabled={isUploading}
+                      disabled={uploadingTargets.has(targetKey)}
                       className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                     />
                   </div>
@@ -590,12 +597,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <span className="text-white text-sm font-medium">החלף תמונה</span>
               </div>
-              <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('about')} />
+              <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('about'))} />
               {aboutImageUrl ? (
                 <button
                   type="button"
                   onClick={() => handleRemoveBrandingImage('about')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('about'))}
                   className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                   aria-label="הסר תמונה"
                 >
@@ -607,7 +614,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(e) => handleFileUpload(e, 'about')}
-                disabled={isUploading}
+                disabled={uploadingTargets.has(uploadTargetKey('about'))}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
@@ -650,12 +657,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
-                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_desktop')} />
+                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('contact_desktop'))} />
                 {contactDesktopUrl ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveBrandingImage('contact_desktop')}
-                    disabled={isUploading}
+                    disabled={uploadingTargets.has(uploadTargetKey('contact_desktop'))}
                     className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                     aria-label="הסר תמונה"
                   >
@@ -667,7 +674,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleFileUpload(e, 'contact_desktop')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('contact_desktop'))}
                   className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                 />
               </div>
@@ -696,12 +703,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
-                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_mobile')} />
+                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('contact_mobile'))} />
                 {contactMobileUrl ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveBrandingImage('contact_mobile')}
-                    disabled={isUploading}
+                    disabled={uploadingTargets.has(uploadTargetKey('contact_mobile'))}
                     className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                     aria-label="הסר תמונה"
                   >
@@ -713,7 +720,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleFileUpload(e, 'contact_mobile')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('contact_mobile'))}
                   className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                 />
               </div>
@@ -757,12 +764,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
-                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_desktop')} />
+                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_desktop'))} />
                 {packagesDesktopUrl ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveBrandingImage('packages_desktop')}
-                    disabled={isUploading}
+                    disabled={uploadingTargets.has(uploadTargetKey('packages_desktop'))}
                     className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                     aria-label="הסר תמונה"
                   >
@@ -774,7 +781,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleFileUpload(e, 'packages_desktop')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('packages_desktop'))}
                   className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                 />
               </div>
@@ -803,12 +810,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
-                <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_mobile')} />
+                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_mobile'))} />
                 {packagesMobileUrl ? (
                   <button
                     type="button"
                     onClick={() => handleRemoveBrandingImage('packages_mobile')}
-                    disabled={isUploading}
+                    disabled={uploadingTargets.has(uploadTargetKey('packages_mobile'))}
                     className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                     aria-label="הסר תמונה"
                   >
@@ -820,7 +827,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => handleFileUpload(e, 'packages_mobile')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('packages_mobile'))}
                   className="absolute inset-0 z-10 opacity-0 cursor-pointer"
                 />
               </div>
@@ -993,12 +1000,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   </>
                 )}
               </div>
-              <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('logo')} />
+              <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('logo'))} />
               {logoUrl ? (
                 <button
                   type="button"
                   onClick={() => handleRemoveBrandingImage('logo')}
-                  disabled={isUploading}
+                  disabled={uploadingTargets.has(uploadTargetKey('logo'))}
                   className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
                   aria-label="הסר לוגו"
                 >
@@ -1010,7 +1017,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/svg+xml"
                 onChange={(e) => handleFileUpload(e, 'logo')}
-                disabled={isUploading}
+                disabled={uploadingTargets.has(uploadTargetKey('logo'))}
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>

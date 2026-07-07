@@ -1,3 +1,5 @@
+import { homepageSectionHref, homepageScrollToTopAction } from '@/lib/photographer-site-paths'
+
 export type SiteChromeTheme = 'elegant' | 'modern' | 'classic' | 'dark'
 
 export type SiteChromeLinkMode = 'scroll' | 'href'
@@ -72,7 +74,11 @@ function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
 
 function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'home') return cfg.homepagePath
-  return `${cfg.homepagePath}#${navSectionId(cfg, target)}`
+  const sectionId = navSectionId(cfg, target)
+  if (cfg.linkMode === 'href') {
+    return homepageSectionHref(cfg.homepagePath, sectionId)
+  }
+  return `${cfg.homepagePath}#${sectionId}`
 }
 
 function parentNavTarget(cfg: SiteChromeConfig) {
@@ -85,7 +91,7 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
     return `href="${navHref(cfg, target)}"`
   }
   if (target === 'home') {
-    return `onclick="window.scrollTo({top: 0, behavior: 'smooth'})${close}"`
+    return homepageScrollToTopAction(closeMenu)
   }
   return `onclick="document.querySelector('#${navSectionId(cfg, target)}').scrollIntoView({behavior: 'smooth'})${close}"`
 }
@@ -159,16 +165,18 @@ export function generateSiteNav(cfg: SiteChromeConfig): string {
   switch (cfg.theme) {
     case 'elegant':
       return `
-<nav class="fixed top-0 w-full z-50 bg-transparent transition-all duration-500 px-lg py-md flex flex-row-reverse justify-between items-center left-0 right-0">
-${brandLink(cfg, logoBlock(cfg, { textClass: 'font-display text-xl uppercase tracking-[0.2em] font-medium text-on-surface' }))}
-<button onclick="toggleMobileMenuElegant()" class="md:hidden p-2 text-on-surface hover:text-accent transition-colors">
+<nav class="elegant-nav fixed top-0 w-full z-50 bg-transparent transition-all duration-500 left-0 right-0" id="main-nav">
+<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+${brandLink(cfg, logoBlock(cfg, { imgClass: 'site-nav-logo h-10 w-auto object-contain', textClass: 'font-display text-xl uppercase tracking-[0.2em] font-medium text-on-surface' }))}
+<button onclick="toggleMobileMenuElegant()" class="site-nav-menu-btn md:hidden p-2 text-on-surface hover:text-accent transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-elegant">menu</span>
 </button>
 <div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'text-on-surface-variant hover:text-accent transition-colors text-sm uppercase tracking-widest')}
 </div>
+</div>
 </nav>
-<div id="mobile-menu-elegant" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#0F0F0D]/10">
+<div id="mobile-menu-elegant" class="site-nav-mobile-menu hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-[#0F0F0D]/10">
 <div class="flex flex-col gap-md px-lg py-md">
 ${navItems(cfg, 'text-on-surface hover:text-accent transition-colors text-lg uppercase tracking-widest py-2', 'toggleMobileMenuElegant()')}
 </div>
@@ -185,16 +193,16 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'modern':
       return `
 <nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('modern', cfg.linkMode)}" id="main-nav">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
-<button onclick="toggleMobileMenu()" class="modern-nav-menu-btn md:hidden p-2 transition-colors">
+<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
+<button onclick="toggleMobileMenu()" class="modern-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon">menu</span>
 </button>
 <div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'modern-nav-link text-sm font-medium transition-colors')}
 </div>
 </div>
-<div id="mobile-menu" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-[#F8FAFC]/95 backdrop-blur-md border-b border-outline-variant/20">
+<div id="mobile-menu" class="site-nav-mobile-menu hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-[#F8FAFC]/95 backdrop-blur-md border-b border-outline-variant/20">
 <div class="flex flex-col gap-md px-lg py-md">
 ${navItems(cfg, 'text-on-surface hover:text-primary transition-colors text-lg font-medium py-2', 'toggleMobileMenu()')}
 </div>
@@ -212,16 +220,16 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'classic':
       return `
 <nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('classic', cfg.linkMode)}" id="main-nav">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo h-10 w-auto object-contain', textClass: 'classic-nav-brand font-headline-sm text-headline-sm tracking-tight' }))}
-<button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn md:hidden p-2 transition-colors">
+<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'classic-nav-brand font-headline-sm text-headline-sm tracking-tight' }))}
+<button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
 </button>
 <div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'classic-nav-link font-label-sm text-label-sm transition-colors')}
 </div>
 </div>
-<div id="mobile-menu-classic" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant/10">
+<div id="mobile-menu-classic" class="site-nav-mobile-menu hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-surface/95 backdrop-blur-sm border-b border-outline-variant/10">
 <div class="flex flex-col gap-md px-lg py-md">
 ${navItems(cfg, 'text-on-surface hover:text-primary transition-colors text-lg font-label-sm py-2', 'toggleMobileMenuClassic()')}
 </div>
@@ -239,16 +247,16 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'dark':
       return `
 <nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('dark', cfg.linkMode)}" id="main-nav">
-<div class="flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
-${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo h-10 w-auto object-contain', textClass: 'bold-nav-brand font-headline-sm text-headline-sm tracking-tighter' }))}
-<button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn md:hidden p-2 transition-colors">
+<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'bold-nav-brand font-headline-sm text-headline-sm tracking-tighter' }))}
+<button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
 </button>
 <div class="hidden md:flex flex-row gap-xl items-center">
 ${navItems(cfg, 'bold-nav-link font-label-sm text-label-sm btn-fuchsia-transition')}
 </div>
 </div>
-<div id="mobile-menu-dark" class="hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-white/10">
+<div id="mobile-menu-dark" class="site-nav-mobile-menu hidden md:hidden fixed top-16 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-b border-white/10">
 <div class="flex flex-col gap-md px-lg py-md">
 ${navItems(cfg, 'text-on-surface hover:text-primary transition-colors text-lg font-label-sm btn-fuchsia-transition py-2', 'toggleMobileMenuDark()')}
 </div>
@@ -274,7 +282,7 @@ export function generateSiteFooter(cfg: SiteChromeConfig): string {
 <footer class="bg-background py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant/20 pb-32">
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${cfg.studioName}</div>`}
-<div class="flex flex-row-reverse gap-8 text-xs uppercase tracking-widest opacity-40">
+<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest opacity-40">
 <a class="hover:text-accent transition-colors" href="#">תקנון</a>
 <a class="hover:text-accent transition-colors" href="#">פרטיות</a>
 <a class="hover:text-accent transition-colors" href="#">נגישות</a>
@@ -295,7 +303,7 @@ ${generateStudioSignupFooterCta('elegant')}
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${cfg.studioName}</span>`}
 <p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
 </div>
-<div class="flex flex-col sm:flex-row-reverse gap-lg items-center">
+<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md sm:gap-lg items-center">
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">תקנון</a>
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">פרטיות</a>
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">נגישות</a>
@@ -324,7 +332,7 @@ ${generateStudioSignupFooterCta('modern')}
 <div class="font-headline-md text-headline-md text-primary tracking-tight">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${cfg.studioName}`}
             </div>
-<div class="flex flex-row-reverse gap-lg">
+<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-lg">
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">פרטיות</a>
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">נגישות</a>
@@ -345,7 +353,7 @@ ${generateStudioSignupFooterCta('classic')}
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(cfg.studioName)}`}
 </div>
-<div class="flex flex-row-reverse gap-md lg:gap-xl">
+<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md lg:gap-xl">
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">פרטיות</a>
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">נגישות</a>
@@ -425,6 +433,48 @@ window.addEventListener('scroll', () => {
   }
 }
 
+export function generateSiteNavMobileStyles(): string {
+  return `
+        @media (max-width: 767px) {
+            .modern-nav,
+            .classic-nav,
+            .bold-nav,
+            .elegant-nav {
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+            }
+            .site-nav-inner {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            .site-nav-logo {
+                height: 2.5rem;
+                width: auto;
+            }
+            .site-nav-menu-btn {
+                padding: 0.5rem;
+            }
+            .site-nav-menu-btn .material-symbols-outlined {
+                font-size: 1.875rem;
+                line-height: 1;
+            }
+            .site-nav-mobile-menu {
+                top: 4rem;
+            }
+            .site-footer-legal-links {
+                display: flex !important;
+                flex-direction: row-reverse !important;
+                flex-wrap: nowrap !important;
+                justify-content: center;
+                align-items: center;
+                gap: 0.625rem;
+            }
+            .site-footer-legal-links a {
+                white-space: nowrap;
+            }
+        }`
+}
+
 export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: string): string {
   if (theme === 'classic') {
     return `
@@ -460,7 +510,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
         }
         .classic-nav.nav-scrolled .classic-nav-logo {
             filter: none;
-        }`
+        }${generateSiteNavMobileStyles()}`
   }
 
   if (theme === 'modern') {
@@ -502,7 +552,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
         }
         .modern-nav.nav-scrolled .modern-nav-logo {
             filter: none;
-        }`
+        }${generateSiteNavMobileStyles()}`
   }
 
   if (theme === 'dark') {
@@ -542,10 +592,10 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
         }
         .bold-nav .bold-nav-brand .text-primary {
             color: ${primaryColor};
-        }`
+        }${generateSiteNavMobileStyles()}`
   }
 
-  return ''
+  return generateSiteNavMobileStyles()
 }
 
 export function createSiteChromeConfig(options: {

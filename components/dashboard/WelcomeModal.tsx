@@ -27,9 +27,9 @@ const STEPS = [
   },
   {
     icon: Palette,
-    title: 'ערכת נושא',
+    title: 'מיתוג ועיצוב',
     description:
-      'בחרי סגנון עיצוב, שמרי, ופתחי את האתר בכרטיסייה חדשה כדי לראות איך זה נראה — כך תביני בערך מה כל בחירה עושה.',
+      'בחרי את צבע המותג שלך — הוא משמש לקישורים, הדגשות, כפתורים וקווים מודגשים בכל האתר. בחרי גם ערכת נושא, שמרי שינויים, ורק אז תוכלי לפתוח את האתר ולראות איך זה נראה.',
   },
   {
     icon: Image,
@@ -70,7 +70,7 @@ export function WelcomeModal({ open, previewUrl }: WelcomeModalProps) {
 
   return (
     <Dialog open={visible} onOpenChange={(next) => !next && handleDismiss()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg overflow-x-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Sparkles className="h-5 w-5 text-amber-500" />
@@ -83,13 +83,13 @@ export function WelcomeModal({ open, previewUrl }: WelcomeModalProps) {
 
         <ol className="space-y-4 py-2">
           {STEPS.map(({ icon: Icon, title, description }, index) => (
-            <li key={title} className="flex gap-3">
+            <li key={title} className="flex min-w-0 gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[--border]/40 text-sm font-semibold">
                 {index + 1}
               </div>
-              <div className="space-y-1">
+              <div className="min-w-0 space-y-1">
                 <p className="flex items-center gap-1.5 font-medium text-[--foreground]">
-                  <Icon className="h-4 w-4 text-[--muted]" />
+                  <Icon className="h-4 w-4 shrink-0 text-[--muted]" />
                   {title}
                 </p>
                 <p className="text-sm leading-relaxed text-[--muted]">{description}</p>
@@ -98,20 +98,35 @@ export function WelcomeModal({ open, previewUrl }: WelcomeModalProps) {
           ))}
         </ol>
 
+        <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 px-4 py-3 text-sm leading-relaxed text-[--foreground] dark:border-amber-900/40 dark:bg-amber-950/20">
+          <p className="flex items-start gap-2">
+            <Palette className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            <span>
+              <span className="font-semibold">צבע המותג</span> — בחרי אותו תחת &quot;מיתוג ועיצוב&quot;. הוא
+              קובע את צבע הקישורים, ההדגשות, הכפתורים והקווים המודגשים באתר שלך.
+            </span>
+          </p>
+        </div>
+
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
           <Button onClick={handleDismiss} disabled={pending} className="w-full">
-            יאללה, בואי נתחיל!
+            בואי נתחיל!
           </Button>
           {previewUrl ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleOpenPreview}
-              className="w-full gap-2"
-            >
-              <ExternalLink className="h-4 w-4" />
-              פתיחת האתר בכרטיסייה חדשה
-            </Button>
+            <>
+              <p className="w-full text-center text-sm font-medium text-[--foreground]">
+                כדי לראות את האתר — יש לשמור שינויים קודם, ואז לפתוח אותו.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleOpenPreview}
+                className="w-full gap-2"
+              >
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                פתיחת האתר בכרטיסייה חדשה
+              </Button>
+            </>
           ) : null}
         </DialogFooter>
       </DialogContent>

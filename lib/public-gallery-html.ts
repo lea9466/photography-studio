@@ -3,10 +3,11 @@ import {
   generateSiteFooter,
   generateSiteNav,
   generateSiteNavScrollScript,
+  generateSiteNavMobileStyles,
   generateSiteNavStyles,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
-import type { PhotographerSiteTheme } from '@/lib/photographer-site-paths'
+import { homepageSectionHref, type PhotographerSiteTheme } from '@/lib/photographer-site-paths'
 
 export type PublicGalleryPhoto = {
   id: string
@@ -282,13 +283,32 @@ function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChrom
     .join('')
 }
 
-function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme) {
+function contactButton(theme: SiteChromeTheme, homepagePath: string) {
+  const href = escapeHtml(homepageSectionHref(homepagePath, 'contact'))
+
+  if (theme === 'dark') {
+    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-on-primary px-xl py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+  }
+
+  if (theme === 'classic') {
+    return `<a href="${href}" target="_parent" class="inline-block border border-primary text-primary px-xl py-md font-label-sm hover:bg-primary/5 transition-colors" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+  }
+
+  if (theme === 'modern') {
+    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-white px-xl py-md rounded-lg font-bold hover:brightness-110 transition-all" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+  }
+
+  return `<a href="${href}" target="_parent" class="inline-block border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+}
+
+function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme, homepagePath: string) {
   if (!data.contactCardTitle && !data.contactCardDescription) return ''
   const title = escapeHtml(data.contactCardTitle || 'מוכנים ליצור משהו יוצא דופן?')
   const description = escapeHtml(
     data.contactCardDescription ||
       'אנחנו זמינים לצילום פרויקטים מיוחדים. בואו נתכנן יחד את הסיפור הבא שלכם.'
   )
+  const button = contactButton(theme, homepagePath)
 
   if (theme === 'dark') {
     return `
@@ -296,6 +316,7 @@ function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme) {
   <div class="max-w-[1280px] mx-auto px-[24px] text-center">
     <h2 class="font-headline-md text-headline-md text-on-surface mb-[24px]">${title}</h2>
     <p class="font-body-md text-body-md text-on-surface-variant mb-[48px] max-w-xl mx-auto" style="white-space: pre-line">${description}</p>
+    ${button}
   </div>
 </section>`
   }
@@ -306,6 +327,7 @@ function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme) {
   <div class="max-w-[1280px] mx-auto px-[24px] text-center">
     <h2 class="font-headline-md text-headline-md mb-[24px]">${title}</h2>
     <p class="font-body-md text-body-md text-on-surface-variant mb-[48px] max-w-xl mx-auto" style="white-space: pre-line">${description}</p>
+    ${button}
   </div>
 </section>`
   }
@@ -313,9 +335,10 @@ function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme) {
   if (theme === 'modern') {
     return `
 <section class="max-w-[1280px] mx-auto px-[24px] mb-[80px]">
-  <div class="relative bg-[#2D2825] text-white rounded-xl p-[32px] overflow-hidden shadow-lg">
+  <div class="relative bg-[#2D2825] text-white rounded-xl p-[32px] overflow-hidden shadow-lg text-center">
     <h2 class="font-headline text-[32px] font-bold mb-[12px]">${title}</h2>
     <p class="text-[14px] text-[#e5e2df] mb-[32px] opacity-80" style="white-space: pre-line">${description}</p>
+    ${button}
   </div>
 </section>`
   }
@@ -325,11 +348,12 @@ function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme) {
   <div class="max-w-[1280px] mx-auto px-[24px] text-center">
     <h2 class="font-serif-hebrew text-[36px] mb-[24px] font-medium">${title}</h2>
     <p class="font-body text-[16px] text-[#5A504A] mb-[48px] max-w-xl mx-auto" style="white-space: pre-line">${description}</p>
+    ${button}
   </div>
 </section>`
 }
 
-function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme) {
+function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme, homepagePath: string) {
   const title = escapeHtml(data.title)
   const meta = `${data.photoCount} תמונות • ${escapeHtml(data.galleryDate)}`
 
@@ -346,7 +370,7 @@ function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme) {
 <section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
-${ctaSection(data, theme)}
+${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
   }
@@ -364,7 +388,7 @@ ${ctaSection(data, theme)}
 <section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
-${ctaSection(data, theme)}
+${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
   }
@@ -381,7 +405,7 @@ ${ctaSection(data, theme)}
 <section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
-${ctaSection(data, theme)}
+${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
   }
@@ -396,7 +420,7 @@ ${ctaSection(data, theme)}
 <section class="pg-masonry mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
-${ctaSection(data, theme)}
+${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
 }
@@ -563,6 +587,7 @@ body { background: #FAFAF8; color: #0F0F0D; font-family: 'Heebo', sans-serif; }
 .font-serif-hebrew { font-family: 'Frank Ruhl Libre', serif; }
 .font-display { font-family: 'Playfair Display', serif; }
 .font-body { font-family: 'Heebo', sans-serif; }
+${generateSiteNavMobileStyles()}
 </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">`
@@ -595,7 +620,7 @@ export function generatePublicGalleryPageHTML(options: {
 ${themeHead(chromeTheme, options.studioName, primaryColor)}
 ${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
-${galleryBody(options.gallery, chromeTheme)}
+${galleryBody(options.gallery, chromeTheme, options.homepagePath)}
 ${lightboxMarkup}
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>

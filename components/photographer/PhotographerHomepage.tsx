@@ -14,10 +14,15 @@ import {
   createSiteChromeConfig,
   generateSiteFooter,
   generateSiteNav,
+  generateSiteNavMobileStyles,
   generateSiteNavScrollScript,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import { parseFaqItems, sanitizeFaqItems, type FaqItem } from '@/lib/faq'
+import {
+  generateHomepageSectionScrollScript,
+  readHomepageInitialSection,
+} from '@/lib/photographer-site-paths'
 
 interface Photographer {
   id: string
@@ -211,6 +216,42 @@ const UNIFIED_GALLERY_GRID_CSS = `
     transform: translateY(0);
   }
   .homepage-gallery-card:hover .homepage-gallery-card-arrow { transform: translateX(-4px); }
+`
+
+const HOMEPAGE_PACKAGES_GRID_CSS = `
+  .homepage-packages-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    justify-content: center;
+    justify-items: stretch;
+    align-items: stretch;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .homepage-packages-grid > * {
+    width: 100%;
+    min-width: 0;
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .homepage-packages-grid {
+      grid-template-columns: 1fr !important;
+      max-width: 36rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .homepage-packages-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .homepage-packages-grid--count-1 {
+      grid-template-columns: minmax(0, 22rem);
+      justify-content: center;
+    }
+    .homepage-packages-grid--count-2 {
+      grid-template-columns: repeat(2, minmax(0, 22rem));
+      justify-content: center;
+    }
+  }
 `
 
 const RECENT_PHOTOS_GRID_CSS = `
@@ -854,7 +895,15 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
     }
 
     const theme = themeMap[photographer.selected_theme] || 'elegant'
-    const generatedHtml = generateHomepageHTML(photographer, theme, galleries, packages, testimonials)
+    const initialSection = readHomepageInitialSection(window.location.search, window.location.hash)
+    const generatedHtml = generateHomepageHTML(
+      photographer,
+      theme,
+      galleries,
+      packages,
+      testimonials,
+      initialSection
+    )
     setHtml(generatedHtml)
   }, [photographer, galleries, packages, testimonials])
 
@@ -957,7 +1006,14 @@ function contactFormSubmitScript(photographerId: string): string {
   `
 }
 
-function generateHomepageHTML(photographer: Photographer, theme: string, galleries: Gallery[], packages: Package[], testimonials: Testimonial[] = []): string {
+function generateHomepageHTML(
+  photographer: Photographer,
+  theme: string,
+  galleries: Gallery[],
+  packages: Package[],
+  testimonials: Testimonial[] = [],
+  initialSection?: string | null
+): string {
   const {
     id: photographerId,
     name,
@@ -1123,6 +1179,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const photographerName = name || 'אפרת כהן'
   const validFaqItems = sanitizeFaqItems(parseFaqItems(photographer.faq_items))
   const hasFaq = validFaqItems.length > 0
+  const sectionScrollScript = generateHomepageSectionScrollScript(initialSection)
 
   const siteChrome = (themeKey: SiteChromeTheme) =>
     createSiteChromeConfig({
@@ -1147,6 +1204,12 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
   const statsYears = stat_experience_years ?? 0
   const hasStats = statsProjects > 0 || statsClients > 0 || statsYears > 0
   const hasPackages = packages.length > 0
+  const packagesGridClass =
+    packages.length === 1
+      ? 'homepage-packages-grid homepage-packages-grid--count-1'
+      : packages.length === 2
+        ? 'homepage-packages-grid homepage-packages-grid--count-2'
+        : 'homepage-packages-grid'
   const hasTestimonials = testimonials.length > 0
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
@@ -1166,13 +1229,13 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
           ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important; background-color: ${primaryColor};">הנמכרת ביותר</div>` : ''}
           <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="direction: rtl !important; text-align: center !important;">
-            <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : '#0F0F0D'};">${pkg.name}</h3>
+            <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: center !important; color: ${primaryColor};">${pkg.name}</h3>
             <div class="text-lg tracking-widest elegant-accent" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : 'inherit'};">₪${pkg.price_amount}</div>
           </div>
           <div class="border-t pt-8 mb-10 flex-grow" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor}20;` : 'border-color: rgba(15, 15, 13, 0.1);'}">
             <div class="mx-auto w-fit" style="direction: rtl !important;">
               <ul class="space-y-4 font-body text-base ${isFeatured ? 'text-on-surface-variant' : 'opacity-80'}" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-                ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${isFeatured ? primaryColor : 'inherit'};">check</span> <span>${item}</span></li>`).join('')}
+                ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${primaryColor};">check</span> <span>${item}</span></li>`).join('')}
               </ul>
             </div>
           </div>
@@ -1186,7 +1249,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
           <div style="direction: rtl !important; text-align: center !important;">
-            <h3 class="font-headline text-2xl font-bold" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+            <h3 class="font-headline text-2xl font-bold text-primary" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
             <div class="flex items-baseline gap-xs mt-sm justify-center" style="direction: rtl !important; text-align: center !important;">
               <span class="font-headline text-3xl font-bold text-primary" style="direction: rtl !important;">₪${pkg.price_amount}</span>
             </div>
@@ -1206,7 +1269,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         <div class="${isFeatured ? `${packageCardBg('bg-background')} p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl` : `${packageCardBg('bg-background')} p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10`}" style="direction: rtl !important; text-align: center !important;">
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-xs font-label-sm uppercase tracking-widest" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
           <span class="font-label-sm text-primary/60 mb-md tracking-widest uppercase" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'Professional' : 'Essential'}</span>
-          <h3 class="font-headline-sm mb-sm text-on-surface" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+          <h3 class="font-headline-sm mb-sm text-primary" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
           <div class="text-[48px] lg:text-display-lg ${isFeatured ? 'text-primary' : 'text-on-surface'} mb-xl" style="direction: rtl !important; text-align: center !important;">₪${pkg.price_amount}</div>
           <div class="mx-auto w-fit mb-xl" style="direction: rtl !important;">
             <ul class="space-y-md text-on-surface-variant font-body-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
@@ -1222,7 +1285,7 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
         return `
         <div class="${packageCardBg('bg-surface')} ${isFeatured ? 'border-2' : 'border border-outline-variant/30 hover:border-primary/50 transition-colors duration-500'} p-xl flex flex-col items-center rounded-sm relative" style="direction: rtl !important; text-align: center !important;${isFeatured ? ` border-color: ${primaryColor};` : ''}">
           ${isFeatured ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-          <h3 class="font-headline-sm text-headline-sm text-on-surface mb-xs" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+          <h3 class="font-headline-sm text-headline-sm text-primary mb-xs" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
           <p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים'}</p>
           <div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1 justify-center" dir="ltr" style="direction: ltr !important;"><span class="text-lg font-normal">₪</span>${pkg.price_amount}</div>
           <div class="mx-auto w-fit mb-xl border-t ${isFeatured ? 'border-primary/10' : 'border-outline-variant/20'} pt-lg" style="direction: rtl !important;">
@@ -1737,16 +1800,47 @@ ${accordion}
         }
         
         .glass-hero-wrapper {
-            position: relative;
+            position: absolute;
+            z-index: 100;
+            top: 55%;
+            left: 2rem;
+            transform: translateY(-50%);
         }
         .glass-hero {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 11px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
             animation: gentleFloat 6s ease-in-out infinite;
             max-width: calc(28rem - 30px);
+            padding: 4.125rem 4.75rem;
+        }
+        @media (max-width: 1023px) {
+            .glass-hero-wrapper {
+                top: auto;
+                bottom: 2rem;
+                left: 50%;
+                right: auto;
+                transform: translateX(-50%);
+                width: calc(100% - 2.5rem);
+                max-width: 26rem;
+            }
+            .glass-hero {
+                width: 100%;
+                max-width: none;
+                padding: 1.75rem 1.5rem;
+            }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .glass-hero-wrapper {
+                bottom: 2.5rem;
+                max-width: 34rem;
+            }
+            .glass-hero {
+                padding: 2rem 2.25rem;
+            }
         }
         @media (max-width: 767px) {
             #contact.contact-section-has-bg .contact-section-bg-mobile {
@@ -1807,12 +1901,14 @@ ${accordion}
             }
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HOMEPAGE_PACKAGES_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${FAQ_ACCORDION_CSS}
         ${elegantFaqSectionCss(primaryColor)}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
+        ${generateSiteNavMobileStyles()}
     </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">
@@ -1822,8 +1918,8 @@ ${generateSiteNav(siteChrome('elegant'))}
 <div class="absolute inset-0 z-0 image-reveal active">
 ${heroSlideshowHtml}
 </div>
-<div class="relative z-[100] glass-hero-wrapper absolute top-[55%] -translate-y-1/2 left-4 md:left-4 md:top-[55%] top-[75%]">
-<div class="glass-hero px-[12px] py-[2px] md:px-[76px] md:py-[66px] text-center backdrop-blur-md">
+<div class="glass-hero-wrapper">
+<div class="glass-hero text-center">
 <h1 class="font-display text-4xl md:text-7xl mb-6 leading-[1.1] text-on-surface">
                 ${brandLastWord(studioName)}
 </h1>
@@ -1863,8 +1959,8 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 ${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-8' }) : ''}
 ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
-<button class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
-                    הכירי את הצוות
+<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
+                    לצפייה בגלריות
                 </button>
 </div>
 <div class="order-1 lg:order-2 image-reveal aspect-[4/5] shadow-2xl">
@@ -1903,7 +1999,7 @@ ${packagesBgLayers('#f2f1ef', '#f2f1ef')}
 ${elegantSectionHeading('חבילות שירות', 'PACKAGES', { center: true, titleClass: 'mb-4' })}
 <p class="font-body opacity-60 italic">השקעה בזיכרונות שיישארו לנצח</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">${generatePackagesHTML('elegant')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('elegant')}</div>
 </div>
 </section>
 ` : ''}
@@ -1990,7 +2086,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
-<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -2127,31 +2223,77 @@ ${generateSiteFooter(siteChrome('elegant'))}
             padding-top: calc(clamp(3.5rem, 8vw, 5.5rem) + 50px) !important;
             padding-bottom: clamp(2.5rem, 6vw, 4rem) !important;
         }
-        #pricing.contact-section-has-bg .contact-section-bg-desktop,
-        #contact.contact-section-has-bg .contact-section-bg-desktop {
+        #pricing.contact-section-has-bg .contact-section-bg-desktop {
             opacity: 0.68;
             filter: brightness(1.18) saturate(0.92) contrast(0.96);
             -webkit-mask-image: none;
             mask-image: none;
         }
-        #pricing.contact-section-has-bg .contact-section-bg-mobile,
-        #contact.contact-section-has-bg .contact-section-bg-mobile {
+        #pricing.contact-section-has-bg .contact-section-bg-mobile {
             opacity: 0.52;
             filter: brightness(1.28) saturate(0.88) contrast(0.94);
             -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 58%, rgba(0,0,0,0.12) 100%);
             mask-image: linear-gradient(to bottom, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 58%, rgba(0,0,0,0.12) 100%);
         }
-        #pricing.contact-section-has-bg .contact-section-bg-overlay,
-        #contact.contact-section-has-bg .contact-section-bg-overlay {
+        #pricing.contact-section-has-bg .contact-section-bg-overlay {
             background: linear-gradient(
                 to bottom,
                 color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #F8FAFC)) 18%, transparent) 0%,
                 color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #F8FAFC)) 42%, transparent) 100%
             ) !important;
         }
+        #contact.contact-section-has-bg {
+            padding-inline: 0.75rem;
+        }
+        #contact.contact-section-has-bg .contact-section-bg-overlay {
+            background: transparent !important;
+        }
+        #contact.contact-section-has-bg .contact-section-bg-desktop,
+        #contact.contact-section-has-bg .contact-section-bg-mobile {
+            opacity: 0.74;
+            filter: none;
+            -webkit-mask-image: none;
+            mask-image: none;
+            border-radius: 0;
+            left: 0.75rem;
+            width: calc(100% - 1.5rem);
+            margin-left: 0;
+        }
+        #contact.contact-section-has-bg .contact-section-content {
+            position: relative;
+            z-index: 1;
+        }
+        #contact.contact-section-has-bg .modern-contact-card--has-bg {
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none;
+        }
+        #contact.contact-section-has-bg .modern-contact-card h2,
+        #contact.contact-section-has-bg .modern-contact-card p,
+        #contact.contact-section-has-bg .modern-contact-card .text-white,
+        #contact.contact-section-has-bg .modern-contact-info-row {
+            text-shadow: 0 1px 10px rgba(15, 23, 42, 0.55);
+        }
+        @media (min-width: 768px) {
+            #contact.contact-section-has-bg {
+                padding-inline: 1.5rem;
+            }
+            #contact.contact-section-has-bg .contact-section-bg-desktop,
+            #contact.contact-section-has-bg .contact-section-bg-mobile {
+                left: 1.5rem;
+                width: calc(100% - 3rem);
+            }
+            #contact.contact-section-has-bg .contact-section-content {
+                max-width: none;
+                width: 100%;
+                padding-inline: 1.5rem;
+            }
+            #contact.contact-section-has-bg .modern-contact-card--has-bg {
+                padding: 2.5rem 1.5rem;
+            }
+        }
         @media (max-width: 767px) {
-            #pricing.contact-section-has-bg .contact-section-bg-overlay,
-            #contact.contact-section-has-bg .contact-section-bg-overlay {
+            #pricing.contact-section-has-bg .contact-section-bg-overlay {
                 background: linear-gradient(
                     to bottom,
                     transparent 0%,
@@ -2159,13 +2301,58 @@ ${generateSiteFooter(siteChrome('elegant'))}
                     color-mix(in srgb, var(--contact-fade, #F8FAFC) 72%, transparent) 100%
                 ) !important;
             }
+            #contact.contact-section-has-bg .contact-section-content {
+                max-width: none;
+                width: 100%;
+                padding-inline: 0.75rem;
+            }
+            #contact.contact-section-has-bg .modern-contact-card--has-bg {
+                padding: 1.5rem 0.75rem;
+            }
+            #contact .modern-contact-card {
+                text-align: center;
+            }
+            #contact .modern-contact-card .modern-contact-info {
+                max-width: none;
+                width: 100%;
+                text-align: center;
+            }
+            #contact .modern-contact-card .modern-contact-info-row {
+                justify-content: center;
+            }
+            #contact .modern-contact-form {
+                width: 100%;
+                padding-inline: 0.75rem;
+                box-sizing: border-box;
+            }
+            #contact .modern-contact-form .modern-contact-form-grid {
+                grid-template-columns: 1fr !important;
+                width: 100%;
+            }
+            #contact .modern-contact-form input,
+            #contact .modern-contact-form textarea,
+            #contact .modern-contact-form button {
+                width: 100%;
+            }
+        }
+        .modern-contact-card {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+        .modern-contact-card:not(.modern-contact-card--has-bg) {
+            background-color: ${primaryColor};
+        }
+        .modern-contact-card--has-bg {
+            background-color: transparent;
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HOMEPAGE_PACKAGES_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${FAQ_ACCORDION_CSS}
         ${MODERN_HERO_FILM_BELT_CSS}
         ${sectionBgCss}
+        ${generateSiteNavMobileStyles()}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -2288,7 +2475,7 @@ ${packagesBgLayers('#F8FAFC')}
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
 <p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('modern')}</div>
 </div>
 </section>
 ` : `
@@ -2298,7 +2485,7 @@ ${packagesBgLayers('#F8FAFC')}
 <h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
 <p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-xl">${generatePackagesHTML('modern')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('modern')}</div>
 </div>
 </section>
 `) : ''}
@@ -2311,30 +2498,30 @@ ${hasTestimonials ? `
 ${generateFaqSectionHTML('modern')}
 <section class="w-full ${hasContactBg ? 'contact-section-has-bg py-xxl' : 'max-w-7xl mx-auto px-lg'}" id="contact">
 ${contactBgLayers('#F8FAFC')}
-<div class="contact-section-content${hasContactBg ? ' max-w-7xl mx-auto px-lg' : ''}">
-<div class="${hasContactBg ? 'bg-primary/88 backdrop-blur-sm' : 'bg-primary'} rounded-2xl p-xl md:p-xxl text-white animate-reveal">
+<div class="contact-section-content">
+<div class="modern-contact-card ${hasContactBg ? 'modern-contact-card--has-bg' : 'bg-primary rounded-2xl'} p-xl md:p-xxl text-white animate-reveal">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
-<div class="max-w-md text-right">
+<div class="modern-contact-info max-w-md text-right">
 <h2 class="font-headline text-4xl font-bold mb-sm text-white">צרו איתנו קשר</h2>
 <p class="text-lg opacity-90 text-white mb-lg">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או סשן צילומים.</p>
 <div class="flex flex-col gap-md">
-<div class="flex items-center justify-start gap-sm">
+<div class="modern-contact-info-row flex items-center justify-start gap-sm">
 <span class="material-symbols-outlined text-white">call</span>
 <span class="text-white" dir="ltr">050-1234567</span>
 </div>
-<div class="flex items-center justify-start gap-sm">
+<div class="modern-contact-info-row flex items-center justify-start gap-sm">
 <span class="material-symbols-outlined text-white">mail</span>
 <span class="text-white">${email || 'hello@studiogallery.co.il'}</span>
 </div>
 ${studioAddress ? `
-<div class="flex items-center justify-start gap-sm">
+<div class="modern-contact-info-row flex items-center justify-start gap-sm">
 <span class="material-symbols-outlined text-white">location_on</span>
 <span class="text-white">${studioAddressHtml}</span>
 </div>` : ''}
 </div>
 </div>
-<form class="flex flex-col gap-md w-full">
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-md">
+<form class="modern-contact-form flex flex-col gap-md w-full">
+<div class="modern-contact-form-grid grid grid-cols-1 sm:grid-cols-2 gap-md">
 <div class="relative">
 <input name="name" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
 </div>
@@ -2362,7 +2549,7 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${MODERN_HERO_FILM_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
-<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -2732,12 +2919,14 @@ ${generateSiteFooter(siteChrome('modern'))}
             background: ${primaryColor};
         }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HOMEPAGE_PACKAGES_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${FAQ_ACCORDION_CSS}
         ${classicFaqSectionCss(primaryColor)}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
+        ${generateSiteNavMobileStyles()}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -2938,7 +3127,7 @@ ${packagesBgLayers('#fdf8f7', '#f7f3f2')}
 <h2 class="font-headline-md text-headline-md text-on-surface">חבילות צילום</h2>
 <div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('classic')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('classic')}</div>
 </div>
 </section>
 ` : ''}
@@ -3079,7 +3268,7 @@ ${generateSiteFooter(siteChrome('classic'))}
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
-<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;
@@ -3338,6 +3527,11 @@ ${generateSiteFooter(siteChrome('classic'))}
             align-items: flex-start;
             gap: 1.5rem;
         }
+        .bold-hero-btn-gallery {
+            width: fit-content;
+            max-width: 100%;
+            padding-inline: 1.5rem;
+        }
         @media (min-width: 640px) {
             .bold-hero-actions {
                 flex-direction: row;
@@ -3350,7 +3544,9 @@ ${generateSiteFooter(siteChrome('classic'))}
             }
         }
         .bold-contact-details {
-            backdrop-filter: blur(2px);
+            background-color: #121217;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
         }
         .bold-contact-details__item {
             display: flex;
@@ -3378,14 +3574,104 @@ ${generateSiteFooter(siteChrome('classic'))}
             line-height: 1.5;
             max-width: 14rem;
         }
+        .bold-contact-form-block.contact-section-has-bg {
+            padding-bottom: 2.5rem;
+        }
+        @media (min-width: 768px) {
+            .bold-contact-form-block.contact-section-has-bg {
+                padding-bottom: 3.5rem;
+            }
+        }
+        .bold-contact-details-block {
+            position: relative;
+            z-index: 2;
+            background-color: #121217;
+        }
+        @media (max-width: 767px) {
+            .bold-hero-content {
+                left: 0;
+                right: 0;
+                margin-inline: auto;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .bold-hero-actions {
+                align-items: center;
+            }
+            .bold-hero-btn-gallery {
+                white-space: nowrap;
+                padding-inline: 1rem;
+                letter-spacing: 0.08em;
+            }
+            #about .about-inner .grid {
+                justify-items: center;
+                text-align: center;
+            }
+            #about .about-inner .grid > div {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                width: 100%;
+            }
+            #about .grid.grid-cols-3 {
+                margin-inline: auto;
+            }
+            #about .grid.grid-cols-3 > div {
+                text-align: center;
+            }
+            .homepage-gallery-header,
+            .recent-photos-header {
+                text-align: center !important;
+            }
+            #contact .bold-contact-form-block .contact-section-content {
+                text-align: center;
+            }
+            #contact form {
+                width: 100%;
+                max-width: none;
+                text-align: center;
+            }
+            #contact form > div {
+                width: 100%;
+            }
+            #contact form input,
+            #contact form textarea {
+                width: 100%;
+                text-align: center;
+            }
+            #contact .bold-contact-details-block {
+                text-align: center;
+            }
+            #contact .bold-contact-details {
+                width: 100%;
+                max-width: none;
+                margin-inline: 0;
+            }
+            #contact .bold-contact-details > div {
+                flex-direction: column;
+                align-items: center;
+                gap: 2rem;
+            }
+            #contact .bold-contact-details__item {
+                width: 100%;
+                max-width: none;
+            }
+            #contact .bold-contact-details__value {
+                max-width: none;
+            }
+        }
         ${UNIFIED_GALLERY_GRID_CSS}
+        ${HOMEPAGE_PACKAGES_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
         ${FAQ_ACCORDION_CSS}
         ${HERO_SLIDESHOW_CSS}
         ${sectionBgCss}
-        #contact.contact-section-has-bg .contact-section-bg-desktop,
-        #contact.contact-section-has-bg .contact-section-bg-mobile,
+        #contact .bold-contact-form-block.contact-section-has-bg .contact-section-bg-desktop,
+        #contact .bold-contact-form-block.contact-section-has-bg .contact-section-bg-mobile,
         #pricing.contact-section-has-bg .contact-section-bg-desktop,
         #pricing.contact-section-has-bg .contact-section-bg-mobile {
             opacity: 0.48;
@@ -3393,10 +3679,11 @@ ${generateSiteFooter(siteChrome('classic'))}
             -webkit-mask-image: none;
             mask-image: none;
         }
-        #contact.contact-section-has-bg .contact-section-bg-overlay {
+        #contact .bold-contact-form-block.contact-section-has-bg .contact-section-bg-overlay {
             background: linear-gradient(
                 to top,
-                rgba(18, 18, 23, 0.5) 0%,
+                #121217 0%,
+                rgba(18, 18, 23, 0.55) 14%,
                 rgba(18, 18, 23, 0.02) 42%,
                 rgba(18, 18, 23, 0.18) 100%
             );
@@ -3408,6 +3695,7 @@ ${generateSiteFooter(siteChrome('classic'))}
                 color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fdf8f7)) 97%, transparent)
             );
         }
+        ${generateSiteNavMobileStyles()}
     </style>
 <script id="tailwind-config">
         tailwind.config = {
@@ -3477,7 +3765,7 @@ ${heroSlideshowBoldHtml}
                     ${aboutText}
                 </p>
 <div class="bold-hero-actions flex flex-col sm:flex-row gap-lg">
-<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-primary text-primary bg-transparent px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary">
+<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bold-hero-btn-gallery border border-primary text-primary bg-transparent py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary whitespace-nowrap">
                         צפו בגלריה
                     </button>
 <button onclick="document.querySelector('#about').scrollIntoView({behavior: 'smooth'})" class="text-on-surface font-label-sm uppercase tracking-widest border-b border-on-surface/30 hover:border-primary btn-fuchsia-transition py-xs">
@@ -3559,7 +3847,7 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 <h2 class="font-headline-md text-headline-md mb-md text-background">חבילות וצילום</h2>
 <p class="text-background/60 font-body-md">אנחנו מציעים מגוון אפשרויות שיתאימו לצרכים האישיים והעסקיים שלכם, עם דגש על איכות בלתי מתפשרת.</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('dark')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
 </div>
 </section>
 ` : `
@@ -3570,7 +3858,7 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 <h2 class="font-headline-md text-headline-md mb-md text-background">חבילות וצילום</h2>
 <p class="text-background/60 font-body-md">אנחנו מציעים מגוון אפשרויות שיתאימו לצרכים האישיים והעסקיים שלכם, עם דגש על איכות בלתי מתפשרת.</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-lg lg:gap-xl items-stretch">${generatePackagesHTML('dark')}</div>
+<div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
 </div>
 </section>
 `) : ''}
@@ -3598,8 +3886,9 @@ ${generateFaqSectionHTML('dark')}
                 }
             </style>
 </section>
-<section class="w-full pt-xl md:pt-xxl pb-xl reveal ${hasContactBg ? 'contact-section-has-bg' : 'container mx-auto px-lg'}" id="contact">
-${contactBgLayers('#120f0d', '#1a1614')}
+<section class="w-full pb-xl reveal" id="contact">
+<div class="bold-contact-form-block ${hasContactBg ? 'contact-section-has-bg pt-xl md:pt-xxl' : 'container mx-auto px-lg pt-xl md:pt-xxl'}">
+${hasContactBg ? contactBgLayers('#120f0d', '#1a1614') : ''}
 <div class="max-w-4xl mx-auto text-center contact-section-content${hasContactBg ? ' container px-lg' : ''}">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
 <h2 class="font-headline-md text-headline-md mb-md">בואו ניצור משהו בלתי נשכח</h2>
@@ -3626,8 +3915,10 @@ ${contactBgLayers('#120f0d', '#1a1614')}
         </button>
 </div>
 </form>
-${generateBoldContactDetailsHTML()}
+${hasContactBg ? '' : generateBoldContactDetailsHTML()}
 </div>
+</div>
+${hasContactBg ? `<div class="bold-contact-details-block max-w-4xl mx-auto container px-lg">${generateBoldContactDetailsHTML()}</div>` : ''}
 </section>
 </main>
 ${generateSiteFooter(siteChrome('dark'))}
@@ -3670,7 +3961,7 @@ ${generateSiteFooter(siteChrome('dark'))}
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
-<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 </body>
 </html>
   `;

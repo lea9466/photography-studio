@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createPackage,
@@ -10,7 +10,6 @@ import {
 } from '@/lib/actions/package.actions'
 import type { PhotographyPackage } from '@/lib/types/database.types'
 import { PackageCard } from '@/components/dashboard/PackageCard'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,7 +21,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CustomToggle } from '@/components/ui/custom-toggle'
+import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 
 type PackagesManagerProps = {
@@ -128,10 +127,20 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
     })
   }
 
+  const activeCount = packages.filter((pkg) => pkg.is_active).length
+
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">
-        סקשן החבילות מוצג בדף הבית הציבורי רק כשיש לפחות חבילה פעילה אחת. חבילות מוסתרות לא נספרות.
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted] space-y-2">
+        <p>סקשן החבילות מוצג בדף הבית הציבורי רק כשיש לפחות חבילה פעילה אחת. חבילות מוסתרות לא נספרות.</p>
+        <p className="text-[--foreground]">
+          <span className="font-medium">מומלץ:</span> להגדיר בדיוק 3 חבילות פעילות — כך הן מוצגות בצורה מסודרת ומאוזנת בכל ערכות העיצוב.
+        </p>
+        {activeCount > 0 && activeCount !== 3 ? (
+          <p className="text-xs">
+            כרגע יש {activeCount} חבילות פעילות. לתצוגה מיטבית מומלץ לסיים עם 3.
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[--muted]">
@@ -151,46 +160,23 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
           <p className="mt-2">לדוגמה: חבילת פרימיום, ₪2,400, שעתיים צילום, ורשימת &quot;מה כלול&quot;</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div
+          className={
+            packages.length === 1
+              ? 'mx-auto grid max-w-sm grid-cols-1 gap-5'
+              : packages.length === 2
+                ? 'mx-auto grid max-w-3xl grid-cols-1 gap-5 md:grid-cols-2'
+                : 'grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3'
+          }
+        >
           {packages.map((pkg) => (
-            <div key={pkg.id} className="space-y-3">
-              <div className="flex items-center justify-between gap-2 px-1">
-                <div className="flex gap-2">
-                  {pkg.is_featured ? (
-                    <Badge variant="default">מומלצת</Badge>
-                  ) : null}
-                  {!pkg.is_active ? (
-                    <Badge variant="muted">מוסתרת</Badge>
-                  ) : null}
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openEditDialog(pkg)}
-                    disabled={isPending}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    עריכה
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(pkg.id)}
-                    disabled={isPending}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    מחיקה
-                  </Button>
-                </div>
-              </div>
-              <PackageCard
-                pkg={pkg}
-                className={!pkg.is_active ? 'opacity-60' : undefined}
-              />
-            </div>
+            <PackageCard
+              key={pkg.id}
+              pkg={pkg}
+              onEdit={() => openEditDialog(pkg)}
+              onDelete={() => handleDelete(pkg.id)}
+              actionsDisabled={isPending}
+            />
           ))}
         </div>
       )}
@@ -268,30 +254,30 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-[#c9c5cd] bg-white px-4 py-3">
               <div>
-                <Label htmlFor="package-active">מוצגת ללקוחות</Label>
-                <p className="text-xs text-[--muted]">
+                <Label className="text-[#100d1f]">מוצגת ללקוחות</Label>
+                <p className="mt-1 text-xs text-[#48464c]">
                   חבילות מוסתרות לא יופיעו בדף הציבורי
                 </p>
               </div>
-              <CustomToggle
+              <Switch
                 checked={form.isActive}
-                onCheckedChange={(checked: boolean) =>
+                onCheckedChange={(checked) =>
                   setForm((current) => ({ ...current, isActive: checked }))
                 }
               />
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-[#c9c5cd] bg-white px-4 py-3">
               <div>
-                <Label htmlFor="package-featured">מומלצת</Label>
-                <p className="text-xs text-[--muted]">
+                <Label className="text-[#100d1f]">מומלצת</Label>
+                <p className="mt-1 text-xs text-[#48464c]">
                   חבילות מומלצות יופיעו עם מסגרת מודגשת בדף הציבורי
                 </p>
               </div>
-              <CustomToggle
+              <Switch
                 checked={form.isFeatured}
-                onCheckedChange={(checked: boolean) =>
+                onCheckedChange={(checked) =>
                   setForm((current) => ({ ...current, isFeatured: checked }))
                 }
               />
