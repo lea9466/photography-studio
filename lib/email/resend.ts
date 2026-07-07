@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
 import { randomBytes } from 'node:crypto'
+import { getFeedbackEmail } from '@/lib/feedback-email'
 
 function getResend() {
   const key = process.env.RESEND_API_KEY
@@ -258,7 +259,7 @@ export async function sendFeedbackEmail(input: {
 
   await resend.emails.send({
     from: emailFrom(),
-    to: process.env.FEEDBACK_EMAIL ?? 'onboarding@resend.dev',
+    to: getFeedbackEmail(),
     subject: `[משוב] ${input.type} — ${input.name}`,
     html: `
       <div dir="rtl">

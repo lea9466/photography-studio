@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
-import { finalizeBrandingUpload, prepareBrandingUpload, removeHeroImageSlot } from '@/lib/actions/branding.actions'
+import { finalizeBrandingUpload, prepareBrandingUpload, removeBrandingImage, removeHeroImageSlot } from '@/lib/actions/branding.actions'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
@@ -31,6 +31,11 @@ type BrandingUploadType =
 function uploadTargetKey(type: BrandingUploadType, slot?: number) {
   return slot !== undefined ? `${type}:${slot}` : type
 }
+
+type SingleBrandingImageType = Exclude<
+  BrandingUploadType,
+  'hero_desktop' | 'hero_mobile'
+>
 
 function UploadSpinnerOverlay({ show }: { show: boolean }) {
   if (!show) return null
@@ -241,6 +246,25 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           return next
         })
       }
+      toast.success('התמונה הוסרה')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
+    } finally {
+      setUploadingTarget(null)
+    }
+  }
+
+  async function handleRemoveBrandingImage(type: SingleBrandingImageType) {
+    const targetKey = uploadTargetKey(type)
+    setUploadingTarget(targetKey)
+    try {
+      await removeBrandingImage(type)
+      if (type === 'logo') setLogoUrl('')
+      if (type === 'about') setAboutImageUrl('')
+      if (type === 'contact_desktop') setContactDesktopUrl('')
+      if (type === 'contact_mobile') setContactMobileUrl('')
+      if (type === 'packages_desktop') setPackagesDesktopUrl('')
+      if (type === 'packages_mobile') setPackagesMobileUrl('')
       toast.success('התמונה הוסרה')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
@@ -527,6 +551,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 <span className="text-white text-sm font-medium">החלף תמונה</span>
               </div>
               <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('about')} />
+              {aboutImageUrl ? (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveBrandingImage('about')}
+                  disabled={isUploading}
+                  className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="הסר תמונה"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
               <input
                 id="about-image"
                 type="file"
@@ -576,6 +611,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
                 <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_desktop')} />
+                {contactDesktopUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBrandingImage('contact_desktop')}
+                    disabled={isUploading}
+                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                    aria-label="הסר תמונה"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
                 <input
                   id="contact-desktop"
                   type="file"
@@ -611,6 +657,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
                 <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('contact_mobile')} />
+                {contactMobileUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBrandingImage('contact_mobile')}
+                    disabled={isUploading}
+                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                    aria-label="הסר תמונה"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
                 <input
                   id="contact-mobile"
                   type="file"
@@ -661,6 +718,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
                 <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_desktop')} />
+                {packagesDesktopUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBrandingImage('packages_desktop')}
+                    disabled={isUploading}
+                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                    aria-label="הסר תמונה"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
                 <input
                   id="packages-desktop"
                   type="file"
@@ -696,6 +764,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   <span className="text-white text-sm font-medium">החלף תמונה</span>
                 </div>
                 <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('packages_mobile')} />
+                {packagesMobileUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveBrandingImage('packages_mobile')}
+                    disabled={isUploading}
+                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                    aria-label="הסר תמונה"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                ) : null}
                 <input
                   id="packages-mobile"
                   type="file"
@@ -875,6 +954,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 )}
               </div>
               <UploadSpinnerOverlay show={uploadingTarget === uploadTargetKey('logo')} />
+              {logoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveBrandingImage('logo')}
+                  disabled={isUploading}
+                  className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="הסר לוגו"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
               <input
                 id="logo"
                 type="file"

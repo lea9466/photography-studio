@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { Button } from '@/components/ui/button'
-import { signPreviewUrls } from '@/lib/actions/photo.actions'
+import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
 export default function DashboardPage() {
@@ -53,55 +53,29 @@ export default function DashboardPage() {
           .order('created_at', { ascending: false })
           .limit(50) // Fetch more to allow filtering
 
-        // Fetch first photo for each gallery using a more efficient query
-        const galleryIds = (galleries || []).map((g: any) => g.id)
-        const firstPhotoMap = new Map<string, string>()
-
-        if (galleryIds.length > 0) {
-          // Use a subquery-like approach: fetch photos with LIMIT 1 per gallery
-          for (const galleryId of galleryIds) {
-            const { data: firstPhoto } = await supabase
-              .from('photos')
-              .select('preview_url')
-              .eq('gallery_id', galleryId)
-              .order('sort_order', { ascending: true })
-              .limit(1)
-              .maybeSingle()
-
-            const typedPhoto = firstPhoto as { preview_url: string | null } | null
-            if (typedPhoto && typedPhoto.preview_url) {
-              firstPhotoMap.set(galleryId, typedPhoto.preview_url)
-            }
-          }
-        }
-
-        // Transform the data to match the expected format
         const transformedGalleries = (galleries || []).map((gallery: any) => ({
           ...gallery,
           client: gallery.client,
           photo_count: gallery.photos?.[0]?.count || 0,
-          first_photo_url: firstPhotoMap.get(gallery.id) || null,
         }))
 
-        // Sign preview URLs using server action
-        const allPreviewUrls = transformedGalleries
-          .map((g) => g.first_photo_url)
-          .filter((url): url is string => url !== null)
-
-        let galleriesWithSignedUrls = transformedGalleries
-        if (allPreviewUrls.length > 0) {
-          try {
-            const signedUrls = await signPreviewUrls(allPreviewUrls)
-            galleriesWithSignedUrls = transformedGalleries.map((gallery) => ({
-              ...gallery,
-              first_photo_url: gallery.first_photo_url ? (signedUrls[gallery.first_photo_url] || gallery.first_photo_url) : null,
+        let galleriesWithThumbnails = transformedGalleries
+        try {
+          const thumbnails = await resolveGalleryTableThumbnails(
+            transformedGalleries.map((g) => ({
+              id: g.id,
+              cover_image: g.cover_image ?? null,
             }))
-          } catch (error) {
-            console.warn('Failed to sign preview URLs:', error)
-          }
+          )
+          galleriesWithThumbnails = transformedGalleries.map((gallery) => ({
+            ...gallery,
+            thumbnail_url: thumbnails[gallery.id] ?? null,
+          }))
+        } catch (error) {
+          console.warn('Failed to resolve gallery thumbnails:', error)
         }
 
-        setRecentGalleries(galleriesWithSignedUrls)
+        setRecentGalleries(galleriesWithThumbnails)
       }
       setLoading(false)
     }

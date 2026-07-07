@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
+import { resolveBrandingPath } from '@/lib/branding-urls'
+import { resolveGalleryCoverImagePath } from '@/lib/seo/public-metadata'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -306,13 +308,18 @@ export async function createGallery(input: CreateGalleryInput) {
 
   const willBePublic = PUBLIC_ONLY_MVP ? true : Boolean(input.isPublic)
   if (willBePublic) {
-    const { count: publicGalleryCount } = await supabase
+    let countQuery = supabase
       .from('galleries')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
-      .eq('is_public', true)
 
-    const limitError = buildPublicGalleryCountLimitError(publicGalleryCount ?? 0)
+    if (!PUBLIC_ONLY_MVP) {
+      countQuery = countQuery.eq('is_public', true)
+    }
+
+    const { count: galleryCount } = await countQuery
+
+    const limitError = buildPublicGalleryCountLimitError(galleryCount ?? 0)
     if (limitError) throw new Error(limitError)
   }
 
@@ -499,11 +506,16 @@ export async function getPublicGalleryQuota() {
 
   if (!user) return null
 
-  const { count } = await supabase
+  let countQuery = supabase
     .from('galleries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
-    .eq('is_public', true)
+
+  if (!PUBLIC_ONLY_MVP) {
+    countQuery = countQuery.eq('is_public', true)
+  }
+
+  const { count } = await countQuery
 
   const galleryCount = count ?? 0
 
@@ -558,4 +570,42 @@ export async function fetchGalleryDetail(galleryId: string) {
 
   if (error) throw new Error(error.message)
   return data as GalleryWithSettings | null
+}
+
+export async function resolveGalleryTableThumbnails(
+  galleries: { id: string; cover_image: string | null }[]
+) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return {}
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('logo_url')
+    .eq('id', user.id)
+    .single()
+
+  const logoUrl = await resolveBrandingPath(
+    (profile as { logo_url: string | null } | null)?.logo_url ?? null
+  )
+
+  const thumbnails: Record<string, string | null> = {}
+
+  await Promise.all(
+    galleries.map(async (gallery) => {
+      if (gallery.cover_image) {
+        thumbnails[gallery.id] = await resolveGalleryCoverImagePath(
+          gallery.cover_image,
+          gallery.id
+        )
+      } else {
+        thumbnails[gallery.id] = logoUrl
+      }
+    })
+  )
+
+  return thumbnails
 }

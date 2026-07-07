@@ -273,6 +273,43 @@ export async function removeHeroImageSlot(input: {
   return { success: true }
 }
 
+type SingleBrandingImageType = Exclude<
+  BrandingImageType,
+  'hero_desktop' | 'hero_mobile'
+>
+
+const SINGLE_BRANDING_FIELD: Record<
+  SingleBrandingImageType,
+  keyof UsersUpdate
+> = {
+  logo: 'logo_url',
+  about: 'about_image_url',
+  contact_desktop: 'contact_desktop_url',
+  contact_mobile: 'contact_mobile_url',
+  packages_desktop: 'packages_desktop_url',
+  packages_mobile: 'packages_mobile_url',
+}
+
+export async function removeBrandingImage(type: SingleBrandingImageType) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  const field = SINGLE_BRANDING_FIELD[type]
+  const untypedClient = await createUntypedClient()
+  const { error } = await untypedClient
+    .from('users')
+    .update({ [field]: null } as UsersUpdate)
+    .eq('id', user.id)
+
+  if (error) throw new Error(error.message)
+
+  return { success: true }
+}
+
 export async function updateBrandingSettings(data: {
   studioName?: string
   aboutText?: string

@@ -229,7 +229,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
               </div>
             )}
             <p className="text-xs text-[#48464c]">
-              אם לא תוזן, תוצג התמונה הראשונה מהגלריה
+              מומלץ להעלות תמונה רוחבית. אם לא תוזן, תוצג התמונה הראשונה מהגלריה
             </p>
           </div>
         </div>

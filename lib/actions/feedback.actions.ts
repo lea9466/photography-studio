@@ -27,6 +27,7 @@ export async function submitFeedback(input: {
 
   await sendFeedbackEmail(input)
   revalidatePath('/')
+  revalidatePath('/dashboard/contact')
   return { success: true }
 }
 

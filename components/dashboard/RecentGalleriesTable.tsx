@@ -39,7 +39,7 @@ export type GalleryWithDetails = Gallery & {
   client?: Client | null
   photo_count?: number
   cover_image?: string | null
-  first_photo_url?: string | null
+  thumbnail_url?: string | null
   is_public?: boolean
 }
 
@@ -157,11 +157,14 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-lg overflow-hidden bg-[--background] border border-[--border]">
-              {gallery.first_photo_url && !imageError ? (
+              {gallery.thumbnail_url && !imageError ? (
                 <img 
                   alt={gallery.title} 
-                  className="w-full h-full object-cover" 
-                  src={gallery.first_photo_url}
+                  className={cn(
+                    'w-full h-full',
+                    gallery.cover_image ? 'object-cover' : 'object-contain p-1.5 bg-white'
+                  )}
+                  src={gallery.thumbnail_url}
                   onError={handleImageError}
                 />
               ) : (

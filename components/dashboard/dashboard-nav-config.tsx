@@ -6,6 +6,7 @@ import {
   Settings,
   MessageSquareQuote,
   CircleHelp,
+  Mail,
 } from 'lucide-react'
 
 export type DashboardNavItem = {
@@ -62,5 +63,11 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'הגדרות אתר',
     icon: <Settings className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+  },
+  {
+    href: '/dashboard/contact',
+    label: 'יצירת קשר',
+    icon: <Mail className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/contact'),
   },
 ]

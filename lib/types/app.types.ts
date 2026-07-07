@@ -42,7 +42,7 @@ export function getDisplayGalleryStatus(status: GalleryStatus): GalleryStatus {
 }
 
 /** Max public galleries per photographer account */
-export const MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER = 5
+export const MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER = 4
 
 /** Max photos in a single public gallery */
 export const MAX_PUBLIC_GALLERY_PHOTOS = 40
@@ -67,7 +67,7 @@ export function buildPublicGalleryPhotoLimitError(
 
 export function buildPublicGalleryCountLimitError(currentCount: number): string | null {
   if (currentCount >= MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER) {
-    return `ניתן ליצור עד ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות ציבוריות לצלם/ת`
+    return `ניתן ליצור עד ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות`
   }
   return null
 }
