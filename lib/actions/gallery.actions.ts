@@ -1,5 +1,6 @@
 'use server'
 
+import { assertGalleryOwner } from '@/lib/auth/gallery-owner'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
@@ -20,26 +21,6 @@ import {
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
 const DELETE_BATCH_SIZE = 50
-
-async function assertGalleryOwner(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: gallery } = await supabase
-    .from('galleries')
-    .select('id')
-    .eq('id', galleryId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!gallery) throw new Error('גלריה לא נמצאה')
-
-  return { supabase, user }
-}
 
 async function deleteGalleryMedia(supabase: Awaited<ReturnType<typeof createClient>>, galleryId: string) {
   const [photosResult, editedResult, jobsResult] = await Promise.all([
@@ -562,7 +543,7 @@ export async function ensurePortfolioSlug(
 }
 
 export async function fetchGalleryDetail(galleryId: string) {
-  const supabase = await createClient()
+  const { supabase } = await assertGalleryOwner(galleryId)
   const { data, error } = await supabase
     .from('galleries')
     .select(

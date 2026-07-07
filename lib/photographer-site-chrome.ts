@@ -282,12 +282,12 @@ export function generateSiteFooter(cfg: SiteChromeConfig): string {
 <footer class="bg-background py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant/20 pb-32">
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${cfg.studioName}</div>`}
-<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest opacity-40">
-<a class="hover:text-accent transition-colors" href="#">תקנון</a>
-<a class="hover:text-accent transition-colors" href="#">פרטיות</a>
-<a class="hover:text-accent transition-colors" href="#">נגישות</a>
+<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest">
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="#">תקנון</a>
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/privacy">פרטיות</a>
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/accessibility">הצהרת נגישות</a>
 </div>
-<div class="text-[10px] uppercase tracking-widest opacity-40">
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant">
             © ${year} ${cfg.studioName}. כל הזכויות שמורות.
         </div>
 ${generateStudioSignupFooterCta('elegant')}
@@ -305,8 +305,8 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md sm:gap-lg items-center">
 <a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="#">נגישות</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/privacy">פרטיות</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/accessibility">הצהרת נגישות</a>
 </div>
 <div class="text-on-surface-variant text-sm text-center">
             © ${year} ${cfg.studioName}. כל הזכויות שמורות.
@@ -334,8 +334,8 @@ ${generateStudioSignupFooterCta('modern')}
             </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-lg">
 <a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">תקנון</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">פרטיות</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="#">נגישות</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/privacy">פרטיות</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/accessibility">הצהרת נגישות</a>
 </div>
 <div class="font-body-md text-body-md text-on-surface/60">
                 © ${year} ${cfg.studioName}. כל הזכויות שמורות.
@@ -355,8 +355,8 @@ ${generateStudioSignupFooterCta('classic')}
 </div>
 <div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md lg:gap-xl">
 <a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="#">נגישות</a>
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/privacy">פרטיות</a>
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/accessibility">הצהרת נגישות</a>
 </div>
 <div class="text-on-surface-variant font-body-md text-[10px] md:text-xs opacity-50">
                 © ${year} ${cfg.studioName}. כל הזכויות שמורות.

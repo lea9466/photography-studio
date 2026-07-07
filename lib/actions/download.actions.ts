@@ -1,6 +1,7 @@
 'use server'
 
 import JSZip from 'jszip'
+import { assertGalleryOwner, assertDownloadJobOwner } from '@/lib/auth/gallery-owner'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -16,11 +17,7 @@ export async function createDownloadJob(
   galleryId: string,
   type: DownloadJobType
 ) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
   const { data, error } = await supabase
     .from('download_jobs')
@@ -133,15 +130,9 @@ async function buildZip(
 }
 
 export async function getDownloadJobUrl(jobId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('download_jobs')
-    .select('file_url, status')
-    .eq('id', jobId)
-    .single()
+  const { job } = await assertDownloadJobOwner(jobId)
 
-  const job = data as { file_url: string | null; status: string } | null
-  if (!job || job.status !== 'ready' || !job.file_url) {
+  if (job.status !== 'ready' || !job.file_url) {
     throw new Error('הורדה לא מוכנה')
   }
 
@@ -149,14 +140,9 @@ export async function getDownloadJobUrl(jobId: string) {
 }
 
 export async function pollDownloadJob(jobId: string) {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('download_jobs')
-    .select('status, file_url')
-    .eq('id', jobId)
-    .single()
+  const { job } = await assertDownloadJobOwner(jobId)
 
-  return data as { status: string; file_url: string | null } | null
+  return { status: job.status, file_url: job.file_url }
 }
 
 export async function createClientEditedDownload(galleryId: string) {

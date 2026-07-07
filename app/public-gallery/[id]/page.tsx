@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
@@ -39,9 +38,9 @@ type UserData = {
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
   const { id } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data: gallery } = await supabase
+  const { data: gallery } = await admin
     .from('galleries')
     .select('id, title, created_at, user_id, is_public')
     .eq('id', id)
@@ -51,7 +50,6 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   if (!gallery) notFound()
 
   const galleryData = gallery as GalleryData
-  const admin = createAdminClient()
 
   const [{ data: user }, { count: packageCount }] = await Promise.all([
     admin
@@ -165,9 +163,9 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
 
 export async function generateMetadata({ params }: PublicGalleryPageProps) {
   const { id } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data } = await supabase
+  const { data } = await admin
     .from('galleries')
     .select('title, user_id, cover_image')
     .eq('id', id)
@@ -179,7 +177,6 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
     return { title: 'גלריה לא נמצאה' }
   }
 
-  const admin = createAdminClient()
   const { data: user } = await admin
     .from('users')
     .select('studio_name')

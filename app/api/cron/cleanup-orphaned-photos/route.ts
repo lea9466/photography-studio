@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cleanupOrphanedPhotos } from '@/lib/actions/cleanup.actions'
+import { cleanupOrphanedPhotos } from '@/lib/cleanup/orphaned-photos'
 
 function isAuthorized(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET

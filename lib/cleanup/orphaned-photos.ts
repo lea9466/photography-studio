@@ -1,5 +1,3 @@
-'use server'
-
 import { createAdminClient } from '@/lib/supabase/admin'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import { buildPhotoStoragePaths } from '@/lib/images/process'

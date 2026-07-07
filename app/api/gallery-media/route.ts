@@ -2,9 +2,10 @@ import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { downloadMediaObject } from '@/lib/r2/storage'
 import { isR2Configured, getR2Config } from '@/lib/r2/config'
 import { getR2Client } from '@/lib/r2/client'
-import type { MediaBucket } from '@/lib/r2/types'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasGallerySession } from '@/lib/gallery-session'
+import type { MediaBucket } from '@/lib/r2/types'
 
 const ALLOWED_PREFIXES = [
   'originals/',
@@ -15,6 +16,16 @@ const ALLOWED_PREFIXES = [
   'branding/',
   'cover-images/',
 ] as const
+
+const GALLERY_SCOPED_BUCKETS = new Set<MediaBucket>([
+  'originals',
+  'previews',
+  'watermarked',
+  'edited',
+  'zips',
+])
+
+const SENSITIVE_BUCKETS = new Set<MediaBucket>(['originals', 'edited', 'zips'])
 
 function textResponse(message: string, status: number) {
   return new Response(message, {
@@ -55,6 +66,12 @@ function contentTypeFromKey(key: string) {
   return 'application/octet-stream'
 }
 
+function parseGalleryScopedPath(path: string) {
+  const parts = path.split('/').filter(Boolean)
+  if (parts.length < 2) return null
+  return { userId: parts[0], galleryId: parts[1] }
+}
+
 async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
   const admin = createAdminClient()
 
@@ -75,6 +92,48 @@ async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
   return await hasGallerySession(galleryId)
 }
 
+async function verifyPhotographerOwnsGallery(galleryId: string): Promise<boolean> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return false
+
+  const { data } = await supabase
+    .from('galleries')
+    .select('id')
+    .eq('id', galleryId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  return !!data
+}
+
+async function authorizeGalleryScopedMedia(
+  bucket: MediaBucket,
+  pathAfterBucket: string,
+  galleryIdParam: string
+) {
+  const scoped = parseGalleryScopedPath(pathAfterBucket)
+  const resolvedGalleryId = galleryIdParam || scoped?.galleryId
+
+  if (!resolvedGalleryId) {
+    return false
+  }
+
+  if (galleryIdParam && scoped?.galleryId && galleryIdParam !== scoped.galleryId) {
+    return false
+  }
+
+  if (SENSITIVE_BUCKETS.has(bucket)) {
+    const isOwner = await verifyPhotographerOwnsGallery(resolvedGalleryId)
+    if (isOwner) return true
+    return hasGallerySession(resolvedGalleryId)
+  }
+
+  return verifyGalleryAccess(resolvedGalleryId)
+}
+
 export async function GET(request: Request) {
   if (!isR2Configured()) {
     return textResponse('אחסון תמונות לא מוגדר', 503)
@@ -83,7 +142,7 @@ export async function GET(request: Request) {
   const key = new URL(request.url).searchParams.get('key')?.trim() ?? ''
   const galleryId = new URL(request.url).searchParams.get('galleryId')?.trim() ?? ''
   const normalizedKey = key.replace(/^\/+/, '')
-  
+
   if (!isAllowedGalleryMediaKey(normalizedKey)) {
     return textResponse('לא נמצא', 404)
   }
@@ -116,14 +175,15 @@ export async function GET(request: Request) {
       return textResponse('לא נמצא', 404)
     }
 
-    if (galleryId) {
-      const hasAccess = await verifyGalleryAccess(galleryId)
-      if (!hasAccess) {
+    const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
+
+    if (GALLERY_SCOPED_BUCKETS.has(bucket)) {
+      const allowed = await authorizeGalleryScopedMedia(bucket, path, galleryId)
+      if (!allowed) {
         return textResponse('גישה נדחתה', 403)
       }
     }
 
-    const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
     const data = await downloadMediaObject(bucket, path)
     const cacheControl = normalizedKey.startsWith('branding/')
       ? 'private, no-cache, must-revalidate'

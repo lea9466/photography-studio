@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { isR2Configured } from '@/lib/r2/config'
@@ -296,7 +297,7 @@ export async function updateTestimonialsSectionTitle(input: {
 
 // Public function to get testimonials for a specific photographer (by their slug or user_id)
 export async function getPublicTestimonials(userId: string) {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('testimonials')

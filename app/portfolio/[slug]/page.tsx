@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
@@ -18,9 +17,9 @@ type PortfolioPageProps = {
 
 export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const { slug } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data } = await supabase
+  const { data } = await admin
     .from('galleries')
     .select('id, title, user_id, is_public')
     .eq('slug', slug)
@@ -32,7 +31,6 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const gallery = data as GalleryRow | null
   if (!gallery) notFound()
 
-  const admin = createAdminClient()
   const { data: user } = await admin
     .from('users')
     .select('studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url, about_text, about_image_url, stat_projects, stat_clients, stat_experience_years')
@@ -249,9 +247,9 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
 
 export async function generateMetadata({ params }: PortfolioPageProps) {
   const { slug } = await params
-  const supabase = await createClient()
+  const admin = createAdminClient()
 
-  const { data } = await supabase
+  const { data } = await admin
     .from('galleries')
     .select('id, title, is_public, user_id, cover_image')
     .eq('slug', slug)
@@ -274,7 +272,6 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
     }
   }
 
-  const admin = createAdminClient()
   const { data: user } = await admin
     .from('users')
     .select('studio_name')

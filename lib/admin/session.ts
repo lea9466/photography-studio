@@ -1,17 +1,15 @@
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto'
 import { cookies } from 'next/headers'
 
+import { requireSessionSecret } from '@/lib/session-secret'
+
 const OTP_COOKIE = 'sg_admin_otp'
 const SESSION_COOKIE = 'sg_admin_session'
 const OTP_TTL_MS = 15 * 60 * 1000
 const SESSION_TTL_SEC = 24 * 60 * 60
 
 function getSecret() {
-  return (
-    process.env.GALLERY_SESSION_SECRET ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    'dev-admin-secret'
-  )
+  return requireSessionSecret('GALLERY_SESSION_SECRET', 'dev-admin-secret')
 }
 
 function sign(value: string) {

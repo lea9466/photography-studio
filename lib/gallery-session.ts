@@ -1,14 +1,12 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 
+import { requireSessionSecret } from '@/lib/session-secret'
+
 const COOKIE_PREFIX = 'sg_gallery_'
 
 function getSecret() {
-  return (
-    process.env.GALLERY_SESSION_SECRET ??
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    'dev-gallery-secret'
-  )
+  return requireSessionSecret('GALLERY_SESSION_SECRET', 'dev-gallery-secret')
 }
 
 function signGalleryId(galleryId: string) {

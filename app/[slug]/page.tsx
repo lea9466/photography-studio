@@ -25,6 +25,7 @@ import {
   buildLandscapePreferredPool,
   type PhotoCandidate,
 } from '@/lib/homepage-photo-pool'
+import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 
 interface PageProps {
   params: Promise<{
@@ -51,13 +52,18 @@ export default async function PhotographerPage({ params }: PageProps) {
     // Type assertion to fix TypeScript inference
     const typedPhotographer = photographer as any
 
-    const { data: galleries } = await admin
+    let galleriesQuery = admin
       .from('galleries')
       .select('id, title, slug, created_at, cover_image')
       .eq('user_id', typedPhotographer.id)
-      .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(4)
+
+    if (!PUBLIC_ONLY_MVP) {
+      galleriesQuery = galleriesQuery.eq('is_public', true)
+    }
+
+    const { data: galleries } = await galleriesQuery
 
     // Fetch first photo for each gallery with smart fallback logic
     const galleriesWithPhotos = await Promise.all(

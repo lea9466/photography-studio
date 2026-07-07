@@ -14,25 +14,7 @@ type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 const COMPLETE_BATCH_SIZE = 50
 const DELETE_BATCH_SIZE = 50
 
-async function assertGalleryOwner(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: gallery } = await supabase
-    .from('galleries')
-    .select('id, is_public')
-    .eq('id', galleryId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!gallery) throw new Error('גלריה לא נמצאה')
-
-  return { supabase, user, gallery: gallery as { id: string; is_public: boolean } }
-}
+import { assertGalleryOwner, assertPhotoInOwnedGallery } from '@/lib/auth/gallery-owner'
 
 export async function reservePhotosBatch(galleryId: string, count: number, isProcessed = false) {
   console.log('👉 1. reservePhotosBatch START', { galleryId, count, isProcessed })
@@ -272,10 +254,24 @@ export async function setPhotosProcessedBulk(
 }
 
 export async function signPreviewUrls(previewUrls: (string | null)[]) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) throw new Error('יש להתחבר מחדש')
+
   const filteredUrls = previewUrls.filter((url): url is string => url !== null)
   if (filteredUrls.length === 0) {
     return {}
   }
+
+  const prefix = `${user.id}/`
+  for (const url of filteredUrls) {
+    if (!url.startsWith(prefix)) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+  }
+
   return signStoragePaths('previews', filteredUrls)
 }
 
@@ -295,20 +291,7 @@ export async function prepareGalleryForDelivery(galleryId: string) {
 }
 
 export async function togglePhotoVisibility(photoId: string, visible: boolean) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: photo } = await supabase
-    .from('photos')
-    .select('gallery_id')
-    .eq('id', photoId)
-    .single()
-
-  const row = photo as { gallery_id: string } | null
-  if (!row) throw new Error('תמונה לא נמצאה')
+  const { supabase, photo } = await assertPhotoInOwnedGallery(photoId)
 
   const { error } = await supabase
     .from('photos')
@@ -317,7 +300,7 @@ export async function togglePhotoVisibility(photoId: string, visible: boolean) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath(`/dashboard/galleries/${row.gallery_id}`)
+  revalidatePath(`/dashboard/galleries/${photo.gallery_id}`)
 }
 
 export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
@@ -403,32 +386,12 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
 }
 
 export async function deletePhoto(photoId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: photo } = await supabase
-    .from('photos')
-    .select('gallery_id, original_url, preview_url, watermarked_preview_url')
-    .eq('id', photoId)
-    .single()
-
-  type PhotoRow = {
-    gallery_id: string
-    original_url: string | null
-    preview_url: string | null
-    watermarked_preview_url: string | null
-  }
-
-  const row = photo as PhotoRow | null
-  if (!row) throw new Error('תמונה לא נמצאה')
+  const { supabase, photo } = await assertPhotoInOwnedGallery(photoId)
 
   const paths = [
-    { bucket: 'originals' as const, path: row.original_url },
-    { bucket: 'previews' as const, path: row.preview_url },
-    { bucket: 'watermarked' as const, path: row.watermarked_preview_url },
+    { bucket: 'originals' as const, path: photo.original_url },
+    { bucket: 'previews' as const, path: photo.preview_url },
+    { bucket: 'watermarked' as const, path: photo.watermarked_preview_url },
   ].filter((p) => p.path)
 
   for (const { bucket, path } of paths) {
@@ -438,7 +401,7 @@ export async function deletePhoto(photoId: string) {
   const { error } = await supabase.from('photos').delete().eq('id', photoId)
   if (error) throw new Error(error.message)
 
-  revalidatePath(`/dashboard/galleries/${row.gallery_id}`)
+  revalidatePath(`/dashboard/galleries/${photo.gallery_id}`)
   revalidatePath('/dashboard')
 }
 
@@ -447,6 +410,28 @@ export async function getSignedPhotoUrl(
   path: string,
   galleryId?: string
 ) {
+  if (!path) throw new Error('לא ניתן ליצור קישור לתמונה')
+
+  const sensitiveBuckets: MediaBucket[] = ['originals', 'edited', 'zips']
+  if (sensitiveBuckets.includes(bucket)) {
+    if (!galleryId) throw new Error('גישה נדחתה')
+
+    const { user } = await assertGalleryOwner(galleryId)
+    const prefix = `${user.id}/${galleryId}/`
+    if (!path.startsWith(prefix)) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+  } else {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) throw new Error('יש להתחבר מחדש')
+    if (!path.startsWith(`${user.id}/`)) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+  }
+
   const url = await resolveMediaUrl(bucket, path, galleryId)
   if (!url) throw new Error('לא ניתן ליצור קישור לתמונה')
   return url
@@ -457,11 +442,8 @@ export async function registerEditedPhoto(input: {
   photoId: string
   editedPath: string
 }) {
+  await assertGalleryOwner(input.galleryId)
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
 
   const { data: existing } = await supabase
     .from('edited_photos')
@@ -533,7 +515,7 @@ export async function registerEditedPhotosBatch(input: {
 }
 
 export async function fetchGalleryPhotos(galleryId: string) {
-  const supabase = await createClient()
+  const { supabase } = await assertGalleryOwner(galleryId)
   const { data, error } = await supabase
     .from('photos')
     .select('*')

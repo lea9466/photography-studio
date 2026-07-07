@@ -1,8 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
-import Image from 'next/image'
 import {
   generateHeroSlideshowHTML,
   generateModernHeroFilmBeltHTML,
@@ -797,68 +795,46 @@ const GALLERY_RADIUS_BY_THEME: Record<GalleryThemeVariant, string> = {
   dark: '0px',
 }
 
-function UnifiedGalleryGrid({
-  galleries,
-  themeVariant,
-}: {
-  galleries: Gallery[]
-  themeVariant: GalleryThemeVariant
-}) {
-  const display = fillGalleriesToFour(galleries)
-  if (display.length === 0) return null
-
-  const radius = GALLERY_RADIUS_BY_THEME[themeVariant]
-
-  return (
-    <>
-      {display.map((g) => {
-        const year = new Date(g.created_at).getFullYear()
-        const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
-        const title = g.title
-        const preview = g.preview_url
-
-        return (
-          <a
-            key={g.id}
-            href={galleryUrl}
-            target="_parent"
-            className="homepage-gallery-card group"
-            style={{ borderRadius: radius }}
-          >
-            {preview ? (
-              <div className="homepage-gallery-card-media">
-                <Image
-                  src={preview}
-                  alt={title}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  className="homepage-gallery-card-image"
-                  loading="lazy"
-                />
-              </div>
-            ) : null}
-            <div className="homepage-gallery-card-overlay" />
-            <div className="homepage-gallery-card-content" dir="rtl">
-              <p className="homepage-gallery-card-label">סדרה</p>
-              <h3 className="homepage-gallery-card-title">{title}</h3>
-              <p className="homepage-gallery-card-subtitle">{year}</p>
-              <span className="homepage-gallery-card-cta">
-                <span className="homepage-gallery-card-arrow">←</span> לצפייה בגלריה
-              </span>
-            </div>
-          </a>
-        )
-      })}
-    </>
-  )
+function escapeGalleryText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 function generateUnifiedGalleryGridHTML(
   galleries: Gallery[],
   themeVariant: GalleryThemeVariant
 ): string {
-  if (fillGalleriesToFour(galleries).length === 0) return ''
-  return `<div id="homepage-unified-gallery-grid" data-theme="${themeVariant}"></div>`
+  const display = fillGalleriesToFour(galleries)
+  if (display.length === 0) return ''
+
+  const radius = GALLERY_RADIUS_BY_THEME[themeVariant]
+
+  return display
+    .map((g) => {
+      const year = new Date(g.created_at).getFullYear()
+      const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
+      const title = escapeGalleryText(String(g.title))
+      const preview = g.preview_url
+      const previewHtml = preview
+        ? `<div class="homepage-gallery-card-media"><img alt="${title}" class="homepage-gallery-card-image" src="${preview}" loading="lazy" decoding="async" /></div>`
+        : ''
+
+      return `<a href="${galleryUrl}" target="_parent" class="homepage-gallery-card group" style="border-radius: ${radius}">
+${previewHtml}
+<div class="homepage-gallery-card-overlay"></div>
+<div class="homepage-gallery-card-content" dir="rtl">
+<p class="homepage-gallery-card-label">סדרה</p>
+<h3 class="homepage-gallery-card-title">${title}</h3>
+<p class="homepage-gallery-card-subtitle">${year}</p>
+<span class="homepage-gallery-card-cta"><span class="homepage-gallery-card-arrow">←</span> לצפייה בגלריה</span>
+</div>
+</a>`
+    })
+    .join('')
 }
 
 function pickRowPhotos(pool: string[], offset: number, count: number): string[] {
@@ -925,7 +901,6 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
   const [mounted, setMounted] = useState(false)
   const [html, setHtml] = useState('')
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const galleryRootRef = useRef<Root | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -950,53 +925,31 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
     setHtml(generatedHtml)
   }, [photographer, galleries, packages, testimonials])
 
-  useEffect(() => {
-    if (!html) return
-
-    const mountGalleryGrid = () => {
-      const doc = iframeRef.current?.contentDocument
-      if (!doc) return
-
-      const mount = doc.getElementById('homepage-unified-gallery-grid')
-      if (!mount) return
-
-      const themeVariant = mount.getAttribute('data-theme') as GalleryThemeVariant | null
-      if (!themeVariant) return
-
-      galleryRootRef.current?.unmount()
-      const root = createRoot(mount)
-      galleryRootRef.current = root
-      root.render(<UnifiedGalleryGrid galleries={galleries} themeVariant={themeVariant} />)
-    }
-
-    const iframe = iframeRef.current
-    if (!iframe) return
-
-    iframe.addEventListener('load', mountGalleryGrid)
-    mountGalleryGrid()
-
-    return () => {
-      iframe.removeEventListener('load', mountGalleryGrid)
-      galleryRootRef.current?.unmount()
-      galleryRootRef.current = null
-    }
-  }, [html, galleries])
-
   if (!mounted) {
-    return <div style={{ padding: '20px' }}>Loading...</div>
+    return (
+      <main>
+        <div style={{ padding: '20px' }}>Loading...</div>
+      </main>
+    )
   }
 
   if (!html) {
-    return <div style={{ padding: '20px' }}>No HTML generated</div>
+    return (
+      <main>
+        <div style={{ padding: '20px' }}>No HTML generated</div>
+      </main>
+    )
   }
 
   return (
-    <iframe
-      ref={iframeRef}
-      srcDoc={html}
-      style={{ width: '100%', height: '100vh', border: 'none' }}
-      title="Photographer Homepage"
-    />
+    <main>
+      <iframe
+        ref={iframeRef}
+        srcDoc={html}
+        style={{ width: '100%', height: '100vh', border: 'none' }}
+        title="Photographer Homepage"
+      />
+    </main>
   )
 }
 
@@ -1062,7 +1015,7 @@ function generateContactPrivacyConsentHTML(
 <div class="contact-privacy-consent flex items-start gap-sm text-right ${wrapperClass}">
 <input type="checkbox" name="privacy_consent" id="contact_privacy_consent_${theme}" required class="contact-privacy-checkbox mt-1 shrink-0 size-4 cursor-pointer rounded border border-current/30" style="accent-color: ${primaryColor};"/>
 <p class="${labelTextClass}">
-<label for="contact_privacy_consent_${theme}" class="cursor-pointer">אני מסכימ/ה לשמירת המידע האישי שלי לצורך טיפול בפנייה , בהתאם ל</label><a href="#" class="${linkClass}">מדיניות הפרטיות</a>.
+<label for="contact_privacy_consent_${theme}" class="cursor-pointer">אני מסכימ/ה לשמירת המידע האישי שלי לצורך טיפול בפנייה , בהתאם ל</label><a href="/privacy" class="${linkClass}">מדיניות הפרטיות</a>.
 </p>
 </div>`.trim()
 }
@@ -2135,7 +2088,7 @@ ${aboutImageHtml}
 ${elegantSectionHeading('קולקציות נבחרות', 'COLLECTIONS')}
 </div>
 </div>
-<div class="homepage-gallery-grid reveal-on-scroll">
+<div class="homepage-gallery-grid reveal-on-scroll active">
 ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 </div>
 </section>
@@ -3187,6 +3140,7 @@ ${documentHead}
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">
 ${generateSiteNav(siteChrome('classic'))}
+<main>
 <section class="relative h-screen w-full flex items-end justify-start overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0 scale-105">
 ${heroSlideshowHtml}
@@ -3363,6 +3317,7 @@ ${generateContactPrivacyConsentHTML('classic', primaryColor, 'mb-lg')}
 </div>
 </div>
 </section>
+</main>
 ${generateSiteFooter(siteChrome('classic'))}
 <script>
         ${generateSiteNavScrollScript('classic')}
@@ -3918,6 +3873,7 @@ ${documentHead}
 </head>
 <body class="bg-background text-on-surface">
 ${generateSiteNav(siteChrome('dark'))}
+<main>
 <section class="relative h-screen w-full flex items-end overflow-hidden reveal" id="hero">
 <div class="absolute inset-0 z-0">
 ${heroSlideshowBoldHtml}
