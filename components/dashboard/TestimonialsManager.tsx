@@ -9,8 +9,10 @@ import {
   getTestimonialPhotoOptions,
   prepareTestimonialImageUpload,
   updateTestimonial,
+  updateTestimonialsSectionTitle,
   type TestimonialPhotoOption,
 } from '@/lib/actions/testimonials.actions'
+import { TESTIMONIALS_SECTION_DEFAULTS } from '@/lib/testimonials-section-copy'
 import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
@@ -47,6 +49,8 @@ type Testimonial = {
 type TestimonialsManagerProps = {
   initialTestimonials: Testimonial[]
   photographerLogoUrl?: string | null
+  initialSectionTitle: string | null
+  selectedTheme: string
 }
 
 type TestimonialFormState = {
@@ -96,8 +100,14 @@ function previewForImageRef(imageRef: string, logoUrl?: string | null) {
 export function TestimonialsManager({
   initialTestimonials,
   photographerLogoUrl,
+  initialSectionTitle,
+  selectedTheme,
 }: TestimonialsManagerProps) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
+  const [sectionTitle, setSectionTitle] = useState(initialSectionTitle ?? '')
+  const [isSectionPending, startSectionTransition] = useTransition()
+  const themeDefault =
+    TESTIMONIALS_SECTION_DEFAULTS[selectedTheme] ?? TESTIMONIALS_SECTION_DEFAULTS.elegant
   const [isPending, startTransition] = useTransition()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -224,8 +234,49 @@ export function TestimonialsManager({
 
   const formPreviewSrc = previewForImageRef(form.imageUrl, photographerLogoUrl)
 
+  function handleSectionTitleSave() {
+    startSectionTransition(async () => {
+      try {
+        const updated = await updateTestimonialsSectionTitle({
+          title: sectionTitle,
+        })
+        setSectionTitle(updated.testimonials_title ?? '')
+        toast.success('כותרת הסקשן נשמרה')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-[--foreground]">כותרת סקשן התגובות</h2>
+          <p className="mt-1 text-sm text-[--muted]">
+            הטקסט מוצג בדף הבית הציבורי. אם השדה ריק, יוצג ברירת המחדל של ערכת העיצוב הנוכחית.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="testimonials-section-title">כותרת</Label>
+          <Input
+            id="testimonials-section-title"
+            value={sectionTitle}
+            onChange={(e) => setSectionTitle(e.target.value)}
+            placeholder={themeDefault}
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSectionTitleSave}
+            disabled={isSectionPending}
+          >
+            {isSectionPending ? 'שומר...' : 'שמור כותרת'}
+          </Button>
+        </div>
+      </div>
       <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">
         סקשן התגובות מוצג בדף הבית הציבורי רק כשיש לפחות תגובה אחת. לכל תגובה אפשר לבחור תמונה
         מהאלבום — אם לא נבחרה תמונה, יוצג הלוגו שלך.

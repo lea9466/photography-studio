@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import sharp from 'sharp'
 import { createClient } from '@/lib/supabase/server'
 import { isR2Configured } from '@/lib/r2/config'
 import { resolveMediaUrl, uploadMediaObject } from '@/lib/r2/storage'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
+
+function toBuffer(data: ArrayBuffer | SharedArrayBuffer): Buffer {
+  return Buffer.from(new Uint8Array(data))
+}
+
+function toUploadBody(buffer: Buffer): Uint8Array {
+  return Uint8Array.from(buffer)
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,13 +45,22 @@ export async function POST(request: NextRequest) {
     }
 
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    const inputBuffer = toBuffer(bytes)
 
-    const extension =
-      file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg'
-    const path = `${user.id}/gallery_cover_${Date.now()}.${extension}`
+    let outputBuffer: Buffer
+    try {
+      outputBuffer = await sharp(inputBuffer)
+        .resize({ width: 1920, withoutEnlargement: true })
+        .webp({ quality: 85 })
+        .toBuffer()
+    } catch (processError) {
+      console.error('Cover image processing failed:', processError)
+      return NextResponse.json({ error: 'עיבוד התמונה נכשל' }, { status: 400 })
+    }
 
-    await uploadMediaObject('branding', path, buffer, file.type)
+    const path = `${user.id}/gallery_cover_${Date.now()}.webp`
+
+    await uploadMediaObject('branding', path, toUploadBody(outputBuffer), 'image/webp')
 
     const url = await resolveMediaUrl('branding', path)
     if (!url) {

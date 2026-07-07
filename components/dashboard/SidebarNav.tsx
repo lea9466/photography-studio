@@ -56,7 +56,7 @@ export function SidebarNav({
           isCollapsed ? 'opacity-0 w-0 overflow-hidden p-0' : 'opacity-100'
         )}
       >
-        <div className="w-12 h-12 rounded-xl bg-[--dashboard-foreground] flex items-center justify-center text-white overflow-hidden border border-[--dashboard-border]">
+        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-[--dashboard-border] bg-[--dashboard-foreground] text-white">
           <Logo
             logoUrl={logoUrl}
             accentColor={accentColor}

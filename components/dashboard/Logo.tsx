@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Camera } from 'lucide-react'
 import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 
 type LogoProps = {
@@ -10,10 +11,26 @@ type LogoProps = {
   className?: string
 }
 
+function DefaultLogoIcon({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`flex h-full w-full items-center justify-center ${className}`}
+      aria-hidden="true"
+    >
+      <Camera className="h-6 w-6 text-current opacity-90" strokeWidth={1.75} />
+    </div>
+  )
+}
+
 export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false, className = '' }: LogoProps) {
   const [svgContent, setSvgContent] = useState<string | null>(null)
   const [isSvg, setIsSvg] = useState(false)
+  const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const previewUrl = getBrandingPreviewUrl(logoUrl)
+
+  useEffect(() => {
+    setImageLoadFailed(false)
+  }, [previewUrl])
 
   useEffect(() => {
     if (!previewUrl) {
@@ -35,18 +52,15 @@ export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false
         .catch(() => {
           setIsSvg(false)
           setSvgContent(null)
+          setImageLoadFailed(true)
         })
     } else {
       setSvgContent(null)
     }
   }, [previewUrl, shouldColorLogo])
 
-  if (!previewUrl) {
-    return (
-      <div className={`w-full h-full flex items-center justify-center ${className}`}>
-        <span className="text-2xl">📷</span>
-      </div>
-    )
+  if (!previewUrl || imageLoadFailed) {
+    return <DefaultLogoIcon className={className} />
   }
 
   if (isSvg && shouldColorLogo && svgContent) {
@@ -69,9 +83,10 @@ export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false
 
   return (
     <img 
-      alt="Logo" 
+      alt="" 
       className={`w-full h-full object-contain ${className}`}
       src={previewUrl}
+      onError={() => setImageLoadFailed(true)}
     />
   )
 }

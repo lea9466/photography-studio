@@ -217,6 +217,51 @@ export async function deletePackage(packageId: string): Promise<void> {
   revalidatePath('/portfolio')
 }
 
+export async function updatePackagesSectionHeadings(input: {
+  title?: string
+  subtitle?: string
+}): Promise<{ packages_title: string | null; packages_subtitle: string | null }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('יש להתחבר מחדש')
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {}
+
+  if (input.title !== undefined) {
+    payload.packages_title = input.title.trim() || null
+  }
+
+  if (input.subtitle !== undefined) {
+    payload.packages_subtitle = input.subtitle.trim() || null
+  }
+
+  if (Object.keys(payload).length === 0) {
+    throw new Error('אין שינויים לשמירה')
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', user.id)
+    .select('packages_title, packages_subtitle')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/packages')
+  revalidatePath('/portfolio')
+  revalidatePath('/[slug]', 'page')
+
+  return data as { packages_title: string | null; packages_subtitle: string | null }
+}
+
 export async function fetchPublicPackages(
   userId: string
 ): Promise<PhotographyPackage[]> {

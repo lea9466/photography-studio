@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
+import Image from 'next/image'
 import {
   generateHeroSlideshowHTML,
   generateModernHeroFilmBeltHTML,
@@ -23,6 +25,8 @@ import {
   generateHomepageSectionScrollScript,
   readHomepageInitialSection,
 } from '@/lib/photographer-site-paths'
+import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
+import { resolveTestimonialsSectionTitle } from '@/lib/testimonials-section-copy'
 
 interface Photographer {
   id: string
@@ -49,6 +53,9 @@ interface Photographer {
   contact_mobile_url: string | null
   packages_desktop_url: string | null
   packages_mobile_url: string | null
+  packages_title: string | null
+  packages_subtitle: string | null
+  testimonials_title: string | null
   email: string | null
   phone: string | null
   address: string | null
@@ -138,6 +145,10 @@ const UNIFIED_GALLERY_GRID_CSS = `
     background: #eae8e5;
     text-decoration: none;
     cursor: pointer;
+  }
+  .homepage-gallery-card-media {
+    position: absolute;
+    inset: 0;
   }
   .homepage-gallery-card:hover,
   .homepage-gallery-card:focus-visible {
@@ -777,47 +788,77 @@ function galleryNavId(id: string) {
   return id.replace(/-fill-\d+$/, '')
 }
 
+type GalleryThemeVariant = 'elegant' | 'modern' | 'classic' | 'dark'
+
+const GALLERY_RADIUS_BY_THEME: Record<GalleryThemeVariant, string> = {
+  elegant: '0px',
+  modern: '12px',
+  classic: '4px',
+  dark: '0px',
+}
+
+function UnifiedGalleryGrid({
+  galleries,
+  themeVariant,
+}: {
+  galleries: Gallery[]
+  themeVariant: GalleryThemeVariant
+}) {
+  const display = fillGalleriesToFour(galleries)
+  if (display.length === 0) return null
+
+  const radius = GALLERY_RADIUS_BY_THEME[themeVariant]
+
+  return (
+    <>
+      {display.map((g) => {
+        const year = new Date(g.created_at).getFullYear()
+        const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
+        const title = g.title
+        const preview = g.preview_url
+
+        return (
+          <a
+            key={g.id}
+            href={galleryUrl}
+            target="_parent"
+            className="homepage-gallery-card group"
+            style={{ borderRadius: radius }}
+          >
+            {preview ? (
+              <div className="homepage-gallery-card-media">
+                <Image
+                  src={preview}
+                  alt={title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  className="homepage-gallery-card-image"
+                  loading="lazy"
+                />
+              </div>
+            ) : null}
+            <div className="homepage-gallery-card-overlay" />
+            <div className="homepage-gallery-card-content" dir="rtl">
+              <p className="homepage-gallery-card-label">סדרה</p>
+              <h3 className="homepage-gallery-card-title">{title}</h3>
+              <p className="homepage-gallery-card-subtitle">{year}</p>
+              <span className="homepage-gallery-card-cta">
+                <span className="homepage-gallery-card-arrow">←</span> לצפייה בגלריה
+              </span>
+            </div>
+          </a>
+        )
+      })}
+    </>
+  )
+}
+
 function generateUnifiedGalleryGridHTML(
   galleries: Gallery[],
-  themeVariant: 'elegant' | 'modern' | 'classic' | 'dark'
+  themeVariant: GalleryThemeVariant
 ): string {
-  const display = fillGalleriesToFour(galleries)
-  if (display.length === 0) return ''
-
-  const radiusByTheme = {
-    elegant: '0px',
-    modern: '12px',
-    classic: '4px',
-    dark: '0px',
-  }
-  const radius = radiusByTheme[themeVariant]
-  const imgExtraClass = ''
-
-  return display
-    .map((g) => {
-      const year = new Date(g.created_at).getFullYear()
-      const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
-      const title = String(g.title)
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-      const preview = g.preview_url || ''
-
-      return `
-<a href="${galleryUrl}" target="_parent" class="homepage-gallery-card group" style="border-radius: ${radius};">
-  <img alt="${title}" class="homepage-gallery-card-image${imgExtraClass}" src="${preview}" loading="lazy" />
-  <div class="homepage-gallery-card-overlay"></div>
-  <div class="homepage-gallery-card-content" dir="rtl">
-    <p class="homepage-gallery-card-label">סדרה</p>
-    <h3 class="homepage-gallery-card-title">${title}</h3>
-    <p class="homepage-gallery-card-subtitle">${year}</p>
-    <span class="homepage-gallery-card-cta"><span class="homepage-gallery-card-arrow">←</span> לצפייה בגלריה</span>
-  </div>
-</a>`
-    })
-    .join('')
+  if (fillGalleriesToFour(galleries).length === 0) return ''
+  return `<div id="homepage-unified-gallery-grid" data-theme="${themeVariant}"></div>`
 }
 
 function pickRowPhotos(pool: string[], offset: number, count: number): string[] {
@@ -883,6 +924,8 @@ interface PhotographerHomepageProps {
 export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [] }: PhotographerHomepageProps) {
   const [mounted, setMounted] = useState(false)
   const [html, setHtml] = useState('')
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const galleryRootRef = useRef<Root | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -907,6 +950,38 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
     setHtml(generatedHtml)
   }, [photographer, galleries, packages, testimonials])
 
+  useEffect(() => {
+    if (!html) return
+
+    const mountGalleryGrid = () => {
+      const doc = iframeRef.current?.contentDocument
+      if (!doc) return
+
+      const mount = doc.getElementById('homepage-unified-gallery-grid')
+      if (!mount) return
+
+      const themeVariant = mount.getAttribute('data-theme') as GalleryThemeVariant | null
+      if (!themeVariant) return
+
+      galleryRootRef.current?.unmount()
+      const root = createRoot(mount)
+      galleryRootRef.current = root
+      root.render(<UnifiedGalleryGrid galleries={galleries} themeVariant={themeVariant} />)
+    }
+
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    iframe.addEventListener('load', mountGalleryGrid)
+    mountGalleryGrid()
+
+    return () => {
+      iframe.removeEventListener('load', mountGalleryGrid)
+      galleryRootRef.current?.unmount()
+      galleryRootRef.current = null
+    }
+  }, [html, galleries])
+
   if (!mounted) {
     return <div style={{ padding: '20px' }}>Loading...</div>
   }
@@ -917,6 +992,7 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
   return (
     <iframe
+      ref={iframeRef}
       srcDoc={html}
       style={{ width: '100%', height: '100vh', border: 'none' }}
       title="Photographer Homepage"
@@ -955,6 +1031,42 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;')
 }
 
+function generatePhotographerDocumentHead(studioName: string, logoUrl: string | null): string {
+  const title = escapeHtml(studioName)
+  const faviconLink = logoUrl
+    ? `<link rel="icon" href="${escapeHtml(logoUrl)}" sizes="any"/>`
+    : ''
+  return `<title>${title}</title>\n${faviconLink}`
+}
+
+function generateContactPrivacyConsentHTML(
+  theme: 'elegant' | 'modern' | 'classic' | 'dark',
+  primaryColor: string,
+  wrapperClass = ''
+): string {
+  const labelTextClass = {
+    elegant: 'text-sm font-light opacity-80 leading-relaxed',
+    modern: 'text-sm text-white/90 leading-relaxed',
+    classic: 'text-sm text-on-surface-variant leading-relaxed',
+    dark: 'text-sm text-on-surface-variant leading-relaxed',
+  }[theme]
+
+  const linkClass = {
+    elegant: 'underline hover:opacity-80',
+    modern: 'underline text-white hover:opacity-80',
+    classic: 'text-primary underline hover:opacity-80',
+    dark: 'text-primary underline hover:opacity-80',
+  }[theme]
+
+  return `
+<div class="contact-privacy-consent flex items-start gap-sm text-right ${wrapperClass}">
+<input type="checkbox" name="privacy_consent" id="contact_privacy_consent_${theme}" required class="contact-privacy-checkbox mt-1 shrink-0 size-4 cursor-pointer rounded border border-current/30" style="accent-color: ${primaryColor};"/>
+<p class="${labelTextClass}">
+<label for="contact_privacy_consent_${theme}" class="cursor-pointer">אני מסכימ/ה לשמירת המידע האישי שלי לצורך טיפול בפנייה , בהתאם ל</label><a href="#" class="${linkClass}">מדיניות הפרטיות</a>.
+</p>
+</div>`.trim()
+}
+
 function contactFormSubmitScript(photographerId: string): string {
   return `
     (function() {
@@ -962,6 +1074,10 @@ function contactFormSubmitScript(photographerId: string): string {
       if (!form) return;
       form.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
         var submitBtn = form.querySelector('button[type="submit"]');
         var originalLabel = submitBtn ? submitBtn.innerHTML : '';
         if (submitBtn) {
@@ -1038,6 +1154,9 @@ function generateHomepageHTML(
     contact_mobile_url,
     packages_desktop_url,
     packages_mobile_url,
+    packages_title,
+    packages_subtitle,
+    testimonials_title,
     email,
     phone,
     address,
@@ -1175,7 +1294,8 @@ function generateHomepageHTML(
     ? `<img alt="צילום פורטרט" class="w-full h-full object-cover" src="${about_image_url}"/>`
     : ''
 
-  const studioName = studio_name || 'סטודיו גלריה'
+  const studioName = studio_name || name || 'סטודיו גלריה'
+  const documentHead = generatePhotographerDocumentHead(studioName, logo_url)
   const photographerName = name || 'אפרת כהן'
   const validFaqItems = sanitizeFaqItems(parseFaqItems(photographer.faq_items))
   const hasFaq = validFaqItems.length > 0
@@ -1204,6 +1324,7 @@ function generateHomepageHTML(
   const statsYears = stat_experience_years ?? 0
   const hasStats = statsProjects > 0 || statsClients > 0 || statsYears > 0
   const hasPackages = packages.length > 0
+  const packagesSectionCopy = resolvePackagesSectionCopy(theme, packages_title, packages_subtitle)
   const packagesGridClass =
     packages.length === 1
       ? 'homepage-packages-grid homepage-packages-grid--count-1'
@@ -1211,6 +1332,10 @@ function generateHomepageHTML(
         ? 'homepage-packages-grid homepage-packages-grid--count-2'
         : 'homepage-packages-grid'
   const hasTestimonials = testimonials.length > 0
+  const testimonialsSectionTitle = resolveTestimonialsSectionTitle(
+    theme,
+    testimonials_title
+  )
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
   // Generate dynamic packages HTML for each theme
@@ -1384,7 +1509,7 @@ function generateHomepageHTML(
 
     if (items.length === 0) return ''
 
-    return `<div class="${prefix}-contact-details mt-16 mx-auto max-w-3xl border border-white/15 px-8 py-10 md:px-12 ${revealClass}">
+    return `<div class="${prefix}-contact-details mt-16 mx-auto max-w-3xl px-8 py-10 md:px-12 ${revealClass}">
 <div class="flex flex-wrap justify-center gap-10 md:gap-16">${items.join('')}</div>
 </div>`
   }
@@ -1632,6 +1757,7 @@ ${accordion}
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+${documentHead}
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -1842,15 +1968,49 @@ ${accordion}
                 padding: 2rem 2.25rem;
             }
         }
-        @media (max-width: 767px) {
-            #contact.contact-section-has-bg .contact-section-bg-mobile {
+        @media (max-width: 1023px) {
+            #contact.elegant-contact-section--has-bg {
+                padding-top: 0;
+                background-color: #1c1b1b;
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-form-area.contact-section-has-bg {
+                position: relative;
+                overflow: hidden;
+                padding-top: 8rem;
+                padding-bottom: 1.25rem;
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-form-area .contact-section-bg-mobile {
                 opacity: 0.4;
                 filter: brightness(1.45) saturate(0.68) contrast(0.9);
                 -webkit-mask-image: none;
                 mask-image: none;
             }
-            #contact.contact-section-has-bg .contact-section-bg-overlay {
-                background: linear-gradient(to bottom, color-mix(in srgb, var(--contact-fade-desktop, #1c1b1b) 58%, transparent), color-mix(in srgb, var(--contact-fade-desktop, #1c1b1b) 96%, transparent));
+            #contact.elegant-contact-section--has-bg .elegant-contact-form-area .contact-section-bg-overlay {
+                background: linear-gradient(to bottom, color-mix(in srgb, #1c1b1b 58%, transparent) 0%, #1c1b1b 100%);
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-details-area {
+                background-color: #1c1b1b;
+                margin-top: 0;
+                padding-top: 0;
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-details-area .elegant-contact-details {
+                margin-top: 0;
+            }
+        }
+        @media (min-width: 1024px) {
+            #contact.elegant-contact-section--has-bg {
+                position: relative;
+                overflow: hidden;
+                padding-top: 8rem;
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-form-area.contact-section-has-bg {
+                position: static;
+                overflow: visible;
+                padding-bottom: 0;
+            }
+            #contact.elegant-contact-section--has-bg .elegant-contact-details-area {
+                position: relative;
+                z-index: 1;
             }
         }
         @keyframes gentleFloat {
@@ -1996,8 +2156,8 @@ ${hasPackages ? `
 ${packagesBgLayers('#f2f1ef', '#f2f1ef')}
 <div class="mx-auto max-w-7xl contact-section-content">
 <div class="text-center mb-16 reveal-on-scroll">
-${elegantSectionHeading('חבילות שירות', 'PACKAGES', { center: true, titleClass: 'mb-4' })}
-<p class="font-body opacity-60 italic">השקעה בזיכרונות שיישארו לנצח</p>
+${elegantSectionHeading(packagesSectionCopy.title, 'PACKAGES', { center: true, titleClass: 'mb-4' })}
+<p class="font-body opacity-60 italic">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('elegant')}</div>
 </div>
@@ -2006,14 +2166,15 @@ ${elegantSectionHeading('חבילות שירות', 'PACKAGES', { center: true, t
 ${hasTestimonials ? `
 <section class="testimonials-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto" id="testimonials">
 <div class="text-center mb-16 reveal-on-scroll">
-${elegantSectionHeading('מה לקוחות אומרות', 'RECOMMEND', { center: true, titleClass: 'mb-4' })}
+${elegantSectionHeading(testimonialsSectionTitle, 'RECOMMEND', { center: true, titleClass: 'mb-4' })}
 </div>
 <div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
 </section>
 ` : ''}
 ${generateFaqSectionHTML('elegant')}
-<section id="contact" class="pt-32 pb-12 ${hasContactBg ? 'contact-section-has-bg' : 'bg-[#1c1b1b] px-margin-mobile md:px-margin-desktop'} text-white reveal-on-scroll">
-${contactBgLayers('#FAFAF8', '#1c1b1b')}
+<section id="contact" class="elegant-contact-section ${hasContactBg ? 'elegant-contact-section--has-bg pb-12' : 'pt-32 pb-12 bg-[#1c1b1b] px-margin-mobile md:px-margin-desktop'} text-white reveal-on-scroll">
+<div class="elegant-contact-form-area ${hasContactBg ? 'contact-section-has-bg' : 'px-margin-mobile md:px-margin-desktop'}">
+${hasContactBg ? contactBgLayers('#1c1b1b', '#1c1b1b') : ''}
 <div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop">
 <div class="text-center mb-16">
 ${elegantSectionHeading('צרי קשר', 'CONTACT', { center: true, onDark: true, titleClass: 'mb-4' })}
@@ -2041,14 +2202,18 @@ ${email ? `
 <label class="text-[10px] uppercase tracking-[0.2em] opacity-40">הודעה</label>
 <textarea name="message" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none" placeholder="איך נוכל לעזור?"></textarea>
 </div>
+${generateContactPrivacyConsentHTML('elegant', primaryColor, 'md:col-span-2')}
 <div class="md:col-span-2 flex justify-center mt-6">
 <button type="submit" class="elegant-bg-accent text-white px-16 py-4 text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300">
                         שליחת הודעה
                     </button>
 </div>
 </form>
+` : `<div class="text-center py-20 opacity-40"><p class="font-body text-lg">אין כתובת אימייל ליצירת קשר</p></div>`}
+</div>
+</div>
+<div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop${hasContactBg ? ' elegant-contact-details-area' : ''}">
 ${generateElegantContactDetailsHTML()}
-` : `<div class="text-center py-20 opacity-40"><p class="font-body text-lg">אין כתובת אימייל ליצירת קשר</p></div>${generateElegantContactDetailsHTML()}`}
 </div>
 </section>
 </main>
@@ -2098,7 +2263,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>${studioName} | סטודיו לצילום מודרני</title>
+${documentHead}
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -2472,8 +2637,8 @@ ${hasPackages ? (hasPackagesBg ? `
 ${packagesBgLayers('#F8FAFC')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="text-center mb-xl animate-reveal">
-<h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
-<p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
+<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+<p class="modern-section-subtitle">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('modern')}</div>
 </div>
@@ -2482,8 +2647,8 @@ ${packagesBgLayers('#F8FAFC')}
 <section class="py-xxl bg-surface-dim" id="pricing">
 <div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl animate-reveal">
-<h2 class="font-headline text-4xl font-bold text-on-surface">חבילות הצילום שלנו</h2>
-<p class="modern-section-subtitle">בחרו את החבילה המתאימה ליותר עבורכם</p>
+<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+<p class="modern-section-subtitle">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('modern')}</div>
 </div>
@@ -2491,7 +2656,7 @@ ${packagesBgLayers('#F8FAFC')}
 `) : ''}
 ${hasTestimonials ? `
 <section class="testimonials-section py-xxl max-w-7xl mx-auto px-lg" id="testimonials">
-<h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">מה הלקוחות אומרים</h2>
+<h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">${escapeHtml(testimonialsSectionTitle)}</h2>
 <div class="testimonials-section-grid">${generateTestimonialsHTML('modern')}</div>
 </section>
 ` : ''}
@@ -2535,6 +2700,7 @@ ${studioAddress ? `
 <div class="relative">
 <textarea name="message" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
 </div>
+${generateContactPrivacyConsentHTML('modern', primaryColor)}
 <button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl w-full transition-all" type="submit">
                         שליחת הודעה
                     </button>
@@ -2561,7 +2727,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>${studioName} | צילום מקצועי</title>
+${documentHead}
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -3123,8 +3289,8 @@ ${hasPackages ? `
 ${packagesBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
 <div class="text-center mb-xl">
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">השקעה ברגעי קסם</span>
-<h2 class="font-headline-md text-headline-md text-on-surface">חבילות צילום</h2>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(packagesSectionCopy.subtitle)}</span>
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 <div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('classic')}</div>
@@ -3135,7 +3301,7 @@ ${hasTestimonials ? `
 <section class="testimonials-section py-xxl reveal" id="testimonials">
 <div class="max-w-7xl mx-auto px-lg">
 <div class="text-center mb-xl">
-<h2 class="font-headline-md text-headline-md text-on-surface">לקוחות מספרים</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
 </div>
 <div class="testimonials-section-grid">${generateClassicTestimonialsSection()}
 </div>
@@ -3187,6 +3353,7 @@ ${studioAddress ? `
 <label class="font-label-sm text-label-sm text-on-surface-variant block px-1">ספרו לי על האירוע שלכם</label>
 <textarea name="message" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
 </div>
+${generateContactPrivacyConsentHTML('classic', primaryColor, 'mb-lg')}
 <button class="w-full bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-md" type="submit">
                         שלח פנייה
 <span class="material-symbols-outlined text-sm">send</span>
@@ -3279,7 +3446,8 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 <html class="dark" dir="rtl" lang="he">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, in" style="scroll-behavior: smooth;itial-scale=1.0" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+${documentHead}
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -3844,8 +4012,8 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 <div class="contact-section-content">
 <div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
-<h2 class="font-headline-md text-headline-md mb-md text-background">חבילות וצילום</h2>
-<p class="text-background/60 font-body-md">אנחנו מציעים מגוון אפשרויות שיתאימו לצרכים האישיים והעסקיים שלכם, עם דגש על איכות בלתי מתפשרת.</p>
+<h2 class="font-headline-md text-headline-md mb-md text-background">${escapeHtml(packagesSectionCopy.title)}</h2>
+<p class="text-background/60 font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
 </div>
@@ -3855,8 +4023,8 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 <div class="container mx-auto px-lg">
 <div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
-<h2 class="font-headline-md text-headline-md mb-md text-background">חבילות וצילום</h2>
-<p class="text-background/60 font-body-md">אנחנו מציעים מגוון אפשרויות שיתאימו לצרכים האישיים והעסקיים שלכם, עם דגש על איכות בלתי מתפשרת.</p>
+<h2 class="font-headline-md text-headline-md mb-md text-background">${escapeHtml(packagesSectionCopy.title)}</h2>
+<p class="text-background/60 font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 </div>
 <div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
 </div>
@@ -3866,7 +4034,7 @@ ${hasTestimonials ? `
 <section class="testimonials-section py-xl md:py-xxl container mx-auto px-lg reveal" id="testimonials">
 <div class="text-center mb-xl md:mb-xxl">
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Kind Words</span>
-<h2 class="font-headline-md text-headline-md">מה הלקוחות שלנו אומרים</h2>
+<h2 class="font-headline-md text-headline-md">${escapeHtml(testimonialsSectionTitle)}</h2>
 </div>
 <div class="testimonials-section-grid">${generateTestimonialsHTML('dark')}</div>
 </section>
@@ -3909,6 +4077,7 @@ ${hasContactBg ? contactBgLayers('#120f0d', '#1a1614') : ''}
 <div class="md:col-span-2 border-b border-outline-variant">
 <textarea name="message" required class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 min-h-[120px]" placeholder="ההודעה שלך"></textarea>
 </div>
+${generateContactPrivacyConsentHTML('dark', primaryColor, 'md:col-span-2')}
 <div class="md:col-span-2 flex justify-center mt-md">
 <button type="submit" class="bg-primary text-on-primary px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary/90 active:scale-95">
             שלח הודעה

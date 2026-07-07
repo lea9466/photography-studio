@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/cleanup-orphaned-photos",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

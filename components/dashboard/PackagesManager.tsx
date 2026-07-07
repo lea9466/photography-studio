@@ -7,8 +7,10 @@ import {
   createPackage,
   deletePackage,
   updatePackage,
+  updatePackagesSectionHeadings,
 } from '@/lib/actions/package.actions'
 import type { PhotographyPackage } from '@/lib/types/database.types'
+import { PACKAGES_SECTION_DEFAULTS } from '@/lib/packages-section-copy'
 import { PackageCard } from '@/components/dashboard/PackageCard'
 import { Button } from '@/components/ui/button'
 import {
@@ -26,6 +28,9 @@ import { Textarea } from '@/components/ui/textarea'
 
 type PackagesManagerProps = {
   initialPackages: PhotographyPackage[]
+  initialSectionTitle: string | null
+  initialSectionSubtitle: string | null
+  selectedTheme: string
 }
 
 type PackageFormState = {
@@ -57,8 +62,18 @@ function packageToForm(pkg: PhotographyPackage): PackageFormState {
   }
 }
 
-export function PackagesManager({ initialPackages }: PackagesManagerProps) {
+export function PackagesManager({
+  initialPackages,
+  initialSectionTitle,
+  initialSectionSubtitle,
+  selectedTheme,
+}: PackagesManagerProps) {
   const [packages, setPackages] = useState(initialPackages)
+  const [sectionTitle, setSectionTitle] = useState(initialSectionTitle ?? '')
+  const [sectionSubtitle, setSectionSubtitle] = useState(initialSectionSubtitle ?? '')
+  const [isSectionPending, startSectionTransition] = useTransition()
+  const themeDefaults =
+    PACKAGES_SECTION_DEFAULTS[selectedTheme] ?? PACKAGES_SECTION_DEFAULTS.elegant
   const [isPending, startTransition] = useTransition()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -129,8 +144,62 @@ export function PackagesManager({ initialPackages }: PackagesManagerProps) {
 
   const activeCount = packages.filter((pkg) => pkg.is_active).length
 
+  function handleSectionHeadingsSave() {
+    startSectionTransition(async () => {
+      try {
+        const updated = await updatePackagesSectionHeadings({
+          title: sectionTitle,
+          subtitle: sectionSubtitle,
+        })
+        setSectionTitle(updated.packages_title ?? '')
+        setSectionSubtitle(updated.packages_subtitle ?? '')
+        toast.success('כותרות הסקשן נשמרו')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-[--foreground]">כותרות סקשן החבילות</h2>
+          <p className="mt-1 text-sm text-[--muted]">
+            הטקסטים מוצגים בדף הבית הציבורי. אם השדות ריקים, יוצגו ברירות המחדל של ערכת העיצוב הנוכחית.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="packages-section-title">כותרת</Label>
+            <Input
+              id="packages-section-title"
+              value={sectionTitle}
+              onChange={(e) => setSectionTitle(e.target.value)}
+              placeholder={themeDefaults.title}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="packages-section-subtitle">כותרת משנה</Label>
+            <Input
+              id="packages-section-subtitle"
+              value={sectionSubtitle}
+              onChange={(e) => setSectionSubtitle(e.target.value)}
+              placeholder={themeDefaults.subtitle}
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleSectionHeadingsSave}
+            disabled={isSectionPending}
+          >
+            {isSectionPending ? 'שומר...' : 'שמור כותרות'}
+          </Button>
+        </div>
+      </div>
       <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted] space-y-2">
         <p>סקשן החבילות מוצג בדף הבית הציבורי רק כשיש לפחות חבילה פעילה אחת. חבילות מוסתרות לא נספרות.</p>
         <p className="text-[--foreground]">

@@ -182,19 +182,21 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         </td>
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
         <td className="px-6 py-4">
+          <div
+            className="flex items-center justify-center gap-2"
+            title="הצג בדף הבית — עד 4 גלריות ציבוריות; 4 תמונות מכל גלריה בסקשן תמונות אחרונות"
+          >
+            <Globe className="h-4 w-4 text-[--muted]" />
+            <Switch
+              checked={isPublic}
+              onCheckedChange={handleTogglePublic}
+              disabled={isPending}
+              className="scale-75"
+            />
+          </div>
+        </td>
+        <td className="px-6 py-4">
           <div className="flex items-center justify-end gap-3">
-            <div
-              className="flex items-center gap-2"
-              title="הצג בדף הבית — עד 4 גלריות ציבוריות; 4 תמונות מכל גלריה בסקשן תמונות אחרונות"
-            >
-              <Globe className="h-4 w-4 text-[--muted]" />
-              <Switch
-                checked={isPublic}
-                onCheckedChange={handleTogglePublic}
-                disabled={isPending}
-                className="scale-75"
-              />
-            </div>
             <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
               <Link href={`/dashboard/galleries/${gallery.id}`}>
@@ -374,6 +376,7 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
               <th className="px-6 py-3 text-sm font-medium">לקוח</th>
               <th className="px-6 py-3 text-sm font-medium">סטטוס</th>
               <th className="px-6 py-3 text-sm font-medium text-center">תמונות</th>
+              <th className="px-6 py-3 text-sm font-medium text-center">מוצג באתר</th>
               <th className="px-6 py-3 text-sm font-medium text-left">פעולות</th>
             </tr>
           </thead>
@@ -384,7 +387,7 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-[--muted]">
+                <td colSpan={7} className="px-6 py-8 text-center text-[--muted]">
                   אין גלריות עדיין
                 </td>
               </tr>

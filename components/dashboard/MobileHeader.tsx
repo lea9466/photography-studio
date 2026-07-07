@@ -35,7 +35,7 @@ export function MobileHeader({
     <>
       <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 px-4 py-3 bg-white border-b border-[--border]">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center text-[--foreground]">
             <Logo
               logoUrl={logoUrl}
               accentColor={accentColor}

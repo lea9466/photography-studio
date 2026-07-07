@@ -98,6 +98,8 @@ export async function updateProfile(input: {
   contact_mobile_url?: string
   packages_desktop_url?: string
   packages_mobile_url?: string
+  packages_title?: string
+  packages_subtitle?: string
   phone?: string
   email?: string
   slug?: string

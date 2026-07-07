@@ -18,7 +18,12 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
     .select('id, email, name, studio_name, slug, created_at')
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    const message = error.message.includes('fetch failed')
+      ? 'לא ניתן להתחבר ל-Supabase. בדקי חיבור לאינטרנט ונסי שוב.'
+      : error.message
+    throw new Error(message)
+  }
 
   return (data ?? []).map((row) => {
     const studio = row as {

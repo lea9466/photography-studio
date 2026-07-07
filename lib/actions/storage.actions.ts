@@ -3,6 +3,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import type { R2UploadRequest } from '@/lib/r2/types'
+import {
+  assertGalleryPhotoCountWithinLimit,
+  assertReservedPhotosExist,
+  parsePhotoIdsFromUploadRequests,
+} from '@/lib/gallery-photo-limits'
 
 async function assertGalleryUploadPaths(
   galleryId: string,
@@ -17,7 +22,7 @@ async function assertGalleryUploadPaths(
 
   const { data: gallery } = await supabase
     .from('galleries')
-    .select('id')
+    .select('id, is_public')
     .eq('id', galleryId)
     .eq('user_id', user.id)
     .single()
@@ -30,6 +35,15 @@ async function assertGalleryUploadPaths(
       throw new Error('נתיב קובץ לא תקין')
     }
   }
+
+  const photoIds = parsePhotoIdsFromUploadRequests(user.id, galleryId, items)
+  await assertReservedPhotosExist(supabase, galleryId, photoIds)
+  await assertGalleryPhotoCountWithinLimit(
+    supabase,
+    galleryId,
+    (gallery as { is_public: boolean }).is_public,
+    0
+  )
 
   return user
 }

@@ -58,6 +58,9 @@ export type Database = {
           contact_mobile_url: string | null
           packages_desktop_url: string | null
           packages_mobile_url: string | null
+          packages_title: string | null
+          packages_subtitle: string | null
+          testimonials_title: string | null
           should_color_logo: boolean
           faq_items: Json
           trial_end_date: string
@@ -99,6 +102,9 @@ export type Database = {
           contact_mobile_url?: string | null
           packages_desktop_url?: string | null
           packages_mobile_url?: string | null
+          packages_title?: string | null
+          packages_subtitle?: string | null
+          testimonials_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
           trial_end_date?: string
@@ -140,6 +146,9 @@ export type Database = {
           contact_mobile_url?: string | null
           packages_desktop_url?: string | null
           packages_mobile_url?: string | null
+          packages_title?: string | null
+          packages_subtitle?: string | null
+          testimonials_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
           trial_end_date?: string

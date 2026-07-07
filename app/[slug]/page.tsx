@@ -13,7 +13,9 @@ import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
   resolvePhotographerShareImage,
+  toAbsoluteMediaUrl,
 } from '@/lib/seo/public-metadata'
+import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import Script from 'next/script'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
@@ -260,7 +262,8 @@ export default async function PhotographerPage({ params }: PageProps) {
       process.env.NODE_ENV === 'development' &&
       error instanceof Error &&
       (error.message.includes('SUPABASE_SERVICE_ROLE_KEY') ||
-        error.message.includes('Missing database permissions'))
+        error.message.includes('Missing database permissions') ||
+        error.message.includes('Database schema is out of date'))
     ) {
       throw error
     }
@@ -287,12 +290,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const canonicalPath =
       getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
+    const logoIconUrl = toAbsoluteMediaUrl(getBrandingPreviewUrl(typedPhotographer.logo_url))
     const description = buildPhotographerDescription({
       studioName,
       aboutText: typedPhotographer.about_text,
       address: typedPhotographer.address,
     })
-    const title = typedPhotographer.address?.trim()
+    const title = studioName
+    const seoTitle = typedPhotographer.address?.trim()
       ? `${studioName} - צילום מקצועי | ${typedPhotographer.address.trim()}`
       : `${studioName} - צילום מקצועי`
     const keywords = buildPhotographerKeywords({
@@ -304,11 +309,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       keywords,
+      ...(logoIconUrl
+        ? {
+            icons: {
+              icon: logoIconUrl,
+              shortcut: logoIconUrl,
+              apple: logoIconUrl,
+            },
+          }
+        : {}),
       alternates: {
         canonical: buildCanonicalUrl(canonicalPath),
       },
       openGraph: buildPublicOpenGraph({
-        title,
+        title: seoTitle,
         description,
         canonicalPath,
         imageUrl: shareImage,

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
@@ -10,6 +11,7 @@ import {
   getTestimonialImagePreviewUrl,
 } from '@/lib/testimonial-image-url'
 import { PRIMARY_IMAGE_MAX_BYTES, validatePrimaryImageFile } from '@/lib/media-upload-limits'
+import type { Database } from '@/lib/types/database.types'
 
 // Create a non-typed client for dynamic operations
 async function createUntypedClient() {
@@ -252,6 +254,44 @@ export async function reorderTestimonials(testimonials: { id: string; sortOrder:
   }
 
   return { success: true }
+}
+
+export async function updateTestimonialsSectionTitle(input: {
+  title?: string
+}): Promise<{ testimonials_title: string | null }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('יש להתחבר מחדש')
+  }
+
+  if (input.title === undefined) {
+    throw new Error('אין שינויים לשמירה')
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {
+    testimonials_title: input.title.trim() || null,
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', user.id)
+    .select('testimonials_title')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/reviews')
+  revalidatePath('/portfolio')
+  revalidatePath('/[slug]', 'page')
+
+  return data as { testimonials_title: string | null }
 }
 
 // Public function to get testimonials for a specific photographer (by their slug or user_id)

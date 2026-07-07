@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/lib/types/database.types'
+import { fetchWithRetry } from '@/lib/supabase/fetch'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
@@ -14,6 +15,11 @@ import {
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  if (pathname === '/manage' || pathname.startsWith('/manage/')) {
+    return NextResponse.next({ request })
+  }
+
   const studioSlug = parseStudioSlugPath(pathname)
 
   if (studioSlug) {
@@ -35,6 +41,9 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: fetchWithRetry,
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll()
@@ -52,9 +61,14 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] = null
+
+  try {
+    const authResult = await supabase.auth.getUser()
+    user = authResult.data.user
+  } catch {
+    return supabaseResponse
+  }
 
   async function userNeedsWelcomePopup() {
     if (!user) return false

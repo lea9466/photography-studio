@@ -6,10 +6,8 @@ import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
-import {
-  PUBLIC_ONLY_MVP,
-  buildPublicGalleryPhotoLimitError,
-} from '@/lib/types/app.types'
+import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import { assertGalleryPhotoCountWithinLimit } from '@/lib/gallery-photo-limits'
 
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
@@ -46,13 +44,12 @@ export async function reservePhotosBatch(galleryId: string, count: number, isPro
   }
 
   if (gallery.is_public || PUBLIC_ONLY_MVP) {
-    const { count: currentCount } = await supabase
-      .from('photos')
-      .select('id', { count: 'exact', head: true })
-      .eq('gallery_id', galleryId)
-
-    const limitError = buildPublicGalleryPhotoLimitError(currentCount ?? 0, count)
-    if (limitError) throw new Error(limitError)
+    await assertGalleryPhotoCountWithinLimit(
+      supabase,
+      galleryId,
+      gallery.is_public,
+      count
+    )
   }
 
   console.log('👉 4. About to query last photo')

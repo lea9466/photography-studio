@@ -30,6 +30,9 @@ export type PublicPhotographer = Pick<
   | 'contact_mobile_url'
   | 'packages_desktop_url'
   | 'packages_mobile_url'
+  | 'packages_title'
+  | 'packages_subtitle'
+  | 'testimonials_title'
   | 'email'
   | 'faq_items'
 >
@@ -62,6 +65,9 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   contact_mobile_url,
   packages_desktop_url,
   packages_mobile_url,
+  packages_title,
+  packages_subtitle,
+  testimonials_title,
   email,
   faq_items
 `
@@ -72,13 +78,22 @@ function isDbPermissionError(code?: string) {
   return code === '42501' || code === 'PGRST301'
 }
 
-function formatDbError(error: { message?: string; details?: string; hint?: string; code?: string }) {
-  return {
-    code: error.code,
-    message: error.message,
-    details: error.details,
-    hint: error.hint,
+function formatDbError(error: unknown) {
+  if (error && typeof error === 'object') {
+    const dbError = error as { message?: string; details?: string; hint?: string; code?: string }
+    const formatted = {
+      code: dbError.code ?? null,
+      message: dbError.message ?? null,
+      details: dbError.details ?? null,
+      hint: dbError.hint ?? null,
+    }
+
+    if (formatted.code || formatted.message || formatted.details || formatted.hint) {
+      return formatted
+    }
   }
+
+  return { raw: String(error) }
 }
 
 function isMissingColumnError(error: { message?: string; code?: string }) {
@@ -88,8 +103,30 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('contact_desktop_url') ||
     message.includes('contact_mobile_url') ||
     message.includes('packages_desktop_url') ||
-    message.includes('packages_mobile_url')
+    message.includes('packages_mobile_url') ||
+    message.includes('packages_title') ||
+    message.includes('packages_subtitle') ||
+    message.includes('faq_items')
   )
+}
+
+function getMissingColumnMigrationHint(error: { message?: string }) {
+  const message = error.message?.toLowerCase() ?? ''
+
+  if (message.includes('packages_title') || message.includes('packages_subtitle')) {
+    return 'Run migration add_packages_section_headings on Supabase.'
+  }
+  if (message.includes('faq_items')) {
+    return 'Run migration add_faq_items on Supabase.'
+  }
+  if (message.includes('packages_desktop_url') || message.includes('packages_mobile_url')) {
+    return 'Run migration add_packages_background_images on Supabase.'
+  }
+  if (message.includes('contact_desktop_url') || message.includes('contact_mobile_url')) {
+    return 'Run migration add_contact_background_images on Supabase.'
+  }
+
+  return 'Apply pending Supabase migrations (supabase db push).'
 }
 
 export async function findPhotographerBySlug(decodedSlug: string): Promise<PublicPhotographer | null> {
@@ -116,7 +153,7 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
       }
       if (isMissingColumnError(slugError)) {
         throw new Error(
-          'Database schema is out of date. Run migration add_contact_background_images on Supabase.'
+          `Database schema is out of date. ${getMissingColumnMigrationHint(slugError)}`
         )
       }
     }
@@ -140,7 +177,7 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
     }
     if (isMissingColumnError(studioError)) {
       throw new Error(
-        'Database schema is out of date. Run migration add_contact_background_images on Supabase.'
+        `Database schema is out of date. ${getMissingColumnMigrationHint(studioError)}`
       )
     }
     return null
