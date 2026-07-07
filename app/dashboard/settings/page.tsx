@@ -13,7 +13,7 @@ export default async function SettingsPage() {
 
   const { data, error } = await supabase
     .from('users')
-    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, packages_desktop_url, packages_mobile_url, email, slug, should_color_logo')
+    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, packages_desktop_url, packages_mobile_url, email, slug, should_color_logo')
     .eq('id', user.id)
     .single()
 
@@ -35,6 +35,8 @@ export default async function SettingsPage() {
     about_description: string | null
     contact_card_title: string | null
     contact_card_description: string | null
+    address: string | null
+    phone: string | null
     stat_projects: number
     stat_clients: number
     stat_experience_years: number

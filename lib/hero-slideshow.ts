@@ -1,5 +1,5 @@
-const DEFAULT_HERO =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBtc8vYozqzsyyaSs762LNJcnclKdmGuK6RBZsCh9_MldHQKMKggJGAHH3J5iuJgvcCH-Rg_dmsmWUY3qKjIC3VxudGLoH_zp5RlgbhaDLLX8vwYl3u79Wt3ndaPtlt1px4spTUAY7PfRDXX69fTMO-z2V5Ij-GinPBFta-y5hZS2_Zrz3Y4HDR0V-wWv6S5Xqk8ver8tRBpMGDwXazgy0yNIUdjM9KmyqMURhx9mQfOx2xIMXb69yEPxvlkXmYucFWaM5XR-U-KAw'
+export const HERO_EMPTY_PLACEHOLDER_TEXT =
+  'כדי להתחיל לערוך את האתר שלך, העלי תמונות רקע'
 
 export const HERO_SLIDESHOW_INTERVAL_MS = 3000
 export const HERO_SLIDESHOW_FADE_MS = 2000
@@ -105,6 +105,36 @@ export const HERO_SLIDESHOW_CSS = `
   @keyframes heroFilmScroll {
     from { transform: translateX(0); }
     to { transform: translateX(-50%); }
+  }
+  .hero-slideshow--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f1ef;
+  }
+  .hero-empty-placeholder {
+    text-align: center;
+    padding: 2rem;
+    max-width: 28rem;
+    color: rgba(15, 15, 13, 0.45);
+  }
+  .hero-empty-placeholder-icon {
+    display: block;
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+  }
+  .hero-empty-placeholder-text {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+  .modern-hero-film-belt--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f1ef;
   }
 `
 
@@ -387,12 +417,26 @@ function uniqueImages(images: string[]): string[] {
 export function normalizeHeroUrlList(
   urls: string[] | null | undefined,
   fallbackSingle: string | null | undefined,
-  defaultImage = DEFAULT_HERO
+  crossVariantFallback?: string | null | undefined
 ): string[] {
   const fromArray = uniqueImages(urls ?? [])
   if (fromArray.length > 0) return fromArray.slice(0, 3)
   if (fallbackSingle) return [fallbackSingle]
-  return [defaultImage]
+  if (crossVariantFallback) return [crossVariantFallback]
+  return []
+}
+
+function generateHeroEmptyPlaceholderHTML(options: {
+  heroId: string
+  wrapperClass: string
+}): string {
+  const { heroId, wrapperClass } = options
+  return `<div class="${wrapperClass}" id="${heroId}">
+<div class="hero-empty-placeholder">
+<span class="material-symbols-outlined hero-empty-placeholder-icon" aria-hidden="true">photo_camera</span>
+<p class="hero-empty-placeholder-text">${HERO_EMPTY_PLACEHOLDER_TEXT}</p>
+</div>
+</div>`
 }
 
 function hasFilmMotion(
@@ -431,6 +475,14 @@ export function generateHeroSlideshowHTML(options: {
   const mobile = uniqueImages(
     mobileImages.length ? mobileImages : desktopImages
   )
+
+  if (desktop.length === 0 && mobile.length === 0) {
+    return generateHeroEmptyPlaceholderHTML({
+      heroId,
+      wrapperClass: 'hero-slideshow hero-slideshow--empty',
+    })
+  }
+
   const extraClass = imgClass.trim()
   const desktopAnimate = desktop.length > 1
   const mobileAnimate = mobile.length > 1
@@ -440,8 +492,14 @@ export function generateHeroSlideshowHTML(options: {
     : 'hero-slideshow'
 
   if (transition === 'film' ? !useFilmMotion : !desktopAnimate && !mobileAnimate) {
-    const desktopSrc = desktop[0] ?? mobile[0] ?? DEFAULT_HERO
+    const desktopSrc = desktop[0] ?? mobile[0]
     const mobileSrc = mobile[0] ?? desktopSrc
+    if (!desktopSrc || !mobileSrc) {
+      return generateHeroEmptyPlaceholderHTML({
+        heroId,
+        wrapperClass: 'hero-slideshow hero-slideshow--empty',
+      })
+    }
     return `<div class="${slideshowClass}" id="${heroId}">
 <picture class="block w-full h-full">
 <source media="(max-width: 768px)" srcset="${mobileSrc}"/>
@@ -455,7 +513,8 @@ export function generateHeroSlideshowHTML(options: {
     layer: 'desktop' | 'mobile',
     animate: boolean
   ) => {
-    const src = images[0] ?? DEFAULT_HERO
+    const src = images[0]
+    if (!src) return ''
     if (!animate || images.length <= 1) {
       return `<div class="hero-slideshow-layer hero-slideshow-layer--${layer}">
 <img src="${src}" alt="${alt}" class="hero-slide hero-slide--static ${extraClass}" loading="eager" decoding="async" />
@@ -519,8 +578,16 @@ export function generateModernHeroFilmBeltHTML(options: {
     mobileImages.length ? mobileImages : desktopImages
   )
 
+  if (desktop.length === 0 && mobile.length === 0) {
+    return generateHeroEmptyPlaceholderHTML({
+      heroId,
+      wrapperClass: 'modern-hero-film-belt modern-hero-film-belt--empty',
+    })
+  }
+
   const renderLayer = (images: string[], layer: 'desktop' | 'mobile') => {
-    const src = images[0] ?? DEFAULT_HERO
+    const src = images[0]
+    if (!src) return ''
     if (images.length <= 1) {
       return `<div class="modern-hero-film-layer modern-hero-film-layer--${layer}">
 <img src="${src}" alt="${alt}" class="modern-hero-film-static" loading="eager" decoding="async" />

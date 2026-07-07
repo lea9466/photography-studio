@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { SidebarNav } from './SidebarNav'
 import { MobileHeader } from './MobileHeader'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
+import { WelcomeModal } from './WelcomeModal'
 
 type DashboardLayoutWrapperProps = {
   userName?: string
@@ -12,6 +13,8 @@ type DashboardLayoutWrapperProps = {
   logoUrl?: string | null
   portfolioSlug?: string | null
   showReferralPopup?: boolean
+  showWelcomePopup?: boolean
+  welcomePreviewUrl?: string | null
   onSignOut?: () => void
   children: React.ReactNode
   accentColor?: string
@@ -24,6 +27,8 @@ export function DashboardLayoutWrapper({
   logoUrl,
   portfolioSlug,
   showReferralPopup = false,
+  showWelcomePopup = false,
+  welcomePreviewUrl = null,
   onSignOut,
   children,
   accentColor,
@@ -33,6 +38,7 @@ export function DashboardLayoutWrapper({
 
   return (
     <div className="min-h-screen">
+      <WelcomeModal open={showWelcomePopup} previewUrl={welcomePreviewUrl} />
       <ReferralSuccessModal open={showReferralPopup} />
       {/* Desktop Sidebar */}
       <SidebarNav

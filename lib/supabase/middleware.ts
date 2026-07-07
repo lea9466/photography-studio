@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/lib/types/database.types'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
+  ONBOARDING_SETTINGS_PATH,
   isMvpBlockedDashboardRoute,
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
@@ -55,6 +56,30 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  async function userNeedsWelcomePopup() {
+    if (!user) return false
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('show_welcome_popup')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    return Boolean(
+      (profile as { show_welcome_popup?: boolean } | null)?.show_welcome_popup
+    )
+  }
+
+  async function resolveAuthenticatedDashboardPath() {
+    if (!user) return MVP_DEFAULT_DASHBOARD_PATH
+
+    if (await userNeedsWelcomePopup()) {
+      return ONBOARDING_SETTINGS_PATH
+    }
+
+    return MVP_DEFAULT_DASHBOARD_PATH
+  }
+
   const isAuthRoute =
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
@@ -64,14 +89,27 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = MVP_DEFAULT_DASHBOARD_PATH
+    url.pathname = await resolveAuthenticatedDashboardPath()
     return NextResponse.redirect(url)
   }
 
   if (user && isMvpBlockedDashboardRoute(pathname)) {
     const url = request.nextUrl.clone()
-    url.pathname = MVP_DEFAULT_DASHBOARD_PATH
+    url.pathname = await resolveAuthenticatedDashboardPath()
     return NextResponse.redirect(url)
+  }
+
+  if (
+    user &&
+    pathname.startsWith('/dashboard') &&
+    pathname !== ONBOARDING_SETTINGS_PATH &&
+    pathname !== `${ONBOARDING_SETTINGS_PATH}/`
+  ) {
+    if (await userNeedsWelcomePopup()) {
+      const url = request.nextUrl.clone()
+      url.pathname = ONBOARDING_SETTINGS_PATH
+      return NextResponse.redirect(url)
+    }
   }
 
   if (!user && isProtectedRoute) {

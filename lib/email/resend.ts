@@ -244,6 +244,29 @@ export async function sendContactInquiryEmail(input: {
   })
 }
 
+export async function sendAdminLoginCodeEmail(input: { code: string }) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] admin login code', input)
+    return
+  }
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: getFeedbackEmail(),
+    subject: 'קוד כניסה — ניהול Studio Galleries',
+    html: `
+      <div dir="rtl" style="font-family: sans-serif;">
+        <h2>כניסה לדף הניהול</h2>
+        <p>קוד הכניסה שלך:</p>
+        <p style="font-size: 1.5rem; letter-spacing: 0.2em;"><strong>${input.code}</strong></p>
+        <p style="color: #666; font-size: 0.9rem;">הקוד תקף ל-15 דקות.</p>
+        <p><a href="${appUrl('/manage')}">מעבר לדף הניהול</a></p>
+      </div>
+    `,
+  })
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

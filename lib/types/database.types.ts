@@ -42,6 +42,8 @@ export type Database = {
           about_description: string | null
           contact_card_title: string | null
           contact_card_description: string | null
+          address: string | null
+          phone: string | null
           stat_projects: number | null
           stat_clients: number | null
           stat_experience_years: number | null
@@ -63,6 +65,7 @@ export type Database = {
           referred_by_user_id: string | null
           has_triggered_referral_bonus: boolean
           show_referral_popup: boolean
+          show_welcome_popup: boolean
         }
         Insert: {
           id: string
@@ -80,6 +83,8 @@ export type Database = {
           about_description?: string | null
           contact_card_title?: string | null
           contact_card_description?: string | null
+          address?: string | null
+          phone?: string | null
           stat_projects?: number | null
           stat_clients?: number | null
           stat_experience_years?: number | null
@@ -101,6 +106,7 @@ export type Database = {
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
+          show_welcome_popup?: boolean
         }
         Update: {
           id?: string
@@ -118,6 +124,8 @@ export type Database = {
           about_description?: string | null
           contact_card_title?: string | null
           contact_card_description?: string | null
+          address?: string | null
+          phone?: string | null
           stat_projects?: number | null
           stat_clients?: number | null
           stat_experience_years?: number | null
@@ -139,6 +147,7 @@ export type Database = {
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
+          show_welcome_popup?: boolean
         }
         Relationships: []
       }

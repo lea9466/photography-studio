@@ -12,6 +12,8 @@ export default async function DashboardLayout({
   const sitePath = profile
     ? getPublicSitePath(profile.slug, profile.studio_name)
     : null
+  const welcomePreviewUrl =
+    profile?.slug?.trim() && sitePath ? sitePath : null
 
   return (
     <DashboardLayoutWrapper
@@ -20,6 +22,8 @@ export default async function DashboardLayout({
       logoUrl={profile?.logo_url || undefined}
       portfolioSlug={sitePath ? sitePath.replace(/^\//, '') : null}
       showReferralPopup={profile?.show_referral_popup ?? false}
+      showWelcomePopup={profile?.show_welcome_popup ?? false}
+      welcomePreviewUrl={welcomePreviewUrl}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       onSignOut={async () => {

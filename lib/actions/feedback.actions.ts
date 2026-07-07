@@ -42,6 +42,7 @@ export async function updateProfile(input: {
   about_description?: string
   contact_card_title?: string
   contact_card_description?: string
+  address?: string
   stat_projects?: number
   stat_clients?: number
   stat_experience_years?: number

@@ -1,6 +1,8 @@
 import {
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
@@ -125,5 +127,71 @@ export async function deleteMediaObject(bucket: MediaBucket, path: string) {
       Bucket: bucketName,
       Key: r2ObjectKey(bucket, path),
     })
+  )
+}
+
+const DELETE_OBJECTS_BATCH_SIZE = 1000
+
+export async function deleteMediaPrefix(bucket: MediaBucket, prefix: string) {
+  const { bucketName } = getR2Config()
+  const fullPrefix = r2ObjectKey(bucket, prefix.replace(/^\/+/, ''))
+  let continuationToken: string | undefined
+
+  do {
+    const list = await getR2Client().send(
+      new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: fullPrefix,
+        ContinuationToken: continuationToken,
+      })
+    )
+
+    const keys = (list.Contents ?? [])
+      .map((object) => object.Key)
+      .filter((key): key is string => Boolean(key))
+
+    for (let offset = 0; offset < keys.length; offset += DELETE_OBJECTS_BATCH_SIZE) {
+      const chunk = keys.slice(offset, offset + DELETE_OBJECTS_BATCH_SIZE)
+      if (chunk.length === 0) continue
+
+      await getR2Client().send(
+        new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: {
+            Objects: chunk.map((Key) => ({ Key })),
+          },
+        })
+      )
+    }
+
+    continuationToken = list.IsTruncated ? list.NextContinuationToken : undefined
+  } while (continuationToken)
+}
+
+export async function deleteR2ObjectKey(key: string) {
+  const normalizedKey = key.replace(/^\/+/, '').trim()
+  if (!normalizedKey) return
+
+  const { bucketName } = getR2Config()
+  await getR2Client().send(
+    new DeleteObjectCommand({
+      Bucket: bucketName,
+      Key: normalizedKey,
+    })
+  )
+}
+
+export async function deleteMediaObjects(
+  objects: { bucket: MediaBucket; path: string }[]
+) {
+  const unique = new Map<string, { bucket: MediaBucket; path: string }>()
+  for (const object of objects) {
+    const path = object.path.trim()
+    if (!path) continue
+    unique.set(`${object.bucket}:${path}`, { bucket: object.bucket, path })
+  }
+
+  await Promise.all(
+    [...unique.values()].map(({ bucket, path }) => deleteMediaObject(bucket, path))
   )
 }

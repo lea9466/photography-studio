@@ -5,10 +5,16 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveSlugRedirect } from '@/lib/referral/slug-redirect'
 import {
+  buildPhotographerDescription,
+  buildPhotographerKeywords,
+  buildPhotographerLocalBusinessJsonLd,
+} from '@/lib/seo/local-business-schema'
+import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
   resolvePhotographerShareImage,
 } from '@/lib/seo/public-metadata'
+import Script from 'next/script'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
@@ -43,7 +49,6 @@ export default async function PhotographerPage({ params }: PageProps) {
     // Type assertion to fix TypeScript inference
     const typedPhotographer = photographer as any
 
-    // Fetch public portfolio galleries (all galleries with is_public = true)
     const { data: galleries } = await admin
       .from('galleries')
       .select('id, title, slug, created_at, cover_image')
@@ -219,8 +224,28 @@ export default async function PhotographerPage({ params }: PageProps) {
       }))
     )
 
+    const canonicalPath =
+      getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
+    const shareImage = await resolvePhotographerShareImage(typedPhotographer)
+    const localBusinessJsonLd = buildPhotographerLocalBusinessJsonLd({
+      name: typedPhotographer.name,
+      studioName: typedPhotographer.studio_name,
+      aboutText: typedPhotographer.about_text,
+      email: typedPhotographer.email,
+      address: typedPhotographer.address,
+      canonicalPath,
+      imageUrl: shareImage,
+    })
+
     return (
       <>
+        <Script
+          id="photographer-local-business-jsonld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(localBusinessJsonLd),
+          }}
+        />
         <PhotographerHomepage
           photographer={photographerWithUrls}
           galleries={galleriesWithPools}
@@ -259,17 +284,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const typedPhotographer = photographer as any
     const studioName = typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
-    const description =
-      typedPhotographer.about_text ||
-      `הפורטפוליו והעבודות של ${studioName}. צילום מקצועי, שירות אישי ותוצאות ברמה הגבוהה ביותר.`
-    const title = `${studioName} - צילום מקצועי`
     const canonicalPath =
       getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
+    const description = buildPhotographerDescription({
+      studioName,
+      aboutText: typedPhotographer.about_text,
+      address: typedPhotographer.address,
+    })
+    const title = typedPhotographer.address?.trim()
+      ? `${studioName} - צילום מקצועי | ${typedPhotographer.address.trim()}`
+      : `${studioName} - צילום מקצועי`
+    const keywords = buildPhotographerKeywords({
+      studioName,
+      address: typedPhotographer.address,
+    })
 
     return {
       title,
       description,
+      keywords,
       alternates: {
         canonical: buildCanonicalUrl(canonicalPath),
       },

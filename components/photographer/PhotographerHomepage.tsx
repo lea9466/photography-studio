@@ -45,6 +45,8 @@ interface Photographer {
   packages_desktop_url: string | null
   packages_mobile_url: string | null
   email: string | null
+  phone: string | null
+  address: string | null
   faq_items?: FaqItem[] | unknown
 }
 
@@ -895,6 +897,15 @@ function brandLastWord(text: string) {
   return `${words.join(' ')} <span class="text-primary font-light">${lastWord}</span>`
 }
 
+function escapeHtml(text: string): string {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function contactFormSubmitScript(photographerId: string): string {
   return `
     (function() {
@@ -972,8 +983,17 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     packages_desktop_url,
     packages_mobile_url,
     email,
+    phone,
+    address,
   } = photographer
 
+  const studioAddress = address?.trim() || null
+  const studioAddressHtml = studioAddress ? escapeHtml(studioAddress) : ''
+  const studioPhone = phone?.trim() || null
+  const studioPhoneHtml = studioPhone ? escapeHtml(studioPhone) : ''
+  const studioPhoneHref = studioPhone ? studioPhone.replace(/[^\d+]/g, '') : ''
+  const contactEmail = email?.trim() || null
+  const contactEmailHtml = contactEmail ? escapeHtml(contactEmail) : ''
   const contactDesktopUrl = contact_desktop_url || null
   const contactMobileUrl = contact_mobile_url || null
   const hasContactBg = !!(contactDesktopUrl || contactMobileUrl)
@@ -1095,7 +1115,9 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     heroId: 'hero-slideshow-bold',
     imgClass: 'bold-hero-image',
   })
-  const aboutImage = about_image_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBIq8lAwhbuZMrb5ZZ_F-ZyhFBSMxWhWNg7V-_a7q3NWQrpgsg9RqhbgcZcJiXVII6xbNapQk30LDSiiVCpM7XrGqYj1YlL3K_Y8xKZ7tqBxFqQoory1FYngx7ju_3XuDodAO_Nt0V8m8Hm_NtH8GnVKN3O3PGvDPlSuwxt8rFnJjOlVPFSJu7Kv81xtWup4oxTJZJvwL4TwYUps6nqbPhL22XF_WJkDiv0r0jFuN2887-7PiO9KEBAVS1OX75Z3uKuCScZ_TlTFOc'
+  const aboutImageHtml = about_image_url
+    ? `<img alt="צילום פורטרט" class="w-full h-full object-cover" src="${about_image_url}"/>`
+    : ''
 
   const studioName = studio_name || 'סטודיו גלריה'
   const photographerName = name || 'אפרת כהן'
@@ -1218,15 +1240,6 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
     }).join('');
   };
 
-  // Escape user-generated text before injecting into the iframe HTML
-  const escapeHtml = (value: string) =>
-    String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
-
   const elegantSectionHeading = (
     title: string,
     watermark: string,
@@ -1272,6 +1285,49 @@ function generateHomepageHTML(photographer: Photographer, theme: string, galleri
 </article>`
       )
       .join('')
+
+  const generateContactDetailsHTML = (variant: 'elegant' | 'bold') => {
+    const prefix = variant === 'elegant' ? 'elegant' : 'bold'
+    const revealClass = variant === 'elegant' ? 'reveal-on-scroll' : 'reveal'
+    const linkHoverClass =
+      variant === 'elegant'
+        ? 'hover:text-white transition-colors'
+        : 'hover:text-primary transition-colors'
+    const items: string[] = []
+
+    if (studioPhone) {
+      items.push(`<div class="${prefix}-contact-details__item">
+<span class="material-symbols-outlined ${prefix}-contact-details__icon">call</span>
+<span class="${prefix}-contact-details__label">טלפון</span>
+<a href="tel:${studioPhoneHref}" class="${prefix}-contact-details__value ${linkHoverClass}" dir="ltr">${studioPhoneHtml}</a>
+</div>`)
+    }
+
+    if (contactEmail) {
+      items.push(`<div class="${prefix}-contact-details__item">
+<span class="material-symbols-outlined ${prefix}-contact-details__icon">mail</span>
+<span class="${prefix}-contact-details__label">אימייל</span>
+<a href="mailto:${contactEmailHtml}" class="${prefix}-contact-details__value ${linkHoverClass}">${contactEmailHtml}</a>
+</div>`)
+    }
+
+    if (studioAddress) {
+      items.push(`<div class="${prefix}-contact-details__item">
+<span class="material-symbols-outlined ${prefix}-contact-details__icon">location_on</span>
+<span class="${prefix}-contact-details__label">מיקום</span>
+<span class="${prefix}-contact-details__value">${studioAddressHtml}</span>
+</div>`)
+    }
+
+    if (items.length === 0) return ''
+
+    return `<div class="${prefix}-contact-details mt-16 mx-auto max-w-3xl border border-white/15 px-8 py-10 md:px-12 ${revealClass}">
+<div class="flex flex-wrap justify-center gap-10 md:gap-16">${items.join('')}</div>
+</div>`
+  }
+
+  const generateElegantContactDetailsHTML = () => generateContactDetailsHTML('elegant')
+  const generateBoldContactDetailsHTML = () => generateContactDetailsHTML('bold')
 
   const generateClassicFaqCardsHTML = () =>
     validFaqItems
@@ -1570,6 +1626,35 @@ ${accordion}
         .elegant-bg-accent { background-color: ${primaryColor}; }
         .elegant-border-accent { border-color: ${primaryColor}; }
 
+        .elegant-contact-details {
+            backdrop-filter: blur(2px);
+        }
+        .elegant-contact-details__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 8.75rem;
+            text-align: center;
+        }
+        .elegant-contact-details__icon {
+            font-size: 1.75rem;
+            color: ${primaryColor};
+        }
+        .elegant-contact-details__label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            opacity: 0.4;
+        }
+        .elegant-contact-details__value {
+            font-weight: 300;
+            opacity: 0.75;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 14rem;
+        }
+
         .elegant-section-heading {
             display: inline-grid;
             justify-items: center;
@@ -1783,7 +1868,7 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
                 </button>
 </div>
 <div class="order-1 lg:order-2 image-reveal aspect-[4/5] shadow-2xl">
-<img alt="צילום פורטרט" class="w-full h-full object-cover" src="${aboutImage}"/>
+${aboutImageHtml}
 </div>
 </div>
 </section>
@@ -1866,7 +1951,8 @@ ${email ? `
                     </button>
 </div>
 </form>
-` : '<div class="text-center py-20 opacity-40"><p class="font-body text-lg">אין כתובת אימייל ליצירת קשר</p></div>'}
+${generateElegantContactDetailsHTML()}
+` : `<div class="text-center py-20 opacity-40"><p class="font-body text-lg">אין כתובת אימייל ליצירת קשר</p></div>${generateElegantContactDetailsHTML()}`}
 </div>
 </section>
 </main>
@@ -2240,10 +2326,11 @@ ${contactBgLayers('#F8FAFC')}
 <span class="material-symbols-outlined text-white">mail</span>
 <span class="text-white">${email || 'hello@studiogallery.co.il'}</span>
 </div>
+${studioAddress ? `
 <div class="flex items-center justify-start gap-sm">
 <span class="material-symbols-outlined text-white">location_on</span>
-<span class="text-white">תל אביב, ישראל</span>
-</div>
+<span class="text-white">${studioAddressHtml}</span>
+</div>` : ''}
 </div>
 </div>
 <form class="flex flex-col gap-md w-full">
@@ -2808,7 +2895,7 @@ ${hasStats ? `
 ` : ''}
 </div>
 <div class="order-2 relative">
-<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${aboutImage}"/>
+${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${about_image_url}"/>` : ''}
 <div class="about-image-quote absolute -bottom-8 -left-6 md:-bottom-10 md:-left-10 max-w-[260px] hidden md:block">
 <div class="about-image-quote-line"></div>
 <p class="about-image-quote-name">— ${photographerName}</p>
@@ -2884,10 +2971,11 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
 <span class="font-body-md text-body-md">${email || 'hello@studiogallery.co.il'}</span>
 </a>
+${studioAddress ? `
 <div class="flex items-center gap-md flex-row-reverse justify-end">
 <span class="material-symbols-outlined text-primary">location_on</span>
-<span class="font-body-md text-body-md">מתחם האמנים, תל אביב</span>
-</div>
+<span class="font-body-md text-body-md">${studioAddressHtml}</span>
+</div>` : ''}
 </div>
 </div>
 <div class="lg:col-span-7">
@@ -3261,6 +3349,35 @@ ${generateSiteFooter(siteChrome('classic'))}
                 padding: 2rem 2.5rem 4rem 1.5rem;
             }
         }
+        .bold-contact-details {
+            backdrop-filter: blur(2px);
+        }
+        .bold-contact-details__item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 8.75rem;
+            text-align: center;
+        }
+        .bold-contact-details__icon {
+            font-size: 1.75rem;
+            color: ${primaryColor};
+        }
+        .bold-contact-details__label {
+            font-family: 'Heebo', sans-serif;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            opacity: 0.45;
+        }
+        .bold-contact-details__value {
+            font-weight: 400;
+            opacity: 0.75;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 14rem;
+        }
         ${UNIFIED_GALLERY_GRID_CSS}
         ${RECENT_PHOTOS_GRID_CSS}
         ${TESTIMONIAL_THUMB_CARD_CSS}
@@ -3375,7 +3492,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <div class="about-inner relative z-10">
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl lg:gap-xxl items-center">
 <div class="lg:col-span-5 relative">
-<img alt="דיוקן צלמת" class="w-full aspect-[4/5] object-cover" src="${aboutImage}"/>
+${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] object-cover" src="${about_image_url}"/>` : ''}
 <div class="about-image-quote absolute -bottom-10 -right-6 md:-right-12 max-w-[260px] hidden md:block">
 <div class="about-image-quote-line"></div>
 <p class="about-image-quote-name">— ${photographerName}</p>
@@ -3509,6 +3626,7 @@ ${contactBgLayers('#120f0d', '#1a1614')}
         </button>
 </div>
 </form>
+${generateBoldContactDetailsHTML()}
 </div>
 </section>
 </main>

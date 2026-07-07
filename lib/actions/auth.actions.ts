@@ -6,7 +6,11 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
-import { MVP_DEFAULT_DASHBOARD_PATH, resolveMvpDashboardPath } from '@/lib/types/app.types'
+import {
+  MVP_DEFAULT_DASHBOARD_PATH,
+  ONBOARDING_SETTINGS_PATH,
+  resolveMvpDashboardPath,
+} from '@/lib/types/app.types'
 import { applyReferralOnSignup } from '@/lib/referral/referral'
 import { randomBytes } from 'node:crypto'
 
@@ -66,6 +70,7 @@ async function ensureUserProfile(
     email: user.email,
     name,
     studio_name: studioName,
+    show_welcome_popup: true,
   } as never)
 
   if (error) {
@@ -213,7 +218,7 @@ export async function signUp(
   }
 
   revalidatePath('/', 'layout')
-  redirect(MVP_DEFAULT_DASHBOARD_PATH)
+  redirect(ONBOARDING_SETTINGS_PATH)
 }
 
 export async function signOut() {

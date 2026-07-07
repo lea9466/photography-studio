@@ -67,6 +67,8 @@ type ProfileFormProps = {
     about_description: string | null
     contact_card_title: string | null
     contact_card_description: string | null
+    address: string | null
+    phone: string | null
     stat_projects: number
     stat_clients: number
     stat_experience_years: number
@@ -148,6 +150,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [packagesDesktopUrl, setPackagesDesktopUrl] = useState(profile?.packages_desktop_url ?? '')
   const [packagesMobileUrl, setPackagesMobileUrl] = useState(profile?.packages_mobile_url ?? '')
   const [email, setEmail] = useState(profile?.email ?? '')
+  const [address, setAddress] = useState(profile?.address ?? '')
+  const [phone, setPhone] = useState(profile?.phone ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
   const [uploadingTarget, setUploadingTarget] = useState<string | null>(null)
@@ -317,6 +321,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           packages_desktop_url: extractPathFromUrl(packagesDesktopUrl) || undefined,
           packages_mobile_url: extractPathFromUrl(packagesMobileUrl) || undefined,
           email,
+          phone: phone.trim() || undefined,
+          address: address.trim() || undefined,
           slug,
           should_color_logo: shouldColorLogo,
         })
@@ -398,6 +404,40 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="bg-white dark:bg-zinc-900 border-[--border]"
+            />
+          </div>
+          <div className="space-y-2">
+            <LabelWithHelp
+              htmlFor="phone"
+              help={SITE_SETTINGS_HELP.fields.phone.content}
+              where={SITE_SETTINGS_HELP.fields.phone.where}
+            >
+              טלפון
+            </LabelWithHelp>
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="050-0000000"
+              className="bg-white dark:bg-zinc-900 border-[--border]"
+              dir="ltr"
+            />
+          </div>
+          <div className="space-y-2">
+            <LabelWithHelp
+              htmlFor="address"
+              help={SITE_SETTINGS_HELP.fields.address.content}
+              where={SITE_SETTINGS_HELP.fields.address.where}
+            >
+              כתובת / עיר
+            </LabelWithHelp>
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="למשל: תל אביב, רothschild 12"
               className="bg-white dark:bg-zinc-900 border-[--border]"
             />
           </div>

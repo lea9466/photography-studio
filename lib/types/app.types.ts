@@ -79,6 +79,9 @@ export function getGalleryStatusLabel(status: GalleryStatus): string {
 /** Default landing page while dashboard overview is blocked in MVP */
 export const MVP_DEFAULT_DASHBOARD_PATH = '/dashboard/galleries'
 
+/** First-time studio setup — slug, theme, branding */
+export const ONBOARDING_SETTINGS_PATH = '/dashboard/settings'
+
 /** Routes blocked entirely during MVP (redirect to galleries list) */
 export function isMvpBlockedDashboardRoute(pathname: string): boolean {
   if (!PUBLIC_ONLY_MVP) return false

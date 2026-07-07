@@ -14,6 +14,8 @@ export type PublicPhotographer = Pick<
   | 'about_description'
   | 'contact_card_title'
   | 'contact_card_description'
+  | 'address'
+  | 'phone'
   | 'stat_projects'
   | 'stat_clients'
   | 'stat_experience_years'
@@ -44,6 +46,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   about_description,
   contact_card_title,
   contact_card_description,
+  address,
+  phone,
   stat_projects,
   stat_clients,
   stat_experience_years,
