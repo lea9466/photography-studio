@@ -1,9 +1,12 @@
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import { Nav } from '@/components/marketing/Nav'
 import { Hero } from '@/components/marketing/Hero'
 import { ContactForm } from '@/components/marketing/ContactForm'
 import { CTABanner } from '@/components/marketing/CTABanner'
 import { Footer } from '@/components/marketing/Footer'
 import { MarketingSeoFeatures } from '@/components/marketing/MarketingSeoFeatures'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -67,6 +70,18 @@ export function MarketingHome() {
 
       <section className="mx-auto max-w-xl px-4 py-16" id="contact">
         <h2 className="mb-6 text-2xl font-semibold text-center">יצירת קשר</h2>
+        <div className="mb-6 flex justify-center">
+          <Button asChild variant="outline">
+            <Link
+              href="https://studio-galleries.com/lea-studio"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4" />
+              צפייה באתר דוגמא
+            </Link>
+          </Button>
+        </div>
         <ContactForm />
       </section>
 
