@@ -526,7 +526,7 @@ export function generateSiteNavMobileStyles(): string {
         }`
 }
 
-export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: string): string {
+export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: string, shouldColorLogo: boolean = false): string {
   if (theme === 'classic') {
     return `
         .classic-nav .classic-nav-brand,
@@ -560,7 +560,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: ${primaryColor};
         }
         .classic-nav.nav-scrolled .classic-nav-logo {
-            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
+            filter: ${shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }${generateSiteNavMobileStyles()}`
   }
 
@@ -602,7 +602,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: #0F172A;
         }
         .modern-nav.nav-scrolled .modern-nav-logo {
-            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
+            filter: ${shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }${generateSiteNavMobileStyles()}`
   }
 
@@ -639,7 +639,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: ${primaryColor};
         }
         .bold-nav.nav-scrolled .bold-nav-logo {
-            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
+            filter: ${shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }
         .bold-nav .bold-nav-brand .text-primary {
             color: ${primaryColor};

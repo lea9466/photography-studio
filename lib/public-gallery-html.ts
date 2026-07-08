@@ -425,7 +425,7 @@ ${ctaSection(data, theme, homepagePath)}
 </main>`
 }
 
-function themeHead(theme: SiteChromeTheme, studioName: string, primaryColor: string) {
+function themeHead(theme: SiteChromeTheme, studioName: string, primaryColor: string, shouldColorLogo: boolean = false) {
   const title = escapeHtml(`${studioName} | גלריה`)
 
   if (theme === 'modern') {
@@ -460,7 +460,7 @@ tailwind.config = {
 body { font-family: 'Heebo', sans-serif; background: #F8FAFC; color: #0F172A; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
 .nav-glass { background: rgba(248, 250, 252, 0.8); backdrop-filter: blur(12px); }
-${generateSiteNavStyles(theme, primaryColor)}
+${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 </style>
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">`
@@ -504,7 +504,7 @@ tailwind.config = {
 </script>
 <style>
 body { font-family: 'Heebo', sans-serif; background: #FAFAF8; }
-${generateSiteNavStyles(theme, primaryColor)}
+${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 </style>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">`
@@ -544,7 +544,7 @@ tailwind.config = {
 <style>
 body { font-family: 'Heebo', sans-serif; background: #121217; color: #F5F5F0; }
 .btn-fuchsia-transition { transition: color 0.3s ease; }
-${generateSiteNavStyles(theme, primaryColor)}
+${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 </style>
 </head>
 <body class="bg-background text-on-surface">`
@@ -601,6 +601,7 @@ export function generatePublicGalleryPageHTML(options: {
   gallery: PublicGalleryPageData
   hasFaq?: boolean
   hasPackages?: boolean
+  shouldColorLogo?: boolean
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.gallery.accentColor
@@ -613,11 +614,12 @@ export function generatePublicGalleryPageHTML(options: {
     linkMode: 'href',
     hasFaq: options.hasFaq ?? false,
     hasPackages: options.hasPackages ?? false,
+    shouldColorLogo: options.shouldColorLogo ?? false,
   })
 
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he" style="scroll-behavior: smooth;">
-${themeHead(chromeTheme, options.studioName, primaryColor)}
+${themeHead(chromeTheme, options.studioName, primaryColor, options.shouldColorLogo ?? false)}
 ${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
 ${galleryBody(options.gallery, chromeTheme, options.homepagePath)}
