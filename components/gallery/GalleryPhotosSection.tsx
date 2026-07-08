@@ -10,7 +10,8 @@ import {
   Image as ImageIcon,
   Hourglass,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { GalleryUploadCallbacks } from '@/lib/gallery-upload-client'
