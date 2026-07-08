@@ -3159,7 +3159,7 @@ ${studioName} · ${photographerName}
 </div>
 <div class="hero-glass-container">
 <div class="glass-card-frame w-full lg:w-auto">
-<div class="glass-card glass-card-float hero-glass-card pt-8 pb-8 px-6 lg:pt-24 lg:pb-28 lg:px-12 lg:w-[450px] lg:m-5">
+<div class="glass-card glass-card-float hero-glass-card pt-8 pb-8 px-6 lg:pt-16 lg:pb-20 lg:px-12 lg:w-[450px] lg:m-5 lg:mt-[calc(1.25rem+10px)]">
 <div class="hero-glass-inner">
 <div class="hero-glass-copy">
 <span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase">${studioName}</span>
