@@ -386,7 +386,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 id="slug"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
-                className="flex-1 border-none focus:ring-0"
+                className="flex-1 border-[--border] focus:ring-0"
               />
             </div>
             {previewPath ? (
