@@ -109,7 +109,7 @@ export function WelcomeModal({ open, previewUrl }: WelcomeModalProps) {
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-        <span>האתר בהרצה קבלי בהנה אם יש שגיאות או באגים ונשמח אם תעדכני אותנו😊</span>
+        <div>האתר בהרצה קבלי בהבנה אם יש שגיאות או באגים ונשמח אם תעדכני אותנו😊</div>
           <Button onClick={handleDismiss} disabled={pending} className="w-full">
             בואי נתחיל!
           </Button>
