@@ -42,7 +42,7 @@ export default async function RegisterPage({
   }
 
   return (
-    <div className="flex w-full max-w-2xl flex-col gap-10">
+    <div className="flex w-full max-w-xl flex-col items-center gap-10 text-center">
       <p className="sr-only">{MARKETING_H1}</p>
       <AuthForm mode="register" action={registerAction} />
       <MarketingSeoFeatures compact />

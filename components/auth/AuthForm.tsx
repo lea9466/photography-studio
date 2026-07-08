@@ -31,7 +31,7 @@ export function AuthForm({ mode, action, next }: AuthFormProps) {
 
   return (
     <Card className="w-full max-w-md animate-float-up">
-      <CardHeader>
+      <CardHeader className={isLogin ? undefined : 'items-center text-center'}>
         <CardTitle>{isLogin ? 'התחברות' : 'פתיחת סטודיו'}</CardTitle>
         <CardDescription>
           {isLogin
