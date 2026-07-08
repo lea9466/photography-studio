@@ -258,7 +258,6 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           photos={photos as never}
           signedUrls={signedUrls}
           showWizardHeader={false}
-          showWizardFooter={false}
           initialPhotoLimit={20}
         />
       </section>
