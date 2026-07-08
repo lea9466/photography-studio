@@ -658,6 +658,7 @@ export function createSiteChromeConfig(options: {
   linkMode?: SiteChromeLinkMode
   hasFaq?: boolean
   hasPackages?: boolean
+  shouldColorLogo?: boolean
 }): SiteChromeConfig {
   return {
     theme: options.theme,
@@ -668,5 +669,6 @@ export function createSiteChromeConfig(options: {
     linkMode: options.linkMode ?? 'scroll',
     hasFaq: options.hasFaq ?? false,
     hasPackages: options.hasPackages ?? false,
+    shouldColorLogo: options.shouldColorLogo ?? false,
   }
 }
