@@ -1266,7 +1266,7 @@ function generateHomepageHTML(
       hasFaq,
       hasPackages: packages.length > 0,
     })
-  const aboutText = about_text || 'ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.'
+  const aboutText = about_text || ''
   const aboutTitle = about_title || ''
   const aboutSubtitle = about_subtitle || ''
   const aboutDescription = about_description || ''
