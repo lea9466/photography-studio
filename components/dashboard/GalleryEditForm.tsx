@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateGallerySettings } from '@/lib/actions/gallery.actions'
+import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,28 +52,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         if (coverImageFile) {
           setIsUploadingCover(true)
           try {
-            const formData = new FormData()
-            formData.append('file', coverImageFile)
-            formData.append('type', 'cover')
-            formData.append('watermarkText', watermark)
-            formData.append('applyAutoWatermark', autoApplyWatermark ? 'true' : 'false')
-            
-            const uploadResponse = await fetch('/api/upload-cover', {
-              method: 'POST',
-              body: formData,
-            })
-
-            const uploadData = await uploadResponse.json().catch(() => ({}))
-
-            if (!uploadResponse.ok) {
-              throw new Error(
-                typeof uploadData.error === 'string'
-                  ? uploadData.error
-                  : 'העלאת תמונת השער נכשלה'
-              )
-            }
-
-            finalCoverImage = uploadData.path ?? uploadData.url
+            finalCoverImage = await uploadGalleryCoverFile(coverImageFile)
             setCoverImage(finalCoverImage)
             setCoverImageFile(null)
           } catch (error) {

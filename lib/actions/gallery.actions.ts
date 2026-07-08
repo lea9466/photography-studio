@@ -12,7 +12,10 @@ import {
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
-import { deleteMediaObject } from '@/lib/r2/storage'
+import { createPresignedUploadUrl, deleteMediaObject } from '@/lib/r2/storage'
+import { isR2Configured } from '@/lib/r2/config'
+import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
+import { buildCoverStoragePath } from '@/lib/images/cover-process'
 import type { MediaBucket } from '@/lib/r2/types'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { resolveGalleryCoverImagePath, resolveGalleryCoverCardPath } from '@/lib/seo/public-metadata'
@@ -620,4 +623,27 @@ export async function resolveGalleryTableThumbnails(
   )
 
   return thumbnails
+}
+
+export async function prepareGalleryCoverUpload(input: {
+  contentType: string
+  fileSize: number
+}) {
+  if (!isR2Configured()) {
+    throw new Error('אחסון תמונות לא מוגדר')
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('יש להתחבר מחדש')
+
+  validatePrimaryImageFile(input.contentType, input.fileSize)
+
+  const path = buildCoverStoragePath(user.id, Date.now(), input.contentType)
+  const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
+
+  return { uploadUrl, path }
 }

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { createClientRecord } from '@/lib/actions/client.actions'
 import { createGallery } from '@/lib/actions/gallery.actions'
+import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import type { Client, GalleryType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
@@ -197,28 +198,7 @@ export function GalleryWizard({
         let coverImageUrl: string | undefined = undefined
         if (state.coverImageFile) {
           try {
-            const formData = new FormData()
-            formData.append('file', state.coverImageFile)
-            formData.append('type', 'cover')
-            formData.append('watermarkText', state.watermarkText)
-            formData.append('applyAutoWatermark', state.autoApplyWatermark ? 'true' : 'false')
-            
-            const uploadResponse = await fetch('/api/upload-cover', {
-              method: 'POST',
-              body: formData,
-            })
-
-            const uploadData = await uploadResponse.json().catch(() => ({}))
-
-            if (!uploadResponse.ok) {
-              throw new Error(
-                typeof uploadData.error === 'string'
-                  ? uploadData.error
-                  : 'העלאת תמונת השער נכשלה'
-              )
-            }
-
-            coverImageUrl = uploadData.path ?? uploadData.url
+            coverImageUrl = await uploadGalleryCoverFile(state.coverImageFile)
           } catch (error) {
             console.error('Error uploading cover image:', error)
             toast.error(error instanceof Error ? error.message : 'העלאת תמונת השער נכשלה')
