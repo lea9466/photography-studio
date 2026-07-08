@@ -592,32 +592,32 @@ export function GalleryPhotosSection({
 
       {/* Fixed Bottom Action Bar */}
       {showWizardFooter && (
-        <footer className="mt-auto bg-white border-t border-[#c9c5cd] px-4 py-4 sm:px-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between sticky bottom-0 z-10 backdrop-blur-md bg-opacity-90">
-          <button
-            onClick={handleBack}
-            className="w-full sm:w-auto px-6 py-3 border border-[#c9c5cd] text-[#100d1f] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#f7f2f4] transition-colors"
-          >
-            <ArrowRight className="w-5 h-5" />
-            חזרה לרשימה
-          </button>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
-            <button
-              onClick={handleSaveAsDraft}
-              disabled={isPending}
-              className="w-full sm:w-auto px-6 py-3 text-[#48464c] font-bold hover:text-[#100d1f] transition-colors disabled:opacity-50"
-            >
-              שמור כטיוטה
-            </button>
-            <button
-              onClick={handlePublishGallery}
-              disabled={isPending}
-              className="w-full sm:w-auto bg-[#7D3A52] text-white px-6 sm:px-12 py-3 rounded-xl font-bold text-base sm:text-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              סיום ופרסום הגלריה
-              <Rocket className="w-5 h-5" />
-            </button>
-          </div>
-        </footer>
+        // <footer className="mt-auto bg-white border-t border-[#c9c5cd] px-4 py-4 sm:px-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between sticky bottom-0 z-10 backdrop-blur-md bg-opacity-90">
+        //   <button
+        //     onClick={handleBack}
+        //     className="w-full sm:w-auto px-6 py-3 border border-[#c9c5cd] text-[#100d1f] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#f7f2f4] transition-colors"
+        //   >
+        //     <ArrowRight className="w-5 h-5" />
+        //     חזרה לרשימה
+        //   </button>
+        //   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
+        //     <button
+        //       onClick={handleSaveAsDraft}
+        //       disabled={isPending}
+        //       className="w-full sm:w-auto px-6 py-3 text-[#48464c] font-bold hover:text-[#100d1f] transition-colors disabled:opacity-50"
+        //     >
+        //       שמור כטיוטה
+        //     </button>
+        //     <button
+        //       onClick={handlePublishGallery}
+        //       disabled={isPending}
+        //       className="w-full sm:w-auto bg-[#7D3A52] text-white px-6 sm:px-12 py-3 rounded-xl font-bold text-base sm:text-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+        //     >
+        //       סיום ופרסום הגלריה
+        //       <Rocket className="w-5 h-5" />
+        //     </button>
+        //   </div>
+        // </footer>
       )}
 
       {/* Delete Dialog */}
