@@ -166,6 +166,19 @@
                 grid-template-columns: 1fr !important;
             }
         }
+
+        /* Hidden text for SEO/internal use */
+        .hidden-text {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
 
     <script id="tailwind-config">
@@ -279,8 +292,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
                 <div class="order-2 lg:order-1">
                     <h2 class="font-serif-hebrew text-4xl md:text-5xl mb-8 font-medium">החזון שלנו</h2>
-                    <p class="font-body text-lg mb-6 leading-relaxed opacity-80">
-                        ב-Studio Gallery, אנו מאמינים שכל אישה נושאת בתוכה סיפור ייחודי הראוי להיות מונצח באמנות. הגישה שלנו משלבת צילום אופנה קלאסי עם רגישות דוקומנטרית מודרנית.
+                    <p class="font-body text-lg mb-6 leading-relaxed opacity-80 hidden-text">
+                        אנחנו מצלמים באהבה גדולה 
                     </p>
                     <p class="font-body text-base mb-10 opacity-60 leading-relaxed">
                         אנו לא רק מצלמים תמונות; אנו יוצרים חוויות. מהרגע שנכנסת לסטודיו ועד לקבלת האלבום היוקרתי, כל פרט מעוצב כדי לגרום לך להרגיש הגרסה הבטוחה והיפה ביותר של עצמך.
