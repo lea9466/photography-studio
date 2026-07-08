@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import {
   Card,
   CardContent,
@@ -56,8 +57,8 @@ export function GallerySettingsForm({
           maxAlbumSelection: maxAlbum ? Number(maxAlbum) : null,
           maxEditSelection: maxEdit ? Number(maxEdit) : null,
           watermarkText: watermark || null,
-          allowDownloadPreview: allowPreview,
-          allowDownloadOriginal: allowOriginal,
+          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED ? allowPreview : false,
+          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED ? allowOriginal : false,
         })
         toast.success('ההגדרות נשמרו')
       } catch (error) {
@@ -130,14 +131,27 @@ export function GallerySettingsForm({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border border-[--border] p-4">
+        <div className={`relative space-y-4 rounded-xl border border-[--border] p-4 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+          {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+            <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
+              לא זמין כרגע
+            </span>
+          ) : null}
           <div className="flex items-center justify-between">
             <Label>הורדת preview</Label>
-            <Switch checked={allowPreview} onCheckedChange={setAllowPreview} />
+            <Switch
+              checked={allowPreview}
+              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              onCheckedChange={setAllowPreview}
+            />
           </div>
           <div className="flex items-center justify-between">
             <Label>הורדת מקור</Label>
-            <Switch checked={allowOriginal} onCheckedChange={setAllowOriginal} />
+            <Switch
+              checked={allowOriginal}
+              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              onCheckedChange={setAllowOriginal}
+            />
           </div>
         </div>
 

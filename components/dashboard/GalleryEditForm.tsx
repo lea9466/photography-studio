@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 
 type GalleryEditFormProps = {
   gallery: {
@@ -73,8 +74,12 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           autoApplyWatermark,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit) : undefined,
-          allowDownloadPreview,
-          allowDownloadOriginal,
+          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED
+            ? allowDownloadPreview
+            : false,
+          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED
+            ? allowDownloadOriginal
+            : false,
         }
         
         console.log('Saving gallery settings:', {
@@ -94,7 +99,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid gap-6 pb-24 sm:pb-0 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
           <Input
@@ -116,8 +121,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#c9c5cd] px-4 py-3 bg-white">
-            <div>
+          <div className="flex flex-col gap-3 rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <Label className="text-[#100d1f]">החל סימן מים אוטומטי</Label>
               <p className="text-xs text-[#48464c] mt-1">
                 בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה הציבורית
@@ -129,10 +134,10 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             />
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="cover-image" className="text-[#100d1f]">
             תמונת שער לאתר הציבורי
-            <span className="text-[#6b2d43] font-normal mr-1">
+            <span className="mt-1 block text-xs font-normal text-[#6b2d43] sm:mt-0 sm:inline sm:mr-1 sm:text-sm">
               (מוצגת בכרטיס הגלריה בדף הבית; בנוסף 4 תמונות מהגלריה יוצגו בסקשן &quot;תמונות אחרונות&quot;)
             </span>
           </Label>
@@ -152,7 +157,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                   <input
                     type="file"
                     accept="image/*"
@@ -166,7 +171,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
                   />
                   <label
                     htmlFor="cover-image-replace"
-                    className="inline-flex cursor-pointer items-center rounded-lg border border-[#c9c5cd] px-4 py-2 text-sm text-[#100d1f] hover:border-[#6b2d43] transition-colors"
+                    className="inline-flex w-full cursor-pointer items-center justify-center rounded-lg border border-[#c9c5cd] px-4 py-2 text-sm text-[#100d1f] hover:border-[#6b2d43] transition-colors sm:w-auto"
                   >
                     החלף תמונה
                   </label>
@@ -176,7 +181,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
                       setCoverImageFile(null)
                       setCoverImage('')
                     }}
-                    className="inline-flex items-center rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="inline-flex w-full items-center justify-center rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors sm:w-auto"
                     disabled={isUploadingCover || isPending}
                   >
                     הסר תמונה
@@ -184,7 +189,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
                 </div>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-6 text-center hover:border-[#6b2d43] transition-colors">
+              <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-4 text-center hover:border-[#6b2d43] transition-colors sm:p-6">
                 <input
                   type="file"
                   accept="image/*"
@@ -261,36 +266,36 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         </div>
       </div>
 
-      {/* MVP: download permissions remain active in public-only mode */}
-      <div className="space-y-4 rounded-xl border border-[#c9c5cd] p-6 bg-[#f7f2f4]">
-        <div className="flex items-center justify-between">
+      <div className={`relative space-y-4 rounded-xl border border-[#c9c5cd] p-4 bg-[#f7f2f4] sm:p-6 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+        {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+          <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
+            לא זמין כרגע
+          </span>
+        ) : null}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Label className="text-[#100d1f]">הורדת preview</Label>
           <Switch
             checked={allowDownloadPreview}
-            onCheckedChange={(checked) => {
-              console.log('allowDownloadPreview changed:', checked)
-              setAllowDownloadPreview(checked)
-            }}
+            disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+            onCheckedChange={setAllowDownloadPreview}
           />
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Label className="text-[#100d1f]">הורדת מקור</Label>
           <Switch
             checked={allowDownloadOriginal}
-            onCheckedChange={(checked) => {
-              console.log('allowDownloadOriginal changed:', checked)
-              setAllowDownloadOriginal(checked)
-            }}
+            disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+            onCheckedChange={setAllowDownloadOriginal}
           />
         </div>
       </div>
 
       {/* Floating Save Button */}
-      <div className="fixed bottom-8 left-8 z-50">
+      <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-8 sm:right-auto">
         <Button
           onClick={handleSave}
           disabled={isPending}
-          className="bg-[#6b2d43] text-white px-12 py-3 rounded-xl font-bold text-lg shadow-sm hover:bg-[#5a2538] active:scale-[0.98] transition-all"
+          className="w-full bg-[#6b2d43] text-white px-8 py-3 rounded-xl font-bold text-base shadow-sm hover:bg-[#5a2538] active:scale-[0.98] transition-all sm:w-auto sm:px-12 sm:text-lg"
         >
           {isPending ? 'שומר...' : 'שמור הגדרות'}
         </Button>

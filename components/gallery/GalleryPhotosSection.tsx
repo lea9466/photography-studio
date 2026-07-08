@@ -357,52 +357,56 @@ export function GalleryPhotosSection({
   const atPhotoLimit = remainingPhotoSlots === 0
 
   return (
-    <div className="min-h-screen bg-[#fdf8fa]">
+    <div className={showWizardHeader ? 'min-h-screen bg-[#fdf8fa]' : 'bg-transparent'}>
       {/* Header / Progress Indicator */}
       {showWizardHeader && (
-        <header className="bg-white px-10 py-6 border-b border-[#c9c5cd] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <header className="bg-white px-4 py-4 sm:px-6 md:px-10 md:py-6 border-b border-[#c9c5cd] flex flex-col gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-[#100d1f]">אשף יצירת גלריה</h2>
-            <p className="text-[#48464c] text-base">שלב 4 מתוך 4: העלאת תמונות ופרסום</p>
+            <h2 className="text-lg sm:text-xl font-semibold text-[#100d1f]">אשף יצירת גלריה</h2>
+            <p className="text-[#48464c] text-sm sm:text-base">שלב 4 מתוך 4: העלאת תמונות ופרסום</p>
           </div>
           {/* Step Progress Dots */}
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
-                <CheckCircle2 className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 w-full">
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-[#48464c] font-semibold">פרטים</span>
+              <span className="text-[9px] sm:text-[10px] text-[#48464c] font-semibold whitespace-nowrap">פרטים</span>
             </div>
-            <div className="w-12 h-[2px] bg-[#100d1f]"></div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="w-6 sm:w-12 h-[2px] bg-[#100d1f] shrink-0"></div>
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-[#48464c] font-semibold">עיצוב</span>
+              <span className="text-[9px] sm:text-[10px] text-[#48464c] font-semibold whitespace-nowrap">עיצוב</span>
             </div>
-            <div className="w-12 h-[2px] bg-[#100d1f]"></div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
-                <CheckCircle2 className="w-4 h-4" />
+            <div className="w-6 sm:w-12 h-[2px] bg-[#100d1f] shrink-0"></div>
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs">
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
-              <span className="text-[10px] text-[#48464c] font-semibold">פרטיות</span>
+              <span className="text-[9px] sm:text-[10px] text-[#48464c] font-semibold whitespace-nowrap">פרטיות</span>
             </div>
-            <div className="w-12 h-[2px] bg-[#100d1f]"></div>
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs border-2 border-[#100d1f]">
+            <div className="w-6 sm:w-12 h-[2px] bg-[#100d1f] shrink-0"></div>
+            <div className="flex shrink-0 flex-col items-center gap-1">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#100d1f] text-white flex items-center justify-center text-xs border-2 border-[#100d1f]">
                 4
               </div>
-              <span className="text-[10px] text-[#100d1f] font-bold">העלאה</span>
+              <span className="text-[9px] sm:text-[10px] text-[#100d1f] font-bold whitespace-nowrap">העלאה</span>
             </div>
           </div>
         </header>
       )}
 
-      <section className="flex-1 p-10 max-w-[1600px] mx-auto w-full">
-        <div className="space-y-8">
+      <section
+        className={`flex-1 max-w-[1600px] mx-auto w-full ${
+          showWizardHeader ? 'p-4 sm:p-6 md:p-10' : 'p-0'
+        }`}
+      >
+        <div className="space-y-6 sm:space-y-8">
           {/* Drag & Drop Zone */}
           <div
-            className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
+            className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-6 sm:p-10 md:p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
               atPhotoLimit || isUploading
                 ? 'opacity-50 cursor-not-allowed'
                 : 'cursor-pointer hover:bg-[#f7f2f4]'
@@ -419,22 +423,22 @@ export function GalleryPhotosSection({
             }}
           >
             {isUploading ? (
-              <Loader2 className="w-20 h-20 animate-spin text-[#100d1f] mb-6" />
+              <Loader2 className="w-14 h-14 sm:w-20 sm:h-20 animate-spin text-[#100d1f] mb-4 sm:mb-6" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#ebe7e9] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <CloudUpload className="w-10 h-10 text-[#100d1f]" />
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-[#ebe7e9] flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                <CloudUpload className="w-7 h-7 sm:w-10 sm:h-10 text-[#100d1f]" />
               </div>
             )}
-            <h3 className="text-base font-semibold text-[#100d1f] mb-2">
+            <h3 className="text-sm sm:text-base font-semibold text-[#100d1f] mb-2">
               {isUploading ? 'מעלה תמונות...' : 'גררו תמונות לכאן או לחצו לבחירה'}
             </h3>
-            <p className="text-[#48464c] text-base max-w-sm">
+            <p className="text-[#48464c] text-sm sm:text-base max-w-sm px-2">
               {atPhotoLimit
                 ? `הגעת למקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בגלריה ציבורית`
                 : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} בגלריה).`}
             </p>
             <button
-              className="mt-6 px-8 py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-4 sm:mt-6 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={(e) => {
                 e.stopPropagation()
                 if (atPhotoLimit || isUploading) return
@@ -467,12 +471,43 @@ export function GalleryPhotosSection({
           <div className="space-y-4">
             {activeTab === 'regular' && !PUBLIC_ONLY_MVP && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב "מעובדות" למטה
+                <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב &quot;מעובדות&quot; למטה
               </div>
             )}
-            <div className="flex items-center justify-between">
-              <h4 className="text-base font-semibold text-[#100d1f]">תמונות {activeTab === 'regular' ? 'רגילות' : 'מעובדות'} ({currentPhotos.length})</h4>
-              <div className="flex items-center gap-2">
+
+            <div className="space-y-3">
+              <h4 className="text-sm sm:text-base font-semibold text-[#100d1f]">
+                תמונות {activeTab === 'regular' ? 'רגילות' : 'מעובדות'} ({currentPhotos.length})
+              </h4>
+
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={activeTab === 'regular' ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={PUBLIC_ONLY_MVP}
+                  onClick={() => {
+                    if (PUBLIC_ONLY_MVP) return
+                    setActiveTab('regular')
+                    activeTabRef.current = 'regular'
+                  }}
+                  className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'} ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none cursor-not-allowed' : ''}`}
+                >
+                  רגילות ({regularPhotos.length})
+                </Button>
+                <Button
+                  variant={activeTab === 'processed' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    setActiveTab('processed')
+                    activeTabRef.current = 'processed'
+                  }}
+                  className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'}`}
+                >
+                  מעובדות ({processedPhotos.length})
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -509,33 +544,6 @@ export function GalleryPhotosSection({
                     </Button>
                   </>
                 )}
-                <div className="flex items-center gap-2 border-r border-[#c9c5cd] pr-2">
-                  <span className="text-xs text-[#48464c]">טאבים:</span>
-                  <Button
-                    variant={activeTab === 'regular' ? 'default' : 'ghost'}
-                    size="sm"
-                    disabled={PUBLIC_ONLY_MVP}
-                    onClick={() => {
-                      if (PUBLIC_ONLY_MVP) return
-                      setActiveTab('regular')
-                      activeTabRef.current = 'regular'
-                    }}
-                    className={`${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'} ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none cursor-not-allowed' : ''}`}
-                  >
-                    רגילות ({regularPhotos.length})
-                  </Button>
-                  <Button
-                    variant={activeTab === 'processed' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => {
-                      setActiveTab('processed')
-                      activeTabRef.current = 'processed'
-                    }}
-                    className={activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'hover:bg-[#f7f2f4] text-xs'}
-                  >
-                    מעובדות ({processedPhotos.length})
-                  </Button>
-                </div>
               </div>
             </div>
             <div>
@@ -584,26 +592,26 @@ export function GalleryPhotosSection({
 
       {/* Fixed Bottom Action Bar */}
       {showWizardFooter && (
-        <footer className="mt-auto bg-white border-t border-[#c9c5cd] px-10 py-4 flex items-center justify-between sticky bottom-0 z-10 backdrop-blur-md bg-opacity-90">
+        <footer className="mt-auto bg-white border-t border-[#c9c5cd] px-4 py-4 sm:px-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between sticky bottom-0 z-10 backdrop-blur-md bg-opacity-90">
           <button
             onClick={handleBack}
-            className="px-6 py-3 border border-[#c9c5cd] text-[#100d1f] rounded-xl font-bold flex items-center gap-2 hover:bg-[#f7f2f4] transition-colors"
+            className="w-full sm:w-auto px-6 py-3 border border-[#c9c5cd] text-[#100d1f] rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-[#f7f2f4] transition-colors"
           >
             <ArrowRight className="w-5 h-5" />
             חזרה לרשימה
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 w-full sm:w-auto">
             <button
               onClick={handleSaveAsDraft}
               disabled={isPending}
-              className="px-6 py-3 text-[#48464c] font-bold hover:text-[#100d1f] transition-colors disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-3 text-[#48464c] font-bold hover:text-[#100d1f] transition-colors disabled:opacity-50"
             >
               שמור כטיוטה
             </button>
             <button
               onClick={handlePublishGallery}
               disabled={isPending}
-              className="bg-[#7D3A52] text-white px-12 py-3 rounded-xl font-bold text-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto bg-[#7D3A52] text-white px-6 sm:px-12 py-3 rounded-xl font-bold text-base sm:text-lg shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               סיום ופרסום הגלריה
               <Rocket className="w-5 h-5" />

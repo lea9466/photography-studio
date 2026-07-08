@@ -34,16 +34,16 @@ export default async function NewGalleryPage() {
     <div className="space-y-6">
       <GalleryBreadcrumb galleryTitle="גלריה חדשה" />
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">גלריה חדשה</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold">גלריה חדשה</h1>
           <p className="mt-1 text-sm text-[--muted]">
             {canCreateGallery
               ? `${quota?.galleryCount ?? 0} מתוך ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות · עד ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה`
               : `הגעת למקסימום ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות`}
           </p>
         </div>
-        <Button variant="outline" size="sm" asChild>
+        <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
           <Link href="/dashboard/galleries">ביטול</Link>
         </Button>
       </div>

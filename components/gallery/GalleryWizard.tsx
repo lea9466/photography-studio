@@ -28,7 +28,7 @@ import {
 import { createClientRecord } from '@/lib/actions/client.actions'
 import { createGallery } from '@/lib/actions/gallery.actions'
 import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
-import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
+import { GALLERY_TYPE_LABELS, PUBLIC_ONLY_MVP, DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import type { Client, GalleryType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import {
@@ -79,10 +79,6 @@ type WizardState = {
   coverImage: string
   coverImageFile: File | null
 }
-
-// MVP: Public-only mode. Private/client gallery flows are frozen (not deleted).
-const PUBLIC_ONLY_MVP = true
-const DOWNLOAD_PERMISSIONS_ENABLED = false
 
 const initialState: WizardState = {
   clientMode: 'public',
@@ -248,37 +244,37 @@ export function GalleryWizard({
   }
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-8 space-y-8">
+    <div className={`w-full max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 ${step === WIZARD_STEPS.length ? 'pb-28 sm:pb-8' : ''}`}>
       {/* Progress Stepper - Visible on all steps */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 -mx-1 px-1">
         {/* MVP: client-selection step is frozen and hidden */}
         {!PUBLIC_ONLY_MVP && (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
                 step === 1 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
               }`}>1</div>
-              <span className={`font-medium transition-colors ${
+              <span className={`font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
                 step === 1 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
               }`}>בחירת לקוח</span>
             </div>
-            <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
+            <div className="h-[1px] w-8 sm:w-16 bg-[#c9c5cd] shrink-0"></div>
           </>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 2 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
           }`}>{PUBLIC_ONLY_MVP ? '1' : '2'}</div>
-          <span className={`font-medium transition-colors ${
+          <span className={`font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
             step === 2 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>סוג גלריה</span>
         </div>
-        <div className="h-[1px] w-16 bg-[#c9c5cd]"></div>
-        <div className="flex items-center gap-2">
+        <div className="h-[1px] w-8 sm:w-16 bg-[#c9c5cd] shrink-0"></div>
+        <div className="flex shrink-0 items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 3 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
           }`}>{PUBLIC_ONLY_MVP ? '2' : '3'}</div>
-          <span className={`font-medium transition-colors ${
+          <span className={`font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
             step === 3 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>הגדרות מתקדמות</span>
         </div>
@@ -500,7 +496,7 @@ export function GalleryWizard({
                     disabled={isFrozen}
                     onChange={() => updateState('galleryType', type)}
                   />
-                  <div className={`selection-card h-full p-8 rounded-xl border border-[#c9c5cd] flex flex-col gap-4 text-right peer-checked:border-[#7D3A52] peer-checked:bg-[#7D3A52]/[0.03] peer-checked:ring-1 peer-checked:ring-[#7D3A52] group transition-all duration-300 ${
+                  <div className={`selection-card h-full p-5 sm:p-8 rounded-xl border border-[#c9c5cd] flex flex-col gap-4 text-right peer-checked:border-[#7D3A52] peer-checked:bg-[#7D3A52]/[0.03] peer-checked:ring-1 peer-checked:ring-[#7D3A52] group transition-all duration-300 ${
                     state.galleryType === type
                       ? 'border-[#7D3A52] bg-[#7D3A52]/[0.03] ring-1 ring-[#7D3A52]'
                       : 'hover:border-[#7D3A52] hover:shadow-sm'
@@ -540,9 +536,9 @@ export function GalleryWizard({
       {step === 3 ? (
         <div className="max-w-7xl mx-auto">
           {/* Bento Grid Layout for Sections */}
-          <form className="grid grid-cols-12 gap-6">
+          <form className="grid grid-cols-12 gap-4 sm:gap-6">
             {/* Security Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">אבטחה ופרטיות</h2>
@@ -578,7 +574,7 @@ export function GalleryWizard({
             </section>
             
             {/* Limits Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Zap className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">מגבלות אלבום</h2>
@@ -608,15 +604,15 @@ export function GalleryWizard({
             </section>
             
             {/* Content & Watermark Section */}
-            <section className="col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 overflow-hidden relative">
+            <section className="col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 overflow-hidden relative">
               <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#e5dff9] opacity-10 rounded-full blur-3xl"></div>
               <div className="flex items-center gap-2 mb-6">
                 <Droplets className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">תוכן וסימן מים</h2>
               </div>
               <div className="space-y-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="text-xs font-semibold text-[#48464c]">החל סימן מים אוטומטי</p>
                     <p className="text-xs text-[#48464c]/80 mt-1">
                       בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה הציבורית
@@ -640,7 +636,9 @@ export function GalleryWizard({
                 <div>
                   <label className="block text-xs font-semibold text-[#48464c] mb-2">
                     תמונת שער לאתר הציבורי
-                    <span className="text-[#7D3A52] font-normal mr-1">(מוצג רק כאשר הגלריה מופיעה באתר הציבורי)</span>
+                    <span className="mt-1 block font-normal text-[#7D3A52] sm:mt-0 sm:inline sm:mr-1">
+                      (מוצג רק כאשר הגלריה מופיעה באתר הציבורי)
+                    </span>
                   </label>
                   <div className="space-y-3">
                     {state.coverImageFile ? (
@@ -664,7 +662,7 @@ export function GalleryWizard({
                         </button>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-6 text-center hover:border-[#7D3A52] transition-colors">
+                      <div className="border-2 border-dashed border-[#c9c5cd] rounded-lg p-4 text-center hover:border-[#7D3A52] transition-colors sm:p-6">
                         <input
                           type="file"
                           accept="image/*"
@@ -699,7 +697,7 @@ export function GalleryWizard({
             </section>
             
             {/* Download Permissions Section */}
-            <section className={`relative col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-8 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+            <section className={`relative col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
               {!DOWNLOAD_PERMISSIONS_ENABLED ? (
                 <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
                   לא זמין כרגע
@@ -709,10 +707,10 @@ export function GalleryWizard({
                 <Download className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">הרשאות הורדה</h2>
               </div>
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-base font-semibold text-[#100d1f]">אפשר הורדת תצוגה מקדימה</h4>
+              <div className="space-y-6 sm:space-y-8">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <h4 className="text-sm sm:text-base font-semibold text-[#100d1f]">אפשר הורדת תצוגה מקדימה</h4>
                     <p className="text-sm text-[#48464c]">הורדת תמונות ברזולוציה נמוכה עם סימן מים</p>
                   </div>
                   <Switch
@@ -722,9 +720,9 @@ export function GalleryWizard({
                   />
                 </div>
                 <div className="h-[1px] w-full bg-[#c9c5cd] opacity-50"></div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-base font-semibold text-[#100d1f]">אפשר הורדת קבצי מקור</h4>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <h4 className="text-sm sm:text-base font-semibold text-[#100d1f]">אפשר הורדת קבצי מקור</h4>
                     <p className="text-sm text-[#48464c]">הורדת קבצי Full HD ללא סימן מים (ללקוחות משלמים בלבד)</p>
                   </div>
                   <Switch
@@ -740,14 +738,14 @@ export function GalleryWizard({
       ) : null}
 
       {step < WIZARD_STEPS.length ? (
-        <div className="flex items-center justify-between gap-4 pt-4">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4">
           <Button
             type="button"
             variant="outline"
             size="lg"
             onClick={handleBack}
             disabled={step === 1 || isPending}
-            className="border-2 hover:bg-[#fdf8fa] h-12 px-8"
+            className="w-full sm:w-auto border-2 hover:bg-[#fdf8fa] h-12 px-8"
           >
             חזרה
           </Button>
@@ -758,20 +756,20 @@ export function GalleryWizard({
               size="lg"
               onClick={handleNext}
               disabled={isPending || !canContinue()}
-              className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+              className="w-full sm:w-auto bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
             >
               הבא
             </Button>
           ) : null}
         </div>
       ) : (
-        <div className="fixed bottom-8 left-8 z-50">
+        <div className="fixed bottom-4 left-4 right-4 sm:left-8 sm:right-auto z-50">
           <Button
             type="button"
             size="lg"
             onClick={handlePublish}
             disabled={isPending}
-            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-8"
+            className="w-full sm:w-auto bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg h-12 px-6 sm:px-8"
           >
             {isPending ? (
               'שומר גלריה...'

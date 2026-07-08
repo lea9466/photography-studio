@@ -84,7 +84,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
   )
 
   return (
-    <div className="animate-fade-in space-y-12">
+    <div className="animate-fade-in space-y-8 sm:space-y-12">
       {/* Section 1: Overview - Actions — MVP: frozen */}
       <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
         <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
@@ -188,9 +188,9 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       </section>
 
       {/* Section 3: Settings - Edit Gallery */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-[#100d1f] flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#100d1f] flex items-center gap-2">
             <Settings className="w-5 h-5" />
             הגדרות
           </h2>
@@ -199,11 +199,11 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           </p>
         </div>
         <Card className="border-[#c9c5cd] shadow-sm">
-          <CardHeader>
+          <CardHeader className="px-4 sm:px-6">
             <CardTitle className="text-[#100d1f]">עריכת הגדרות</CardTitle>
             <CardDescription className="text-[#48464c]">שינויים נשמרים בלחיצה על &quot;שמור הגדרות&quot;</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <GalleryEditForm
               gallery={{
                 id: gallery.id,
@@ -240,9 +240,9 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       </section>
 
       {/* Section 5: Upload and Management */}
-      <section className="space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-[#100d1f] flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-semibold text-[#100d1f] flex items-center gap-2">
             <Upload className="w-5 h-5" />
             העלאה וניהול
           </h2>

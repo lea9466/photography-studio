@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { GALLERY_TYPE_LABELS, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import { GALLERY_TYPE_LABELS, PUBLIC_ONLY_MVP, DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import { Lock, Zap, Droplets, Download, UserCheck, Eye, ImageIcon } from 'lucide-react'
 
 type GalleryEditFormProps = {
@@ -75,8 +75,8 @@ export function GalleryEditForm({
           maxEditSelection: maxEdit ? Number(maxEdit) : null,
           watermarkText: watermark || null,
           autoApplyWatermark,
-          allowDownloadPreview: allowPreview,
-          allowDownloadOriginal: allowOriginal,
+          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED ? allowPreview : false,
+          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED ? allowOriginal : false,
         })
         toast.success('הגלריה עודכנה בהצלחה')
       } catch (error) {
@@ -234,7 +234,12 @@ export function GalleryEditForm({
       </Card>
 
       {/* Download Permissions Section */}
-      <Card>
+      <Card className={`relative ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+        {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+          <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
+            לא זמין כרגע
+          </span>
+        ) : null}
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-[#7D3A52]" />
@@ -248,7 +253,11 @@ export function GalleryEditForm({
               <h4 className="font-semibold">אפשר הורדת תצוגה מקדימה</h4>
               <p className="text-sm text-[--muted]">הורדת תמונות ברזולוציה נמוכה עם סימן מים</p>
             </div>
-            <Switch checked={allowPreview} onCheckedChange={setAllowPreview} />
+            <Switch
+              checked={allowPreview}
+              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              onCheckedChange={setAllowPreview}
+            />
           </div>
           <div className="h-[1px] w-full bg-[--border]"></div>
           <div className="flex items-center justify-between">
@@ -256,7 +265,11 @@ export function GalleryEditForm({
               <h4 className="font-semibold">אפשר הורדת קבצי מקור</h4>
               <p className="text-sm text-[--muted]">הורדת קבצי Full HD ללא סימן מים</p>
             </div>
-            <Switch checked={allowOriginal} onCheckedChange={setAllowOriginal} />
+            <Switch
+              checked={allowOriginal}
+              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              onCheckedChange={setAllowOriginal}
+            />
           </div>
         </CardContent>
       </Card>

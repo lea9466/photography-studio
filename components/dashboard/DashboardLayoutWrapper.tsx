@@ -35,12 +35,16 @@ export function DashboardLayoutWrapper({
   shouldColorLogo,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  function closeMobileMenu() {
+    setIsMobileMenuOpen(false)
+  }
 
   return (
     <div className="min-h-screen">
       <WelcomeModal open={showWelcomePopup} previewUrl={welcomePreviewUrl} />
       <ReferralSuccessModal open={showReferralPopup} />
-      {/* Desktop Sidebar */}
       <SidebarNav
         userName={userName}
         studioName={studioName}
@@ -49,18 +53,19 @@ export function DashboardLayoutWrapper({
         onSignOut={onSignOut}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isMobileOpen={isMobileMenuOpen}
+        onMobileClose={closeMobileMenu}
         accentColor={accentColor}
         shouldColorLogo={shouldColorLogo}
       />
-      
+
       <MobileHeader
         studioName={studioName}
         logoUrl={logoUrl || undefined}
         accentColor={accentColor}
         shouldColorLogo={shouldColorLogo}
-        userName={userName}
-        portfolioSlug={portfolioSlug}
-        onSignOut={onSignOut}
+        isMenuOpen={isMobileMenuOpen}
+        onToggleMenu={() => setIsMobileMenuOpen((open) => !open)}
       />
 
       {/* Main Content */}
