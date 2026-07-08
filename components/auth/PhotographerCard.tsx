@@ -22,7 +22,7 @@ export function PhotographerCard({ studio, isDemo = false }: PhotographerCardPro
         {hasLogo ? (
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
             <img
-              src={studio.logo_url}
+              src={studio.logo_url || undefined}
               alt={displayName}
               className="w-full h-full object-cover"
             />
