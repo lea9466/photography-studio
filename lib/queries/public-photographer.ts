@@ -35,6 +35,7 @@ export type PublicPhotographer = Pick<
   | 'testimonials_title'
   | 'email'
   | 'faq_items'
+  | 'should_color_logo'
 >
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
@@ -69,7 +70,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   packages_subtitle,
   testimonials_title,
   email,
-  faq_items
+  faq_items,
+  should_color_logo
 `
 
 const RESERVED_SLUGS = new Set(['favicon.ico', 'robots.txt', 'sitemap.xml'])

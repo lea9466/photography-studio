@@ -4,8 +4,10 @@ import { redirect } from 'next/navigation'
 import { ExternalLink } from 'lucide-react'
 import { AuthForm } from '@/components/auth/AuthForm'
 import { MarketingSeoFeatures } from '@/components/marketing/MarketingSeoFeatures'
+import { PhotographerCard } from '@/components/auth/PhotographerCard'
 import { Button } from '@/components/ui/button'
 import { signUp, type AuthActionState } from '@/lib/actions/auth.actions'
+import { getPublicStudios } from '@/lib/actions/public-studios.actions'
 import { buildMarketingMetadata, MARKETING_H1 } from '@/lib/seo/marketing-metadata'
 
 export const metadata: Metadata = buildMarketingMetadata({
@@ -35,6 +37,7 @@ export default async function RegisterPage({
   }
 
   const referralCode = parseReferralParam(refSegments)
+  const publicStudios = await getPublicStudios()
 
   async function registerAction(
     prevState: AuthActionState,
@@ -45,22 +48,56 @@ export default async function RegisterPage({
   }
 
   return (
-    <div className="flex w-full max-w-xl flex-col items-center gap-10 text-center">
+    <div className="w-full min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-x-hidden">
       <p className="sr-only">{MARKETING_H1}</p>
-      <div className="flex w-full max-w-md flex-col items-center gap-4">
-        <Button asChild variant="outline" className="w-full">
-          <Link
-            href="https://studio-galleries.com/lea-studio"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink className="h-4 w-4" />
-            צפייה באתר דוגמא
-          </Link>
-        </Button>
-        <AuthForm mode="register" action={registerAction} />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          {/* Left Column */}
+          <div className="flex flex-col items-center order-2 lg:order-1 min-w-0">
+            <MarketingSeoFeatures compact />
+            <div className="w-full max-w-md mt-8">
+              <div className="mb-6">
+                <Button asChild variant="outline" className="w-full">
+                  <Link
+                    href="https://studio-galleries.com/lea-studio"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4 ml-2" />
+                    צפייה באתר דוגמא
+                  </Link>
+                </Button>
+              </div>
+              <AuthForm mode="register" action={registerAction} />
+            </div>
+          </div>
+
+          {/* Right Column - Public Studios */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 sm:p-6 lg:p-8 order-1 lg:order-2 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
+              צלמות שכבר איתנו
+            </h2>
+            
+            {publicStudios.length > 0 ? (
+              <div className="space-y-3">
+                {publicStudios.map((studio, index) => (
+                  <PhotographerCard 
+                    key={studio.id} 
+                    studio={studio} 
+                    isDemo={index === 0 && studio.slug === 'lea-studio'}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <p>עדיין אין סטודיו ציבוריים</p>
+                <p className="text-sm mt-1">הירשמי והיי הראשונה!</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-      <MarketingSeoFeatures compact />
     </div>
   )
 }

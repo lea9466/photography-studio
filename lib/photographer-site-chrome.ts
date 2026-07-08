@@ -13,6 +13,7 @@ export type SiteChromeConfig = {
   linkMode: SiteChromeLinkMode
   hasFaq?: boolean
   hasPackages?: boolean
+  shouldColorLogo?: boolean
 }
 
 export function brandLastWord(text: string) {
@@ -99,6 +100,15 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
 function logoBlock(cfg: SiteChromeConfig, options: { imgClass?: string; textClass: string }) {
   const imgClass = options.imgClass ?? 'h-10 w-auto object-contain'
   if (cfg.logoUrl) {
+    if (cfg.shouldColorLogo) {
+      return `<img 
+        src="${cfg.logoUrl}" 
+        alt="${cfg.studioName}" 
+        class="${imgClass} brand-logo-colorable" 
+        data-brand-color="${cfg.primaryColor}"
+        data-logo-url="${cfg.logoUrl}"
+      />`
+    }
     return `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="${imgClass}" />`
   }
   return `<span class="${options.textClass}">${cfg.theme === 'dark' ? brandLastWord(cfg.studioName) : cfg.studioName}</span>`
@@ -368,6 +378,47 @@ ${generateStudioSignupFooterCta('dark')}
   }
 }
 
+export function generateLogoColoringScript(): string {
+  return `
+  (function() {
+    const colorableLogos = document.querySelectorAll('.brand-logo-colorable');
+    colorableLogos.forEach(async (img) => {
+      const logoUrl = img.getAttribute('data-logo-url');
+      const brandColor = img.getAttribute('data-brand-color');
+      if (!logoUrl || !brandColor) return;
+      
+      const isSvg = logoUrl.toLowerCase().includes('.svg') || logoUrl.includes('image/svg+xml');
+      if (!isSvg) return;
+      
+      try {
+        const response = await fetch(logoUrl);
+        const svgText = await response.text();
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svg = svgDoc.documentElement;
+        
+        // Color all SVG elements
+        const elements = svg.querySelectorAll('path, circle, rect, ellipse, polygon, polyline, line');
+        elements.forEach(el => {
+          el.style.fill = brandColor;
+          el.style.stroke = brandColor;
+        });
+        
+        // Replace img with colored SVG
+        const wrapper = document.createElement('div');
+        wrapper.className = img.className;
+        wrapper.style.cssText = img.style.cssText;
+        wrapper.appendChild(svg);
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        img.parentNode?.replaceChild(wrapper, img);
+      } catch (e) {
+        console.warn('Failed to color logo:', e);
+      }
+    });
+  })();`
+}
+
 export function generateSiteNavScrollScript(
   theme: SiteChromeTheme,
   linkMode: SiteChromeLinkMode = 'scroll',
@@ -509,7 +560,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: ${primaryColor};
         }
         .classic-nav.nav-scrolled .classic-nav-logo {
-            filter: none;
+            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }${generateSiteNavMobileStyles()}`
   }
 
@@ -551,7 +602,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: #0F172A;
         }
         .modern-nav.nav-scrolled .modern-nav-logo {
-            filter: none;
+            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }${generateSiteNavMobileStyles()}`
   }
 
@@ -588,7 +639,7 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             color: ${primaryColor};
         }
         .bold-nav.nav-scrolled .bold-nav-logo {
-            filter: none;
+            filter: ${cfg.shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
         }
         .bold-nav .bold-nav-brand .text-primary {
             color: ${primaryColor};

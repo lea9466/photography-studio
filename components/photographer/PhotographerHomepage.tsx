@@ -13,6 +13,7 @@ import {
 import {
   createSiteChromeConfig,
   generateSiteFooter,
+  generateLogoColoringScript,
   generateSiteNav,
   generateSiteNavMobileStyles,
   generateSiteNavScrollScript,
@@ -58,6 +59,7 @@ interface Photographer {
   phone: string | null
   address: string | null
   faq_items?: FaqItem[] | unknown
+  should_color_logo?: boolean
 }
 
 interface Gallery {
@@ -1092,6 +1094,7 @@ function generateHomepageHTML(
     about_text,
     about_title,
     about_subtitle,
+    should_color_logo,
     about_description,
     contact_card_title,
     contact_card_description,
@@ -1263,6 +1266,7 @@ function generateHomepageHTML(
       primaryColor,
       homepagePath: '/',
       linkMode: 'scroll',
+      shouldColorLogo: photographer.should_color_logo ?? false,
       hasFaq,
       hasPackages: packages.length > 0,
     })
@@ -2185,6 +2189,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
     }, observerOptions);
     document.querySelectorAll('.reveal-on-scroll').forEach(el => revealObserver.observe(el));
     ${generateSiteNavScrollScript('elegant')}
+    ${generateLogoColoringScript()}
     
     // Smooth scroll for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -2314,7 +2319,7 @@ ${documentHead}
             color: #0F172A;
         }
         .modern-nav.nav-scrolled .modern-nav-logo {
-            filter: none;
+            filter: ${photographer.should_color_logo ? 'none' : 'brightness(0) invert(1)'};
         }
         .modern-about-content {
             color: #ffffff;
@@ -2666,6 +2671,7 @@ ${generateContactPrivacyConsentHTML('modern', primaryColor)}
 </main>
 ${generateSiteFooter(siteChrome('modern'))}
 <script>${generateSiteNavScrollScript('modern')}</script>
+<script>${generateLogoColoringScript()}</script>
 <script>${MODERN_HERO_FILM_INIT_SCRIPT}</script>
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
@@ -2903,7 +2909,7 @@ ${documentHead}
             color: ${primaryColor};
         }
         .classic-nav.nav-scrolled .classic-nav-logo {
-            filter: none;
+            filter: ${photographer.should_color_logo ? 'none' : 'brightness(0) invert(1)'};
         }
         .about-section-label {
             font-family: 'Heebo', sans-serif;
@@ -3322,6 +3328,7 @@ ${generateContactPrivacyConsentHTML('classic', primaryColor, 'mb-lg')}
 ${generateSiteFooter(siteChrome('classic'))}
 <script>
         ${generateSiteNavScrollScript('classic')}
+        ${generateLogoColoringScript()}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -3586,7 +3593,7 @@ ${documentHead}
             color: ${primaryColor};
         }
         .bold-nav.nav-scrolled .bold-nav-logo {
-            filter: none;
+            filter: ${photographer.should_color_logo ? 'none' : 'brightness(0) invert(1)'};
         }
         .bold-nav .bold-nav-brand .text-primary {
             color: ${primaryColor};
@@ -4067,6 +4074,7 @@ ${generateSiteFooter(siteChrome('dark'))}
             });
         });
         ${generateSiteNavScrollScript('dark')}
+        ${generateLogoColoringScript()}
         
         // Smooth scroll for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
