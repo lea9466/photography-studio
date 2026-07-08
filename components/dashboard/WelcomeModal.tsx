@@ -23,7 +23,7 @@ const STEPS = [
     icon: Globe,
     title: 'כתובת האתר (Slug)',
     description:
-      'דבר ראשון — בחרי כתובת קצרה לאתר שלך. עד שלא תגדירי slug, האתר לא יהיה זמין לצפייה.',
+      'דבר ראשון — בחרי כתובת קצרה לאתר שלך. עד שלא תגדירי slug ותשמרי, האתר לא יהיה זמין לצפייה.',
   },
   {
     icon: Palette,
@@ -102,20 +102,21 @@ export function WelcomeModal({ open, previewUrl }: WelcomeModalProps) {
           <p className="flex items-start gap-2">
             <Palette className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
-              <span className="font-semibold">צבע המותג</span> — בחרי אותו תחת &quot;מיתוג ועיצוב&quot;. הוא
+              <span className="font-semibold">צבע המותג</span> — בחרי אותו תחת &quot;הגדרות אתר&quot;. הוא
               קובע את צבע הקישורים, ההדגשות, הכפתורים והקווים המודגשים באתר שלך.
             </span>
           </p>
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+        <span>האתר בהרצה קבלי בהנה אם יש שגיאות או באגים ונשמח אם תעדכני אותנו😊</span>
           <Button onClick={handleDismiss} disabled={pending} className="w-full">
             בואי נתחיל!
           </Button>
           {previewUrl ? (
             <>
               <p className="w-full text-center text-sm font-medium text-[--foreground]">
-                כדי לראות את האתר — יש לשמור שינויים קודם, ואז לפתוח אותו.
+                כדי לראות את האתר — יש לשמור שינויים קודם, ואז יפתח כפתור לצפייה באתר .
               </p>
               <Button
                 type="button"
