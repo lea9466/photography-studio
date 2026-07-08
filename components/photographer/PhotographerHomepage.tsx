@@ -820,7 +820,7 @@ function generateUnifiedGalleryGridHTML(
       const title = escapeGalleryText(String(g.title))
       const preview = g.preview_url
       const previewHtml = preview
-        ? `<div class="homepage-gallery-card-media"><img alt="${title}" class="homepage-gallery-card-image" src="${preview}" loading="lazy" decoding="async" /></div>`
+        ? `<div class="homepage-gallery-card-media"><img alt="${title}" class="homepage-gallery-card-image" src="${preview}" loading="eager" decoding="async" fetchpriority="high" /></div>`
         : ''
 
       return `<a href="${galleryUrl}" target="_parent" class="homepage-gallery-card group" style="border-radius: ${radius}">
@@ -878,10 +878,11 @@ function generateRecentPhotosGridHTML(
         .map((src) => {
           const delay = (cellIndex % 4) * 90
           cellIndex++
+          // Remove link functionality for performance - images display faster without links
           return `
-<a href="${galleryUrl}" target="_parent" class="recent-photo-cell" data-reveal-delay="${delay}" aria-label="${title}">
-  <img alt="${title}" class="recent-photo-img" src="${src}" loading="lazy" decoding="async" />
-</a>`
+<div class="recent-photo-cell" data-reveal-delay="${delay}" aria-label="${title}">
+  <img alt="${title}" class="recent-photo-img" src="${src}" loading="lazy" decoding="async" fetchpriority="low" />
+</div>`
         })
         .join('')
     })

@@ -369,6 +369,30 @@ export const HERO_SLIDESHOW_FILM_INIT_SCRIPT = `
 
 export const HERO_SLIDESHOW_INIT_SCRIPT = `
 (function initHeroSlideshow() {
+  // Preload hero images to prevent flickering
+  function preloadHeroImages() {
+    document.querySelectorAll('[data-hero-slideshow]').forEach(function(root) {
+      if (root.getAttribute('data-transition') === 'film') return;
+      ['desktop', 'mobile'].forEach(function(layer) {
+        var container = root.querySelector('.hero-slideshow-layer--' + layer);
+        if (!container) return;
+        var slides = Array.from(container.querySelectorAll('.hero-slide:not(.hero-slide--static)'));
+        if (slides.length <= 1) return;
+        // Preload 2nd and 3rd images (skip first as it's already loading)
+        for (var i = 1; i < Math.min(slides.length, 3); i++) {
+          var img = slides[i];
+          if (img.src && !img.complete) {
+            var preloadImg = new Image();
+            preloadImg.src = img.src;
+          }
+        }
+      });
+    });
+  }
+
+  // Start preloading immediately
+  preloadHeroImages();
+
   document.querySelectorAll('[data-hero-slideshow]').forEach(function(root) {
     if (root.getAttribute('data-transition') === 'film') return;
     var transitionMs = parseInt(root.getAttribute('data-transition-ms') || '${HERO_SLIDESHOW_FADE_MS}', 10);
@@ -546,7 +570,7 @@ ${loopImages
 ${images
   .map(
     (imageSrc, i) =>
-      `<img src="${imageSrc}" alt="${alt}" class="hero-slide ${i === 0 ? 'is-active' : ''} ${extraClass}" loading="${i === 0 ? 'eager' : 'lazy'}" decoding="async" />`
+      `<img src="${imageSrc}" alt="${alt}" class="hero-slide ${i === 0 ? 'is-active' : ''} ${extraClass}" loading="eager" fetchpriority="${i === 0 ? 'high' : 'auto'}" decoding="async" />`
   )
   .join('\n')}
 </div>`
