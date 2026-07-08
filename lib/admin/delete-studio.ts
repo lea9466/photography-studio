@@ -7,6 +7,7 @@ import {
 } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import { parseTestimonialImageRef } from '@/lib/testimonial-image-url'
+import { deriveCoverCardStoragePath } from '@/lib/images/cover-process'
 
 const MEDIA_BUCKETS: MediaBucket[] = [
   'originals',
@@ -88,6 +89,11 @@ async function collectGalleryMediaPaths(admin: ReturnType<typeof createAdminClie
       bucket: 'branding',
       path: cover.replace(/^branding\//, ''),
     })
+
+    const cardPath = deriveCoverCardStoragePath(cover)
+    if (cardPath) {
+      storageDeletes.push({ bucket: 'branding', path: cardPath })
+    }
   }
 
   if (galleryIds.length === 0) {

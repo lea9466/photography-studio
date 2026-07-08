@@ -15,7 +15,7 @@ import { processReferralBonusIfEligible } from '@/lib/referral/referral'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import { resolveBrandingPath } from '@/lib/branding-urls'
-import { resolveGalleryCoverImagePath } from '@/lib/seo/public-metadata'
+import { resolveGalleryCoverImagePath, resolveGalleryCoverCardPath } from '@/lib/seo/public-metadata'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
 import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -609,7 +609,7 @@ export async function resolveGalleryTableThumbnails(
   await Promise.all(
     galleries.map(async (gallery) => {
       if (gallery.cover_image) {
-        thumbnails[gallery.id] = await resolveGalleryCoverImagePath(
+        thumbnails[gallery.id] = await resolveGalleryCoverCardPath(
           gallery.cover_image,
           gallery.id
         )

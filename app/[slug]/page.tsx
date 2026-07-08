@@ -12,6 +12,7 @@ import {
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
+  resolveGalleryCoverCardPath,
   resolvePhotographerShareImage,
   toAbsoluteMediaUrl,
 } from '@/lib/seo/public-metadata'
@@ -74,7 +75,7 @@ export default async function PhotographerPage({ params }: PageProps) {
             ? gallery.cover_image
             : gallery.cover_image.startsWith('cover-images/')
               ? `/api/gallery-media?key=${encodeURIComponent(gallery.cover_image)}`
-              : await resolveMediaUrl('branding', gallery.cover_image)
+              : await resolveGalleryCoverCardPath(gallery.cover_image, gallery.id)
           return {
             ...gallery,
             preview_url: coverUrl,

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveBrandingPath } from '@/lib/branding-urls'
+import { deriveCoverCardStoragePath } from '@/lib/images/cover-process'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
@@ -81,6 +82,20 @@ export async function resolveGalleryCoverImagePath(
   }
 
   return resolveMediaUrl('branding', coverImage, galleryId)
+}
+
+export async function resolveGalleryCoverCardPath(
+  coverImage: string | null | undefined,
+  galleryId?: string
+): Promise<string | null> {
+  if (!coverImage) return null
+
+  const cardPath = deriveCoverCardStoragePath(coverImage)
+  if (cardPath) {
+    return resolveGalleryCoverImagePath(cardPath, galleryId)
+  }
+
+  return resolveGalleryCoverImagePath(coverImage, galleryId)
 }
 
 export async function resolveGalleryShareImage(

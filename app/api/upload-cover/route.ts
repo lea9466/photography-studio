@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import sharp from 'sharp'
 import { createClient } from '@/lib/supabase/server'
 import { isR2Configured } from '@/lib/r2/config'
 import { resolveMediaUrl, uploadMediaObject } from '@/lib/r2/storage'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
+import {
+  buildCoverStoragePaths,
+  processCoverCardImage,
+  processCoverFullImage,
+} from '@/lib/images/cover-process'
+import { resolveWatermarkText } from '@/lib/images/process'
 
 function toBuffer(data: ArrayBuffer | SharedArrayBuffer): Buffer {
   return Buffer.from(new Uint8Array(data))
@@ -30,6 +35,8 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File | null
+    const watermarkTextInput = formData.get('watermarkText')
+    const applyAutoWatermarkInput = formData.get('applyAutoWatermark')
 
     if (!file) {
       return NextResponse.json({ error: 'לא נבחר קובץ' }, { status: 400 })
@@ -44,30 +51,46 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const { data: profile } = await supabase
+      .from('users')
+      .select('studio_name')
+      .eq('id', user.id)
+      .single()
+
+    const watermarkText = resolveWatermarkText(
+      typeof watermarkTextInput === 'string' ? watermarkTextInput : null,
+      (profile as { studio_name: string | null } | null)?.studio_name ?? null
+    )
+    const applyAutoWatermark = applyAutoWatermarkInput !== 'false'
+
     const bytes = await file.arrayBuffer()
     const inputBuffer = toBuffer(bytes)
 
-    let outputBuffer: Buffer
+    let fullBuffer: Buffer
+    let cardBuffer: Buffer
     try {
-      outputBuffer = await sharp(inputBuffer)
-        .resize({ width: 1920, withoutEnlargement: true })
-        .webp({ quality: 85 })
-        .toBuffer()
+      ;[fullBuffer, cardBuffer] = await Promise.all([
+        processCoverFullImage(inputBuffer),
+        processCoverCardImage(inputBuffer, { watermarkText, applyAutoWatermark }),
+      ])
     } catch (processError) {
       console.error('Cover image processing failed:', processError)
       return NextResponse.json({ error: 'עיבוד התמונה נכשל' }, { status: 400 })
     }
 
-    const path = `${user.id}/gallery_cover_${Date.now()}.webp`
+    const { fullPath, cardPath } = buildCoverStoragePaths(user.id, Date.now())
 
-    await uploadMediaObject('branding', path, toUploadBody(outputBuffer), 'image/webp')
+    await Promise.all([
+      uploadMediaObject('branding', fullPath, toUploadBody(fullBuffer), 'image/webp'),
+      uploadMediaObject('branding', cardPath, toUploadBody(cardBuffer), 'image/webp'),
+    ])
 
-    const url = await resolveMediaUrl('branding', path)
+    const url = await resolveMediaUrl('branding', fullPath)
     if (!url) {
       return NextResponse.json({ error: 'לא ניתן ליצור כתובת לתמונה' }, { status: 500 })
     }
 
-    return NextResponse.json({ url, path })
+    return NextResponse.json({ url, path: fullPath, cardPath })
   } catch (error) {
     console.error('Error uploading cover image:', error)
     return NextResponse.json(

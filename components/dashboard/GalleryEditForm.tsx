@@ -54,6 +54,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
             const formData = new FormData()
             formData.append('file', coverImageFile)
             formData.append('type', 'cover')
+            formData.append('watermarkText', watermark)
+            formData.append('applyAutoWatermark', autoApplyWatermark ? 'true' : 'false')
             
             const uploadResponse = await fetch('/api/upload-cover', {
               method: 'POST',

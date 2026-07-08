@@ -200,6 +200,8 @@ export function GalleryWizard({
             const formData = new FormData()
             formData.append('file', state.coverImageFile)
             formData.append('type', 'cover')
+            formData.append('watermarkText', state.watermarkText)
+            formData.append('applyAutoWatermark', state.autoApplyWatermark ? 'true' : 'false')
             
             const uploadResponse = await fetch('/api/upload-cover', {
               method: 'POST',
