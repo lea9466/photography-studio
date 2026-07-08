@@ -3157,7 +3157,7 @@ ${studioName} · ${photographerName}
 <div class="hero-glass-copy">
 <span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase">${studioName}</span>
 <h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
-<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.</p>
+<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">${aboutText || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
 </div>
 <div class="hero-glass-actions">
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95 whitespace-nowrap">
