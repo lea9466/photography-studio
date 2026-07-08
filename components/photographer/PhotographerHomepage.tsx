@@ -2072,7 +2072,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <section class="px-margin-mobile md:px-margin-desktop py-32 max-w-7xl mx-auto reveal-on-scroll relative" id="about">
 <div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70"></div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-24 items-center relative z-10">
-<div class="order-2 lg:order-1">
+<div class="order-2 lg:order-1 max-w-2xl">
 <span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-8' }) : ''}
 ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
@@ -2523,7 +2523,7 @@ ${heroSlideshowModernHtml}
 </div>
 <div class="relative z-10 min-h-screen flex items-center pt-[80px]">
 <div class="w-full max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center min-h-[calc(100vh-80px)]">
-<div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-start">
+<div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-start max-w-2xl">
 <span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 ${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
 ${aboutSubtitle ? '<p class="text-lg md:text-xl modern-about-muted leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
@@ -3186,7 +3186,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 <div class="about-glow about-glow-right" style="background: radial-gradient(circle, ${primaryColor}80 0%, ${primaryColor}50 26%, ${primaryColor}28 48%, transparent 74%);"></div>
 <div class="max-w-7xl mx-auto px-lg relative z-10">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl md:gap-xxl items-center">
-<div class="order-1 space-y-8 md:pr-8">
+<div class="order-1 space-y-8 md:pr-8 max-w-2xl">
 <span class="about-section-label block">About — קצת עליי</span>
 ${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title">${underlineLastWord('אודות הסטודיו')}</h2>`}
 <div class="space-y-6">
@@ -3918,7 +3918,7 @@ ${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] o
 <p class="about-image-quote-name">— ${photographerName}</p>
 </div>
 </div>
-<div class="lg:col-span-7">
+<div class="lg:col-span-7 max-w-2xl">
 <span class="about-section-label block mb-6">About · קצת עליי</span>
 ${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h2>` : '<h2 class="about-title mb-8">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
 <div class="space-y-5">
