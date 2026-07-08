@@ -47,13 +47,10 @@ export function PhotographerCard({ studio, isDemo = false }: PhotographerCardPro
             </span>
           )}
         </div>
-        {!hasSlug && (
-          <p className="text-xs sm:text-sm text-gray-500">בתהליך הקמה</p>
-        )}
       </div>
 
       {/* Action Button */}
-      {hasSlug && (
+      {hasSlug && isDemo && (
         <Link
           href={`/${studio.slug}`}
           className="flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
