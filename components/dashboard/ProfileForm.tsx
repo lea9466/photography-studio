@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
 import { finalizeBrandingUpload, prepareBrandingUpload, removeBrandingImage, removeHeroImageSlot } from '@/lib/actions/branding.actions'
@@ -121,6 +122,7 @@ function SectionHeader({
 }
 
 export function ProfileForm({ profile }: ProfileFormProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(profile?.name ?? '')
   const [studioName, setStudioName] = useState(profile?.studio_name ?? '')
@@ -186,6 +188,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   useEffect(() => {
     setSavedSlug(profile?.slug ?? '')
   }, [profile?.slug])
+
+  useEffect(() => {
+    setEmail(profile?.email ?? '')
+    setPhone(profile?.phone ?? '')
+    setAddress(profile?.address ?? '')
+  }, [profile?.email, profile?.phone, profile?.address])
 
   const previewPath = savedSlug.trim() ? `/${savedSlug.trim()}` : null
 
@@ -354,15 +362,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           contact_mobile_url: extractPathFromUrl(contactMobileUrl) || undefined,
           packages_desktop_url: extractPathFromUrl(packagesDesktopUrl) || undefined,
           packages_mobile_url: extractPathFromUrl(packagesMobileUrl) || undefined,
-          email,
-          phone: phone.trim() || undefined,
-          address: address.trim() || undefined,
+          email: email.trim() || null,
+          phone: phone.trim() || null,
+          address: address.trim() || null,
           slug: slug.trim(),
           should_color_logo: shouldColorLogo,
         })
         setSavedSlug(slug.trim())
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
+        router.refresh()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה')
       }

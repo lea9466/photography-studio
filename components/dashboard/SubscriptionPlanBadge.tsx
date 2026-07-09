@@ -1,3 +1,5 @@
+'use client'
+
 import { cn } from '@/lib/utils'
 
 const PLAN_BADGE_CONFIG = {
@@ -18,6 +20,7 @@ type SubscriptionPlanBadgeProps = {
 
 export function SubscriptionPlanBadge({ plan, className }: SubscriptionPlanBadgeProps) {
   const config = PLAN_BADGE_CONFIG[plan]
+  if (!config) return null
 
   return (
     <span
