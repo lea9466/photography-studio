@@ -147,18 +147,32 @@ const HOMEPAGE_POSTS_CSS = `
   overflow: hidden;
   white-space: pre-line;
 }
-.hp-posts-more { text-align: center; margin-top: 40px; }
-.hp-posts-more a {
-  display: inline-block;
-  font-size: 13px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 12px 30px;
-  border: 1px solid currentColor;
-  text-decoration: none;
-  transition: opacity 0.2s ease, background 0.2s ease;
+.hp-posts-more {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 28px;
 }
-.hp-posts-more a:hover { opacity: 0.7; }
+.hp-posts-more a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: none;
+  padding: 0;
+  background: none;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+.hp-posts-more a:hover { opacity: 0.75; }
+.hp-posts-more a:active { transform: scale(0.96); }
+.hp-posts-more a:hover .hp-posts-more-arrow { transform: translateX(-5px); }
+.hp-posts-more-arrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
 `
 
 function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string): string {
@@ -226,7 +240,10 @@ export function generateHomepagePostsSectionHTML(options: {
   const moreLink = options.showAllLink
     ? `
 <div class="hp-posts-more">
-  <a href="${escapeHtml(options.blogHref)}" target="_parent" style="color:${options.primaryColor};">לכל הפוסטים</a>
+  <a href="${escapeHtml(options.blogHref)}" target="_parent" style="color:${options.primaryColor};">
+    לכל הפוסטים
+    <span class="hp-posts-more-arrow" aria-hidden="true">←</span>
+  </a>
 </div>`
     : ''
 
