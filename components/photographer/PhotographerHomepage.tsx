@@ -3124,7 +3124,7 @@ ${documentHead}
         }
         .classic-testimonials-track {
             display: flex;
-            transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             direction: ltr;
         }
         .classic-testimonials-slide {
@@ -3495,7 +3495,7 @@ ${generateSiteFooter(siteChrome('classic'))}
                     function next() { goTo(index + 1); }
                     function resetTimer() {
                         if (timer) clearInterval(timer);
-                        timer = setInterval(next, 3500);
+                        timer = setInterval(next, 5000);
                     }
                     dots.forEach(function(dot, dotIndex) {
                         dot.addEventListener('click', function() {
@@ -3527,7 +3527,7 @@ ${generateSiteFooter(siteChrome('classic'))}
                     function tabletNext() { tabletGoTo(tabletIndex + 1); }
                     function tabletResetTimer() {
                         if (tabletTimer) clearInterval(tabletTimer);
-                        tabletTimer = setInterval(tabletNext, 3500);
+                        tabletTimer = setInterval(tabletNext, 5000);
                     }
                     tabletDots.forEach(function(dot, dotIndex) {
                         dot.addEventListener('click', function() {
@@ -3559,7 +3559,7 @@ ${generateSiteFooter(siteChrome('classic'))}
                     function mobileNext() { mobileGoTo(mobileIndex + 1); }
                     function mobileResetTimer() {
                         if (mobileTimer) clearInterval(mobileTimer);
-                        mobileTimer = setInterval(mobileNext, 3500);
+                        mobileTimer = setInterval(mobileNext, 5000);
                     }
                     mobileDots.forEach(function(dot, dotIndex) {
                         dot.addEventListener('click', function() {
