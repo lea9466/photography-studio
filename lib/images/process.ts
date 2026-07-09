@@ -144,6 +144,20 @@ export function buildPhotoStoragePaths(
   }
 }
 
+export function buildPostPhotoStoragePaths(
+  userId: string,
+  postId: string,
+  photoId: string
+) {
+  const baseName = `${photoId}.jpg`
+  const prefix = `${userId}/posts/${postId}`
+  return {
+    originalPath: `${prefix}/${baseName}`,
+    previewPath: `${prefix}/preview-${baseName}`,
+    watermarkedPath: `${prefix}/wm-${baseName}`,
+  }
+}
+
 export async function applyWatermarkToBlob(
   preview: Blob,
   watermarkText?: string,

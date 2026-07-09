@@ -268,6 +268,48 @@ export async function sendAdminLoginCodeEmail(input: { code: string }) {
   })
 }
 
+export async function sendAdminBroadcastEmail(input: {
+  to: string
+  recipientName?: string | null
+  subject: string
+  message: string
+  imageUrl?: string | null
+}) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] admin broadcast', input)
+    return
+  }
+
+  const greeting = input.recipientName ? `שלום ${input.recipientName},` : 'שלום,'
+  const bodyHtml = input.message.replace(/\n/g, '<br>')
+
+  const imageHref = input.imageUrl
+    ? getTestimonialImagePreviewUrl(input.imageUrl)
+      ? appUrl(getTestimonialImagePreviewUrl(input.imageUrl)!)
+      : null
+    : null
+  const imageBlock = imageHref
+    ? `
+        <p><img src="${imageHref}" alt="" style="max-width: 100%; max-height: 480px; border-radius: 8px; border: 1px solid #ddd; margin-top: 16px;" /></p>
+      `
+    : ''
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.to,
+    subject: input.subject,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6;">
+        <p>${greeting}</p>
+        <p>${bodyHtml}</p>
+        ${imageBlock}
+        <p style="color: #666; font-size: 0.85rem; margin-top: 24px;">Studio Galleries</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

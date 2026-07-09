@@ -1511,6 +1511,141 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
 
 
+const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
+(function initTestimonialsMarquee() {
+  // Mirrors the modern hero film belt: measure the real pixel width of one card
+  // set and drive the loop via the Web Animations API. No CSS percentages / vw /
+  // RTL-anchoring, so the strip never empties or jumps at the seam.
+  var SPEED_PX_PER_SEC = 55;
+
+  function setup(container) {
+    var track = container.querySelector('.testimonials-marquee-track');
+    if (!track) return;
+    var sets = track.querySelectorAll('.testimonials-marquee-set');
+    if (sets.length < 2) return;
+    var dup = sets[1];
+
+    var containerWidth = Math.round(container.getBoundingClientRect().width);
+    if (!containerWidth) return;
+
+    // How many cards to show at once, per breakpoint (uniform widths -> no gaps).
+    var vw = window.innerWidth || containerWidth;
+    var perView = vw >= 1024 ? 3 : (vw >= 768 ? 2 : 1);
+    var gapPx = vw >= 1024 ? 32 : 24; // matches CSS gap (2rem / 1.5rem)
+
+    var uniqueCards = sets[0].querySelectorAll('.testimonial-thumb-card');
+    var allCards = track.querySelectorAll('.testimonial-thumb-card');
+    var unique = uniqueCards.length;
+
+    // Only scroll when there are more testimonials than fit in one view.
+    var willScroll = unique > perView;
+
+    // Uniform card width so exactly perView cards fill the container width
+    // (3 on desktop, 2 on tablet, 1 on mobile). Same sizing in both modes so a
+    // static row looks identical to a scrolling one, just centered.
+    var cardW = Math.floor((containerWidth - (perView - 1) * gapPx) / perView);
+    allCards.forEach(function (c) {
+      c.style.width = cardW + 'px';
+      c.style.minWidth = cardW + 'px';
+      c.style.maxWidth = cardW + 'px';
+      c.style.flex = '0 0 ' + cardW + 'px';
+    });
+
+    if (!willScroll) {
+      // Not enough testimonials for a belt -> one static, centered row, no motion.
+      if (track.__mqAnim) { try { track.__mqAnim.cancel(); } catch (e) {} track.__mqAnim = null; }
+      track.__mqShift = 0;
+      dup.style.display = 'none';
+      track.style.width = '100%';
+      track.style.justifyContent = 'center';
+      track.style.transform = 'none';
+      return;
+    }
+
+    dup.style.display = 'flex';
+    track.style.width = '';
+    track.style.justifyContent = '';
+
+    // Distance between the two identical sets = one full period (one set + gap).
+    var shift = Math.round(
+      sets[1].getBoundingClientRect().left - sets[0].getBoundingClientRect().left
+    );
+    if (shift < 1) return;
+
+    // Already set up for this exact width -> keep the running animation. We must
+    // NOT depend on playState here: a freshly created WAAPI animation can still be
+    // 'pending', and re-entrant setupAll calls (image loads, fonts.ready) would
+    // otherwise cancel + recreate it every time, freezing it on the first frame.
+    if (track.__mqShift === shift && track.__mqAnim) {
+      return;
+    }
+    track.__mqShift = shift;
+
+    if (track.__mqAnim) { try { track.__mqAnim.cancel(); } catch (e) {} track.__mqAnim = null; }
+    if (typeof track.animate !== 'function') return;
+
+    var duration = (shift / SPEED_PX_PER_SEC) * 1000;
+    track.__mqAnim = track.animate(
+      [
+        { transform: 'translate3d(0px, 0, 0)' },
+        { transform: 'translate3d(' + (-shift) + 'px, 0, 0)' }
+      ],
+      { duration: duration, iterations: Infinity, easing: 'linear' }
+    );
+
+    if (!container.__mqHoverBound) {
+      container.__mqHoverBound = true;
+      container.addEventListener('mouseenter', function () {
+        if (track.__mqAnim) { try { track.__mqAnim.pause(); } catch (e) {} }
+      });
+      container.addEventListener('mouseleave', function () {
+        if (track.__mqAnim) { try { track.__mqAnim.play(); } catch (e) {} }
+      });
+    }
+  }
+
+  function setupAll() {
+    document.querySelectorAll('[data-testimonials-marquee]').forEach(setup);
+  }
+
+  function boot() {
+    setupAll();
+
+    // All repeated triggers funnel through one debounce so we never thrash the
+    // animation (which would freeze it). Card widths are fixed pixels, so the
+    // measured shift is stable across image/font loads and the guard keeps the
+    // single running animation alive.
+    var t;
+    function schedule() {
+      clearTimeout(t);
+      t = setTimeout(setupAll, 150);
+    }
+
+    window.addEventListener('load', schedule);
+    window.addEventListener('resize', schedule);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(schedule).catch(function () {});
+    }
+    document.querySelectorAll('[data-testimonials-marquee] img').forEach(function (img) {
+      if (img.complete) return;
+      img.addEventListener('load', schedule, { once: true });
+      img.addEventListener('error', schedule, { once: true });
+    });
+    if (typeof ResizeObserver !== 'undefined') {
+      document.querySelectorAll('[data-testimonials-marquee]').forEach(function (container) {
+        new ResizeObserver(schedule).observe(container);
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+`
+
 const TESTIMONIALS_EQUAL_HEIGHT_SCRIPT = `
 
 (function() {
@@ -1827,11 +1962,15 @@ interface PhotographerHomepageProps {
 
   testimonials?: Testimonial[]
 
+  postCount?: number
+
+  blogPath?: string
+
 }
 
 
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [] }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath }: PhotographerHomepageProps) {
 
   const [mounted, setMounted] = useState(false)
 
@@ -1877,13 +2016,17 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       testimonials,
 
-      initialSection
+      initialSection,
+
+      postCount,
+
+      blogPath
 
     )
 
     setHtml(generatedHtml)
 
-  }, [photographer, galleries, packages, testimonials])
+  }, [photographer, galleries, packages, testimonials, postCount, blogPath])
 
 
 
@@ -2199,7 +2342,11 @@ function generateHomepageHTML(
 
   testimonials: Testimonial[] = [],
 
-  initialSection?: string | null
+  initialSection?: string | null,
+
+  postCount: number = 0,
+
+  blogPath?: string
 
 ): string {
 
@@ -2568,6 +2715,10 @@ function generateHomepageHTML(
       hasFaq,
 
       hasPackages: packages.length > 0,
+
+      hasBlog: postCount > 0,
+
+      blogPath,
 
     })
 
@@ -3373,6 +3524,59 @@ ${accordion}
 
 
 
+  function generateTestimonialsMarqueeHTML(cardsHtml: string) {
+    // Two identical, contiguous sets with a uniform gap. The init script measures
+    // the pixel distance between them and animates by exactly that amount, so the
+    // loop seam is invisible. Track flows LTR (anchored left) to avoid the RTL
+    // "empties on scroll" bug; each card keeps RTL text.
+    return `
+    <div class="testimonials-marquee" data-testimonials-marquee>
+      <div class="testimonials-marquee-track">
+        <div class="testimonials-marquee-set">${cardsHtml}</div>
+        <div class="testimonials-marquee-set" aria-hidden="true">${cardsHtml}</div>
+      </div>
+    </div>
+    <style>
+      .testimonials-marquee {
+        overflow: hidden;
+        width: 100%;
+        padding: 1rem 0;
+        /* LTR so the overflowing max-content track anchors to the LEFT edge.
+           Under the page's RTL direction it would anchor right and translateX(-)
+           would scroll into empty space (the "screen empties" bug). */
+        direction: ltr;
+      }
+      .testimonials-marquee-track {
+        display: flex;
+        flex-direction: row;
+        direction: ltr;
+        width: max-content;
+        gap: 2rem;
+        justify-content: flex-start;
+        will-change: transform;
+      }
+      .testimonials-marquee-set {
+        display: flex;
+        flex-direction: row;
+        flex: 0 0 auto;
+        gap: 2rem;
+        align-items: stretch;
+      }
+      .testimonials-marquee .testimonial-thumb-card {
+        direction: rtl;
+        flex: 0 0 auto;
+      }
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .testimonials-marquee-track,
+        .testimonials-marquee-set { gap: 1.5rem; }
+      }
+      @media (max-width: 767px) {
+        .testimonials-marquee-track,
+        .testimonials-marquee-set { gap: 1.5rem; }
+      }
+    </style>`
+  }
+
   function generateClassicTestimonialsSection() {
 
     if (testimonials.length === 0) return ''
@@ -3411,98 +3615,11 @@ ${accordion}
     </style>`
       }
 
-      // Marquee with animation - clean slate implementation
-      const marqueeContent = cardsHtml + cardsHtml // Exactly 2x, no gaps
-      const containerClasses = [
-        'testimonials-marquee-container',
-        !shouldAnimateDesktop ? 'no-scroll-desktop' : '',
-        !shouldAnimateTablet ? 'no-scroll-tablet' : '',
-        !shouldAnimateMobile ? 'no-scroll-mobile' : ''
-      ].filter(Boolean).join(' ')
-
-      return `
-    <div class="${containerClasses}">
-      <div class="marquee-content">
-        ${marqueeContent}
-      </div>
-    </div>
-    <style>
-      @keyframes marquee-loop {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-      }
-      .testimonials-marquee-container {
-        overflow: hidden;
-        width: 100%;
-        padding: 1rem 0;
-        direction: rtl;
-      }
-      .marquee-content {
-        display: flex;
-        flex-direction: row;
-        width: max-content;
-        gap: 2rem;
-        animation: marquee-loop 40s linear infinite;
-        padding: 0 1rem;
-      }
-      .marquee-content:hover {
-        animation-play-state: paused;
-      }
-      /* Natural card sizes - no stretching */
-      .marquee-content .testimonial-thumb-card {
-        height: auto;
-        max-width: max-content;
-        flex-shrink: 0;
-      }
-      @media (min-width: 768px) and (max-width: 1023px) {
-        .marquee-content {
-          gap: 1.5rem;
-          animation: marquee-loop 35s linear infinite;
-        }
-      }
-      @media (max-width: 767px) {
-        .marquee-content {
-          gap: 1.5rem;
-          animation: marquee-loop 30s linear infinite;
-        }
-      }
-      /* Conditional: disable animation on desktop if ≤3 items */
-      @media (min-width: 1024px) {
-        .testimonials-marquee-container.no-scroll-desktop {
-          display: flex;
-          justify-content: center;
-          overflow: visible;
-        }
-        .testimonials-marquee-container.no-scroll-desktop .marquee-content {
-          animation: none;
-          gap: 2rem;
-        }
-      }
-      /* Conditional: disable animation on tablet if ≤2 items */
-      @media (min-width: 768px) and (max-width: 1023px) {
-        .testimonials-marquee-container.no-scroll-tablet {
-          display: flex;
-          justify-content: center;
-          overflow: visible;
-        }
-        .testimonials-marquee-container.no-scroll-tablet .marquee-content {
-          animation: none;
-          gap: 1.5rem;
-        }
-      }
-      /* Conditional: disable animation on mobile if 1 item */
-      @media (max-width: 767px) {
-        .testimonials-marquee-container.no-scroll-mobile {
-          display: flex;
-          justify-content: center;
-          overflow: visible;
-        }
-        .testimonials-marquee-container.no-scroll-mobile .marquee-content {
-          animation: none;
-          gap: 1.5rem;
-        }
-      }
-    </style>`
+      // Marquee with animation - measured, seamless belt (mirrors the modern hero
+      // film belt). The init script (TESTIMONIALS_MARQUEE_INIT_SCRIPT) measures one
+      // set's pixel width and drives the loop, so there is no %/gap/RTL mismatch that
+      // empties the strip. It also auto-centers (no motion) when content fits.
+      return generateTestimonialsMarqueeHTML(cardsHtml)
     }
 
 
@@ -4590,6 +4707,8 @@ ${generateSiteFooter(siteChrome('elegant'))}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
+<script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
@@ -5519,6 +5638,8 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${MODERN_HERO_FILM_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -7050,6 +7171,8 @@ ${generateSiteFooter(siteChrome('classic'))}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
+<script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
@@ -8443,6 +8566,8 @@ ${generateSiteFooter(siteChrome('dark'))}
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 

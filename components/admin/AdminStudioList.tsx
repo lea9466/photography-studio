@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
+import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -118,6 +119,8 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
           </CardHeader>
         </Card>
       </div>
+
+      <AdminBroadcastForm />
 
       <Card>
         <CardHeader>

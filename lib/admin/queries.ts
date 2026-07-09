@@ -11,6 +11,42 @@ export type AdminStudioRow = {
   site_path: string | null
 }
 
+export type AdminBroadcastRecipient = {
+  email: string
+  name: string | null
+}
+
+export async function getAdminBroadcastRecipients(): Promise<AdminBroadcastRecipient[]> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .select('email, name, studio_name')
+    .not('email', 'is', null)
+
+  if (error) throw new Error(error.message)
+
+  const seen = new Set<string>()
+  const recipients: AdminBroadcastRecipient[] = []
+
+  for (const row of data ?? []) {
+    const user = row as {
+      email: string | null
+      name: string | null
+      studio_name: string | null
+    }
+    const email = user.email?.trim().toLowerCase()
+    if (!email || seen.has(email)) continue
+
+    seen.add(email)
+    recipients.push({
+      email,
+      name: user.studio_name?.trim() || user.name?.trim() || null,
+    })
+  }
+
+  return recipients
+}
+
 export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const admin = createAdminClient()
   const { data, error } = await admin

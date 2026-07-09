@@ -8,6 +8,12 @@ import {
   assertReservedPhotosExist,
   parsePhotoIdsFromUploadRequests,
 } from '@/lib/gallery-photo-limits'
+import {
+  assertPostPhotoCountWithinLimit,
+  assertReservedPostPhotosExist,
+  parsePostPhotoIdsFromUploadRequests,
+} from '@/lib/post-photo-limits'
+import { assertPostOwner } from '@/lib/auth/post-owner'
 
 async function assertGalleryUploadPaths(
   galleryId: string,
@@ -63,5 +69,37 @@ export async function createR2UploadUrls(
     )
   )
   console.log('👉 13. Presigned URLs created', { urlCount: urls.length })
+  return urls
+}
+
+async function assertPostUploadPaths(postId: string, items: R2UploadRequest[]) {
+  const { user } = await assertPostOwner(postId)
+
+  const prefix = `${user.id}/posts/${postId}/`
+  for (const item of items) {
+    if (!item.path.startsWith(prefix)) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+  }
+
+  const supabase = await createClient()
+  const photoIds = parsePostPhotoIdsFromUploadRequests(user.id, postId, items)
+  await assertReservedPostPhotosExist(supabase, postId, photoIds)
+  await assertPostPhotoCountWithinLimit(supabase, postId, 0)
+
+  return user
+}
+
+export async function createPostR2UploadUrls(
+  postId: string,
+  items: R2UploadRequest[]
+) {
+  await assertPostUploadPaths(postId, items)
+
+  const urls = await Promise.all(
+    items.map((item) =>
+      createPresignedUploadUrl(item.bucket, item.path, item.contentType)
+    )
+  )
   return urls
 }

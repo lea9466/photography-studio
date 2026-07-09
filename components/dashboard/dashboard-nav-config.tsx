@@ -8,6 +8,7 @@ import {
   CircleHelp,
   Mail,
   CreditCard,
+  FileText,
 } from 'lucide-react'
 
 export type DashboardNavItem = {
@@ -41,6 +42,12 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'גלריות',
     icon: <ImageIcon className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/galleries'),
+  },
+  {
+    href: '/dashboard/posts',
+    label: 'פוסטים',
+    icon: <FileText className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/posts'),
   },
   {
     href: '/dashboard/packages',

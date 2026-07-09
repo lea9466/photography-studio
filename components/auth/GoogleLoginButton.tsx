@@ -50,9 +50,8 @@ export function GoogleLoginButton({
 
     try {
       const supabase = createClient()
-      const appUrl =
-        process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ??
-        window.location.origin
+      // OAuth must return to the current origin (localhost in dev, production in prod).
+      const appUrl = window.location.origin
       const redirectPath = resolveMvpDashboardPath(
         next ?? MVP_DEFAULT_DASHBOARD_PATH
       )

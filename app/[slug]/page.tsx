@@ -128,6 +128,12 @@ export default async function PhotographerPage({ params }: PageProps) {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
+    // Count posts to conditionally show the blog link in the header
+    const { count: postCount } = await admin
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typedPhotographer.id)
+
     // Fetch client testimonials/reviews (public)
     const { data: testimonials } = await admin
       .from('testimonials')
@@ -260,6 +266,8 @@ export default async function PhotographerPage({ params }: PageProps) {
           galleries={galleriesWithPools}
           packages={packages || []}
           testimonials={testimonialsWithUrls}
+          postCount={postCount ?? 0}
+          blogPath={`${canonicalPath}/blog`}
         />
       </>
     )

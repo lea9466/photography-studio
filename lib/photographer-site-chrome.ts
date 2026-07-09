@@ -13,6 +13,8 @@ export type SiteChromeConfig = {
   linkMode: SiteChromeLinkMode
   hasFaq?: boolean
   hasPackages?: boolean
+  hasBlog?: boolean
+  blogPath?: string
   shouldColorLogo?: boolean
 }
 
@@ -64,7 +66,7 @@ function generateStudioSignupFooterCta(theme: SiteChromeTheme): string {
   }
 }
 
-type NavTarget = 'home' | 'gallery' | 'pricing' | 'faq' | 'contact'
+type NavTarget = 'home' | 'gallery' | 'blog' | 'pricing' | 'faq' | 'contact'
 
 function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'gallery') return gallerySectionId(cfg.theme)
@@ -124,17 +126,24 @@ function navItems(
   const labels: Record<NavTarget, string> = {
     home: 'בית',
     gallery: 'גלריות',
+    blog: 'בלוג',
     pricing: 'חבילות צילום',
     faq: 'שאלות נפוצות',
     contact: 'יצירת קשר',
   }
   const targets: NavTarget[] = ['home', 'gallery']
+  if (cfg.hasBlog && cfg.blogPath) targets.push('blog')
   if (cfg.hasPackages) targets.push('pricing')
   if (cfg.hasFaq) targets.push('faq')
   targets.push('contact')
 
   return targets
     .map((target) => {
+      // Blog always navigates to a real sub-page (breaks out of the iframe).
+      if (target === 'blog') {
+        const closeAttr = closeMenu ? ` onclick="${closeMenu}"` : ''
+        return `<a href="${cfg.blogPath}" class="${cls}" target="_parent"${closeAttr}>${labels[target]}</a>`
+      }
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
         cfg.linkMode === 'href' && closeMenu ? ` onclick="${closeMenu}"` : ''
@@ -658,6 +667,8 @@ export function createSiteChromeConfig(options: {
   linkMode?: SiteChromeLinkMode
   hasFaq?: boolean
   hasPackages?: boolean
+  hasBlog?: boolean
+  blogPath?: string
   shouldColorLogo?: boolean
 }): SiteChromeConfig {
   return {
@@ -669,6 +680,8 @@ export function createSiteChromeConfig(options: {
     linkMode: options.linkMode ?? 'scroll',
     hasFaq: options.hasFaq ?? false,
     hasPackages: options.hasPackages ?? false,
+    hasBlog: options.hasBlog ?? false,
+    blogPath: options.blogPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
   }
 }

@@ -61,6 +61,7 @@ export type Database = {
           packages_title: string | null
           packages_subtitle: string | null
           testimonials_title: string | null
+          posts_page_title: string | null
           should_color_logo: boolean
           faq_items: Json
           trial_end_date: string
@@ -106,6 +107,7 @@ export type Database = {
           packages_title?: string | null
           packages_subtitle?: string | null
           testimonials_title?: string | null
+          posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
           trial_end_date?: string
@@ -151,6 +153,7 @@ export type Database = {
           packages_title?: string | null
           packages_subtitle?: string | null
           testimonials_title?: string | null
+          posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
           trial_end_date?: string
@@ -625,6 +628,97 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          subtitle: string | null
+          content: string
+          watermark_text: string | null
+          auto_apply_watermark: boolean
+          cover_photo_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          subtitle?: string | null
+          content: string
+          watermark_text?: string | null
+          auto_apply_watermark?: boolean
+          cover_photo_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          subtitle?: string | null
+          content?: string
+          watermark_text?: string | null
+          auto_apply_watermark?: boolean
+          cover_photo_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'posts_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      post_photos: {
+        Row: {
+          id: string
+          post_id: string
+          original_url: string | null
+          preview_url: string | null
+          watermarked_preview_url: string | null
+          sort_order: number
+          width: number | null
+          height: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          post_id: string
+          original_url?: string | null
+          preview_url?: string | null
+          watermarked_preview_url?: string | null
+          sort_order?: number
+          width?: number | null
+          height?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          post_id?: string
+          original_url?: string | null
+          preview_url?: string | null
+          watermarked_preview_url?: string | null
+          sort_order?: number
+          width?: number | null
+          height?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'post_photos_post_id_fkey'
+            columns: ['post_id']
+            isOneToOne: false
+            referencedRelation: 'posts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -654,6 +748,8 @@ export type SlugRedirect = Database['public']['Tables']['slug_redirects']['Row']
 export type PhotographyPackage =
   Database['public']['Tables']['photography_packages']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']
+export type Post = Database['public']['Tables']['posts']['Row']
+export type PostPhoto = Database['public']['Tables']['post_photos']['Row']
 
 export type GalleryWithSettings = Gallery & {
   gallery_settings: GallerySettings | null
