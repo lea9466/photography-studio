@@ -107,62 +107,7 @@ function eyebrowLabel(theme: SiteChromeTheme) {
   return 'Journal'
 }
 
-const BLOG_CSS = `
-.blog-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
-}
-@media (min-width: 640px) { .blog-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; } }
-@media (min-width: 1024px) { .blog-grid { grid-template-columns: repeat(3, 1fr); gap: 36px; } }
-.blog-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  cursor: pointer;
-  text-align: right;
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-  opacity: 0;
-  transform: translateY(18px);
-}
-.blog-card.is-visible { opacity: 1; transform: translateY(0); }
-.blog-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
-.blog-card:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-.blog-card__media {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: rgba(0,0,0,0.06);
-}
-.blog-card__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.7s ease;
-}
-.blog-card:hover .blog-card__media img { transform: scale(1.05); }
-.blog-card__media--empty::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.12));
-}
-.blog-card__body { padding: 20px 18px 24px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
-.blog-card__title { font-size: 22px; line-height: 1.25; }
-.blog-card__date { font-size: 13px; letter-spacing: 0.02em; opacity: 0.65; }
-.blog-card__excerpt {
-  font-size: 15px;
-  line-height: 1.7;
-  opacity: 0.85;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  white-space: pre-line;
-}
-.blog-empty { text-align: center; padding: 80px 0; opacity: 0.7; font-size: 18px; }
-
+const BLOG_MODAL_CSS = `
 .blog-modal {
   position: fixed;
   inset: 0;
@@ -226,6 +171,64 @@ const BLOG_CSS = `
   display: block;
 }
 @media (max-width: 768px) { .blog-detail__image { width: 100%; } }
+`
+
+const BLOG_CSS = `
+.blog-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+@media (min-width: 640px) { .blog-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; } }
+@media (min-width: 1024px) { .blog-grid { grid-template-columns: repeat(3, 1fr); gap: 36px; } }
+.blog-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: right;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  opacity: 0;
+  transform: translateY(18px);
+}
+.blog-card.is-visible { opacity: 1; transform: translateY(0); }
+.blog-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
+.blog-card:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.blog-card__media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: rgba(0,0,0,0.06);
+}
+.blog-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+.blog-card:hover .blog-card__media img { transform: scale(1.05); }
+.blog-card__media--empty::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.12));
+}
+.blog-card__body { padding: 20px 18px 24px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
+.blog-card__title { font-size: 22px; line-height: 1.25; }
+.blog-card__date { font-size: 13px; letter-spacing: 0.02em; opacity: 0.65; }
+.blog-card__excerpt {
+  font-size: 15px;
+  line-height: 1.7;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;
+}
+.blog-empty { text-align: center; padding: 80px 0; opacity: 0.7; font-size: 18px; }
+${BLOG_MODAL_CSS}
 `
 
 function blogHead(
@@ -388,7 +391,30 @@ const revealScript = `
 })();
 `
 
-const modalScript = `
+export { BLOG_MODAL_CSS }
+
+export function getBlogThemeTokens(theme: SiteChromeTheme) {
+  return TOKENS[theme]
+}
+
+export function generateBlogPostDetailTemplates(
+  posts: PublicBlogPost[],
+  theme: SiteChromeTheme
+): string {
+  return posts.map((post) => blogDetailTemplate(post, theme)).join('\n')
+}
+
+export function generateBlogModalMarkup(options: { surface: string; text: string }): string {
+  return `
+<div id="blog-modal" class="blog-modal" aria-hidden="true">
+  <div class="blog-modal__dialog" style="background:${options.surface};color:${options.text};">
+    <button type="button" class="blog-modal__close" aria-label="סגור">&times;</button>
+    <div id="blog-modal-body"></div>
+  </div>
+</div>`
+}
+
+export const BLOG_MODAL_INIT_SCRIPT = `
 (function initBlogModal() {
   function boot() {
     var modal = document.getElementById('blog-modal');
@@ -412,7 +438,7 @@ const modalScript = `
       document.body.style.overflow = '';
     }
 
-    document.querySelectorAll('.blog-card').forEach(function(card) {
+    document.querySelectorAll('.blog-card, .hp-post-card').forEach(function(card) {
       card.addEventListener('click', function() { open(card.getAttribute('data-post-id')); });
       card.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -467,17 +493,12 @@ export function generatePublicBlogPageHTML(options: {
     shouldColorLogo: options.shouldColorLogo ?? false,
   })
 
-  const templates = options.blog.posts
-    .map((post) => blogDetailTemplate(post, chromeTheme))
-    .join('\n')
+  const templates = generateBlogPostDetailTemplates(options.blog.posts, chromeTheme)
 
-  const modalMarkup = `
-<div id="blog-modal" class="blog-modal" aria-hidden="true">
-  <div class="blog-modal__dialog" style="background:${t.surface};color:${t.text};">
-    <button type="button" class="blog-modal__close" aria-label="סגור">&times;</button>
-    <div id="blog-modal-body"></div>
-  </div>
-</div>`
+  const modalMarkup = generateBlogModalMarkup({
+    surface: t.surface,
+    text: t.text,
+  })
 
   return `<!DOCTYPE html>
 <html dir="rtl" lang="he" style="scroll-behavior: smooth;">
@@ -488,7 +509,7 @@ ${templates}
 ${modalMarkup}
 ${generateSiteFooter(chrome)}
 <script>${revealScript}</script>
-<script>${modalScript}</script>
+<script>${BLOG_MODAL_INIT_SCRIPT}</script>
 </body>
 </html>`
 }

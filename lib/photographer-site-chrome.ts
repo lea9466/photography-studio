@@ -70,6 +70,7 @@ type NavTarget = 'home' | 'gallery' | 'blog' | 'pricing' | 'faq' | 'contact'
 
 function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'gallery') return gallerySectionId(cfg.theme)
+  if (target === 'blog') return 'posts'
   if (target === 'pricing') return 'pricing'
   if (target === 'faq') return 'faq'
   return 'contact'
@@ -96,7 +97,7 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
   if (target === 'home') {
     return homepageScrollToTopAction(closeMenu)
   }
-  return `onclick="document.querySelector('#${navSectionId(cfg, target)}').scrollIntoView({behavior: 'smooth'})${close}"`
+  return `onclick="document.querySelector('#${navSectionId(cfg, target)}')?.scrollIntoView({behavior: 'smooth'})${close}"`
 }
 
 function logoBlock(cfg: SiteChromeConfig, options: { imgClass?: string; textClass: string }) {
@@ -132,18 +133,13 @@ function navItems(
     contact: 'יצירת קשר',
   }
   const targets: NavTarget[] = ['home', 'gallery']
-  if (cfg.hasBlog && cfg.blogPath) targets.push('blog')
+  if (cfg.hasBlog) targets.push('blog')
   if (cfg.hasPackages) targets.push('pricing')
   if (cfg.hasFaq) targets.push('faq')
   targets.push('contact')
 
   return targets
     .map((target) => {
-      // Blog always navigates to a real sub-page (breaks out of the iframe).
-      if (target === 'blog') {
-        const closeAttr = closeMenu ? ` onclick="${closeMenu}"` : ''
-        return `<a href="${cfg.blogPath}" class="${cls}" target="_parent"${closeAttr}>${labels[target]}</a>`
-      }
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
         cfg.linkMode === 'href' && closeMenu ? ` onclick="${closeMenu}"` : ''

@@ -29,7 +29,7 @@ export async function getPosts(): Promise<PostWithPhotos[]> {
 
   const { data, error } = await supabase
     .from('posts')
-    .select('*, post_photos(*)')
+    .select('*, post_photos!post_photos_post_id_fkey(*)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -45,7 +45,7 @@ export async function getPost(postId: string): Promise<PostWithPhotos | null> {
 
   const { data, error } = await supabase
     .from('posts')
-    .select('*, post_photos(*)')
+    .select('*, post_photos!post_photos_post_id_fkey(*)')
     .eq('id', postId)
     .single()
 

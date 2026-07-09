@@ -36,7 +36,6 @@ const MASONRY_STYLES = `
 }
 @media (min-width: 640px) { .pg-masonry { column-count: 2; } }
 @media (min-width: 1024px) { .pg-masonry { column-count: 3; } }
-@media (min-width: 1280px) { .pg-masonry { column-count: 4; } }
 .pg-masonry-cell {
   break-inside: avoid;
   margin-bottom: 12px;

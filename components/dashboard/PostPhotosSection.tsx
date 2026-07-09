@@ -159,6 +159,23 @@ export function PostPhotosSection({
           <p className="text-xs text-[--muted]">
             עד {MAX_POST_PHOTOS} תמונות · נותרו {remainingSlots}
           </p>
+          <p className="mt-1.5 text-xs text-[--muted]">
+            <Star className="mb-0.5 inline h-3 w-3 text-[--primary]" />{' '}
+            {photos.length > 0 ? (
+              <>
+                לחצי על הכוכב לסימון{' '}
+                <span className="font-medium text-[--foreground]">תמונת השער</span> — התמונה שתוצג
+                בכרטיס הפוסט בדף הבית ובבלוג. מומלץ לבחור{' '}
+                <span className="font-medium text-[--foreground]">תמונה רחבה</span> (לרוחב).
+              </>
+            ) : (
+              <>
+                אחרי העלאה, סמני בכוכב את{' '}
+                <span className="font-medium text-[--foreground]">תמונת השער</span> לכרטיס הפוסט.
+                מומלץ <span className="font-medium text-[--foreground]">תמונה רחבה</span> (לרוחב).
+              </>
+            )}
+          </p>
         </div>
         {selectedIds.size > 0 && (
           <Button

@@ -27,11 +27,38 @@ import {
   type PhotoCandidate,
 } from '@/lib/homepage-photo-pool'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import type { PublicBlogPost } from '@/lib/public-blog-html'
 
 interface PageProps {
   params: Promise<{
     slug: string
   }>
+}
+
+type HomepagePostPhotoRow = {
+  id: string
+  preview_url: string | null
+  watermarked_preview_url: string | null
+  sort_order: number
+}
+
+type HomepagePostRow = {
+  id: string
+  title: string
+  subtitle: string | null
+  content: string
+  auto_apply_watermark: boolean
+  cover_photo_id: string | null
+  created_at: string
+  post_photos: HomepagePostPhotoRow[]
+}
+
+function formatPostDate(value: string) {
+  return new Date(value).toLocaleDateString('he-IL', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 export default async function PhotographerPage({ params }: PageProps) {
@@ -133,6 +160,77 @@ export default async function PhotographerPage({ params }: PageProps) {
       .from('posts')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', typedPhotographer.id)
+
+    // Fetch the latest posts for the homepage "latest posts" section
+    const { data: latestPostsData } = await admin
+      .from('posts')
+      .select(
+        'id, title, subtitle, content, auto_apply_watermark, cover_photo_id, created_at, post_photos!post_photos_post_id_fkey(id, preview_url, watermarked_preview_url, sort_order)'
+      )
+      .eq('user_id', typedPhotographer.id)
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    const latestPosts = (latestPostsData ?? []) as HomepagePostRow[]
+
+    const postPreviewPaths: string[] = []
+    const postWatermarkedPaths: string[] = []
+    for (const post of latestPosts) {
+      for (const photo of post.post_photos ?? []) {
+        if (post.auto_apply_watermark) {
+          if (photo.watermarked_preview_url) postWatermarkedPaths.push(photo.watermarked_preview_url)
+        } else if (photo.preview_url) {
+          postPreviewPaths.push(photo.preview_url)
+        }
+      }
+    }
+
+    const emptyUrlMap: Record<string, string> = {}
+    const [postPreviewUrls, postWatermarkedUrls] = await Promise.all([
+      postPreviewPaths.length
+        ? signStoragePaths('previews', postPreviewPaths)
+        : Promise.resolve(emptyUrlMap),
+      postWatermarkedPaths.length
+        ? signStoragePaths('watermarked', postWatermarkedPaths)
+        : Promise.resolve(emptyUrlMap),
+    ])
+
+    const resolvePostPhotoUrl = (
+      post: HomepagePostRow,
+      photo: HomepagePostPhotoRow
+    ): string | null => {
+      if (post.auto_apply_watermark) {
+        return photo.watermarked_preview_url
+          ? postWatermarkedUrls[photo.watermarked_preview_url] ?? null
+          : photo.preview_url
+            ? postPreviewUrls[photo.preview_url] ?? null
+            : null
+      }
+      return photo.preview_url ? postPreviewUrls[photo.preview_url] ?? null : null
+    }
+
+    const homepagePosts: PublicBlogPost[] = latestPosts.map((post) => {
+      const orderedPhotos = [...(post.post_photos ?? [])].sort(
+        (a, b) => a.sort_order - b.sort_order
+      )
+      const images = orderedPhotos
+        .map((photo) => resolvePostPhotoUrl(post, photo))
+        .filter((url): url is string => Boolean(url))
+      const coverPhoto = post.cover_photo_id
+        ? orderedPhotos.find((photo) => photo.id === post.cover_photo_id)
+        : null
+      const coverUrl = coverPhoto ? resolvePostPhotoUrl(post, coverPhoto) : images[0] ?? null
+
+      return {
+        id: post.id,
+        title: post.title,
+        subtitle: post.subtitle,
+        content: post.content,
+        date: formatPostDate(post.created_at),
+        coverUrl,
+        images,
+      }
+    })
 
     // Fetch client testimonials/reviews (public)
     const { data: testimonials } = await admin
@@ -268,6 +366,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           testimonials={testimonialsWithUrls}
           postCount={postCount ?? 0}
           blogPath={`${canonicalPath}/blog`}
+          posts={homepagePosts}
         />
       </>
     )

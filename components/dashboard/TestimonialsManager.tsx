@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { ImageIcon, Pencil, Plus, Trash2, Star, Upload, X } from 'lucide-react'
+import { Check, ImageIcon, Pencil, Plus, Trash2, Star, Upload, X } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createTestimonial,
@@ -64,6 +64,18 @@ type TestimonialFormState = {
   imageUrl: string
 }
 
+type TestimonialLayoutType = 'carousel' | 'marquee'
+
+const LAYOUT_OPTIONS: Array<{
+  value: TestimonialLayoutType
+  label: string
+  description: string
+  isNew?: boolean
+}> = [
+  { value: 'carousel', label: 'קרוסלה', description: 'תצוגה עם נקודות ניווט' },
+  { value: 'marquee', label: 'סרט נע', description: 'גלילה רציפה ואינסופית', isNew: true },
+]
+
 const EMPTY_FORM: TestimonialFormState = {
   title: '',
   content: '',
@@ -108,7 +120,9 @@ export function TestimonialsManager({
 }: TestimonialsManagerProps) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [sectionTitle, setSectionTitle] = useState(initialSectionTitle ?? '')
-  const [layoutType, setLayoutType] = useState(initialLayoutType ?? 'carousel')
+  const [layoutType, setLayoutType] = useState<TestimonialLayoutType>(() =>
+    initialLayoutType === 'marquee' ? 'marquee' : 'carousel'
+  )
   const [isSectionPending, startSectionTransition] = useTransition()
   const [isLayoutPending, startLayoutTransition] = useTransition()
   const themeDefault =
@@ -253,15 +267,19 @@ export function TestimonialsManager({
     })
   }
 
-  function handleLayoutTypeSave() {
+  function handleLayoutTypeSelect(value: TestimonialLayoutType) {
+    if (isLayoutPending || value === layoutType) return
+
+    const previous = layoutType
+    setLayoutType(value)
+
     startLayoutTransition(async () => {
       try {
-        const updated = await updateTestimonialLayoutType({
-          layoutType: layoutType as 'carousel' | 'marquee',
-        })
-        setLayoutType(updated.testimonial_layout_type)
+        const updated = await updateTestimonialLayoutType({ layoutType: value })
+        setLayoutType(updated.testimonial_layout_type === 'marquee' ? 'marquee' : 'carousel')
         toast.success('סוג התצוגה נשמר')
       } catch (error) {
+        setLayoutType(previous)
         toast.error(error instanceof Error ? error.message : 'שגיאה')
       }
     })
@@ -304,26 +322,58 @@ export function TestimonialsManager({
           </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="testimonial-layout-type">סוג תצוגה</Label>
-          <select
-            id="testimonial-layout-type"
-            value={layoutType}
-            onChange={(e) => setLayoutType(e.target.value)}
-            className="w-full rounded-md border border-[--border] bg-[--dashboard-surface] px-3 py-2 text-sm text-[--foreground]"
+          <Label>סוג תצוגה</Label>
+          <div
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            role="radiogroup"
+            aria-label="סוג תצוגת תגובות"
           >
-            <option value="carousel">קרוסלה (Carousel)</option>
-            <option value="marquee">סרט נע (Smooth Marquee)</option>
-          </select>
-        </div>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleLayoutTypeSave}
-            disabled={isLayoutPending}
-          >
-            {isLayoutPending ? 'שומר...' : 'שמור סוג תצוגה'}
-          </Button>
+            {LAYOUT_OPTIONS.map((option) => {
+              const selected = layoutType === option.value
+              return (
+                <div
+                  key={option.value}
+                  role="radio"
+                  aria-checked={selected}
+                  tabIndex={0}
+                  onClick={() => handleLayoutTypeSelect(option.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleLayoutTypeSelect(option.value)
+                    }
+                  }}
+                  className={`relative cursor-pointer rounded-xl border-2 p-4 text-right transition-all ${
+                    selected
+                      ? 'border-[#7D3A52] bg-[#7D3A52]/5'
+                      : 'border-[--border] bg-[--dashboard-surface] hover:border-[#7D3A52]/50'
+                  } ${isLayoutPending ? 'pointer-events-none opacity-60' : ''}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      {selected ? (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7D3A52] text-white">
+                          <Check className="h-3 w-3" />
+                        </span>
+                      ) : (
+                        <span className="h-5 w-5 rounded-full border-2 border-[--border]" />
+                      )}
+                      <span className="font-medium text-[--foreground]">{option.label}</span>
+                    </div>
+                    {option.isNew ? (
+                      <Badge variant="default" className="shrink-0">
+                        חדש!
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-xs text-[--muted] pr-7">{option.description}</p>
+                </div>
+              )
+            })}
+          </div>
+          {isLayoutPending ? (
+            <p className="text-xs text-[--muted]">שומר...</p>
+          ) : null}
         </div>
       </div>
       <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">

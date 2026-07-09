@@ -126,10 +126,27 @@ export function PostsManager({
   }
 
   function handleSubmit() {
+    const postIdToUpdate = editingId ?? savedPostId
+
+    if (postIdToUpdate && activePost) {
+      const original = postToForm(activePost)
+      const unchanged =
+        form.title.trim() === original.title.trim() &&
+        form.subtitle.trim() === original.subtitle.trim() &&
+        form.content.trim() === original.content.trim() &&
+        form.watermarkText.trim() === original.watermarkText.trim() &&
+        form.autoApplyWatermark === original.autoApplyWatermark
+
+      if (unchanged) {
+        toast.message('אין שינויים לשמירה')
+        return
+      }
+    }
+
     startTransition(async () => {
       try {
-        if (editingId) {
-          await updatePost(editingId, {
+        if (postIdToUpdate) {
+          await updatePost(postIdToUpdate, {
             title: form.title,
             subtitle: form.subtitle || null,
             content: form.content,
@@ -138,7 +155,7 @@ export function PostsManager({
           })
           setPosts((current) =>
             current.map((post) =>
-              post.id === editingId
+              post.id === postIdToUpdate
                 ? {
                     ...post,
                     title: form.title.trim(),
@@ -150,7 +167,8 @@ export function PostsManager({
                 : post
             )
           )
-          setSavedPostId(editingId)
+          setSavedPostId(postIdToUpdate)
+          setEditingId(null)
           toast.success('הפוסט עודכן')
         } else {
           const { id } = await createPost({

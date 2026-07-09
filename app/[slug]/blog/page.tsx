@@ -59,7 +59,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const { data: postsData } = await admin
     .from('posts')
     .select(
-      'id, title, subtitle, content, auto_apply_watermark, cover_photo_id, created_at, post_photos(id, preview_url, watermarked_preview_url, sort_order)'
+      'id, title, subtitle, content, auto_apply_watermark, cover_photo_id, created_at, post_photos!post_photos_post_id_fkey(id, preview_url, watermarked_preview_url, sort_order)'
     )
     .eq('user_id', typed.id)
     .order('created_at', { ascending: false })

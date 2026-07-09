@@ -1,8 +1,10 @@
+export const POSTS_PAGE_TITLE_DEFAULT = 'בלוג'
+
 export const POSTS_PAGE_TITLE_DEFAULTS: Record<string, string> = {
-  elegant: 'יומן',
-  modern: 'הבלוג',
-  classic: 'הסיפורים שלנו',
-  dark: 'בלוג',
+  elegant: POSTS_PAGE_TITLE_DEFAULT,
+  modern: POSTS_PAGE_TITLE_DEFAULT,
+  classic: POSTS_PAGE_TITLE_DEFAULT,
+  dark: POSTS_PAGE_TITLE_DEFAULT,
 }
 
 export function resolvePostsPageTitle(
@@ -10,7 +12,7 @@ export function resolvePostsPageTitle(
   postsPageTitle?: string | null
 ) {
   const fallback =
-    POSTS_PAGE_TITLE_DEFAULTS[theme] ?? POSTS_PAGE_TITLE_DEFAULTS.elegant
+    POSTS_PAGE_TITLE_DEFAULTS[theme] ?? POSTS_PAGE_TITLE_DEFAULT
 
   return postsPageTitle?.trim() || fallback
 }

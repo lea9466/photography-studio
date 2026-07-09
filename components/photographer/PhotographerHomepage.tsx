@@ -54,6 +54,16 @@ import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
 
 import { resolveTestimonialsSectionTitle } from '@/lib/testimonials-section-copy'
 
+import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
+
+import {
+
+  generateHomepagePostsSectionHTML,
+
+} from '@/lib/homepage-posts-section'
+
+import type { PublicBlogPost } from '@/lib/public-blog-html'
+
 
 
 interface Photographer {
@@ -122,6 +132,8 @@ interface Photographer {
   faq_items?: FaqItem[] | unknown
 
   should_color_logo?: boolean
+
+  posts_page_title?: string | null
 
 }
 
@@ -1267,6 +1279,22 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     }
 
+    .testimonials-section-grid > .testimonial-thumb-card--elegant,
+
+    .testimonials-row > .testimonial-thumb-card--elegant,
+
+    .testimonials-section-grid > .testimonial-thumb-card--classic,
+
+    .testimonials-row > .testimonial-thumb-card--classic {
+
+      flex: 0 1 18rem;
+
+      max-width: min(18rem, calc(50% - 0.75rem));
+
+      width: auto;
+
+    }
+
     .testimonial-thumb-card {
 
       padding: 1.85rem 1.25rem 1.85rem 4.75rem;
@@ -1296,6 +1324,22 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
       width: auto;
 
       min-width: 0;
+
+    }
+
+    .testimonials-section-grid > .testimonial-thumb-card--elegant,
+
+    .testimonials-row > .testimonial-thumb-card--elegant,
+
+    .testimonials-section-grid > .testimonial-thumb-card--classic,
+
+    .testimonials-row > .testimonial-thumb-card--classic {
+
+      flex: 0 0 18rem;
+
+      max-width: 18rem;
+
+      width: 18rem;
 
     }
 
@@ -1443,11 +1487,15 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     border: 1px solid rgba(121, 116, 126, 0.2);
 
+    max-width: min(100%, 18rem);
+
   }
 
   .testimonial-thumb-card--elegant {
 
     border: 1px solid rgba(121, 116, 126, 0.35);
+
+    max-width: min(100%, 18rem);
 
   }
 
@@ -1507,6 +1555,82 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
   }
 
+  .classic-testimonials-carousel {
+
+    overflow: hidden;
+
+    width: 100%;
+
+    padding-bottom: 1rem;
+
+    padding-left: 1.15rem;
+
+  }
+
+  .classic-testimonials-track {
+
+    display: flex;
+
+    transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+
+    direction: ltr;
+
+  }
+
+  .classic-testimonials-slide {
+
+    flex: 0 0 100%;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    direction: rtl;
+
+  }
+
+  .classic-testimonials-dots {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 0.5rem;
+
+    margin-top: 2rem;
+
+  }
+
+  .classic-testimonials-dot {
+
+    width: 8px;
+
+    height: 8px;
+
+    border-radius: 9999px;
+
+    background: rgba(45, 40, 37, 0.22);
+
+    border: none;
+
+    padding: 0;
+
+    cursor: pointer;
+
+    transition: all 0.35s ease;
+
+  }
+
+  .classic-testimonials-dot.is-active {
+
+    width: 28px;
+
+    background: rgba(45, 40, 37, 0.55);
+
+  }
+
 `
 
 
@@ -1525,13 +1649,13 @@ const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
     if (sets.length < 2) return;
     var dup = sets[1];
 
+    // Container width comes from CSS (94vw bleed wrapper). No JS viewport breakout.
     var containerWidth = Math.round(container.getBoundingClientRect().width);
     if (!containerWidth) return;
 
-    // How many cards to show at once, per breakpoint (uniform widths -> no gaps).
-    var vw = window.innerWidth || containerWidth;
-    var perView = vw >= 1024 ? 3 : (vw >= 768 ? 2 : 1);
-    var gapPx = vw >= 1024 ? 32 : 24; // matches CSS gap (2rem / 1.5rem)
+    var visibleW = document.documentElement.clientWidth || window.innerWidth;
+    var perView = visibleW >= 1024 ? 3 : (visibleW >= 768 ? 2 : 1);
+    var gapPx = visibleW >= 1024 ? 48 : (visibleW >= 768 ? 36 : 28);
 
     var uniqueCards = sets[0].querySelectorAll('.testimonial-thumb-card');
     var allCards = track.querySelectorAll('.testimonial-thumb-card');
@@ -1544,6 +1668,14 @@ const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
     // (3 on desktop, 2 on tablet, 1 on mobile). Same sizing in both modes so a
     // static row looks identical to a scrolling one, just centered.
     var cardW = Math.floor((containerWidth - (perView - 1) * gapPx) / perView);
+    var isNarrowCard = uniqueCards.length > 0 && (
+      uniqueCards[0].classList.contains('testimonial-thumb-card--elegant') ||
+      uniqueCards[0].classList.contains('testimonial-thumb-card--classic')
+    );
+    if (isNarrowCard) {
+      var narrowMaxW = 288; // 18rem — fixed narrow card width for classic/elegant
+      if (cardW > narrowMaxW) cardW = narrowMaxW;
+    }
     allCards.forEach(function (c) {
       c.style.width = cardW + 'px';
       c.style.minWidth = cardW + 'px';
@@ -1551,34 +1683,41 @@ const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
       c.style.flex = '0 0 ' + cardW + 'px';
     });
 
+    sets[0].style.marginLeft = '';
+    sets[0].style.marginRight = '';
+
     if (!willScroll) {
       // Not enough testimonials for a belt -> one static, centered row, no motion.
       if (track.__mqAnim) { try { track.__mqAnim.cancel(); } catch (e) {} track.__mqAnim = null; }
       track.__mqShift = 0;
+      track.__mqLayoutKey = '';
       dup.style.display = 'none';
       track.style.width = '100%';
       track.style.justifyContent = 'center';
       track.style.transform = 'none';
+      sets[0].style.marginLeft = 'auto';
+      sets[0].style.marginRight = 'auto';
       return;
     }
 
     dup.style.display = 'flex';
     track.style.width = '';
     track.style.justifyContent = '';
+    track.style.transform = '';
 
-    // Distance between the two identical sets = one full period (one set + gap).
-    var shift = Math.round(
-      sets[1].getBoundingClientRect().left - sets[0].getBoundingClientRect().left
-    );
+    // Compute shift mathematically (one full set + track gap). Measuring
+    // getBoundingClientRect between sets was unreliable on desktop and returned
+    // 0, which skipped the animation entirely and left cards stuck on the left.
+    var trackGap = parseFloat(getComputedStyle(track).gap);
+    if (isNaN(trackGap)) trackGap = gapPx;
+    var shift = unique * cardW + Math.max(0, unique - 1) * gapPx + Math.round(trackGap);
     if (shift < 1) return;
 
-    // Already set up for this exact width -> keep the running animation. We must
-    // NOT depend on playState here: a freshly created WAAPI animation can still be
-    // 'pending', and re-entrant setupAll calls (image loads, fonts.ready) would
-    // otherwise cancel + recreate it every time, freezing it on the first frame.
-    if (track.__mqShift === shift && track.__mqAnim) {
+    var layoutKey = unique + 'x' + perView + 'x' + cardW;
+    if (track.__mqAnim && track.__mqLayoutKey === layoutKey) {
       return;
     }
+    track.__mqLayoutKey = layoutKey;
     track.__mqShift = shift;
 
     if (track.__mqAnim) { try { track.__mqAnim.cancel(); } catch (e) {} track.__mqAnim = null; }
@@ -1643,6 +1782,76 @@ const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
   } else {
     boot();
   }
+})();
+`
+
+const TESTIMONIALS_CAROUSEL_INIT_SCRIPT = `
+(function initTestimonialsCarousel() {
+  var carousel = document.getElementById('testimonials-carousel');
+  if (!carousel) return;
+  var track = carousel.querySelector('.classic-testimonials-track');
+  var dots = carousel.querySelectorAll('.classic-testimonials-dot');
+  var slides = carousel.querySelectorAll('.classic-testimonials-slide');
+  if (!track || slides.length <= 1) return;
+
+  function isDesktop() {
+    return window.innerWidth >= 1024;
+  }
+
+  if (!isDesktop()) {
+    track.style.transform = 'none';
+    slides.forEach(function(slide) {
+      slide.style.flex = '0 0 auto';
+      slide.style.width = '100%';
+    });
+    dots.forEach(function(dot) {
+      dot.style.display = 'none';
+    });
+    return;
+  }
+
+  var index = 0;
+  var timer;
+  function goTo(i) {
+    index = ((i % slides.length) + slides.length) % slides.length;
+    track.style.transform = 'translateX(-' + (index * 100) + '%)';
+    dots.forEach(function(dot, dotIndex) {
+      dot.classList.toggle('is-active', dotIndex === index);
+    });
+  }
+  function next() { goTo(index + 1); }
+  function resetTimer() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(next, 5000);
+  }
+  dots.forEach(function(dot, dotIndex) {
+    dot.addEventListener('click', function() {
+      goTo(dotIndex);
+      resetTimer();
+    });
+  });
+  goTo(0);
+  resetTimer();
+
+  window.addEventListener('resize', function() {
+    if (!isDesktop()) {
+      track.style.transform = 'none';
+      slides.forEach(function(slide) {
+        slide.style.flex = '0 0 auto';
+        slide.style.width = '100%';
+      });
+      dots.forEach(function(dot) {
+        dot.style.display = 'none';
+      });
+      if (timer) clearInterval(timer);
+    } else {
+      dots.forEach(function(dot) {
+        dot.style.display = '';
+      });
+      goTo(0);
+      resetTimer();
+    }
+  });
 })();
 `
 
@@ -1966,11 +2175,13 @@ interface PhotographerHomepageProps {
 
   blogPath?: string
 
+  posts?: PublicBlogPost[]
+
 }
 
 
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, posts = [] }: PhotographerHomepageProps) {
 
   const [mounted, setMounted] = useState(false)
 
@@ -2020,13 +2231,15 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       postCount,
 
-      blogPath
+      blogPath,
+
+      posts
 
     )
 
     setHtml(generatedHtml)
 
-  }, [photographer, galleries, packages, testimonials, postCount, blogPath])
+  }, [photographer, galleries, packages, testimonials, postCount, blogPath, posts])
 
 
 
@@ -2346,7 +2559,9 @@ function generateHomepageHTML(
 
   postCount: number = 0,
 
-  blogPath?: string
+  blogPath?: string,
+
+  posts: PublicBlogPost[] = []
 
 ): string {
 
@@ -2721,6 +2936,15 @@ function generateHomepageHTML(
       blogPath,
 
     })
+
+  const postsSectionHtml = generateHomepagePostsSectionHTML({
+    posts,
+    theme: theme as SiteChromeTheme,
+    primaryColor,
+    sectionTitle: resolvePostsPageTitle(theme, photographer.posts_page_title),
+    blogHref: blogPath ?? '#',
+    showAllLink: postCount > posts.length,
+  })
 
   const aboutText = about_text || ''
 
@@ -3308,7 +3532,7 @@ ${accordion}
 
     variant: 'classic' | 'elegant' | 'modern' | 'dark',
 
-    options?: { delayAttr?: string; extraClass?: string }
+    options?: { delayAttr?: string; extraClass?: string; forMarquee?: boolean }
 
   ) => {
 
@@ -3320,9 +3544,11 @@ ${accordion}
 
     const thumbSrc = testimonialThumbSrc(t)
 
-    const delayAttr = options?.delayAttr ?? ''
+    const forMarquee = options?.forMarquee ?? false
 
-    const extraClass = options?.extraClass ?? ''
+    const delayAttr = forMarquee ? '' : (options?.delayAttr ?? '')
+
+    const extraClass = forMarquee ? '' : (options?.extraClass ?? '')
 
 
 
@@ -3370,7 +3596,7 @@ ${accordion}
 
       return `
 
-        <div class="testimonial-thumb-card testimonial-thumb-card--elegant flex flex-col justify-between reveal-on-scroll${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+        <div class="testimonial-thumb-card testimonial-thumb-card--elegant flex flex-col justify-between${forMarquee ? '' : ' reveal-on-scroll'}${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
 
           ${quoteHtml}
 
@@ -3420,7 +3646,7 @@ ${accordion}
 
       return `
 
-        <div class="testimonial-thumb-card testimonial-thumb-card--modern italic text-lg animate-reveal hover-scale modern-shadow${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+        <div class="testimonial-thumb-card testimonial-thumb-card--modern italic text-lg${forMarquee ? '' : ' animate-reveal hover-scale modern-shadow'}${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
 
           ${quoteHtml}
 
@@ -3478,50 +3704,82 @@ ${accordion}
 
 
 
-  const generateTestimonialsHTML = (currentTheme: string) => {
-
-    if (testimonials.length === 0) return ''
-
-
-
-    return testimonials.map((t, i) => {
-
-      if (currentTheme === 'elegant') {
-
-        const delay = i > 0 ? ` style="transition-delay: ${i * 150}ms;"` : ''
-
-        return generateTestimonialThumbCard(t, 'elegant', { delayAttr: delay })
-
-      } else if (currentTheme === 'classic') {
-
-        return ''
-
-      } else if (currentTheme === 'modern') {
-
-        const delayClass = i > 0 ? ` delay-${Math.min(i * 100, 300)}` : ''
-
-        return generateTestimonialThumbCard(t, 'modern', { extraClass: delayClass })
-
-      } else if (currentTheme === 'dark') {
-
-        return generateTestimonialThumbCard(t, 'dark')
-
-      }
-
-      return '';
-
-    }).join('');
-
-  };
-
-
-
-  function generateClassicTestimonialCard(t: Testimonial) {
-
-    return generateTestimonialThumbCard(t, 'classic')
-
+  function generateThemeTestimonialCard(
+    t: Testimonial,
+    theme: 'classic' | 'elegant' | 'modern' | 'dark',
+    index: number,
+    options?: { forMarquee?: boolean }
+  ) {
+    if (options?.forMarquee) {
+      return generateTestimonialThumbCard(t, theme, { forMarquee: true })
+    }
+    if (theme === 'elegant') {
+      const delay = index > 0 ? ` style="transition-delay: ${index * 150}ms;"` : ''
+      return generateTestimonialThumbCard(t, 'elegant', { delayAttr: delay })
+    }
+    if (theme === 'modern') {
+      const delayClass = index > 0 ? ` delay-${Math.min(index * 100, 300)}` : ''
+      return generateTestimonialThumbCard(t, 'modern', { extraClass: delayClass })
+    }
+    return generateTestimonialThumbCard(t, theme)
   }
 
+  function generateTestimonialsCarouselHTML(theme: 'classic' | 'elegant' | 'modern' | 'dark') {
+    if (testimonials.length <= 3) {
+      const cardsHtml = testimonials
+        .map((t, i) => generateThemeTestimonialCard(t, theme, i))
+        .join('')
+      return `
+    <div class="testimonials-row">
+      ${cardsHtml}
+    </div>`
+    }
+
+    const slides: Testimonial[][] = []
+    for (let i = 0; i < testimonials.length - 2; i++) {
+      slides.push(testimonials.slice(i, i + 3))
+    }
+
+    const slidesHtml = slides
+      .map(
+        (slide) => `
+    <div class="classic-testimonials-slide">
+      <div class="testimonials-row">
+        ${slide.map((t, i) => generateThemeTestimonialCard(t, theme, i)).join('')}
+      </div>
+    </div>`
+      )
+      .join('')
+
+    const dotsHtml = `
+    <div class="classic-testimonials-dots">
+      ${slides
+        .map(
+          (_, i) =>
+            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
+        )
+        .join('')}
+    </div>`
+
+    return `
+    <div class="classic-testimonials-carousel" id="testimonials-carousel">
+      <div class="classic-testimonials-track">${slidesHtml}</div>
+      ${dotsHtml}
+    </div>`
+  }
+
+  function generateTestimonialsSection(theme: 'classic' | 'elegant' | 'modern' | 'dark') {
+    if (testimonials.length === 0) return ''
+
+    if (photographer.testimonial_layout_type === 'marquee') {
+      const cardsHtml = testimonials
+        .map((t, i) => generateThemeTestimonialCard(t, theme, i, { forMarquee: true }))
+        .join('')
+      return generateTestimonialsMarqueeHTML(cardsHtml)
+    }
+
+    return generateTestimonialsCarouselHTML(theme)
+  }
 
 
   function generateTestimonialsMarqueeHTML(cardsHtml: string) {
@@ -3530,16 +3788,28 @@ ${accordion}
     // loop seam is invisible. Track flows LTR (anchored left) to avoid the RTL
     // "empties on scroll" bug; each card keeps RTL text.
     return `
+    <div class="testimonials-marquee-bleed">
     <div class="testimonials-marquee" data-testimonials-marquee>
       <div class="testimonials-marquee-track">
         <div class="testimonials-marquee-set">${cardsHtml}</div>
         <div class="testimonials-marquee-set" aria-hidden="true">${cardsHtml}</div>
       </div>
     </div>
+    </div>
     <style>
+      .testimonials-marquee-bleed {
+        /* Full-bleed breakout — 98vw (~1% side margin) for more card breathing room. */
+        width: 98vw;
+        max-width: 98vw;
+        margin-left: calc(50% - 49vw);
+        margin-right: calc(50% - 49vw);
+        box-sizing: border-box;
+      }
       .testimonials-marquee {
         overflow: hidden;
+        position: relative;
         width: 100%;
+        box-sizing: border-box;
         padding: 1rem 0;
         /* LTR so the overflowing max-content track anchors to the LEFT edge.
            Under the page's RTL direction it would anchor right and translateX(-)
@@ -3551,7 +3821,7 @@ ${accordion}
         flex-direction: row;
         direction: ltr;
         width: max-content;
-        gap: 2rem;
+        gap: 3rem;
         justify-content: flex-start;
         will-change: transform;
       }
@@ -3559,148 +3829,28 @@ ${accordion}
         display: flex;
         flex-direction: row;
         flex: 0 0 auto;
-        gap: 2rem;
+        gap: 3rem;
         align-items: stretch;
       }
       .testimonials-marquee .testimonial-thumb-card {
         direction: rtl;
         flex: 0 0 auto;
       }
+      .testimonials-marquee .reveal-on-scroll,
+      .testimonials-marquee .animate-reveal {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
       @media (min-width: 768px) and (max-width: 1023px) {
         .testimonials-marquee-track,
-        .testimonials-marquee-set { gap: 1.5rem; }
+        .testimonials-marquee-set { gap: 2.25rem; }
       }
       @media (max-width: 767px) {
         .testimonials-marquee-track,
-        .testimonials-marquee-set { gap: 1.5rem; }
+        .testimonials-marquee-set { gap: 1.75rem; }
       }
     </style>`
-  }
-
-  function generateClassicTestimonialsSection() {
-
-    if (testimonials.length === 0) return ''
-
-
-
-    const cardsHtml = testimonials.map((t) => generateClassicTestimonialCard(t)).join('')
-
-
-    // Check if marquee layout is selected
-    const useMarquee = photographer.testimonial_layout_type === 'marquee'
-
-    if (useMarquee) {
-      // Marquee layout: smooth infinite scroll with conditional behavior
-      const itemCount = testimonials.length
-
-      // Determine if we should animate based on breakpoint and item count
-      // Desktop: animate if >3 items, else centered
-      // Tablet: animate if >2 items, else centered
-      // Mobile: animate if >1 item, else centered
-
-      const shouldAnimateDesktop = itemCount > 3
-      const shouldAnimateTablet = itemCount > 2
-      const shouldAnimateMobile = itemCount > 1
-
-      if (!shouldAnimateDesktop && !shouldAnimateTablet && !shouldAnimateMobile) {
-        // No animation needed - display centered
-        return `
-    <div class="testimonials-row testimonials-centered">
-      ${cardsHtml}
-    </div>
-    <style>
-      .testimonials-centered {
-        justify-content: center;
-      }
-    </style>`
-      }
-
-      // Marquee with animation - measured, seamless belt (mirrors the modern hero
-      // film belt). The init script (TESTIMONIALS_MARQUEE_INIT_SCRIPT) measures one
-      // set's pixel width and drives the loop, so there is no %/gap/RTL mismatch that
-      // empties the strip. It also auto-centers (no motion) when content fits.
-      return generateTestimonialsMarqueeHTML(cardsHtml)
-    }
-
-
-    if (testimonials.length <= 3) {
-
-      return `
-
-    <div class="testimonials-row">
-
-      ${cardsHtml}
-
-    </div>`
-
-    }
-
-
-
-    // Create slides where each slide adds one more testimonial, always showing exactly 3
-
-    const slides: Testimonial[][] = []
-
-    for (let i = 0; i < testimonials.length - 2; i++) {
-
-      slides.push(testimonials.slice(i, i + 3))
-
-    }
-
-
-
-    const slidesHtml = slides
-
-      .map(
-
-        (slide) => `
-
-    <div class="classic-testimonials-slide">
-
-      <div class="testimonials-row">
-
-        ${slide.map((t) => generateClassicTestimonialCard(t)).join('')}
-
-      </div>
-
-    </div>`
-
-      )
-
-      .join('')
-
-
-
-    const dotsHtml = `
-
-    <div class="classic-testimonials-dots">
-
-      ${slides
-
-        .map(
-
-          (_, i) =>
-
-            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
-
-        )
-
-        .join('')}
-
-    </div>`
-
-
-
-    return `
-
-    <div class="classic-testimonials-carousel" id="classic-testimonials-carousel">
-
-      <div class="classic-testimonials-track">${slidesHtml}</div>
-
-      ${dotsHtml}
-
-    </div>`
-
   }
 
 
@@ -4507,6 +4657,8 @@ ${generateRecentPhotosGridHTML(galleries, 'elegant')}
 
 ` : ''}
 
+${postsSectionHtml}
+
 ${hasPackages ? `
 
 <section class="py-32 px-margin-mobile md:px-margin-desktop ${hasPackagesBg ? 'contact-section-has-bg' : 'bg-[#f2f1ef]'}" id="pricing">
@@ -4541,7 +4693,7 @@ ${elegantSectionHeading(testimonialsSectionTitle, 'RECOMMEND', { center: true, t
 
 </div>
 
-<div class="testimonials-section-grid">${generateTestimonialsHTML('elegant')}</div>
+<div class="testimonials-section-grid">${generateTestimonialsSection('elegant')}</div>
 
 </section>
 
@@ -4708,6 +4860,8 @@ ${generateSiteFooter(siteChrome('elegant'))}
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -5473,6 +5627,8 @@ ${generateRecentPhotosGridHTML(galleries, 'modern')}
 
 ` : ''}
 
+${postsSectionHtml}
+
 ${hasPackages ? (hasPackagesBg ? `
 
 <section class="w-full contact-section-has-bg py-xxl" id="pricing">
@@ -5523,7 +5679,7 @@ ${hasTestimonials ? `
 
 <h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">${escapeHtml(testimonialsSectionTitle)}</h2>
 
-<div class="testimonials-section-grid">${generateTestimonialsHTML('modern')}</div>
+<div class="testimonials-section-grid">${generateTestimonialsSection('modern')}</div>
 
 </section>
 
@@ -5640,6 +5796,8 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -6309,82 +6467,6 @@ ${documentHead}
 
         }
 
-        .classic-testimonials-carousel {
-
-            overflow: hidden;
-
-            width: 100%;
-
-            padding-bottom: 1rem;
-
-            padding-left: 1.15rem;
-
-        }
-
-        .classic-testimonials-track {
-
-            display: flex;
-
-            transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
-
-            direction: ltr;
-
-        }
-
-        .classic-testimonials-slide {
-
-            flex: 0 0 100%;
-
-            width: 100%;
-
-            box-sizing: border-box;
-
-            direction: rtl;
-
-        }
-
-        .classic-testimonials-dots {
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
-
-            gap: 0.5rem;
-
-            margin-top: 2rem;
-
-        }
-
-        .classic-testimonials-dot {
-
-            width: 8px;
-
-            height: 8px;
-
-            border-radius: 9999px;
-
-            background: rgba(45, 40, 37, 0.22);
-
-            border: none;
-
-            padding: 0;
-
-            cursor: pointer;
-
-            transition: all 0.35s ease;
-
-        }
-
-        .classic-testimonials-dot.is-active {
-
-            width: 28px;
-
-            background: ${primaryColor};
-
-        }
-
         ${UNIFIED_GALLERY_GRID_CSS}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
@@ -6787,6 +6869,8 @@ ${generateRecentPhotosGridHTML(galleries, 'classic')}
 
 ` : ''}
 
+${postsSectionHtml}
+
 ${hasPackages ? `
 
 <section class="py-xxl reveal ${hasPackagesBg ? 'contact-section-has-bg border-t border-outline-variant/10' : ''}" id="pricing">
@@ -6825,7 +6909,7 @@ ${hasTestimonials ? `
 
 </div>
 
-<div class="testimonials-section-grid">${generateClassicTestimonialsSection()}
+<div class="testimonials-section-grid">${generateTestimonialsSection('classic')}
 
 </div>
 
@@ -7025,146 +7109,6 @@ ${generateSiteFooter(siteChrome('classic'))}
 
 
 
-        (function() {
-
-            var carousel = document.getElementById('classic-testimonials-carousel');
-
-            if (!carousel) return;
-
-            var track = carousel.querySelector('.classic-testimonials-track');
-
-            var dots = carousel.querySelectorAll('.classic-testimonials-dot');
-
-            var slides = carousel.querySelectorAll('.classic-testimonials-slide');
-
-            if (!track || slides.length <= 1) return;
-
-            
-
-            // Disable carousel on mobile and tablet (under 1024px)
-
-            function isDesktop() {
-
-                return window.innerWidth >= 1024;
-
-            }
-
-            
-
-            if (!isDesktop()) {
-
-                // Show all slides stacked on mobile/tablet
-
-                track.style.transform = 'none';
-
-                slides.forEach(function(slide) {
-
-                    slide.style.flex = '0 0 auto';
-
-                    slide.style.width = '100%';
-
-                });
-
-                dots.forEach(function(dot) {
-
-                    dot.style.display = 'none';
-
-                });
-
-                return;
-
-            }
-
-            
-
-            var index = 0;
-
-            var timer;
-
-            function goTo(i) {
-
-                index = ((i % slides.length) + slides.length) % slides.length;
-
-                track.style.transform = 'translateX(-' + (index * 100) + '%)';
-
-                dots.forEach(function(dot, dotIndex) {
-
-                    dot.classList.toggle('is-active', dotIndex === index);
-
-                });
-
-            }
-
-            function next() { goTo(index + 1); }
-
-            function resetTimer() {
-
-                if (timer) clearInterval(timer);
-
-                timer = setInterval(next, 5000);
-
-            }
-
-            dots.forEach(function(dot, dotIndex) {
-
-                dot.addEventListener('click', function() {
-
-                    goTo(dotIndex);
-
-                    resetTimer();
-
-                });
-
-            });
-
-            goTo(0);
-
-            resetTimer();
-
-            
-
-            // Handle resize
-
-            window.addEventListener('resize', function() {
-
-                if (!isDesktop()) {
-
-                    track.style.transform = 'none';
-
-                    slides.forEach(function(slide) {
-
-                        slide.style.flex = '0 0 auto';
-
-                        slide.style.width = '100%';
-
-                    });
-
-                    dots.forEach(function(dot) {
-
-                        dot.style.display = 'none';
-
-                    });
-
-                    if (timer) clearInterval(timer);
-
-                } else {
-
-                    dots.forEach(function(dot) {
-
-                        dot.style.display = '';
-
-                    });
-
-                    goTo(0);
-
-                    resetTimer();
-
-                }
-
-            });
-
-        })();
-
     </script>
 
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
@@ -7172,6 +7116,8 @@ ${generateSiteFooter(siteChrome('classic'))}
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -8319,6 +8265,8 @@ ${generateRecentPhotosGridHTML(galleries, 'dark')}
 
 ` : ''}
 
+${postsSectionHtml}
+
 ${hasPackages ? (hasPackagesBg ? `
 
 <section class="py-xl md:py-xxl container mx-auto px-lg reveal contact-section-has-bg" id="pricing">
@@ -8379,7 +8327,7 @@ ${hasTestimonials ? `
 
 </div>
 
-<div class="testimonials-section-grid">${generateTestimonialsHTML('dark')}</div>
+<div class="testimonials-section-grid">${generateTestimonialsSection('dark')}</div>
 
 </section>
 
@@ -8568,6 +8516,8 @@ ${generateSiteFooter(siteChrome('dark'))}
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
+
+<script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
