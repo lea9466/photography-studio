@@ -170,7 +170,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   }
 
   function validateSlug(value: string): string {
-    if (!value) return ''
+    if (!value.trim()) {
+      return 'כתובת האתר היא שדה חובה'
+    }
     // Check for spaces
     if (/\s/.test(value)) {
       return 'אסור להשתמש ברווחים בכתובת האתר'
@@ -312,6 +314,15 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
+    
+    // Validate slug before saving
+    const slugValidationError = validateSlug(slug)
+    if (slugValidationError) {
+      setSlugError(slugValidationError)
+      toast.error(slugValidationError)
+      return
+    }
+    
     startTransition(async () => {
       try {
         await updateProfile({
@@ -346,7 +357,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           email,
           phone: phone.trim() || undefined,
           address: address.trim() || undefined,
-          slug,
+          slug: slug.trim(),
           should_color_logo: shouldColorLogo,
         })
         setSavedSlug(slug.trim())
@@ -388,13 +399,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           <div className="space-y-2" dir="ltr">
             <LabelWithHelp
               htmlFor="slug"
-              className="text-right"
+              className={`text-right ${slugError ? 'text-red-600' : ''}`}
               help={SITE_SETTINGS_HELP.fields.slug.content}
               where={SITE_SETTINGS_HELP.fields.slug.where}
             >
               כתובת אתר (Slug)
             </LabelWithHelp>
-            <div className="flex items-center bg-white dark:bg-zinc-900 border-[--border] rounded-lg overflow-hidden">
+            <div className={`flex items-center bg-white dark:bg-zinc-900 rounded-lg overflow-hidden ${slugError ? 'border-red-500' : 'border-[--border]'}`}>
               <span className="bg-[--border]/30 px-3 py-3 text-[--muted] text-sm border-r border-[--border]">gallery.studio/</span>
               <Input
                 id="slug"
@@ -404,7 +415,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   setSlug(value)
                   setSlugError(validateSlug(value))
                 }}
-                className="flex-1 border-[--border] focus:ring-0"
+                className={`flex-1 focus:ring-0 ${slugError ? 'border-red-500' : 'border-[--border]'}`}
               />
             </div>
             {slugError && (
