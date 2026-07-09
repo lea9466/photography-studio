@@ -136,7 +136,7 @@ const HOMEPAGE_POSTS_CSS = `
 }
 .hp-post-body { padding: 18px 16px 22px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
 .hp-post-title { font-size: 21px; line-height: 1.25; }
-.hp-post-date { font-size: 13px; letter-spacing: 0.02em; opacity: 0.65; }
+.hp-post-date { font-size: 13px; letter-spacing: 0.02em; }
 .hp-post-excerpt {
   font-size: 14px;
   line-height: 1.7;
@@ -161,7 +161,7 @@ const HOMEPAGE_POSTS_CSS = `
 .hp-posts-more a:hover { opacity: 0.7; }
 `
 
-function postCard(post: PublicBlogPost, t: SectionTokens): string {
+function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string): string {
   const cover = post.coverUrl || post.images[0] || null
   const media = cover
     ? `<div class="hp-post-media"><img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" /></div>`
@@ -172,7 +172,7 @@ function postCard(post: PublicBlogPost, t: SectionTokens): string {
   ${media}
   <div class="hp-post-body">
     <h3 class="hp-post-title" style="font-family:${t.titleFont};">${escapeHtml(post.title)}</h3>
-    <p class="hp-post-date">${escapeHtml(post.date)}</p>
+    <p class="hp-post-date" style="color:${primaryColor};">${escapeHtml(post.date)}</p>
     <p class="hp-post-excerpt">${escapeHtml(post.content)}</p>
   </div>
 </article>`
@@ -216,8 +216,8 @@ export function generateHomepagePostsSectionHTML(options: {
 
   const t = TOKENS[options.theme]
   const blogTokens = getBlogThemeTokens(options.theme)
-  const cards = options.posts.map((p) => postCard(p, t)).join('\n')
-  const templates = generateBlogPostDetailTemplates(options.posts, options.theme)
+  const cards = options.posts.map((p) => postCard(p, t, options.primaryColor)).join('\n')
+  const templates = generateBlogPostDetailTemplates(options.posts, options.theme, options.primaryColor)
   const modalMarkup = generateBlogModalMarkup({
     surface: blogTokens.surface,
     text: blogTokens.text,

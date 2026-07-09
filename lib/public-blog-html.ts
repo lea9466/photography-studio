@@ -147,7 +147,7 @@ const BLOG_MODAL_CSS = `
 .blog-detail__title { font-size: 30px; line-height: 1.2; text-align: center; }
 @media (min-width: 768px) { .blog-detail__title { font-size: 42px; } }
 .blog-detail__subtitle { text-align: center; margin-top: 10px; font-size: 18px; opacity: 0.8; }
-.blog-detail__date { text-align: center; margin-top: 12px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.6; }
+.blog-detail__date { text-align: center; margin-top: 12px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
 .blog-detail__divider { width: 56px; height: 1px; margin: 24px auto 0; opacity: 0.5; }
 .blog-detail__content {
   margin: 32px auto 0;
@@ -216,7 +216,7 @@ const BLOG_CSS = `
 }
 .blog-card__body { padding: 20px 18px 24px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
 .blog-card__title { font-size: 22px; line-height: 1.25; }
-.blog-card__date { font-size: 13px; letter-spacing: 0.02em; opacity: 0.65; }
+.blog-card__date { font-size: 13px; letter-spacing: 0.02em; }
 .blog-card__excerpt {
   font-size: 15px;
   line-height: 1.7;
@@ -294,7 +294,7 @@ ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 <body class="bg-background text-on-surface overflow-x-hidden">`
 }
 
-function blogCard(post: PublicBlogPost, theme: SiteChromeTheme) {
+function blogCard(post: PublicBlogPost, theme: SiteChromeTheme, primaryColor: string) {
   const t = TOKENS[theme]
   const cover = post.coverUrl || post.images[0] || null
   const titleFont = titleFontClass(theme)
@@ -307,13 +307,13 @@ function blogCard(post: PublicBlogPost, theme: SiteChromeTheme) {
   ${media}
   <div class="blog-card__body">
     <h2 class="blog-card__title ${titleFont}">${escapeHtml(post.title)}</h2>
-    <p class="blog-card__date">${escapeHtml(post.date)}</p>
+    <p class="blog-card__date" style="color:${primaryColor};">${escapeHtml(post.date)}</p>
     <p class="blog-card__excerpt">${escapeHtml(post.content)}</p>
   </div>
 </article>`
 }
 
-function blogDetailTemplate(post: PublicBlogPost, theme: SiteChromeTheme) {
+function blogDetailTemplate(post: PublicBlogPost, theme: SiteChromeTheme, primaryColor: string) {
   const t = TOKENS[theme]
   const titleFont = titleFontClass(theme)
   const images = post.images
@@ -333,7 +333,7 @@ function blogDetailTemplate(post: PublicBlogPost, theme: SiteChromeTheme) {
   <header>
     <h2 class="blog-detail__title ${titleFont}">${escapeHtml(post.title)}</h2>
     ${subtitle}
-    <p class="blog-detail__date">${escapeHtml(post.date)}</p>
+    <p class="blog-detail__date" style="color:${primaryColor};">${escapeHtml(post.date)}</p>
     <div class="blog-detail__divider elegant-bg-accent"></div>
   </header>
   <div class="blog-detail__content">${escapeHtml(post.content)}</div>
@@ -345,10 +345,11 @@ function blogDetailTemplate(post: PublicBlogPost, theme: SiteChromeTheme) {
 function blogBody(data: PublicBlogPageData, theme: SiteChromeTheme) {
   const titleFont = titleFontClass(theme)
   const eyebrow = eyebrowLabel(theme)
+  const primaryColor = data.accentColor
 
   const content = data.posts.length
     ? `<div class="blog-grid">
-${data.posts.map((post) => blogCard(post, theme)).join('\n')}
+${data.posts.map((post) => blogCard(post, theme, primaryColor)).join('\n')}
 </div>`
     : `<p class="blog-empty">עדיין אין פוסטים.</p>`
 
@@ -399,9 +400,10 @@ export function getBlogThemeTokens(theme: SiteChromeTheme) {
 
 export function generateBlogPostDetailTemplates(
   posts: PublicBlogPost[],
-  theme: SiteChromeTheme
+  theme: SiteChromeTheme,
+  primaryColor: string
 ): string {
-  return posts.map((post) => blogDetailTemplate(post, theme)).join('\n')
+  return posts.map((post) => blogDetailTemplate(post, theme, primaryColor)).join('\n')
 }
 
 export function generateBlogModalMarkup(options: { surface: string; text: string }): string {
@@ -493,7 +495,7 @@ export function generatePublicBlogPageHTML(options: {
     shouldColorLogo: options.shouldColorLogo ?? false,
   })
 
-  const templates = generateBlogPostDetailTemplates(options.blog.posts, chromeTheme)
+  const templates = generateBlogPostDetailTemplates(options.blog.posts, chromeTheme, primaryColor)
 
   const modalMarkup = generateBlogModalMarkup({
     surface: t.surface,

@@ -2343,6 +2343,52 @@ function brandLastWord(text: string) {
 
 
 
+function glassHeroTitle(text: string) {
+
+  const trimmed = text.trim()
+
+  if (!trimmed) return trimmed
+
+  const words = trimmed.split(/\s+/)
+
+  const lastIndex = words.length - 1
+
+  const formatWords = (chunk: string[], offset: number) =>
+
+    chunk
+
+      .map((word, index) => {
+
+        const safeWord = escapeHtml(word)
+
+        if (offset + index === lastIndex) {
+
+          return `<span class="text-primary">${safeWord}</span>`
+
+        }
+
+        return safeWord
+
+      })
+
+      .join(' ')
+
+  const toLine = (chunk: string[], offset: number) =>
+
+    `<span class="glass-hero-title__line">${formatWords(chunk, offset)}</span>`
+
+  if (words.length <= 2) {
+
+    return toLine(words, 0)
+
+  }
+
+  return toLine(words.slice(0, 2), 0) + toLine(words.slice(2), 2)
+
+}
+
+
+
 function escapeHtml(text: string): string {
 
   return String(text)
@@ -4211,33 +4257,177 @@ ${documentHead}
 
             z-index: 100;
 
-            top: 55%;
+            top: auto;
+
+            bottom: 4.5rem;
 
             left: 2rem;
 
-            transform: translateY(-50%);
+            transform: none;
+
+            width: 100%;
+
+            max-width: 28rem;
+
+        }
+
+        .glass-hero-wrapper::before {
+
+            content: '';
+
+            position: absolute;
+
+            inset: -25% -20%;
+
+            background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, ${primaryColor} 28%, transparent) 0%, transparent 72%);
+
+            filter: blur(28px);
+
+            z-index: -1;
+
+            pointer-events: none;
+
+            opacity: 0.6;
 
         }
 
         .glass-hero {
 
-            background: rgba(255, 255, 255, 0.12);
+            position: relative;
 
-            backdrop-filter: blur(6px);
+            overflow: hidden;
 
-            -webkit-backdrop-filter: blur(6px);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 52%, rgba(255, 255, 255, 0.06) 100%);
 
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px) saturate(1.2);
 
-            border-radius: 11px;
+            -webkit-backdrop-filter: blur(20px) saturate(1.2);
 
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+
+            border-radius: 16px;
+
+            box-shadow:
+
+                0 24px 70px rgba(0, 0, 0, 0.14),
+
+                0 10px 28px rgba(0, 0, 0, 0.06),
+
+                inset 0 1px 1px rgba(255, 255, 255, 0.22);
 
             animation: gentleFloat 6s ease-in-out infinite;
 
-            max-width: calc(28rem - 30px);
+            width: 100%;
 
-            padding: 4.125rem 4.75rem;
+            max-width: 28rem;
+
+            padding: 3.5rem 3.25rem;
+
+        }
+
+        .glass-hero::before {
+
+            content: '';
+
+            position: absolute;
+
+            top: -60%;
+
+            left: -30%;
+
+            width: 70%;
+
+            height: 220%;
+
+            background: linear-gradient(108deg, transparent 42%, rgba(255, 255, 255, 0.1) 50%, transparent 58%);
+
+            transform: rotate(-10deg);
+
+            pointer-events: none;
+
+            animation: glassShine 9s ease-in-out infinite;
+
+        }
+
+        .glass-hero::after {
+
+            content: '';
+
+            position: absolute;
+
+            bottom: 0;
+
+            left: 12%;
+
+            right: 12%;
+
+            height: 1px;
+
+            background: linear-gradient(90deg, transparent, color-mix(in srgb, ${primaryColor} 75%, white), transparent);
+
+            box-shadow: 0 0 22px 5px color-mix(in srgb, ${primaryColor} 22%, transparent);
+
+            pointer-events: none;
+
+        }
+
+        .glass-hero__glow-bar {
+
+            width: 3.5rem;
+
+            height: 3px;
+
+            margin: 0 auto 1.5rem;
+
+            border-radius: 999px;
+
+            background: linear-gradient(90deg, transparent, ${primaryColor}, transparent);
+
+            box-shadow: 0 0 18px color-mix(in srgb, ${primaryColor} 55%, transparent);
+
+            animation: glowPulse 3.5s ease-in-out infinite;
+
+        }
+
+        @keyframes glassShine {
+
+            0%, 100% { opacity: 0.35; transform: rotate(-10deg) translateX(0); }
+
+            50% { opacity: 0.85; transform: rotate(-10deg) translateX(18%); }
+
+        }
+
+        @keyframes glowPulse {
+
+            0%, 100% { opacity: 0.55; transform: scaleX(1); }
+
+            50% { opacity: 1; transform: scaleX(1.18); }
+
+        }
+
+        .glass-hero-title {
+
+            font-family: 'Heebo', sans-serif;
+
+            font-weight: 300;
+
+            letter-spacing: 0.04em;
+
+            line-height: 1.2;
+
+            max-width: 100%;
+
+        }
+
+        .glass-hero-title__line {
+
+            display: block;
+
+        }
+
+        .glass-hero__text {
+
+            max-width: 100%;
 
         }
 
@@ -4247,7 +4437,7 @@ ${documentHead}
 
                 top: auto;
 
-                bottom: 2rem;
+                bottom: 1.25rem;
 
                 left: 50%;
 
@@ -4271,13 +4461,21 @@ ${documentHead}
 
             }
 
+            .glass-hero-wrapper::before {
+
+                inset: -18% -12%;
+
+                filter: blur(20px);
+
+            }
+
         }
 
         @media (min-width: 768px) and (max-width: 1023px) {
 
             .glass-hero-wrapper {
 
-                bottom: 2.5rem;
+                bottom: 1.75rem;
 
                 max-width: 34rem;
 
@@ -4515,13 +4713,15 @@ ${heroSlideshowHtml}
 
 <div class="glass-hero text-center">
 
-<h1 class="font-display text-4xl md:text-7xl mb-6 leading-[1.1] text-on-surface">
+<div class="glass-hero__glow-bar" aria-hidden="true"></div>
 
-                ${brandLastWord(studioName)}
+<h1 class="glass-hero-title text-3xl md:text-5xl mb-6 text-on-surface">
+
+                ${glassHeroTitle(studioName)}
 
 </h1>
 
-<p class="font-body text-lg md:text-xl text-on-surface/70 mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+<p class="glass-hero__text font-body text-lg md:text-xl text-on-surface/70 mb-10 mx-auto font-light leading-relaxed">
 
                 ${aboutText}
 
