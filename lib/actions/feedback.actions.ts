@@ -23,7 +23,7 @@ type UpdateProfileInput = {
   about_description?: string
   contact_card_title?: string
   contact_card_description?: string
-  address?: string
+  address?: string | null
   stat_projects?: number
   stat_clients?: number
   stat_experience_years?: number
@@ -49,6 +49,7 @@ type UpdateProfileInput = {
 
 function normalizeOptionalText(value: string | null | undefined) {
   if (value === undefined) return undefined
+  if (value === null) return null
   const trimmed = value.trim()
   return trimmed || null
 }

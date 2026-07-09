@@ -5,7 +5,10 @@ import { redirect } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
+import {
+  sendPhotographerPasswordResetEmail,
+  sendWelcomeEmail,
+} from '@/lib/email/resend'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
@@ -132,6 +135,15 @@ export async function ensureUserProfile(
       )
     }
     throw new Error(error.message)
+  }
+
+  const recipientEmail = user.email?.trim()
+  if (recipientEmail) {
+    try {
+      await sendWelcomeEmail({ name, email: recipientEmail })
+    } catch (emailError) {
+      console.error('[ensureUserProfile] welcome email failed', emailError)
+    }
   }
 }
 

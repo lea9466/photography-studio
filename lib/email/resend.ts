@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 
 import { randomBytes } from 'node:crypto'
-import { getFeedbackEmail } from '@/lib/feedback-email'
+import { getAdminName, getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
 
 function getResend() {
@@ -305,6 +305,47 @@ export async function sendAdminBroadcastEmail(input: {
         <p>${bodyHtml}</p>
         ${imageBlock}
         <p style="color: #666; font-size: 0.85rem; margin-top: 24px;">Studio Galleries</p>
+      </div>
+    `,
+  })
+}
+
+export async function sendWelcomeEmail(input: {
+  name: string
+  email: string
+}) {
+  const resend = getResend()
+  if (!resend) {
+    console.info('[email stub] welcome', input)
+    return
+  }
+
+  const supportEmail = getFeedbackEmail()
+  const adminName = getAdminName()
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: supportEmail,
+    subject: 'איזה כיף שהצטרפת! הסטודיו שלך מוכן 📸',
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p style="font-size: 1.1rem;">👋 היי ${input.name},</p>
+        <p>🎉 איזה כיף שהצטרפת אלינו! הסטודיו הדיגיטלי החדש שלך רשום ומוכן לעבודה.</p>
+        <p>✨ בניתי את המערכת הזו מתוך מטרה לאפשר לכל צלמת להקים אתר עסקי מהיר ומקצועי בקלות ובמהירות, ואני מתרגשת לראות את האתר שלך קורם עור וגידים.</p>
+        <p><strong>🚀 כמה דברים קצרים שתוכלי לעשות כבר עכשיו באתר שלך:</strong></p>
+        <ul style="padding-right: 1.25rem;">
+          <li style="margin-bottom: 0.5rem;">📸 <strong>להעלות את העבודות שלך:</strong> הקימי גלריות מרהיבות שיציגו את הצילומים שלך בצורה הכי איכותית ומהירה שיש.</li>
+          <li style="margin-bottom: 0.5rem;">💎 <strong>להגדיר חבילות ומחירים:</strong> הציגי ללקוחות את חבילות הצילום השונות שלך בצורה ברורה ומסודרת.</li>
+          <li style="margin-bottom: 0.5rem;">✍️ <strong>לפתוח בלוג אישי:</strong> תוכלי לכתוב פוסטים, לשתף הצצות מאחורי הקלעים ולתת טיפים ללקוחות שלך (זה גם מעולה לקידום האתר בגוגל!).</li>
+          <li style="margin-bottom: 0.5rem;">🎨 <strong>לעצב בקלות:</strong> להוסיף לוגו, לשנות תמונות רקע ולהתאים את האתר לקו העסקי שלך (בלי לגעת בקוד בכלל).</li>
+        </ul>
+        <p><strong>💬 צריכה עזרה? אני כאן!</strong></p>
+        <p>אם את מסתבכת, צריכה תמיכה בהקמה הבסיסית או סתם רוצה להתייעץ – אל תהססו לפנות אליי. אני זמינה בשבילך לכל שאלה בכתובת המייל של מנהלת המערכת: <a href="mailto:${supportEmail}">${supportEmail}</a> 📧, או באמצעות טאב יצירת הקשר שבמערכת.</p>
+        <p><strong>🎁 רוצה לקבל חודשי שימוש במתנה?</strong></p>
+        <p>כרגע המערכת פתוחה לשימוש בחינם, אבל יש לך הזדמנות לצבור חודשי פרימיום לעתיד! באזור האישי שלך מחכה לך קישור שיתוף ייחודי 🔗. אם תשתפי אותו עם חברה צלמת והיא תפתח סטודיו דרך הקישור שלך – את תקבלי אוטומטית חודש נוסף מלא בחינם, והיא תקבל אתר מדהים. שווה, לא? 😉</p>
+        <p>🌟 שיהיה המון בהצלחה, ואני מחכה כבר לראות את האתר המוכן שלך!</p>
+        <p>שלך,<br>💜 ${adminName}</p>
       </div>
     `,
   })
