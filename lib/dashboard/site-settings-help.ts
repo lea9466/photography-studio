@@ -32,7 +32,7 @@ export const SITE_SETTINGS_HELP = {
     },
     slug: {
       content:
-        'כתובת האתר באנגלית. עדיף קצר וברור — למשל leaor-photography-tlv או portrait-studio-haifa. אותיות, מספרים ומקפים בלבד.',
+        'כתובת האתר שלך (Slug) יכולה להכיל אותיות, מספרים ומקפים בלבד. אסור להשתמש ברווחים או בסימנים מיוחדים.',
       where: 'כתובת האתר: gallery.studio/הכתובת-שבחרת',
     },
     email: {

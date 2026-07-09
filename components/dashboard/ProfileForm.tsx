@@ -154,6 +154,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [slug, setSlug] = useState(profile?.slug ?? '')
   const [savedSlug, setSavedSlug] = useState(profile?.slug ?? '')
+  const [slugError, setSlugError] = useState('')
   const [shouldColorLogo, setShouldColorLogo] = useState(profile?.should_color_logo ?? false)
   const [uploadingTargets, setUploadingTargets] = useState<ReadonlySet<string>>(() => new Set())
   const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({})
@@ -166,6 +167,19 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       else next.delete(targetKey)
       return next
     })
+  }
+
+  function validateSlug(value: string): string {
+    if (!value) return ''
+    // Check for spaces
+    if (/\s/.test(value)) {
+      return 'אסור להשתמש ברווחים בכתובת האתר'
+    }
+    // Check for invalid characters (only letters, numbers, and hyphens allowed)
+    if (!/^[a-zA-Z0-9-]*$/.test(value)) {
+      return 'כתובת האתר יכולה להכיל אותיות, מספרים ומקפים בלבד'
+    }
+    return ''
   }
   useEffect(() => {
     setSavedSlug(profile?.slug ?? '')
@@ -385,10 +399,19 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <Input
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value
+                  setSlug(value)
+                  setSlugError(validateSlug(value))
+                }}
                 className="flex-1 border-[--border] focus:ring-0"
               />
             </div>
+            {slugError && (
+              <p className="text-sm text-red-600" role="alert">
+                {slugError}
+              </p>
+            )}
             {previewPath ? (
               <a
                 href={previewPath}

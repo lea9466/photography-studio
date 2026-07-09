@@ -605,20 +605,60 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
   .classic-testimonials-slide .testimonials-row {
     justify-content: center;
   }
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .classic-testimonials-carousel .testimonials-row {
-      flex-wrap: nowrap;
-      gap: 1.5rem;
+  .testimonials-responsive-wrapper {
+    position: relative;
+  }
+  .desktop-only {
+    display: block;
+  }
+  .mobile-only {
+    display: none;
+  }
+  .tablet-only {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .desktop-only {
+      display: none;
+    }
+    .mobile-only {
+      display: block;
+    }
+    .tablet-only {
+      display: none;
+    }
+    .mobile-only .testimonials-row {
+      flex-wrap: wrap;
+      gap: 2rem;
       justify-content: center;
     }
-    .testimonials-section-grid > .testimonial-thumb-card,
-    .testimonials-row > .testimonial-thumb-card {
-      flex: 0 1 15.5rem;
-      max-width: 15.5rem;
-      width: 15.5rem;
-      min-width: 0;
+    .mobile-only .testimonials-row > .testimonial-thumb-card {
+      flex: 0 1 100% !important;
+      max-width: 400px !important;
+      width: 100% !important;
+      min-width: 0 !important;
     }
-    .testimonial-thumb-card {
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .desktop-only {
+      display: none;
+    }
+    .mobile-only {
+      display: none;
+    }
+    .tablet-only {
+      display: block;
+    }
+    .tablet-only .testimonials-row {
+      flex-wrap: wrap !important;
+      gap: 1.5rem !important;
+      justify-content: center !important;
+    }
+    .tablet-only .testimonials-row > .testimonial-thumb-card {
+      flex: 0 1 calc(50% - 0.75rem) !important;
+      max-width: calc(50% - 0.75rem) !important;
+      width: calc(50% - 0.75rem) !important;
+      min-width: 0 !important;
       padding: 1.85rem 1.25rem 1.85rem 4.75rem;
     }
   }
@@ -1675,12 +1715,13 @@ ${accordion}
     </div>`
     }
 
-    const slides: Testimonial[][] = []
-    for (let i = 0; i < testimonials.length; i += 3) {
-      slides.push(testimonials.slice(i, i + 3))
+    // Desktop: carousel with reveal (each slide shows one more testimonial)
+    const desktopSlides: Testimonial[][] = []
+    for (let i = 0; i < testimonials.length - 2; i++) {
+      desktopSlides.push(testimonials.slice(i, i + 3))
     }
 
-    const slidesHtml = slides
+    const desktopSlidesHtml = desktopSlides
       .map(
         (slide) => `
     <div class="classic-testimonials-slide">
@@ -1691,9 +1732,9 @@ ${accordion}
       )
       .join('')
 
-    const dotsHtml = `
+    const desktopDotsHtml = `
     <div class="classic-testimonials-dots">
-      ${slides
+      ${desktopSlides
         .map(
           (_, i) =>
             `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
@@ -1701,10 +1742,80 @@ ${accordion}
         .join('')}
     </div>`
 
+    const desktopCarousel = `
+    <div class="classic-testimonials-carousel desktop-only" id="classic-testimonials-carousel">
+      <div class="classic-testimonials-track">${desktopSlidesHtml}</div>
+      ${desktopDotsHtml}
+    </div>`
+
+    // Tablet: carousel with 2 items per slide, no overlap
+    const tabletSlides: Testimonial[][] = []
+    for (let i = 0; i < testimonials.length; i += 2) {
+      tabletSlides.push(testimonials.slice(i, i + 2))
+    }
+
+    const tabletSlidesHtml = tabletSlides
+      .map(
+        (slide) => `
+    <div class="classic-testimonials-slide">
+      <div class="testimonials-row">
+        ${slide.map((t) => generateClassicTestimonialCard(t)).join('')}
+      </div>
+    </div>`
+      )
+      .join('')
+
+    const tabletDotsHtml = `
+    <div class="classic-testimonials-dots">
+      ${tabletSlides
+        .map(
+          (_, i) =>
+            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
+        )
+        .join('')}
+    </div>`
+
+    const tabletCarousel = `
+    <div class="classic-testimonials-carousel tablet-only" id="classic-testimonials-carousel-tablet">
+      <div class="classic-testimonials-track">${tabletSlidesHtml}</div>
+      ${tabletDotsHtml}
+    </div>`
+
+    // Mobile: carousel with 1 item per slide
+    const mobileSlides: Testimonial[][] = testimonials.map((t) => [t])
+
+    const mobileSlidesHtml = mobileSlides
+      .map(
+        (slide) => `
+    <div class="classic-testimonials-slide">
+      <div class="testimonials-row">
+        ${slide.map((t) => generateClassicTestimonialCard(t)).join('')}
+      </div>
+    </div>`
+      )
+      .join('')
+
+    const mobileDotsHtml = `
+    <div class="classic-testimonials-dots">
+      ${mobileSlides
+        .map(
+          (_, i) =>
+            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
+        )
+        .join('')}
+    </div>`
+
+    const mobileCarousel = `
+    <div class="classic-testimonials-carousel mobile-only" id="classic-testimonials-carousel-mobile">
+      <div class="classic-testimonials-track">${mobileSlidesHtml}</div>
+      ${mobileDotsHtml}
+    </div>`
+
     return `
-    <div class="classic-testimonials-carousel" id="classic-testimonials-carousel">
-      <div class="classic-testimonials-track">${slidesHtml}</div>
-      ${dotsHtml}
+    <div class="testimonials-responsive-wrapper">
+      ${desktopCarousel}
+      ${tabletCarousel}
+      ${mobileCarousel}
     </div>`
   }
 
@@ -3010,7 +3121,6 @@ ${documentHead}
             overflow: hidden;
             width: 100%;
             padding-bottom: 1rem;
-            padding-left: 1.15rem;
         }
         .classic-testimonials-track {
             display: flex;
@@ -3022,6 +3132,7 @@ ${documentHead}
             width: 100%;
             box-sizing: border-box;
             direction: rtl;
+            padding: 0 1rem;
         }
         .classic-testimonials-dots {
             display: flex;
@@ -3365,34 +3476,110 @@ ${generateSiteFooter(siteChrome('classic'))}
         });
 
         (function() {
+            // Desktop carousel
             var carousel = document.getElementById('classic-testimonials-carousel');
-            if (!carousel) return;
-            var track = carousel.querySelector('.classic-testimonials-track');
-            var dots = carousel.querySelectorAll('.classic-testimonials-dot');
-            var slides = carousel.querySelectorAll('.classic-testimonials-slide');
-            if (!track || slides.length <= 1) return;
-            var index = 0;
-            var timer;
-            function goTo(i) {
-                index = ((i % slides.length) + slides.length) % slides.length;
-                track.style.transform = 'translateX(-' + (index * 100) + '%)';
-                dots.forEach(function(dot, dotIndex) {
-                    dot.classList.toggle('is-active', dotIndex === index);
-                });
-            }
-            function next() { goTo(index + 1); }
-            function resetTimer() {
-                if (timer) clearInterval(timer);
-                timer = setInterval(next, 5000);
-            }
-            dots.forEach(function(dot, dotIndex) {
-                dot.addEventListener('click', function() {
-                    goTo(dotIndex);
+            if (carousel && window.innerWidth >= 1024) {
+                var track = carousel.querySelector('.classic-testimonials-track');
+                var dots = carousel.querySelectorAll('.classic-testimonials-dot');
+                var slides = carousel.querySelectorAll('.classic-testimonials-slide');
+                if (track && slides.length > 1) {
+                    var index = 0;
+                    var timer;
+                    function goTo(i) {
+                        index = ((i % slides.length) + slides.length) % slides.length;
+                        track.style.transform = 'translateX(-' + (index * 100) + '%)';
+                        dots.forEach(function(dot, dotIndex) {
+                            dot.classList.toggle('is-active', dotIndex === index);
+                        });
+                    }
+                    function next() { goTo(index + 1); }
+                    function resetTimer() {
+                        if (timer) clearInterval(timer);
+                        timer = setInterval(next, 3500);
+                    }
+                    dots.forEach(function(dot, dotIndex) {
+                        dot.addEventListener('click', function() {
+                            goTo(dotIndex);
+                            resetTimer();
+                        });
+                    });
+                    goTo(0);
                     resetTimer();
-                });
+                }
+            }
+
+            // Tablet carousel
+            var tabletCarousel = document.getElementById('classic-testimonials-carousel-tablet');
+            if (tabletCarousel && window.innerWidth >= 768 && window.innerWidth < 1024) {
+                var tabletTrack = tabletCarousel.querySelector('.classic-testimonials-track');
+                var tabletDots = tabletCarousel.querySelectorAll('.classic-testimonials-dot');
+                var tabletSlides = tabletCarousel.querySelectorAll('.classic-testimonials-slide');
+                if (tabletTrack && tabletSlides.length > 1) {
+                    var tabletIndex = 0;
+                    var tabletTimer;
+                    function tabletGoTo(i) {
+                        tabletIndex = ((i % tabletSlides.length) + tabletSlides.length) % tabletSlides.length;
+                        tabletTrack.style.transform = 'translateX(-' + (tabletIndex * 100) + '%)';
+                        tabletDots.forEach(function(dot, dotIndex) {
+                            dot.classList.toggle('is-active', dotIndex === tabletIndex);
+                        });
+                    }
+                    function tabletNext() { tabletGoTo(tabletIndex + 1); }
+                    function tabletResetTimer() {
+                        if (tabletTimer) clearInterval(tabletTimer);
+                        tabletTimer = setInterval(tabletNext, 3500);
+                    }
+                    tabletDots.forEach(function(dot, dotIndex) {
+                        dot.addEventListener('click', function() {
+                            tabletGoTo(dotIndex);
+                            tabletResetTimer();
+                        });
+                    });
+                    tabletGoTo(0);
+                    tabletResetTimer();
+                }
+            }
+
+            // Mobile carousel
+            var mobileCarousel = document.getElementById('classic-testimonials-carousel-mobile');
+            if (mobileCarousel && window.innerWidth < 768) {
+                var mobileTrack = mobileCarousel.querySelector('.classic-testimonials-track');
+                var mobileDots = mobileCarousel.querySelectorAll('.classic-testimonials-dot');
+                var mobileSlides = mobileCarousel.querySelectorAll('.classic-testimonials-slide');
+                if (mobileTrack && mobileSlides.length > 1) {
+                    var mobileIndex = 0;
+                    var mobileTimer;
+                    function mobileGoTo(i) {
+                        mobileIndex = ((i % mobileSlides.length) + mobileSlides.length) % mobileSlides.length;
+                        mobileTrack.style.transform = 'translateX(-' + (mobileIndex * 100) + '%)';
+                        mobileDots.forEach(function(dot, dotIndex) {
+                            dot.classList.toggle('is-active', dotIndex === mobileIndex);
+                        });
+                    }
+                    function mobileNext() { mobileGoTo(mobileIndex + 1); }
+                    function mobileResetTimer() {
+                        if (mobileTimer) clearInterval(mobileTimer);
+                        mobileTimer = setInterval(mobileNext, 3500);
+                    }
+                    mobileDots.forEach(function(dot, dotIndex) {
+                        dot.addEventListener('click', function() {
+                            mobileGoTo(dotIndex);
+                            mobileResetTimer();
+                        });
+                    });
+                    mobileGoTo(0);
+                    mobileResetTimer();
+                }
+            }
+
+            // Handle resize - reload page on significant layout change
+            var currentBreakpoint = window.innerWidth >= 1024 ? 'desktop' : (window.innerWidth >= 768 ? 'tablet' : 'mobile');
+            window.addEventListener('resize', function() {
+                var newBreakpoint = window.innerWidth >= 1024 ? 'desktop' : (window.innerWidth >= 768 ? 'tablet' : 'mobile');
+                if (currentBreakpoint !== newBreakpoint) {
+                    location.reload();
+                }
             });
-            goTo(0);
-            resetTimer();
         })();
     </script>
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
