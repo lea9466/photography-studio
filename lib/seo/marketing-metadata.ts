@@ -5,12 +5,20 @@ export const MARKETING_SEO_TITLE =
   'סטודיו גלריה | בניית אתר לצלמות בקלות, גלריות תמונות דיגיטליות ותיק עבודות מעוצב'
 
 export const MARKETING_SEO_DESCRIPTION =
-  'מחפשת בניית אתר לצלמת בקלות ובחינם? הקימי אתר תדמית מקצועי ב-10 דקות! מערכת מתקדמת לניהול גלריות ציבוריות ופרטיות, שיתוף תמונות עם לקוחות, בחירת תמונות לעיבוד באיכות שיא והגנה מלאה בסימני מים.'
+  'מחפשת בניית אתר לצלמת בקלות ובחינם? הקימי אתר תדמית מקצועי ב-10 דקות — עם בלוג פוסטים, גלריות תמונות ותיק עבודות. מערכת מתקדמת לניהול גלריות, שיתוף תמונות עם לקוחות והגנה מלאה בסימני מים.'
+
+export const REGISTER_SEO_DESCRIPTION =
+  'בניית אתר בחינם ובפשטות לצלמות — אתר תדמית מקצועי עם בלוג פוסטים, גלריות תמונות ותיק עבודות. תמצאו אותנו בגוגל במגוון חיפושים: בניית אתר לצלמת, אתר לצלמות בחינם, בלוג לצלמות, גלריה דיגיטלית, תיק עבודות לצלמת ועוד.'
 
 export const MARKETING_SEO_KEYWORDS = [
   'בניית אתר לצלמת',
   'בניית אתר בחינם',
   'בניית אתר בקלות',
+  'בניית אתר בפשטות לצלמות',
+  'אתר לצלמות בחינם',
+  'בלוג לצלמות',
+  'בלוג אישי לצלמת',
+  'פוסטים לצלמות',
   'מערכת גלריות לצלמות',
   'אתר פורטפוליו לצלמים',
   'תיק עבודות לצלמת',
@@ -35,6 +43,11 @@ export const MARKETING_FEATURES = [
     description: 'תצוגת גריד מודרנית ולייטבוקס מלא ואיכותי להצגת העבודות שלך בצורה מרשימה.',
   },
   {
+    title: 'בלוג אישי לפוסטים ותוכן',
+    description:
+      'פרסמי מאמרים, טיפים וסיפורי צילום ישירות מהאתר שלך — בלוג מעוצב שמחזק את הנוכחות שלך בגוגל.',
+  },
+  {
     title: 'הגנה מתקדמת על זכויות יוצרים',
     description: 'החלת סימן מים אוטומטי בלחיצת כפתור ישירות מהדפדפן — הגנה על התמונות שלך.',
   },
@@ -47,21 +60,23 @@ export const MARKETING_FEATURES = [
 
 export function buildMarketingMetadata(options?: {
   title?: string
+  description?: string
   canonicalPath?: string
 }): Metadata {
   const title = options?.title ?? MARKETING_SEO_TITLE
+  const description = options?.description ?? MARKETING_SEO_DESCRIPTION
   const canonicalPath = options?.canonicalPath ?? '/'
 
   return {
     title,
-    description: MARKETING_SEO_DESCRIPTION,
+    description,
     keywords: [...MARKETING_SEO_KEYWORDS],
     alternates: {
       canonical: buildCanonicalUrl(canonicalPath),
     },
     openGraph: {
       title,
-      description: MARKETING_SEO_DESCRIPTION,
+      description,
       type: 'website',
       locale: 'he_IL',
       url: buildCanonicalUrl(canonicalPath),

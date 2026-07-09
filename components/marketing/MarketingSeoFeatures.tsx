@@ -1,4 +1,4 @@
-import { Images, LayoutTemplate, ShieldCheck, Users } from 'lucide-react'
+import { Images, FileText, LayoutTemplate, ShieldCheck, Users } from 'lucide-react'
 import { MARKETING_FEATURES } from '@/lib/seo/marketing-metadata'
 
 type MarketingSeoFeaturesProps = {
@@ -8,6 +8,7 @@ type MarketingSeoFeaturesProps = {
 const COMPACT_FEATURE_ICONS = [
   { icon: LayoutTemplate, iconBg: 'bg-violet-100', iconColor: 'text-violet-600' },
   { icon: Images, iconBg: 'bg-rose-100', iconColor: 'text-rose-600' },
+  { icon: FileText, iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
   { icon: ShieldCheck, iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
   { icon: Users, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
 ] as const

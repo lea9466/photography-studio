@@ -8,10 +8,11 @@ import { PhotographerCard } from '@/components/auth/PhotographerCard'
 import { Button } from '@/components/ui/button'
 import { signUp, type AuthActionState } from '@/lib/actions/auth.actions'
 import { getPublicStudios } from '@/lib/actions/public-studios.actions'
-import { buildMarketingMetadata, MARKETING_H1 } from '@/lib/seo/marketing-metadata'
+import { buildMarketingMetadata, MARKETING_H1, REGISTER_SEO_DESCRIPTION } from '@/lib/seo/marketing-metadata'
 
 export const metadata: Metadata = buildMarketingMetadata({
   title: 'הרשמה חינם | סטודיו גלריה — בניית אתר לצלמות וגלריות דיגיטליות',
+  description: REGISTER_SEO_DESCRIPTION,
   canonicalPath: '/register',
 })
 
