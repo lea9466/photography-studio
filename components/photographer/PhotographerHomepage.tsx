@@ -1330,6 +1330,22 @@ function generateHomepageHTML(
       : packages.length === 2
         ? 'homepage-packages-grid homepage-packages-grid--count-2'
         : 'homepage-packages-grid'
+  
+  // Sort packages: if there are exactly 3 packages and one is featured, place it in the middle
+  const sortedPackages = (() => {
+    if (packages.length === 3) {
+      const featuredIndex = packages.findIndex(pkg => pkg.is_featured)
+      if (featuredIndex !== -1) {
+        // Create a copy and move featured package to middle position (index 1)
+        const packagesCopy = [...packages]
+        const [featured] = packagesCopy.splice(featuredIndex, 1)
+        packagesCopy.splice(1, 0, featured)
+        return packagesCopy
+      }
+    }
+    return packages
+  })()
+  
   const hasTestimonials = testimonials.length > 0
   const testimonialsSectionTitle = resolveTestimonialsSectionTitle(
     theme,
@@ -1342,9 +1358,9 @@ function generateHomepageHTML(
     hasPackagesBg ? `${solidClass}/55 backdrop-blur-sm` : solidClass
 
   const generatePackagesHTML = (currentTheme: string) => {
-    if (packages.length === 0) return ''
+    if (sortedPackages.length === 0) return ''
     
-    return packages.map((pkg, i) => {
+    return sortedPackages.map((pkg, i) => {
       const includesList = pkg.includes || [];
       const isFeatured = pkg.is_featured;
       

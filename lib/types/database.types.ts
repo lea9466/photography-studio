@@ -69,6 +69,7 @@ export type Database = {
           has_triggered_referral_bonus: boolean
           show_referral_popup: boolean
           show_welcome_popup: boolean
+          testimonial_layout_type: 'carousel' | 'marquee'
         }
         Insert: {
           id: string
@@ -113,6 +114,7 @@ export type Database = {
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
+          testimonial_layout_type?: 'carousel' | 'marquee'
         }
         Update: {
           id?: string
@@ -157,6 +159,7 @@ export type Database = {
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
+          testimonial_layout_type?: 'carousel' | 'marquee'
         }
         Relationships: []
       }
