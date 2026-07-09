@@ -15,12 +15,13 @@ export default async function ReviewsPage() {
   const [{ data: profile }, testimonials] = await Promise.all([
     supabase
       .from('users')
-      .select('logo_url, testimonials_title, selected_theme')
+      .select('logo_url, testimonials_title, selected_theme, testimonial_layout_type')
       .eq('id', user.id)
       .maybeSingle<{
         logo_url: string | null
         testimonials_title: string | null
         selected_theme: string | null
+        testimonial_layout_type: string | null
       }>(),
     getTestimonials() as Promise<Testimonial[]>,
   ])
@@ -37,6 +38,7 @@ export default async function ReviewsPage() {
         initialTestimonials={testimonials}
         photographerLogoUrl={profile?.logo_url ?? null}
         initialSectionTitle={profile?.testimonials_title ?? null}
+        initialLayoutType={profile?.testimonial_layout_type ?? null}
         selectedTheme={profile?.selected_theme ?? 'elegant'}
       />
     </div>

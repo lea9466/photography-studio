@@ -295,6 +295,40 @@ export async function updateTestimonialsSectionTitle(input: {
   return data as { testimonials_title: string | null }
 }
 
+export async function updateTestimonialLayoutType(input: {
+  layoutType: 'carousel' | 'marquee'
+}): Promise<{ testimonial_layout_type: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('יש להתחבר מחדש')
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {
+    testimonial_layout_type: input.layoutType,
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', user.id)
+    .select('testimonial_layout_type')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/reviews')
+  revalidatePath('/portfolio')
+  revalidatePath('/[slug]', 'page')
+
+  return data as { testimonial_layout_type: string }
+}
+
 // Public function to get testimonials for a specific photographer (by their slug or user_id)
 export async function getPublicTestimonials(userId: string) {
   const supabase = createAdminClient()

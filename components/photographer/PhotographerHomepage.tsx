@@ -52,6 +52,7 @@ interface Photographer {
   contact_mobile_url: string | null
   packages_desktop_url: string | null
   packages_mobile_url: string | null
+  testimonial_layout_type?: string | null
   packages_title: string | null
   packages_subtitle: string | null
   testimonials_title: string | null
@@ -1707,6 +1708,129 @@ ${accordion}
     if (testimonials.length === 0) return ''
 
     const cardsHtml = testimonials.map((t) => generateClassicTestimonialCard(t)).join('')
+
+    // Check if marquee layout is selected
+    const useMarquee = photographer.testimonial_layout_type === 'marquee'
+
+    if (useMarquee) {
+      // Marquee layout: smooth infinite scroll with conditional behavior
+      const itemCount = testimonials.length
+
+      // Determine if we should animate based on breakpoint and item count
+      // Desktop: animate if >3 items, else centered
+      // Tablet: animate if >2 items, else centered
+      // Mobile: animate if >1 item, else centered
+
+      const shouldAnimateDesktop = itemCount > 3
+      const shouldAnimateTablet = itemCount > 2
+      const shouldAnimateMobile = itemCount > 1
+
+      if (!shouldAnimateDesktop && !shouldAnimateTablet && !shouldAnimateMobile) {
+        // No animation needed - display centered
+        return `
+    <div class="testimonials-row testimonials-centered">
+      ${cardsHtml}
+    </div>
+    <style>
+      .testimonials-centered {
+        justify-content: center;
+      }
+    </style>`
+      }
+
+      // Marquee with animation - clean slate implementation
+      const marqueeContent = cardsHtml + cardsHtml // Exactly 2x, no gaps
+      const containerClasses = [
+        'testimonials-marquee-container',
+        !shouldAnimateDesktop ? 'no-scroll-desktop' : '',
+        !shouldAnimateTablet ? 'no-scroll-tablet' : '',
+        !shouldAnimateMobile ? 'no-scroll-mobile' : ''
+      ].filter(Boolean).join(' ')
+
+      return `
+    <div class="${containerClasses}">
+      <div class="marquee-content">
+        ${marqueeContent}
+      </div>
+    </div>
+    <style>
+      @keyframes marquee-loop {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .testimonials-marquee-container {
+        overflow: hidden;
+        width: 100%;
+        padding: 1rem 0;
+        direction: rtl;
+      }
+      .marquee-content {
+        display: flex;
+        flex-direction: row;
+        width: max-content;
+        gap: 2rem;
+        animation: marquee-loop 40s linear infinite;
+        padding: 0 1rem;
+      }
+      .marquee-content:hover {
+        animation-play-state: paused;
+      }
+      /* Natural card sizes - no stretching */
+      .marquee-content .testimonial-thumb-card {
+        height: auto;
+        max-width: max-content;
+        flex-shrink: 0;
+      }
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .marquee-content {
+          gap: 1.5rem;
+          animation: marquee-loop 35s linear infinite;
+        }
+      }
+      @media (max-width: 767px) {
+        .marquee-content {
+          gap: 1.5rem;
+          animation: marquee-loop 30s linear infinite;
+        }
+      }
+      /* Conditional: disable animation on desktop if ≤3 items */
+      @media (min-width: 1024px) {
+        .testimonials-marquee-container.no-scroll-desktop {
+          display: flex;
+          justify-content: center;
+          overflow: visible;
+        }
+        .testimonials-marquee-container.no-scroll-desktop .marquee-content {
+          animation: none;
+          gap: 2rem;
+        }
+      }
+      /* Conditional: disable animation on tablet if ≤2 items */
+      @media (min-width: 768px) and (max-width: 1023px) {
+        .testimonials-marquee-container.no-scroll-tablet {
+          display: flex;
+          justify-content: center;
+          overflow: visible;
+        }
+        .testimonials-marquee-container.no-scroll-tablet .marquee-content {
+          animation: none;
+          gap: 1.5rem;
+        }
+      }
+      /* Conditional: disable animation on mobile if 1 item */
+      @media (max-width: 767px) {
+        .testimonials-marquee-container.no-scroll-mobile {
+          display: flex;
+          justify-content: center;
+          overflow: visible;
+        }
+        .testimonials-marquee-container.no-scroll-mobile .marquee-content {
+          animation: none;
+          gap: 1.5rem;
+        }
+      }
+    </style>`
+    }
 
     if (testimonials.length <= 3) {
       return `

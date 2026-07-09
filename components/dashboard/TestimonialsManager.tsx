@@ -10,6 +10,7 @@ import {
   prepareTestimonialImageUpload,
   updateTestimonial,
   updateTestimonialsSectionTitle,
+  updateTestimonialLayoutType,
   type TestimonialPhotoOption,
 } from '@/lib/actions/testimonials.actions'
 import { TESTIMONIALS_SECTION_DEFAULTS } from '@/lib/testimonials-section-copy'
@@ -50,6 +51,7 @@ type TestimonialsManagerProps = {
   initialTestimonials: Testimonial[]
   photographerLogoUrl?: string | null
   initialSectionTitle: string | null
+  initialLayoutType: string | null
   selectedTheme: string
 }
 
@@ -101,11 +103,14 @@ export function TestimonialsManager({
   initialTestimonials,
   photographerLogoUrl,
   initialSectionTitle,
+  initialLayoutType,
   selectedTheme,
 }: TestimonialsManagerProps) {
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [sectionTitle, setSectionTitle] = useState(initialSectionTitle ?? '')
+  const [layoutType, setLayoutType] = useState(initialLayoutType ?? 'carousel')
   const [isSectionPending, startSectionTransition] = useTransition()
+  const [isLayoutPending, startLayoutTransition] = useTransition()
   const themeDefault =
     TESTIMONIALS_SECTION_DEFAULTS[selectedTheme] ?? TESTIMONIALS_SECTION_DEFAULTS.elegant
   const [isPending, startTransition] = useTransition()
@@ -248,6 +253,20 @@ export function TestimonialsManager({
     })
   }
 
+  function handleLayoutTypeSave() {
+    startLayoutTransition(async () => {
+      try {
+        const updated = await updateTestimonialLayoutType({
+          layoutType: layoutType as 'carousel' | 'marquee',
+        })
+        setLayoutType(updated.testimonial_layout_type)
+        toast.success('סוג התצוגה נשמר')
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה')
+      }
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
@@ -274,6 +293,36 @@ export function TestimonialsManager({
             disabled={isSectionPending}
           >
             {isSectionPending ? 'שומר...' : 'שמור כותרת'}
+          </Button>
+        </div>
+      </div>
+      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
+        <div>
+          <h2 className="text-base font-semibold text-[--foreground]">סוג תצוגת תגובות</h2>
+          <p className="mt-1 text-sm text-[--muted]">
+            בחר איך התגובות יוצגו בדף הבית הציבורי
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="testimonial-layout-type">סוג תצוגה</Label>
+          <select
+            id="testimonial-layout-type"
+            value={layoutType}
+            onChange={(e) => setLayoutType(e.target.value)}
+            className="w-full rounded-md border border-[--border] bg-[--dashboard-surface] px-3 py-2 text-sm text-[--foreground]"
+          >
+            <option value="carousel">קרוסלה (Carousel)</option>
+            <option value="marquee">סרט נע (Smooth Marquee)</option>
+          </select>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleLayoutTypeSave}
+            disabled={isLayoutPending}
+          >
+            {isLayoutPending ? 'שומר...' : 'שמור סוג תצוגה'}
           </Button>
         </div>
       </div>

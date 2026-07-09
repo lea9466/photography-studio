@@ -33,6 +33,7 @@ export type PublicPhotographer = Pick<
   | 'packages_title'
   | 'packages_subtitle'
   | 'testimonials_title'
+  | 'testimonial_layout_type'
   | 'email'
   | 'faq_items'
   | 'should_color_logo'
@@ -69,6 +70,7 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   packages_title,
   packages_subtitle,
   testimonials_title,
+  testimonial_layout_type,
   email,
   faq_items,
   should_color_logo
