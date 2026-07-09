@@ -5,6 +5,10 @@ const PLAN_BADGE_CONFIG = {
     label: 'FREE',
     className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
   },
+  new: {
+    label: 'NEW!',
+    className: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
+  },
 } as const
 
 type SubscriptionPlanBadgeProps = {

@@ -17,7 +17,7 @@ export type DashboardNavItem = {
   icon: React.ReactNode
   isActive: (pathname: string) => boolean
   frozen?: boolean
-  badge?: 'free'
+  badge?: 'free' | 'new'
 }
 
 export const PUBLIC_ONLY_MVP = true
@@ -48,6 +48,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'פוסטים',
     icon: <FileText className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/posts'),
+    badge: 'new',
   },
   {
     href: '/dashboard/packages',
