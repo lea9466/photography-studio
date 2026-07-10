@@ -136,14 +136,31 @@ export async function ensureUserProfile(
     }
     throw new Error(error.message)
   }
+}
 
-  const recipientEmail = user.email?.trim()
-  if (recipientEmail) {
-    try {
-      await sendWelcomeEmail({ name, email: recipientEmail })
-    } catch (emailError) {
-      console.error('[ensureUserProfile] welcome email failed', emailError)
-    }
+export async function maybeSendWelcomeEmail(user: User, name?: string) {
+  const metadata = user.user_metadata ?? {}
+  if (metadata.welcome_email_sent === true) return
+
+  const email = user.email?.trim()
+  if (!email) return
+
+  const displayName = name?.trim() || readOAuthDisplayName(user)
+
+  try {
+    await sendWelcomeEmail({ name: displayName, email })
+  } catch (emailError) {
+    console.error('[maybeSendWelcomeEmail] send failed', emailError)
+    return
+  }
+
+  try {
+    const admin = createAdminClient()
+    await admin.auth.admin.updateUserById(user.id, {
+      user_metadata: { ...metadata, welcome_email_sent: true },
+    })
+  } catch (metadataError) {
+    console.error('[maybeSendWelcomeEmail] metadata update failed', metadataError)
   }
 }
 
@@ -263,6 +280,7 @@ export async function signUp(
       name,
       studio_name: studioName || null,
     })
+    await maybeSendWelcomeEmail(user, name)
   } catch (profileError) {
     return {
       error:
