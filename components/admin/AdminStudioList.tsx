@@ -33,6 +33,7 @@ function formatDate(iso: string) {
 export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [rows, setRows] = useState(studios)
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
   const [logoutPending, startLogout] = useTransition()
 
   async function handleDelete(studio: AdminStudioRow) {
@@ -59,6 +60,30 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
       await adminLogout()
       window.location.reload()
     })
+  }
+
+  async function handleImpersonate(studio: AdminStudioRow) {
+    setImpersonatingId(studio.id)
+    try {
+      const response = await fetch('/api/admin/impersonate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: studio.id }),
+      })
+
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null
+
+      if (!response.ok) {
+        throw new Error(payload?.error || 'התחברות כמנהל נכשלה')
+      }
+
+      window.location.href = '/dashboard/galleries'
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'התחברות כמנהל נכשלה')
+      setImpersonatingId(null)
+    }
   }
 
   return (
@@ -182,6 +207,17 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                           ) : (
                             <span className="text-xs text-[--muted]">אין אתר</span>
                           )}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={impersonatingId === studio.id}
+                            onClick={() => handleImpersonate(studio)}
+                          >
+                            {impersonatingId === studio.id
+                              ? 'נכנס...'
+                              : 'התחבר כמנהל'}
+                          </Button>
                           <Button
                             type="button"
                             size="sm"

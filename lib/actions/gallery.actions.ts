@@ -10,7 +10,8 @@ import {
   rotateGalleryPassword,
 } from '@/lib/gallery-password-store'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext, getDashboardContext } from '@/lib/auth/dashboard-context'
+import type { DashboardAuthContext } from '@/lib/auth/dashboard-context'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
 import { createPresignedUploadUrl, deleteMediaObject } from '@/lib/r2/storage'
 import { isR2Configured } from '@/lib/r2/config'
@@ -33,7 +34,7 @@ type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
 const DELETE_BATCH_SIZE = 50
 
-async function deleteGalleryMedia(supabase: Awaited<ReturnType<typeof createClient>>, galleryId: string) {
+async function deleteGalleryMedia(supabase: DashboardAuthContext['supabase'], galleryId: string) {
   const [photosResult, editedResult, jobsResult] = await Promise.all([
     supabase
       .from('photos')
@@ -121,11 +122,7 @@ type GalleryEmailRow = {
 }
 
 async function fetchOwnedGalleryForEmail(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data } = await supabase
     .from('galleries')
@@ -137,7 +134,7 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
     `
     )
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
   const gallery = data as GalleryEmailRow | null
@@ -215,14 +212,7 @@ export async function updateGalleryStatus(
   galleryId: string,
   status: GalleryStatus
 ) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const payload: GalleriesUpdate = { status }
 
@@ -230,7 +220,7 @@ export async function updateGalleryStatus(
     .from('galleries')
     .update(payload as never)
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) {
     throw new Error(error.message)
@@ -293,14 +283,7 @@ function portfolioSlug(title: string) {
 }
 
 export async function createGallery(input: CreateGalleryInput) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const title = input.title.trim()
   if (!title) {
@@ -312,7 +295,7 @@ export async function createGallery(input: CreateGalleryInput) {
     let countQuery = supabase
       .from('galleries')
       .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     if (!PUBLIC_ONLY_MVP) {
       countQuery = countQuery.eq('is_public', true)
@@ -328,7 +311,7 @@ export async function createGallery(input: CreateGalleryInput) {
   const hashedPassword = await hashGalleryPassword(plainPassword)
 
   const galleryPayload: Database['public']['Tables']['galleries']['Insert'] = {
-    user_id: user.id,
+    user_id: userId,
     client_id: input.clientId || null,
     title,
     gallery_type: input.galleryType,
@@ -363,7 +346,7 @@ export async function createGallery(input: CreateGalleryInput) {
     const { data: profile } = await supabase
       .from('users')
       .select('studio_name')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
     watermarkText =
       (profile as { studio_name: string | null } | null)?.studio_name?.trim() ||
@@ -393,7 +376,7 @@ export async function createGallery(input: CreateGalleryInput) {
   revalidatePath(`/dashboard/galleries/${gallery.id}`)
 
   try {
-    await processReferralBonusIfEligible(user.id)
+    await processReferralBonusIfEligible(userId)
   } catch (referralError) {
     console.error('[createGallery] referral bonus failed', referralError)
   }
@@ -422,18 +405,14 @@ export async function updateGallerySettings(
   }
 ) {
   console.log('updateGallerySettings called with:', { galleryId, input })
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   if (input.title !== undefined) {
     const { error } = await supabase
       .from('galleries')
       .update({ title: input.title.trim() } as never)
       .eq('id', galleryId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
     if (error) throw new Error(error.message)
   }
 
@@ -451,7 +430,7 @@ export async function updateGallerySettings(
         .from('galleries')
         .select('is_public')
         .eq('id', galleryId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single()
 
       const wasPublic = (existingGallery as { is_public: boolean } | null)?.is_public ?? false
@@ -459,7 +438,7 @@ export async function updateGallerySettings(
         const { count: publicGalleryCount } = await supabase
           .from('galleries')
           .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
+          .eq('user_id', userId)
           .eq('is_public', true)
 
         const limitError = buildPublicGalleryCountLimitError(publicGalleryCount ?? 0)
@@ -480,7 +459,7 @@ export async function updateGallerySettings(
       .from('galleries')
       .update(galleryUpdate as never)
       .eq('id', galleryId)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
     if (error) throw new Error(error.message)
   }
 
@@ -514,17 +493,15 @@ export async function updateGallerySettings(
 }
 
 export async function getPublicGalleryQuota() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await getDashboardContext()
+  if (!context) return null
 
-  if (!user) return null
+  const { userId, supabase } = context
 
   let countQuery = supabase
     .from('galleries')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (!PUBLIC_ONLY_MVP) {
     countQuery = countQuery.eq('is_public', true)
@@ -548,18 +525,17 @@ export async function ensurePortfolioSlug(
 ) {
   if (currentSlug) return currentSlug
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
+  const context = await getDashboardContext()
+  if (!context) return null
+
+  const { userId, supabase } = context
 
   const slug = portfolioSlug(title)
   const { error } = await supabase
     .from('galleries')
     .update({ slug } as never)
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('gallery_type', 'portfolio')
 
   if (error) return null
@@ -590,17 +566,15 @@ export async function fetchGalleryDetail(galleryId: string) {
 export async function resolveGalleryTableThumbnails(
   galleries: { id: string; cover_image: string | null }[]
 ) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await getDashboardContext()
+  if (!context) return {}
 
-  if (!user) return {}
+  const { userId, supabase } = context
 
   const { data: profile } = await supabase
     .from('users')
     .select('logo_url')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const logoUrl = await resolveBrandingPath(
@@ -633,16 +607,11 @@ export async function prepareGalleryCoverUpload(input: {
     throw new Error('אחסון תמונות לא מוגדר')
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   validatePrimaryImageFile(input.contentType, input.fileSize)
 
-  const path = buildCoverStoragePath(user.id, Date.now(), input.contentType)
+  const path = buildCoverStoragePath(userId, Date.now(), input.contentType)
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
   return { uploadUrl, path }

@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import type { R2UploadRequest } from '@/lib/r2/types'
 import {
@@ -19,30 +19,25 @@ async function assertGalleryUploadPaths(
   galleryId: string,
   items: R2UploadRequest[]
 ) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data: gallery } = await supabase
     .from('galleries')
     .select('id, is_public')
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
   if (!gallery) throw new Error('גלריה לא נמצאה')
 
-  const prefix = `${user.id}/${galleryId}/`
+  const prefix = `${userId}/${galleryId}/`
   for (const item of items) {
     if (!item.path.startsWith(prefix)) {
       throw new Error('נתיב קובץ לא תקין')
     }
   }
 
-  const photoIds = parsePhotoIdsFromUploadRequests(user.id, galleryId, items)
+  const photoIds = parsePhotoIdsFromUploadRequests(userId, galleryId, items)
   await assertReservedPhotosExist(supabase, galleryId, photoIds)
   await assertGalleryPhotoCountWithinLimit(
     supabase,
@@ -51,7 +46,7 @@ async function assertGalleryUploadPaths(
     0
   )
 
-  return user
+  return { id: userId }
 }
 
 export async function createR2UploadUrls(
@@ -73,7 +68,7 @@ export async function createR2UploadUrls(
 }
 
 async function assertPostUploadPaths(postId: string, items: R2UploadRequest[]) {
-  const { user } = await assertPostOwner(postId)
+  const { user, supabase } = await assertPostOwner(postId)
 
   const prefix = `${user.id}/posts/${postId}/`
   for (const item of items) {
@@ -82,7 +77,6 @@ async function assertPostUploadPaths(postId: string, items: R2UploadRequest[]) {
     }
   }
 
-  const supabase = await createClient()
   const photoIds = parsePostPhotoIdsFromUploadRequests(user.id, postId, items)
   await assertReservedPostPhotosExist(supabase, postId, photoIds)
   await assertPostPhotoCountWithinLimit(supabase, postId, 0)

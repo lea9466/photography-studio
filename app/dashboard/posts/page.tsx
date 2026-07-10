@@ -1,22 +1,24 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { getPosts } from '@/lib/actions/post.actions'
 import { PostsManager } from '@/components/dashboard/PostsManager'
 import { signStoragePaths } from '@/lib/storage'
 
 export default async function PostsPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
-  if (!user) redirect('/login')
+  const { userId, supabase } = context
 
   const [{ data: profile }, posts] = await Promise.all([
     supabase
       .from('users')
       .select('studio_name, selected_theme, posts_page_title')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle<{
         studio_name: string | null
         selected_theme: string | null
@@ -43,7 +45,7 @@ export default async function PostsPage() {
       </div>
       <PostsManager
         initialPosts={posts}
-        userId={user.id}
+        userId={userId}
         studioName={profile?.studio_name}
         selectedTheme={profile?.selected_theme ?? 'elegant'}
         initialPageTitle={profile?.posts_page_title ?? null}

@@ -1,4 +1,5 @@
 import { signOut } from '@/lib/actions/auth.actions'
+import { getDashboardContext } from '@/lib/auth/dashboard-context'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
 
@@ -7,9 +8,13 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const profile = await getDashboardProfile()
+  const [profile, context] = await Promise.all([
+    getDashboardProfile(),
+    getDashboardContext(),
+  ])
   const portfolioSlug = profile?.slug?.trim() || null
   const welcomePreviewUrl = portfolioSlug ? `/${portfolioSlug}` : null
+  const isImpersonating = context?.isImpersonating ?? false
 
   return (
     <DashboardLayoutWrapper
@@ -17,11 +22,12 @@ export default async function DashboardLayout({
       studioName={profile?.studio_name || undefined}
       logoUrl={profile?.logo_url || undefined}
       portfolioSlug={portfolioSlug}
-      showReferralPopup={profile?.show_referral_popup ?? false}
-      showWelcomePopup={profile?.show_welcome_popup ?? false}
+      showReferralPopup={isImpersonating ? false : (profile?.show_referral_popup ?? false)}
+      showWelcomePopup={isImpersonating ? false : (profile?.show_welcome_popup ?? false)}
       welcomePreviewUrl={welcomePreviewUrl}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
+      isImpersonating={isImpersonating}
       onSignOut={async () => {
         'use server'
         await signOut()

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { getPublicGalleryQuota } from '@/lib/actions/gallery.actions'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
@@ -12,15 +12,17 @@ import {
 } from '@/lib/types/app.types'
 
 export default async function NewGalleryPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
-  if (!user) redirect('/login')
+  const { userId, supabase } = context
 
   const [{ data: profileData }, clients, quota] = await Promise.all([
-    supabase.from('users').select('studio_name').eq('id', user.id).single(),
+    supabase.from('users').select('studio_name').eq('id', userId).single(),
     fetchClients(),
     getPublicGalleryQuota(),
   ])

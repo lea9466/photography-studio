@@ -1,22 +1,24 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchPackages } from '@/lib/actions/package.actions'
 import { PackagesManager } from '@/components/dashboard/PackagesManager'
 
 export default async function PackagesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
-  if (!user) redirect('/login')
+  const { userId, supabase } = context
 
   const [packages, profileResult] = await Promise.all([
     fetchPackages(),
     supabase
       .from('users')
       .select('packages_title, packages_subtitle, selected_theme')
-      .eq('id', user.id)
+      .eq('id', userId)
       .single(),
   ])
 

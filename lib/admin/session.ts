@@ -87,9 +87,7 @@ export async function clearAdminSession() {
   cookieStore.delete(SESSION_COOKIE)
 }
 
-export async function isAdminAuthenticated() {
-  const cookieStore = await cookies()
-  const raw = cookieStore.get(SESSION_COOKIE)?.value
+export function verifyAdminSessionToken(raw: string | undefined | null) {
   if (!raw) return false
 
   const lastColon = raw.lastIndexOf(':')
@@ -104,6 +102,12 @@ export async function isAdminAuthenticated() {
 
   const exp = Number(payload.slice(sep + 1))
   return Number.isFinite(exp) && Date.now() <= exp
+}
+
+export async function isAdminAuthenticated() {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(SESSION_COOKIE)?.value
+  return verifyAdminSessionToken(raw)
 }
 
 export async function requireAdmin() {

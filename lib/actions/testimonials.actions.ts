@@ -1,10 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import {
@@ -14,43 +12,13 @@ import {
 import { PRIMARY_IMAGE_MAX_BYTES, validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import type { Database } from '@/lib/types/database.types'
 
-// Create a non-typed client for dynamic operations
-async function createUntypedClient() {
-  const cookieStore = await cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // setAll from Server Component — middleware handles refresh
-          }
-        },
-      },
-    }
-  )
-}
-
 export async function getTestimonials() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data, error } = await supabase
     .from('testimonials')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
@@ -71,12 +39,7 @@ export async function prepareTestimonialImageUpload(input: {
     throw new Error('אחסון תמונות לא מוגדר')
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) {
     throw new Error('סוג הקובץ לא נתמך')
@@ -84,7 +47,7 @@ export async function prepareTestimonialImageUpload(input: {
   validatePrimaryImageFile(input.contentType, input.fileSize)
 
   const extension = input.fileName.split('.').pop() || 'jpg'
-  const path = `${user.id}/testimonials_${Date.now()}.${extension}`
+  const path = `${userId}/testimonials_${Date.now()}.${extension}`
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
   return {
@@ -101,26 +64,20 @@ export type TestimonialPhotoOption = {
 }
 
 export async function getTestimonialPhotoOptions(): Promise<TestimonialPhotoOption[]> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { userId, supabase } = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const untypedClient = await createUntypedClient()
-  const { data: galleries, error: galleriesError } = await untypedClient
+  const { data: galleries, error: galleriesError } = await supabase
     .from('galleries')
     .select('id, title')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (galleriesError) throw new Error(galleriesError.message)
 
   const options: TestimonialPhotoOption[] = []
 
-  for (const gallery of galleries || []) {
-    const { data: photos, error: photosError } = await untypedClient
+  for (const gallery of (galleries || []) as Array<{ id: string; title: string }>) {
+    const { data: photos, error: photosError } = await supabase
       .from('photos')
       .select('id, preview_url')
       .eq('gallery_id', gallery.id)
@@ -130,7 +87,7 @@ export async function getTestimonialPhotoOptions(): Promise<TestimonialPhotoOpti
 
     if (photosError) throw new Error(photosError.message)
 
-    for (const photo of photos || []) {
+    for (const photo of (photos || []) as Array<{ id: string; preview_url: string | null }>) {
       if (!photo.preview_url) continue
       const storageRef = formatTestimonialImageRef('previews', photo.preview_url)
       options.push({
@@ -153,23 +110,17 @@ export async function createTestimonial(data: {
   isFeatured?: boolean
   imageUrl?: string | null
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { userId, supabase } = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const untypedClient = await createUntypedClient()
-  const { error } = await untypedClient.from('testimonials').insert({
-    user_id: user.id,
+  const { error } = await supabase.from('testimonials').insert({
+    user_id: userId,
     title: data.title,
     content: data.content,
     shoot_type: data.shootType || null,
     review_date: data.reviewDate || null,
     is_featured: data.isFeatured || false,
     image_url: data.imageUrl || null,
-  })
+  } as never)
 
   if (error) throw new Error(error.message)
 
@@ -185,12 +136,7 @@ export async function updateTestimonial(id: string, data: {
   sortOrder?: number
   imageUrl?: string | null
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const updateData: Record<string, any> = {}
 
@@ -202,12 +148,11 @@ export async function updateTestimonial(id: string, data: {
   if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder
   if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl || null
 
-  const untypedClient = await createUntypedClient()
-  const { error } = await untypedClient
+  const { error } = await supabase
     .from('testimonials')
-    .update(updateData)
+    .update(updateData as never)
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(error.message)
 
@@ -215,18 +160,13 @@ export async function updateTestimonial(id: string, data: {
 }
 
 export async function deleteTestimonial(id: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { error } = await supabase
     .from('testimonials')
     .delete()
     .eq('id', id)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) throw new Error(error.message)
 
@@ -234,22 +174,14 @@ export async function deleteTestimonial(id: string) {
 }
 
 export async function reorderTestimonials(testimonials: { id: string; sortOrder: number }[]) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { userId, supabase } = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const untypedClient = await createUntypedClient()
-
-  // Update each testimonial's sort order
   for (const testimonial of testimonials) {
-    const { error } = await untypedClient
+    const { error } = await supabase
       .from('testimonials')
-      .update({ sort_order: testimonial.sortOrder })
+      .update({ sort_order: testimonial.sortOrder } as never)
       .eq('id', testimonial.id)
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
 
     if (error) throw new Error(error.message)
   }
@@ -260,14 +192,7 @@ export async function reorderTestimonials(testimonials: { id: string; sortOrder:
 export async function updateTestimonialsSectionTitle(input: {
   title?: string
 }): Promise<{ testimonials_title: string | null }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   if (input.title === undefined) {
     throw new Error('אין שינויים לשמירה')
@@ -280,7 +205,7 @@ export async function updateTestimonialsSectionTitle(input: {
   const { data, error } = await supabase
     .from('users')
     .update(payload as never)
-    .eq('id', user.id)
+    .eq('id', userId)
     .select('testimonials_title')
     .single()
 
@@ -298,14 +223,7 @@ export async function updateTestimonialsSectionTitle(input: {
 export async function updateTestimonialLayoutType(input: {
   layoutType: 'carousel' | 'marquee'
 }): Promise<{ testimonial_layout_type: string }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const payload: Database['public']['Tables']['users']['Update'] = {
     testimonial_layout_type: input.layoutType,
@@ -314,7 +232,7 @@ export async function updateTestimonialLayoutType(input: {
   const { data, error } = await supabase
     .from('users')
     .update(payload as never)
-    .eq('id', user.id)
+    .eq('id', userId)
     .select('testimonial_layout_type')
     .single()
 

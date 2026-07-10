@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
@@ -573,17 +574,13 @@ export async function completeClientSelection(
 }
 
 export async function markDeliveryReady(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data: owned } = await supabase
     .from('galleries')
     .select('id')
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
   if (!owned) throw new Error('גלריה לא נמצאה')

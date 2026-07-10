@@ -1,19 +1,22 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { SubscriptionPanel } from '@/components/dashboard/SubscriptionPanel'
 import { SubscriptionPlanBadge } from '@/components/dashboard/SubscriptionPlanBadge'
-export default async function SubscriptionPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+export default async function SubscriptionPage() {
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
+
+  const { userId, supabase } = context
 
   const { data: profile } = await supabase
     .from('users')
     .select('trial_end_date, referral_code, slug')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const row = profile as {

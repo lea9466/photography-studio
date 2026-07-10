@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { fetchDashboardGalleries } from '@/lib/actions/dashboard.actions'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { Button } from '@/components/ui/button'
-import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
@@ -19,47 +18,14 @@ export default function GalleriesPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (user) {
-        // Fetch all galleries with client details and photo count
-        const { data: galleries } = await supabase
-          .from('galleries')
-          .select(`
-            *,
-            client:clients(name),
-            photos(count)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-
-        // Transform the data to match the expected format
-        const transformedGalleries = (galleries || []).map((gallery: any) => ({
-          ...gallery,
-          client: gallery.client,
-          photo_count: gallery.photos?.[0]?.count || 0,
-        }))
-
-        let galleriesWithThumbnails = transformedGalleries
-        try {
-          const thumbnails = await resolveGalleryTableThumbnails(
-            transformedGalleries.map((g) => ({
-              id: g.id,
-              cover_image: g.cover_image ?? null,
-            }))
-          )
-          galleriesWithThumbnails = transformedGalleries.map((gallery) => ({
-            ...gallery,
-            thumbnail_url: thumbnails[gallery.id] ?? null,
-          }))
-        } catch (error) {
-          console.warn('Failed to resolve gallery thumbnails:', error)
-        }
-
-        setRecentGalleries(galleriesWithThumbnails)
+      try {
+        const galleries = await fetchDashboardGalleries()
+        setRecentGalleries(galleries)
+      } catch (error) {
+        console.error('Failed to load galleries:', error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchData()

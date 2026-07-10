@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Gallery } from '@/lib/types/database.types'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchGallerySelections } from '@/lib/actions/photo.actions'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
@@ -15,12 +15,14 @@ export default async function GallerySelectionsPage({
   params,
 }: SelectionsPageProps) {
   const { id } = await params
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    notFound()
+  }
 
-  if (!user) notFound()
+  const { userId } = context
 
   const gallery = (await fetchGalleryDetail(id)) as Gallery | null
   if (!gallery) notFound()
@@ -55,7 +57,7 @@ export default async function GallerySelectionsPage({
             <CardContent className="pt-6">
               <UploadEdited
                 galleryId={id}
-                userId={user.id}
+                userId={userId}
                 selectedPhotos={editPhotos}
               />
             </CardContent>

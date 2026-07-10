@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { recordSlugRedirect } from '@/lib/referral/slug-redirect'
 import { sendFeedbackEmail } from '@/lib/email/resend'
@@ -146,12 +146,7 @@ export async function prepareFeedbackImageUpload(input: {
     throw new Error('אחסון תמונות לא מוגדר')
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) {
     throw new Error('סוג הקובץ לא נתמך — JPG, PNG או WebP')
@@ -159,7 +154,7 @@ export async function prepareFeedbackImageUpload(input: {
   validatePrimaryImageFile(input.contentType, input.fileSize)
 
   const extension = input.fileName.split('.').pop() || 'jpg'
-  const path = `${user.id}/feedback_${Date.now()}.${extension}`
+  const path = `${userId}/feedback_${Date.now()}.${extension}`
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
   return {
@@ -197,11 +192,7 @@ export async function submitFeedback(input: {
 }
 
 export async function updateProfile(input: UpdateProfileInput) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase, actorEmail } = await requireDashboardContext()
 
   const updateData = buildProfileUpdateData(input)
   if (Object.keys(updateData).length === 0) return
@@ -210,7 +201,7 @@ export async function updateProfile(input: UpdateProfileInput) {
     const { data: current } = await supabase
       .from('users')
       .select('slug')
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle()
 
     const oldSlug = (current as { slug: string | null } | null)?.slug?.trim()
@@ -224,13 +215,13 @@ export async function updateProfile(input: UpdateProfileInput) {
   const { data: existingProfile } = await supabase
     .from('users')
     .select('id')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle()
 
   if (!existingProfile) {
     const { error: insertError } = await supabase.from('users').insert({
-      id: user.id,
-      email: updateData.email ?? user.email ?? null,
+      id: userId,
+      email: updateData.email ?? actorEmail ?? null,
       show_welcome_popup: true,
       ...updateData,
     } as never)
@@ -240,7 +231,7 @@ export async function updateProfile(input: UpdateProfileInput) {
     const { data: updated, error } = await supabase
       .from('users')
       .update(updateData as never)
-      .eq('id', user.id)
+      .eq('id', userId)
       .select('id, phone, email')
       .maybeSingle()
 

@@ -1,19 +1,21 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { DashboardContactForm } from '@/components/dashboard/DashboardContactForm'
 
 export default async function ContactPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
-  if (!user) redirect('/login')
+  const { userId, supabase, actorEmail } = context
 
   const { data: profile } = await supabase
     .from('users')
     .select('name, email, studio_name')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle<{ name: string | null; email: string | null; studio_name: string | null }>()
 
   return (
@@ -26,7 +28,7 @@ export default async function ContactPage() {
       </div>
       <DashboardContactForm
         defaultName={profile?.name ?? ''}
-        defaultEmail={profile?.email ?? user.email ?? ''}
+        defaultEmail={profile?.email ?? actorEmail ?? ''}
         defaultStudio={profile?.studio_name ?? ''}
       />
     </div>

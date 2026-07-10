@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { ClientsManager } from '@/components/dashboard/ClientsManager'
 import {
@@ -12,12 +12,11 @@ export default async function ClientsPage() {
     redirect(MVP_DEFAULT_DASHBOARD_PATH)
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login')
+  try {
+    await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
   const clients = await fetchClients()
 

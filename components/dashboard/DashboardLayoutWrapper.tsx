@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SidebarNav } from './SidebarNav'
 import { MobileHeader } from './MobileHeader'
+import { ImpersonationBanner } from './ImpersonationBanner'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
 import { WelcomeModal } from './WelcomeModal'
 
@@ -19,6 +20,7 @@ type DashboardLayoutWrapperProps = {
   children: React.ReactNode
   accentColor?: string
   shouldColorLogo?: boolean
+  isImpersonating?: boolean
 }
 
 export function DashboardLayoutWrapper({
@@ -33,6 +35,7 @@ export function DashboardLayoutWrapper({
   children,
   accentColor,
   shouldColorLogo,
+  isImpersonating = false,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -43,6 +46,7 @@ export function DashboardLayoutWrapper({
 
   return (
     <div className="min-h-screen">
+      {isImpersonating ? <ImpersonationBanner studioName={studioName} /> : null}
       <WelcomeModal open={showWelcomePopup} previewUrl={welcomePreviewUrl} />
       <ReferralSuccessModal open={showReferralPopup} />
       <SidebarNav
@@ -70,8 +74,9 @@ export function DashboardLayoutWrapper({
 
       {/* Main Content */}
       <main className={cn(
-        "p-4 md:p-10 min-h-screen pt-20 md:pt-10 transition-all duration-300 ease-in-out bg-white",
-        isSidebarCollapsed ? "md:mr-16" : "md:mr-72"
+        'p-4 md:p-10 min-h-screen transition-all duration-300 ease-in-out bg-white',
+        isImpersonating ? 'pt-28 md:pt-16' : 'pt-20 md:pt-10',
+        isSidebarCollapsed ? 'md:mr-16' : 'md:mr-72'
       )}>
         {children}
       </main>

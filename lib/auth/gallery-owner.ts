@@ -1,26 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 export async function assertGalleryOwner(galleryId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: gallery } = await supabase
+  const { data: gallery } = await context.supabase
     .from('galleries')
     .select('id, is_public')
     .eq('id', galleryId)
-    .eq('user_id', user.id)
+    .eq('user_id', context.userId)
     .single()
 
   if (!gallery) throw new Error('גלריה לא נמצאה')
 
   return {
-    supabase,
-    user,
+    supabase: context.supabase,
+    user: { id: context.userId },
     gallery: gallery as { id: string; is_public: boolean },
+    isImpersonating: context.isImpersonating,
   }
 }
 
@@ -33,14 +29,9 @@ type OwnedPhotoRow = {
 }
 
 export async function assertPhotoInOwnedGallery(photoId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: photo } = await supabase
+  const { data: photo } = await context.supabase
     .from('photos')
     .select('id, gallery_id, original_url, preview_url, watermarked_preview_url')
     .eq('id', photoId)
@@ -49,27 +40,27 @@ export async function assertPhotoInOwnedGallery(photoId: string) {
   const row = photo as OwnedPhotoRow | null
   if (!row) throw new Error('תמונה לא נמצאה')
 
-  const { data: gallery } = await supabase
+  const { data: gallery } = await context.supabase
     .from('galleries')
     .select('id')
     .eq('id', row.gallery_id)
-    .eq('user_id', user.id)
+    .eq('user_id', context.userId)
     .single()
 
   if (!gallery) throw new Error('גלריה לא נמצאה')
 
-  return { supabase, user, photo: row }
+  return {
+    supabase: context.supabase,
+    user: { id: context.userId },
+    photo: row,
+    isImpersonating: context.isImpersonating,
+  }
 }
 
 export async function assertDownloadJobOwner(jobId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await requireDashboardContext()
 
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: job } = await supabase
+  const { data: job } = await context.supabase
     .from('download_jobs')
     .select('id, file_url, status, gallery_id')
     .eq('id', jobId)
@@ -85,14 +76,18 @@ export async function assertDownloadJobOwner(jobId: string) {
   const row = job as JobRow | null
   if (!row) throw new Error('הורדה לא נמצאה')
 
-  const { data: gallery } = await supabase
+  const { data: gallery } = await context.supabase
     .from('galleries')
     .select('id')
     .eq('id', row.gallery_id)
-    .eq('user_id', user.id)
+    .eq('user_id', context.userId)
     .single()
 
   if (!gallery) throw new Error('הורדה לא נמצאה')
 
-  return { supabase, job: row }
+  return {
+    supabase: context.supabase,
+    job: row,
+    isImpersonating: context.isImpersonating,
+  }
 }

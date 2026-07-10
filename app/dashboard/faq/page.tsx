@@ -1,20 +1,22 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { FaqItemsForm } from '@/components/dashboard/FaqItemsForm'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 
 export default async function FaqPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    redirect('/login')
+  }
 
-  if (!user) redirect('/login')
+  const { userId, supabase } = context
 
   const { data, error } = await supabase
     .from('users')
     .select('faq_items')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle<{ faq_items: unknown }>()
 
   if (error && error.code !== 'PGRST116') {

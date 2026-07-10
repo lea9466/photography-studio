@@ -1,21 +1,20 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { BrandingEditForm } from '@/components/dashboard/BrandingEditForm'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import { MVP_DEFAULT_DASHBOARD_PATH } from '@/lib/types/app.types'
 import type { User } from '@/lib/types/database.types'
 
 export default async function BrandingPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
     redirect('/login')
   }
 
-  // Fetch user branding data
+  const { userId, supabase } = context
+
   const { data: userData } = await supabase
     .from('users')
     .select(`
@@ -32,7 +31,7 @@ export default async function BrandingPage() {
       name,
       logo_url
     `)
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const typedUserData = userData as User | null

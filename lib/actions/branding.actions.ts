@@ -1,10 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import {
@@ -50,30 +48,6 @@ function brandingPathForUser(
 }
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
-
-async function createUntypedClient() {
-  const cookieStore = await cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // setAll from Server Component — middleware handles refresh
-          }
-        },
-      },
-    }
-  )
-}
 
 function normalizeHeroSlots(
   urls: string[] | null | undefined,
@@ -138,17 +112,12 @@ export async function prepareBrandingUpload(input: {
     throw new Error('אחסון תמונות לא מוגדר')
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   validateBrandingFile(input.contentType, input.fileSize)
   const slot = coerceHeroSlot(input.slot)
 
-  const path = brandingPathForUser(user.id, input.type, input.fileName, slot)
+  const path = brandingPathForUser(userId, input.type, input.fileName, slot)
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
   return { uploadUrl, path, slot }
@@ -159,13 +128,8 @@ export async function finalizeBrandingUpload(
   path: string,
   slot?: number
 ) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
-  if (!path.startsWith(`${user.id}/`)) {
+  const { userId, supabase } = await requireDashboardContext()
+  if (!path.startsWith(`${userId}/`)) {
     throw new Error('נתיב קובץ לא תקין')
   }
 
@@ -193,7 +157,7 @@ export async function finalizeBrandingUpload(
     const { data: profile, error: readError } = await admin
       .from('users')
       .select(`${arrayField}, ${legacyField}`)
-      .eq('id', user.id)
+      .eq('id', userId)
       .single()
 
     if (readError) {
@@ -211,15 +175,12 @@ export async function finalizeBrandingUpload(
     Object.assign(updateData, buildHeroUpdate(arrayField, legacyField, slots))
   }
 
-  const writeClient =
-    type === 'hero_desktop' || type === 'hero_mobile'
-      ? createAdminClient()
-      : await createUntypedClient()
+  const writeClient = createAdminClient()
 
   const { error } = await writeClient
     .from('users')
-    .update(updateData)
-    .eq('id', user.id)
+    .update(updateData as never)
+    .eq('id', userId)
 
   if (error) {
     console.error('[finalizeBrandingUpload] update failed', error, updateData)
@@ -235,12 +196,7 @@ export async function removeHeroImageSlot(input: {
 }) {
   validateHeroSlot(input.slot)
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   const arrayField =
     input.variant === 'desktop' ? 'hero_desktop_urls' : 'hero_mobile_urls'
@@ -251,7 +207,7 @@ export async function removeHeroImageSlot(input: {
   const { data: profile, error: readError } = await admin
     .from('users')
     .select(`${arrayField}, ${legacyField}`)
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (readError) throw new Error(readError.message)
@@ -266,7 +222,7 @@ export async function removeHeroImageSlot(input: {
   const { error } = await admin
     .from('users')
     .update(buildHeroUpdate(arrayField, legacyField, slots))
-    .eq('id', user.id)
+    .eq('id', userId)
 
   if (error) throw new Error(error.message)
 
@@ -291,19 +247,14 @@ const SINGLE_BRANDING_FIELD: Record<
 }
 
 export async function removeBrandingImage(type: SingleBrandingImageType) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   const field = SINGLE_BRANDING_FIELD[type]
-  const untypedClient = await createUntypedClient()
-  const { error } = await untypedClient
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('users')
     .update({ [field]: null } as UsersUpdate)
-    .eq('id', user.id)
+    .eq('id', userId)
 
   if (error) throw new Error(error.message)
 
@@ -329,12 +280,7 @@ export async function updateBrandingSettings(data: {
   packagesMobileUrl?: string
   shouldColorLogo?: boolean
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   const updateData: Record<string, any> = {}
 
@@ -369,11 +315,11 @@ export async function updateBrandingSettings(data: {
     updateData.packages_mobile_url = data.packagesMobileUrl
   if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
-  const untypedClient = await createUntypedClient()
-  const { error } = await untypedClient
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('users')
-    .update(updateData)
-    .eq('id', user.id)
+    .update(updateData as never)
+    .eq('id', userId)
 
   if (error) throw new Error(error.message)
 

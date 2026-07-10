@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { Database } from '@/lib/types/database.types'
 import { assertPostOwner } from '@/lib/auth/post-owner'
@@ -20,17 +20,12 @@ function revalidatePostSurfaces() {
 }
 
 export async function getPosts(): Promise<PostWithPhotos[]> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data, error } = await supabase
     .from('posts')
     .select('*, post_photos!post_photos_post_id_fkey(*)')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
@@ -64,12 +59,7 @@ export async function createPost(input: {
   watermarkText?: string | null
   autoApplyWatermark?: boolean
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const title = input.title.trim()
   const content = input.content.trim()
@@ -77,7 +67,7 @@ export async function createPost(input: {
   if (!content) throw new Error('תוכן הפוסט נדרש')
 
   const payload: PostInsert = {
-    user_id: user.id,
+    user_id: userId,
     title,
     subtitle: input.subtitle?.trim() || null,
     content,
@@ -172,19 +162,14 @@ export async function setPostCoverPhoto(postId: string, photoId: string | null) 
 export async function updatePostsPageTitle(input: {
   title?: string
 }): Promise<{ posts_page_title: string | null }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const title = input.title?.trim() || null
 
   const { data, error } = await supabase
     .from('users')
     .update({ posts_page_title: title } as never)
-    .eq('id', user.id)
+    .eq('id', userId)
     .select('posts_page_title')
     .single()
 

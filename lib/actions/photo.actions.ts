@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -173,21 +173,7 @@ export async function registerPhoto(input: {
   watermarkedPath: string
   sortOrder?: number
 }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
-
-  const { data: gallery } = await supabase
-    .from('galleries')
-    .select('id')
-    .eq('id', input.galleryId)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!gallery) throw new Error('גלריה לא נמצאה')
+  const { supabase } = await assertGalleryOwner(input.galleryId)
 
   const payload: PhotoInsert = {
     gallery_id: input.galleryId,
@@ -254,18 +240,14 @@ export async function setPhotosProcessedBulk(
 }
 
 export async function signPreviewUrls(previewUrls: (string | null)[]) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId } = await requireDashboardContext()
 
   const filteredUrls = previewUrls.filter((url): url is string => url !== null)
   if (filteredUrls.length === 0) {
     return {}
   }
 
-  const prefix = `${user.id}/`
+  const prefix = `${userId}/`
   for (const url of filteredUrls) {
     if (!url.startsWith(prefix)) {
       throw new Error('נתיב קובץ לא תקין')
@@ -422,12 +404,8 @@ export async function getSignedPhotoUrl(
       throw new Error('נתיב קובץ לא תקין')
     }
   } else {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) throw new Error('יש להתחבר מחדש')
-    if (!path.startsWith(`${user.id}/`)) {
+    const { userId } = await requireDashboardContext()
+    if (!path.startsWith(`${userId}/`)) {
       throw new Error('נתיב קובץ לא תקין')
     }
   }
@@ -442,8 +420,7 @@ export async function registerEditedPhoto(input: {
   photoId: string
   editedPath: string
 }) {
-  await assertGalleryOwner(input.galleryId)
-  const supabase = await createClient()
+  const { supabase } = await assertGalleryOwner(input.galleryId)
 
   const { data: existing } = await supabase
     .from('edited_photos')
@@ -477,8 +454,7 @@ export async function registerEditedPhotosBatch(input: {
 }) {
   if (input.items.length === 0) return { uploaded: 0 }
 
-  await assertGalleryOwner(input.galleryId)
-  const supabase = await createClient()
+  const { supabase } = await assertGalleryOwner(input.galleryId)
 
   for (const item of input.items) {
     const { data: existing } = await supabase
@@ -537,9 +513,8 @@ export type GallerySelectionPhoto = {
 }
 
 export async function fetchGallerySelections(galleryId: string) {
-  await assertGalleryOwner(galleryId)
+  const { supabase } = await assertGalleryOwner(galleryId)
 
-  const supabase = await createClient()
   const { data, error } = await supabase
     .from('photos')
     .select(

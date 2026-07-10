@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchGalleryPhotos } from '@/lib/actions/photo.actions'
 import { resolveWatermarkText } from '@/lib/images/process'
@@ -14,17 +14,19 @@ type PhotosPageProps = {
 
 export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   const { id } = await params
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let context
+  try {
+    context = await requireDashboardContext()
+  } catch {
+    notFound()
+  }
 
-  if (!user) notFound()
+  const { userId, supabase } = context
 
   const { data: profileData } = await supabase
     .from('users')
     .select('studio_name')
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   const studioName =
@@ -47,7 +49,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   return (
     <GalleryPhotosSection
       galleryId={id}
-      userId={user.id}
+      userId={userId}
       watermarkText={resolveWatermarkText(settings?.watermark_text, studioName)}
       applyAutoWatermark={settings?.auto_apply_watermark ?? true}
       photos={photos as never}

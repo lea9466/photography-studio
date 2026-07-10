@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getDashboardContext } from '@/lib/auth/dashboard-context'
 
 export type DashboardProfile = {
   name: string | null
@@ -21,12 +21,10 @@ function defaultTrialEndDate(createdAt: string) {
 }
 
 export async function getDashboardProfile(): Promise<DashboardProfile | null> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const context = await getDashboardContext()
+  if (!context) return null
 
-  if (!user) return null
+  const { supabase, userId } = context
 
   const fullSelect =
     'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, created_at'
@@ -34,7 +32,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
   const { data: full, error: fullError } = await supabase
     .from('users')
     .select(fullSelect)
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (!fullError && full) {
@@ -52,7 +50,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
     .select(
       'name, studio_name, slug, logo_url, accent_color, should_color_logo, created_at'
     )
-    .eq('id', user.id)
+    .eq('id', userId)
     .single()
 
   if (basicError || !basic) return null

@@ -1,23 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 export async function assertPostOwner(postId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data: post } = await supabase
     .from('posts')
     .select('id')
     .eq('id', postId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
   if (!post) throw new Error('פוסט לא נמצא')
 
-  return { supabase, user, post: post as { id: string } }
+  return { supabase, user: { id: userId }, post: post as { id: string } }
 }
 
 type OwnedPostPhotoRow = {
@@ -29,12 +24,7 @@ type OwnedPostPhotoRow = {
 }
 
 export async function assertPostPhotoInOwnedPost(photoId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) throw new Error('יש להתחבר מחדש')
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data: photo } = await supabase
     .from('post_photos')
@@ -49,10 +39,10 @@ export async function assertPostPhotoInOwnedPost(photoId: string) {
     .from('posts')
     .select('id')
     .eq('id', row.post_id)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
-  if (!post) throw new Error('פוסט לא נמצא')
+  if (!post) throw new Error('פוסט לא נמצאה')
 
-  return { supabase, user, photo: row }
+  return { supabase, user: { id: userId }, photo: row }
 }

@@ -12,6 +12,10 @@ import {
   parseStudioSlugPath,
   resolveSlugRedirect,
 } from '@/lib/referral/slug-redirect'
+import {
+  canUseImpersonationFromRequest,
+  getImpersonatedUserIdFromRequest,
+} from '@/lib/auth/impersonation-middleware'
 
 export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -70,8 +74,14 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  const impersonatedUserId = getImpersonatedUserIdFromRequest(request)
+  const manageAdminSession = await canUseImpersonationFromRequest(request)
+  const hasImpersonationAccess =
+    Boolean(impersonatedUserId) && manageAdminSession && !user
+
   async function userNeedsWelcomePopup() {
     if (!user) return false
+    if (impersonatedUserId && manageAdminSession) return false
 
     const { data: profile } = await supabase
       .from('users')
@@ -126,7 +136,7 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  if (!user && isProtectedRoute) {
+  if (!user && isProtectedRoute && !hasImpersonationAccess) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', resolveMvpDashboardPath(pathname))

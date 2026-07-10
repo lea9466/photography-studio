@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import type { Database } from '@/lib/types/database.types'
 import type { PhotographyPackage } from '@/lib/types/database.types'
 
@@ -43,19 +44,12 @@ function validatePackageInput(input: {
 }
 
 export async function fetchPackages(): Promise<PhotographyPackage[]> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data, error } = await supabase
     .from('photography_packages')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
 
@@ -72,14 +66,7 @@ export async function createPackage(input: {
   durationText?: string
   includesText: string
 }): Promise<PhotographyPackage> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const includes = parseIncludes(input.includesText)
   const validated = validatePackageInput({
@@ -92,10 +79,10 @@ export async function createPackage(input: {
   const { count } = await supabase
     .from('photography_packages')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   const payload: PackageInsert = {
-    user_id: user.id,
+    user_id: userId,
     ...validated,
     sort_order: count ?? 0,
   }
@@ -126,14 +113,7 @@ export async function updatePackage(
     isFeatured?: boolean
   }
 ): Promise<PhotographyPackage> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const payload: PackageUpdate = {}
 
@@ -180,7 +160,7 @@ export async function updatePackage(
     .from('photography_packages')
     .update(payload as never)
     .eq('id', packageId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .select('*')
     .single()
 
@@ -194,20 +174,13 @@ export async function updatePackage(
 }
 
 export async function deletePackage(packageId: string): Promise<void> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const { error } = await supabase
     .from('photography_packages')
     .delete()
     .eq('id', packageId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) {
     throw new Error(error.message)
@@ -221,14 +194,7 @@ export async function updatePackagesSectionHeadings(input: {
   title?: string
   subtitle?: string
 }): Promise<{ packages_title: string | null; packages_subtitle: string | null }> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const payload: Database['public']['Tables']['users']['Update'] = {}
 
@@ -247,7 +213,7 @@ export async function updatePackagesSectionHeadings(input: {
   const { data, error } = await supabase
     .from('users')
     .update(payload as never)
-    .eq('id', user.id)
+    .eq('id', userId)
     .select('packages_title, packages_subtitle')
     .single()
 

@@ -1,20 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 export async function dismissReferralPopup() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return
+  const { userId, supabase } = await requireDashboardContext()
 
   await supabase
     .from('users')
     .update({ show_referral_popup: false } as never)
-    .eq('id', user.id)
+    .eq('id', userId)
 
   revalidatePath('/dashboard', 'layout')
 }

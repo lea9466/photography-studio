@@ -1,26 +1,19 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import type { Database } from '@/lib/types/database.types'
 import type { Client } from '@/lib/types/database.types'
 
 type ClientInsert = Database['public']['Tables']['clients']['Insert']
 
 export async function fetchClients(): Promise<Client[]> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const { data, error } = await supabase
     .from('clients')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .order('name', { ascending: true })
 
   if (error) {
@@ -35,14 +28,7 @@ export async function createClientRecord(input: {
   email?: string
   phone?: string
 }): Promise<Client> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const name = input.name.trim()
   if (!name) {
@@ -50,7 +36,7 @@ export async function createClientRecord(input: {
   }
 
   const payload: ClientInsert = {
-    user_id: user.id,
+    user_id: userId,
     name,
     email: input.email?.trim() || null,
     phone: input.phone?.trim() || null,
@@ -79,14 +65,7 @@ export async function updateClientRecord(
     galleryId?: string
   }
 ): Promise<Client> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const payload: Database['public']['Tables']['clients']['Update'] = {}
 
@@ -114,7 +93,7 @@ export async function updateClientRecord(
     .from('clients')
     .update(payload as never)
     .eq('id', clientId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .select('*')
     .single()
 
@@ -130,20 +109,13 @@ export async function updateClientRecord(
 }
 
 export async function deleteClientRecord(clientId: string): Promise<void> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('יש להתחבר מחדש')
-  }
+  const { userId, supabase } = await requireDashboardContext()
 
   const { error } = await supabase
     .from('clients')
     .delete()
     .eq('id', clientId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (error) {
     throw new Error(error.message)
