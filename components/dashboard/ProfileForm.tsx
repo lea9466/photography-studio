@@ -589,7 +589,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               >
                 תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
               </LabelWithHelp>
-              <p className="text-sm leading-relaxed text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
+              <p className="text-sm leading-relaxed text-[--muted]">
+                התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade. מומלץ להעלות תמונות לרוחב (שוכבות).
+              </p>
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {heroDesktopUrls.map((url, slot) => {
