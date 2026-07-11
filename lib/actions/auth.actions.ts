@@ -15,6 +15,7 @@ import {
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
 import { applyReferralOnSignup } from '@/lib/referral/referral'
+import { randomBytes } from 'node:crypto'
 
 export type AuthActionState = {
   error?: string
