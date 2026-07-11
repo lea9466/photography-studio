@@ -9,6 +9,10 @@ import {
   PRIMARY_IMAGE_MAX_BYTES,
   validatePrimaryImageFile,
 } from '@/lib/media-upload-limits'
+import {
+  deleteBrandingLogoFavicon,
+  syncBrandingLogoFavicon,
+} from '@/lib/branding/logo-favicon'
 
 const HERO_SLOT_COUNT = 3
 
@@ -135,7 +139,10 @@ export async function finalizeBrandingUpload(
 
   const updateData: UsersUpdate = {}
 
-  if (type === 'logo') updateData.logo_url = path
+  if (type === 'logo') {
+    updateData.logo_url = path
+    await syncBrandingLogoFavicon(userId, path)
+  }
   if (type === 'about') updateData.about_image_url = path
   if (type === 'contact_desktop') updateData.contact_desktop_url = path
   if (type === 'contact_mobile') updateData.contact_mobile_url = path
@@ -248,6 +255,10 @@ const SINGLE_BRANDING_FIELD: Record<
 
 export async function removeBrandingImage(type: SingleBrandingImageType) {
   const { userId } = await requireDashboardContext()
+
+  if (type === 'logo') {
+    await deleteBrandingLogoFavicon(userId)
+  }
 
   const field = SINGLE_BRANDING_FIELD[type]
   const admin = createAdminClient()

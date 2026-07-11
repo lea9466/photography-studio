@@ -61,6 +61,8 @@ import {
   generateHomepagePostsSectionHTML,
 } from '@/lib/homepage-posts-section'
 
+import { getBrandingPublicMediaPath } from '@/lib/branding-public-url'
+import { getBrandingFaviconStoragePath } from '@/lib/branding/logo-favicon-path'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
 
 
@@ -2254,7 +2256,9 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       portfolioPath,
 
-      posts
+      posts,
+
+      window.location.origin
 
     )
 
@@ -2428,13 +2432,30 @@ function escapeHtml(text: string): string {
 
 
 
-function generatePhotographerDocumentHead(studioName: string, logoUrl: string | null): string {
+function generatePhotographerDocumentHead(
+  studioName: string,
+  logoUrl: string | null,
+  faviconOrigin?: string,
+  userId?: string
+): string {
 
   const title = escapeHtml(studioName)
 
-  const faviconLink = logoUrl
+  const faviconStoragePath =
+    userId && logoUrl ? getBrandingFaviconStoragePath(userId, logoUrl) : null
+  const publicFaviconPath = faviconStoragePath
+    ? getBrandingPublicMediaPath(faviconStoragePath)
+    : logoUrl
+      ? getBrandingPublicMediaPath(logoUrl)
+      : null
+  const faviconHref =
+    publicFaviconPath && faviconOrigin
+      ? `${faviconOrigin.replace(/\/$/, '')}${publicFaviconPath}`
+      : logoUrl
 
-    ? `<link rel="icon" href="${escapeHtml(logoUrl)}" sizes="any"/>`
+  const faviconLink = faviconHref
+
+    ? `<link rel="icon" href="${escapeHtml(faviconHref)}" sizes="any"/>`
 
     : ''
 
@@ -2630,7 +2651,9 @@ function generateHomepageHTML(
 
   portfolioPath?: string,
 
-  posts: PublicBlogPost[] = []
+  posts: PublicBlogPost[] = [],
+
+  faviconOrigin?: string
 
 ): string {
 
@@ -2994,7 +3017,12 @@ function generateHomepageHTML(
 
   const studioName = studio_name || name || 'סטודיו גלריה'
 
-  const documentHead = generatePhotographerDocumentHead(studioName, logo_url)
+  const documentHead = generatePhotographerDocumentHead(
+    studioName,
+    logo_url,
+    faviconOrigin,
+    photographerId
+  )
 
   const photographerName = name || 'אפרת כהן'
 
@@ -3054,6 +3082,7 @@ function generateHomepageHTML(
   })
 
   const aboutText = about_text || ''
+  const aboutTextHtml = escapeHtml(aboutText)
 
   const aboutTitle = about_title || ''
 
@@ -4489,6 +4518,7 @@ ${documentHead}
         .glass-hero__text {
 
             max-width: 100%;
+            white-space: pre-line;
 
         }
 
@@ -4784,7 +4814,7 @@ ${heroSlideshowHtml}
 
 <p class="glass-hero__text font-body text-lg md:text-xl text-on-surface/70 mb-10 mx-auto font-light leading-relaxed">
 
-                ${aboutText}
+                ${aboutTextHtml}
 
             </p>
 
@@ -6351,6 +6381,8 @@ ${documentHead}
 
                 margin-right: auto;
 
+                white-space: pre-line;
+
             }
 
             .hero-glass-actions {
@@ -6422,6 +6454,7 @@ ${documentHead}
             .hero-glass-copy p {
 
                 margin-bottom: 2rem;
+                white-space: pre-line;
 
             }
 
@@ -6981,7 +7014,7 @@ ${studioName} · ${photographerName}
 
 <h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
 
-<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">${aboutText || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
+<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">${aboutTextHtml || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
 
 </div>
 
@@ -8392,9 +8425,9 @@ ${heroSlideshowBoldHtml}
 
                 </h1>
 
-<p class="font-body-md text-body-md max-w-xl mb-xl text-on-surface-variant leading-relaxed">
+<p class="font-body-md text-body-md max-w-xl mb-xl text-on-surface-variant leading-relaxed whitespace-pre-line">
 
-                    ${aboutText}
+                    ${aboutTextHtml}
 
                 </p>
 

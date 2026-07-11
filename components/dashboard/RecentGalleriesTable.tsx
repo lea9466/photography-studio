@@ -145,7 +145,7 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
 
   return (
     <>
-      <tr className="hover:bg-[--background] transition-colors">
+      <tr className="transition-colors hover:bg-[#7D3A52]/[0.03]">
         <td className="px-6 py-4">
           <input
             type="checkbox"
@@ -156,7 +156,7 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg overflow-hidden bg-[--background] border border-[--border]">
+            <div className="h-12 w-12 overflow-hidden rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.03]">
               {gallery.thumbnail_url && !imageError ? (
                 <img 
                   alt={gallery.title} 
@@ -278,9 +278,83 @@ type RecentGalleriesTableProps = {
   galleries: GalleryWithDetails[]
   filter?: string
   title?: string
+  variant?: 'default' | 'section'
 }
 
-export function RecentGalleriesTable({ galleries, filter, title = 'גלריות אחרונות' }: RecentGalleriesTableProps) {
+function GalleriesSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        'relative space-y-6 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        className
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
+        aria-hidden
+      />
+      {children}
+    </section>
+  )
+}
+
+function GalleriesSubPanel({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border border-[--border]/60 bg-white/80 p-5 text-sm text-[--muted] shadow-sm shadow-[#7D3A52]/[0.03]',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function GalleriesSectionHeader({
+  title,
+  description,
+  index,
+}: {
+  title: string
+  description?: string
+  index?: number
+}) {
+  return (
+    <div className="space-y-3 border-b border-[#7D3A52]/10 pb-5">
+      <div className="flex flex-wrap items-center gap-2">
+        {index !== undefined ? (
+          <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
+            {index}
+          </span>
+        ) : null}
+        <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+      </div>
+      {description ? (
+        <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+      ) : null}
+    </div>
+  )
+}
+
+export function RecentGalleriesTable({
+  galleries,
+  filter,
+  title = 'גלריות אחרונות',
+  variant = 'default',
+}: RecentGalleriesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
 
@@ -339,15 +413,23 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
       }
     })
   }
-  return (
-    <>
-      <div className="mb-4 rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-        <span className="font-semibold">גלריות ציבוריות בדף הבית:</span>{' '}
-        עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
-      </div>
-      <section className="bg-white dark:bg-zinc-900 border border-[--border] rounded-xl overflow-hidden mb-6">
-      <div className="p-6 border-b border-[--border] flex items-center justify-between">
-        <h3 className="font-semibold text-lg text-[--foreground]">{title}</h3>
+  const tipBox = (
+    <GalleriesSubPanel>
+      <span className="font-semibold text-[--foreground]">גלריות ציבוריות בדף הבית:</span>{' '}
+      עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
+    </GalleriesSubPanel>
+  )
+
+  const tableContent = (
+    <div className={cn(
+      'overflow-hidden rounded-xl border border-[--border]/60 bg-white/80 shadow-sm shadow-[#7D3A52]/[0.03]',
+      variant === 'default' && 'mb-6 border border-[--border] bg-white dark:bg-zinc-900'
+    )}>
+      <div className={cn(
+        'flex items-center justify-between border-b border-[#7D3A52]/10 p-6',
+        variant === 'default' && 'border-[--border]'
+      )}>
+        <h3 className="text-lg font-semibold text-[--foreground]">{title}</h3>
         {selectedIds.size > 0 && (
           <Button
             variant="destructive"
@@ -361,10 +443,10 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
         )}
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-right border-collapse">
+        <table className="w-full border-collapse text-right">
           <thead>
-            <tr className="bg-[--background] text-[--muted]">
-              <th className="px-6 py-3 text-sm font-medium w-10">
+            <tr className="bg-[#7D3A52]/[0.03] text-[--muted]">
+              <th className="w-10 px-6 py-3 text-sm font-medium">
                 <input
                   type="checkbox"
                   checked={selectedIds.size === filteredGalleries.length && filteredGalleries.length > 0}
@@ -375,19 +457,19 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
               <th className="px-6 py-3 text-sm font-medium">שם גלריה</th>
               <th className="px-6 py-3 text-sm font-medium">לקוח</th>
               <th className="px-6 py-3 text-sm font-medium">סטטוס</th>
-              <th className="px-6 py-3 text-sm font-medium text-center">תמונות</th>
-              <th className="px-6 py-3 text-sm font-medium text-center">מוצג באתר</th>
-              <th className="px-6 py-3 text-sm font-medium text-left">פעולות</th>
+              <th className="px-6 py-3 text-center text-sm font-medium">תמונות</th>
+              <th className="px-6 py-3 text-center text-sm font-medium">מוצג באתר</th>
+              <th className="px-6 py-3 text-left text-sm font-medium">פעולות</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[--border]">
+          <tbody className="divide-y divide-[#7D3A52]/10">
             {filteredGalleries.length > 0 ? (
               filteredGalleries.map((gallery) => (
                 <GalleryRow key={gallery.id} gallery={gallery} selected={selectedIds.has(gallery.id)} onSelect={toggleSelect} />
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-8 text-center text-[--muted]">
+                <td colSpan={7} className="px-6 py-12 text-center text-[--muted]">
                   אין גלריות עדיין
                 </td>
               </tr>
@@ -395,7 +477,30 @@ export function RecentGalleriesTable({ galleries, filter, title = 'גלריות 
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
+  )
+
+  if (variant === 'section') {
+    return (
+      <GalleriesSection>
+        <GalleriesSectionHeader
+          index={2}
+          title={title}
+          description="ניהול, עריכה ושיתוף של כל הגלריות שלך"
+        />
+        {tipBox}
+        {tableContent}
+      </GalleriesSection>
+    )
+  }
+
+  return (
+    <>
+      <div className="mb-4 rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+        <span className="font-semibold">גלריות ציבוריות בדף הבית:</span>{' '}
+        עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
+      </div>
+      {tableContent}
     </>
   )
 }

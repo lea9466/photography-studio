@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 const PLAN_BADGE_CONFIG = {
   free: {
     label: 'FREE',
-    className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
+    className: 'bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/15',
   },
   new: {
     label: 'NEW!',

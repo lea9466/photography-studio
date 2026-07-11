@@ -21,7 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Bug, ImageIcon, Lightbulb, MessageSquare, Mail, Upload, X } from 'lucide-react'
+import { Bug, ImageIcon, Lightbulb, Mail, MessageSquare, Send, Upload, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+const INPUT_CLASS =
+  'border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] shadow-sm transition-[border-color,box-shadow,background-color] focus-visible:border-[#7D3A52]/25 focus-visible:bg-[#7D3A52]/[0.07] focus-visible:ring-2 focus-visible:ring-[#7D3A52]/10'
+const ACCENT_BUTTON_CLASS =
+  'bg-[#7D3A52] text-white shadow-md shadow-[#7D3A52]/25 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40'
 
 const TYPES: { value: FeedbackType; label: string; description: string }[] = [
   { value: 'תקלה', label: 'דיווח על באג', description: 'משהו לא עובד כמו שצריך' },
@@ -29,6 +35,83 @@ const TYPES: { value: FeedbackType; label: string; description: string }[] = [
   { value: 'משוב', label: 'הערות כלליות', description: 'משוב, שבח או הצעה' },
   { value: 'אחר', label: 'אחר', description: 'כל נושא אחר' },
 ]
+
+function ContactSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        className
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
+        aria-hidden
+      />
+      {children}
+    </section>
+  )
+}
+
+function ContactSubPanel({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function ContactSectionHeader({
+  icon: Icon,
+  title,
+  description,
+  index,
+}: {
+  icon: typeof Mail
+  title: string
+  description?: string
+  index?: number
+}) {
+  return (
+    <div className="space-y-3 border-b border-[#7D3A52]/10 pb-5">
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {index !== undefined ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
+                {index}
+              </span>
+            ) : null}
+            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+          </div>
+          {description ? (
+            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 type DashboardContactFormProps = {
   defaultName?: string
@@ -99,53 +182,50 @@ export function DashboardContactForm({
 
   if (sent) {
     return (
-      <div className="rounded-xl border border-[--border] bg-white dark:bg-zinc-900 p-10 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-          <Mail className="h-7 w-7" />
-        </div>
-        <p className="text-lg font-semibold text-[--foreground]">תודה על הפנייה!</p>
-        <p className="mt-2 text-sm text-[--muted]">
-          ההודעה נשלחה אלינו. נחזור אליך בהקדם האפשר.
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          className="mt-6"
-          onClick={() => setSent(false)}
-        >
-          שליחת פנייה נוספת
-        </Button>
-      </div>
+      <ContactSection>
+        <ContactSubPanel className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52]">
+            <Mail className="h-7 w-7" />
+          </div>
+          <p className="text-lg font-semibold text-[--foreground]">תודה על הפנייה!</p>
+          <p className="text-sm text-[--muted]">
+            ההודעה נשלחה אלינו. נחזור אליך בהקדם האפשר.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-2 border-[#7D3A52]/20 text-[#7D3A52] hover:bg-[#7D3A52]/5"
+            onClick={() => setSent(false)}
+          >
+            שליחת פנייה נוספת
+          </Button>
+        </ContactSubPanel>
+      </ContactSection>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-        <p>
-          כאן אפשר לשלוח הערות, לדווח על באגים או לבקש פיצ׳רים חדשים. אשמח מאוד לשמוע מכן!
-        </p>
-        <p className="mt-2 text-[--muted]">
-          ההודעה תישלח ישירות לצוות הפיתוח — נחזור אליך בהקדם.
-        </p>
-      </div>
+    <ContactSection>
+      <ContactSectionHeader
+        index={1}
+        icon={Send}
+        title="שליחת פנייה"
+        description="כאן אפשר לשלוח הערות, לדווח על באגים או לבקש פיצ׳רים חדשים. ההודעה תישלח ישירות לצוות הפיתוח."
+      />
 
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-xl border border-[--border] bg-white dark:bg-zinc-900 p-6 md:p-8 space-y-6"
-      >
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2" dir="rtl">
           <Label>סוג הפנייה</Label>
           <Select value={type} onValueChange={(v) => setType(v as FeedbackType)}>
-            <SelectTrigger className="bg-white dark:bg-zinc-900 border-[--border] text-right flex-row-reverse justify-between shadow-none">
+            <SelectTrigger className={cn(INPUT_CLASS, 'flex-row-reverse justify-between text-right shadow-none')}>
               <SelectValue placeholder="בחרי סוג פנייה" />
             </SelectTrigger>
-            <SelectContent className="bg-white dark:bg-zinc-900 border-[--border] shadow-lg">
+            <SelectContent className="border-[--border] bg-white shadow-lg">
               {TYPES.map((item) => (
                 <SelectItem
                   key={item.value}
                   value={item.value}
-                  className="text-right pr-2 pl-8"
+                  className="pr-2 pl-8 text-right"
                 >
                   {item.label}
                 </SelectItem>
@@ -157,7 +237,7 @@ export function DashboardContactForm({
           ) : null}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="contact-name">שם</Label>
             <Input
@@ -165,7 +245,7 @@ export function DashboardContactForm({
               name="name"
               defaultValue={defaultName}
               required
-              className="bg-white dark:bg-zinc-900"
+              className={INPUT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -177,7 +257,7 @@ export function DashboardContactForm({
               dir="ltr"
               defaultValue={defaultEmail}
               required
-              className="bg-white dark:bg-zinc-900"
+              className={INPUT_CLASS}
             />
           </div>
         </div>
@@ -188,7 +268,7 @@ export function DashboardContactForm({
             id="contact-studio"
             name="studio"
             defaultValue={defaultStudio}
-            className="bg-white dark:bg-zinc-900"
+            className={INPUT_CLASS}
           />
         </div>
 
@@ -200,11 +280,11 @@ export function DashboardContactForm({
             rows={6}
             required
             placeholder="ספרי לנו מה קרה, מה היית רוצה לראות, או כל הערה אחרת..."
-            className="bg-white dark:bg-zinc-900 resize-y min-h-[140px]"
+            className={cn(INPUT_CLASS, 'min-h-[140px] resize-y')}
           />
         </div>
 
-        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-[#fdf8f4] px-4 py-4">
+        <ContactSubPanel className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <Label>תמונה מצורפת (אופציונלי)</Label>
@@ -215,10 +295,11 @@ export function DashboardContactForm({
             {imageUrl ? (
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={() => setImageUrl(null)}
                 disabled={uploadingImage || isPending}
+                className="border-red-200 text-red-600 hover:bg-red-50"
               >
                 <X className="h-4 w-4" />
                 הסר
@@ -227,7 +308,7 @@ export function DashboardContactForm({
           </div>
 
           <div className="flex flex-wrap items-end gap-4">
-            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-[#c9c5cd] bg-white">
+            <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[#7D3A52]/15 bg-[#7D3A52]/[0.03]">
               {imagePreviewSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -241,7 +322,14 @@ export function DashboardContactForm({
                 </div>
               )}
             </div>
-            <Button type="button" variant="outline" size="sm" asChild disabled={uploadingImage || isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              asChild
+              disabled={uploadingImage || isPending}
+              className="border-[#7D3A52]/15 hover:bg-[#7D3A52]/5"
+            >
               <label className="cursor-pointer">
                 <Upload className="h-4 w-4" />
                 {uploadingImage ? 'מעלה...' : imageUrl ? 'החלפת תמונה' : 'העלאת תמונה'}
@@ -255,13 +343,13 @@ export function DashboardContactForm({
               </label>
             </Button>
           </div>
-        </div>
+        </ContactSubPanel>
 
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <Button
             type="submit"
             disabled={isPending || uploadingImage}
-            className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] px-8"
+            className={cn(ACCENT_BUTTON_CLASS, 'px-8')}
           >
             {isPending ? 'שולח...' : 'שליחת הודעה'}
           </Button>
@@ -281,6 +369,6 @@ export function DashboardContactForm({
           </div>
         </div>
       </form>
-    </div>
+    </ContactSection>
   )
 }

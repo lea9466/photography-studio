@@ -152,8 +152,8 @@ export function PostPhotosSection({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#7D3A52]/10 pb-4">
         <div>
           <h3 className="text-sm font-semibold">תמונות לפוסט</h3>
           <p className="text-xs text-[--muted]">
@@ -206,12 +206,12 @@ export function PostPhotosSection({
           return (
             <div
               key={photo.id}
-              className={`group relative aspect-square overflow-hidden rounded-lg border bg-[--background] transition ${
+              className={`group relative aspect-square overflow-hidden rounded-xl border bg-[#7D3A52]/[0.03] transition ${
                 isSelected
-                  ? 'border-[--primary] ring-2 ring-[--primary]/30'
+                  ? 'border-[#7D3A52] ring-2 ring-[#7D3A52]/20'
                   : isCover
-                    ? 'border-[--primary]'
-                    : 'border-[--border] hover:border-[--primary]/50'
+                    ? 'border-[#7D3A52]/50'
+                    : 'border-[--border]/80 hover:border-[#7D3A52]/30'
               }`}
             >
               <button
@@ -257,7 +257,7 @@ export function PostPhotosSection({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[--border] bg-[--background] text-[--muted] transition hover:border-[--primary]/50 hover:text-[--foreground]"
+            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#7D3A52]/15 bg-[#7D3A52]/[0.03] text-[--muted] transition hover:border-[#7D3A52]/35 hover:bg-[#7D3A52]/[0.06] hover:text-[#7D3A52]"
           >
             {isUploading ? (
               <Loader2 className="h-6 w-6 animate-spin" />

@@ -8,6 +8,87 @@ import {
   buildReferralShareText,
   daysUntilTrialEnd,
 } from '@/lib/referral/referral-utils'
+import { cn } from '@/lib/utils'
+
+const ACCENT_BUTTON_CLASS =
+  'bg-[#7D3A52] text-white shadow-md shadow-[#7D3A52]/25 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40'
+
+function SubscriptionSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        'relative space-y-6 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        className
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
+        aria-hidden
+      />
+      {children}
+    </section>
+  )
+}
+
+function SubscriptionSubPanel({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function SubscriptionSectionHeader({
+  icon: Icon,
+  title,
+  description,
+  index,
+}: {
+  icon: typeof Sparkles
+  title: string
+  description?: string
+  index?: number
+}) {
+  return (
+    <div className="space-y-3 border-b border-[#7D3A52]/10 pb-5">
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {index !== undefined ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
+                {index}
+              </span>
+            ) : null}
+            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+          </div>
+          {description ? (
+            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 type SubscriptionPanelProps = {
   trialEndDate: string
@@ -30,60 +111,59 @@ export function SubscriptionPanel({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-[--dashboard-border] bg-gradient-to-br from-[--dashboard-accent]/10 to-white p-6 md:p-8">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[--dashboard-accent]/15 text-[--dashboard-accent]">
-            <Sparkles className="h-6 w-6" />
+    <div className="space-y-8 md:space-y-10">
+      <SubscriptionSection>
+        <SubscriptionSectionHeader
+          index={1}
+          icon={Sparkles}
+          title="תקופת הניסיון"
+          description="כמה ימים נשארו לך בתקופת הניסיון החינמית"
+        />
+        <SubscriptionSubPanel>
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52]">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm text-[--muted]">ימים שנשארו</p>
+              <p className="mt-1 text-4xl font-bold text-[--foreground]">
+                {daysLeft}
+                <span className="mr-2 text-lg font-semibold text-[--muted]">ימים</span>
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm text-[--dashboard-muted]">תקופת הניסיון שלך</p>
-            <p className="mt-1 text-4xl font-bold text-[--dashboard-foreground]">
-              {daysLeft}
-              <span className="mr-2 text-lg font-semibold text-[--dashboard-muted]">
-                ימים נשארו
-              </span>
-            </p>
-          </div>
-        </div>
-      </section>
+        </SubscriptionSubPanel>
+      </SubscriptionSection>
 
-      <section className="rounded-2xl border border-[--dashboard-border] bg-white p-6 md:p-8 space-y-5">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <Gift className="h-6 w-6" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold text-[--dashboard-foreground]">
-              חברה מביאה חברה
-            </h2>
-            <p className="text-sm leading-relaxed text-[--dashboard-muted]">
-              שתפי את הקישור האישי שלך עם צלמות אחרות. כשחברה נרשמת דרך הקישור שלך
-              ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
-              <strong className="text-[--dashboard-foreground]">30 יום נוספים</strong>{' '}
-              לתקופת הניסיון.
-            </p>
-          </div>
-        </div>
+      <SubscriptionSection>
+        <SubscriptionSectionHeader
+          index={2}
+          icon={Gift}
+          title="חברה מביאה חברה"
+          description="שתפי את הקישור האישי שלך עם צלמות אחרות וקבלי 30 יום נוספים לתקופת הניסיון"
+        />
 
-        <div className="rounded-xl border border-[--dashboard-border] bg-[--dashboard-surface] p-4 md:p-5">
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[--dashboard-foreground]">
-            {shareText}
+        <SubscriptionSubPanel className="space-y-5">
+          <p className="text-sm leading-relaxed text-[--muted]">
+            כשחברה נרשמת דרך הקישור שלך ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
+            <strong className="text-[--foreground]">30 יום נוספים</strong> לתקופת הניסיון.
           </p>
-        </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[--dashboard-muted] break-all">{referralLink}</p>
-          <Button
-            type="button"
-            onClick={handleCopy}
-            className="shrink-0 gap-2 bg-[--dashboard-accent] hover:bg-[--dashboard-accent]/90"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}
-          </Button>
-        </div>
-      </section>
+          <div className="rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] p-4 md:p-5">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-[--foreground]">
+              {shareText}
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="break-all text-xs text-[--muted]">{referralLink}</p>
+            <Button type="button" onClick={handleCopy} className={cn(ACCENT_BUTTON_CLASS, 'shrink-0 gap-2')}>
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}
+            </Button>
+          </div>
+        </SubscriptionSubPanel>
+      </SubscriptionSection>
     </div>
   )
 }

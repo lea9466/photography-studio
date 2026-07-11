@@ -15,9 +15,14 @@ import { HelpTooltip } from '@/components/ui/help-tooltip'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { SITE_SETTINGS_HELP, THEME_HELP, THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
-import { Building2, ExternalLink, Globe, Loader2, Palette, Trash2, Upload } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Loader2, MessageCircle, Palette, Trash2, Upload, User } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const HERO_SLOT_COUNT = 3
+const INPUT_CLASS =
+  'border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] shadow-sm transition-[border-color,box-shadow,background-color] focus-visible:border-[#7D3A52]/25 focus-visible:bg-[#7D3A52]/[0.07] focus-visible:ring-2 focus-visible:ring-[#7D3A52]/10'
+const UPLOAD_ZONE_CLASS =
+  'relative cursor-pointer overflow-hidden rounded-xl border border-[--border]/80 bg-white/50 transition-all hover:border-[#7D3A52]/35 hover:shadow-sm hover:shadow-[#7D3A52]/5'
 
 type BrandingUploadType =
   | 'logo'
@@ -26,8 +31,6 @@ type BrandingUploadType =
   | 'about'
   | 'contact_desktop'
   | 'contact_mobile'
-  | 'packages_desktop'
-  | 'packages_mobile'
 
 function uploadTargetKey(type: BrandingUploadType, slot?: number) {
   return slot !== undefined ? `${type}:${slot}` : type
@@ -83,8 +86,6 @@ type ProfileFormProps = {
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
-    packages_desktop_url: string | null
-    packages_mobile_url: string | null
     email: string | null
     slug: string | null
     should_color_logo: boolean
@@ -106,17 +107,91 @@ function SectionHeader({
   title,
   help,
   where,
+  index,
 }: {
   icon: typeof Building2
   title: string
   help: string
   where?: string
+  index?: number
 }) {
   return (
-    <div className="flex items-center gap-2 border-b border-[--border] pb-2">
-      <Icon className="h-6 w-6 text-[--foreground]" />
-      <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
-      <HelpTooltip content={help} where={where} />
+    <div className="space-y-3 border-b border-[#7D3A52]/10 pb-5">
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {index !== undefined ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
+                {index}
+              </span>
+            ) : null}
+            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <HelpTooltip content={help} where={where} />
+          </div>
+          {where ? (
+            <p className="text-xs leading-relaxed text-[--muted]">{where}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SettingsSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        className
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
+        aria-hidden
+      />
+      {children}
+    </section>
+  )
+}
+
+function SettingsSubPanel({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function SettingsFieldGroup({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn('grid grid-cols-1 gap-x-7 gap-y-6 md:grid-cols-2', className)}>
+      {children}
     </div>
   )
 }
@@ -149,8 +224,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
   const [contactDesktopUrl, setContactDesktopUrl] = useState(profile?.contact_desktop_url ?? '')
   const [contactMobileUrl, setContactMobileUrl] = useState(profile?.contact_mobile_url ?? '')
-  const [packagesDesktopUrl, setPackagesDesktopUrl] = useState(profile?.packages_desktop_url ?? '')
-  const [packagesMobileUrl, setPackagesMobileUrl] = useState(profile?.packages_mobile_url ?? '')
   const [email, setEmail] = useState(profile?.email ?? '')
   const [address, setAddress] = useState(profile?.address ?? '')
   const [phone, setPhone] = useState(profile?.phone ?? '')
@@ -203,7 +276,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
   async function handleFileUpload(
     e: React.ChangeEvent<HTMLInputElement>,
-    type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile' | 'packages_desktop' | 'packages_mobile',
+    type: 'logo' | 'hero_desktop' | 'hero_mobile' | 'about' | 'contact_desktop' | 'contact_mobile',
     slot?: number
   ) {
     const file = e.target.files?.[0]
@@ -246,8 +319,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         if (type === 'about') setAboutImageUrl(storedPath)
         if (type === 'contact_desktop') setContactDesktopUrl(storedPath)
         if (type === 'contact_mobile') setContactMobileUrl(storedPath)
-        if (type === 'packages_desktop') setPackagesDesktopUrl(storedPath)
-        if (type === 'packages_mobile') setPackagesMobileUrl(storedPath)
         setPreviewVersions((prev) => ({ ...prev, [targetKey]: Date.now() }))
         toast.success('התמונה הועלתה בהצלחה')
       }
@@ -300,8 +371,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       if (type === 'about') setAboutImageUrl('')
       if (type === 'contact_desktop') setContactDesktopUrl('')
       if (type === 'contact_mobile') setContactMobileUrl('')
-      if (type === 'packages_desktop') setPackagesDesktopUrl('')
-      if (type === 'packages_mobile') setPackagesMobileUrl('')
       toast.success('התמונה הוסרה')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
@@ -360,8 +429,6 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           about_image_url: extractPathFromUrl(aboutImageUrl) || undefined,
           contact_desktop_url: extractPathFromUrl(contactDesktopUrl) || undefined,
           contact_mobile_url: extractPathFromUrl(contactMobileUrl) || undefined,
-          packages_desktop_url: extractPathFromUrl(packagesDesktopUrl) || undefined,
-          packages_mobile_url: extractPathFromUrl(packagesMobileUrl) || undefined,
           email: email.trim() || null,
           phone: phone.trim() || null,
           address: address.trim() || null,
@@ -380,16 +447,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
 
 
   return (
-    <div className="space-y-10 pb-10 md:pb-24">
+    <div className="space-y-8 pb-12 md:space-y-10 md:pb-28">
       {/* Section 1: Business Details */}
-      <section className="space-y-6">
+      <SettingsSection>
         <SectionHeader
+          index={1}
           icon={Building2}
           title="פרטי העסק"
           help={SITE_SETTINGS_HELP.sections.business.content}
           where={SITE_SETTINGS_HELP.sections.business.where}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <SettingsFieldGroup>
           <div className="space-y-2">
             <LabelWithHelp
               htmlFor="studio-name"
@@ -402,7 +470,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="studio-name"
               value={studioName}
               onChange={(e) => setStudioName(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
             />
           </div>
           <div className="space-y-2" dir="ltr">
@@ -414,8 +482,15 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             >
               כתובת אתר (Slug)
             </LabelWithHelp>
-            <div className={`flex items-center bg-white dark:bg-zinc-900 rounded-lg overflow-hidden ${slugError ? 'border-red-500' : 'border-[--border]'}`}>
-              <span className="bg-[--border]/30 px-3 py-3 text-[--muted] text-sm border-r border-[--border]">gallery.studio/</span>
+            <div
+              className={cn(
+                'flex items-center overflow-hidden rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] shadow-sm transition-[border-color,box-shadow,background-color]',
+                slugError ? 'border-red-400' : 'focus-within:border-[#7D3A52]/25 focus-within:bg-[#7D3A52]/[0.07] focus-within:ring-2 focus-within:ring-[#7D3A52]/10'
+              )}
+            >
+              <span className="border-l border-[--border]/60 bg-[#7D3A52]/[0.04] px-3 py-3 text-sm text-[--muted]">
+                gallery.studio/
+              </span>
               <Input
                 id="slug"
                 value={slug}
@@ -424,7 +499,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   setSlug(value)
                   setSlugError(validateSlug(value))
                 }}
-                className={`flex-1 focus:ring-0 ${slugError ? 'border-red-500' : 'border-[--border]'}`}
+                className={cn('flex-1 border-0 bg-transparent focus-visible:ring-0', slugError && 'text-red-600')}
               />
             </div>
             {slugError && (
@@ -437,7 +512,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 href={previewPath}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-[--foreground]/70 hover:text-[--foreground] transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#7D3A52]/15 bg-[#7D3A52]/[0.05] px-3 py-1.5 text-sm text-[#7D3A52] transition-colors hover:bg-[#7D3A52]/10"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 צפייה באתר הציבורי
@@ -457,7 +532,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
             />
           </div>
           <div className="space-y-2">
@@ -474,7 +549,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="050-0000000"
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
               dir="ltr"
             />
           </div>
@@ -490,37 +565,40 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
             />
           </div>
-        </div>
-      </section>
+        </SettingsFieldGroup>
+      </SettingsSection>
 
       {/* Section 2: Website Content */}
-      <section className="space-y-6">
+      <SettingsSection>
         <SectionHeader
+          index={2}
           icon={Globe}
           title="תוכן האתר"
           help={SITE_SETTINGS_HELP.sections.content.content}
           where={SITE_SETTINGS_HELP.sections.content.where}
         />
-        <div className="space-y-8">
-          <div className="space-y-3">
-            <LabelWithHelp
-              help={SITE_SETTINGS_HELP.fields.heroDesktop.content}
-              where={SITE_SETTINGS_HELP.fields.heroDesktop.where}
-            >
-              תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
-            </LabelWithHelp>
-            <p className="text-sm text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-10">
+          <SettingsSubPanel>
+            <div className="space-y-2">
+              <LabelWithHelp
+                help={SITE_SETTINGS_HELP.fields.heroDesktop.content}
+                where={SITE_SETTINGS_HELP.fields.heroDesktop.where}
+              >
+                תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
+              </LabelWithHelp>
+              <p className="text-sm leading-relaxed text-[--muted]">התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade</p>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {heroDesktopUrls.map((url, slot) => {
                 const targetKey = uploadTargetKey('hero_desktop', slot)
                 const previewSrc = brandingPreviewSrc(targetKey, url)
                 return (
                 <div key={`hero-desktop-${slot}`} className="space-y-2">
                   <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
-                  <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
                     {previewSrc ? (
                       <BrandingPreviewImage
                         src={previewSrc}
@@ -559,23 +637,23 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 </div>
               )})}
             </div>
-          </div>
+          </SettingsSubPanel>
 
-          <div className="space-y-3">
+          <SettingsSubPanel>
             <LabelWithHelp
               help={SITE_SETTINGS_HELP.fields.heroMobile.content}
               where={SITE_SETTINGS_HELP.fields.heroMobile.where}
             >
               תמונות הירו (מובייל) — עד 3 תמונות מתחלפות
             </LabelWithHelp>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {heroMobileUrls.map((url, slot) => {
                 const targetKey = uploadTargetKey('hero_mobile', slot)
                 const previewSrc = brandingPreviewSrc(targetKey, url)
                 return (
                 <div key={`hero-mobile-${slot}`} className="space-y-2">
                   <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
-                  <div className="relative group aspect-[9/16] max-w-[180px] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-[9/16] max-w-[180px]')}>
                     {previewSrc ? (
                       <BrandingPreviewImage
                         src={previewSrc}
@@ -614,11 +692,10 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 </div>
               )})}
             </div>
-          </div>
+          </SettingsSubPanel>
 
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6 max-w-sm">
-          {/* About Section Image */}
-          <div className="space-y-3">
+          <SettingsSubPanel className="max-w-sm">
+            <div className="space-y-3">
             <LabelWithHelp
               htmlFor="about-image"
               help={SITE_SETTINGS_HELP.fields.aboutImage.content}
@@ -626,7 +703,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             >
               תמונת אודות
             </LabelWithHelp>
-            <div className="relative group aspect-square bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+            <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-square')}>
               {brandingPreviewSrc('about', aboutImageUrl) ? (
                 <BrandingPreviewImage
                   src={brandingPreviewSrc('about', aboutImageUrl)}
@@ -663,21 +740,22 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 className="absolute inset-0 opacity-0 cursor-pointer"
               />
             </div>
-          </div>
-        </div>
-        <div className="space-y-3 pt-2 border-t border-[--border]">
-          <div className="flex items-start gap-1.5">
-            <div>
-              <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
-              <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
             </div>
-            <HelpTooltip
-              content={SITE_SETTINGS_HELP.fields.contactBgDesktop.content}
-              where={SITE_SETTINGS_HELP.fields.contactBgDesktop.where}
-              className="mt-0.5"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </SettingsSubPanel>
+        <div className="space-y-3 border-t border-[#7D3A52]/10 pt-6">
+          <SettingsSubPanel>
+            <div className="flex items-start gap-1.5">
+              <div>
+                <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
+                <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+              </div>
+              <HelpTooltip
+                content={SITE_SETTINGS_HELP.fields.contactBgDesktop.content}
+                where={SITE_SETTINGS_HELP.fields.contactBgDesktop.where}
+                className="mt-0.5"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
               <LabelWithHelp
                 htmlFor="contact-desktop"
@@ -686,7 +764,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               >
                 רקע יצירת קשר (דסקטופ)
               </LabelWithHelp>
-              <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
+              <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
                 {brandingPreviewSrc('contact_desktop', contactDesktopUrl) ? (
                   <BrandingPreviewImage
                     src={brandingPreviewSrc('contact_desktop', contactDesktopUrl)}
@@ -732,7 +810,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               >
                 רקע יצירת קשר (מובייל)
               </LabelWithHelp>
-              <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
+              <div className={cn(UPLOAD_ZONE_CLASS, 'group mx-auto aspect-[9/16] max-w-[200px]')}>
                 {brandingPreviewSrc('contact_mobile', contactMobileUrl) ? (
                   <BrandingPreviewImage
                     src={brandingPreviewSrc('contact_mobile', contactMobileUrl)}
@@ -770,114 +848,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 />
               </div>
             </div>
-          </div>
-        </div>
-        <div className="space-y-3 pt-2 border-t border-[--border]">
-          <div className="flex items-start gap-1.5">
-            <div>
-              <h3 className="text-sm font-semibold text-[--foreground]">רקע חבילות צילום (דף הבית)</h3>
-              <p className="text-xs text-[--muted] mt-1">תמונת רקע לסקשן החבילות · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
             </div>
-            <HelpTooltip
-              content={SITE_SETTINGS_HELP.fields.packagesBgDesktop.content}
-              where={SITE_SETTINGS_HELP.fields.packagesBgDesktop.where}
-              className="mt-0.5"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <LabelWithHelp
-                htmlFor="packages-desktop"
-                help={SITE_SETTINGS_HELP.fields.packagesBgDesktop.content}
-                where={SITE_SETTINGS_HELP.fields.packagesBgDesktop.where}
-              >
-                רקע חבילות (דסקטופ)
-              </LabelWithHelp>
-              <div className="relative group aspect-video bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] cursor-pointer transition-all hover:border-[--foreground]">
-                {brandingPreviewSrc('packages_desktop', packagesDesktopUrl) ? (
-                  <BrandingPreviewImage
-                    src={brandingPreviewSrc('packages_desktop', packagesDesktopUrl)}
-                    cacheKey={previewVersions.packages_desktop}
-                    alt="Packages desktop background preview"
-                    className="object-cover pointer-events-none"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                    <Upload className="h-8 w-8" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <span className="text-white text-sm font-medium">החלף תמונה</span>
-                </div>
-                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_desktop'))} />
-                {packagesDesktopUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveBrandingImage('packages_desktop')}
-                    disabled={uploadingTargets.has(uploadTargetKey('packages_desktop'))}
-                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                    aria-label="הסר תמונה"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
-                <input
-                  id="packages-desktop"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => handleFileUpload(e, 'packages_desktop')}
-                  disabled={uploadingTargets.has(uploadTargetKey('packages_desktop'))}
-                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-                />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <LabelWithHelp
-                htmlFor="packages-mobile"
-                help={SITE_SETTINGS_HELP.fields.packagesBgMobile.content}
-                where={SITE_SETTINGS_HELP.fields.packagesBgMobile.where}
-              >
-                רקע חבילות (מובייל)
-              </LabelWithHelp>
-              <div className="relative group aspect-[9/16] bg-[--border]/30 rounded-xl overflow-hidden border border-[--border] max-w-[200px] mx-auto cursor-pointer transition-all hover:border-[--foreground]">
-                {brandingPreviewSrc('packages_mobile', packagesMobileUrl) ? (
-                  <BrandingPreviewImage
-                    src={brandingPreviewSrc('packages_mobile', packagesMobileUrl)}
-                    cacheKey={previewVersions.packages_mobile}
-                    alt="Packages mobile background preview"
-                    className="object-cover pointer-events-none"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                    <Upload className="h-8 w-8" />
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <span className="text-white text-sm font-medium">החלף תמונה</span>
-                </div>
-                <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_mobile'))} />
-                {packagesMobileUrl ? (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveBrandingImage('packages_mobile')}
-                    disabled={uploadingTargets.has(uploadTargetKey('packages_mobile'))}
-                    className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                    aria-label="הסר תמונה"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
-                <input
-                  id="packages-mobile"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => handleFileUpload(e, 'packages_mobile')}
-                  disabled={uploadingTargets.has(uploadTargetKey('packages_mobile'))}
-                  className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
+          </SettingsSubPanel>
         </div>
         <div className="space-y-2 pt-4">
           <LabelWithHelp
@@ -892,23 +864,24 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             value={aboutText}
             onChange={(e) => setAboutText(e.target.value)}
             rows={4}
-            className="bg-white dark:bg-zinc-900 border-[--border] resize-none"
+            className={cn(INPUT_CLASS, 'resize-none')}
             placeholder="ספרי על עצמך ועל הסטודיו שלך..."
           />
         </div>
         </div>
-      </section>
+      </SettingsSection>
 
       {/* Section 3: Branding & Design */}
-      <section className="space-y-6">
+      <SettingsSection>
         <SectionHeader
+          index={3}
           icon={Palette}
           title="מיתוג ועיצוב"
           help={SITE_SETTINGS_HELP.sections.branding.content}
           where={SITE_SETTINGS_HELP.sections.branding.where}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div className="space-y-6">
             <div className="space-y-2">
               <LabelWithHelp
                 htmlFor="name"
@@ -921,7 +894,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-white dark:bg-zinc-900 border-[--border]"
+                className={INPUT_CLASS}
               />
             </div>
             <div className="space-y-2">
@@ -932,7 +905,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               >
                 צבע מותג ראשי
               </LabelWithHelp>
-              <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border-[--border] rounded-lg px-4 py-2">
+              <div className="flex items-center gap-3 rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] px-4 py-2.5 shadow-sm">
                 <Input
                   id="accent"
                   type="color"
@@ -1026,7 +999,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
             >
               לוגו סטודיו
             </LabelWithHelp>
-            <div className="relative h-full min-h-[160px] flex flex-col items-center justify-center bg-white dark:bg-zinc-900 border-2 border-dashed border-[--border] hover:border-[--foreground] transition-colors cursor-pointer group overflow-hidden">
+            <div className={cn(UPLOAD_ZONE_CLASS, 'group flex h-full min-h-[200px] flex-col items-center justify-center border-2 border-dashed')}>
               <div className="p-6 text-center">
                 {brandingPreviewSrc('logo', logoUrl) ? (
                   <div className="relative h-20 w-20 mb-2 mx-auto">
@@ -1069,33 +1042,32 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         </div>
         {/* Logo Coloring Toggle */}
-        <div className="space-y-3 pt-4">
-          <div className="flex items-center justify-between">
-            <LabelWithHelp
-              htmlFor="should-color-logo"
-              help={SITE_SETTINGS_HELP.fields.shouldColorLogo.content}
-              where={SITE_SETTINGS_HELP.fields.shouldColorLogo.where}
-            >
-              צביעת הלוגו בצבע המותג שלי
-            </LabelWithHelp>
-            <Switch
-              id="should-color-logo"
-              checked={shouldColorLogo}
-              onCheckedChange={setShouldColorLogo}
-            />
-          </div>
-        </div>
-      </section>
+        <SettingsSubPanel className="flex flex-row items-center justify-between gap-4 space-y-0">
+          <LabelWithHelp
+            htmlFor="should-color-logo"
+            help={SITE_SETTINGS_HELP.fields.shouldColorLogo.content}
+            where={SITE_SETTINGS_HELP.fields.shouldColorLogo.where}
+          >
+            צביעת הלוגו בצבע המותג שלי
+          </LabelWithHelp>
+          <Switch
+            id="should-color-logo"
+            checked={shouldColorLogo}
+            onCheckedChange={setShouldColorLogo}
+          />
+        </SettingsSubPanel>
+      </SettingsSection>
 
       {/* Section 4: About Me Settings */}
-      <section className="space-y-6">
+      <SettingsSection>
         <SectionHeader
-          icon={Globe}
+          index={4}
+          icon={User}
           title="הגדרות אודותי"
           help={SITE_SETTINGS_HELP.sections.about.content}
           where={SITE_SETTINGS_HELP.sections.about.where}
         />
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="space-y-2">
             <LabelWithHelp
               htmlFor="about-title"
@@ -1108,7 +1080,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="about-title"
               value={aboutTitle}
               onChange={(e) => setAboutTitle(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
               placeholder="לדוגמה: צלמת מקצועית"
             />
           </div>
@@ -1124,7 +1096,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="about-subtitle"
               value={aboutSubtitle}
               onChange={(e) => setAboutSubtitle(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
               placeholder="לדוגמה: מתמחה בצילום פורטרטים"
             />
           </div>
@@ -1141,18 +1113,18 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               value={aboutDescription}
               onChange={(e) => setAboutDescription(e.target.value)}
               rows={6}
-              className="bg-white dark:bg-zinc-900 border-[--border] resize-y"
+              className={cn(INPUT_CLASS, 'resize-y')}
               placeholder="ספרי על עצמך ועל הסטודיו שלך..."
             />
           </div>
-          <div className="space-y-3 pt-2 border-t border-[--border]">
+          <SettingsSubPanel>
             <LabelWithHelp
               help={SITE_SETTINGS_HELP.fields.stats.content}
               where={SITE_SETTINGS_HELP.fields.stats.where}
             >
               נתונים לתצוגה באתר
             </LabelWithHelp>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               <div className="space-y-2">
                 <LabelWithHelp
                   htmlFor="stat-clients"
@@ -1167,7 +1139,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   min={0}
                   value={statClients}
                   onChange={(e) => setStatClients(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                  className={INPUT_CLASS}
                 />
               </div>
               <div className="space-y-2">
@@ -1184,7 +1156,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   min={0}
                   value={statProjects}
                   onChange={(e) => setStatProjects(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                  className={INPUT_CLASS}
                 />
               </div>
               <div className="space-y-2">
@@ -1203,23 +1175,24 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                   onChange={(e) =>
                     setStatExperienceYears(Math.max(0, parseInt(e.target.value, 10) || 0))
                   }
-                  className="bg-white dark:bg-zinc-900 border-[--border]"
+                  className={INPUT_CLASS}
                 />
               </div>
             </div>
-          </div>
+          </SettingsSubPanel>
         </div>
-      </section>
+      </SettingsSection>
 
       {/* Section 5: Gallery Contact Card Settings */}
-      <section className="space-y-6">
+      <SettingsSection>
         <SectionHeader
-          icon={Palette}
+          index={5}
+          icon={MessageCircle}
           title="הגדרות כרטיס יצירת קשר בגלריה"
           help={SITE_SETTINGS_HELP.sections.contactCard.content}
           where={SITE_SETTINGS_HELP.sections.contactCard.where}
         />
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="space-y-2">
             <LabelWithHelp
               htmlFor="contact-card-title"
@@ -1232,7 +1205,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               id="contact-card-title"
               value={contactCardTitle}
               onChange={(e) => setContactCardTitle(e.target.value)}
-              className="bg-white dark:bg-zinc-900 border-[--border]"
+              className={INPUT_CLASS}
               placeholder="לדוגמה: תיאום צילום"
             />
           </div>
@@ -1249,22 +1222,24 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               value={contactCardDescription}
               onChange={(e) => setContactCardDescription(e.target.value)}
               rows={4}
-              className="bg-white dark:bg-zinc-900 border-[--border] resize-y"
+              className={cn(INPUT_CLASS, 'resize-y')}
               placeholder="לדוגמה: לתיאום צילום או שאלות, צרו קשר..."
             />
           </div>
         </div>
-      </section>
+      </SettingsSection>
 
-      <div className="fixed bottom-8 left-4 z-50 md:bottom-8 md:left-8">
-        <Button
-          onClick={handleSave}
-          disabled={isPending}
-          size="lg"
-          className="min-w-[168px] bg-[#7D3A52] px-8 font-semibold text-white shadow-lg shadow-[#7D3A52]/35 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40"
-        >
-          {isPending ? 'שומר...' : 'שמור שינויים'}
-        </Button>
+      <div className="fixed bottom-6 left-4 z-50 md:bottom-8 md:left-8">
+        <div className="rounded-2xl border border-[#7D3A52]/15 bg-white/95 p-1.5 shadow-xl shadow-[#7D3A52]/10 backdrop-blur-md">
+          <Button
+            onClick={handleSave}
+            disabled={isPending}
+            size="lg"
+            className="min-w-[180px] bg-[#7D3A52] px-8 font-semibold text-white shadow-md shadow-[#7D3A52]/30 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40"
+          >
+            {isPending ? 'שומר...' : 'שמור שינויים'}
+          </Button>
+        </div>
       </div>
     </div>
   )

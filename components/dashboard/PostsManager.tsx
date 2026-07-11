@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { FileText, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileText, Heading, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createPost,
@@ -14,7 +14,6 @@ import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { PostPhotosSection } from '@/components/dashboard/PostPhotosSection'
 import { resolveWatermarkText } from '@/lib/images/process'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -27,6 +26,89 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
+
+const INPUT_CLASS =
+  'border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] shadow-sm transition-[border-color,box-shadow,background-color] focus-visible:border-[#7D3A52]/25 focus-visible:bg-[#7D3A52]/[0.07] focus-visible:ring-2 focus-visible:ring-[#7D3A52]/10'
+const ACCENT_BUTTON_CLASS =
+  'bg-[#7D3A52] text-white shadow-md shadow-[#7D3A52]/25 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40'
+
+function PostsSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        className
+      )}
+    >
+      <div
+        className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
+        aria-hidden
+      />
+      {children}
+    </section>
+  )
+}
+
+function PostsSubPanel({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function PostsSectionHeader({
+  icon: Icon,
+  title,
+  description,
+  index,
+}: {
+  icon: typeof FileText
+  title: string
+  description?: string
+  index?: number
+}) {
+  return (
+    <div className="space-y-3 border-b border-[#7D3A52]/10 pb-5">
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {index !== undefined ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
+                {index}
+              </span>
+            ) : null}
+            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+          </div>
+          {description ? (
+            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 type PostsManagerProps = {
   initialPosts: PostWithPhotos[]
@@ -226,14 +308,14 @@ export function PostsManager({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4 rounded-xl border border-[--border] bg-[--dashboard-surface] p-4">
-        <div>
-          <h2 className="text-base font-semibold text-[--foreground]">כותרת עמוד הבלוג</h2>
-          <p className="mt-1 text-sm text-[--muted]">
-            הכותרת מוצגת בראש עמוד הבלוג הציבורי. אם השדה ריק, תוצג ברירת המחדל של ערכת העיצוב.
-          </p>
-        </div>
+    <div className="space-y-8 md:space-y-10">
+      <PostsSection>
+        <PostsSectionHeader
+          index={1}
+          icon={Heading}
+          title="כותרת עמוד הבלוג"
+          description="הכותרת מוצגת בראש עמוד הבלוג הציבורי. אם השדה ריק, תוצג ברירת המחדל של ערכת העיצוב."
+        />
         <div className="space-y-2">
           <Label htmlFor="posts-page-title">כותרת</Label>
           <Input
@@ -241,6 +323,7 @@ export function PostsManager({
             value={pageTitle}
             onChange={(e) => setPageTitle(e.target.value)}
             placeholder={pageTitlePlaceholder}
+            className={INPUT_CLASS}
           />
         </div>
         <div className="flex justify-end">
@@ -249,75 +332,88 @@ export function PostsManager({
             variant="outline"
             onClick={handlePageTitleSave}
             disabled={isTitlePending}
+            className="border-[#7D3A52]/20 text-[#7D3A52] hover:bg-[#7D3A52]/5"
           >
             {isTitlePending ? 'שומר...' : 'שמור כותרת'}
           </Button>
         </div>
-      </div>
+      </PostsSection>
 
-      <div className="flex justify-end">
-        <Button type="button" onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 ml-1" />
-          פוסט חדש
-        </Button>
-      </div>
+      <PostsSection>
+        <PostsSectionHeader
+          index={2}
+          icon={FileText}
+          title="הפוסטים שלי"
+          description="צרי, ערכי ונהלי את הפוסטים שמוצגים בבלוג ובדף הבית."
+        />
 
-      {posts.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-          <FileText className="h-10 w-10 text-[--muted]" />
-          <p className="text-sm text-[--muted]">עדיין אין פוסטים. צרי את הפוסט הראשון שלך.</p>
-          <Button type="button" onClick={openCreateDialog}>
+        <div className="flex justify-end">
+          <Button type="button" onClick={openCreateDialog} className={ACCENT_BUTTON_CLASS}>
             <Plus className="h-4 w-4 ml-1" />
             פוסט חדש
           </Button>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {posts.map((post) => (
-            <Card key={post.id} className="p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-[--foreground]">{post.title}</h3>
-                  {post.subtitle && (
-                    <p className="mt-0.5 text-sm text-[--muted]">{post.subtitle}</p>
-                  )}
-                  <p className="mt-2 line-clamp-2 text-sm text-[--foreground]/80">
-                    {post.content}
-                  </p>
-                  <p className="mt-2 text-xs text-[--muted]">
-                    {formatDate(post.created_at)} · {post.post_photos.length} תמונות
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(post)}
-                  >
-                    <Pencil className="h-4 w-4 ml-1" />
-                    עריכה
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600"
-                    onClick={() => handleDelete(post.id)}
-                    disabled={isPending}
-                  >
-                    <Trash2 className="h-4 w-4 ml-1" />
-                    מחק
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
         </div>
-      )}
+
+        {posts.length === 0 ? (
+          <PostsSubPanel className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52]">
+              <FileText className="h-7 w-7" />
+            </div>
+            <p className="text-sm text-[--muted]">עדיין אין פוסטים. צרי את הפוסט הראשון שלך.</p>
+            <Button type="button" onClick={openCreateDialog} className={ACCENT_BUTTON_CLASS}>
+              <Plus className="h-4 w-4 ml-1" />
+              פוסט חדש
+            </Button>
+          </PostsSubPanel>
+        ) : (
+          <div className="space-y-4">
+            {posts.map((post) => (
+              <PostsSubPanel key={post.id} className="transition-colors hover:border-[#7D3A52]/20">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <h3 className="font-semibold text-[--foreground]">{post.title}</h3>
+                    {post.subtitle ? (
+                      <p className="text-sm text-[--muted]">{post.subtitle}</p>
+                    ) : null}
+                    <p className="line-clamp-2 text-sm leading-relaxed text-[--foreground]/80">
+                      {post.content}
+                    </p>
+                    <p className="text-xs text-[--muted]">
+                      {formatDate(post.created_at)} · {post.post_photos.length} תמונות
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(post)}
+                      className="border-[#7D3A52]/15 hover:bg-[#7D3A52]/5"
+                    >
+                      <Pencil className="h-4 w-4 ml-1" />
+                      עריכה
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() => handleDelete(post.id)}
+                      disabled={isPending}
+                    >
+                      <Trash2 className="h-4 w-4 ml-1" />
+                      מחק
+                    </Button>
+                  </div>
+                </div>
+              </PostsSubPanel>
+            ))}
+          </div>
+        )}
+      </PostsSection>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-[--border]/80">
           <DialogHeader>
             <DialogTitle>{editingId ? 'עריכת פוסט' : 'פוסט חדש'}</DialogTitle>
             <DialogDescription>
@@ -327,7 +423,7 @@ export function PostsManager({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
+          <div className="space-y-5 py-2">
             <div className="space-y-2">
               <Label htmlFor="post-title">כותרת *</Label>
               <Input
@@ -335,6 +431,7 @@ export function PostsManager({
                 value={form.title}
                 onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
                 placeholder="כותרת הפוסט"
+                className={INPUT_CLASS}
               />
             </div>
 
@@ -345,6 +442,7 @@ export function PostsManager({
                 value={form.subtitle}
                 onChange={(e) => setForm((current) => ({ ...current, subtitle: e.target.value }))}
                 placeholder="אופציונלי"
+                className={INPUT_CLASS}
               />
             </div>
 
@@ -356,10 +454,11 @@ export function PostsManager({
                 onChange={(e) => setForm((current) => ({ ...current, content: e.target.value }))}
                 placeholder="טקסט הפוסט"
                 rows={6}
+                className={cn(INPUT_CLASS, 'resize-y')}
               />
             </div>
 
-            <div className="space-y-3 rounded-xl border border-[--border] bg-[--background] p-4">
+            <PostsSubPanel className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Label>הטבע סימן מים על תמונות</Label>
@@ -374,7 +473,7 @@ export function PostsManager({
                   }
                 />
               </div>
-              {form.autoApplyWatermark && (
+              {form.autoApplyWatermark ? (
                 <div className="space-y-2">
                   <Label htmlFor="post-watermark">טקסט סימן המים</Label>
                   <Input
@@ -388,15 +487,16 @@ export function PostsManager({
                         ? `ברירת מחדל: ${studioName}`
                         : 'למשל: © שם הסטודיו'
                     }
+                    className={INPUT_CLASS}
                   />
                   <p className="text-xs text-[--muted]">
                     אם השדה ריק, יוצג שם הסטודיו שלך
                   </p>
                 </div>
-              )}
-            </div>
+              ) : null}
+            </PostsSubPanel>
 
-            {activePostId && activePost && (
+            {activePostId && activePost ? (
               <PostPhotosSection
                 postId={activePostId}
                 userId={userId}
@@ -406,14 +506,19 @@ export function PostsManager({
                 coverPhotoId={activePost.cover_photo_id}
                 signedUrls={signedUrls}
               />
-            )}
+            ) : null}
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={closeDialog}>
               {activePostId ? 'סגור' : 'ביטול'}
             </Button>
-            <Button type="button" onClick={handleSubmit} disabled={isPending}>
+            <Button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isPending}
+              className={ACCENT_BUTTON_CLASS}
+            >
               {isPending ? 'שומר...' : activePostId ? 'שמור שינויים' : 'שמור והמשך'}
             </Button>
           </DialogFooter>

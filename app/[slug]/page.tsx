@@ -14,9 +14,8 @@ import {
   buildPublicOpenGraph,
   resolveGalleryCoverCardPath,
   resolvePhotographerShareImage,
-  toAbsoluteMediaUrl,
 } from '@/lib/seo/public-metadata'
-import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
+import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import Script from 'next/script'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
@@ -405,7 +404,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const canonicalPath =
       getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
-    const logoIconUrl = toAbsoluteMediaUrl(getBrandingPreviewUrl(typedPhotographer.logo_url))
+    const logoIconUrl =
+      getBrandingFaviconPublicUrl(typedPhotographer.id, typedPhotographer.logo_url) ??
+      getBrandingPublicMediaUrl(typedPhotographer.logo_url)
     const description = buildPhotographerDescription({
       studioName,
       aboutText: typedPhotographer.about_text,
