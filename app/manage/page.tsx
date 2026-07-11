@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
+const pageShellClass =
+  'min-h-screen bg-slate-100/90 bg-[radial-gradient(ellipse_at_top,_rgba(148,163,184,0.18),_transparent_55%)]'
+
 export default async function ManagePage() {
   const authenticated = await isAdminAuthenticated()
   const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000').replace(
@@ -18,7 +21,7 @@ export default async function ManagePage() {
 
   if (!authenticated) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[--background] p-6">
+      <main className={`${pageShellClass} flex items-center justify-center px-4 py-8`}>
         <AdminLoginForm />
       </main>
     )
@@ -36,23 +39,27 @@ export default async function ManagePage() {
 
   if (loadError) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[--background] p-6">
-        <div className="max-w-md rounded-xl border border-[--border] bg-[--card] p-6 text-center">
-          <h1 className="text-lg font-semibold">שגיאה בטעינת הנתונים</h1>
-          <p className="mt-2 text-sm text-[--muted-foreground]">{loadError}</p>
-          <a
-            href="/manage"
-            className="mt-4 inline-flex rounded-md bg-[--primary] px-4 py-2 text-sm text-[--primary-foreground]"
-          >
-            נסי שוב
-          </a>
+      <main className={`${pageShellClass} flex items-center justify-center px-4 py-8`}>
+        <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200/80 bg-white text-center shadow-md">
+          <div className="bg-slate-800 px-6 py-4">
+            <h1 className="text-lg font-semibold text-white">שגיאה בטעינת הנתונים</h1>
+          </div>
+          <div className="bg-slate-50/70 p-6">
+            <p className="text-sm text-slate-600">{loadError}</p>
+            <a
+              href="/manage"
+              className="mt-4 inline-flex rounded-xl border border-sky-300 bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600"
+            >
+              נסי שוב
+            </a>
+          </div>
         </div>
       </main>
     )
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[--card] via-[--background] to-[--background] px-4 py-8 sm:px-6">
+    <main className={`${pageShellClass} px-4 py-8 sm:px-6`}>
       <div className="mx-auto flex max-w-7xl justify-center">
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>

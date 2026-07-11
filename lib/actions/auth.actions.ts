@@ -15,8 +15,6 @@ import {
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
 import { applyReferralOnSignup } from '@/lib/referral/referral'
-import { recordDashboardLogin } from '@/lib/auth/record-dashboard-login'
-import { randomBytes } from 'node:crypto'
 
 export type AuthActionState = {
   error?: string
@@ -189,7 +187,6 @@ export async function signIn(
 
   try {
     await ensureUserProfile(data.user)
-    await recordDashboardLogin(data.user.id)
   } catch (profileError) {
     return {
       error:
@@ -283,7 +280,6 @@ export async function signUp(
       studio_name: studioName || null,
     })
     await maybeSendWelcomeEmail(user, name)
-    await recordDashboardLogin(user.id)
   } catch (profileError) {
     return {
       error:

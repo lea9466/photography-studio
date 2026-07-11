@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { ensureUserProfile, maybeSendWelcomeEmail } from '@/lib/actions/auth.actions'
-import { recordDashboardLogin } from '@/lib/auth/record-dashboard-login'
 import { NextResponse } from 'next/server'
 
 import {
@@ -32,7 +31,6 @@ export async function GET(request: Request) {
       try {
         await ensureUserProfile(data.user)
         await maybeSendWelcomeEmail(data.user)
-        await recordDashboardLogin(data.user.id)
       } catch (profileError) {
         console.error('[auth/callback] ensureUserProfile failed', profileError)
         return NextResponse.redirect(`${origin}/login?error=auth`)

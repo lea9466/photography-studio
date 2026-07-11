@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { ImageIcon, Mail, Upload, X } from 'lucide-react'
+import { ImageIcon, Mail, Send, Upload, Users, X } from 'lucide-react'
 
 export function AdminBroadcastForm() {
   const [isPending, startTransition] = useTransition()
@@ -106,22 +106,34 @@ export function AdminBroadcastForm() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" />
-          שליחת מייל לכל הלקוחות
-        </CardTitle>
-        <CardDescription>
-          {recipientCount === null
-            ? 'טוען נמענים...'
-            : `המייל יישלח ל-${recipientCount} לקוחות עם כתובת מייל`}
-        </CardDescription>
+    <Card className="overflow-hidden border-slate-200/80 shadow-md">
+      <CardHeader className="border-b border-slate-200/80 bg-gradient-to-l from-rose-50 via-white to-white">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                <Mail className="h-4 w-4" />
+              </span>
+              שליחת מייל לכל הלקוחות
+            </CardTitle>
+            <CardDescription className="mt-2 text-slate-600">
+              {recipientCount === null
+                ? 'טוען נמענים...'
+                : `המייל יישלח ל-${recipientCount} לקוחות עם כתובת מייל`}
+            </CardDescription>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-800">
+            <Users className="h-3.5 w-3.5" />
+            {recipientCount ?? 0} נמענים
+          </span>
+        </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="broadcast-subject">נושא</Label>
+      <CardContent className="bg-slate-50/60 p-4 sm:p-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-rose-400 bg-white p-4 shadow-sm">
+            <Label htmlFor="broadcast-subject" className="text-slate-700">
+              נושא
+            </Label>
             <Input
               id="broadcast-subject"
               value={subject}
@@ -129,11 +141,14 @@ export function AdminBroadcastForm() {
               placeholder="לדוגמה: עדכון חשוב מהמערכת"
               required
               disabled={isPending || uploadingImage}
+              className="mt-2 border-slate-200 bg-slate-50 focus-visible:ring-rose-300"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="broadcast-message">תוכן המייל</Label>
+          <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-violet-400 bg-white p-4 shadow-sm">
+            <Label htmlFor="broadcast-message" className="text-slate-700">
+              תוכן המייל
+            </Label>
             <Textarea
               id="broadcast-message"
               value={message}
@@ -142,17 +157,15 @@ export function AdminBroadcastForm() {
               placeholder="כתבי את תוכן ההודעה..."
               required
               disabled={isPending || uploadingImage}
-              className="resize-y min-h-[140px]"
+              className="mt-2 min-h-[140px] resize-y border-slate-200 bg-slate-50 focus-visible:ring-violet-300"
             />
           </div>
 
-          <div className="space-y-3 rounded-xl border border-[--border] bg-[--card] px-4 py-4">
+          <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-sky-400 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Label>תמונה (אופציונלי)</Label>
-                <p className="mt-1 text-xs text-[--muted]">
-                  התמונה תוצג בתוך גוף המייל
-                </p>
+                <Label className="text-slate-700">תמונה (אופציונלי)</Label>
+                <p className="mt-1 text-xs text-slate-500">התמונה תוצג בתוך גוף המייל</p>
               </div>
               {imageUrl ? (
                 <Button
@@ -161,6 +174,7 @@ export function AdminBroadcastForm() {
                   size="sm"
                   onClick={() => setImageUrl(null)}
                   disabled={uploadingImage || isPending}
+                  className="text-slate-600 hover:text-slate-900"
                 >
                   <X className="h-4 w-4" />
                   הסר
@@ -168,8 +182,8 @@ export function AdminBroadcastForm() {
               ) : null}
             </div>
 
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-[--border] bg-[--background]">
+            <div className="mt-4 flex flex-wrap items-end gap-4">
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-sky-200 bg-sky-50">
                 {imagePreviewSrc ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -178,7 +192,7 @@ export function AdminBroadcastForm() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-[--muted]">
+                  <div className="flex h-full w-full items-center justify-center text-sky-400">
                     <ImageIcon className="h-6 w-6" />
                   </div>
                 )}
@@ -189,6 +203,7 @@ export function AdminBroadcastForm() {
                 size="sm"
                 asChild
                 disabled={uploadingImage || isPending}
+                className="border-sky-200 bg-sky-50 text-sky-800 hover:bg-sky-100"
               >
                 <label className="cursor-pointer">
                   <Upload className="h-4 w-4" />
@@ -208,7 +223,9 @@ export function AdminBroadcastForm() {
           <Button
             type="submit"
             disabled={isPending || uploadingImage || recipientCount === 0}
+            className="h-11 rounded-xl border border-rose-300 bg-rose-500 px-6 text-white shadow-md shadow-rose-500/20 hover:bg-rose-600"
           >
+            <Send className="h-4 w-4" />
             {isPending ? 'שולח...' : `שליחה ל-${recipientCount ?? 0} לקוחות`}
           </Button>
         </form>

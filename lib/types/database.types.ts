@@ -71,8 +71,8 @@ export type Database = {
           show_referral_popup: boolean
           show_welcome_popup: boolean
           testimonial_layout_type: 'carousel' | 'marquee'
-          last_dashboard_login_at: string | null
-          dashboard_login_count: number
+          last_dashboard_visit_at: string | null
+          dashboard_visit_count: number
         }
         Insert: {
           id: string
@@ -119,8 +119,8 @@ export type Database = {
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
-          last_dashboard_login_at?: string | null
-          dashboard_login_count?: number
+          last_dashboard_visit_at?: string | null
+          dashboard_visit_count?: number
         }
         Update: {
           id?: string
@@ -167,8 +167,8 @@ export type Database = {
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
-          last_dashboard_login_at?: string | null
-          dashboard_login_count?: number
+          last_dashboard_visit_at?: string | null
+          dashboard_visit_count?: number
         }
         Relationships: []
       }
@@ -730,7 +730,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      record_dashboard_login: {
+      record_dashboard_visit: {
         Args: { p_user_id: string }
         Returns: undefined
       }

@@ -1,7 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 import type { Database } from '@/lib/types/database.types'
 import { fetchWithRetry } from '@/lib/supabase/fetch'
+import { recordDashboardVisit } from '@/lib/auth/record-dashboard-visit'
+import { shouldRecordDashboardVisit } from '@/lib/auth/should-record-dashboard-visit'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
@@ -17,7 +19,7 @@ import {
   getImpersonatedUserIdFromRequest,
 } from '@/lib/auth/impersonation-middleware'
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, event?: NextFetchEvent) {
   const pathname = request.nextUrl.pathname
 
   if (pathname === '/manage' || pathname.startsWith('/manage/')) {
@@ -147,6 +149,20 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/forgot-password'
     return NextResponse.redirect(url)
+  }
+
+  const isImpersonating = Boolean(impersonatedUserId) && manageAdminSession
+  if (
+    user &&
+    !isImpersonating &&
+    shouldRecordDashboardVisit(request, pathname)
+  ) {
+    const recordVisit = recordDashboardVisit(user.id)
+    if (event?.waitUntil) {
+      event.waitUntil(recordVisit)
+    } else {
+      void recordVisit
+    }
   }
 
   return supabaseResponse

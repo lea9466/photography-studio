@@ -8,8 +8,8 @@ export type AdminStudioRow = {
   studio_name: string | null
   slug: string | null
   created_at: string
-  last_dashboard_login_at: string | null
-  dashboard_login_count: number
+  last_dashboard_visit_at: string | null
+  dashboard_visit_count: number
   site_path: string | null
 }
 
@@ -54,7 +54,7 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const { data, error } = await admin
     .from('users')
     .select(
-      'id, email, name, studio_name, slug, created_at, last_dashboard_login_at, dashboard_login_count'
+      'id, email, name, studio_name, slug, created_at, last_dashboard_visit_at, dashboard_visit_count'
     )
     .order('created_at', { ascending: false })
 
@@ -73,13 +73,13 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
       studio_name: string | null
       slug: string | null
       created_at: string
-      last_dashboard_login_at: string | null
-      dashboard_login_count: number
+      last_dashboard_visit_at: string | null
+      dashboard_visit_count: number
     }
 
     return {
       ...studio,
-      dashboard_login_count: studio.dashboard_login_count ?? 0,
+      dashboard_visit_count: studio.dashboard_visit_count ?? 0,
       site_path: getPublicSitePath(studio.slug, studio.studio_name),
     }
   })
