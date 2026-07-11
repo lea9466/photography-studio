@@ -52,8 +52,8 @@ export default async function ManagePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[--background] p-6">
-      <div className="mx-auto flex max-w-6xl justify-center">
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[--card] via-[--background] to-[--background] px-4 py-8 sm:px-6">
+      <div className="mx-auto flex max-w-7xl justify-center">
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>
     </main>
