@@ -5,8 +5,10 @@ import { cn } from '@/lib/utils'
 import { SidebarNav } from './SidebarNav'
 import { MobileHeader } from './MobileHeader'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { AnnouncementBanner } from './AnnouncementBanner'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
 import { WelcomeModal } from './WelcomeModal'
+import type { Announcement } from '@/lib/announcements/types'
 
 type DashboardLayoutWrapperProps = {
   userName?: string
@@ -21,6 +23,7 @@ type DashboardLayoutWrapperProps = {
   accentColor?: string
   shouldColorLogo?: boolean
   isImpersonating?: boolean
+  announcement?: Announcement | null
 }
 
 export function DashboardLayoutWrapper({
@@ -36,6 +39,7 @@ export function DashboardLayoutWrapper({
   accentColor,
   shouldColorLogo,
   isImpersonating = false,
+  announcement = null,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -78,6 +82,10 @@ export function DashboardLayoutWrapper({
         isImpersonating ? 'pt-28 md:pt-16' : 'pt-20 md:pt-10',
         isSidebarCollapsed ? 'md:mr-16' : 'md:mr-72'
       )}>
+        <AnnouncementBanner
+          announcement={announcement}
+          accentColor={accentColor}
+        />
         {children}
       </main>
     </div>

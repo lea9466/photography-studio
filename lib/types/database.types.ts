@@ -177,6 +177,36 @@ export type Database = {
         }
         Relationships: []
       }
+      announcements: {
+        Row: {
+          id: string
+          title: string
+          content: string
+          icon: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          content: string
+          icon?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: string
+          icon?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           id: string
@@ -750,6 +780,7 @@ export type Database = {
 }
 
 export type User = Database['public']['Tables']['users']['Row']
+export type Announcement = Database['public']['Tables']['announcements']['Row']
 export type Client = Database['public']['Tables']['clients']['Row']
 export type Gallery = Database['public']['Tables']['galleries']['Row']
 export type Photo = Database['public']['Tables']['photos']['Row']

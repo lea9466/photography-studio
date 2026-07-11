@@ -22,6 +22,7 @@ import {
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
+import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -359,6 +360,8 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
           </div>
         </div>
       </div>
+
+      <AnnouncementManagerForm />
 
       <AdminBroadcastForm />
 

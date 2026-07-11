@@ -1,3 +1,5 @@
+import { normalizeAnnouncementIcon } from '@/lib/announcements/icons'
+import type { Announcement } from '@/lib/announcements/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
@@ -16,6 +18,26 @@ export type AdminStudioRow = {
 export type AdminBroadcastRecipient = {
   email: string
   name: string | null
+}
+
+export async function getLatestAnnouncementForAdmin(): Promise<Announcement | null> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('announcements')
+    .select('id, title, content, icon, is_active, created_at, updated_at')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!data) return null
+
+  const row = data as Announcement
+
+  return {
+    ...row,
+    icon: normalizeAnnouncementIcon(row.icon),
+  }
 }
 
 export async function getAdminBroadcastRecipients(): Promise<AdminBroadcastRecipient[]> {

@@ -2,15 +2,17 @@ import { signOut } from '@/lib/actions/auth.actions'
 import { getDashboardContext } from '@/lib/auth/dashboard-context'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
+import { getActiveAnnouncement } from '@/lib/queries/announcement'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [profile, context] = await Promise.all([
+  const [profile, context, announcement] = await Promise.all([
     getDashboardProfile(),
     getDashboardContext(),
+    getActiveAnnouncement(),
   ])
   const portfolioSlug = profile?.slug?.trim() || null
   const welcomePreviewUrl = portfolioSlug ? `/${portfolioSlug}` : null
@@ -28,6 +30,7 @@ export default async function DashboardLayout({
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
+      announcement={isImpersonating ? null : announcement}
       onSignOut={async () => {
         'use server'
         await signOut()

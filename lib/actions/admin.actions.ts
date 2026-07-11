@@ -6,7 +6,13 @@ import { deleteStudioCompletely } from '@/lib/admin/delete-studio'
 import {
   getAdminBroadcastRecipients,
   getAdminStudios,
+  getLatestAnnouncementForAdmin,
 } from '@/lib/admin/queries'
+import {
+  isAnnouncementIconKey,
+  normalizeAnnouncementIcon,
+} from '@/lib/announcements/icons'
+import type { Announcement } from '@/lib/announcements/types'
 import {
   clearAdminSession,
   clearPendingAdminOtp,
@@ -18,6 +24,7 @@ import {
   verifyPendingAdminOtp,
 } from '@/lib/admin/session'
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
@@ -137,6 +144,63 @@ export async function prepareAdminBroadcastImageUpload(input: {
     uploadUrl,
     storageRef: formatTestimonialImageRef('branding', path),
   }
+}
+
+export async function fetchLatestAnnouncementForAdmin(): Promise<Announcement | null> {
+  await requireAdmin()
+  return getLatestAnnouncementForAdmin()
+}
+
+export async function publishAnnouncement(input: {
+  title: string
+  content: string
+  icon: string
+  isActive: boolean
+}) {
+  await requireAdmin()
+
+  const title = input.title.trim()
+  const content = input.content.trim()
+  const icon = normalizeAnnouncementIcon(input.icon)
+  const isActive = input.isActive
+
+  if (!title) throw new Error('נא להזין כותרת')
+  if (!content) throw new Error('נא להזין תוכן')
+  if (!isAnnouncementIconKey(icon)) {
+    throw new Error('סוג אייקון לא תקין')
+  }
+
+  const admin = createAdminClient()
+
+  if (isActive) {
+    const { error: deactivateError } = await admin
+      .from('announcements')
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq('is_active', true)
+
+    if (deactivateError) throw new Error(deactivateError.message)
+  }
+
+  const { data, error } = await admin
+    .from('announcements')
+    .insert({
+      title,
+      content,
+      icon,
+      is_active: isActive,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id, title, content, icon, is_active, created_at, updated_at')
+    .single()
+
+  if (error || !data) {
+    throw new Error(error?.message || 'פרסום ההודעה נכשל')
+  }
+
+  revalidatePath('/manage')
+  revalidatePath('/dashboard')
+
+  return data as Announcement
 }
 
 export async function sendAdminBroadcast(input: {
