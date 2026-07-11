@@ -66,6 +66,52 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
 }
 
+export const HOMEPAGE_MORE_LINK_CSS = `
+.hp-posts-more {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 28px;
+}
+.hp-posts-more a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  border: none;
+  padding: 0;
+  background: none;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+.hp-posts-more a:hover { opacity: 0.75; }
+.hp-posts-more a:active { transform: scale(0.96); }
+.hp-posts-more a:hover .hp-posts-more-arrow { transform: translateX(-5px); }
+.hp-posts-more-arrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+`
+
+export function generateHomepageMoreLinkHTML(options: {
+  href: string
+  label: string
+  primaryColor: string
+  includeStyles?: boolean
+}): string {
+  const styles =
+    options.includeStyles === false ? '' : `<style>${HOMEPAGE_MORE_LINK_CSS}</style>`
+  return `${styles}
+<div class="hp-posts-more">
+  <a href="${escapeHtml(options.href)}" target="_parent" style="color:${options.primaryColor};">
+    ${escapeHtml(options.label)}
+    <span class="hp-posts-more-arrow" aria-hidden="true">←</span>
+  </a>
+</div>`
+}
+
 const HOMEPAGE_POSTS_CSS = `
 .hp-posts-section {
   width: 100%;
@@ -147,32 +193,7 @@ const HOMEPAGE_POSTS_CSS = `
   overflow: hidden;
   white-space: pre-line;
 }
-.hp-posts-more {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 28px;
-}
-.hp-posts-more a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  border: none;
-  padding: 0;
-  background: none;
-  transition: opacity 0.2s ease, transform 0.15s ease;
-}
-.hp-posts-more a:hover { opacity: 0.75; }
-.hp-posts-more a:active { transform: scale(0.96); }
-.hp-posts-more a:hover .hp-posts-more-arrow { transform: translateX(-5px); }
-.hp-posts-more-arrow {
-  display: inline-block;
-  font-size: 1.05em;
-  line-height: 1;
-  transition: transform 0.3s ease;
-}
+${HOMEPAGE_MORE_LINK_CSS}
 `
 
 function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string): string {
@@ -238,13 +259,12 @@ export function generateHomepagePostsSectionHTML(options: {
   })
 
   const moreLink = options.showAllLink
-    ? `
-<div class="hp-posts-more">
-  <a href="${escapeHtml(options.blogHref)}" target="_parent" style="color:${options.primaryColor};">
-    לכל הפוסטים
-    <span class="hp-posts-more-arrow" aria-hidden="true">←</span>
-  </a>
-</div>`
+    ? generateHomepageMoreLinkHTML({
+        href: options.blogHref,
+        label: 'לכל הפוסטים',
+        primaryColor: options.primaryColor,
+        includeStyles: false,
+      })
     : ''
 
   return `

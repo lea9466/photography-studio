@@ -1,4 +1,4 @@
-import type { GalleryStatus, GalleryType } from '@/lib/types/database.types'
+import type { GalleryStatus, GalleryType, GalleryLayoutMode } from '@/lib/types/database.types'
 
 /** MVP: all galleries display and behave as public */
 export const PUBLIC_ONLY_MVP = true
@@ -25,6 +25,11 @@ export const GALLERY_STATUS_LABELS: Record<GalleryStatus, string> = {
 export const GALLERY_TYPE_LABELS: Record<GalleryType, string> = {
   selection: 'בחירה',
   portfolio: 'תיק עבודות',
+}
+
+export const GALLERY_LAYOUT_MODE_LABELS: Record<GalleryLayoutMode, string> = {
+  separated: 'מצב מופרד',
+  portfolio: 'מצב תיק עבודות',
 }
 
 export type GalleryListItem = {

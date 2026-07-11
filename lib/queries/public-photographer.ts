@@ -35,6 +35,7 @@ export type PublicPhotographer = Pick<
   | 'testimonials_title'
   | 'posts_page_title'
   | 'testimonial_layout_type'
+  | 'gallery_layout_mode'
   | 'email'
   | 'faq_items'
   | 'should_color_logo'
@@ -73,6 +74,7 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   testimonials_title,
   posts_page_title,
   testimonial_layout_type,
+  gallery_layout_mode,
   email,
   faq_items,
   should_color_logo
@@ -112,8 +114,27 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('packages_mobile_url') ||
     message.includes('packages_title') ||
     message.includes('packages_subtitle') ||
-    message.includes('faq_items')
+    message.includes('faq_items') ||
+    message.includes('gallery_layout_mode')
   )
+}
+
+function stripPortfolioLayoutFields(fields: string) {
+  return fields
+    .split('\n')
+    .filter((line) => !line.includes('gallery_layout_mode'))
+    .join('\n')
+}
+
+function withDefaultGalleryLayoutMode(
+  photographer: Omit<PublicPhotographer, 'gallery_layout_mode'> & {
+    gallery_layout_mode?: PublicPhotographer['gallery_layout_mode']
+  }
+): PublicPhotographer {
+  return {
+    ...photographer,
+    gallery_layout_mode: photographer.gallery_layout_mode ?? 'separated',
+  }
 }
 
 function getMissingColumnMigrationHint(error: { message?: string }) {
@@ -131,6 +152,9 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   if (message.includes('contact_desktop_url') || message.includes('contact_mobile_url')) {
     return 'Run migration add_contact_background_images on Supabase.'
   }
+  if (message.includes('gallery_layout_mode')) {
+    return 'Run migration 20250711000001_add_portfolio_layout.sql on Supabase.'
+  }
 
   return 'Apply pending Supabase migrations (supabase db push).'
 }
@@ -143,11 +167,32 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
 
   const admin = createAdminClient()
 
-  const { data: bySlug, error: slugError } = await admin
-    .from('users')
-    .select(PHOTOGRAPHER_PUBLIC_FIELDS)
-    .eq('slug' satisfies keyof Database['public']['Tables']['users']['Row'], normalizedSlug)
-    .maybeSingle<PublicPhotographer>()
+  async function lookupBySlug(fields: string) {
+    return admin
+      .from('users')
+      .select(fields)
+      .eq('slug' satisfies keyof Database['public']['Tables']['users']['Row'], normalizedSlug)
+      .maybeSingle<PublicPhotographer>()
+  }
+
+  async function lookupByStudioName(fields: string) {
+    return admin
+      .from('users')
+      .select(fields)
+      .eq('studio_name', normalizedSlug)
+      .limit(1)
+      .returns<PublicPhotographer[]>()
+  }
+
+  let fields = PHOTOGRAPHER_PUBLIC_FIELDS
+  let legacyFields = false
+  let { data: bySlug, error: slugError } = await lookupBySlug(fields)
+
+  if (slugError && isMissingColumnError(slugError) && !legacyFields) {
+    legacyFields = true
+    fields = stripPortfolioLayoutFields(fields)
+    ;({ data: bySlug, error: slugError } = await lookupBySlug(fields))
+  }
 
   if (slugError) {
     if (slugError.code !== 'PGRST116') {
@@ -164,15 +209,16 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
       }
     }
   } else if (bySlug) {
-    return bySlug
+    return withDefaultGalleryLayoutMode(bySlug)
   }
 
-  const { data: byStudioName, error: studioError } = await admin
-    .from('users')
-    .select(PHOTOGRAPHER_PUBLIC_FIELDS)
-    .eq('studio_name', normalizedSlug)
-    .limit(1)
-    .returns<PublicPhotographer[]>()
+  let { data: byStudioName, error: studioError } = await lookupByStudioName(fields)
+
+  if (studioError && isMissingColumnError(studioError) && !legacyFields) {
+    legacyFields = true
+    fields = stripPortfolioLayoutFields(fields)
+    ;({ data: byStudioName, error: studioError } = await lookupByStudioName(fields))
+  }
 
   if (studioError) {
     console.error('[findPhotographerBySlug] studio_name lookup error:', formatDbError(studioError))
@@ -189,7 +235,8 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
     return null
   }
 
-  return byStudioName?.[0] ?? null
+  const match = byStudioName?.[0]
+  return match ? withDefaultGalleryLayoutMode(match) : null
 }
 
 export function getPublicSitePath(slug: string | null | undefined, studioName: string | null | undefined) {

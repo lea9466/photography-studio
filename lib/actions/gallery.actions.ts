@@ -616,3 +616,58 @@ export async function prepareGalleryCoverUpload(input: {
 
   return { uploadUrl, path }
 }
+
+export async function fetchGalleryLayoutMode() {
+  const context = await getDashboardContext()
+  if (!context) return 'separated' as const
+
+  const { userId, supabase } = context
+  const { data, error } = await supabase
+    .from('users')
+    .select('gallery_layout_mode')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? ''
+    if (
+      error.code === '42703' ||
+      error.code === 'PGRST204' ||
+      message.includes('gallery_layout_mode')
+    ) {
+      return 'separated'
+    }
+    throw new Error(error.message)
+  }
+
+  const mode = (data as { gallery_layout_mode: string } | null)?.gallery_layout_mode
+  return mode === 'portfolio' ? 'portfolio' : 'separated'
+}
+
+export async function updateGalleryLayoutMode(mode: 'separated' | 'portfolio') {
+  const { userId, supabase } = await requireDashboardContext()
+
+  const { error } = await supabase
+    .from('users')
+    .update({ gallery_layout_mode: mode } as never)
+    .eq('id', userId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/dashboard/galleries')
+  revalidatePath('/dashboard')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('slug')
+    .eq('id', userId)
+    .single()
+
+  const slug = (profile as { slug: string | null } | null)?.slug
+  if (slug) {
+    revalidatePath(`/${slug}`)
+    revalidatePath(`/${slug}/portfolio`)
+  }
+
+  return { success: true }
+}

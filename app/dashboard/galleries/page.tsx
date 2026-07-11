@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { fetchDashboardGalleries } from '@/lib/actions/dashboard.actions'
+import { fetchGalleryLayoutMode } from '@/lib/actions/gallery.actions'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
+import { GalleryLayoutModeSetting } from '@/components/dashboard/GalleryLayoutModeSetting'
 import { Button } from '@/components/ui/button'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
+import type { GalleryLayoutMode } from '@/lib/types/database.types'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
   MAX_PUBLIC_GALLERY_PHOTOS,
@@ -14,13 +17,18 @@ import {
 
 export default function GalleriesPage() {
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
+  const [layoutMode, setLayoutMode] = useState<GalleryLayoutMode>('separated')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const galleries = await fetchDashboardGalleries()
+        const [galleries, mode] = await Promise.all([
+          fetchDashboardGalleries(),
+          fetchGalleryLayoutMode(),
+        ])
         setRecentGalleries(galleries)
+        setLayoutMode(mode)
       } catch (error) {
         console.error('Failed to load galleries:', error)
       } finally {
@@ -77,6 +85,8 @@ export default function GalleriesPage() {
           </Button>
         )}
       </header>
+
+      <GalleryLayoutModeSetting key={layoutMode} initialMode={layoutMode} />
 
       {/* Galleries Table */}
       <RecentGalleriesTable galleries={recentGalleries} title="כל הגלריות" />

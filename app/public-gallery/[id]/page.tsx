@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveMediaUrl } from '@/lib/r2/storage'
-import { signStoragePaths } from '@/lib/storage'
+import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
-import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -75,64 +74,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const homepagePath = resolveHomepagePath(userData?.slug, userData?.studio_name)
   const logoUrl = userData?.logo_url ? await resolveMediaUrl('branding', userData.logo_url) : null
 
-  const { data: editedPhotos } = await admin
-    .from('edited_photos')
-    .select('photo_id, final_url')
-    .eq('gallery_id', galleryData.id)
-
-  type PublicGalleryPhotoRow = {
-    id: string
-    preview_url?: string | null
-    watermarked_preview_url?: string | null
-  }
-
-  let photosToDisplay: PublicGalleryPhotoRow[] = []
-  let bucket: 'previews' | 'edited' | 'watermarked' = 'watermarked'
-
-  if (!PUBLIC_ONLY_MVP && editedPhotos && editedPhotos.length > 0) {
-    photosToDisplay = editedPhotos.map((ep) => ({
-      id: ep.photo_id,
-      preview_url: ep.final_url,
-    }))
-    bucket = 'edited'
-  } else if (!PUBLIC_ONLY_MVP) {
-    const { data: legacyPhotos } = await admin
-      .from('photos')
-      .select('id, preview_url')
-      .eq('gallery_id', galleryData.id)
-      .eq('is_visible_to_client', true)
-      .order('sort_order')
-
-    photosToDisplay = (legacyPhotos ?? []) as { id: string; preview_url: string | null }[]
-    bucket = 'previews'
-  } else {
-    const { data: watermarkedPhotos } = await admin
-      .from('photos')
-      .select('id, watermarked_preview_url')
-      .eq('gallery_id', galleryData.id)
-      .eq('is_visible_to_client', true)
-      .order('sort_order')
-
-    photosToDisplay = (watermarkedPhotos ?? []) as PublicGalleryPhotoRow[]
-    bucket = 'watermarked'
-  }
-
-  const previewPaths = photosToDisplay.map((photo) =>
-    PUBLIC_ONLY_MVP
-      ? photo.watermarked_preview_url ?? null
-      : photo.preview_url ?? null
-  )
-  const signedUrls = await signStoragePaths(bucket, previewPaths, galleryData.id)
-
-  const photos = photosToDisplay.map((photo) => {
-    const path = PUBLIC_ONLY_MVP
-      ? photo.watermarked_preview_url ?? null
-      : photo.preview_url ?? null
-    return {
-      id: photo.id,
-      url: path ? signedUrls[path] ?? null : null,
-    }
-  })
+  const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id)
 
   const galleryDate = new Date(galleryData.created_at).toLocaleDateString('he-IL', {
     year: 'numeric',

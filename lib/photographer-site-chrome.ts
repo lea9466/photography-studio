@@ -16,6 +16,8 @@ export type SiteChromeConfig = {
   hasBlog?: boolean
   blogPath?: string
   shouldColorLogo?: boolean
+  galleryLayoutMode?: 'separated' | 'portfolio'
+  portfolioPath?: string
 }
 
 export function brandLastWord(text: string) {
@@ -78,6 +80,13 @@ function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
 
 function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'home') return cfg.homepagePath
+  if (
+    target === 'gallery' &&
+    cfg.galleryLayoutMode === 'portfolio' &&
+    cfg.portfolioPath
+  ) {
+    return cfg.portfolioPath
+  }
   const sectionId = navSectionId(cfg, target)
   if (cfg.linkMode === 'href') {
     return homepageSectionHref(cfg.homepagePath, sectionId)
@@ -91,6 +100,13 @@ function parentNavTarget(cfg: SiteChromeConfig) {
 
 function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string) {
   const close = closeMenu ? `; ${closeMenu}` : ''
+  if (
+    target === 'gallery' &&
+    cfg.galleryLayoutMode === 'portfolio' &&
+    cfg.portfolioPath
+  ) {
+    return `href="${cfg.portfolioPath}"`
+  }
   if (cfg.linkMode === 'href') {
     return `href="${navHref(cfg, target)}"`
   }
@@ -126,7 +142,8 @@ function navItems(
   const cls = `${className}${cursor}`
   const labels: Record<NavTarget, string> = {
     home: 'בית',
-    gallery: 'גלריות',
+    gallery:
+      cfg.galleryLayoutMode === 'portfolio' ? 'תיק עבודות' : 'גלריות',
     blog: 'בלוג',
     pricing: 'חבילות צילום',
     faq: 'שאלות נפוצות',
@@ -138,14 +155,19 @@ function navItems(
   if (cfg.hasFaq) targets.push('faq')
   targets.push('contact')
 
+  const useHrefForGallery =
+    cfg.galleryLayoutMode === 'portfolio' && Boolean(cfg.portfolioPath)
+
   return targets
     .map((target) => {
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
-        cfg.linkMode === 'href' && closeMenu ? ` onclick="${closeMenu}"` : ''
-      if (cfg.linkMode === 'href') {
+        (cfg.linkMode === 'href' || useHrefForGallery) && closeMenu
+          ? ` onclick="${closeMenu}"`
+          : ''
+      if (cfg.linkMode === 'href' || (target === 'gallery' && useHrefForGallery)) {
         const href = navHref(cfg, target)
-        return `<a href="${href}" class="${cls}"${parentNavTarget(cfg)}${closeAttr}>${labels[target]}</a>`
+        return `<a href="${href}" class="${cls}" target="_parent"${closeAttr}>${labels[target]}</a>`
       }
       return `<a ${action} class="${cls}">${labels[target]}</a>`
     })
@@ -666,6 +688,8 @@ export function createSiteChromeConfig(options: {
   hasBlog?: boolean
   blogPath?: string
   shouldColorLogo?: boolean
+  galleryLayoutMode?: 'separated' | 'portfolio'
+  portfolioPath?: string
 }): SiteChromeConfig {
   return {
     theme: options.theme,
@@ -679,5 +703,7 @@ export function createSiteChromeConfig(options: {
     hasBlog: options.hasBlog ?? false,
     blogPath: options.blogPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
+    galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
+    portfolioPath: options.portfolioPath,
   }
 }

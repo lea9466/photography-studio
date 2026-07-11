@@ -57,9 +57,8 @@ import { resolveTestimonialsSectionTitle } from '@/lib/testimonials-section-copy
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 
 import {
-
+  generateHomepageMoreLinkHTML,
   generateHomepagePostsSectionHTML,
-
 } from '@/lib/homepage-posts-section'
 
 import type { PublicBlogPost } from '@/lib/public-blog-html'
@@ -134,6 +133,8 @@ interface Photographer {
   should_color_logo?: boolean
 
   posts_page_title?: string | null
+
+  gallery_layout_mode?: string | null
 
 }
 
@@ -555,7 +556,7 @@ const RECENT_PHOTOS_GRID_CSS = `
 
     padding-top: calc(2rem + 50px) !important;
 
-    padding-bottom: 2.5rem !important;
+    padding-bottom: 1.5rem !important;
 
   }
 
@@ -565,7 +566,7 @@ const RECENT_PHOTOS_GRID_CSS = `
 
       padding-top: calc(3rem + 50px) !important;
 
-      padding-bottom: 3.5rem !important;
+      padding-bottom: 2rem !important;
 
     }
 
@@ -585,9 +586,31 @@ const RECENT_PHOTOS_GRID_CSS = `
 
   }
 
+  .portfolio-cta-wrap {
+
+    width: 100%;
+
+    max-width: 80rem;
+
+    margin-inline: auto;
+
+    padding-inline: 1rem;
+
+    padding-bottom: 0;
+
+  }
+
+  .portfolio-cta-wrap .hp-posts-more {
+
+    margin-top: 20px;
+
+  }
+
   @media (min-width: 768px) {
 
     .recent-photos-header { padding-inline: 2rem; }
+
+    .portfolio-cta-wrap { padding-inline: 2rem; }
 
   }
 
@@ -2161,6 +2184,36 @@ function generateRecentPhotosGridHTML(
 
 
 
+function generatePortfolioCtaHTML(
+
+  portfolioPath: string,
+
+  primaryColor: string
+
+): string {
+
+  return `
+
+<div class="portfolio-cta-wrap">
+
+${generateHomepageMoreLinkHTML({
+
+  href: portfolioPath,
+
+  label: 'לכל התמונות',
+
+  primaryColor,
+
+  includeStyles: true,
+
+})}
+
+</div>`
+
+}
+
+
+
 interface PhotographerHomepageProps {
 
   photographer: Photographer
@@ -2175,13 +2228,15 @@ interface PhotographerHomepageProps {
 
   blogPath?: string
 
+  portfolioPath?: string
+
   posts?: PublicBlogPost[]
 
 }
 
 
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, posts = [] }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, portfolioPath, posts = [] }: PhotographerHomepageProps) {
 
   const [mounted, setMounted] = useState(false)
 
@@ -2233,13 +2288,15 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       blogPath,
 
+      portfolioPath,
+
       posts
 
     )
 
     setHtml(generatedHtml)
 
-  }, [photographer, galleries, packages, testimonials, postCount, blogPath, posts])
+  }, [photographer, galleries, packages, testimonials, postCount, blogPath, portfolioPath, posts])
 
 
 
@@ -2607,6 +2664,8 @@ function generateHomepageHTML(
 
   blogPath?: string,
 
+  portfolioPath?: string,
+
   posts: PublicBlogPost[] = []
 
 ): string {
@@ -2885,6 +2944,34 @@ function generateHomepageHTML(
 
   const primaryColor = accent_color || '#B8953F'
 
+  const isPortfolioMode = (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
+
+  const heroGalleryAnchor = isPortfolioMode
+    ? '#recent-photos'
+    : theme === 'modern'
+      ? '#portfolio'
+      : theme === 'classic'
+        ? '#galleries'
+        : '#gallery'
+
+  const portfolioCtaHtml =
+
+    isPortfolioMode &&
+
+    portfolioPath &&
+
+    galleries.some((g) => (g.photo_pool?.length ?? 0) > 0)
+
+      ? generatePortfolioCtaHTML(
+
+          portfolioPath,
+
+          primaryColor
+
+        )
+
+      : ''
+
   const desktopHeroImages = normalizeHeroUrlList(hero_desktop_urls, hero_desktop_url)
 
   const mobileHeroImages = normalizeHeroUrlList(
@@ -2980,6 +3067,16 @@ function generateHomepageHTML(
       hasBlog: postCount > 0,
 
       blogPath,
+
+      galleryLayoutMode:
+        (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
+          ? 'portfolio'
+          : 'separated',
+
+      portfolioPath:
+        (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
+          ? portfolioPath
+          : undefined,
 
     })
 
@@ -4729,7 +4826,7 @@ ${heroSlideshowHtml}
 
 <div class="flex justify-center">
 
-<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bg-[#0F0F0D] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-accent transition-all duration-300">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="bg-[#0F0F0D] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-accent transition-all duration-300">
 
                     לצפייה בגלריות
 
@@ -4813,6 +4910,8 @@ ${aboutImageHtml}
 
 ` : ''}
 
+${!isPortfolioMode ? `
+
 <section class="homepage-gallery-section py-24 bg-white" id="gallery">
 
 <div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-16">
@@ -4833,6 +4932,8 @@ ${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
 
 </section>
 
+` : ''}
+
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
@@ -4852,6 +4953,8 @@ ${elegantSectionHeading('תמונות אחרונות', 'LATEST')}
 ${generateRecentPhotosGridHTML(galleries, 'elegant')}
 
 </div>
+
+${portfolioCtaHtml}
 
 </section>
 
@@ -5709,7 +5812,7 @@ ${aboutDescription ? '<p class="text-lg md:text-xl modern-about-muted leading-re
 
                 </button>
 
-<button onclick="document.querySelector('#portfolio').scrollIntoView({behavior: 'smooth'})" class="border border-white/40 text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-white/10 transition-all">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="border border-white/40 text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-white/10 transition-all">
 
                     לצפייה בגלריה
 
@@ -5771,6 +5874,8 @@ ${hasStats ? `
 
 ` : ''}
 
+${!isPortfolioMode ? `
+
 <section class="homepage-gallery-section modern-homepage-gallery-section" id="portfolio">
 
 <div class="homepage-gallery-header px-lg mb-xl">
@@ -5797,6 +5902,8 @@ ${generateUnifiedGalleryGridHTML(galleries, 'modern')}
 
 </section>
 
+` : ''}
+
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section modern-recent-photos-section" id="recent-photos">
@@ -5822,6 +5929,8 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 ${generateRecentPhotosGridHTML(galleries, 'modern')}
 
 </div>
+
+${portfolioCtaHtml}
 
 </section>
 
@@ -6920,7 +7029,7 @@ ${studioName} · ${photographerName}
 
                     </button>
 
-<button onclick="document.querySelector('#galleries').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
 
                         לצפייה בגלריות
 
@@ -7022,6 +7131,8 @@ ${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] m
 
 ` : ''}
 
+${!isPortfolioMode ? `
+
 <section class="homepage-gallery-section bg-surface-container-low py-xxl reveal" id="galleries">
 
 <div class="homepage-gallery-header px-lg mb-xl">
@@ -7044,6 +7155,8 @@ ${generateUnifiedGalleryGridHTML(galleries, 'classic')}
 
 </section>
 
+` : ''}
+
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
@@ -7065,6 +7178,8 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 ${generateRecentPhotosGridHTML(galleries, 'classic')}
 
 </div>
+
+${portfolioCtaHtml}
 
 </section>
 
@@ -8321,7 +8436,7 @@ ${heroSlideshowBoldHtml}
 
 <div class="bold-hero-actions flex flex-col sm:flex-row gap-lg">
 
-<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="bold-hero-btn-gallery border border-primary text-primary bg-transparent py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary whitespace-nowrap">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="bold-hero-btn-gallery border border-primary text-primary bg-transparent py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary whitespace-nowrap">
 
                         צפו בגלריה
 
@@ -8419,6 +8534,8 @@ ${hasStats ? `
 
 ` : ''}
 
+${!isPortfolioMode ? `
+
 <section class="homepage-gallery-section py-xl md:py-xxl reveal" id="gallery">
 
 <div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-left">
@@ -8441,6 +8558,8 @@ ${generateUnifiedGalleryGridHTML(galleries, 'dark')}
 
 </section>
 
+` : ''}
+
 ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
@@ -8462,6 +8581,8 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 ${generateRecentPhotosGridHTML(galleries, 'dark')}
 
 </div>
+
+${portfolioCtaHtml}
 
 </section>
 

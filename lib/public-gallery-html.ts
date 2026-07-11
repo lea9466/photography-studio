@@ -250,6 +250,102 @@ const lightboxScript = `
 })();
 `
 
+const lightboxDelegationScript = `
+(function initPublicGalleryLightboxDelegation() {
+  function boot() {
+    var lightbox = document.getElementById('pg-lightbox');
+    var image = document.getElementById('pg-lightbox-image');
+    var counter = document.getElementById('pg-lightbox-counter');
+    var closeBtn = lightbox && lightbox.querySelector('.pg-lightbox__close');
+    var prevBtn = lightbox && lightbox.querySelector('.pg-lightbox__nav--prev');
+    var nextBtn = lightbox && lightbox.querySelector('.pg-lightbox__nav--next');
+    if (!lightbox || !image || !counter || !closeBtn || !prevBtn || !nextBtn) return;
+
+    var photos = [];
+    var currentIndex = 0;
+
+    function collectPhotos() {
+      return [].slice.call(document.querySelectorAll('.pg-masonry-cell'))
+        .filter(function(cell) { return cell.style.display !== 'none'; })
+        .map(function(cell) {
+          var img = cell.querySelector('img[data-lightbox-src]');
+          return img ? img.getAttribute('data-lightbox-src') : null;
+        })
+        .filter(Boolean);
+    }
+
+    function render() {
+      image.src = photos[currentIndex];
+      counter.textContent = (currentIndex + 1) + ' / ' + photos.length;
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex >= photos.length - 1;
+    }
+
+    function open(index) {
+      photos = collectPhotos();
+      if (!photos.length) return;
+      currentIndex = index;
+      render();
+      lightbox.classList.add('is-open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function close() {
+      lightbox.classList.remove('is-open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      image.removeAttribute('src');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', function(event) {
+      var target = event.target;
+      if (!target || !target.closest) return;
+      var img = target.closest('.pg-masonry-cell img[data-lightbox-src]');
+      if (!img) return;
+      photos = collectPhotos();
+      var url = img.getAttribute('data-lightbox-src');
+      var index = photos.indexOf(url);
+      if (index >= 0) open(index);
+    });
+
+    closeBtn.addEventListener('click', close);
+    lightbox.addEventListener('click', function(event) {
+      if (event.target === lightbox) close();
+    });
+    prevBtn.addEventListener('click', function() {
+      if (currentIndex > 0) {
+        currentIndex -= 1;
+        render();
+      }
+    });
+    nextBtn.addEventListener('click', function() {
+      if (currentIndex < photos.length - 1) {
+        currentIndex += 1;
+        render();
+      }
+    });
+    document.addEventListener('keydown', function(event) {
+      if (!lightbox.classList.contains('is-open')) return;
+      if (event.key === 'Escape') close();
+      if (event.key === 'ArrowRight' && currentIndex > 0) {
+        currentIndex -= 1;
+        render();
+      }
+      if (event.key === 'ArrowLeft' && currentIndex < photos.length - 1) {
+        currentIndex += 1;
+        render();
+      }
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})();
+`
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -264,6 +360,10 @@ const MASONRY_CELL_STYLE: Record<SiteChromeTheme, { radius: string; bg: string; 
   classic: { radius: '4px', bg: '#eae8e5', extra: '' },
   modern: { radius: '12px', bg: '#eae8e5', extra: 'box-shadow: 0 1px 3px rgba(0,0,0,0.08);' },
   dark: { radius: '2px', bg: '#1A1A22', extra: '' },
+}
+
+function escapeAttr(value: string) {
+  return escapeHtml(value).replace(/`/g, '&#96;')
 }
 
 function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChromeTheme) {
@@ -424,8 +524,14 @@ ${ctaSection(data, theme, homepagePath)}
 </main>`
 }
 
-function themeHead(theme: SiteChromeTheme, studioName: string, primaryColor: string, shouldColorLogo: boolean = false) {
-  const title = escapeHtml(`${studioName} | גלריה`)
+function themeHead(
+  theme: SiteChromeTheme,
+  studioName: string,
+  primaryColor: string,
+  shouldColorLogo: boolean = false,
+  pageTitleSuffix = 'גלריה'
+) {
+  const title = escapeHtml(`${studioName} | ${pageTitleSuffix}`)
 
   if (theme === 'modern') {
     return `
@@ -629,4 +735,49 @@ ${generateSiteFooter(chrome)}
 <script>${lightboxScript}</script>
 </body>
 </html>`
+}
+
+export function generatePublicGalleryThemeHead(
+  theme: SiteChromeTheme,
+  studioName: string,
+  primaryColor: string,
+  pageTitleSuffix = 'גלריה',
+  shouldColorLogo = false
+) {
+  return themeHead(theme, studioName, primaryColor, shouldColorLogo, pageTitleSuffix)
+}
+
+export function getMasonryCellStyle(theme: SiteChromeTheme) {
+  return MASONRY_CELL_STYLE[theme]
+}
+
+export function generatePublicGalleryMasonryGrid(
+  photos: Array<{ id: string; url: string | null; galleryName?: string }>,
+  title: string,
+  theme: SiteChromeTheme
+) {
+  const cfg = MASONRY_CELL_STYLE[theme]
+  return photos
+    .map((photo, index) => {
+      if (!photo.url) return ''
+      const alt = escapeHtml(`${title} - ${index + 1}`)
+      const url = escapeHtml(photo.url)
+      const delay = (index % 4) * 90
+      const galleryAttr = photo.galleryName
+        ? ` data-gallery-name="${escapeAttr(photo.galleryName)}"`
+        : ''
+      return `
+<div class="pg-masonry-cell group"${galleryAttr} style="border-radius:${cfg.radius};background:${cfg.bg};overflow:hidden;${cfg.extra}" data-reveal-delay="${delay}">
+  <img src="${url}" data-lightbox-src="${url}" alt="${alt}" loading="lazy" />
+</div>`
+    })
+    .join('')
+}
+
+export {
+  MASONRY_STYLES as PUBLIC_GALLERY_MASONRY_STYLES,
+  masonryRevealScript as PUBLIC_GALLERY_MASONRY_REVEAL_SCRIPT,
+  lightboxMarkup as PUBLIC_GALLERY_LIGHTBOX_MARKUP,
+  lightboxScript as PUBLIC_GALLERY_LIGHTBOX_SCRIPT,
+  lightboxDelegationScript as PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
 }

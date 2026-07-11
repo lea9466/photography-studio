@@ -16,6 +16,8 @@ export type GalleryStatus =
 
 export type GalleryType = 'selection' | 'portfolio'
 
+export type GalleryLayoutMode = 'separated' | 'portfolio'
+
 export type DownloadJobType = 'preview' | 'original' | 'edited' | 'watermarked'
 
 export type DownloadJobStatus = 'pending' | 'processing' | 'ready' | 'failed'
@@ -71,6 +73,7 @@ export type Database = {
           show_referral_popup: boolean
           show_welcome_popup: boolean
           testimonial_layout_type: 'carousel' | 'marquee'
+          gallery_layout_mode: GalleryLayoutMode
           last_dashboard_visit_at: string | null
           dashboard_visit_count: number
         }
@@ -119,6 +122,7 @@ export type Database = {
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
+          gallery_layout_mode?: GalleryLayoutMode
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }
@@ -167,6 +171,7 @@ export type Database = {
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
+          gallery_layout_mode?: GalleryLayoutMode
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }
