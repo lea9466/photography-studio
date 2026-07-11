@@ -1302,22 +1302,6 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     }
 
-    .testimonials-section-grid > .testimonial-thumb-card--elegant,
-
-    .testimonials-row > .testimonial-thumb-card--elegant,
-
-    .testimonials-section-grid > .testimonial-thumb-card--classic,
-
-    .testimonials-row > .testimonial-thumb-card--classic {
-
-      flex: 0 1 18rem;
-
-      max-width: min(18rem, calc(50% - 0.75rem));
-
-      width: auto;
-
-    }
-
     .testimonial-thumb-card {
 
       padding: 1.85rem 1.25rem 1.85rem 4.75rem;
@@ -1350,22 +1334,6 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     }
 
-    .testimonials-section-grid > .testimonial-thumb-card--elegant,
-
-    .testimonials-row > .testimonial-thumb-card--elegant,
-
-    .testimonials-section-grid > .testimonial-thumb-card--classic,
-
-    .testimonials-row > .testimonial-thumb-card--classic {
-
-      flex: 0 0 18rem;
-
-      max-width: 18rem;
-
-      width: 18rem;
-
-    }
-
   }
 
   .testimonial-thumb-card {
@@ -1374,7 +1342,7 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     background: #ffffff;
 
-    width: fit-content;
+    width: 100%;
 
     max-width: min(100%, 24rem);
 
@@ -1456,6 +1424,12 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     flex: 1 1 auto;
 
+    width: 100%;
+
+    overflow-wrap: break-word;
+
+    word-wrap: break-word;
+
   }
 
   .testimonial-thumb-card__footer {
@@ -1510,15 +1484,11 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
     border: 1px solid rgba(121, 116, 126, 0.2);
 
-    max-width: min(100%, 18rem);
-
   }
 
   .testimonial-thumb-card--elegant {
 
     border: 1px solid rgba(121, 116, 126, 0.35);
-
-    max-width: min(100%, 18rem);
 
   }
 
@@ -1691,14 +1661,8 @@ const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
     // (3 on desktop, 2 on tablet, 1 on mobile). Same sizing in both modes so a
     // static row looks identical to a scrolling one, just centered.
     var cardW = Math.floor((containerWidth - (perView - 1) * gapPx) / perView);
-    var isNarrowCard = uniqueCards.length > 0 && (
-      uniqueCards[0].classList.contains('testimonial-thumb-card--elegant') ||
-      uniqueCards[0].classList.contains('testimonial-thumb-card--classic')
-    );
-    if (isNarrowCard) {
-      var narrowMaxW = 288; // 18rem — fixed narrow card width for classic/elegant
-      if (cardW > narrowMaxW) cardW = narrowMaxW;
-    }
+    var maxCardW = 384; // 24rem — same fixed max width as modern theme
+    if (cardW > maxCardW) cardW = maxCardW;
     allCards.forEach(function (c) {
       c.style.width = cardW + 'px';
       c.style.minWidth = cardW + 'px';
