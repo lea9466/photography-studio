@@ -127,8 +127,8 @@ export function FaqItemsForm({ initialItems }: FaqItemsFormProps) {
   }
 
   function addItem() {
-    setItems((current) => [...current, { ...EMPTY_ITEM }])
-    setEditingIndex(items.length)
+    setItems((current) => [{ ...EMPTY_ITEM }, ...current])
+    setEditingIndex(0)
     setExpandedIndex(null)
   }
 
