@@ -5905,13 +5905,14 @@ ${contactBgLayers('#F8FAFC')}
 
 <div class="flex flex-col gap-md">
 
+${studioPhone ? `
 <div class="modern-contact-info-row flex items-center justify-start gap-sm">
 
 <span class="material-symbols-outlined text-white">call</span>
 
-<span class="text-white" dir="ltr">050-1234567</span>
+<span class="text-white" dir="ltr">${studioPhoneHtml}</span>
 
-</div>
+</div>` : ''}
 
 <div class="modern-contact-info-row flex items-center justify-start gap-sm">
 
@@ -7139,13 +7140,14 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 
 <div class="space-y-md pt-lg">
 
-<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="tel:050-1234567">
+${studioPhone ? `
+<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="tel:${studioPhoneHref}">
 
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">call</span>
 
-<span class="font-body-md text-body-md" dir="ltr">050-1234567</span>
+<span class="font-body-md text-body-md" dir="ltr">${studioPhoneHtml}</span>
 
-</a>
+</a>` : ''}
 
 <a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="mailto:${email || 'hello@studiogallery.co.il'}">
 
