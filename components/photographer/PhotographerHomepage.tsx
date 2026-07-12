@@ -3304,31 +3304,9 @@ const TESTIMONIALS_EQUAL_HEIGHT_SCRIPT = `
 
 
 
-function fillGalleriesToFour(galleries: Gallery[]): Gallery[] {
+function takeHomepageGalleries(galleries: Gallery[]): Gallery[] {
 
-  if (galleries.length === 0) return []
-
-  if (galleries.length >= 4) return galleries.slice(0, 4)
-
-  const filled = [...galleries]
-
-  while (filled.length < 4) {
-
-    const source = galleries[filled.length % galleries.length]
-
-    filled.push({ ...source, id: `${source.id}-fill-${filled.length}` })
-
-  }
-
-  return filled
-
-}
-
-
-
-function galleryNavId(id: string) {
-
-  return id.replace(/-fill-\d+$/, '')
+  return galleries.slice(0, 4)
 
 }
 
@@ -3378,7 +3356,7 @@ function generateUnifiedGalleryGridHTML(
 
 ): string {
 
-  const display = fillGalleriesToFour(galleries)
+  const display = takeHomepageGalleries(galleries)
 
   if (display.length === 0) return ''
 
@@ -3394,7 +3372,7 @@ function generateUnifiedGalleryGridHTML(
 
       const year = new Date(g.created_at).getFullYear()
 
-      const galleryUrl = `/public-gallery/${galleryNavId(g.id)}`
+      const galleryUrl = `/public-gallery/${g.id}`
 
       const title = escapeGalleryText(String(g.title))
 
@@ -3468,15 +3446,7 @@ function generateRecentPhotosGridHTML(
 
 
 
-  const rows = fillGalleriesToFour(withPhotos)
-
-  // Track how many times each real gallery was used so duplicated rows
-
-  // pull a different slice of photos from the same pool.
-
-  const usage: Record<string, number> = {}
-
-
+  const rows = takeHomepageGalleries(withPhotos)
 
   let cellIndex = 0
 
@@ -3486,15 +3456,7 @@ function generateRecentPhotosGridHTML(
 
       const pool = g.photo_pool ?? []
 
-      const baseId = galleryNavId(g.id)
-
-      const galleryUrl = `/public-gallery/${baseId}`
-
-      const used = usage[baseId] ?? 0
-
-      usage[baseId] = used + 1
-
-      const photos = pickRowPhotos(pool, used * 4, 4)
+      const photos = pickRowPhotos(pool, 0, 4)
 
       const title = String(g.title)
 
@@ -8759,7 +8721,7 @@ ${!isPortfolioMode ? `
 
 <h2 class="font-headline-md text-headline-md text-on-surface">עבודות נבחרות</h2>
 
-<p class="font-body-md text-body-md text-on-surface-variant mt-sm">מבט אל הרגעים שהפכו לנצח</p>
+<p class="font-body-md text-body-md mt-sm" style="color:${primaryColor};">מבט אל הרגעים שהפכו לנצח</p>
 
 </div>
 

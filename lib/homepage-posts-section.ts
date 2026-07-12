@@ -221,7 +221,7 @@ const HOMEPAGE_POSTS_CSS = `
 .hp-post-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   flex: 0 0 auto;
   overflow: hidden;
   background: rgba(0,0,0,0.06);
@@ -242,7 +242,7 @@ const HOMEPAGE_POSTS_CSS = `
 }
 .hp-post-body {
   flex: 1 1 auto;
-  padding: 18px 16px 22px;
+  padding: 20px 16px 24px;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -255,10 +255,11 @@ const HOMEPAGE_POSTS_CSS = `
   line-height: 1.7;
   opacity: 0.85;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   white-space: pre-line;
+  min-height: calc(1.7em * 4);
 }
 .hp-posts-footer {
   width: 100%;
@@ -337,7 +338,7 @@ const CLASSIC_HOMEPAGE_POSTS_CSS = `
 .theme-classic .hp-post-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 4 / 3;
   height: auto;
   flex: 0 0 auto;
   overflow: hidden;

@@ -1,5 +1,11 @@
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Database } from '@/lib/types/database.types'
+
+type UserScopedTable = Extract<
+  keyof Database['public']['Tables'],
+  'galleries' | 'clients' | 'photography_packages' | 'posts' | 'testimonials'
+>
 
 export type AdminStudioSummary = {
   galleries: number
@@ -14,17 +20,14 @@ export type AdminStudioSummary = {
 }
 
 async function countExact(
-  table: string,
-  filter?: { column: string; value: string }
+  table: UserScopedTable,
+  filter: { column: 'user_id'; value: string }
 ): Promise<number> {
   const admin = createAdminClient()
-  let query = admin.from(table).select('*', { count: 'exact', head: true })
-
-  if (filter) {
-    query = query.eq(filter.column, filter.value)
-  }
-
-  const { count, error } = await query
+  const { count, error } = await admin
+    .from(table)
+    .select('*', { count: 'exact', head: true })
+    .eq(filter.column, filter.value)
   if (error) throw new Error(error.message)
   return count ?? 0
 }
