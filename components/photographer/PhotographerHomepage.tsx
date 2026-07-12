@@ -593,7 +593,7 @@ const HOMEPAGE_PACKAGES_GRID_CSS = `
 
 const CLASSIC_PACKAGES_ROWS_CSS = `
 
-  .theme-classic .homepage-packages-section {
+  .theme-classic .homepage-packages-section, .theme-bold .homepage-packages-section {
 
     width: 100%;
 
@@ -607,7 +607,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-section__inner {
+  .theme-classic .homepage-packages-section__inner, .theme-bold .homepage-packages-section__inner {
 
     width: 100%;
 
@@ -621,7 +621,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-section__header {
+  .theme-classic .homepage-packages-section__header, .theme-bold .homepage-packages-section__header {
 
     width: 100%;
 
@@ -632,14 +632,16 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
   }
 
   .theme-classic .homepage-packages-section__header span,
+  .theme-bold .homepage-packages-section__header span,
 
-  .theme-classic .homepage-packages-section__header h2 {
+  .theme-classic .homepage-packages-section__header h2,
+  .theme-bold .homepage-packages-section__header h2 {
 
     text-align: left !important;
 
   }
 
-  .theme-classic .homepage-packages-section__divider {
+  .theme-classic .homepage-packages-section__divider, .theme-bold .homepage-packages-section__divider {
 
     margin-left: 0;
 
@@ -719,7 +721,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-rows {
+  .theme-classic .homepage-packages-rows, .theme-bold .homepage-packages-rows {
 
     display: flex;
 
@@ -733,7 +735,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row {
+  .theme-classic .homepage-packages-row, .theme-bold .homepage-packages-row {
 
     display: grid;
 
@@ -757,13 +759,13 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row:last-child {
+  .theme-classic .homepage-packages-row:last-child, .theme-bold .homepage-packages-row:last-child {
 
     border-bottom: none;
 
   }
 
-  .theme-classic .homepage-packages-row--featured {
+  .theme-classic .homepage-packages-row--featured, .theme-bold .homepage-packages-row--featured {
 
     background: rgba(250, 246, 240, 0.88);
 
@@ -771,7 +773,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__title {
+  .theme-classic .homepage-packages-row__title, .theme-bold .homepage-packages-row__title {
 
     grid-column: 1;
 
@@ -794,8 +796,10 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
   }
 
   .theme-classic .homepage-packages-row__title h3,
+  .theme-bold .homepage-packages-row__title h3,
 
-  .theme-classic .homepage-packages-row__title p {
+  .theme-classic .homepage-packages-row__title p,
+  .theme-bold .homepage-packages-row__title p {
 
     text-align: right;
 
@@ -803,13 +807,13 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__title h3 {
+  .theme-classic .homepage-packages-row__title h3, .theme-bold .homepage-packages-row__title h3 {
 
     font-weight: 600;
 
   }
 
-  .theme-classic .homepage-packages-row__badge {
+  .theme-classic .homepage-packages-row__badge, .theme-bold .homepage-packages-row__badge {
 
     position: absolute;
 
@@ -843,7 +847,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__features {
+  .theme-classic .homepage-packages-row__features, .theme-bold .homepage-packages-row__features {
 
     grid-column: 2;
 
@@ -865,7 +869,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__features-grid {
+  .theme-classic .homepage-packages-row__features-grid, .theme-bold .homepage-packages-row__features-grid {
 
     display: grid;
 
@@ -889,7 +893,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__features-grid li {
+  .theme-classic .homepage-packages-row__features-grid li, .theme-bold .homepage-packages-row__features-grid li {
 
     display: flex;
 
@@ -915,7 +919,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__features-grid li > span:not(.material-symbols-outlined) {
+  .theme-classic .homepage-packages-row__features-grid li > span:not(.material-symbols-outlined), .theme-bold .homepage-packages-row__features-grid li > span:not(.material-symbols-outlined) {
 
     min-width: 0;
 
@@ -925,7 +929,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__features-grid .material-symbols-outlined {
+  .theme-classic .homepage-packages-row__features-grid .material-symbols-outlined, .theme-bold .homepage-packages-row__features-grid .material-symbols-outlined {
 
     font-size: 1.1rem;
 
@@ -937,7 +941,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__action {
+  .theme-classic .homepage-packages-row__action, .theme-bold .homepage-packages-row__action {
 
     grid-column: 3;
 
@@ -959,7 +963,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__price {
+  .theme-classic .homepage-packages-row__price, .theme-bold .homepage-packages-row__price {
 
     font-size: 2rem;
 
@@ -977,7 +981,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__price-currency {
+  .theme-classic .homepage-packages-row__price-currency, .theme-bold .homepage-packages-row__price-currency {
 
     font-size: 1rem;
 
@@ -985,7 +989,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__btn {
+  .theme-classic .homepage-packages-row__btn, .theme-bold .homepage-packages-row__btn {
 
     white-space: nowrap;
 
@@ -1005,7 +1009,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__btn--featured {
+  .theme-classic .homepage-packages-row__btn--featured, .theme-bold .homepage-packages-row__btn--featured {
 
     background: var(--primary-color, #8b6f5c);
 
@@ -1017,13 +1021,13 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__btn--featured:hover {
+  .theme-classic .homepage-packages-row__btn--featured:hover, .theme-bold .homepage-packages-row__btn--featured:hover {
 
     filter: brightness(1.08);
 
   }
 
-  .theme-classic .homepage-packages-row__btn--default {
+  .theme-classic .homepage-packages-row__btn--default, .theme-bold .homepage-packages-row__btn--default {
 
     background: transparent;
 
@@ -1033,7 +1037,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .homepage-packages-row__btn--default:hover {
+  .theme-classic .homepage-packages-row__btn--default:hover, .theme-bold .homepage-packages-row__btn--default:hover {
 
     background: var(--primary-color, #8b6f5c);
 
@@ -1043,7 +1047,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   @media (max-width: 767px) {
 
-    .theme-classic .homepage-packages-section {
+    .theme-classic .homepage-packages-section, .theme-bold .homepage-packages-section {
 
       padding-top: 100px !important;
 
@@ -1051,13 +1055,13 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-section__inner {
+    .theme-classic .homepage-packages-section__inner, .theme-bold .homepage-packages-section__inner {
 
       padding-inline: clamp(1rem, 4vw, 1.5rem);
 
     }
 
-    .theme-classic .homepage-packages-row {
+    .theme-classic .homepage-packages-row, .theme-bold .homepage-packages-row {
 
       display: flex;
 
@@ -1075,7 +1079,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__title {
+    .theme-classic .homepage-packages-row__title, .theme-bold .homepage-packages-row__title {
 
       grid-column: auto;
 
@@ -1093,7 +1097,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__features {
+    .theme-classic .homepage-packages-row__features, .theme-bold .homepage-packages-row__features {
 
       grid-column: auto;
 
@@ -1105,7 +1109,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__features-grid {
+    .theme-classic .homepage-packages-row__features-grid, .theme-bold .homepage-packages-row__features-grid {
 
       grid-template-columns: 1fr;
 
@@ -1117,7 +1121,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__features-grid li {
+    .theme-classic .homepage-packages-row__features-grid li, .theme-bold .homepage-packages-row__features-grid li {
 
       white-space: normal;
 
@@ -1127,7 +1131,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__badge {
+    .theme-classic .homepage-packages-row__badge, .theme-bold .homepage-packages-row__badge {
 
       position: static;
 
@@ -1135,7 +1139,7 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__action {
+    .theme-classic .homepage-packages-row__action, .theme-bold .homepage-packages-row__action {
 
       grid-column: auto;
 
@@ -1155,12 +1159,42 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     }
 
-    .theme-classic .homepage-packages-row__btn {
+    .theme-classic .homepage-packages-row__btn, .theme-bold .homepage-packages-row__btn {
 
       flex-shrink: 0;
 
     }
 
+  }
+
+`
+
+const BOLD_PACKAGES_ROWS_CSS = `
+
+  .theme-bold .homepage-packages-section {
+    background: linear-gradient(to bottom, #121217 0%, #1a1a22 150px, #1a1a22 100%);
+  }
+
+  .theme-bold .homepage-packages-row {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .theme-bold .homepage-packages-row--featured {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .theme-bold .homepage-packages-row__features-grid li {
+    color: rgba(245, 245, 240, 0.75);
+  }
+
+  .theme-bold .homepage-packages-row__btn--default {
+    border-color: rgba(255, 255, 255, 0.28);
+  }
+
+  @media (max-width: 767px) {
+    .theme-bold .homepage-packages-section {
+      background: linear-gradient(to bottom, #121217 0%, #1a1a22 120px, #1a1a22 100%);
+    }
   }
 
 `
@@ -4264,7 +4298,7 @@ function generateHomepageHTML(
 
     if (packages.length === 0) return ''
 
-    const packageList = currentTheme === 'classic' ? packages : sortedPackages
+    const packageList = currentTheme === 'classic' || currentTheme === 'dark' ? packages : sortedPackages
 
     
 
@@ -4364,45 +4398,7 @@ function generateHomepageHTML(
 
       `;
 
-      } else if (currentTheme === 'dark') {
-
-        return `
-
-        <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
-
-        <div class="${isFeatured ? `${packageCardBg('bg-background')} p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl` : `${packageCardBg('bg-background')} p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10`}" style="direction: rtl !important; text-align: center !important;">
-
-          ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-xs font-label-sm uppercase tracking-widest" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
-
-          <span class="font-label-sm text-primary/60 mb-md tracking-widest uppercase" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'Professional' : 'Essential'}</span>
-
-          <h3 class="font-headline-sm mb-sm text-primary" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
-
-          <div class="text-[48px] lg:text-display-lg ${isFeatured ? 'text-primary' : 'text-on-surface'} mb-xl" style="direction: rtl !important; text-align: center !important;">₪${pkg.price_amount}</div>
-
-          <div class="mx-auto w-fit mb-xl" style="direction: rtl !important;">
-
-            <ul class="space-y-md text-on-surface-variant font-body-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
-
-              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-md w-full border-b border-white/10 pb-sm"><span class="material-symbols-outlined text-primary">check_circle</span> <span>${item}</span></li>`).join('')}
-
-            </ul>
-
-          </div>
-
-          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="mt-auto w-full ${isFeatured ? 'bg-primary text-on-primary py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition' : 'border border-on-surface text-on-surface py-md font-label-sm uppercase tracking-widest hover:bg-on-surface hover:text-background btn-fuchsia-transition'}" style="direction: rtl !important; text-align: center !important;">
-
-            ${isFeatured ? 'לבחירת החבילה' : 'הזמן עכשיו'}
-
-          </button>
-
-        </div>
-
-        </div>
-
-      `;
-
-      } else if (currentTheme === 'classic') {
+      } else if (currentTheme === 'classic' || currentTheme === 'dark') {
 
         const subtitle = pkg.duration_text || (isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים')
 
@@ -9522,6 +9518,10 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${CLASSIC_PACKAGES_ROWS_CSS}
+
+        ${BOLD_PACKAGES_ROWS_CSS}
+
         ${RECENT_PHOTOS_GRID_CSS}
 
         ${HOMEPAGE_STAGGER_REVEAL_CSS}
@@ -9888,23 +9888,23 @@ ${postsSectionHtml}
 
 ${hasPackages ? `
 
-<section class="py-xl md:py-xxl reveal relative overflow-hidden w-full" id="pricing">
+<section class="homepage-packages-section py-xxl reveal relative overflow-hidden" id="pricing">
 
 ${aboutAmbientBackgroundHtml}
 
-<div class="container mx-auto px-lg relative z-10">
+<div class="homepage-packages-section__inner contact-section-content relative z-10">
 
-<div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto stagger-reveal" data-reveal-delay="0">
+<div class="homepage-packages-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(packagesSectionCopy.subtitle)}</span>
 
-<h2 class="font-headline-md text-headline-md mb-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
-<p class="text-on-surface-variant font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
+<div class="homepage-packages-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
 </div>
 
-<div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
+<div class="homepage-packages-rows">${generatePackagesHTML('dark')}</div>
 
 </div>
 
