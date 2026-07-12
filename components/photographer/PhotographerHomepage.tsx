@@ -3178,7 +3178,7 @@ function generateHomepageHTML(
 
     
 
-    return packages.map((pkg, i) => {
+    return sortedPackages.map((pkg, i) => {
 
       const includesList = pkg.includes || [];
 
