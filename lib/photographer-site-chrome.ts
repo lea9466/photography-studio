@@ -1,4 +1,12 @@
 import { homepageSectionHref, homepageScrollToTopAction } from '@/lib/photographer-site-paths'
+import { HOMEPAGE_LTR_CSS } from '@/lib/homepage-ltr-css'
+import {
+  getSiteChromeCopy,
+  portfolioNavLabel,
+  resolveSiteLanguage,
+  siteHtmlAttrs,
+  type SiteLanguage,
+} from '@/lib/site-language'
 
 export type SiteChromeTheme = 'elegant' | 'modern' | 'classic' | 'dark'
 
@@ -18,6 +26,7 @@ export type SiteChromeConfig = {
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
+  language?: SiteLanguage
 }
 
 export function brandLastWord(text: string) {
@@ -39,9 +48,10 @@ function gallerySectionId(theme: SiteChromeTheme) {
 
 const STUDIO_SIGNUP_PATH = '/register'
 
-function generateStudioSignupFooterCta(theme: SiteChromeTheme): string {
-  const question = 'אהבתם את הסטודיו?'
-  const btn = 'לפתיחת סטודיו משלכם'
+function generateStudioSignupFooterCta(theme: SiteChromeTheme, language: SiteLanguage = 'he'): string {
+  const copy = getSiteChromeCopy(language)
+  const question = copy.footer.studioSignupQuestion
+  const btn = copy.footer.studioSignupButton
   const wrap = 'inline-flex flex-row items-center gap-2 shrink-0'
 
   switch (theme) {
@@ -140,14 +150,15 @@ function navItems(
 ) {
   const cursor = cfg.linkMode === 'scroll' ? ' cursor-pointer' : ''
   const cls = `${className}${cursor}`
+  const language = cfg.language ?? 'he'
+  const copy = getSiteChromeCopy(language)
   const labels: Record<NavTarget, string> = {
-    home: 'בית',
-    gallery:
-      cfg.galleryLayoutMode === 'portfolio' ? 'תיק עבודות' : 'גלריות',
-    blog: 'בלוג',
-    pricing: 'חבילות צילום',
-    faq: 'שאלות נפוצות',
-    contact: 'יצירת קשר',
+    home: copy.nav.home,
+    gallery: portfolioNavLabel(language, cfg.galleryLayoutMode ?? 'separated'),
+    blog: copy.nav.blog,
+    pricing: copy.nav.pricing,
+    faq: copy.nav.faq,
+    contact: copy.nav.contact,
   }
   const targets: NavTarget[] = ['home', 'gallery']
   if (cfg.hasBlog) targets.push('blog')
@@ -203,7 +214,7 @@ export function generateSiteNav(cfg: SiteChromeConfig): string {
     case 'elegant':
       return `
 <nav class="elegant-nav fixed top-0 w-full z-50 bg-transparent transition-all duration-500 left-0 right-0" id="main-nav">
-<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'site-nav-logo h-10 w-auto object-contain', textClass: 'font-display text-xl uppercase tracking-[0.2em] font-medium text-on-surface' }))}
 <button onclick="toggleMobileMenuElegant()" class="site-nav-menu-btn md:hidden p-2 text-on-surface hover:text-accent transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-elegant">menu</span>
@@ -230,7 +241,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'modern':
       return `
 <nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('modern', cfg.linkMode)}" id="main-nav">
-<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
 <button onclick="toggleMobileMenu()" class="modern-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon">menu</span>
@@ -257,7 +268,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'classic':
       return `
 <nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('classic', cfg.linkMode)}" id="main-nav">
-<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'classic-nav-brand font-headline-sm text-headline-sm tracking-tight' }))}
 <button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-classic">menu</span>
@@ -284,7 +295,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
     case 'dark':
       return `
 <nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('dark', cfg.linkMode)}" id="main-nav">
-<div class="site-nav-inner flex flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
+<div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'bold-nav-brand font-headline-sm text-headline-sm tracking-tighter' }))}
 <button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
 <span class="material-symbols-outlined text-3xl" id="menu-icon-dark">menu</span>
@@ -312,22 +323,25 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
 export function generateSiteFooter(cfg: SiteChromeConfig): string {
   const year = new Date().getFullYear()
+  const language = cfg.language ?? 'he'
+  const copy = getSiteChromeCopy(language)
+  const rightsLine = `© ${year} ${cfg.studioName}. ${copy.footer.rights}`
 
   switch (cfg.theme) {
     case 'elegant':
       return `
 <footer class="bg-background py-12 px-margin-mobile md:px-margin-desktop border-t border-outline-variant/20 pb-32">
-<div class="max-w-7xl mx-auto flex flex-col md:flex-row-reverse justify-between items-center gap-8">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row rtl:md:flex-row-reverse justify-between items-center gap-8">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<div class="font-display text-xl uppercase tracking-widest text-on-surface">${cfg.studioName}</div>`}
-<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest">
-<a class="text-on-surface-variant hover:text-accent transition-colors" href="/terms">תקנון</a>
-<a class="text-on-surface-variant hover:text-accent transition-colors" href="/privacy">פרטיות</a>
-<a class="text-on-surface-variant hover:text-accent transition-colors" href="/accessibility">הצהרת נגישות</a>
+<div class="site-footer-legal-links flex flex-row rtl:flex-row-reverse flex-wrap justify-center gap-8 text-xs uppercase tracking-widest">
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/terms">${copy.footer.terms}</a>
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/privacy">${copy.footer.privacy}</a>
+<a class="text-on-surface-variant hover:text-accent transition-colors" href="/accessibility">${copy.footer.accessibility}</a>
 </div>
 <div class="text-[10px] uppercase tracking-widest text-on-surface-variant">
-            © ${year} ${cfg.studioName}. כל הזכויות שמורות.
+            ${rightsLine}
         </div>
-${generateStudioSignupFooterCta('elegant')}
+${generateStudioSignupFooterCta('elegant', language)}
 </div>
 </footer>`
 
@@ -335,18 +349,18 @@ ${generateStudioSignupFooterCta('elegant')}
       return `
 <footer class="bg-background border-t border-outline-variant/20 w-full py-xl pb-[120px]">
 <div class="max-w-7xl mx-auto w-full px-lg">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-md w-full">
-<div class="flex flex-col items-center md:items-end gap-xs">
+<div class="flex flex-col md:flex-row rtl:md:flex-row-reverse justify-between items-center gap-md w-full">
+<div class="flex flex-col items-center md:items-start rtl:md:items-end gap-xs">
 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `<span class="font-headline text-2xl font-bold text-primary">${cfg.studioName}</span>`}
-<p class="text-on-surface-variant text-sm">צילום אמנותי למותגים ואנשים.</p>
+<p class="text-on-surface-variant text-sm">${copy.footer.modernTagline}</p>
 </div>
-<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md sm:gap-lg items-center">
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/terms">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/privacy">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/accessibility">הצהרת נגישות</a>
+<div class="site-footer-legal-links flex flex-row rtl:flex-row-reverse flex-wrap justify-center gap-md sm:gap-lg items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/terms">${copy.footer.terms}</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/privacy">${copy.footer.privacy}</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/accessibility">${copy.footer.accessibility}</a>
 </div>
 <div class="text-on-surface-variant text-sm text-center">
-            © ${year} ${cfg.studioName}. כל הזכויות שמורות.
+            ${rightsLine}
         </div>
 <div class="flex gap-md">
 <a aria-label="שיתוף" class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all btn-magnetic" href="#">
@@ -356,7 +370,7 @@ ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w
 <span class="material-symbols-outlined text-xl">mail</span>
 </a>
 </div>
-${generateStudioSignupFooterCta('modern')}
+${generateStudioSignupFooterCta('modern', language)}
 </div>
 </div>
 </footer>`
@@ -365,19 +379,19 @@ ${generateStudioSignupFooterCta('modern')}
       return `
 <footer class="bg-background border-t border-outline-variant/20 py-xl pb-xxl">
 <div class="max-w-7xl mx-auto w-full px-lg">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-md w-full">
+<div class="flex flex-col md:flex-row rtl:md:flex-row-reverse justify-between items-center gap-md w-full">
 <div class="font-headline-md text-headline-md text-primary tracking-tight">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${cfg.studioName}`}
             </div>
-<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-lg">
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/terms">תקנון</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/privacy">פרטיות</a>
-<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/accessibility">הצהרת נגישות</a>
+<div class="site-footer-legal-links flex flex-row rtl:flex-row-reverse flex-wrap justify-center gap-lg">
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/terms">${copy.footer.terms}</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/privacy">${copy.footer.privacy}</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors" href="/accessibility">${copy.footer.accessibility}</a>
 </div>
 <div class="font-body-md text-body-md text-on-surface/60">
-                © ${year} ${cfg.studioName}. כל הזכויות שמורות.
+                ${rightsLine}
         </div>
-${generateStudioSignupFooterCta('classic')}
+${generateStudioSignupFooterCta('classic', language)}
 </div>
 </div>
 </footer>`
@@ -386,19 +400,19 @@ ${generateStudioSignupFooterCta('classic')}
       return `
 <footer class="bg-background border-t border-outline-variant/20 py-xl">
 <div class="max-w-7xl mx-auto w-full px-lg">
-<div class="flex flex-col md:flex-row-reverse justify-between items-center gap-lg w-full">
+<div class="flex flex-col md:flex-row rtl:md:flex-row-reverse justify-between items-center gap-lg w-full">
 <div class="font-headline-sm text-headline-sm text-on-surface tracking-tighter">
                 ${cfg.logoUrl ? `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="h-10 w-auto object-contain" />` : `${brandLastWord(cfg.studioName)}`}
 </div>
-<div class="site-footer-legal-links flex flex-row-reverse flex-wrap justify-center gap-md lg:gap-xl">
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/terms">תקנון</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/privacy">פרטיות</a>
-<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/accessibility">הצהרת נגישות</a>
+<div class="site-footer-legal-links flex flex-row rtl:flex-row-reverse flex-wrap justify-center gap-md lg:gap-xl">
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/terms">${copy.footer.terms}</a>
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/privacy">${copy.footer.privacy}</a>
+<a class="text-on-surface-variant hover:text-primary btn-fuchsia-transition font-label-sm uppercase tracking-widest text-[10px] md:text-xs" href="/accessibility">${copy.footer.accessibility}</a>
 </div>
 <div class="text-on-surface-variant font-body-md text-[10px] md:text-xs opacity-50">
-                © ${year} ${cfg.studioName}. כל הזכויות שמורות.
+                ${rightsLine}
         </div>
-${generateStudioSignupFooterCta('dark')}
+${generateStudioSignupFooterCta('dark', language)}
 </div>
 </div>
 </footer>`
@@ -541,11 +555,14 @@ export function generateSiteNavMobileStyles(): string {
             }
             .site-footer-legal-links {
                 display: flex !important;
-                flex-direction: row-reverse !important;
+                flex-direction: row !important;
                 flex-wrap: nowrap !important;
                 justify-content: center;
                 align-items: center;
                 gap: 0.625rem;
+            }
+            html[dir="rtl"] .site-footer-legal-links {
+                flex-direction: row-reverse !important;
             }
             .site-footer-legal-links a {
                 white-space: nowrap;
@@ -690,6 +707,7 @@ export function createSiteChromeConfig(options: {
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
+  language?: SiteLanguage
 }): SiteChromeConfig {
   return {
     theme: options.theme,
@@ -705,5 +723,53 @@ export function createSiteChromeConfig(options: {
     shouldColorLogo: options.shouldColorLogo ?? false,
     galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
     portfolioPath: options.portfolioPath,
+    language: options.language ?? 'he',
   }
+}
+
+/** Shared chrome builder for homepage and all public internal pages. */
+export type PublicSiteChromeOptions = {
+  theme: SiteChromeTheme
+  studioName: string
+  logoUrl: string | null
+  primaryColor: string
+  homepagePath: string
+  linkMode?: SiteChromeLinkMode
+  hasFaq?: boolean
+  hasPackages?: boolean
+  hasBlog?: boolean
+  blogPath?: string
+  shouldColorLogo?: boolean
+  galleryLayoutMode?: 'separated' | 'portfolio'
+  portfolioPath?: string
+  siteLanguage?: string | null
+}
+
+export function buildPublicSiteChrome(options: PublicSiteChromeOptions): SiteChromeConfig {
+  const language = resolveSiteLanguage(options.siteLanguage)
+  return createSiteChromeConfig({
+    theme: options.theme,
+    studioName: options.studioName,
+    logoUrl: options.logoUrl,
+    primaryColor: options.primaryColor,
+    homepagePath: options.homepagePath,
+    linkMode: options.linkMode ?? 'href',
+    hasFaq: options.hasFaq,
+    hasPackages: options.hasPackages,
+    hasBlog: options.hasBlog,
+    blogPath: options.blogPath,
+    shouldColorLogo: options.shouldColorLogo,
+    galleryLayoutMode: options.galleryLayoutMode,
+    portfolioPath: options.portfolioPath,
+    language,
+  })
+}
+
+export function publicSitePageHtmlAttrs(siteLanguage?: string | null): string {
+  return siteHtmlAttrs(resolveSiteLanguage(siteLanguage))
+}
+
+/** LTR layout overrides for public pages — only when site language is English. */
+export function publicSiteLtrCss(siteLanguage?: string | null): string {
+  return resolveSiteLanguage(siteLanguage) === 'en' ? HOMEPAGE_LTR_CSS : ''
 }

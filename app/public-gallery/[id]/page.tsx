@@ -4,6 +4,7 @@ import { resolveMediaUrl } from '@/lib/r2/storage'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
+import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
 import {
@@ -33,6 +34,7 @@ type UserData = {
   contact_card_title: string | null
   contact_card_description: string | null
   faq_items: unknown
+  site_language: string | null
 }
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
@@ -54,7 +56,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     admin
       .from('users')
       .select(
-        'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, faq_items'
+        'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, faq_items, site_language'
       )
       .eq('id', galleryData.user_id)
       .single(),
@@ -75,12 +77,8 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const logoUrl = userData?.logo_url ? await resolveMediaUrl('branding', userData.logo_url) : null
 
   const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id)
-
-  const galleryDate = new Date(galleryData.created_at).toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
+  const siteLanguage = resolveSiteLanguage(userData?.site_language)
+  const galleryDate = formatSiteDate(galleryData.created_at, siteLanguage)
 
   const html = generatePublicGalleryPageHTML({
     theme: siteTheme,
@@ -98,6 +96,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
       contactCardTitle: userData?.contact_card_title ?? null,
       contactCardDescription: userData?.contact_card_description ?? null,
     },
+    siteLanguage: userData?.site_language ?? 'he',
   })
 
   return <HtmlFramePage html={html} title={`${galleryData.title} | ${studioName}`} />

@@ -1,13 +1,23 @@
 import {
-  createSiteChromeConfig,
+  buildPublicSiteChrome,
   generateSiteFooter,
   generateSiteNav,
   generateSiteNavScrollScript,
   generateSiteNavMobileStyles,
   generateSiteNavStyles,
+  publicSiteLtrCss,
+  publicSitePageHtmlAttrs,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import { homepageSectionHref, type PhotographerSiteTheme } from '@/lib/photographer-site-paths'
+import {
+  formatGalleryMetaLine,
+  getPublicGalleryContactLabel,
+  getPublicGalleryDefaultCta,
+  getPublicGalleryLightboxCopy,
+  getPublicGalleryPageTitleSuffix,
+} from '@/lib/public-gallery-copy'
+import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 
 export type PublicGalleryPhoto = {
   id: string
@@ -158,16 +168,19 @@ const masonryRevealScript = `
 })();
 `
 
-const lightboxMarkup = `
+function lightboxMarkup(language: SiteLanguage) {
+  const copy = getPublicGalleryLightboxCopy(language)
+  return `
 <div id="pg-lightbox" class="pg-lightbox" aria-hidden="true">
-  <button type="button" class="pg-lightbox__close" aria-label="סגור">&times;</button>
-  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--prev" aria-label="תמונה קודמת">&#8250;</button>
-  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--next" aria-label="תמונה הבאה">&#8249;</button>
+  <button type="button" class="pg-lightbox__close" aria-label="${copy.close}">&times;</button>
+  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--prev" aria-label="${copy.prev}">&#8250;</button>
+  <button type="button" class="pg-lightbox__nav pg-lightbox__nav--next" aria-label="${copy.next}">&#8249;</button>
   <div class="pg-lightbox__stage">
     <img id="pg-lightbox-image" class="pg-lightbox__image" alt="" />
   </div>
   <p id="pg-lightbox-counter" class="pg-lightbox__counter"></p>
 </div>`
+}
 
 const lightboxScript = `
 (function initPublicGalleryLightbox() {
@@ -382,32 +395,38 @@ function photoGrid(photos: PublicGalleryPhoto[], title: string, theme: SiteChrom
     .join('')
 }
 
-function contactButton(theme: SiteChromeTheme, homepagePath: string) {
+function contactButton(theme: SiteChromeTheme, homepagePath: string, language: SiteLanguage) {
   const href = escapeHtml(homepageSectionHref(homepagePath, 'contact'))
+  const label = getPublicGalleryContactLabel(language)
+  const dir = language === 'en' ? 'ltr' : 'rtl'
+  const btnStyle = `direction: ${dir} !important; text-align: center !important;`
 
   if (theme === 'dark') {
-    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-on-primary px-xl py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-on-primary px-xl py-md font-label-sm uppercase tracking-widest hover:opacity-90 btn-fuchsia-transition" style="${btnStyle}">${label}</a>`
   }
 
   if (theme === 'classic') {
-    return `<a href="${href}" target="_parent" class="inline-block border border-primary text-primary px-xl py-md font-label-sm hover:bg-primary/5 transition-colors" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+    return `<a href="${href}" target="_parent" class="inline-block border border-primary text-primary px-xl py-md font-label-sm hover:bg-primary/5 transition-colors" style="${btnStyle}">${label}</a>`
   }
 
   if (theme === 'modern') {
-    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-white px-xl py-md rounded-lg font-bold hover:brightness-110 transition-all" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+    return `<a href="${href}" target="_parent" class="inline-block bg-primary text-white px-xl py-md rounded-lg font-bold hover:brightness-110 transition-all" style="${btnStyle}">${label}</a>`
   }
 
-  return `<a href="${href}" target="_parent" class="inline-block border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="direction: rtl !important; text-align: center !important;">יצירת קשר</a>`
+  return `<a href="${href}" target="_parent" class="inline-block border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="${btnStyle}">${label}</a>`
 }
 
-function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme, homepagePath: string) {
+function ctaSection(
+  data: PublicGalleryPageData,
+  theme: SiteChromeTheme,
+  homepagePath: string,
+  language: SiteLanguage
+) {
   if (!data.contactCardTitle && !data.contactCardDescription) return ''
-  const title = escapeHtml(data.contactCardTitle || 'מוכנים ליצור משהו יוצא דופן?')
-  const description = escapeHtml(
-    data.contactCardDescription ||
-      'אנחנו זמינים לצילום פרויקטים מיוחדים. בואו נתכנן יחד את הסיפור הבא שלכם.'
-  )
-  const button = contactButton(theme, homepagePath)
+  const defaults = getPublicGalleryDefaultCta(language)
+  const title = escapeHtml(data.contactCardTitle || defaults.title)
+  const description = escapeHtml(data.contactCardDescription || defaults.description)
+  const button = contactButton(theme, homepagePath, language)
 
   if (theme === 'dark') {
     return `
@@ -452,9 +471,14 @@ function ctaSection(data: PublicGalleryPageData, theme: SiteChromeTheme, homepag
 </section>`
 }
 
-function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme, homepagePath: string) {
+function galleryBody(
+  data: PublicGalleryPageData,
+  theme: SiteChromeTheme,
+  homepagePath: string,
+  language: SiteLanguage
+) {
   const title = escapeHtml(data.title)
-  const meta = `${data.photoCount} תמונות • ${escapeHtml(data.galleryDate)}`
+  const meta = escapeHtml(formatGalleryMetaLine(data.photoCount, data.galleryDate, language))
 
   if (theme === 'elegant') {
     return `
@@ -471,7 +495,7 @@ function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme, homepa
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath)}
+${ctaSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -491,7 +515,7 @@ ${ctaSection(data, theme, homepagePath)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath)}
+${ctaSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -510,7 +534,7 @@ ${ctaSection(data, theme, homepagePath)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath)}
+${ctaSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -527,7 +551,7 @@ ${ctaSection(data, theme, homepagePath)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath)}
+${ctaSection(data, theme, homepagePath, language)}
 </section>
 </main>`
 }
@@ -537,9 +561,11 @@ function themeHead(
   studioName: string,
   primaryColor: string,
   shouldColorLogo: boolean = false,
-  pageTitleSuffix = 'גלריה'
+  pageTitleSuffix = 'גלריה',
+  siteLanguage?: string | null
 ) {
   const title = escapeHtml(`${studioName} | ${pageTitleSuffix}`)
+  const ltrCss = publicSiteLtrCss(siteLanguage)
 
   if (theme === 'modern') {
     return `
@@ -574,6 +600,7 @@ body { font-family: 'Heebo', sans-serif; background: #F8FAFC; color: #0F172A; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
 .nav-glass { background: rgba(248, 250, 252, 0.8); backdrop-filter: blur(12px); }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
+${ltrCss}
 </style>
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">`
@@ -618,6 +645,7 @@ tailwind.config = {
 <style>
 body { font-family: 'Heebo', sans-serif; background: #FAFAF8; }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
+${ltrCss}
 </style>
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">`
@@ -658,6 +686,7 @@ tailwind.config = {
 body { font-family: 'Heebo', sans-serif; background: #121217; color: #F5F5F0; }
 .btn-fuchsia-transition { transition: color 0.3s ease; }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
+${ltrCss}
 </style>
 </head>
 <body class="bg-background text-on-surface">`
@@ -701,6 +730,7 @@ body { background: #FAFAF8; color: #0F0F0D; font-family: 'Heebo', sans-serif; }
 .font-display { font-family: 'Playfair Display', serif; }
 .font-body { font-family: 'Heebo', sans-serif; }
 ${generateSiteNavMobileStyles()}
+${ltrCss}
 </style>
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">`
@@ -715,10 +745,13 @@ export function generatePublicGalleryPageHTML(options: {
   hasFaq?: boolean
   hasPackages?: boolean
   shouldColorLogo?: boolean
+  siteLanguage?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.gallery.accentColor
-  const chrome = createSiteChromeConfig({
+  const language = resolveSiteLanguage(options.siteLanguage)
+  const pageTitleSuffix = getPublicGalleryPageTitleSuffix(language)
+  const chrome = buildPublicSiteChrome({
     theme: chromeTheme,
     studioName: options.studioName,
     logoUrl: options.logoUrl,
@@ -728,15 +761,16 @@ export function generatePublicGalleryPageHTML(options: {
     hasFaq: options.hasFaq ?? false,
     hasPackages: options.hasPackages ?? false,
     shouldColorLogo: options.shouldColorLogo ?? false,
+    siteLanguage: options.siteLanguage,
   })
 
   return `<!DOCTYPE html>
-<html dir="rtl" lang="he" style="scroll-behavior: smooth;">
-${themeHead(chromeTheme, options.studioName, primaryColor, options.shouldColorLogo ?? false)}
+<html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
+${themeHead(chromeTheme, options.studioName, primaryColor, options.shouldColorLogo ?? false, pageTitleSuffix, options.siteLanguage)}
 ${MASONRY_STYLES}
 ${generateSiteNav(chrome)}
-${galleryBody(options.gallery, chromeTheme, options.homepagePath)}
-${lightboxMarkup}
+${galleryBody(options.gallery, chromeTheme, options.homepagePath, language)}
+${lightboxMarkup(language)}
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${masonryRevealScript}</script>
@@ -750,9 +784,10 @@ export function generatePublicGalleryThemeHead(
   studioName: string,
   primaryColor: string,
   pageTitleSuffix = 'גלריה',
-  shouldColorLogo = false
+  shouldColorLogo = false,
+  siteLanguage?: string | null
 ) {
-  return themeHead(theme, studioName, primaryColor, shouldColorLogo, pageTitleSuffix)
+  return themeHead(theme, studioName, primaryColor, shouldColorLogo, pageTitleSuffix, siteLanguage)
 }
 
 export function getMasonryCellStyle(theme: SiteChromeTheme) {
@@ -785,7 +820,7 @@ export function generatePublicGalleryMasonryGrid(
 export {
   MASONRY_STYLES as PUBLIC_GALLERY_MASONRY_STYLES,
   masonryRevealScript as PUBLIC_GALLERY_MASONRY_REVEAL_SCRIPT,
-  lightboxMarkup as PUBLIC_GALLERY_LIGHTBOX_MARKUP,
+  lightboxMarkup as generatePublicGalleryLightboxMarkup,
   lightboxScript as PUBLIC_GALLERY_LIGHTBOX_SCRIPT,
   lightboxDelegationScript as PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
 }

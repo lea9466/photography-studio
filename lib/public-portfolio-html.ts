@@ -1,17 +1,19 @@
 import {
-  createSiteChromeConfig,
+  buildPublicSiteChrome,
   generateSiteFooter,
   generateSiteNav,
   generateSiteNavScrollScript,
+  publicSitePageHtmlAttrs,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import {
   generatePublicGalleryThemeHead,
+  generatePublicGalleryLightboxMarkup,
   getMasonryCellStyle,
   PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
-  PUBLIC_GALLERY_LIGHTBOX_MARKUP,
   PUBLIC_GALLERY_MASONRY_STYLES,
 } from '@/lib/public-gallery-html'
+import { resolveSiteLanguage } from '@/lib/site-language'
 import type { PhotographerSiteTheme } from '@/lib/photographer-site-paths'
 
 export type PortfolioPhoto = {
@@ -342,11 +344,13 @@ export function generatePublicPortfolioPageHTML(options: {
   hasBlog?: boolean
   blogPath?: string
   shouldColorLogo?: boolean
+  siteLanguage?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.portfolio.accentColor
+  const language = resolveSiteLanguage(options.siteLanguage)
 
-  const chrome = createSiteChromeConfig({
+  const chrome = buildPublicSiteChrome({
     theme: chromeTheme,
     studioName: options.studioName,
     logoUrl: options.logoUrl,
@@ -360,6 +364,7 @@ export function generatePublicPortfolioPageHTML(options: {
     shouldColorLogo: options.shouldColorLogo ?? false,
     galleryLayoutMode: 'portfolio',
     portfolioPath: options.portfolioPath,
+    siteLanguage: options.siteLanguage,
   })
 
   const masonryEmptyMessage =
@@ -384,13 +389,13 @@ ${masonryEmptyMessage}
 ${generatePortfolioPhotosDataScript(options.portfolio.photos)}`
 
   return `<!DOCTYPE html>
-<html dir="rtl" lang="he" style="scroll-behavior: smooth;">
-${generatePublicGalleryThemeHead(chromeTheme, options.studioName, primaryColor, options.portfolio.pageTitle, options.shouldColorLogo ?? false)}
+<html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
+${generatePublicGalleryThemeHead(chromeTheme, options.studioName, primaryColor, options.portfolio.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage)}
 ${PUBLIC_GALLERY_MASONRY_STYLES}
 ${generatePortfolioTabStyles(primaryColor)}
 ${generateSiteNav(chrome)}
 ${body}
-${PUBLIC_GALLERY_LIGHTBOX_MARKUP}
+${generatePublicGalleryLightboxMarkup(language)}
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${generatePortfolioLazyLoadScript(options.portfolio.pageTitle, chromeTheme)}</script>
