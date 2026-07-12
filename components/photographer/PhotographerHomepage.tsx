@@ -1200,6 +1200,20 @@ function classicFaqSectionCss(primaryColor: string) {
 
 const TESTIMONIAL_THUMB_CARD_CSS = `
 
+  .testimonials-section--modern .testimonials-section-grid {
+    padding-top: 1rem;
+    padding-bottom: 4rem;
+  }
+
+  .testimonials-section--modern .testimonials-marquee {
+    padding-top: 1rem;
+    padding-bottom: 4rem;
+  }
+
+  .testimonials-section--modern .classic-testimonials-carousel {
+    padding-bottom: 2rem;
+  }
+
   .testimonials-section {
 
     background: transparent !important;
@@ -5978,7 +5992,7 @@ ${packagesBgLayers('#F8FAFC')}
 
 ${hasTestimonials ? `
 
-<section class="testimonials-section py-xxl max-w-7xl mx-auto px-lg" id="testimonials">
+<section class="testimonials-section testimonials-section--modern py-xxl max-w-7xl mx-auto px-lg" id="testimonials">
 
 <h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">${escapeHtml(testimonialsSectionTitle)}</h2>
 
