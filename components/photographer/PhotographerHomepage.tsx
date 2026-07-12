@@ -2225,6 +2225,71 @@ function classicFaqSectionCss(primaryColor: string) {
 
 const TESTIMONIAL_THUMB_CARD_CSS = `
 
+  .testimonials-bleed {
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    box-sizing: border-box;
+  }
+
+  .testimonials-section-grid:has(.testimonials-bleed) {
+    padding-inline: 0;
+  }
+
+  .testimonials-marquee {
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem 0;
+    direction: ltr;
+  }
+
+  .testimonials-marquee-track {
+    display: flex;
+    flex-direction: row;
+    direction: ltr;
+    width: max-content;
+    gap: 3rem;
+    justify-content: flex-start;
+    will-change: transform;
+  }
+
+  .testimonials-marquee-set {
+    display: flex;
+    flex-direction: row;
+    flex: 0 0 auto;
+    gap: 3rem;
+    align-items: stretch;
+  }
+
+  .testimonials-marquee .testimonial-thumb-card {
+    direction: rtl;
+    flex: 0 0 auto;
+  }
+
+  .testimonials-marquee .reveal-on-scroll,
+  .testimonials-marquee .animate-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .testimonials-marquee-track,
+    .testimonials-marquee-set {
+      gap: 2.25rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .testimonials-marquee-track,
+    .testimonials-marquee-set {
+      gap: 1.75rem;
+    }
+  }
+
   .testimonials-section--modern .testimonials-section-grid {
     padding-top: 1rem;
     padding-bottom: 1.5rem;
@@ -2242,6 +2307,8 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
   .testimonials-section {
 
     background: transparent !important;
+
+    overflow: visible;
 
   }
 
@@ -2596,8 +2663,6 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
     width: 100%;
 
     padding-bottom: 1rem;
-
-    padding-left: 1.15rem;
 
   }
 
@@ -4980,14 +5045,16 @@ ${accordion}
   }
 
   function generateTestimonialsCarouselHTML(theme: 'classic' | 'elegant' | 'modern' | 'dark') {
+    const wrapBleed = (inner: string) => `<div class="testimonials-bleed">${inner}</div>`
+
     if (testimonials.length <= 3) {
       const cardsHtml = testimonials
         .map((t, i) => generateThemeTestimonialCard(t, theme, i))
         .join('')
-      return `
+      return wrapBleed(`
     <div class="testimonials-row">
       ${cardsHtml}
-    </div>`
+    </div>`)
     }
 
     const slides: Testimonial[][] = []
@@ -5016,11 +5083,11 @@ ${accordion}
         .join('')}
     </div>`
 
-    return `
+    return wrapBleed(`
     <div class="classic-testimonials-carousel" id="testimonials-carousel">
       <div class="classic-testimonials-track">${slidesHtml}</div>
       ${dotsHtml}
-    </div>`
+    </div>`)
   }
 
   function generateTestimonialsSection(theme: 'classic' | 'elegant' | 'modern' | 'dark') {
@@ -5043,69 +5110,14 @@ ${accordion}
     // loop seam is invisible. Track flows LTR (anchored left) to avoid the RTL
     // "empties on scroll" bug; each card keeps RTL text.
     return `
-    <div class="testimonials-marquee-bleed">
+    <div class="testimonials-bleed">
     <div class="testimonials-marquee" data-testimonials-marquee>
       <div class="testimonials-marquee-track">
         <div class="testimonials-marquee-set">${cardsHtml}</div>
         <div class="testimonials-marquee-set" aria-hidden="true">${cardsHtml}</div>
       </div>
     </div>
-    </div>
-    <style>
-      .testimonials-marquee-bleed {
-        /* Full-bleed breakout — 98vw (~1% side margin) for more card breathing room. */
-        width: 98vw;
-        max-width: 98vw;
-        margin-left: calc(50% - 49vw);
-        margin-right: calc(50% - 49vw);
-        box-sizing: border-box;
-      }
-      .testimonials-marquee {
-        overflow: hidden;
-        position: relative;
-        width: 100%;
-        box-sizing: border-box;
-        padding: 1rem 0;
-        /* LTR so the overflowing max-content track anchors to the LEFT edge.
-           Under the page's RTL direction it would anchor right and translateX(-)
-           would scroll into empty space (the "screen empties" bug). */
-        direction: ltr;
-      }
-      .testimonials-marquee-track {
-        display: flex;
-        flex-direction: row;
-        direction: ltr;
-        width: max-content;
-        gap: 3rem;
-        justify-content: flex-start;
-        will-change: transform;
-      }
-      .testimonials-marquee-set {
-        display: flex;
-        flex-direction: row;
-        flex: 0 0 auto;
-        gap: 3rem;
-        align-items: stretch;
-      }
-      .testimonials-marquee .testimonial-thumb-card {
-        direction: rtl;
-        flex: 0 0 auto;
-      }
-      .testimonials-marquee .reveal-on-scroll,
-      .testimonials-marquee .animate-reveal {
-        opacity: 1 !important;
-        transform: none !important;
-        transition: none !important;
-      }
-      @media (min-width: 768px) and (max-width: 1023px) {
-        .testimonials-marquee-track,
-        .testimonials-marquee-set { gap: 2.25rem; }
-      }
-      @media (max-width: 767px) {
-        .testimonials-marquee-track,
-        .testimonials-marquee-set { gap: 1.75rem; }
-      }
-    </style>`
+    </div>`
   }
 
 
