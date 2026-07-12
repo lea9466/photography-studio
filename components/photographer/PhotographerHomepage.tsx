@@ -137,6 +137,8 @@ interface Photographer {
 
   faq_items?: FaqItem[] | unknown
 
+  faq_section_image_url?: string | null
+
   should_color_logo?: boolean
 
   posts_page_title?: string | null
@@ -1913,9 +1915,495 @@ const MODERN_FAQ_ACCORDION_CSS = `
 
 
 
+function magazineFaqGridCss(primaryColor: string) {
+
+  return `
+
+  .theme-classic .faq-magazine-wrap,
+
+  .theme-elegant .faq-magazine-wrap {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding-inline: 2%;
+
+    box-sizing: border-box;
+
+  }
+
+  .theme-classic .faq-magazine-layout--with-image,
+
+  .theme-elegant .faq-magazine-layout--with-image {
+
+    display: grid;
+
+    grid-template-columns: 1.2fr 1fr;
+
+    gap: 60px;
+
+    direction: rtl;
+
+    align-items: start;
+
+    width: 100%;
+
+  }
+
+  .theme-classic .faq-magazine-content,
+
+  .theme-elegant .faq-magazine-content {
+
+    min-width: 0;
+
+    width: 100%;
+
+  }
+
+  .theme-classic .faq-magazine-feature,
+
+  .theme-elegant .faq-magazine-feature {
+
+    min-width: 0;
+
+    width: 100%;
+
+    align-self: stretch;
+
+    min-height: 100%;
+
+  }
+
+  .theme-classic .faq-magazine-feature__image,
+
+  .theme-elegant .faq-magazine-feature__image {
+
+    width: 100%;
+
+    height: 100%;
+
+    min-height: clamp(20rem, 52vh, 36rem);
+
+    object-fit: cover;
+
+    border-radius: 12px;
+
+    display: block;
+
+  }
+
+  .theme-classic .faq-magazine-layout--with-image .faq-magazine-grid,
+
+  .theme-elegant .faq-magazine-layout--with-image .faq-magazine-grid {
+
+    grid-template-columns: 1fr;
+
+    gap: 50px 0;
+
+  }
+
+  .theme-classic .faq-magazine-layout--with-image .faq-magazine-item--featured,
+
+  .theme-elegant .faq-magazine-layout--with-image .faq-magazine-item--featured {
+
+    grid-column: auto;
+
+  }
+
+  .theme-classic .faq-magazine-layout--with-image .faq-magazine-item:not(.faq-magazine-item--featured):nth-child(2n + 3),
+
+  .theme-elegant .faq-magazine-layout--with-image .faq-magazine-item:not(.faq-magazine-item--featured):nth-child(2n + 3) {
+
+    margin-top: 0;
+
+  }
+
+  @media (max-width: 768px) {
+
+    .theme-classic .faq-section--with-image,
+
+    .theme-elegant .faq-section--with-image {
+
+      position: relative;
+
+      width: 100%;
+
+      background-image: var(--faq-section-bg-image);
+
+      background-position: center;
+
+      background-size: cover;
+
+      background-repeat: no-repeat;
+
+      padding: 40px 20px !important;
+
+      overflow: hidden;
+
+      isolation: isolate;
+
+    }
+
+    .theme-classic .faq-section--with-image::before,
+
+    .theme-elegant .faq-section--with-image::before {
+
+      content: '';
+
+      position: absolute;
+
+      inset: 0;
+
+      z-index: 0;
+
+      background: rgba(251, 249, 244, 0.85);
+
+      backdrop-filter: blur(8px);
+
+      -webkit-backdrop-filter: blur(8px);
+
+      pointer-events: none;
+
+    }
+
+    .theme-elegant .faq-section--with-image::before {
+
+      background: rgba(255, 255, 255, 0.88);
+
+    }
+
+    .theme-classic .faq-section--with-image > *,
+
+    .theme-elegant .faq-section--with-image > * {
+
+      position: relative;
+
+      z-index: 1;
+
+    }
+
+    .theme-classic .faq-section--with-image .faq-magazine-layout--with-image,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-layout--with-image {
+
+      display: block;
+
+      width: 100%;
+
+      gap: 0;
+
+    }
+
+    .theme-classic .faq-section--with-image .faq-magazine-feature,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-feature {
+
+      display: none;
+
+    }
+
+    .theme-classic .faq-section--with-image .faq-magazine-wrap,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-wrap {
+
+      padding-inline: 0;
+
+      width: 100%;
+
+    }
+
+    .theme-classic .faq-section--with-image .faq-magazine-grid,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-grid {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 50px;
+
+      width: 100%;
+
+    }
+
+    .theme-classic .faq-section--with-image .faq-magazine-item,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-item,
+
+    .theme-classic .faq-section--with-image .faq-magazine-item__question,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-item__question,
+
+    .theme-classic .faq-section--with-image .faq-magazine-item__answer,
+
+    .theme-elegant .faq-section--with-image .faq-magazine-item__answer {
+
+      text-align: right;
+
+    }
+
+    .theme-classic .faq-magazine-layout--with-image,
+
+    .theme-elegant .faq-magazine-layout--with-image {
+
+      display: block;
+
+      width: 100%;
+
+      gap: 0;
+
+    }
+
+  }
+
+  .theme-classic .faq-magazine-grid,
+
+  .theme-elegant .faq-magazine-grid {
+
+    display: grid;
+
+    direction: rtl;
+
+    grid-template-columns: 1fr;
+
+    gap: 50px 60px;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding: 0;
+
+    box-sizing: border-box;
+
+    background: transparent;
+
+    border: none;
+
+    box-shadow: none;
+
+  }
+
+  @media (min-width: 768px) {
+
+    .theme-classic .faq-magazine-grid,
+
+    .theme-elegant .faq-magazine-grid {
+
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+    .theme-classic .faq-magazine-item--featured,
+
+    .theme-elegant .faq-magazine-item--featured {
+
+      grid-column: 1 / -1;
+
+    }
+
+    .theme-classic .faq-magazine-item:not(.faq-magazine-item--featured):nth-child(2n + 3),
+
+    .theme-elegant .faq-magazine-item:not(.faq-magazine-item--featured):nth-child(2n + 3) {
+
+      margin-top: 2.5rem;
+
+    }
+
+  }
+
+  .theme-classic .faq-magazine-item,
+
+  .theme-elegant .faq-magazine-item {
+
+    background: transparent;
+
+    border: none;
+
+    border-radius: 0;
+
+    box-shadow: none;
+
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+    padding: 0 0 clamp(2rem, 4vw, 2.75rem);
+
+    text-align: right;
+
+    direction: rtl;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 0.85rem;
+
+    min-height: 0;
+
+  }
+
+  .theme-classic .faq-magazine-item__heading,
+
+  .theme-elegant .faq-magazine-item__heading {
+
+    display: flex;
+
+    flex-direction: row;
+
+    align-items: flex-start;
+
+    justify-content: flex-start;
+
+    gap: clamp(0.75rem, 2vw, 1.25rem);
+
+    direction: rtl;
+
+    text-align: right;
+
+  }
+
+  .theme-classic .faq-magazine-item__number,
+
+  .theme-elegant .faq-magazine-item__number {
+
+    color: transparent;
+
+    -webkit-text-stroke: 1.5px ${primaryColor};
+
+    paint-order: stroke fill;
+
+    font-weight: 800;
+
+    font-size: clamp(2rem, 5vw, 2.5rem);
+
+    line-height: 1;
+
+    flex-shrink: 0;
+
+    font-variant-numeric: tabular-nums;
+
+    letter-spacing: -0.02em;
+
+    user-select: none;
+
+  }
+
+  .theme-classic .faq-magazine-item--featured .faq-magazine-item__number,
+
+  .theme-elegant .faq-magazine-item--featured .faq-magazine-item__number {
+
+    font-size: clamp(2.75rem, 6vw, 3.5rem);
+
+  }
+
+  .theme-elegant .faq-magazine-item__question {
+
+    font-family: 'Heebo', sans-serif;
+
+    font-size: clamp(1rem, 2.4vw, 1.125rem);
+
+    font-weight: 400;
+
+    line-height: 1.55;
+
+    color: ${primaryColor};
+
+    margin: 0;
+
+    text-align: right;
+
+    flex: 1;
+
+  }
+
+  .theme-elegant .faq-magazine-item--featured .faq-magazine-item__question {
+
+    font-size: clamp(1.15rem, 2.8vw, 1.35rem);
+
+  }
+
+  .theme-elegant .faq-magazine-item__answer {
+
+    font-family: 'Heebo', sans-serif;
+
+    font-size: clamp(0.8125rem, 2.1vw, 0.975rem);
+
+    font-weight: 300;
+
+    line-height: 1.75;
+
+    color: #0F0F0D;
+
+    margin: 0;
+
+    text-align: right;
+
+    white-space: pre-line;
+
+  }
+
+  .theme-classic .faq-magazine-item__question {
+
+    font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
+
+    font-size: clamp(1rem, 2.3vw, 1.2rem);
+
+    font-weight: 600;
+
+    line-height: 1.45;
+
+    color: ${primaryColor};
+
+    margin: 0;
+
+    text-align: right;
+
+    flex: 1;
+
+  }
+
+  .theme-classic .faq-magazine-item--featured .faq-magazine-item__question {
+
+    font-size: clamp(1.2rem, 2.8vw, 1.45rem);
+
+  }
+
+  .theme-classic .faq-magazine-item__answer {
+
+    font-family: 'Heebo', sans-serif;
+
+    font-size: clamp(0.875rem, 2vw, 1rem);
+
+    font-weight: 400;
+
+    line-height: 1.7;
+
+    color: #5a504a;
+
+    margin: 0;
+
+    text-align: right;
+
+    white-space: pre-line;
+
+  }`
+
+}
+
+
+
 function elegantFaqSectionCss(primaryColor: string) {
 
   return `
+
+  ${magazineFaqGridCss(primaryColor)}
 
   .faq-section__header,
 
@@ -2011,118 +2499,6 @@ function elegantFaqSectionCss(primaryColor: string) {
 
     max-width: none;
 
-  }
-
-  .faq-grid-elegant {
-
-    display: grid;
-
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-
-    gap: 3px;
-
-    width: 100%;
-
-    max-width: 100%;
-
-    margin-inline: 0;
-
-    padding-inline: 2%;
-
-    box-sizing: border-box;
-
-    align-items: stretch;
-
-  }
-
-  @media (min-width: 640px) {
-
-    .faq-grid-elegant {
-
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-
-      gap: 4px;
-
-    }
-
-  }
-
-  @media (min-width: 768px) {
-
-    .faq-grid-elegant {
-
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-
-      gap: 4px;
-
-    }
-
-  }
-
-  .faq-card-elegant {
-
-    background: #ffffff;
-
-    border-radius: 0;
-
-    padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 2.5vw, 1.5rem);
-
-    text-align: center;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: flex-start;
-
-    gap: 0.75rem;
-
-    min-height: clamp(10rem, 24vw, 13rem);
-
-    width: 100%;
-
-    height: 100%;
-
-    box-shadow: none;
-
-    border: 1px solid rgba(15, 15, 13, 0.06);
-
-  }
-
-  .faq-card-elegant__question {
-
-    font-family: 'Heebo', sans-serif;
-
-    font-size: clamp(1rem, 2.4vw, 1.125rem);
-
-    font-weight: 400;
-
-    line-height: 1.55;
-
-    color: ${primaryColor};
-
-    margin: 0;
-
-  }
-
-  .faq-card-elegant__answer {
-
-    font-family: 'Heebo', sans-serif;
-
-    font-size: clamp(0.8125rem, 2.1vw, 0.975rem);
-
-    font-weight: 300;
-
-    line-height: 1.75;
-
-    color: #0F0F0D;
-
-    margin: 0;
-
-    white-space: pre-line;
-
   }`
 
 }
@@ -2131,127 +2507,7 @@ function elegantFaqSectionCss(primaryColor: string) {
 
 function classicFaqSectionCss(primaryColor: string) {
 
-  return `
-
-  .faq-grid-classic {
-
-    display: grid;
-
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-
-    gap: 3px;
-
-    width: 100%;
-
-    max-width: 100%;
-
-    margin-inline: 0;
-
-    padding-inline: 2%;
-
-    box-sizing: border-box;
-
-    align-items: stretch;
-
-  }
-
-  @media (min-width: 640px) {
-
-    .faq-grid-classic {
-
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-
-      gap: 4px;
-
-    }
-
-  }
-
-  @media (min-width: 768px) {
-
-    .faq-grid-classic {
-
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-
-      gap: 4px;
-
-    }
-
-  }
-
-  .faq-card-classic {
-
-    background: #ffffff;
-
-    border-radius: 4px;
-
-    padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 2.5vw, 1.5rem);
-
-    text-align: center;
-
-    display: flex;
-
-    flex-direction: column;
-
-    align-items: center;
-
-    justify-content: flex-start;
-
-    gap: 0.75rem;
-
-    min-height: clamp(10rem, 24vw, 13rem);
-
-    width: 100%;
-
-    height: 100%;
-
-    border: 1px solid rgba(0, 0, 0, 0.06);
-
-    box-shadow: none;
-
-    transition: border-color 0.3s ease;
-
-  }
-
-  .faq-card-classic:hover {
-
-    border-color: ${primaryColor}40;
-
-  }
-
-  .faq-card-classic__question {
-
-    font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
-
-    font-size: clamp(1rem, 2.3vw, 1.2rem);
-
-    font-weight: 600;
-
-    line-height: 1.45;
-
-    color: ${primaryColor};
-
-    margin: 0;
-
-  }
-
-  .faq-card-classic__answer {
-
-    font-family: 'Heebo', sans-serif;
-
-    font-size: clamp(0.875rem, 2vw, 1rem);
-
-    font-weight: 400;
-
-    line-height: 1.7;
-
-    color: #5a504a;
-
-    margin: 0;
-
-    white-space: pre-line;
-
-  }`
+  return magazineFaqGridCss(primaryColor)
 
 }
 
@@ -4164,6 +4420,16 @@ function generateHomepageHTML(
 
   const validFaqItems = sanitizeFaqItems(parseFaqItems(photographer.faq_items))
 
+  const faqSectionImageUrl = photographer.faq_section_image_url?.trim() || null
+
+  const faqSectionWithImageClass = faqSectionImageUrl ? ' faq-section--with-image' : ''
+
+  const faqSectionWithImageStyle = faqSectionImageUrl
+
+    ? ` style="--faq-section-bg-image: url('${faqSectionImageUrl.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')"`
+
+    : ''
+
   const hasFaq = validFaqItems.length > 0
 
   const sectionScrollScript = generateHomepageSectionScrollScript(initialSection)
@@ -4566,23 +4832,75 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 
 
-  const generateElegantFaqCardsHTML = () =>
+  const generateMagazineFaqItemsHTML = (variant: 'elegant' | 'classic', includeFeatured = true) =>
 
     validFaqItems
 
-      .map(
+      .map((item, index) => {
 
-        (item, index) => `<article class="faq-card-elegant reveal-on-scroll" style="transition-delay: ${index * 80}ms">
+        const revealClass = variant === 'elegant' ? 'reveal-on-scroll' : 'reveal'
 
-<h3 class="faq-card-elegant__question">${escapeHtml(item.question)}</h3>
+        const featuredClass = includeFeatured && index === 0 ? ' faq-magazine-item--featured' : ''
 
-<p class="faq-card-elegant__answer">${escapeHtml(item.answer)}</p>
+        const indexLabel = String(index + 1).padStart(2, '0')
+
+
+
+        return `<article class="faq-magazine-item${featuredClass} ${revealClass}" style="transition-delay: ${index * 80}ms">
+
+<div class="faq-magazine-item__heading">
+
+<span class="faq-magazine-item__number" aria-hidden="true">${indexLabel}</span>
+
+<h3 class="faq-magazine-item__question">${escapeHtml(item.question)}</h3>
+
+</div>
+
+<p class="faq-magazine-item__answer">${escapeHtml(item.answer)}</p>
 
 </article>`
 
-      )
+      })
 
       .join('')
+
+
+
+  const generateMagazineFaqBodyHTML = (variant: 'elegant' | 'classic') => {
+
+    const revealClass = variant === 'elegant' ? 'reveal-on-scroll' : 'reveal'
+
+    const withImage = Boolean(faqSectionImageUrl)
+
+    const itemsHtml = generateMagazineFaqItemsHTML(variant, !withImage)
+
+
+
+    if (!withImage) {
+
+      return `<div class="faq-magazine-grid">${itemsHtml}</div>`
+
+    }
+
+
+
+    return `<div class="faq-magazine-layout faq-magazine-layout--with-image">
+
+<div class="faq-magazine-content">
+
+<div class="faq-magazine-grid faq-magazine-grid--stacked">${itemsHtml}</div>
+
+</div>
+
+<div class="faq-magazine-feature ${revealClass}">
+
+<img src="${faqSectionImageUrl}" alt="" class="faq-magazine-feature__image" loading="lazy" decoding="async"/>
+
+</div>
+
+</div>`
+
+  }
 
 
 
@@ -4672,26 +4990,6 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 
 
-  const generateClassicFaqCardsHTML = () =>
-
-    validFaqItems
-
-      .map(
-
-        (item, index) => `<article class="faq-card-classic reveal" style="transition-delay: ${index * 80}ms">
-
-<h3 class="faq-card-classic__question">${escapeHtml(item.question)}</h3>
-
-<p class="faq-card-classic__answer">${escapeHtml(item.answer)}</p>
-
-</article>`
-
-      )
-
-      .join('')
-
-
-
   const generateFaqSectionHTML = (currentTheme: string) => {
 
     if (!hasFaq) return ''
@@ -4704,7 +5002,7 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
     if (currentTheme === 'elegant') {
 
-      return `<section class="faq-section pt-8 pb-16 md:pt-12 md:pb-32 reveal-on-scroll" id="faq">
+      return `<section class="faq-section pt-8 pb-16 md:pt-12 md:pb-32 reveal-on-scroll${faqSectionWithImageClass}" id="faq"${faqSectionWithImageStyle}>
 
 <div class="faq-section__header reveal-on-scroll">
 
@@ -4714,7 +5012,11 @@ ${elegantSectionHeading('שאלות נפוצות', 'FAQ')}
 
 </div>
 
-<div class="faq-grid-elegant">${generateElegantFaqCardsHTML()}</div>
+<div class="faq-magazine-wrap">
+
+${generateMagazineFaqBodyHTML('elegant')}
+
+</div>
 
 </section>`
 
@@ -4764,7 +5066,7 @@ ${generateFaqAccordionHTML('dark')}
 
     if (currentTheme === 'classic') {
 
-      return `<section class="faq-section py-xxl reveal" id="faq">
+      return `<section class="faq-section py-xxl reveal${faqSectionWithImageClass}" id="faq"${faqSectionWithImageStyle}>
 
 <div class="faq-section__header stagger-reveal" data-reveal-delay="0">
 
@@ -4778,7 +5080,11 @@ ${generateFaqAccordionHTML('dark')}
 
 </div>
 
-<div class="faq-grid-classic">${generateClassicFaqCardsHTML()}</div>
+<div class="faq-magazine-wrap">
+
+${generateMagazineFaqBodyHTML('classic')}
+
+</div>
 
 </section>`
 
@@ -5975,7 +6281,7 @@ ${documentHead}
 
 </head>
 
-<body class="selection:bg-[${primaryColor}] selection:text-white">
+<body class="theme-elegant selection:bg-[${primaryColor}] selection:text-white">
 
 ${generateSiteNav(siteChrome('elegant'))}
 
@@ -6456,6 +6762,52 @@ ${documentHead}
         .hover-scale:hover {
 
             transform: scale(1.02);
+
+        }
+
+        .modern-stats-section {
+
+            width: 100%;
+
+            max-width: 100%;
+
+            padding-top: 30px;
+
+            padding-bottom: 80px;
+
+        }
+
+        .modern-stats-grid {
+
+            display: grid;
+
+            grid-template-columns: 1fr;
+
+            width: 100%;
+
+            gap: 4px;
+
+            padding-inline: 4px;
+
+            box-sizing: border-box;
+
+        }
+
+        @media (min-width: 768px) {
+
+            .modern-stats-grid {
+
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+
+            }
+
+        }
+
+        .modern-stats-card {
+
+            min-width: 0;
+
+            width: 100%;
 
         }
 
@@ -7015,11 +7367,11 @@ ${aboutDescription ? '<p class="text-lg md:text-xl modern-about-muted leading-re
 
 ${hasStats ? `
 
-<section class="max-w-7xl mx-auto px-lg py-xxl">
+<section class="modern-stats-section w-full">
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-lg">
+<div class="modern-stats-grid">
 
-<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal hover-scale">
+<div class="modern-stats-card bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal hover-scale">
 
 <span class="material-symbols-outlined text-primary text-5xl">photo_camera</span>
 
@@ -7029,7 +7381,7 @@ ${hasStats ? `
 
 </div>
 
-<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-100 hover-scale">
+<div class="modern-stats-card bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-100 hover-scale">
 
 <span class="material-symbols-outlined text-primary text-5xl">groups</span>
 
@@ -7039,7 +7391,7 @@ ${hasStats ? `
 
 </div>
 
-<div class="bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-200 hover-scale">
+<div class="modern-stats-card bg-white p-xl rounded-2xl modern-shadow flex flex-col items-center text-center gap-sm animate-reveal delay-200 hover-scale">
 
 <span class="material-symbols-outlined text-primary text-5xl">military_tech</span>
 

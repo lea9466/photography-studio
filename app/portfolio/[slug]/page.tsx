@@ -150,9 +150,9 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
         <h1 className="mt-2 text-3xl font-semibold">{gallery.title}</h1>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8 space-y-12">
+      <main className="w-full space-y-12 py-8">
         {packages.length > 0 ? (
-          <section>
+          <section className="mx-auto max-w-5xl px-4">
             <h2 className="mb-6 text-2xl font-semibold">חבילות צילום</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {packages.map((pkg) => (
@@ -164,26 +164,27 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
 
         <section>
           {packages.length > 0 ? (
-            <h2 className="mb-6 text-2xl font-semibold">תיק עבודות</h2>
+            <h2 className="mx-auto mb-6 max-w-5xl px-4 text-2xl font-semibold">תיק עבודות</h2>
           ) : null}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {signed.map((photo) => (
-            <div
-              key={photo.id}
-              className="relative aspect-square overflow-hidden rounded-xl border border-[--border]"
-            >
-              {photo.url ? (
-                <Image
-                  src={photo.url}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                />
-              ) : null}
-            </div>
-          ))}
-        </div>
+          <div className="columns-1 gap-1 px-1 sm:columns-2 sm:px-1.5 lg:columns-3">
+            {signed.map((photo) => (
+              <div
+                key={photo.id}
+                className="relative mb-1 break-inside-avoid overflow-hidden"
+              >
+                {photo.url ? (
+                  <Image
+                    src={photo.url}
+                    alt=""
+                    width={800}
+                    height={1200}
+                    className="h-auto w-full"
+                    sizes="(max-width: 1024px) 50vw, 33vw"
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* About Section */}

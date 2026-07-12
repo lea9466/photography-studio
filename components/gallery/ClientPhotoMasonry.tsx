@@ -27,11 +27,11 @@ export function ClientPhotoMasonry({
   getGlobalIndex,
 }: ClientPhotoMasonryProps) {
   return (
-    <div className="columns-1 gap-3 sm:columns-2 lg:columns-3">
+    <div className="columns-1 gap-1 sm:columns-2 lg:columns-3">
       {photos.map((photo) => (
         <div
           key={photo.id}
-          className="group relative mb-3 break-inside-avoid overflow-hidden rounded-none animate-float-up"
+          className="group relative mb-1 break-inside-avoid overflow-hidden rounded-none animate-float-up"
         >
           <button
             type="button"

@@ -220,15 +220,17 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         <h1 className="mt-1 text-2xl font-semibold">{gallery.title}</h1>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl space-y-6 px-3 py-6 sm:px-4">
-        <StatusBanner
-          status={gallery.status}
-          maxAlbum={gallery.max_album_selection}
-          maxEdit={gallery.max_edit_selection}
-        />
+      <main className="w-full space-y-6 py-6">
+        <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
+          <StatusBanner
+            status={gallery.status}
+            maxAlbum={gallery.max_album_selection}
+            maxEdit={gallery.max_edit_selection}
+          />
+        </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-3 sm:px-4">
             <TabsList>
               <TabsTrigger value="regular">תמונות רגילות</TabsTrigger>
               <TabsTrigger value="edit">לעיבוד</TabsTrigger>
@@ -247,30 +249,32 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
             </div>
           </div>
 
-          <TabsContent value={tab}>
+          <TabsContent value={tab} className="mt-6">
             {filtered.length === 0 ? (
               <p className="py-12 text-center text-sm text-[--muted]">
                 אין תמונות בטאב זה
               </p>
             ) : (
-              <ClientPhotoMasonry
-                photos={filtered.map((photo) => ({
-                  id: photo.id,
-                  src:
-                    tab === 'processed'
-                      ? photo.edited_signed_url ?? photo.preview_signed_url
-                      : photo.preview_signed_url,
-                  lightboxSrc:
-                    photo.lightbox_signed_url ?? photo.preview_signed_url,
-                  selected_album: photo.selected_album,
-                  selected_edit: photo.selected_edit,
-                }))}
-                canSelect={canSelect}
-                onOpen={openLightbox}
-                onToggleAlbum={(id) => toggleField(id, 'selected_album')}
-                onToggleEdit={(id) => toggleField(id, 'selected_edit')}
-                getGlobalIndex={(id) => items.findIndex((p) => p.id === id)}
-              />
+              <div className="px-1 sm:px-1.5">
+                <ClientPhotoMasonry
+                  photos={filtered.map((photo) => ({
+                    id: photo.id,
+                    src:
+                      tab === 'processed'
+                        ? photo.edited_signed_url ?? photo.preview_signed_url
+                        : photo.preview_signed_url,
+                    lightboxSrc:
+                      photo.lightbox_signed_url ?? photo.preview_signed_url,
+                    selected_album: photo.selected_album,
+                    selected_edit: photo.selected_edit,
+                  }))}
+                  canSelect={canSelect}
+                  onOpen={openLightbox}
+                  onToggleAlbum={(id) => toggleField(id, 'selected_album')}
+                  onToggleEdit={(id) => toggleField(id, 'selected_edit')}
+                  getGlobalIndex={(id) => items.findIndex((p) => p.id === id)}
+                />
+              </div>
             )}
           </TabsContent>
         </Tabs>

@@ -99,27 +99,29 @@ export function PublicPortfolioGalleryView({
         <p className="mt-1 text-sm text-[--muted]">{date}</p>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-3 py-6 sm:px-4">
+      <main className="w-full py-6">
         {photos.length === 0 ? (
           <p className="py-12 text-center text-sm text-[--muted]">
             אין תמונות בגלריה זו
           </p>
         ) : (
-          <ClientPhotoMasonry
-            photos={photos.map((photo) => ({
-              id: photo.id,
-              src: photo.preview_signed_url,
-              lightboxSrc:
-                photo.lightbox_signed_url ?? photo.preview_signed_url,
-              selected_album: false,
-              selected_edit: false,
-            }))}
-            canSelect={false}
-            onOpen={openLightbox}
-            onToggleAlbum={() => {}}
-            onToggleEdit={() => {}}
-            getGlobalIndex={(id) => photos.findIndex((p) => p.id === id)}
-          />
+          <div className="px-1 sm:px-1.5">
+            <ClientPhotoMasonry
+              photos={photos.map((photo) => ({
+                id: photo.id,
+                src: photo.preview_signed_url,
+                lightboxSrc:
+                  photo.lightbox_signed_url ?? photo.preview_signed_url,
+                selected_album: false,
+                selected_edit: false,
+              }))}
+              canSelect={false}
+              onOpen={openLightbox}
+              onToggleAlbum={() => {}}
+              onToggleEdit={() => {}}
+              getGlobalIndex={(id) => photos.findIndex((p) => p.id === id)}
+            />
+          </div>
         )}
       </main>
 

@@ -32,13 +32,13 @@ const MASONRY_STYLES = `
 <style>
 .pg-masonry {
   column-count: 1;
-  column-gap: 12px;
+  column-gap: 4px;
 }
 @media (min-width: 640px) { .pg-masonry { column-count: 2; } }
 @media (min-width: 1024px) { .pg-masonry { column-count: 3; } }
 .pg-masonry-cell {
   break-inside: avoid;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   opacity: 0;
   transform: scale(0.82);
   transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
@@ -357,9 +357,9 @@ function escapeHtml(value: string) {
 
 const MASONRY_CELL_STYLE: Record<SiteChromeTheme, { radius: string; bg: string; extra: string }> = {
   elegant: { radius: '0px', bg: '#eae8e5', extra: '' },
-  classic: { radius: '4px', bg: '#eae8e5', extra: '' },
-  modern: { radius: '12px', bg: '#eae8e5', extra: 'box-shadow: 0 1px 3px rgba(0,0,0,0.08);' },
-  dark: { radius: '2px', bg: '#1A1A22', extra: '' },
+  classic: { radius: '0px', bg: '#eae8e5', extra: '' },
+  modern: { radius: '0px', bg: '#eae8e5', extra: '' },
+  dark: { radius: '0px', bg: '#1A1A22', extra: '' },
 }
 
 function escapeAttr(value: string) {
@@ -459,16 +459,18 @@ function galleryBody(data: PublicGalleryPageData, theme: SiteChromeTheme, homepa
   if (theme === 'elegant') {
     return `
 <main class="pt-24">
-<section class="max-w-[1280px] mx-auto px-[24px] pt-8 pb-24">
+<section class="max-w-[1280px] mx-auto px-[24px] pt-8">
 <header class="text-center mb-[80px]">
 <span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block elegant-accent">Aesthetic Collection</span>
 <h1 class="font-serif-hebrew text-[48px] md:text-[68px] text-on-surface mb-[16px] font-medium">${title}</h1>
 <div class="w-16 h-px mx-auto mb-[24px] elegant-bg-accent"></div>
 <p class="font-body text-[18px] text-on-surface-variant max-w-2xl mx-auto">${meta}</p>
 </header>
-<section class="pg-masonry mb-[80px]">
+</section>
+<section class="pg-masonry px-1 sm:px-1.5 mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
+<section class="max-w-[1280px] mx-auto px-[24px] pb-24">
 ${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
@@ -477,16 +479,18 @@ ${ctaSection(data, theme, homepagePath)}
   if (theme === 'classic') {
     return `
 <main class="pt-24">
-<section class="max-w-[1280px] mx-auto px-[24px] pt-8 pb-24">
+<section class="max-w-[1280px] mx-auto px-[24px] pt-8">
 <header class="text-center mb-[48px]">
 <span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block text-primary">Editorial Series</span>
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
 <div class="w-12 h-px mx-auto mb-[24px] bg-primary"></div>
 <p class="font-body-md text-body-md text-on-surface-variant italic">${meta}</p>
 </header>
-<section class="pg-masonry mb-[80px]">
+</section>
+<section class="pg-masonry px-1 sm:px-1.5 mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
+<section class="max-w-[1280px] mx-auto px-[24px] pb-24">
 ${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
@@ -501,9 +505,11 @@ ${ctaSection(data, theme, homepagePath)}
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
 <p class="font-body-md text-body-md text-on-surface-variant">${meta}</p>
 </header>
-<section class="pg-masonry mb-[80px]">
+</section>
+<section class="pg-masonry px-1 sm:px-1.5 mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
+<section class="max-w-[1280px] mx-auto px-[24px] pb-24">
 ${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`
@@ -516,9 +522,11 @@ ${ctaSection(data, theme, homepagePath)}
 <h1 class="font-headline text-[48px] md:text-[64px] font-bold text-on-surface leading-tight mb-[8px]">${title}</h1>
 <p class="font-body text-[16px] text-on-surface-variant">${meta}</p>
 </header>
-<section class="pg-masonry mb-[80px]">
+</section>
+<section class="pg-masonry px-1 sm:px-1.5 mb-[80px]">
 ${photoGrid(data.photos, data.title, theme)}
 </section>
+<section class="max-w-[1280px] mx-auto px-[24px] pb-24">
 ${ctaSection(data, theme, homepagePath)}
 </section>
 </main>`

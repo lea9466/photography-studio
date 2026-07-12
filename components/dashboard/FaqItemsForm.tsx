@@ -2,9 +2,13 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, HelpCircle, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, HelpCircle, ImageIcon, Loader2, Pencil, Plus, Trash2, Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { finalizeBrandingUpload, prepareBrandingUpload, removeBrandingImage } from '@/lib/actions/branding.actions'
 import { updateFaqItems } from '@/lib/actions/faq.actions'
+import { compressBrandingFile } from '@/lib/branding-upload-client'
+import { putToPresignedUrl } from '@/lib/r2/upload-client'
+import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
 import { sanitizeFaqItems, type FaqItem } from '@/lib/faq'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,8 +99,23 @@ function FaqSectionHeader({
   )
 }
 
+const UPLOAD_ZONE_CLASS =
+  'relative cursor-pointer overflow-hidden rounded-xl border border-[--border]/80 bg-[#7D3A52]/[0.03] transition-all hover:border-[#7D3A52]/25'
+
+function UploadSpinnerOverlay({ show }: { show: boolean }) {
+  if (!show) return null
+
+  return (
+    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 pointer-events-none">
+      <Loader2 className="h-10 w-10 animate-spin text-white" />
+    </div>
+  )
+}
+
 type FaqItemsFormProps = {
   initialItems: FaqItem[]
+  initialSectionImageUrl?: string | null
+  showSectionImageUpload?: boolean
 }
 
 const EMPTY_ITEM: FaqItem = { question: '', answer: '' }
@@ -105,8 +124,16 @@ function isCompleteItem(item: FaqItem) {
   return Boolean(item.question.trim() && item.answer.trim())
 }
 
-export function FaqItemsForm({ initialItems }: FaqItemsFormProps) {
+export function FaqItemsForm({
+  initialItems,
+  initialSectionImageUrl = null,
+  showSectionImageUpload = false,
+}: FaqItemsFormProps) {
   const [items, setItems] = useState<FaqItem[]>(initialItems)
+  const [sectionImageUrl, setSectionImageUrl] = useState(initialSectionImageUrl ?? '')
+  const [uploadingSectionImage, setUploadingSectionImage] = useState(false)
+  const [sectionImagePreview, setSectionImagePreview] = useState<string | null>(null)
+  const [sectionImageVersion, setSectionImageVersion] = useState(0)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -117,6 +144,10 @@ export function FaqItemsForm({ initialItems }: FaqItemsFormProps) {
     setEditingIndex(null)
     setExpandedIndex(null)
   }, [initialItems])
+
+  useEffect(() => {
+    setSectionImageUrl(initialSectionImageUrl ?? '')
+  }, [initialSectionImageUrl])
 
   const savedItems = sanitizeFaqItems(items)
 
@@ -162,8 +193,114 @@ export function FaqItemsForm({ initialItems }: FaqItemsFormProps) {
     })
   }
 
+  async function handleSectionImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const blobUrl = URL.createObjectURL(file)
+    setSectionImagePreview(blobUrl)
+    setUploadingSectionImage(true)
+
+    try {
+      const uploadFile = await compressBrandingFile(file)
+      const { uploadUrl, path } = await prepareBrandingUpload({
+        type: 'faq_section',
+        fileName: uploadFile.name,
+        contentType: uploadFile.type,
+        fileSize: uploadFile.size,
+      })
+
+      await putToPresignedUrl(uploadUrl, uploadFile)
+
+      const result = await finalizeBrandingUpload('faq_section', path)
+      if (result.success && result.path) {
+        setSectionImageUrl(result.path)
+        setSectionImageVersion(Date.now())
+        router.refresh()
+        toast.success('תמונת הסקשן הועלתה בהצלחה')
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
+    } finally {
+      URL.revokeObjectURL(blobUrl)
+      setSectionImagePreview(null)
+      setUploadingSectionImage(false)
+      e.target.value = ''
+    }
+  }
+
+  async function handleRemoveSectionImage() {
+    setUploadingSectionImage(true)
+    try {
+      await removeBrandingImage('faq_section')
+      setSectionImageUrl('')
+      router.refresh()
+      toast.success('תמונת הסקשן הוסרה')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'שגיאה בהסרת התמונה')
+    } finally {
+      setUploadingSectionImage(false)
+    }
+  }
+
+  const sectionImagePreviewSrc = sectionImagePreview ?? sectionImageUrl
+
   return (
     <div className="space-y-8 pb-12 md:pb-28">
+      {showSectionImageUpload ? (
+      <FaqSection>
+        <FaqSectionHeader
+          icon={ImageIcon}
+          title="תמונת אווירה לסקשן"
+          description="תמונה אנכית אחת שמוצגת לצד השאלות בערכות קלאסית ואלגנטית. מומלץ תמונה בפורמט לאורך."
+        />
+
+        <FaqSubPanel>
+          <div className="space-y-3">
+            <Label htmlFor="faq-section-image">תמונת FAQ</Label>
+            <div className={cn(UPLOAD_ZONE_CLASS, 'group mx-auto aspect-[3/4] max-w-[280px]')}>
+              {sectionImagePreviewSrc ? (
+                <BrandingPreviewImage
+                  src={sectionImagePreviewSrc}
+                  cacheKey={sectionImageVersion}
+                  alt="FAQ section image preview"
+                  className="object-cover pointer-events-none"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[--muted]">
+                  <Upload className="h-8 w-8" />
+                  <span className="text-xs">העלאת תמונה</span>
+                </div>
+              )}
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="text-sm font-medium text-white">החלפת תמונה</span>
+              </div>
+              <UploadSpinnerOverlay show={uploadingSectionImage} />
+              {sectionImageUrl ? (
+                <button
+                  type="button"
+                  onClick={handleRemoveSectionImage}
+                  disabled={uploadingSectionImage}
+                  className="absolute left-2 top-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="הסר תמונה"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
+              <input
+                id="faq-section-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleSectionImageUpload}
+                disabled={uploadingSectionImage}
+                className="absolute inset-0 z-10 cursor-pointer opacity-0"
+              />
+            </div>
+          </div>
+        </FaqSubPanel>
+      </FaqSection>
+      ) : null}
+
       <FaqSection>
         <FaqSectionHeader
           index={1}

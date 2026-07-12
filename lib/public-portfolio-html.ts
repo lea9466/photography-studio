@@ -369,17 +369,17 @@ export function generatePublicPortfolioPageHTML(options: {
 
   const body = `
 <main class="pt-24">
-<section class="max-w-[1280px] mx-auto px-[24px] pt-8 pb-24">
+<section class="max-w-[1280px] mx-auto px-[24px] pt-8">
 ${portfolioHeader(chromeTheme, options.portfolio.pageTitle, options.portfolio.photos.length)}
 <nav class="portfolio-tabs" aria-label="גלריות">
 ${generateTabButtons(options.portfolio.galleryNames, chromeTheme)}
 </nav>
-<section class="pg-masonry mb-[80px]" id="portfolio-masonry">
+</section>
+<section class="pg-masonry px-1 sm:px-1.5 mb-[80px]" id="portfolio-masonry">
 ${masonryEmptyMessage}
 <div id="portfolio-load-sentinel" aria-hidden="true"></div>
 </section>
 <p id="portfolio-load-status" class="portfolio-load-status" aria-live="polite"></p>
-</section>
 </main>
 ${generatePortfolioPhotosDataScript(options.portfolio.photos)}`
 

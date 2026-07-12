@@ -38,6 +38,7 @@ export type PublicPhotographer = Pick<
   | 'gallery_layout_mode'
   | 'email'
   | 'faq_items'
+  | 'faq_section_image_url'
   | 'should_color_logo'
 >
 
@@ -77,6 +78,7 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   gallery_layout_mode,
   email,
   faq_items,
+  faq_section_image_url,
   should_color_logo
 `
 
@@ -115,6 +117,7 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('packages_title') ||
     message.includes('packages_subtitle') ||
     message.includes('faq_items') ||
+    message.includes('faq_section_image_url') ||
     message.includes('gallery_layout_mode')
   )
 }
@@ -143,8 +146,8 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   if (message.includes('packages_title') || message.includes('packages_subtitle')) {
     return 'Run migration add_packages_section_headings on Supabase.'
   }
-  if (message.includes('faq_items')) {
-    return 'Run migration add_faq_items on Supabase.'
+  if (message.includes('faq_items') || message.includes('faq_section_image_url')) {
+    return 'Run migration add_faq_section_image on Supabase.'
   }
   if (message.includes('packages_desktop_url') || message.includes('packages_mobile_url')) {
     return 'Run migration add_packages_background_images on Supabase.'

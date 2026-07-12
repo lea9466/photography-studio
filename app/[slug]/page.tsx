@@ -265,6 +265,7 @@ export default async function PhotographerPage({ params }: PageProps) {
       contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),
       packages_desktop_url: await resolveBrandingPath(typedPhotographer.packages_desktop_url),
       packages_mobile_url: await resolveBrandingPath(typedPhotographer.packages_mobile_url),
+      faq_section_image_url: await resolveBrandingPath(typedPhotographer.faq_section_image_url),
       logo_url: await resolveBrandingPath(typedPhotographer.logo_url),
     }
 

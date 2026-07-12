@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
@@ -25,6 +26,7 @@ type BrandingImageType =
   | 'contact_mobile'
   | 'packages_desktop'
   | 'packages_mobile'
+  | 'faq_section'
 
 function validateBrandingFile(contentType: string, fileSize: number) {
   validatePrimaryImageFile(contentType, fileSize)
@@ -148,6 +150,7 @@ export async function finalizeBrandingUpload(
   if (type === 'contact_mobile') updateData.contact_mobile_url = path
   if (type === 'packages_desktop') updateData.packages_desktop_url = path
   if (type === 'packages_mobile') updateData.packages_mobile_url = path
+  if (type === 'faq_section') updateData.faq_section_image_url = path
 
   if (type === 'hero_desktop' || type === 'hero_mobile') {
     const heroSlot = coerceHeroSlot(slot)
@@ -192,6 +195,11 @@ export async function finalizeBrandingUpload(
   if (error) {
     console.error('[finalizeBrandingUpload] update failed', error, updateData)
     throw new Error(error.message)
+  }
+
+  if (type === 'faq_section') {
+    revalidatePath('/dashboard/faq')
+    revalidatePath('/[slug]', 'page')
   }
 
   return { success: true, path, slot }
@@ -251,6 +259,7 @@ const SINGLE_BRANDING_FIELD: Record<
   contact_mobile: 'contact_mobile_url',
   packages_desktop: 'packages_desktop_url',
   packages_mobile: 'packages_mobile_url',
+  faq_section: 'faq_section_image_url',
 }
 
 export async function removeBrandingImage(type: SingleBrandingImageType) {
@@ -268,6 +277,11 @@ export async function removeBrandingImage(type: SingleBrandingImageType) {
     .eq('id', userId)
 
   if (error) throw new Error(error.message)
+
+  if (type === 'faq_section') {
+    revalidatePath('/dashboard/faq')
+    revalidatePath('/[slug]', 'page')
+  }
 
   return { success: true }
 }

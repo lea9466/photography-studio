@@ -8,6 +8,7 @@ import {
   getAdminStudios,
   getLatestAnnouncementForAdmin,
 } from '@/lib/admin/queries'
+import { getAdminStudioSummary } from '@/lib/admin/studio-summary'
 import {
   isAnnouncementIconKey,
   normalizeAnnouncementIcon,
@@ -98,6 +99,17 @@ export async function adminLogout() {
 export async function fetchAdminStudios() {
   await requireAdmin()
   return getAdminStudios()
+}
+
+export async function fetchAdminStudioSummary(userId: string) {
+  await requireAdmin()
+
+  const trimmedId = userId.trim()
+  if (!trimmedId) {
+    throw new Error('מזהה סטודיו חסר')
+  }
+
+  return getAdminStudioSummary(trimmedId)
 }
 
 export async function deleteAdminStudio(userId: string) {

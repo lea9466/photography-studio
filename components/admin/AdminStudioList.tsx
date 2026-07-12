@@ -23,6 +23,7 @@ import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
+import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -566,6 +567,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                         className={`rounded-l-2xl border border-slate-200/80 px-4 py-4 shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md ${rowAccent}`}
                       >
                         <div className="flex flex-wrap gap-2">
+                          <AdminStudioSummaryDialog studio={studio} />
                           {siteUrl ? (
                             <Button
                               asChild

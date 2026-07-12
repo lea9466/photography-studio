@@ -66,6 +66,7 @@ export type Database = {
           posts_page_title: string | null
           should_color_logo: boolean
           faq_items: Json
+          faq_section_image_url: string | null
           trial_end_date: string
           referral_code: string | null
           referred_by_user_id: string | null
@@ -115,6 +116,7 @@ export type Database = {
           posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
+          faq_section_image_url?: string | null
           trial_end_date?: string
           referral_code?: string | null
           referred_by_user_id?: string | null
@@ -164,6 +166,7 @@ export type Database = {
           posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
+          faq_section_image_url?: string | null
           trial_end_date?: string
           referral_code?: string | null
           referred_by_user_id?: string | null
