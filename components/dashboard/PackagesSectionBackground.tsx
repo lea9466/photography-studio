@@ -12,7 +12,9 @@ import { SITE_SETTINGS_HELP } from '@/lib/dashboard/site-settings-help'
 import { cn } from '@/lib/utils'
 
 const UPLOAD_ZONE_CLASS =
-  'relative cursor-pointer overflow-hidden rounded-xl border border-[--border]/80 bg-[#7D3A52]/[0.03] transition-all hover:border-[#7D3A52]/35 hover:shadow-sm hover:shadow-[#7D3A52]/5'
+  'relative overflow-hidden rounded-xl border border-[--border]/80 bg-[#7D3A52]/[0.03] transition-all'
+
+const PACKAGES_BACKGROUND_UPLOAD_ENABLED = false
 
 type PackagesBgType = 'packages_desktop' | 'packages_mobile'
 
@@ -127,7 +129,13 @@ export function PackagesSectionBackground({
           >
             רקע חבילות (דסקטופ)
           </LabelWithHelp>
-          <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
+          <div
+            className={cn(
+              UPLOAD_ZONE_CLASS,
+              'group aspect-video',
+              !PACKAGES_BACKGROUND_UPLOAD_ENABLED && 'cursor-not-allowed opacity-90'
+            )}
+          >
             {brandingPreviewSrc('packages_desktop', packagesDesktopUrl) ? (
               <BrandingPreviewImage
                 src={brandingPreviewSrc('packages_desktop', packagesDesktopUrl)}
@@ -140,9 +148,11 @@ export function PackagesSectionBackground({
                 <Upload className="h-8 w-8" />
               </div>
             )}
+            {!PACKAGES_BACKGROUND_UPLOAD_ENABLED ? null : (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <span className="text-white text-sm font-medium">החלף תמונה</span>
             </div>
+            )}
             <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_desktop'))} />
             {packagesDesktopUrl ? (
               <button
@@ -160,8 +170,14 @@ export function PackagesSectionBackground({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => handleFileUpload(e, 'packages_desktop')}
-              disabled={uploadingTargets.has(uploadTargetKey('packages_desktop'))}
-              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              disabled={
+                !PACKAGES_BACKGROUND_UPLOAD_ENABLED ||
+                uploadingTargets.has(uploadTargetKey('packages_desktop'))
+              }
+              className={cn(
+                'absolute inset-0 z-10 opacity-0',
+                PACKAGES_BACKGROUND_UPLOAD_ENABLED ? 'cursor-pointer' : 'pointer-events-none cursor-not-allowed'
+              )}
             />
           </div>
         </div>
@@ -173,7 +189,13 @@ export function PackagesSectionBackground({
           >
             רקע חבילות (מובייל)
           </LabelWithHelp>
-          <div className={cn(UPLOAD_ZONE_CLASS, 'group mx-auto aspect-[9/16] max-w-[200px]')}>
+          <div
+            className={cn(
+              UPLOAD_ZONE_CLASS,
+              'group mx-auto aspect-[9/16] max-w-[200px]',
+              !PACKAGES_BACKGROUND_UPLOAD_ENABLED && 'cursor-not-allowed opacity-90'
+            )}
+          >
             {brandingPreviewSrc('packages_mobile', packagesMobileUrl) ? (
               <BrandingPreviewImage
                 src={brandingPreviewSrc('packages_mobile', packagesMobileUrl)}
@@ -186,9 +208,11 @@ export function PackagesSectionBackground({
                 <Upload className="h-8 w-8" />
               </div>
             )}
+            {!PACKAGES_BACKGROUND_UPLOAD_ENABLED ? null : (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
               <span className="text-white text-sm font-medium">החלף תמונה</span>
             </div>
+            )}
             <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('packages_mobile'))} />
             {packagesMobileUrl ? (
               <button
@@ -206,8 +230,14 @@ export function PackagesSectionBackground({
               type="file"
               accept="image/jpeg,image/png,image/webp"
               onChange={(e) => handleFileUpload(e, 'packages_mobile')}
-              disabled={uploadingTargets.has(uploadTargetKey('packages_mobile'))}
-              className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+              disabled={
+                !PACKAGES_BACKGROUND_UPLOAD_ENABLED ||
+                uploadingTargets.has(uploadTargetKey('packages_mobile'))
+              }
+              className={cn(
+                'absolute inset-0 z-10 opacity-0',
+                PACKAGES_BACKGROUND_UPLOAD_ENABLED ? 'cursor-pointer' : 'pointer-events-none cursor-not-allowed'
+              )}
             />
           </div>
         </div>

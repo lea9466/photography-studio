@@ -1,5 +1,8 @@
 import type { SiteChromeTheme } from '@/lib/photographer-site-chrome'
 import {
+  HOMEPAGE_STAGGER_REVEAL_CSS,
+} from '@/lib/homepage-stagger-reveal'
+import {
   BLOG_MODAL_CSS,
   BLOG_MODAL_INIT_SCRIPT,
   generateBlogModalMarkup,
@@ -115,64 +118,121 @@ export function generateHomepageMoreLinkHTML(options: {
 const HOMEPAGE_POSTS_CSS = `
 .hp-posts-section {
   width: 100%;
+  overflow: hidden;
   padding-top: calc(2.5rem + 20px);
   padding-bottom: 3rem;
-  padding-inline: 1rem;
+  padding-inline: 0;
 }
 @media (min-width: 768px) {
-  .hp-posts-section { padding-top: calc(3.5rem + 20px); padding-bottom: 4rem; padding-inline: 2rem; }
+  .hp-posts-section {
+    padding-top: calc(3.5rem + 20px);
+    padding-bottom: 4rem;
+  }
 }
-.hp-posts-inner { max-width: 1320px; margin-inline: auto; }
-.hp-posts-header { text-align: center; margin-bottom: 40px; }
-.hp-posts-eyebrow { display: block; font-size: 13px; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 14px; }
-.hp-posts-title { font-size: 32px; line-height: 1.2; font-weight: 500; }
-@media (min-width: 768px) { .hp-posts-title { font-size: 46px; } }
-.hp-posts-divider { width: 56px; height: 1px; margin: 18px auto 0; }
-.hp-posts-grid {
+.hp-posts-header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  margin-bottom: 40px;
+  padding-inline: 2%;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 28px;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right !important;
+  box-sizing: border-box;
 }
-@media (min-width: 640px) { .hp-posts-grid { gap: 30px; } }
-@media (min-width: 1024px) { .hp-posts-grid { gap: 33px; } }
+.hp-posts-header--with-more {
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.hp-posts-header__titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right !important;
+  min-width: 0;
+}
+.hp-posts-header__more {
+  flex-shrink: 0;
+}
+.hp-posts-header__more .hp-posts-more {
+  margin-top: 0;
+}
+@media (max-width: 767px) {
+  .hp-posts-header--with-more:not(.hp-posts-header--classic) {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+}
+.hp-posts-eyebrow {
+  display: block;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.hp-posts-title {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 500;
+  margin: 0;
+}
+@media (min-width: 768px) { .hp-posts-title { font-size: 46px; } }
+.hp-posts-divider { width: 56px; height: 1px; margin: 8px 0 0; }
+.hp-posts-grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+@media (min-width: 640px) {
+  .hp-posts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+@media (min-width: 768px) {
+  .hp-posts-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
 .hp-post-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
   cursor: pointer;
   width: 100%;
-  max-width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: 100%;
   margin-inline: 0;
-  transition: transform 0.4s ease, box-shadow 0.4s ease, opacity 0.6s ease;
-  opacity: 0;
-  transform: translateY(18px);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
-.hp-post-card.is-visible { opacity: 1; transform: translateY(0); }
-.hp-post-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
+.hp-post-card.is-visible:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
 .hp-post-card:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-@media (min-width: 640px) {
-  .hp-post-card {
-    width: calc((100% - 30px) / 2);
-    max-width: 530px;
-    margin-inline: 0;
-  }
-}
-@media (min-width: 1024px) {
-  .hp-post-card {
-    width: calc((100% - 66px) / 3);
-    max-width: none;
-    margin-inline: 0;
-  }
-}
 .hp-post-media {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
+  flex: 0 0 auto;
   overflow: hidden;
   background: rgba(0,0,0,0.06);
 }
-.hp-post-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease; }
+.hp-post-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s ease;
+}
 .hp-post-card:hover .hp-post-media img { transform: scale(1.05); }
 .hp-post-media--empty::after {
   content: '';
@@ -180,7 +240,14 @@ const HOMEPAGE_POSTS_CSS = `
   inset: 0;
   background: linear-gradient(135deg, rgba(0,0,0,0.05), rgba(0,0,0,0.12));
 }
-.hp-post-body { padding: 18px 16px 22px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
+.hp-post-body {
+  flex: 1 1 auto;
+  padding: 18px 16px 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .hp-post-title { font-size: 21px; line-height: 1.25; }
 .hp-post-date { font-size: 13px; letter-spacing: 0.02em; }
 .hp-post-excerpt {
@@ -193,17 +260,199 @@ const HOMEPAGE_POSTS_CSS = `
   overflow: hidden;
   white-space: pre-line;
 }
+.hp-posts-footer {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  padding-top: 0;
+  box-sizing: border-box;
+}
 ${HOMEPAGE_MORE_LINK_CSS}
+${HOMEPAGE_STAGGER_REVEAL_CSS}
 `
 
-function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string): string {
+const CLASSIC_HOMEPAGE_POSTS_CSS = `
+.theme-classic .hp-posts-section {
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+.theme-classic .hp-posts-header.hp-posts-header--classic {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center !important;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 2%;
+  margin-bottom: 2.5rem;
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+.theme-classic .hp-posts-header__titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left !important;
+  order: 1;
+}
+.theme-classic .hp-posts-header__titles .hp-posts-eyebrow,
+.theme-classic .hp-posts-header__titles .hp-posts-title {
+  text-align: left !important;
+}
+.theme-classic .hp-posts-header__more {
+  order: 2;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.theme-classic .hp-posts-header__more .hp-posts-more {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+.theme-classic .hp-posts-grid {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  align-items: stretch;
+  gap: 4px;
+  box-sizing: border-box;
+}
+@media (min-width: 768px) {
+  .theme-classic .hp-posts-grid {
+    gap: 4px;
+  }
+}
+.theme-classic .hp-post-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  max-width: none;
+}
+.theme-classic .hp-post-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+.theme-classic .hp-post-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.theme-classic .hp-post-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (max-width: 767px) {
+  .theme-classic .hp-posts-header.hp-posts-header--classic {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+    direction: ltr;
+  }
+  .theme-classic .hp-posts-header__more {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+}
+`
+
+const ELEGANT_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
+.hp-posts-header--elegant {
+  direction: ltr;
+  text-align: left !important;
+  align-items: flex-end !important;
+  margin-bottom: 1.25rem !important;
+}
+.hp-posts-header--elegant.hp-posts-header--with-more {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.hp-posts-header--elegant .hp-posts-header__titles {
+  align-items: flex-start;
+  text-align: left !important;
+}
+.hp-posts-header--elegant .elegant-section-heading {
+  display: grid !important;
+  width: 100%;
+  max-width: 100%;
+  justify-items: left !important;
+  align-items: last baseline;
+  text-align: left !important;
+}
+.hp-posts-header--elegant .elegant-section-heading__watermark,
+.hp-posts-header--elegant .elegant-section-heading__title {
+  grid-area: 1 / 1;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  text-align: left !important;
+  justify-self: left !important;
+}
+.hp-posts-header--elegant .elegant-section-heading__watermark {
+  font-family: 'Heebo', sans-serif;
+  font-size: clamp(1.5rem, 5.4vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${primaryColor};
+  opacity: 0.14;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.hp-posts-header--elegant .elegant-section-heading__title {
+  position: relative;
+  z-index: 1;
+  font-family: 'Heebo', sans-serif;
+  font-weight: 500;
+  font-size: clamp(1.875rem, 4vw, 2.25rem);
+  color: #1c1b1b;
+  direction: rtl;
+}
+.hp-posts-header--elegant .hp-posts-header__more .hp-posts-more {
+  justify-content: flex-end;
+}
+@media (max-width: 767px) {
+  .hp-posts-header--elegant.hp-posts-header--with-more {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  .hp-posts-header--elegant .hp-posts-header__more {
+    align-self: flex-end;
+  }
+  .hp-posts-header--elegant .elegant-section-heading {
+    text-align: left !important;
+    justify-items: left !important;
+  }
+}
+`
+
+function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string, index: number): string {
   const cover = post.coverUrl || post.images[0] || null
   const media = cover
     ? `<div class="hp-post-media"><img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" /></div>`
     : `<div class="hp-post-media hp-post-media--empty"></div>`
 
   return `
-<article class="hp-post-card" data-post-id="${escapeHtml(post.id)}" role="button" tabindex="0" style="background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};">
+<article class="hp-post-card stagger-reveal" data-reveal-delay="${index * 90}" data-post-id="${escapeHtml(post.id)}" role="button" tabindex="0" style="background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};">
   ${media}
   <div class="hp-post-body">
     <h3 class="hp-post-title" style="font-family:${t.titleFont};">${escapeHtml(post.title)}</h3>
@@ -212,32 +461,6 @@ function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string):
   </div>
 </article>`
 }
-
-const REVEAL_SCRIPT = `
-(function initHpPostsReveal() {
-  function boot() {
-    var cards = [].slice.call(document.querySelectorAll('.hp-post-card'));
-    if (!cards.length) return;
-    if (!('IntersectionObserver' in window)) {
-      cards.forEach(function(c) { c.classList.add('is-visible'); });
-      return;
-    }
-    var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      });
-    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
-    cards.forEach(function(c) { observer.observe(c); });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
-  } else {
-    boot();
-  }
-})();
-`
 
 export function generateHomepagePostsSectionHTML(options: {
   posts: PublicBlogPost[]
@@ -251,14 +474,14 @@ export function generateHomepagePostsSectionHTML(options: {
 
   const t = TOKENS[options.theme]
   const blogTokens = getBlogThemeTokens(options.theme)
-  const cards = options.posts.map((p) => postCard(p, t, options.primaryColor)).join('\n')
+  const cards = options.posts.map((p, i) => postCard(p, t, options.primaryColor, i)).join('\n')
   const templates = generateBlogPostDetailTemplates(options.posts, options.theme, options.primaryColor)
   const modalMarkup = generateBlogModalMarkup({
     surface: blogTokens.surface,
     text: blogTokens.text,
   })
 
-  const moreLink = options.showAllLink
+  const moreLinkHtml = options.showAllLink
     ? generateHomepageMoreLinkHTML({
         href: options.blogHref,
         label: 'לכל הפוסטים',
@@ -267,23 +490,43 @@ export function generateHomepagePostsSectionHTML(options: {
       })
     : ''
 
-  return `
-<section class="hp-posts-section" id="posts">
-<style>${HOMEPAGE_POSTS_CSS}${BLOG_MODAL_CSS}</style>
-<div class="hp-posts-inner">
-<div class="hp-posts-header">
+  const isClassic = options.theme === 'classic'
+  const isElegant = options.theme === 'elegant'
+
+  const sectionCss = isClassic
+    ? `${HOMEPAGE_POSTS_CSS}${CLASSIC_HOMEPAGE_POSTS_CSS}${BLOG_MODAL_CSS}`
+    : isElegant
+      ? `${HOMEPAGE_POSTS_CSS}${ELEGANT_HOMEPAGE_POSTS_CSS(options.primaryColor)}${BLOG_MODAL_CSS}`
+      : `${HOMEPAGE_POSTS_CSS}${BLOG_MODAL_CSS}`
+
+  const headerHtml = isElegant
+    ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--elegant stagger-reveal" data-reveal-delay="0">
+<div class="hp-posts-header__titles">
+<div class="elegant-section-heading">
+<span class="elegant-section-heading__watermark" aria-hidden="true">BLOG</span>
+<h2 class="elegant-section-heading__title text-3xl md:text-4xl">${escapeHtml(options.sectionTitle)}</h2>
+</div>
+</div>
+${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
+</div>`
+    : `<div class="hp-posts-header hp-posts-header--with-more${isClassic ? ' hp-posts-header--classic' : ''} stagger-reveal" data-reveal-delay="0">
+<div class="hp-posts-header__titles">
 <span class="hp-posts-eyebrow" style="color:${options.primaryColor};">${escapeHtml(t.eyebrow)}</span>
 <h2 class="hp-posts-title" style="font-family:${t.titleFont};color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
 <div class="hp-posts-divider" style="background:${options.primaryColor};"></div>
 </div>
+${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
+</div>`
+
+  return `
+<section class="hp-posts-section" id="posts">
+<style>${sectionCss}</style>
+${headerHtml}
 <div class="hp-posts-grid">
 ${cards}
-</div>
-${moreLink}
 </div>
 ${templates}
 ${modalMarkup}
 </section>
-<script>${REVEAL_SCRIPT}</script>
 <script>${BLOG_MODAL_INIT_SCRIPT}</script>`
 }

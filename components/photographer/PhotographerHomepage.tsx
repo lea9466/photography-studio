@@ -52,7 +52,7 @@ import {
 
 import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
 
-import { resolveTestimonialsSectionTitle } from '@/lib/testimonials-section-copy'
+import { resolveTestimonialsSectionTitle, resolveTestimonialsSectionSubtitle } from '@/lib/testimonials-section-copy'
 
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 
@@ -60,6 +60,11 @@ import {
   generateHomepageMoreLinkHTML,
   generateHomepagePostsSectionHTML,
 } from '@/lib/homepage-posts-section'
+
+import {
+  HOMEPAGE_STAGGER_REVEAL_CSS,
+  HOMEPAGE_STAGGER_REVEAL_SCRIPT,
+} from '@/lib/homepage-stagger-reveal'
 
 import { getBrandingPublicMediaPath } from '@/lib/branding-public-url'
 import { getBrandingFaviconStoragePath } from '@/lib/branding/logo-favicon-path'
@@ -224,15 +229,55 @@ const UNIFIED_GALLERY_GRID_CSS = `
 
     width: 100%;
 
-    max-width: 80rem;
+    max-width: 100%;
 
-    margin-inline: auto;
+    margin-inline: 0;
 
     margin-bottom: 1rem !important;
 
     padding-top: calc(1.5rem + 150px);
 
-    padding-inline: 1rem;
+    padding-inline: 2%;
+
+    text-align: right !important;
+
+    box-sizing: border-box;
+
+  }
+
+  .homepage-gallery-header > div {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-end !important;
+
+    justify-content: flex-start !important;
+
+    text-align: right !important;
+
+    width: 100%;
+
+  }
+
+  .homepage-gallery-header .elegant-section-heading {
+
+    justify-items: end !important;
+
+    text-align: right !important;
+
+  }
+
+  .homepage-gallery-header .text-right,
+
+  .homepage-gallery-header .text-center,
+
+  .recent-photos-header .text-right,
+
+  .recent-photos-header .text-center {
+
+    text-align: right !important;
 
   }
 
@@ -241,8 +286,6 @@ const UNIFIED_GALLERY_GRID_CSS = `
     .homepage-gallery-header {
 
       padding-top: calc(2rem + 150px);
-
-      padding-inline: 2rem;
 
     }
 
@@ -548,6 +591,582 @@ const HOMEPAGE_PACKAGES_GRID_CSS = `
 
 
 
+const CLASSIC_PACKAGES_ROWS_CSS = `
+
+  .theme-classic .homepage-packages-section {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    overflow: hidden;
+
+    padding-top: 120px !important;
+
+    background: linear-gradient(to bottom, #ffffff 0%, #FAF7F4 150px, #FAF7F4 100%);
+
+  }
+
+  .theme-classic .homepage-packages-section__inner {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding-inline: clamp(1.5rem, 5vw, 4rem);
+
+    box-sizing: border-box;
+
+  }
+
+  .theme-classic .homepage-packages-section__header {
+
+    width: 100%;
+
+    text-align: left !important;
+
+    margin-bottom: 2.5rem;
+
+  }
+
+  .theme-classic .homepage-packages-section__header span,
+
+  .theme-classic .homepage-packages-section__header h2 {
+
+    text-align: left !important;
+
+  }
+
+  .theme-classic .homepage-packages-section__divider {
+
+    margin-left: 0;
+
+    margin-right: auto;
+
+  }
+
+  .theme-classic .testimonials-section__inner {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding-inline: clamp(1.5rem, 5vw, 4rem);
+
+    box-sizing: border-box;
+
+  }
+
+  .theme-classic .testimonials-section__header {
+
+    width: 100%;
+
+    text-align: left !important;
+
+    margin-bottom: 2.5rem;
+
+  }
+
+  .theme-classic .testimonials-section__header span,
+
+  .theme-classic .testimonials-section__header h2 {
+
+    text-align: left !important;
+
+  }
+
+  .theme-classic .testimonials-section__divider {
+
+    margin-left: 0;
+
+    margin-right: auto;
+
+  }
+
+  .theme-classic .faq-section__header {
+
+    width: 100%;
+
+    text-align: left !important;
+
+    margin-bottom: 2.5rem;
+
+    padding-inline: 2%;
+
+    box-sizing: border-box;
+
+  }
+
+  .theme-classic .faq-section__header span,
+
+  .theme-classic .faq-section__header h2,
+
+  .theme-classic .faq-section__header p {
+
+    text-align: left !important;
+
+  }
+
+  .theme-classic .faq-section__divider {
+
+    margin-left: 0;
+
+    margin-right: auto;
+
+  }
+
+  .theme-classic .homepage-packages-rows {
+
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-inline: 0;
+
+  }
+
+  .theme-classic .homepage-packages-row {
+
+    display: grid;
+
+    grid-template-columns: auto auto 1fr;
+
+    align-items: center;
+
+    column-gap: 0;
+
+    padding: 2rem 0;
+
+    border-bottom: 1px solid #e2e2e2;
+
+    direction: rtl;
+
+    text-align: right;
+
+    width: 100%;
+
+    overflow: visible;
+
+  }
+
+  .theme-classic .homepage-packages-row:last-child {
+
+    border-bottom: none;
+
+  }
+
+  .theme-classic .homepage-packages-row--featured {
+
+    background: rgba(250, 246, 240, 0.88);
+
+    border-radius: 2px;
+
+  }
+
+  .theme-classic .homepage-packages-row__title {
+
+    grid-column: 1;
+
+    justify-self: end;
+
+    flex: 0 0 auto;
+
+    width: auto;
+
+    min-width: 9rem;
+
+    max-width: 14rem;
+
+    text-align: right;
+
+    padding: 0;
+
+    position: relative;
+
+  }
+
+  .theme-classic .homepage-packages-row__title h3,
+
+  .theme-classic .homepage-packages-row__title p {
+
+    text-align: right;
+
+    direction: rtl;
+
+  }
+
+  .theme-classic .homepage-packages-row__title h3 {
+
+    font-weight: 600;
+
+  }
+
+  .theme-classic .homepage-packages-row__badge {
+
+    position: absolute;
+
+    top: -1.35rem;
+
+    right: 0;
+
+    left: auto;
+
+    display: inline-block;
+
+    background: var(--primary-color, #8b6f5c);
+
+    color: #ffffff;
+
+    padding: 0.2rem 0.65rem;
+
+    font-size: 0.65rem;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.08em;
+
+    border-radius: 2px;
+
+    margin-bottom: 0;
+
+    white-space: nowrap;
+
+  }
+
+  .theme-classic .homepage-packages-row__features {
+
+    grid-column: 2;
+
+    justify-self: start;
+
+    margin-inline-start: 5rem;
+
+    flex: 0 0 auto;
+
+    min-width: 0;
+
+    width: 100%;
+
+    max-width: 36rem;
+
+    text-align: right;
+
+    direction: rtl;
+
+  }
+
+  .theme-classic .homepage-packages-row__features-grid {
+
+    display: grid;
+
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+
+    gap: 12px 24px;
+
+    list-style: none;
+
+    padding: 0;
+
+    margin: 0;
+
+    direction: rtl;
+
+    text-align: right;
+
+    width: 100%;
+
+    max-width: 100%;
+
+  }
+
+  .theme-classic .homepage-packages-row__features-grid li {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
+
+    gap: 8px;
+
+    direction: rtl;
+
+    text-align: right;
+
+    font-size: 0.9rem;
+
+    color: rgba(45, 40, 37, 0.75);
+
+    white-space: nowrap;
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .homepage-packages-row__features-grid li > span:not(.material-symbols-outlined) {
+
+    min-width: 0;
+
+    direction: rtl;
+
+    text-align: right;
+
+  }
+
+  .theme-classic .homepage-packages-row__features-grid .material-symbols-outlined {
+
+    font-size: 1.1rem;
+
+    color: var(--primary-color, #8b6f5c);
+
+    flex-shrink: 0;
+
+    line-height: 1;
+
+  }
+
+  .theme-classic .homepage-packages-row__action {
+
+    grid-column: 3;
+
+    justify-self: end;
+
+    flex: 0 0 auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 0.75rem;
+
+    min-width: 9rem;
+
+    margin: 0;
+
+  }
+
+  .theme-classic .homepage-packages-row__price {
+
+    font-size: 2rem;
+
+    font-weight: 700;
+
+    color: var(--primary-color, #8b6f5c);
+
+    display: flex;
+
+    align-items: baseline;
+
+    gap: 0.15rem;
+
+    direction: ltr;
+
+  }
+
+  .theme-classic .homepage-packages-row__price-currency {
+
+    font-size: 1rem;
+
+    font-weight: 400;
+
+  }
+
+  .theme-classic .homepage-packages-row__btn {
+
+    white-space: nowrap;
+
+    padding: 0.65rem 1.25rem;
+
+    font-size: 0.75rem;
+
+    font-weight: 600;
+
+    letter-spacing: 0.04em;
+
+    border-radius: 2px;
+
+    transition: all 0.3s ease;
+
+    cursor: pointer;
+
+  }
+
+  .theme-classic .homepage-packages-row__btn--featured {
+
+    background: var(--primary-color, #8b6f5c);
+
+    color: #ffffff;
+
+    border: none;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  }
+
+  .theme-classic .homepage-packages-row__btn--featured:hover {
+
+    filter: brightness(1.08);
+
+  }
+
+  .theme-classic .homepage-packages-row__btn--default {
+
+    background: transparent;
+
+    color: var(--primary-color, #8b6f5c);
+
+    border: 1px solid rgba(139, 111, 92, 0.4);
+
+  }
+
+  .theme-classic .homepage-packages-row__btn--default:hover {
+
+    background: var(--primary-color, #8b6f5c);
+
+    color: #ffffff;
+
+  }
+
+  @media (max-width: 767px) {
+
+    .theme-classic .homepage-packages-section {
+
+      padding-top: 100px !important;
+
+      background: linear-gradient(to bottom, #ffffff 0%, #FAF7F4 120px, #FAF7F4 100%);
+
+    }
+
+    .theme-classic .homepage-packages-section__inner {
+
+      padding-inline: clamp(1rem, 4vw, 1.5rem);
+
+    }
+
+    .theme-classic .homepage-packages-row {
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: stretch;
+
+      justify-content: flex-start;
+
+      gap: 1.25rem;
+
+      padding: 1.5rem 0;
+
+      direction: rtl;
+
+    }
+
+    .theme-classic .homepage-packages-row__title {
+
+      grid-column: auto;
+
+      justify-self: stretch;
+
+      flex: none;
+
+      width: 100%;
+
+      min-width: 0;
+
+      max-width: none;
+
+      text-align: right;
+
+    }
+
+    .theme-classic .homepage-packages-row__features {
+
+      grid-column: auto;
+
+      justify-self: start;
+
+      margin-inline-start: 0;
+
+      width: 100%;
+
+    }
+
+    .theme-classic .homepage-packages-row__features-grid {
+
+      grid-template-columns: 1fr;
+
+      gap: 12px;
+
+      width: 100%;
+
+      max-width: 100%;
+
+    }
+
+    .theme-classic .homepage-packages-row__features-grid li {
+
+      white-space: normal;
+
+      width: 100%;
+
+      max-width: 100%;
+
+    }
+
+    .theme-classic .homepage-packages-row__badge {
+
+      position: static;
+
+      margin-bottom: 0.5rem;
+
+    }
+
+    .theme-classic .homepage-packages-row__action {
+
+      grid-column: auto;
+
+      justify-self: stretch;
+
+      flex-direction: row;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      width: 100%;
+
+      min-width: 0;
+
+      margin-left: 0;
+
+    }
+
+    .theme-classic .homepage-packages-row__btn {
+
+      flex-shrink: 0;
+
+    }
+
+  }
+
+`
+
+
+
 const RECENT_PHOTOS_GRID_CSS = `
 
   .recent-photos-section {
@@ -578,13 +1197,41 @@ const RECENT_PHOTOS_GRID_CSS = `
 
     width: 100%;
 
-    max-width: 80rem;
+    max-width: 100%;
 
-    margin-inline: auto;
+    margin-inline: 0;
 
     margin-bottom: 1rem;
 
-    padding-inline: 1rem;
+    padding-inline: 2%;
+
+    text-align: right !important;
+
+    box-sizing: border-box;
+
+  }
+
+  .recent-photos-header > div {
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: flex-end !important;
+
+    justify-content: flex-start !important;
+
+    text-align: right !important;
+
+    width: 100%;
+
+  }
+
+  .recent-photos-header .elegant-section-heading {
+
+    justify-items: end !important;
+
+    text-align: right !important;
 
   }
 
@@ -592,27 +1239,41 @@ const RECENT_PHOTOS_GRID_CSS = `
 
     width: 100%;
 
-    max-width: 80rem;
+    max-width: 100%;
 
-    margin-inline: auto;
+    margin-inline: 0;
 
-    padding-inline: 1rem;
+    padding-inline: 2%;
 
     padding-bottom: 0;
 
-  }
-
-  .portfolio-cta-wrap .hp-posts-more {
-
-    margin-top: 20px;
+    box-sizing: border-box;
 
   }
 
-  @media (min-width: 768px) {
+  .recent-photos-header > div:has(.portfolio-cta-wrap) {
 
-    .recent-photos-header { padding-inline: 2rem; }
+    flex-direction: row-reverse !important;
 
-    .portfolio-cta-wrap { padding-inline: 2rem; }
+    justify-content: space-between !important;
+
+    align-items: flex-end !important;
+
+  }
+
+  .recent-photos-header .portfolio-cta-wrap {
+
+    padding-inline: 0;
+
+    width: auto;
+
+    flex-shrink: 0;
+
+  }
+
+  .recent-photos-header .portfolio-cta-wrap .hp-posts-more {
+
+    margin-top: 0;
 
   }
 
@@ -974,17 +1635,121 @@ function elegantFaqSectionCss(primaryColor: string) {
 
   return `
 
+  .faq-section__header,
+
+  .testimonials-section__header {
+
+    width: 100%;
+
+    direction: ltr;
+
+    text-align: left !important;
+
+    margin-bottom: 1.25rem;
+
+    padding-inline: 2%;
+
+    box-sizing: border-box;
+
+  }
+
+  .faq-section__header .elegant-section-heading,
+
+  .testimonials-section__header .elegant-section-heading {
+
+    display: grid !important;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    justify-items: left !important;
+
+    align-items: last baseline;
+
+    text-align: left !important;
+
+  }
+
+  .faq-section__header .elegant-section-heading__watermark,
+
+  .faq-section__header .elegant-section-heading__title,
+
+  .testimonials-section__header .elegant-section-heading__watermark,
+
+  .testimonials-section__header .elegant-section-heading__title {
+
+    text-align: left !important;
+
+    justify-self: left !important;
+
+  }
+
+  .faq-section__header .elegant-section-heading__title,
+
+  .testimonials-section__header .elegant-section-heading__title {
+
+    direction: rtl;
+
+  }
+
+  @media (max-width: 767px) {
+
+    .faq-section__header .elegant-section-heading,
+
+    .testimonials-section__header .elegant-section-heading {
+
+      text-align: left !important;
+
+      justify-items: left !important;
+
+    }
+
+    .faq-section__header .elegant-section-heading__watermark,
+
+    .faq-section__header .elegant-section-heading__title,
+
+    .testimonials-section__header .elegant-section-heading__watermark,
+
+    .testimonials-section__header .elegant-section-heading__title {
+
+      text-align: left !important;
+
+      justify-self: left !important;
+
+    }
+
+  }
+
+  .faq-section__subtitle {
+
+    text-align: left !important;
+
+    margin-top: 0.35rem;
+
+    max-width: none;
+
+  }
+
   .faq-grid-elegant {
 
     display: grid;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
 
-    gap: 1rem;
+    gap: 3px;
 
-    max-width: 56rem;
+    width: 100%;
 
-    margin-inline: auto;
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding-inline: 2%;
+
+    box-sizing: border-box;
+
+    align-items: stretch;
 
   }
 
@@ -994,19 +1759,19 @@ function elegantFaqSectionCss(primaryColor: string) {
 
       grid-template-columns: repeat(2, minmax(0, 1fr));
 
-      gap: 1.25rem 1.5rem;
+      gap: 4px;
 
     }
 
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
 
     .faq-grid-elegant {
 
-      gap: 1.5rem 2rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
 
-      max-width: 64rem;
+      gap: 4px;
 
     }
 
@@ -1016,9 +1781,9 @@ function elegantFaqSectionCss(primaryColor: string) {
 
     background: #ffffff;
 
-    border-radius: 0.375rem;
+    border-radius: 0;
 
-    padding: clamp(1.5rem, 4vw, 2.5rem) clamp(1.25rem, 3vw, 2rem);
+    padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 2.5vw, 1.5rem);
 
     text-align: center;
 
@@ -1028,13 +1793,17 @@ function elegantFaqSectionCss(primaryColor: string) {
 
     align-items: center;
 
-    justify-content: center;
+    justify-content: flex-start;
 
-    gap: 0.875rem;
+    gap: 0.75rem;
 
-    min-height: clamp(10.5rem, 28vw, 14rem);
+    min-height: clamp(10rem, 24vw, 13rem);
 
-    box-shadow: 0 4px 20px rgba(15, 15, 13, 0.08);
+    width: 100%;
+
+    height: 100%;
+
+    box-shadow: none;
 
     border: 1px solid rgba(15, 15, 13, 0.06);
 
@@ -1066,9 +1835,7 @@ function elegantFaqSectionCss(primaryColor: string) {
 
     line-height: 1.75;
 
-    color: ${primaryColor};
-
-    opacity: 0.9;
+    color: #0F0F0D;
 
     margin: 0;
 
@@ -1088,13 +1855,21 @@ function classicFaqSectionCss(primaryColor: string) {
 
     display: grid;
 
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
 
-    gap: 1rem;
+    gap: 3px;
 
-    max-width: 56rem;
+    width: 100%;
 
-    margin-inline: auto;
+    max-width: 100%;
+
+    margin-inline: 0;
+
+    padding-inline: 2%;
+
+    box-sizing: border-box;
+
+    align-items: stretch;
 
   }
 
@@ -1104,19 +1879,19 @@ function classicFaqSectionCss(primaryColor: string) {
 
       grid-template-columns: repeat(2, minmax(0, 1fr));
 
-      gap: 1.25rem 1.5rem;
+      gap: 4px;
 
     }
 
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
 
     .faq-grid-classic {
 
-      gap: 1.5rem 2rem;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
 
-      max-width: 64rem;
+      gap: 4px;
 
     }
 
@@ -1128,7 +1903,7 @@ function classicFaqSectionCss(primaryColor: string) {
 
     border-radius: 4px;
 
-    padding: clamp(1.5rem, 4vw, 2rem) clamp(1.25rem, 3vw, 1.75rem);
+    padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 2.5vw, 1.5rem);
 
     text-align: center;
 
@@ -1138,25 +1913,27 @@ function classicFaqSectionCss(primaryColor: string) {
 
     align-items: center;
 
-    justify-content: center;
+    justify-content: flex-start;
 
     gap: 0.75rem;
 
-    min-height: clamp(10.5rem, 28vw, 14rem);
+    min-height: clamp(10rem, 24vw, 13rem);
 
-    border: 1px solid rgba(209, 198, 180, 0.45);
+    width: 100%;
 
-    box-shadow: 0 2px 16px rgba(45, 40, 37, 0.06);
+    height: 100%;
 
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+
+    box-shadow: none;
+
+    transition: border-color 0.3s ease;
 
   }
 
   .faq-card-classic:hover {
 
     border-color: ${primaryColor}40;
-
-    box-shadow: 0 4px 20px rgba(45, 40, 37, 0.08);
 
   }
 
@@ -2717,10 +3494,6 @@ function generateHomepageHTML(
 
     contact_mobile_url,
 
-    packages_desktop_url,
-
-    packages_mobile_url,
-
     packages_title,
 
     packages_subtitle,
@@ -2757,15 +3530,9 @@ function generateHomepageHTML(
 
   const hasContactBg = !!(contactDesktopUrl || contactMobileUrl)
 
-  const packagesDesktopUrl = packages_desktop_url || null
-
-  const packagesMobileUrl = packages_mobile_url || null
-
-  const hasPackagesBg = !!(packagesDesktopUrl || packagesMobileUrl)
 
 
-
-  const sectionBgCss = hasContactBg || hasPackagesBg
+  const sectionBgCss = hasContactBg
 
     ? `
 
@@ -2937,13 +3704,21 @@ function generateHomepageHTML(
 
 
 
-  const packagesBgLayers = (mobileFade: string, desktopFade?: string) =>
-
-    sectionBgLayers(hasPackagesBg, packagesDesktopUrl, packagesMobileUrl, mobileFade, desktopFade)
-
-
-
   const primaryColor = accent_color || '#B8953F'
+
+  const aboutAmbientBackgroundHtml =
+
+    theme === 'elegant'
+
+      ? `<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70" aria-hidden="true"></div>`
+
+      : theme === 'classic' || theme === 'dark'
+
+        ? `<div class="about-glow about-glow-left" style="background: radial-gradient(circle, ${primaryColor}70 0%, ${primaryColor}45 24%, ${primaryColor}22 46%, transparent 72%);" aria-hidden="true"></div>
+
+<div class="about-glow about-glow-right" style="background: radial-gradient(circle, ${primaryColor}80 0%, ${primaryColor}50 26%, ${primaryColor}28 48%, transparent 74%);" aria-hidden="true"></div>`
+
+        : ''
 
   const isPortfolioMode = (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
 
@@ -3092,11 +3867,11 @@ function generateHomepageHTML(
     primaryColor,
     sectionTitle: resolvePostsPageTitle(theme, photographer.posts_page_title),
     blogHref: blogPath ?? '#',
-    showAllLink: postCount > posts.length,
+    showAllLink: postCount > 0,
   })
 
   const aboutText = about_text || ''
-  const aboutTextHtml = escapeHtml(aboutText)
+  const aboutTextHtml = escapeHtml(aboutText.trim())
 
   const aboutTitle = about_title || ''
 
@@ -3160,15 +3935,15 @@ function generateHomepageHTML(
 
   )
 
+  const testimonialsSectionSubtitle = resolveTestimonialsSectionSubtitle(theme)
+
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
 
 
   // Generate dynamic packages HTML for each theme
 
-  const packageCardBg = (solidClass: string) =>
-
-    hasPackagesBg ? `${solidClass}/55 backdrop-blur-sm` : solidClass
+  const packageCardBg = (solidClass: string) => solidClass
 
 
 
@@ -3176,9 +3951,11 @@ function generateHomepageHTML(
 
     if (packages.length === 0) return ''
 
+    const packageList = currentTheme === 'classic' ? packages : sortedPackages
+
     
 
-    return sortedPackages.map((pkg, i) => {
+    return packageList.map((pkg, i) => {
 
       const includesList = pkg.includes || [];
 
@@ -3190,7 +3967,9 @@ function generateHomepageHTML(
 
         return `
 
-        <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full reveal-on-scroll relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
+        <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
+
+        <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
 
           ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important; background-color: ${primaryColor};">הנמכרת ביותר</div>` : ''}
 
@@ -3224,13 +4003,17 @@ function generateHomepageHTML(
 
         </div>
 
+        </div>
+
       `;
 
       } else if (currentTheme === 'modern') {
 
         return `
 
-        <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 animate-reveal ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
+        <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
+
+        <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
 
           ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
 
@@ -3264,11 +4047,15 @@ function generateHomepageHTML(
 
         </div>
 
+        </div>
+
       `;
 
       } else if (currentTheme === 'dark') {
 
         return `
+
+        <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
 
         <div class="${isFeatured ? `${packageCardBg('bg-background')} p-lg md:p-xl flex flex-col items-center text-center relative md:-translate-y-lg shadow-2xl` : `${packageCardBg('bg-background')} p-lg md:p-xl transition-all flex flex-col items-center text-center shadow-sm hover:shadow-xl group border border-white/10`}" style="direction: rtl !important; text-align: center !important;">
 
@@ -3298,37 +4085,49 @@ function generateHomepageHTML(
 
         </div>
 
+        </div>
+
       `;
 
       } else if (currentTheme === 'classic') {
 
+        const subtitle = pkg.duration_text || (isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים')
+
         return `
 
-        <div class="${packageCardBg('bg-surface')} ${isFeatured ? 'border-2' : 'border border-outline-variant/30 hover:border-primary/50 transition-colors duration-500'} p-xl flex flex-col items-center rounded-sm relative" style="direction: rtl !important; text-align: center !important;${isFeatured ? ` border-color: ${primaryColor};` : ''}">
+        <div class="homepage-packages-row stagger-reveal${isFeatured ? ' homepage-packages-row--featured' : ''}" data-reveal-delay="${i * 100}" style="--primary-color: ${primaryColor};">
 
-          ${isFeatured ? '<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-on-primary px-lg py-1 rounded-sm font-label-sm text-label-sm shadow-md uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
+          <div class="homepage-packages-row__title">
 
-          <h3 class="font-headline-sm text-headline-sm text-primary mb-xs" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+            ${isFeatured ? '<span class="homepage-packages-row__badge">הנמכרת ביותר</span>' : ''}
 
-          <p class="font-body-md text-body-md text-on-surface-variant/60 mb-lg" style="direction: rtl !important; text-align: center !important;">${isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים'}</p>
+            <h3 class="font-headline-sm text-headline-sm text-primary mb-xs">${pkg.name}</h3>
 
-          <div class="text-4xl font-bold text-primary mb-xl flex items-baseline gap-1 justify-center" dir="ltr" style="direction: ltr !important;"><span class="text-lg font-normal">₪</span>${pkg.price_amount}</div>
+            <p class="font-body-md text-body-md text-on-surface-variant/60">${subtitle}</p>
 
-          <div class="mx-auto w-fit mb-xl border-t ${isFeatured ? 'border-primary/10' : 'border-outline-variant/20'} pt-lg" style="direction: rtl !important;">
+          </div>
 
-            <ul class="space-y-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+          <div class="homepage-packages-row__features" dir="rtl">
 
-              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-md w-full"><span class="material-symbols-outlined text-primary">${isFeatured ? 'check_circle' : 'check'}</span> <span class="font-body-md text-body-md text-on-surface-variant">${item}</span></li>`).join('')}
+            <ul class="homepage-packages-row__features-grid">
+
+              ${includesList.map((item: string) => `<li><span class="material-symbols-outlined">${isFeatured ? 'check_circle' : 'check'}</span><span>${item}</span></li>`).join('')}
 
             </ul>
 
           </div>
 
-          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full mt-auto ${isFeatured ? 'bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all duration-300 shadow-md' : 'border border-primary/40 text-primary py-md rounded-sm font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-all duration-300'}" style="direction: rtl !important; text-align: center !important;">
+          <div class="homepage-packages-row__action">
 
-            ${isFeatured ? 'בחירה בחבילה' : 'הזמנת חבילה'}
+            <div class="homepage-packages-row__price"><span class="homepage-packages-row__price-currency">₪</span>${pkg.price_amount}</div>
 
-          </button>
+            <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="homepage-packages-row__btn ${isFeatured ? 'homepage-packages-row__btn--featured' : 'homepage-packages-row__btn--default'}">
+
+              ${isFeatured ? 'בחירה בחבילה' : 'הזמנת חבילה'}
+
+            </button>
+
+          </div>
 
         </div>
 
@@ -3554,13 +4353,13 @@ function generateHomepageHTML(
 
     if (currentTheme === 'elegant') {
 
-      return `<section class="faq-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto reveal-on-scroll" id="faq">
+      return `<section class="faq-section pt-8 pb-16 md:pt-12 md:pb-32 reveal-on-scroll" id="faq">
 
-<div class="text-center mb-10 md:mb-16 reveal-on-scroll">
+<div class="faq-section__header reveal-on-scroll">
 
-${elegantSectionHeading('שאלות נפוצות', 'FAQ', { center: true, titleClass: 'mb-4' })}
+${elegantSectionHeading('שאלות נפוצות', 'FAQ')}
 
-<p class="font-body opacity-60 italic mt-3">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="font-body opacity-60 italic faq-section__subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
 
 </div>
 
@@ -3576,7 +4375,7 @@ ${elegantSectionHeading('שאלות נפוצות', 'FAQ', { center: true, titleC
 
       return `<section class="faq-section py-xxl max-w-7xl mx-auto px-lg reveal-on-scroll" id="faq">
 
-<div class="text-center mb-xl animate-reveal">
+<div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
 <h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">שאלות נפוצות</h2>
 
@@ -3596,23 +4395,19 @@ ${accordion}
 
       return `<section class="faq-section py-xxl reveal" id="faq">
 
-<div class="max-w-7xl mx-auto px-lg">
-
-<div class="text-center mb-xl">
+<div class="faq-section__header stagger-reveal" data-reveal-delay="0">
 
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">FAQ</span>
 
 <h2 class="font-headline-md text-headline-md text-on-surface">שאלות נפוצות</h2>
 
-<div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
+<div class="faq-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
-<p class="font-body-md text-body-md text-on-surface-variant mt-md max-w-xl mx-auto">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-md faq-section__subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
 
 </div>
 
 <div class="faq-grid-classic">${generateClassicFaqCardsHTML()}</div>
-
-</div>
 
 </section>`
 
@@ -4297,13 +5092,15 @@ ${documentHead}
 
             .recent-photos-header > div {
 
-                justify-content: center !important;
+                justify-content: flex-start !important;
 
-                align-items: center !important;
+                align-items: flex-end !important;
 
                 display: flex;
 
                 flex-direction: column;
+
+                text-align: right !important;
 
             }
 
@@ -4576,6 +5373,64 @@ ${documentHead}
 
         }
 
+        @media (max-width: 767px) {
+
+            .glass-hero {
+
+                padding: 1.125rem 1rem;
+
+            }
+
+            .glass-hero__glow-bar {
+
+                width: 2.5rem;
+
+                margin-bottom: 0.625rem;
+
+            }
+
+            .glass-hero-title {
+
+                margin-bottom: 0 !important;
+
+                font-size: 1.625rem;
+
+                line-height: 1.08;
+
+            }
+
+            .glass-hero-title__line {
+
+                line-height: 1.08;
+
+            }
+
+            .glass-hero__text {
+
+                margin-top: 0 !important;
+
+                margin-bottom: 0.875rem !important;
+
+                font-size: 0.9375rem;
+
+                line-height: 1.45;
+
+            }
+
+            .glass-hero .flex button {
+
+                padding-top: 0.75rem;
+
+                padding-bottom: 0.75rem;
+
+                padding-left: 2rem;
+
+                padding-right: 2rem;
+
+            }
+
+        }
+
         @media (min-width: 768px) and (max-width: 1023px) {
 
             .glass-hero-wrapper {
@@ -4784,6 +5639,8 @@ ${documentHead}
 
         ${RECENT_PHOTOS_GRID_CSS}
 
+        ${HOMEPAGE_STAGGER_REVEAL_CSS}
+
         ${TESTIMONIAL_THUMB_CARD_CSS}
 
         ${FAQ_ACCORDION_CSS}
@@ -4820,17 +5677,9 @@ ${heroSlideshowHtml}
 
 <div class="glass-hero__glow-bar" aria-hidden="true"></div>
 
-<h1 class="glass-hero-title text-3xl md:text-5xl mb-6 text-on-surface">
+<h1 class="glass-hero-title text-3xl md:text-5xl mb-0 md:mb-6 text-on-surface">${glassHeroTitle(studioName)}</h1>
 
-                ${glassHeroTitle(studioName)}
-
-</h1>
-
-<p class="glass-hero__text font-body text-lg md:text-xl text-on-surface/70 mb-10 mx-auto font-light leading-relaxed">
-
-                ${aboutTextHtml}
-
-            </p>
+<p class="glass-hero__text font-body text-lg md:text-xl text-on-surface/70 mb-6 md:mb-10 mx-auto font-light leading-relaxed md:leading-relaxed">${aboutTextHtml}</p>
 
 <div class="flex justify-center">
 
@@ -4892,7 +5741,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 
 <span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 
-${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-8' }) : ''}
+${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-4' }) : ''}
 
 ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" style="white-space: pre-line">${aboutSubtitle}</p>` : ''}
 
@@ -4922,7 +5771,7 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section py-24 bg-white" id="gallery">
 
-<div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-16">
+<div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-8">
 
 <div class="flex flex-row-reverse justify-between items-end reveal-on-scroll">
 
@@ -4952,6 +5801,8 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 ${elegantSectionHeading('תמונות אחרונות', 'LATEST')}
 
+${portfolioCtaHtml}
+
 </div>
 
 </div>
@@ -4962,8 +5813,6 @@ ${generateRecentPhotosGridHTML(galleries, 'elegant')}
 
 </div>
 
-${portfolioCtaHtml}
-
 </section>
 
 ` : ''}
@@ -4972,15 +5821,15 @@ ${postsSectionHtml}
 
 ${hasPackages ? `
 
-<section class="py-32 px-margin-mobile md:px-margin-desktop ${hasPackagesBg ? 'contact-section-has-bg' : 'bg-[#f2f1ef]'}" id="pricing">
+<section class="py-16 md:py-32 px-margin-mobile md:px-margin-desktop relative" id="pricing">
 
-${packagesBgLayers('#f2f1ef', '#f2f1ef')}
+${aboutAmbientBackgroundHtml}
 
-<div class="mx-auto max-w-7xl contact-section-content">
+<div class="mx-auto max-w-7xl relative z-10">
 
-<div class="text-center mb-16 reveal-on-scroll">
+<div class="text-center mb-8 stagger-reveal" data-reveal-delay="0">
 
-${elegantSectionHeading(packagesSectionCopy.title, 'PACKAGES', { center: true, titleClass: 'mb-4' })}
+${elegantSectionHeading(packagesSectionCopy.title, 'PACKAGES', { center: true })}
 
 <p class="font-body opacity-60 italic">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 
@@ -4996,11 +5845,11 @@ ${elegantSectionHeading(packagesSectionCopy.title, 'PACKAGES', { center: true, t
 
 ${hasTestimonials ? `
 
-<section class="testimonials-section py-32 px-margin-mobile md:px-margin-desktop max-w-7xl mx-auto" id="testimonials">
+<section class="testimonials-section pt-16 pb-8 md:pt-32 md:pb-12" id="testimonials">
 
-<div class="text-center mb-16 reveal-on-scroll">
+<div class="testimonials-section__header reveal-on-scroll">
 
-${elegantSectionHeading(testimonialsSectionTitle, 'RECOMMEND', { center: true, titleClass: 'mb-4' })}
+${elegantSectionHeading(testimonialsSectionTitle, 'RECOMMEND')}
 
 </div>
 
@@ -5020,9 +5869,9 @@ ${hasContactBg ? contactBgLayers('#1c1b1b', '#1c1b1b') : ''}
 
 <div class="max-w-4xl mx-auto contact-section-content px-margin-mobile md:px-margin-desktop">
 
-<div class="text-center mb-16">
+<div class="text-center mb-8">
 
-${elegantSectionHeading('צרי קשר', 'CONTACT', { center: true, onDark: true, titleClass: 'mb-4' })}
+${elegantSectionHeading('צרי קשר', 'CONTACT', { center: true, onDark: true })}
 
 <p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
 
@@ -5175,6 +6024,8 @@ ${generateSiteFooter(siteChrome('elegant'))}
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
+
+<script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 
@@ -5700,6 +6551,8 @@ ${documentHead}
 
         ${RECENT_PHOTOS_GRID_CSS}
 
+        ${HOMEPAGE_STAGGER_REVEAL_CSS}
+
         ${TESTIMONIAL_THUMB_CARD_CSS}
 
         ${FAQ_ACCORDION_CSS}
@@ -5928,6 +6781,8 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 </div>
 
+${portfolioCtaHtml}
+
 </div>
 
 </div>
@@ -5938,43 +6793,19 @@ ${generateRecentPhotosGridHTML(galleries, 'modern')}
 
 </div>
 
-${portfolioCtaHtml}
-
 </section>
 
 ` : ''}
 
 ${postsSectionHtml}
 
-${hasPackages ? (hasPackagesBg ? `
+${hasPackages ? `
 
-<section class="w-full contact-section-has-bg py-xxl" id="pricing">
-
-${packagesBgLayers('#F8FAFC')}
-
-<div class="max-w-7xl mx-auto px-lg contact-section-content">
-
-<div class="text-center mb-xl animate-reveal">
-
-<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
-
-<p class="modern-section-subtitle">${escapeHtml(packagesSectionCopy.subtitle)}</p>
-
-</div>
-
-<div class="${packagesGridClass}">${generatePackagesHTML('modern')}</div>
-
-</div>
-
-</section>
-
-` : `
-
-<section class="py-xxl bg-surface-dim" id="pricing">
+<section class="py-xxl w-full" id="pricing">
 
 <div class="max-w-7xl mx-auto px-lg">
 
-<div class="text-center mb-xl animate-reveal">
+<div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
 <h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
@@ -5988,7 +6819,7 @@ ${packagesBgLayers('#F8FAFC')}
 
 </section>
 
-`) : ''}
+` : ''}
 
 ${hasTestimonials ? `
 
@@ -6118,6 +6949,8 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
+
+<script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 
@@ -6350,6 +7183,56 @@ ${documentHead}
             padding: 0 1rem 1rem;
 
             box-sizing: border-box;
+
+        }
+
+        @media (max-width: 767px) {
+
+            .hero-glass-card {
+
+                padding-top: 1rem !important;
+
+                padding-bottom: 1rem !important;
+
+                padding-left: 0.75rem !important;
+
+                padding-right: 0.75rem !important;
+
+            }
+
+            .hero-glass-inner {
+
+                gap: 0.625rem;
+
+            }
+
+            .hero-glass-copy .font-label-sm {
+
+                margin-bottom: 0.5rem !important;
+
+            }
+
+            .hero-glass-copy h1 {
+
+                margin-bottom: 0.5rem !important;
+
+                line-height: 1.2;
+
+            }
+
+            .hero-glass-actions {
+
+                gap: 0.5rem;
+
+            }
+
+            .hero-glass-actions button {
+
+                padding-top: 0.625rem;
+
+                padding-bottom: 0.625rem;
+
+            }
 
         }
 
@@ -6838,7 +7721,11 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${CLASSIC_PACKAGES_ROWS_CSS}
+
         ${RECENT_PHOTOS_GRID_CSS}
+
+        ${HOMEPAGE_STAGGER_REVEAL_CSS}
 
         ${TESTIMONIAL_THUMB_CARD_CSS}
 
@@ -7036,7 +7923,7 @@ ${documentHead}
 
 </head>
 
-<body class="bg-surface text-on-surface overflow-x-hidden">
+<body class="theme-classic bg-surface text-on-surface overflow-x-hidden">
 
 ${generateSiteNav(siteChrome('classic'))}
 
@@ -7064,15 +7951,15 @@ ${studioName} · ${photographerName}
 
 <div class="glass-card-frame w-full max-w-[450px] shrink-0">
 
-<div class="glass-card glass-card-float hero-glass-card w-full max-w-[450px] h-auto pt-8 pb-8 px-3 lg:pt-[21px] lg:pb-[27px] lg:px-6 lg:w-[450px] lg:m-5 lg:mt-[calc(1.25rem+10px)] box-border">
+<div class="glass-card glass-card-float hero-glass-card w-full max-w-[450px] h-auto pt-5 pb-5 px-3 lg:pt-[21px] lg:pb-[27px] lg:px-6 lg:w-[450px] lg:m-5 lg:mt-[calc(1.25rem+10px)] box-border">
 
 <div class="hero-glass-inner">
 
 <div class="hero-glass-copy h-auto whitespace-normal break-words">
 
-<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase whitespace-normal">${studioName}</span>
+<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-2 md:mb-3 lg:mb-6 uppercase whitespace-normal">${studioName}</span>
 
-<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white whitespace-normal break-words">${photographerName || 'אפרת כהן'} | צילום</h1>
+<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-2 md:mb-2 lg:mb-6 leading-tight text-white whitespace-normal break-words">${photographerName || 'אפרת כהן'} | צילום</h1>
 
 <p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed whitespace-normal break-words">${aboutTextHtml || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
 
@@ -7080,13 +7967,13 @@ ${studioName} · ${photographerName}
 
 <div class="hero-glass-actions">
 
-<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95 whitespace-nowrap">
+<button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-lg md:px-xl py-2.5 md:py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95 whitespace-nowrap">
 
                         תיאום פגישה
 
                     </button>
 
-<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-2.5 md:py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
 
                         לצפייה בגלריות
 
@@ -7194,7 +8081,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-header px-lg mb-xl">
 
-<div class="text-center">
+<div class="text-right">
 
 <h2 class="font-headline-md text-headline-md text-on-surface">עבודות נבחרות</h2>
 
@@ -7220,11 +8107,17 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="recent-photos-header">
 
-<div class="text-center">
+<div class="flex flex-row-reverse justify-between items-end">
+
+<div class="text-right">
 
 <h2 class="font-headline-md text-headline-md text-on-surface">תמונות אחרונות</h2>
 
 <p class="font-body-md text-body-md text-on-surface-variant mt-sm">רגעים נבחרים מהעבודות שלנו</p>
+
+</div>
+
+${portfolioCtaHtml}
 
 </div>
 
@@ -7236,8 +8129,6 @@ ${generateRecentPhotosGridHTML(galleries, 'classic')}
 
 </div>
 
-${portfolioCtaHtml}
-
 </section>
 
 ` : ''}
@@ -7246,23 +8137,23 @@ ${postsSectionHtml}
 
 ${hasPackages ? `
 
-<section class="py-xxl reveal ${hasPackagesBg ? 'contact-section-has-bg border-t border-outline-variant/10' : ''}" id="pricing">
+<section class="homepage-packages-section py-xxl reveal relative overflow-hidden" id="pricing">
 
-${packagesBgLayers('#fdf8f7', '#f7f3f2')}
+${aboutAmbientBackgroundHtml}
 
-<div class="max-w-7xl mx-auto px-lg contact-section-content">
+<div class="homepage-packages-section__inner contact-section-content relative z-10">
 
-<div class="text-center mb-xl">
+<div class="homepage-packages-section__header stagger-reveal" data-reveal-delay="0">
 
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(packagesSectionCopy.subtitle)}</span>
 
 <h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
-<div class="w-12 h-px bg-outline-variant mx-auto mt-md"></div>
+<div class="homepage-packages-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
 </div>
 
-<div class="${packagesGridClass}">${generatePackagesHTML('classic')}</div>
+<div class="homepage-packages-rows">${generatePackagesHTML('classic')}</div>
 
 </div>
 
@@ -7274,11 +8165,15 @@ ${hasTestimonials ? `
 
 <section class="testimonials-section py-xxl reveal" id="testimonials">
 
-<div class="max-w-7xl mx-auto px-lg">
+<div class="testimonials-section__inner contact-section-content relative z-10">
 
-<div class="text-center mb-xl">
+<div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
+
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
 
 <h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+
+<div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
 </div>
 
@@ -7494,6 +8389,8 @@ ${generateSiteFooter(siteChrome('classic'))}
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
+
+<script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 
@@ -8209,7 +9106,7 @@ ${documentHead}
 
             .recent-photos-header {
 
-                text-align: center !important;
+                text-align: right !important;
 
             }
 
@@ -8292,6 +9189,8 @@ ${documentHead}
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
         ${RECENT_PHOTOS_GRID_CSS}
+
+        ${HOMEPAGE_STAGGER_REVEAL_CSS}
 
         ${TESTIMONIAL_THUMB_CARD_CSS}
 
@@ -8595,7 +9494,7 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section py-xl md:py-xxl reveal" id="gallery">
 
-<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-left">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-right">
 
 <div>
 
@@ -8621,13 +9520,19 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
 
-<div class="recent-photos-header text-left">
+<div class="recent-photos-header text-right">
+
+<div class="flex flex-row-reverse justify-between items-end">
 
 <div>
 
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
 
 <h2 class="font-headline-md text-headline-md">תמונות אחרונות</h2>
+
+</div>
+
+${portfolioCtaHtml}
 
 </div>
 
@@ -8639,29 +9544,27 @@ ${generateRecentPhotosGridHTML(galleries, 'dark')}
 
 </div>
 
-${portfolioCtaHtml}
-
 </section>
 
 ` : ''}
 
 ${postsSectionHtml}
 
-${hasPackages ? (hasPackagesBg ? `
+${hasPackages ? `
 
-<section class="py-xl md:py-xxl container mx-auto px-lg reveal contact-section-has-bg" id="pricing">
+<section class="py-xl md:py-xxl reveal relative overflow-hidden w-full" id="pricing">
 
-${packagesBgLayers('#ffffff', '#ffffff')}
+${aboutAmbientBackgroundHtml}
 
-<div class="contact-section-content">
+<div class="container mx-auto px-lg relative z-10">
 
-<div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
+<div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto stagger-reveal" data-reveal-delay="0">
 
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
 
-<h2 class="font-headline-md text-headline-md mb-md text-background">${escapeHtml(packagesSectionCopy.title)}</h2>
+<h2 class="font-headline-md text-headline-md mb-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
-<p class="text-background/60 font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
+<p class="text-on-surface-variant font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 
 </div>
 
@@ -8671,29 +9574,7 @@ ${packagesBgLayers('#ffffff', '#ffffff')}
 
 </section>
 
-` : `
-
-<section class="section-transition-light py-xl md:py-xxl reveal" id="pricing">
-
-<div class="container mx-auto px-lg">
-
-<div class="text-center mb-xl md:mb-xxl max-w-2xl mx-auto">
-
-<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Investment</span>
-
-<h2 class="font-headline-md text-headline-md mb-md text-background">${escapeHtml(packagesSectionCopy.title)}</h2>
-
-<p class="text-background/60 font-body-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
-
-</div>
-
-<div class="${packagesGridClass}">${generatePackagesHTML('dark')}</div>
-
-</div>
-
-</section>
-
-`) : ''}
+` : ''}
 
 ${hasTestimonials ? `
 
@@ -8900,6 +9781,8 @@ ${generateSiteFooter(siteChrome('dark'))}
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
+
+<script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
 ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
 
