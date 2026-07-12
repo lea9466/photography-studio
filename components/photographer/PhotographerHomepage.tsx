@@ -1211,7 +1211,7 @@ const RECENT_PHOTOS_GRID_CSS = `
 
   }
 
-  .recent-photos-header > div {
+  .recent-photos-header > div:not(.hp-posts-header--classic) {
 
     display: flex;
 
@@ -1251,7 +1251,7 @@ const RECENT_PHOTOS_GRID_CSS = `
 
   }
 
-  .recent-photos-header > div:has(.portfolio-cta-wrap) {
+  .recent-photos-header > div:not(.hp-posts-header--classic):has(.portfolio-cta-wrap) {
 
     flex-direction: row-reverse !important;
 
@@ -1386,6 +1386,108 @@ const RECENT_PHOTOS_GRID_CSS = `
   .recent-photos-grid--classic .recent-photo-cell { border-radius: 4px; }
 
   .recent-photos-grid--dark .recent-photo-cell { border-radius: 0px; }
+
+`
+
+const CLASSIC_RECENT_PHOTOS_HEADER_CSS = `
+
+  .theme-classic .recent-photos-header {
+    margin-bottom: 2.5rem;
+    text-align: left !important;
+    direction: ltr;
+  }
+
+  .theme-classic .recent-photos-header > .hp-posts-header.hp-posts-header--classic {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center !important;
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 0;
+    margin-bottom: 0;
+    text-align: left !important;
+    direction: ltr;
+    box-sizing: border-box;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-header__titles {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start !important;
+    text-align: left !important;
+    order: 1;
+    min-width: 0;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-eyebrow,
+  .theme-classic .recent-photos-header .hp-posts-title {
+    text-align: left !important;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-eyebrow {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    margin-bottom: 4px;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-title {
+    font-size: 32px;
+    line-height: 1.1;
+    font-weight: 500;
+    margin: 0;
+  }
+
+  @media (min-width: 768px) {
+    .theme-classic .recent-photos-header .hp-posts-title {
+      font-size: 46px;
+    }
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-divider {
+    width: 56px;
+    height: 1px;
+    margin: 8px 0 0;
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-header__more {
+    order: 2;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-header__more .hp-posts-more,
+  .theme-classic .recent-photos-header .hp-posts-header__more .portfolio-cta-wrap .hp-posts-more {
+    margin-top: 0;
+    justify-content: flex-end;
+  }
+
+  .theme-classic .recent-photos-header .hp-posts-header__more .portfolio-cta-wrap {
+    padding-inline: 0;
+    width: auto;
+  }
+
+  @media (max-width: 767px) {
+    .theme-classic .recent-photos-header {
+      text-align: left !important;
+    }
+
+    .theme-classic .recent-photos-header > .hp-posts-header.hp-posts-header--classic {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 1rem;
+      direction: ltr;
+    }
+
+    .theme-classic .recent-photos-header .hp-posts-header__more {
+      align-self: flex-end;
+      margin-left: 0;
+    }
+  }
 
 `
 
@@ -1625,6 +1727,152 @@ const FAQ_ACCORDION_CSS = `
 
     border-top-color: rgba(255, 255, 255, 0.1);
 
+  }
+
+`
+
+const MODERN_FAQ_ACCORDION_CSS = `
+
+  .theme-modern .faq-accordion--modern,
+  .theme-bold .faq-accordion--modern {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 60px;
+    direction: rtl;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    interpolate-size: allow-keywords;
+  }
+
+  .theme-modern .faq-accordion__column,
+  .theme-bold .faq-accordion__column {
+    display: flex;
+    flex-direction: column;
+    direction: rtl;
+    min-width: 0;
+  }
+
+  .theme-modern .faq-item--modern,
+  .theme-bold .faq-item--modern {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .theme-bold .faq-item--modern {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .theme-modern .faq-item--modern summary,
+  .theme-modern .faq-item--modern .faq-item__summary,
+  .theme-bold .faq-item--modern summary,
+  .theme-bold .faq-item--modern .faq-item__summary {
+    cursor: pointer;
+    padding: 1.5rem 0;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    direction: rtl;
+    width: 100%;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .theme-modern .faq-item--modern summary::-webkit-details-marker,
+  .theme-bold .faq-item--modern summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .theme-modern .faq-item--modern summary::after,
+  .theme-bold .faq-item--modern summary::after {
+    content: none;
+    display: none;
+  }
+
+  .theme-modern .faq-item--modern .faq-item__question,
+  .theme-bold .faq-item--modern .faq-item__question {
+    flex: 1;
+    min-width: 0;
+    text-align: right;
+    direction: rtl;
+  }
+
+  .theme-modern .faq-item--modern .faq-item__toggle,
+  .theme-bold .faq-item--modern .faq-item__toggle {
+    flex-shrink: 0;
+    align-self: center;
+    font-size: 1.25rem;
+    line-height: 1;
+    transition: transform 0.3s ease;
+  }
+
+  .theme-modern .faq-item--modern .faq-item__toggle::before,
+  .theme-bold .faq-item--modern .faq-item__toggle::before {
+    content: '+';
+  }
+
+  .theme-modern .faq-item--modern[open] .faq-item__toggle::before,
+  .theme-bold .faq-item--modern[open] .faq-item__toggle::before {
+    content: '−';
+  }
+
+  .theme-modern .faq-item--modern::details-content,
+  .theme-bold .faq-item--modern::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition: block-size 0.35s ease, content-visibility 0.35s ease allow-discrete;
+  }
+
+  .theme-modern .faq-item--modern[open]::details-content,
+  .theme-bold .faq-item--modern[open]::details-content {
+    block-size: auto;
+  }
+
+  .theme-modern .faq-item--modern[open] .faq-answer,
+  .theme-bold .faq-item--modern[open] .faq-answer {
+    animation: faqAnswerReveal 0.35s ease both;
+  }
+
+  .theme-modern .faq-item--modern .faq-answer,
+  .theme-bold .faq-item--modern .faq-answer {
+    width: 100%;
+    padding: 0 0 1.5rem;
+    line-height: 1.7;
+    white-space: pre-line;
+    opacity: 0.85;
+    text-align: right;
+    direction: rtl;
+    border-top: none;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 767px) {
+    .theme-modern .faq-accordion--modern,
+    .theme-bold .faq-accordion--modern {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .theme-modern .faq-item--modern::details-content,
+    .theme-modern .faq-item--modern .faq-item__toggle,
+    .theme-bold .faq-item--modern::details-content,
+    .theme-bold .faq-item--modern .faq-item__toggle {
+      transition: none;
+    }
+
+    .theme-modern .faq-item--modern[open] .faq-answer,
+    .theme-bold .faq-item--modern[open] .faq-answer {
+      animation: none;
+    }
   }
 
 `
@@ -1979,12 +2227,12 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
 
   .testimonials-section--modern .testimonials-section-grid {
     padding-top: 1rem;
-    padding-bottom: 4rem;
+    padding-bottom: 1.5rem;
   }
 
   .testimonials-section--modern .testimonials-marquee {
     padding-top: 1rem;
-    padding-bottom: 4rem;
+    padding-bottom: 1.5rem;
   }
 
   .testimonials-section--modern .classic-testimonials-carousel {
@@ -4193,9 +4441,49 @@ function generateHomepageHTML(
 
 
 
-  const generateFaqAccordionHTML = (currentTheme: string) =>
+  const generateFaqAccordionHTML = (currentTheme: string) => {
 
-    validFaqItems
+    if (currentTheme === 'modern' || currentTheme === 'dark') {
+
+      const renderModernItem = (item: FaqItem) =>
+
+        `<details class="faq-item faq-item--modern">
+
+<summary class="faq-item__summary">
+
+<span class="faq-item__question">${escapeHtml(item.question)}</span>
+
+<span class="faq-item__toggle" aria-hidden="true"></span>
+
+</summary>
+
+<div class="faq-answer">${escapeHtml(item.answer)}</div>
+
+</details>`
+
+      const rightColumnItems = validFaqItems.filter((_, index) => index % 2 === 0)
+
+      const leftColumnItems = validFaqItems.filter((_, index) => index % 2 === 1)
+
+      return `<div class="faq-accordion faq-accordion--modern">
+
+<div class="faq-accordion__column faq-accordion__column--start">
+
+${rightColumnItems.map(renderModernItem).join('')}
+
+</div>
+
+<div class="faq-accordion__column faq-accordion__column--end">
+
+${leftColumnItems.map(renderModernItem).join('')}
+
+</div>
+
+</div>`
+
+    }
+
+    return validFaqItems
 
       .map((item) => {
 
@@ -4212,6 +4500,8 @@ function generateHomepageHTML(
       })
 
       .join('')
+
+  }
 
 
 
@@ -4373,7 +4663,7 @@ ${elegantSectionHeading('שאלות נפוצות', 'FAQ')}
 
     if (currentTheme === 'modern') {
 
-      return `<section class="faq-section py-xxl max-w-7xl mx-auto px-lg reveal-on-scroll" id="faq">
+      return `<section class="faq-section pt-lg pb-xxl max-w-7xl mx-auto px-lg reveal-on-scroll" id="faq">
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
@@ -4383,7 +4673,27 @@ ${elegantSectionHeading('שאלות נפוצות', 'FAQ')}
 
 </div>
 
-${accordion}
+${generateFaqAccordionHTML('modern')}
+
+</section>`
+
+    }
+
+
+
+    if (currentTheme === 'dark') {
+
+      return `<section class="faq-section pt-lg pb-xxl max-w-7xl mx-auto px-lg reveal" id="faq">
+
+<div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
+
+<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">שאלות נפוצות</h2>
+
+<p class="modern-section-subtitle opacity-70">מצאו תשובות לשאלות הנפוצות ביותר</p>
+
+</div>
+
+${generateFaqAccordionHTML('dark')}
 
 </section>`
 
@@ -6557,6 +6867,8 @@ ${documentHead}
 
         ${FAQ_ACCORDION_CSS}
 
+        ${MODERN_FAQ_ACCORDION_CSS}
+
         ${MODERN_HERO_FILM_BELT_CSS}
 
         ${sectionBgCss}
@@ -6635,7 +6947,7 @@ ${documentHead}
 
 </head>
 
-<body class="bg-background text-on-surface overflow-x-hidden">
+<body class="theme-modern bg-background text-on-surface overflow-x-hidden">
 
 ${generateSiteNav(siteChrome('modern'))}
 
@@ -6823,7 +7135,7 @@ ${hasPackages ? `
 
 ${hasTestimonials ? `
 
-<section class="testimonials-section testimonials-section--modern py-xxl max-w-7xl mx-auto px-lg" id="testimonials">
+<section class="testimonials-section testimonials-section--modern pt-xxl pb-lg max-w-7xl mx-auto px-lg" id="testimonials">
 
 <h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">${escapeHtml(testimonialsSectionTitle)}</h2>
 
@@ -7725,6 +8037,8 @@ ${documentHead}
 
         ${RECENT_PHOTOS_GRID_CSS}
 
+        ${CLASSIC_RECENT_PHOTOS_HEADER_CSS}
+
         ${HOMEPAGE_STAGGER_REVEAL_CSS}
 
         ${TESTIMONIAL_THUMB_CARD_CSS}
@@ -8107,17 +8421,19 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="recent-photos-header">
 
-<div class="flex flex-row-reverse justify-between items-end">
+<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--classic stagger-reveal" data-reveal-delay="0">
 
-<div class="text-right">
+<div class="hp-posts-header__titles">
 
-<h2 class="font-headline-md text-headline-md text-on-surface">תמונות אחרונות</h2>
+<span class="hp-posts-eyebrow" style="color:${primaryColor};">רגעים נבחרים מהעבודות שלנו</span>
 
-<p class="font-body-md text-body-md text-on-surface-variant mt-sm">רגעים נבחרים מהעבודות שלנו</p>
+<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">תמונות אחרונות</h2>
+
+<div class="hp-posts-divider" style="background:${primaryColor};"></div>
 
 </div>
 
-${portfolioCtaHtml}
+${portfolioCtaHtml ? `<div class="hp-posts-header__more">${portfolioCtaHtml}</div>` : ''}
 
 </div>
 
@@ -8792,6 +9108,12 @@ ${documentHead}
 
         }
 
+        .modern-section-subtitle {
+
+            color: ${primaryColor};
+
+        }
+
         .bold-hero-image {
 
             opacity: 0.72;
@@ -9196,6 +9518,8 @@ ${documentHead}
 
         ${FAQ_ACCORDION_CSS}
 
+        ${MODERN_FAQ_ACCORDION_CSS}
+
         ${HERO_SLIDESHOW_CSS}
 
         ${sectionBgCss}
@@ -9356,7 +9680,7 @@ ${documentHead}
 
 </head>
 
-<body class="bg-background text-on-surface">
+<body class="theme-bold bg-background text-on-surface">
 
 ${generateSiteNav(siteChrome('dark'))}
 
