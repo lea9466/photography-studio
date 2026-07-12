@@ -6285,7 +6285,15 @@ ${documentHead}
 
             position: relative;
 
-            display: inline-block;
+            display: block;
+
+            width: 100%;
+
+            max-width: 450px;
+
+            flex-shrink: 0;
+
+            box-sizing: border-box;
 
         }
 
@@ -6339,9 +6347,9 @@ ${documentHead}
 
             width: 100%;
 
-            max-width: none;
-
             padding: 0 1rem 1rem;
+
+            box-sizing: border-box;
 
         }
 
@@ -6435,11 +6443,11 @@ ${documentHead}
 
                 left: auto;
 
+                right: auto;
+
                 transform: none;
 
                 width: auto;
-
-                max-width: none;
 
                 padding: 0 0 4rem 8rem;
 
@@ -6478,6 +6486,24 @@ ${documentHead}
 
             width: 100%;
 
+            max-width: 450px;
+
+            height: auto;
+
+            box-sizing: border-box;
+
+        }
+
+        @media (min-width: 1024px) {
+
+            .hero-glass-card {
+
+                width: 450px;
+
+                flex: 0 0 450px;
+
+            }
+
         }
 
         .hero-glass-inner {
@@ -6493,6 +6519,26 @@ ${documentHead}
         .hero-glass-copy {
 
             text-align: center;
+
+            height: auto;
+
+            white-space: normal;
+
+            overflow-wrap: break-word;
+
+            word-break: break-word;
+
+        }
+
+        .hero-glass-copy h1,
+
+        .hero-glass-copy p {
+
+            white-space: normal;
+
+            overflow-wrap: break-word;
+
+            word-break: break-word;
 
         }
 
@@ -7016,19 +7062,19 @@ ${studioName} · ${photographerName}
 
 <div class="hero-glass-container">
 
-<div class="glass-card-frame w-full lg:w-auto">
+<div class="glass-card-frame w-full max-w-[450px] shrink-0">
 
-<div class="glass-card glass-card-float hero-glass-card pt-8 pb-8 px-3 lg:pt-[21px] lg:pb-[27px] lg:px-6 lg:w-[450px] lg:m-5 lg:mt-[calc(1.25rem+10px)]">
+<div class="glass-card glass-card-float hero-glass-card w-full max-w-[450px] h-auto pt-8 pb-8 px-3 lg:pt-[21px] lg:pb-[27px] lg:px-6 lg:w-[450px] lg:m-5 lg:mt-[calc(1.25rem+10px)] box-border">
 
 <div class="hero-glass-inner">
 
-<div class="hero-glass-copy">
+<div class="hero-glass-copy h-auto whitespace-normal break-words">
 
-<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase">${studioName}</span>
+<span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-4 md:mb-3 lg:mb-6 uppercase whitespace-normal">${studioName}</span>
 
-<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white">${photographerName || 'אפרת כהן'} | צילום</h1>
+<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-4 md:mb-2 lg:mb-6 leading-tight text-white whitespace-normal break-words">${photographerName || 'אפרת כהן'} | צילום</h1>
 
-<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed">${aboutTextHtml || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
+<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed whitespace-normal break-words">${aboutTextHtml || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
 
 </div>
 
