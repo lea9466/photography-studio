@@ -605,7 +605,19 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
     padding-top: 120px !important;
 
-    background: linear-gradient(to bottom, #ffffff 0%, #FAF7F4 150px, #FAF7F4 100%);
+  }
+
+  .theme-classic .homepage-packages-section {
+
+    background: linear-gradient(
+      to bottom,
+      #FAFAF8 0%,
+      #FAFAF8 56px,
+      #FBF9F6 140px,
+      #FAF7F4 260px,
+      #FAF7F4 calc(100% - 128px),
+      #FAFAF8 100%
+    );
 
   }
 
@@ -1053,7 +1065,19 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
       padding-top: 100px !important;
 
-      background: linear-gradient(to bottom, #ffffff 0%, #FAF7F4 120px, #FAF7F4 100%);
+    }
+
+    .theme-classic .homepage-packages-section {
+
+      background: linear-gradient(
+        to bottom,
+        #FAFAF8 0%,
+        #FAFAF8 40px,
+        #FBF9F6 110px,
+        #FAF7F4 210px,
+        #FAF7F4 calc(100% - 96px),
+        #FAFAF8 100%
+      );
 
     }
 
@@ -1174,7 +1198,16 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 const BOLD_PACKAGES_ROWS_CSS = `
 
   .theme-bold .homepage-packages-section {
-    background: linear-gradient(to bottom, #121217 0%, #1a1a22 150px, #1a1a22 100%);
+    background: linear-gradient(
+      to bottom,
+      #121217 0%,
+      #121217 56px,
+      #14141b 140px,
+      #171720 240px,
+      #1a1a22 320px,
+      #1a1a22 calc(100% - 128px),
+      #121217 100%
+    );
   }
 
   .theme-bold .homepage-packages-row {
@@ -1195,7 +1228,154 @@ const BOLD_PACKAGES_ROWS_CSS = `
 
   @media (max-width: 767px) {
     .theme-bold .homepage-packages-section {
-      background: linear-gradient(to bottom, #121217 0%, #1a1a22 120px, #1a1a22 100%);
+      background: linear-gradient(
+        to bottom,
+        #121217 0%,
+        #121217 40px,
+        #14141b 110px,
+        #171720 200px,
+        #1a1a22 280px,
+        #1a1a22 calc(100% - 96px),
+        #121217 100%
+      );
+    }
+  }
+
+`
+
+
+
+const POSTS_PACKAGES_TRANSITION_CSS = `
+
+  .hp-posts-section {
+    position: relative;
+  }
+
+  .hp-posts-section::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 72px;
+    pointer-events: none;
+  }
+
+  .theme-elegant .hp-posts-section::after {
+    background: linear-gradient(to bottom, transparent 0%, rgba(253, 248, 247, 0.55) 100%);
+  }
+
+  .theme-modern .hp-posts-section::after {
+    background: linear-gradient(to bottom, transparent 0%, rgba(248, 250, 252, 0.7) 100%);
+  }
+
+  .theme-classic .hp-posts-section::after {
+    background: linear-gradient(to bottom, transparent 0%, rgba(250, 247, 244, 0.62) 100%);
+  }
+
+  .theme-bold .hp-posts-section::after {
+    background: linear-gradient(to bottom, transparent 0%, rgba(26, 26, 34, 0.58) 100%);
+  }
+
+  .homepage-packages-section .about-glow {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 22%, rgba(0,0,0,0.62) 50%, #000 76%, #000 84%, rgba(0,0,0,0.45) 93%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.18) 22%, rgba(0,0,0,0.62) 50%, #000 76%, #000 84%, rgba(0,0,0,0.45) 93%, transparent 100%);
+  }
+
+  .homepage-packages-section .about-glow-left {
+    opacity: 0.56;
+  }
+
+  .homepage-packages-section .about-glow-right {
+    opacity: 0.6;
+  }
+
+  .theme-elegant #pricing > [aria-hidden="true"],
+  .theme-modern #pricing > [aria-hidden="true"] {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.2) 24%, rgba(0,0,0,0.64) 54%, #000 72%, #000 82%, rgba(0,0,0,0.42) 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.2) 24%, rgba(0,0,0,0.64) 54%, #000 72%, #000 82%, rgba(0,0,0,0.42) 92%, transparent 100%);
+  }
+
+  .theme-elegant #pricing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 128px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, #fdf8f7 0%, rgba(253, 248, 247, 0.82) 38%, transparent 100%);
+  }
+
+  .theme-elegant #pricing::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 128px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to top, #fdf8f7 0%, rgba(253, 248, 247, 0.82) 38%, transparent 100%);
+  }
+
+  .theme-modern #pricing {
+    position: relative;
+  }
+
+  .theme-modern #pricing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 96px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, #F8FAFC 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+  }
+
+  .theme-modern #pricing::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 96px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to top, #F8FAFC 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+  }
+
+  .theme-classic .homepage-packages-section::after,
+  .theme-bold .homepage-packages-section::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 128px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .theme-classic .homepage-packages-section::after {
+    background: linear-gradient(to top, #FAFAF8 0%, rgba(250, 250, 248, 0.72) 42%, transparent 100%);
+  }
+
+  .theme-bold .homepage-packages-section::after {
+    background: linear-gradient(to top, #121217 0%, rgba(18, 18, 23, 0.72) 42%, transparent 100%);
+  }
+
+  @media (max-width: 767px) {
+    .theme-elegant #pricing::after,
+    .theme-modern #pricing::after,
+    .theme-elegant #pricing::before,
+    .theme-modern #pricing::before,
+    .theme-classic .homepage-packages-section::after,
+    .theme-bold .homepage-packages-section::after {
+      height: 96px;
     }
   }
 
@@ -1915,6 +2095,92 @@ const MODERN_FAQ_ACCORDION_CSS = `
 
 
 
+const FAQ_SECTION_GLOW_CSS = `
+
+  .theme-modern #faq,
+  .theme-bold #faq {
+    position: relative;
+  }
+
+  .faq-section-glow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: min(26rem, 48vw);
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(72px);
+    opacity: 0.66;
+  }
+
+  .faq-section-glow--left {
+    left: 0;
+    transform: translateX(-44%);
+  }
+
+  .faq-section-glow--right {
+    right: 0;
+    transform: translateX(44%);
+  }
+
+  .theme-modern #faq .faq-section-glow,
+  .theme-bold #faq .faq-section-glow {
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 14%, rgba(0,0,0,0.34) 32%, rgba(0,0,0,0.56) 50%, rgba(0,0,0,0.56) 68%, rgba(0,0,0,0.26) 86%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 14%, rgba(0,0,0,0.34) 32%, rgba(0,0,0,0.56) 50%, rgba(0,0,0,0.56) 68%, rgba(0,0,0,0.26) 86%, transparent 100%);
+  }
+
+  .theme-modern #faq::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, #F8FAFC 0%, rgba(248, 250, 252, 0.82) 28%, rgba(248, 250, 252, 0.34) 58%, transparent 100%);
+  }
+
+  .theme-modern #faq::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to top, #F8FAFC 0%, rgba(248, 250, 252, 0.82) 28%, rgba(248, 250, 252, 0.34) 58%, transparent 100%);
+  }
+
+  .theme-bold #faq::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, #121217 0%, rgba(18, 18, 23, 0.82) 28%, rgba(18, 18, 23, 0.34) 58%, transparent 100%);
+  }
+
+  .theme-bold #faq::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 120px;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to top, #121217 0%, rgba(18, 18, 23, 0.82) 28%, rgba(18, 18, 23, 0.34) 58%, transparent 100%);
+  }
+
+`
+
+
+
 function magazineFaqGridCss(primaryColor: string) {
 
   return `
@@ -2580,18 +2846,21 @@ const TESTIMONIAL_THUMB_CARD_CSS = `
     }
   }
 
-  .testimonials-section--modern .testimonials-section-grid {
+  .testimonials-section--modern .testimonials-section-grid,
+  .theme-bold .testimonials-section-grid {
     padding-top: 1rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 50px;
   }
 
-  .testimonials-section--modern .testimonials-marquee {
+  .testimonials-section--modern .testimonials-marquee,
+  .theme-bold .testimonials-marquee {
     padding-top: 1rem;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0;
   }
 
-  .testimonials-section--modern .classic-testimonials-carousel {
-    padding-bottom: 2rem;
+  .testimonials-section--modern .classic-testimonials-carousel,
+  .theme-bold .classic-testimonials-carousel {
+    padding-bottom: 0;
   }
 
   .testimonials-section {
@@ -3680,6 +3949,24 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
 
 
+function hexToRgb(hex: string): string {
+
+  const normalized = hex.replace('#', '').trim()
+
+  const value =
+
+    normalized.length === 3 ? normalized.split('').map((char) => char + char).join('') : normalized
+
+  const int = Number.parseInt(value, 16)
+
+  if (Number.isNaN(int)) return '184, 149, 63'
+
+  return `${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}`
+
+}
+
+
+
 function underlineLastWord(text: string) {
 
   const trimmed = text.trim()
@@ -4271,11 +4558,19 @@ function generateHomepageHTML(
 
   const primaryColor = accent_color || '#B8953F'
 
+  const primaryColorRgb = hexToRgb(primaryColor)
+
+  const aboutHollowTitleAmbientShadow = `0 4px 12px rgba(${primaryColorRgb}, 0.25)`
+
+  const elegantPackagesGlowHtml = `<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70" aria-hidden="true"></div>`
+
+  const faqAmbientGlowHtml = `<div class="faq-section-glow faq-section-glow--left" style="background:radial-gradient(circle, rgba(${primaryColorRgb}, 0.3) 0%, rgba(${primaryColorRgb}, 0.16) 36%, rgba(${primaryColorRgb}, 0.06) 62%, transparent 84%);" aria-hidden="true"></div><div class="faq-section-glow faq-section-glow--right" style="background:radial-gradient(circle, rgba(${primaryColorRgb}, 0.18) 0%, rgba(${primaryColorRgb}, 0.08) 38%, rgba(${primaryColorRgb}, 0.03) 64%, transparent 86%);" aria-hidden="true"></div>`
+
   const aboutAmbientBackgroundHtml =
 
     theme === 'elegant'
 
-      ? `<div class="absolute -left-10 top-0 bottom-0 w-80 bg-gradient-to-r from-[${primaryColor}]/30 to-transparent blur-3xl opacity-70" aria-hidden="true"></div>`
+      ? elegantPackagesGlowHtml
 
       : theme === 'classic' || theme === 'dark'
 
@@ -4988,7 +5283,11 @@ ${generateMagazineFaqBodyHTML('elegant')}
 
     if (currentTheme === 'modern') {
 
-      return `<section class="faq-section pt-lg pb-xxl max-w-7xl mx-auto px-lg reveal-on-scroll" id="faq">
+      return `<section class="faq-section pt-lg pb-xxl w-full reveal-on-scroll relative" id="faq">
+
+${faqAmbientGlowHtml}
+
+<div class="max-w-7xl mx-auto px-lg relative z-10">
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
@@ -5000,6 +5299,8 @@ ${generateMagazineFaqBodyHTML('elegant')}
 
 ${generateFaqAccordionHTML('modern')}
 
+</div>
+
 </section>`
 
     }
@@ -5008,7 +5309,11 @@ ${generateFaqAccordionHTML('modern')}
 
     if (currentTheme === 'dark') {
 
-      return `<section class="faq-section pt-lg pb-xxl max-w-7xl mx-auto px-lg reveal" id="faq">
+      return `<section class="faq-section pt-lg pb-xxl w-full reveal relative" id="faq">
+
+${faqAmbientGlowHtml}
+
+<div class="max-w-7xl mx-auto px-lg relative z-10">
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
@@ -5019,6 +5324,8 @@ ${generateFaqAccordionHTML('modern')}
 </div>
 
 ${generateFaqAccordionHTML('dark')}
+
+</div>
 
 </section>`
 
@@ -6223,6 +6530,8 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${POSTS_PACKAGES_TRANSITION_CSS}
+
         ${RECENT_PHOTOS_GRID_CSS}
 
         ${HOMEPAGE_STAGGER_REVEAL_CSS}
@@ -6639,7 +6948,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 ${documentHead}
 
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700;800&family=Space+Grotesk:wght@300..700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -6650,6 +6959,8 @@ ${documentHead}
         :root {
 
             --headline-font: 'Space Grotesk', 'Heebo', sans-serif;
+
+            --about-title-font: 'Rubik', 'Heebo', sans-serif;
 
         }
 
@@ -6917,6 +7228,34 @@ ${documentHead}
 
         }
 
+        .theme-modern .modern-about-content h1 {
+
+            font-family: var(--about-title-font);
+
+            font-weight: 700;
+
+            letter-spacing: 0.02em;
+
+            color: transparent !important;
+
+            -webkit-text-fill-color: transparent;
+
+            -webkit-text-stroke: 1.5px ${primaryColor};
+
+            paint-order: stroke fill;
+
+            text-shadow: ${aboutHollowTitleAmbientShadow};
+
+        }
+
+        .theme-modern .modern-about-content h1 .text-primary {
+
+            color: transparent !important;
+
+            -webkit-text-fill-color: transparent;
+
+        }
+
         .modern-homepage-gallery-section {
 
             padding-top: calc(clamp(3.5rem, 9vw, 6rem) + 250px) !important;
@@ -7181,6 +7520,8 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${POSTS_PACKAGES_TRANSITION_CSS}
+
         ${RECENT_PHOTOS_GRID_CSS}
 
         ${HOMEPAGE_STAGGER_REVEAL_CSS}
@@ -7190,6 +7531,8 @@ ${documentHead}
         ${FAQ_ACCORDION_CSS}
 
         ${MODERN_FAQ_ACCORDION_CSS}
+
+        ${FAQ_SECTION_GLOW_CSS}
 
         ${MODERN_HERO_FILM_BELT_CSS}
 
@@ -7293,7 +7636,7 @@ ${heroSlideshowModernHtml}
 
 <span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
 
-${aboutTitle ? '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">' + aboutTitle + '</h1>' : '<h1 class="font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight text-white">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
+${aboutTitle ? '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
 
 ${aboutSubtitle ? '<p class="text-lg md:text-xl modern-about-muted leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
 
@@ -7435,9 +7778,11 @@ ${postsSectionHtml}
 
 ${hasPackages ? `
 
-<section class="py-xxl w-full" id="pricing">
+<section class="py-xxl w-full relative overflow-hidden" id="pricing">
 
-<div class="max-w-7xl mx-auto px-lg">
+${elegantPackagesGlowHtml}
+
+<div class="max-w-7xl mx-auto px-lg relative z-10">
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
@@ -8355,6 +8700,8 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${POSTS_PACKAGES_TRANSITION_CSS}
+
         ${CLASSIC_PACKAGES_ROWS_CSS}
 
         ${RECENT_PHOTOS_GRID_CSS}
@@ -9056,7 +9403,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 ${documentHead}
 
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Rubik:wght@500;600;700;800&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -9067,6 +9414,8 @@ ${documentHead}
         :root {
 
             --headline-font: 'Space Grotesk', sans-serif;
+
+            --about-title-font: 'Rubik', 'Heebo', sans-serif;
 
             --accent-pink: ${primaryColor};
 
@@ -9200,27 +9549,41 @@ ${documentHead}
 
         }
 
-        .about-title {
+        .theme-bold .about-title {
 
-            font-family: 'Frank Ruhl Libre', serif;
+            font-family: var(--about-title-font);
 
             font-size: clamp(2.5rem, 5vw, 4.5rem);
 
             line-height: 1.05;
 
-            font-weight: 400;
+            font-weight: 800;
 
-            font-style: italic;
+            font-style: normal;
 
-            color: #F5F5F0;
+            letter-spacing: 0.02em;
+
+            color: transparent !important;
+
+            -webkit-text-fill-color: transparent;
+
+            -webkit-text-stroke: 1.5px ${primaryColor};
+
+            paint-order: stroke fill;
+
+            text-shadow: ${aboutHollowTitleAmbientShadow};
 
         }
 
-        .about-title-underline {
+        .theme-bold .about-title-underline {
 
-            border-bottom: 2px solid ${primaryColor};
+            color: transparent !important;
 
-            padding-bottom: 4px;
+            -webkit-text-fill-color: transparent;
+
+            border-bottom: none;
+
+            padding-bottom: 0;
 
         }
 
@@ -9832,6 +10195,8 @@ ${documentHead}
 
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
+        ${POSTS_PACKAGES_TRANSITION_CSS}
+
         ${CLASSIC_PACKAGES_ROWS_CSS}
 
         ${BOLD_PACKAGES_ROWS_CSS}
@@ -9845,6 +10210,8 @@ ${documentHead}
         ${FAQ_ACCORDION_CSS}
 
         ${MODERN_FAQ_ACCORDION_CSS}
+
+        ${FAQ_SECTION_GLOW_CSS}
 
         ${HERO_SLIDESHOW_CSS}
 
