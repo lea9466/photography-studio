@@ -213,6 +213,24 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_rate_limits: {
+        Row: {
+          key: string
+          count: number
+          reset_at: string
+        }
+        Insert: {
+          key: string
+          count?: number
+          reset_at: string
+        }
+        Update: {
+          key?: string
+          count?: number
+          reset_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           id: string
@@ -774,6 +792,18 @@ export type Database = {
       record_dashboard_visit: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      admin_rate_limit_check: {
+        Args: {
+          p_key: string
+          p_max_attempts: number
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          remaining: number
+          retry_after_seconds: number
+        }[]
       }
     }
     Enums: {

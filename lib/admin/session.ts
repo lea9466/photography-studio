@@ -7,6 +7,7 @@ const OTP_COOKIE = 'sg_admin_otp'
 const SESSION_COOKIE = 'sg_admin_session'
 const OTP_TTL_MS = 15 * 60 * 1000
 const SESSION_TTL_SEC = 24 * 60 * 60
+const MAX_OTP_ATTEMPTS = 5
 
 function getSecret() {
   return requireSessionSecret('GALLERY_SESSION_SECRET', 'dev-admin-secret')
@@ -38,10 +39,14 @@ export function generateAdminOtpCode() {
   return String(randomInt(100000, 999999))
 }
 
+function buildOtpToken(code: string, exp: number, attempts: number) {
+  const payload = `${code}:${exp}:${attempts}`
+  return `${payload}:${sign(payload)}`
+}
+
 export async function setPendingAdminOtp(code: string) {
   const exp = Date.now() + OTP_TTL_MS
-  const payload = `${code}:${exp}`
-  const token = `${payload}:${sign(payload)}`
+  const token = buildOtpToken(code, exp, 0)
   const cookieStore = await cookies()
   cookieStore.set(OTP_COOKIE, token, cookieOptions(Math.floor(OTP_TTL_MS / 1000)))
 }
@@ -58,13 +63,29 @@ export async function verifyPendingAdminOtp(code: string) {
   const payload = raw.slice(0, lastColon)
   if (!safeEqual(sign(payload), sig)) return false
 
-  const sep = payload.indexOf(':')
-  if (sep <= 0) return false
+  const parts = payload.split(':')
+  if (parts.length !== 3) return false
 
-  const storedCode = payload.slice(0, sep)
-  const exp = Number(payload.slice(sep + 1))
+  const [storedCode, expRaw, attemptsRaw] = parts
+  const exp = Number(expRaw)
+  const attempts = Number(attemptsRaw)
   if (!Number.isFinite(exp) || Date.now() > exp) return false
-  if (!safeEqual(storedCode, code.trim())) return false
+  if (!Number.isFinite(attempts)) return false
+
+  // Too many wrong guesses against this code — burn it so a fresh
+  // (rate-limited) code has to be requested instead of allowing unlimited
+  // brute-force attempts within the OTP's TTL.
+  if (attempts >= MAX_OTP_ATTEMPTS) {
+    await clearPendingAdminOtp()
+    return false
+  }
+
+  if (!safeEqual(storedCode, code.trim())) {
+    const remainingTtlSec = Math.max(1, Math.ceil((exp - Date.now()) / 1000))
+    const nextToken = buildOtpToken(storedCode, exp, attempts + 1)
+    cookieStore.set(OTP_COOKIE, nextToken, cookieOptions(remainingTtlSec))
+    return false
+  }
 
   return true
 }

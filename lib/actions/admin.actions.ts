@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 import { getFeedbackEmail } from '@/lib/feedback-email'
 import { deleteStudioCompletely } from '@/lib/admin/delete-studio'
 import {
@@ -34,6 +35,7 @@ import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export type AdminActionState = {
   error?: string
@@ -43,6 +45,64 @@ export type AdminActionState = {
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
+}
+
+async function getClientIp() {
+  const headerStore = await headers()
+  return (
+    headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headerStore.get('x-real-ip')?.trim() ??
+    'unknown'
+  )
+}
+
+// Escapes ILIKE wildcard/escape characters so user input is always matched
+// literally (case-insensitively) instead of being interpreted as a pattern.
+function escapeIlikePattern(value: string) {
+  return value.replace(/[\\%_]/g, (match) => `\\${match}`)
+}
+
+type PersistentRateLimitResult = {
+  allowed: boolean
+  retryAfterSeconds: number
+}
+
+// Persistent rate limiting backed by the admin_rate_limit_check Postgres
+// function (see supabase/migrations/20250713000001_add_admin_rate_limits.sql).
+// Unlike an in-memory counter, this is enforced consistently across every
+// Vercel serverless instance since Postgres is the single shared source of
+// truth, and the check+increment happens atomically in one DB round trip.
+async function checkPersistentRateLimit(
+  key: string,
+  maxAttempts: number,
+  windowSeconds: number
+): Promise<PersistentRateLimitResult> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .rpc('admin_rate_limit_check', {
+      p_key: key,
+      p_max_attempts: maxAttempts,
+      p_window_seconds: windowSeconds,
+    })
+    .maybeSingle()
+
+  if (error) {
+    // Fail OPEN on infrastructure errors (network/DB issues) — a Supabase
+    // hiccup should never be able to lock the only admin out of /manage.
+    // This is a deliberate availability-over-strictness tradeoff for a
+    // low-traffic, single-admin login flow. The error is still logged (not
+    // silenced) so an outage or misconfiguration doesn't go unnoticed.
+    console.error('[admin-rate-limit] check failed, failing open:', {
+      key,
+      error: error.message,
+    })
+    return { allowed: true, retryAfterSeconds: 0 }
+  }
+
+  return {
+    allowed: data?.allowed ?? true,
+    retryAfterSeconds: data?.retry_after_seconds ?? 0,
+  }
 }
 
 export async function requestAdminLoginCode(
@@ -59,6 +119,24 @@ export async function requestAdminLoginCode(
       error: 'אימייל לא מורשה',
       step: 'email',
     }
+  }
+
+  // Rate-limit code requests themselves (not just verification) — otherwise
+  // an attacker can just clear the OTP cookie and request a fresh code
+  // repeatedly to keep resetting the per-code attempt counter. Persisted in
+  // Postgres (not in-memory) so this is actually enforced across Vercel's
+  // separate serverless instances.
+  const ip = await getClientIp()
+  const ipRate = await checkPersistentRateLimit(`admin-otp-request:ip:${ip}`, 5, 15 * 60)
+  if (!ipRate.allowed) {
+    const minutes = Math.max(1, Math.ceil(ipRate.retryAfterSeconds / 60))
+    return { error: `יותר מדי בקשות לקוד. נסי שוב בעוד ${minutes} דקות.`, step: 'email' }
+  }
+
+  const emailRate = await checkPersistentRateLimit(`admin-otp-request:email:${email}`, 10, 60 * 60)
+  if (!emailRate.allowed) {
+    const minutes = Math.max(1, Math.ceil(emailRate.retryAfterSeconds / 60))
+    return { error: `יותר מדי בקשות לקוד. נסי שוב בעוד ${minutes} דקות.`, step: 'email' }
   }
 
   const code = generateAdminOtpCode()
@@ -115,6 +193,9 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
   if (!normalized) {
     throw new Error('נא להזין אימייל')
   }
+  if (!EMAIL_REGEX.test(normalized)) {
+    throw new Error('כתובת אימייל לא תקינה')
+  }
 
   const admin = createAdminClient()
   const { data, error } = await admin
@@ -122,7 +203,10 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     .select(
       'id, email, name, studio_name, slug, created_at, last_dashboard_visit_at, dashboard_visit_count'
     )
-    .ilike('email', normalized)
+    // Case-insensitive match (existing emails aren't guaranteed to be stored
+    // lowercase), but escaped so user input can never be interpreted as an
+    // ILIKE wildcard pattern (% / _).
+    .ilike('email', escapeIlikePattern(normalized))
     .maybeSingle()
 
   if (error) throw new Error(error.message)

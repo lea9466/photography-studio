@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
+    "prebuild": "node scripts/check-required-env.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs",
     "supabase:auth-urls": "node scripts/push-auth-redirect-urls.mjs"
   },
   "dependencies": {
