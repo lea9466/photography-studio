@@ -7,7 +7,9 @@ import {
   getAdminBroadcastRecipients,
   getAdminStudios,
   getLatestAnnouncementForAdmin,
+  type AdminStudioRow,
 } from '@/lib/admin/queries'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 import { getAdminStudioSummary } from '@/lib/admin/studio-summary'
 import {
   isAnnouncementIconKey,
@@ -99,6 +101,54 @@ export async function adminLogout() {
 export async function fetchAdminStudios() {
   await requireAdmin()
   return getAdminStudios()
+}
+
+export type AdminEmailCheckResult = {
+  exists: boolean
+  studio: AdminStudioRow | null
+}
+
+export async function checkStudioEmailExists(email: string): Promise<AdminEmailCheckResult> {
+  await requireAdmin()
+
+  const normalized = normalizeEmail(email)
+  if (!normalized) {
+    throw new Error('נא להזין אימייל')
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .select(
+      'id, email, name, studio_name, slug, created_at, last_dashboard_visit_at, dashboard_visit_count'
+    )
+    .ilike('email', normalized)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!data) {
+    return { exists: false, studio: null }
+  }
+
+  const row = data as {
+    id: string
+    email: string | null
+    name: string | null
+    studio_name: string | null
+    slug: string | null
+    created_at: string
+    last_dashboard_visit_at: string | null
+    dashboard_visit_count: number
+  }
+
+  return {
+    exists: true,
+    studio: {
+      ...row,
+      dashboard_visit_count: row.dashboard_visit_count ?? 0,
+      site_path: getPublicSitePath(row.slug, row.studio_name),
+    },
+  }
 }
 
 export async function fetchAdminStudioSummary(userId: string) {

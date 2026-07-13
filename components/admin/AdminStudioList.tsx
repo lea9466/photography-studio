@@ -22,6 +22,7 @@ import {
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
+import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
 import { Button } from '@/components/ui/button'
@@ -181,6 +182,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('last_visit')
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
+  const [highlightedStudioId, setHighlightedStudioId] = useState<string | null>(null)
   const [logoutPending, startLogout] = useTransition()
 
   const stats = useMemo(() => {
@@ -364,6 +366,13 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
 
       <AnnouncementManagerForm />
 
+      <AdminEmailLookupForm
+        onStudioFound={(studio) => {
+          setFilterKey('all')
+          setHighlightedStudioId(studio.id)
+        }}
+      />
+
       <AdminBroadcastForm />
 
       <Card className="overflow-hidden border-slate-200/80 shadow-md">
@@ -483,11 +492,14 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                     studio.last_dashboard_visit_at &&
                     isToday(studio.last_dashboard_visit_at)
                   const rowAccent = getRowAccentClass(studio)
+                  const isHighlighted = highlightedStudioId === studio.id
 
                   return (
                     <tr key={studio.id} className="group">
                       <td
-                        className={`rounded-r-2xl border border-slate-200/80 border-r-4 px-4 py-4 shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md ${rowAccent}`}
+                        className={`rounded-r-2xl border border-slate-200/80 border-r-4 px-4 py-4 shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md ${rowAccent} ${
+                          isHighlighted ? 'ring-2 ring-sky-400 ring-offset-2' : ''
+                        }`}
                       >
                         <div className="flex items-start gap-3">
                           <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
