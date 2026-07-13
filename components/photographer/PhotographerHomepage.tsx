@@ -2821,6 +2821,18 @@ const CLASSIC_CONTACT_FORM_CSS = `
 
     min-width: 0;
 
+    text-align: right;
+
+  }
+
+  .theme-classic .classic-contact-info h2,
+
+  .theme-classic .classic-contact-info p,
+
+  .theme-classic .classic-contact-info > span {
+
+    text-align: right;
+
   }
 
   .theme-classic .classic-contact-details {
@@ -9477,7 +9489,7 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start classic-contact-layout">
 
-<div class="lg:col-span-5 space-y-lg classic-contact-info text-start rtl:text-end">
+<div class="lg:col-span-5 space-y-lg classic-contact-info text-start rtl:text-right">
 
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">${homepageCopy.sections.contactClassicHeading}</span>
 
@@ -9488,7 +9500,7 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 <div class="classic-contact-details space-y-md pt-lg">
 
 ${studioPhone ? `
-<a class="classic-contact-details__link flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end group transition-colors hover:text-primary" href="tel:${studioPhoneHref}">
+<a class="classic-contact-details__link flex items-center gap-md flex-row justify-start rtl:justify-start group transition-colors hover:text-primary" href="tel:${studioPhoneHref}">
 
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">call</span>
 
@@ -9496,7 +9508,7 @@ ${studioPhone ? `
 
 </a>` : ''}
 
-<a class="classic-contact-details__link flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end group transition-colors hover:text-primary" href="mailto:${email || 'hello@studiogallery.co.il'}">
+<a class="classic-contact-details__link flex items-center gap-md flex-row justify-start rtl:justify-start group transition-colors hover:text-primary" href="mailto:${email || 'hello@studiogallery.co.il'}">
 
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
 
@@ -9506,7 +9518,7 @@ ${studioPhone ? `
 
 ${studioAddress ? `
 
-<div class="classic-contact-details__item flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end">
+<div class="classic-contact-details__item flex items-center gap-md flex-row justify-start rtl:justify-start">
 
 <span class="material-symbols-outlined text-primary shrink-0">location_on</span>
 
