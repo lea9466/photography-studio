@@ -24,6 +24,11 @@ export type PublicGalleryPhoto = {
   url: string | null
 }
 
+export type PublicContactCardData = {
+  contactCardTitle: string | null
+  contactCardDescription: string | null
+}
+
 export type PublicGalleryPageData = {
   title: string
   photoCount: number
@@ -416,8 +421,8 @@ function contactButton(theme: SiteChromeTheme, homepagePath: string, language: S
   return `<a href="${href}" target="_parent" class="inline-block border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="${btnStyle}">${label}</a>`
 }
 
-function ctaSection(
-  data: PublicGalleryPageData,
+export function generatePublicContactCardSection(
+  data: PublicContactCardData,
   theme: SiteChromeTheme,
   homepagePath: string,
   language: SiteLanguage
@@ -495,7 +500,7 @@ function galleryBody(
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath, language)}
+${generatePublicContactCardSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -515,7 +520,7 @@ ${ctaSection(data, theme, homepagePath, language)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath, language)}
+${generatePublicContactCardSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -534,7 +539,7 @@ ${ctaSection(data, theme, homepagePath, language)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath, language)}
+${generatePublicContactCardSection(data, theme, homepagePath, language)}
 </section>
 </main>`
   }
@@ -551,7 +556,7 @@ ${ctaSection(data, theme, homepagePath, language)}
 ${photoGrid(data.photos, data.title, theme)}
 </section>
 <section class="max-w-[1280px] mx-auto px-[24px] pb-24">
-${ctaSection(data, theme, homepagePath, language)}
+${generatePublicContactCardSection(data, theme, homepagePath, language)}
 </section>
 </main>`
 }

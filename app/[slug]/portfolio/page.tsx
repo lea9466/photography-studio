@@ -113,6 +113,8 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
       photos: allPhotos,
       galleryNames,
       accentColor,
+      contactCardTitle: typed.contact_card_title ?? null,
+      contactCardDescription: typed.contact_card_description ?? null,
     },
     siteLanguage: typed.site_language,
   })

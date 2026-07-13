@@ -9,6 +9,7 @@ import {
 import {
   generatePublicGalleryThemeHead,
   generatePublicGalleryLightboxMarkup,
+  generatePublicContactCardSection,
   getMasonryCellStyle,
   PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
   PUBLIC_GALLERY_MASONRY_STYLES,
@@ -28,6 +29,8 @@ export type PublicPortfolioPageData = {
   photos: PortfolioPhoto[]
   galleryNames: string[]
   accentColor: string
+  contactCardTitle: string | null
+  contactCardDescription: string | null
 }
 
 function toChromeTheme(theme: PhotographerSiteTheme): SiteChromeTheme {
@@ -385,6 +388,17 @@ ${masonryEmptyMessage}
 <div id="portfolio-load-sentinel" aria-hidden="true"></div>
 </section>
 <p id="portfolio-load-status" class="portfolio-load-status" aria-live="polite"></p>
+<section class="max-w-[1280px] mx-auto px-[24px] pb-24">
+${generatePublicContactCardSection(
+  {
+    contactCardTitle: options.portfolio.contactCardTitle,
+    contactCardDescription: options.portfolio.contactCardDescription,
+  },
+  chromeTheme,
+  options.homepagePath,
+  language
+)}
+</section>
 </main>
 ${generatePortfolioPhotosDataScript(options.portfolio.photos)}`
 
