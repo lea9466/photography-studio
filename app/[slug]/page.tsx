@@ -26,6 +26,7 @@ import {
   type PhotoCandidate,
 } from '@/lib/homepage-photo-pool'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
+import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 
 interface PageProps {
   params: Promise<{
@@ -49,14 +50,6 @@ type HomepagePostRow = {
   cover_photo_id: string | null
   created_at: string
   post_photos: HomepagePostPhotoRow[]
-}
-
-function formatPostDate(value: string) {
-  return new Date(value).toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
 }
 
 export default async function PhotographerPage({ params }: PageProps) {
@@ -202,6 +195,8 @@ export default async function PhotographerPage({ params }: PageProps) {
       return photo.preview_url ? postPreviewUrls[photo.preview_url] ?? null : null
     }
 
+    const siteLanguage = resolveSiteLanguage(typedPhotographer.site_language)
+
     const homepagePosts: PublicBlogPost[] = latestPosts.map((post) => {
       const orderedPhotos = [...(post.post_photos ?? [])].sort(
         (a, b) => a.sort_order - b.sort_order
@@ -219,7 +214,7 @@ export default async function PhotographerPage({ params }: PageProps) {
         title: post.title,
         subtitle: post.subtitle,
         content: post.content,
-        date: formatPostDate(post.created_at),
+        date: formatSiteDate(post.created_at, siteLanguage),
         coverUrl,
         images,
       }

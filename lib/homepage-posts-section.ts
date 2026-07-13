@@ -1,4 +1,5 @@
 import type { SiteChromeTheme } from '@/lib/photographer-site-chrome'
+import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import {
   HOMEPAGE_STAGGER_REVEAL_CSS,
 } from '@/lib/homepage-stagger-reveal'
@@ -103,14 +104,17 @@ export function generateHomepageMoreLinkHTML(options: {
   label: string
   primaryColor: string
   includeStyles?: boolean
+  language?: SiteLanguage
 }): string {
+  const language = options.language ?? 'he'
+  const arrow = galleryCardArrow(language)
   const styles =
     options.includeStyles === false ? '' : `<style>${HOMEPAGE_MORE_LINK_CSS}</style>`
   return `${styles}
 <div class="hp-posts-more">
   <a href="${escapeHtml(options.href)}" target="_parent" style="color:${options.primaryColor};">
     ${escapeHtml(options.label)}
-    <span class="hp-posts-more-arrow" aria-hidden="true">←</span>
+    <span class="hp-posts-more-arrow" aria-hidden="true">${arrow}</span>
   </a>
 </div>`
 }
@@ -470,8 +474,12 @@ export function generateHomepagePostsSectionHTML(options: {
   sectionTitle: string
   blogHref: string
   showAllLink: boolean
+  language?: SiteLanguage
 }): string {
   if (!options.posts.length) return ''
+
+  const language = options.language ?? 'he'
+  const chromeCopy = getSiteChromeCopy(language)
 
   const t = TOKENS[options.theme]
   const blogTokens = getBlogThemeTokens(options.theme)
@@ -485,9 +493,10 @@ export function generateHomepagePostsSectionHTML(options: {
   const moreLinkHtml = options.showAllLink
     ? generateHomepageMoreLinkHTML({
         href: options.blogHref,
-        label: 'לכל הפוסטים',
+        label: chromeCopy.viewAllPosts,
         primaryColor: options.primaryColor,
         includeStyles: false,
+        language,
       })
     : ''
 

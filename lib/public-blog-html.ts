@@ -1,8 +1,10 @@
 import {
-  createSiteChromeConfig,
+  buildPublicSiteChrome,
   generateSiteFooter,
   generateSiteNav,
   generateSiteNavStyles,
+  publicSiteLtrCss,
+  publicSitePageHtmlAttrs,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import type { PhotographerSiteTheme } from '@/lib/photographer-site-paths'
@@ -236,10 +238,12 @@ function blogHead(
   studioName: string,
   primaryColor: string,
   pageTitle: string,
-  shouldColorLogo: boolean
+  shouldColorLogo: boolean,
+  siteLanguage?: string | null
 ) {
   const t = TOKENS[theme]
   const title = escapeHtml(`${pageTitle} | ${studioName}`)
+  const ltrCss = publicSiteLtrCss(siteLanguage)
   return `
 <head>
 <meta charset="utf-8"/>
@@ -289,6 +293,7 @@ body { font-family: 'Heebo', sans-serif; background: ${t.bg}; color: ${t.text}; 
 .elegant-bg-accent { background-color: ${primaryColor}; }
 ${BLOG_CSS}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
+${ltrCss}
 </style>
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">`
@@ -476,12 +481,13 @@ export function generatePublicBlogPageHTML(options: {
   hasFaq?: boolean
   hasPackages?: boolean
   shouldColorLogo?: boolean
+  siteLanguage?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.blog.accentColor
   const t = TOKENS[chromeTheme]
 
-  const chrome = createSiteChromeConfig({
+  const chrome = buildPublicSiteChrome({
     theme: chromeTheme,
     studioName: options.studioName,
     logoUrl: options.logoUrl,
@@ -493,6 +499,7 @@ export function generatePublicBlogPageHTML(options: {
     hasBlog: true,
     blogPath: options.blogPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
+    siteLanguage: options.siteLanguage,
   })
 
   const templates = generateBlogPostDetailTemplates(options.blog.posts, chromeTheme, primaryColor)
@@ -503,8 +510,8 @@ export function generatePublicBlogPageHTML(options: {
   })
 
   return `<!DOCTYPE html>
-<html dir="rtl" lang="he" style="scroll-behavior: smooth;">
-${blogHead(chromeTheme, options.studioName, primaryColor, options.blog.pageTitle, options.shouldColorLogo ?? false)}
+<html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
+${blogHead(chromeTheme, options.studioName, primaryColor, options.blog.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage)}
 ${generateSiteNav(chrome)}
 ${blogBody(options.blog, chromeTheme)}
 ${templates}

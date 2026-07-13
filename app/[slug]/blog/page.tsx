@@ -11,6 +11,7 @@ import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
+import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>
@@ -32,14 +33,6 @@ type PostRow = {
   cover_photo_id: string | null
   created_at: string
   post_photos: PostPhotoRow[]
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString('he-IL', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
 }
 
 export default async function BlogPage({ params }: BlogPageProps) {
@@ -98,6 +91,8 @@ export default async function BlogPage({ params }: BlogPageProps) {
     return photo.preview_url ? previewUrls[photo.preview_url] ?? null : null
   }
 
+  const siteLanguage = resolveSiteLanguage(typed.site_language)
+
   const blogPosts: PublicBlogPost[] = posts.map((post) => {
     const orderedPhotos = [...post.post_photos].sort((a, b) => a.sort_order - b.sort_order)
     const images = orderedPhotos
@@ -114,7 +109,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
       title: post.title,
       subtitle: post.subtitle,
       content: post.content,
-      date: formatDate(post.created_at),
+      date: formatSiteDate(post.created_at, siteLanguage),
       coverUrl,
       images,
     }
@@ -151,6 +146,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
       posts: blogPosts,
       accentColor,
     },
+    siteLanguage: typed.site_language,
   })
 
   return <HtmlFramePage html={html} title={`${pageTitle} | ${studioName}`} />

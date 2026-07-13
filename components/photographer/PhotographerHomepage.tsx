@@ -24,7 +24,7 @@ import {
 
 import {
 
-  createSiteChromeConfig,
+  buildPublicSiteChrome,
 
   generateSiteFooter,
 
@@ -68,6 +68,22 @@ import {
 
 import { getBrandingPublicMediaPath } from '@/lib/branding-public-url'
 import { getBrandingFaviconStoragePath } from '@/lib/branding/logo-favicon-path'
+import { HOMEPAGE_LTR_CSS } from '@/lib/homepage-ltr-css'
+import {
+  contactLtrDirAttr,
+  contactLtrFieldClass,
+  contactTextAlignClass,
+  getHomepageCopy,
+  type HomepageCopy,
+} from '@/lib/homepage-copy'
+import {
+  contentDirAttr,
+  galleryCardArrow,
+  getSiteChromeCopy,
+  resolveSiteLanguage,
+  siteHtmlAttrs,
+  type SiteLanguage,
+} from '@/lib/site-language'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
 
 
@@ -144,6 +160,8 @@ interface Photographer {
   posts_page_title?: string | null
 
   gallery_layout_mode?: string | null
+
+  site_language?: string | null
 
 }
 
@@ -663,7 +681,9 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .testimonials-section__inner {
+  .theme-classic .testimonials-section__inner,
+  .testimonials-section--modern .testimonials-section__inner,
+  .theme-bold .testimonials-section__inner {
 
     width: 100%;
 
@@ -677,7 +697,9 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
-  .theme-classic .testimonials-section__header {
+  .theme-classic .testimonials-section__header,
+  .testimonials-section--modern .testimonials-section__header,
+  .theme-bold .testimonials-section__header {
 
     width: 100%;
 
@@ -688,14 +710,20 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
   }
 
   .theme-classic .testimonials-section__header span,
+  .testimonials-section--modern .testimonials-section__header span,
+  .theme-bold .testimonials-section__header span,
 
-  .theme-classic .testimonials-section__header h2 {
+  .theme-classic .testimonials-section__header h2,
+  .testimonials-section--modern .testimonials-section__header h2,
+  .theme-bold .testimonials-section__header h2 {
 
     text-align: left !important;
 
   }
 
-  .theme-classic .testimonials-section__divider {
+  .theme-classic .testimonials-section__divider,
+  .testimonials-section--modern .testimonials-section__divider,
+  .theme-bold .testimonials-section__divider {
 
     margin-left: 0;
 
@@ -2779,6 +2807,237 @@ function classicFaqSectionCss(primaryColor: string) {
 
 
 
+const CLASSIC_CONTACT_FORM_CSS = `
+
+  .theme-classic .classic-contact-layout {
+
+    align-items: start;
+
+  }
+
+  .theme-classic .classic-contact-info {
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-details {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1rem;
+
+    width: 100%;
+
+  }
+
+  .theme-classic .classic-contact-details__link,
+  .theme-classic .classic-contact-details__item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 0.75rem;
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-form {
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: stretch !important;
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-form > *:not(.contact-privacy-consent) {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-form > .contact-privacy-consent {
+
+    display: grid !important;
+
+    grid-template-columns: auto 1fr !important;
+
+    column-gap: 0.5rem;
+
+    align-items: start !important;
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    box-sizing: border-box;
+
+  }
+
+  .theme-classic .classic-contact-form .contact-privacy-checkbox {
+
+    width: 1rem !important;
+
+    height: 1rem !important;
+
+    min-width: 1rem !important;
+
+    min-height: 1rem !important;
+
+    max-width: 1rem !important;
+
+    max-height: 1rem !important;
+
+    aspect-ratio: 1 / 1;
+
+    flex-shrink: 0;
+
+    margin-top: 0.2rem;
+
+    border-radius: 2px;
+
+    padding: 0;
+
+    box-sizing: border-box;
+
+    appearance: auto;
+
+  }
+
+  .theme-classic .classic-contact-form .contact-privacy-consent > p {
+
+    flex: none !important;
+
+    width: auto !important;
+
+    max-width: 100% !important;
+
+    min-width: 0;
+
+    margin: 0;
+
+    white-space: normal !important;
+
+    word-break: normal !important;
+
+    overflow-wrap: break-word;
+
+  }
+
+  .theme-classic .classic-contact-form .contact-privacy-consent label,
+  .theme-classic .classic-contact-form .contact-privacy-consent a {
+
+    display: inline !important;
+
+    white-space: normal !important;
+
+  }
+
+  .theme-classic .classic-contact-form__message-block {
+
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    align-items: stretch !important;
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    min-width: 0;
+
+    margin-bottom: 1.5rem;
+
+    overflow: visible !important;
+
+  }
+
+  .theme-classic .classic-contact-form__message-block > * {
+
+    width: 100%;
+
+    max-width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-form__row {
+
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr);
+
+    gap: 1.5rem;
+
+    width: 100%;
+
+  }
+
+  @media (min-width: 768px) {
+
+    .theme-classic .classic-contact-form__row {
+
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    }
+
+  }
+
+  .theme-classic .classic-contact-field {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 0.35rem;
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .theme-classic .classic-contact-field label {
+
+    width: 100%;
+
+  }
+
+  .theme-classic .classic-contact-form input,
+  .theme-classic .classic-contact-form textarea {
+
+    width: 100%;
+
+    min-width: 0;
+
+    box-sizing: border-box;
+
+  }
+
+`
+
+
+
 const TESTIMONIAL_THUMB_CARD_CSS = `
 
   .testimonials-bleed {
@@ -3621,7 +3880,9 @@ function generateUnifiedGalleryGridHTML(
 
   galleries: Gallery[],
 
-  themeVariant: GalleryThemeVariant
+  themeVariant: GalleryThemeVariant,
+
+  language: SiteLanguage = 'he',
 
 ): string {
 
@@ -3655,21 +3916,26 @@ function generateUnifiedGalleryGridHTML(
 
 
 
+      const seriesLabel = getSiteChromeCopy(language).gallerySeriesLabel
+      const viewCta = getSiteChromeCopy(language).galleryViewCta
+      const arrow = galleryCardArrow(language)
+      const cardDir = contentDirAttr(language)
+
       return `<a href="${galleryUrl}" target="_parent" class="homepage-gallery-card group" style="border-radius: ${radius}">
 
 ${previewHtml}
 
 <div class="homepage-gallery-card-overlay"></div>
 
-<div class="homepage-gallery-card-content" dir="rtl">
+<div class="homepage-gallery-card-content" ${cardDir}>
 
-<p class="homepage-gallery-card-label">סדרה</p>
+<p class="homepage-gallery-card-label">${seriesLabel}</p>
 
 <h3 class="homepage-gallery-card-title">${title}</h3>
 
 <p class="homepage-gallery-card-subtitle">${year}</p>
 
-<span class="homepage-gallery-card-cta"><span class="homepage-gallery-card-arrow">←</span> לצפייה בגלריה</span>
+<span class="homepage-gallery-card-cta"><span class="homepage-gallery-card-arrow">${arrow}</span> ${viewCta}</span>
 
 </div>
 
@@ -3779,7 +4045,9 @@ function generatePortfolioCtaHTML(
 
   portfolioPath: string,
 
-  primaryColor: string
+  primaryColor: string,
+
+  language: SiteLanguage = 'he',
 
 ): string {
 
@@ -3791,11 +4059,13 @@ ${generateHomepageMoreLinkHTML({
 
   href: portfolioPath,
 
-  label: 'לכל התמונות',
+  label: getSiteChromeCopy(language).viewAllPhotos,
 
   primaryColor,
 
   includeStyles: true,
+
+  language,
 
 })}
 
@@ -4114,6 +4384,8 @@ function generateContactPrivacyConsentHTML(
 
   primaryColor: string,
 
+  copy: HomepageCopy,
+
   wrapperClass = ''
 
 ): string {
@@ -4124,11 +4396,29 @@ function generateContactPrivacyConsentHTML(
 
     modern: 'text-sm text-white/90 leading-relaxed',
 
-    classic: 'text-sm text-on-surface-variant leading-relaxed',
+    classic: 'classic-contact-privacy-text text-sm text-on-surface-variant leading-relaxed block w-auto max-w-full m-0',
 
     dark: 'text-sm text-on-surface-variant leading-relaxed',
 
   }[theme]
+
+
+
+  const privacyTextWrapperClass = theme === 'classic' ? 'flex-1 w-auto max-w-full' : 'flex-1 min-w-0'
+
+
+
+  const privacyWrapperClass = [
+
+    wrapperClass,
+
+    theme === 'classic' ? 'classic-contact-privacy-consent' : '',
+
+  ]
+
+    .filter(Boolean)
+
+    .join(' ')
 
 
 
@@ -4148,13 +4438,13 @@ function generateContactPrivacyConsentHTML(
 
   return `
 
-<div class="contact-privacy-consent flex items-start gap-sm text-right ${wrapperClass}">
+<div class="contact-privacy-consent w-full min-w-0 flex flex-row items-start gap-sm text-start rtl:text-right ${privacyWrapperClass}">
 
 <input type="checkbox" name="privacy_consent" id="contact_privacy_consent_${theme}" required class="contact-privacy-checkbox mt-1 shrink-0 size-4 cursor-pointer rounded border border-current/30" style="accent-color: ${primaryColor};"/>
 
-<p class="${labelTextClass}">
+<p class="${labelTextClass} ${privacyTextWrapperClass}">
 
-<label for="contact_privacy_consent_${theme}" class="cursor-pointer">אני מסכימ/ה לשמירת המידע האישי שלי לצורך טיפול בפנייה , בהתאם ל</label><a href="/privacy" class="${linkClass}">מדיניות הפרטיות</a>.
+<label for="contact_privacy_consent_${theme}" class="cursor-pointer">${copy.contactForm.privacyBefore}</label><a href="/privacy" class="${linkClass}">${copy.contactForm.privacyLink}</a>.
 
 </p>
 
@@ -4164,7 +4454,7 @@ function generateContactPrivacyConsentHTML(
 
 
 
-function contactFormSubmitScript(photographerId: string): string {
+function contactFormSubmitScript(photographerId: string, copy: HomepageCopy): string {
 
   return `
 
@@ -4194,7 +4484,7 @@ function contactFormSubmitScript(photographerId: string): string {
 
           submitBtn.disabled = true;
 
-          submitBtn.textContent = 'שולח...';
+          submitBtn.textContent = '${copy.contactForm.submitting}';
 
         }
 
@@ -4238,13 +4528,13 @@ function contactFormSubmitScript(photographerId: string): string {
 
         .then(function(result) {
 
-          if (!result.ok) throw new Error(result.data.error || 'שגיאה בשליחה');
+          if (!result.ok) throw new Error(result.data.error || '${copy.contactForm.submitError}');
 
           var section = document.querySelector('#contact .contact-section-content') || document.querySelector('#contact');
 
           if (section) {
 
-            section.innerHTML = '<div class="text-center py-16"><p class="text-xl font-medium mb-2">הפנייה נשלחה בהצלחה ✓</p><p class="opacity-70">ניצור איתך קשר בהקדם.</p></div>';
+            section.innerHTML = '<div class="text-center py-16"><p class="text-xl font-medium mb-2">${copy.contactForm.successTitle}</p><p class="opacity-70">${copy.contactForm.successBody}</p></div>';
 
           }
 
@@ -4252,7 +4542,7 @@ function contactFormSubmitScript(photographerId: string): string {
 
         .catch(function(err) {
 
-          alert(err.message || 'שגיאה בשליחה');
+          alert(err.message || '${copy.contactForm.submitError}');
 
           if (submitBtn) {
 
@@ -4359,6 +4649,37 @@ function generateHomepageHTML(
     address,
 
   } = photographer
+
+
+
+  const siteLanguage = resolveSiteLanguage(photographer.site_language)
+
+  const htmlAttrs = siteHtmlAttrs(siteLanguage)
+
+  const homepageCopy = getHomepageCopy(siteLanguage)
+
+  const contactAlign = contactTextAlignClass(siteLanguage)
+
+  const contactLtrAlign = contactLtrFieldClass(siteLanguage)
+
+  const contactLtrDir = contactLtrDirAttr()
+
+  const contentDir = contentDirAttr(siteLanguage)
+
+  const pkgCenterStyle =
+    siteLanguage === 'en'
+      ? 'text-align: center !important;'
+      : 'direction: rtl !important; text-align: center !important;'
+
+  const pkgListStyle =
+    siteLanguage === 'en'
+      ? 'text-align: center !important; padding-inline: 0 !important; margin-inline: 0 !important;'
+      : 'direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;'
+
+  const pkgListItemStyle =
+    siteLanguage === 'en'
+      ? 'text-align: center !important;'
+      : 'direction: rtl !important; text-align: right !important;'
 
 
 
@@ -4602,7 +4923,9 @@ function generateHomepageHTML(
 
           portfolioPath,
 
-          primaryColor
+          primaryColor,
+
+          siteLanguage,
 
         )
 
@@ -4626,7 +4949,7 @@ function generateHomepageHTML(
 
     mobileImages: mobileHeroImages,
 
-    alt: studio_name || 'סטודיו צילום',
+    alt: studio_name || homepageCopy.misc.photographyAlt,
 
   })
 
@@ -4636,7 +4959,7 @@ function generateHomepageHTML(
 
     mobileImages: mobileHeroImages,
 
-    alt: studio_name || 'סטודיו צילום',
+    alt: studio_name || homepageCopy.misc.photographyAlt,
 
     heroId: 'hero-slideshow-modern',
 
@@ -4648,7 +4971,7 @@ function generateHomepageHTML(
 
     mobileImages: mobileHeroImages,
 
-    alt: studio_name || 'סטודיו צילום',
+    alt: studio_name || homepageCopy.misc.photographyAlt,
 
     heroId: 'hero-slideshow-bold',
 
@@ -4658,7 +4981,7 @@ function generateHomepageHTML(
 
   const aboutImageHtml = about_image_url
 
-    ? `<img alt="צילום פורטרט" class="w-full h-full object-cover" src="${about_image_url}"/>`
+    ? `<img alt="${homepageCopy.misc.portraitAlt}" class="w-full h-full object-cover" src="${about_image_url}"/>`
 
     : ''
 
@@ -4695,7 +5018,7 @@ function generateHomepageHTML(
 
   const siteChrome = (themeKey: SiteChromeTheme) =>
 
-    createSiteChromeConfig({
+    buildPublicSiteChrome({
 
       theme: themeKey,
 
@@ -4729,15 +5052,18 @@ function generateHomepageHTML(
           ? portfolioPath
           : undefined,
 
+      siteLanguage: photographer.site_language,
+
     })
 
   const postsSectionHtml = generateHomepagePostsSectionHTML({
     posts,
     theme: theme as SiteChromeTheme,
     primaryColor,
-    sectionTitle: resolvePostsPageTitle(theme, photographer.posts_page_title),
+    sectionTitle: resolvePostsPageTitle(theme, photographer.posts_page_title, siteLanguage),
     blogHref: blogPath ?? '#',
     showAllLink: postCount > 0,
+    language: siteLanguage,
   })
 
   const aboutText = about_text || ''
@@ -4765,7 +5091,7 @@ function generateHomepageHTML(
 
   const hasPackages = packages.length > 0
 
-  const packagesSectionCopy = resolvePackagesSectionCopy(theme, packages_title, packages_subtitle)
+  const packagesSectionCopy = resolvePackagesSectionCopy(theme, packages_title, packages_subtitle, siteLanguage)
 
   const packagesGridClass =
 
@@ -4801,11 +5127,13 @@ function generateHomepageHTML(
 
     theme,
 
-    testimonials_title
+    testimonials_title,
+
+    siteLanguage
 
   )
 
-  const testimonialsSectionSubtitle = resolveTestimonialsSectionSubtitle(theme)
+  const testimonialsSectionSubtitle = resolveTestimonialsSectionSubtitle(theme, siteLanguage)
 
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
@@ -4839,25 +5167,25 @@ function generateHomepageHTML(
 
         <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
 
-        <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full relative" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor};` : ''}">
+        <div class="${isFeatured ? `${packageCardBg('bg-white')} border-2` : `${packageCardBg('bg-white')} border border-outline-variant`} p-10 flex flex-col h-full relative" style="${pkgCenterStyle} ${isFeatured ? `border-color: ${primaryColor};` : ''}">
 
-          ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="direction: rtl !important; background-color: ${primaryColor};">הנמכרת ביותר</div>` : ''}
+          ${isFeatured ? `<div class="absolute -top-3 left-1/2 -translate-x-1/2 text-white px-4 py-1 text-xs font-bold uppercase tracking-widest rounded-full shadow-lg" style="${pkgCenterStyle} background-color: ${primaryColor};">${homepageCopy.packages.bestSeller}</div>` : ''}
 
-          <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="direction: rtl !important; text-align: center !important;">
+          <div class="text-center mb-8 ${isFeatured ? 'mt-2' : ''}" style="${pkgCenterStyle}">
 
-            <h3 class="font-display text-3xl mb-2" style="direction: rtl !important; text-align: center !important; color: ${primaryColor};">${pkg.name}</h3>
+            <h3 class="font-display text-3xl mb-2" style="${pkgCenterStyle} color: ${primaryColor};">${pkg.name}</h3>
 
-            <div class="text-lg tracking-widest elegant-accent" style="direction: rtl !important; text-align: center !important; color: ${isFeatured ? primaryColor : 'inherit'};">₪${pkg.price_amount}</div>
+            <div class="text-lg tracking-widest elegant-accent" style="${pkgCenterStyle} color: ${isFeatured ? primaryColor : 'inherit'};">₪${pkg.price_amount}</div>
 
           </div>
 
-          <div class="border-t pt-8 mb-10 flex-grow" style="direction: rtl !important; text-align: center !important; ${isFeatured ? `border-color: ${primaryColor}20;` : 'border-color: rgba(15, 15, 13, 0.1);'}">
+          <div class="border-t pt-8 mb-10 flex-grow" style="${pkgCenterStyle} ${isFeatured ? `border-color: ${primaryColor}20;` : 'border-color: rgba(15, 15, 13, 0.1);'}">
 
-            <div class="mx-auto w-fit" style="direction: rtl !important;">
+            <div class="mx-auto w-fit">
 
-              <ul class="space-y-4 font-body text-base ${isFeatured ? 'text-on-surface-variant' : 'opacity-80'}" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+              <ul class="space-y-4 font-body text-base ${isFeatured ? 'text-on-surface-variant' : 'opacity-80'}" style="${pkgListStyle}">
 
-                ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${primaryColor};">check</span> <span>${item}</span></li>`).join('')}
+                ${includesList.map((item: string) => `<li style="${pkgListItemStyle}" class="flex flex-row items-center justify-start gap-4 w-full"><span class="material-symbols-outlined text-xl" style="color: ${primaryColor};">check</span> <span>${item}</span></li>`).join('')}
 
               </ul>
 
@@ -4865,9 +5193,9 @@ function generateHomepageHTML(
 
           </div>
 
-          <div class="mt-auto" style="direction: rtl !important; text-align: center !important;">
+          <div class="mt-auto" style="${pkgCenterStyle}">
 
-            <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="direction: rtl !important; text-align: center !important;">תיאום שיחת ייעוץ</button>
+            <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full border border-[#0F0F0D] px-8 py-4 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all" style="${pkgCenterStyle}">${homepageCopy.packages.scheduleConsultation}</button>
 
           </div>
 
@@ -4883,35 +5211,35 @@ function generateHomepageHTML(
 
         <div class="stagger-reveal homepage-package-reveal" data-reveal-delay="${i * 100}">
 
-        <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 ${isFeatured ? 'border-2 border-primary' : ''}" style="direction: rtl !important; text-align: center !important;">
+        <div class="${packageCardBg('bg-white')} p-xl rounded-2xl modern-shadow border border-outline-variant flex flex-col gap-md transition-all hover:-translate-y-2 ${isFeatured ? 'border-2 border-primary' : ''}" style="${pkgCenterStyle}">
 
-          ${isFeatured ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="direction: rtl !important;">הנמכרת ביותר</div>' : ''}
+          ${isFeatured ? `<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-lg py-1 rounded-full text-xs font-bold uppercase tracking-wider" style="${pkgCenterStyle}">${homepageCopy.packages.bestSeller}</div>` : ''}
 
-          <div style="direction: rtl !important; text-align: center !important;">
+          <div style="${pkgCenterStyle}">
 
-            <h3 class="font-headline text-2xl font-bold text-primary" style="direction: rtl !important; text-align: center !important;">${pkg.name}</h3>
+            <h3 class="font-headline text-2xl font-bold text-primary" style="${pkgCenterStyle}">${pkg.name}</h3>
 
-            <div class="flex items-baseline gap-xs mt-sm justify-center" style="direction: rtl !important; text-align: center !important;">
+            <div class="flex items-baseline gap-xs mt-sm justify-center" style="${pkgCenterStyle}">
 
-              <span class="font-headline text-3xl font-bold text-primary" style="direction: rtl !important;">₪${pkg.price_amount}</span>
+              <span class="font-headline text-3xl font-bold text-primary">₪${pkg.price_amount}</span>
 
             </div>
 
           </div>
 
-          <div class="mx-auto w-fit flex-grow my-lg" style="direction: rtl !important;">
+          <div class="mx-auto w-fit flex-grow my-lg">
 
-            <ul class="flex flex-col gap-md" style="direction: rtl !important; text-align: right !important; padding-right: 0 !important; margin-right: 0 !important;">
+            <ul class="flex flex-col gap-md" style="${pkgListStyle}">
 
-              ${includesList.map((item: string) => `<li style="direction: rtl !important; text-align: right !important;" class="flex flex-row items-center justify-start gap-sm text-md"><span class="material-symbols-outlined text-primary text-xl">check_circle</span> <span>${item}</span></li>`).join('')}
+              ${includesList.map((item: string) => `<li style="${pkgListItemStyle}" class="flex flex-row items-center justify-start gap-sm text-md"><span class="material-symbols-outlined text-primary text-xl">check_circle</span> <span>${item}</span></li>`).join('')}
 
             </ul>
 
           </div>
 
-          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full py-md ${isFeatured ? 'bg-primary text-white rounded-lg font-bold btn-magnetic shadow-lg shadow-indigo-100' : 'border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5'} transition-all" style="direction: rtl !important; text-align: center !important;">
+          <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="w-full py-md ${isFeatured ? 'bg-primary text-white rounded-lg font-bold btn-magnetic shadow-lg shadow-indigo-100' : 'border border-primary text-primary rounded-lg font-bold btn-magnetic hover:bg-primary/5'} transition-all" style="${pkgCenterStyle}">
 
-            הזמינו עכשיו
+            ${homepageCopy.packages.orderNow}
 
           </button>
 
@@ -4923,7 +5251,7 @@ function generateHomepageHTML(
 
       } else if (currentTheme === 'classic' || currentTheme === 'dark') {
 
-        const subtitle = pkg.duration_text || (isFeatured ? 'החוויה המלאה' : 'לרגעים קטנים ומרגשים')
+        const subtitle = pkg.duration_text || (isFeatured ? homepageCopy.packages.fullExperience : homepageCopy.packages.smallMoments)
 
         return `
 
@@ -4931,7 +5259,7 @@ function generateHomepageHTML(
 
           <div class="homepage-packages-row__title">
 
-            ${isFeatured ? '<span class="homepage-packages-row__badge">הנמכרת ביותר</span>' : ''}
+            ${isFeatured ? `<span class="homepage-packages-row__badge">${homepageCopy.packages.bestSeller}</span>` : ''}
 
             <h3 class="font-headline-sm text-headline-sm text-primary mb-xs">${pkg.name}</h3>
 
@@ -4939,7 +5267,7 @@ function generateHomepageHTML(
 
           </div>
 
-          <div class="homepage-packages-row__features" dir="rtl">
+          <div class="homepage-packages-row__features" ${contentDir}>
 
             <ul class="homepage-packages-row__features-grid">
 
@@ -4955,7 +5283,7 @@ function generateHomepageHTML(
 
             <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="homepage-packages-row__btn ${isFeatured ? 'homepage-packages-row__btn--featured' : 'homepage-packages-row__btn--default'}">
 
-              ${isFeatured ? 'בחירה בחבילה' : 'הזמנת חבילה'}
+              ${isFeatured ? homepageCopy.packages.selectPackage : homepageCopy.packages.orderPackage}
 
             </button>
 
@@ -5185,7 +5513,7 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 <span class="material-symbols-outlined ${prefix}-contact-details__icon">call</span>
 
-<span class="${prefix}-contact-details__label">טלפון</span>
+<span class="${prefix}-contact-details__label">${homepageCopy.contactDetails.phone}</span>
 
 <a href="tel:${studioPhoneHref}" class="${prefix}-contact-details__value ${linkHoverClass}" dir="ltr">${studioPhoneHtml}</a>
 
@@ -5201,7 +5529,7 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 <span class="material-symbols-outlined ${prefix}-contact-details__icon">mail</span>
 
-<span class="${prefix}-contact-details__label">אימייל</span>
+<span class="${prefix}-contact-details__label">${homepageCopy.contactDetails.email}</span>
 
 <a href="mailto:${contactEmailHtml}" class="${prefix}-contact-details__value ${linkHoverClass}">${contactEmailHtml}</a>
 
@@ -5217,7 +5545,7 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 <span class="material-symbols-outlined ${prefix}-contact-details__icon">location_on</span>
 
-<span class="${prefix}-contact-details__label">מיקום</span>
+<span class="${prefix}-contact-details__label">${homepageCopy.contactDetails.location}</span>
 
 <span class="${prefix}-contact-details__value">${studioAddressHtml}</span>
 
@@ -5263,9 +5591,9 @@ ${leftColumnItems.map(renderModernItem).join('')}
 
 <div class="faq-section__header reveal-on-scroll">
 
-${elegantSectionHeading('שאלות נפוצות', 'FAQ')}
+${elegantSectionHeading(homepageCopy.sections.faq, 'FAQ')}
 
-<p class="font-body opacity-60 italic faq-section__subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="font-body opacity-60 italic faq-section__subtitle">${homepageCopy.sections.faqSubtitle}</p>
 
 </div>
 
@@ -5291,9 +5619,9 @@ ${faqAmbientGlowHtml}
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">שאלות נפוצות</h2>
+<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">${homepageCopy.sections.faq}</h2>
 
-<p class="modern-section-subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="modern-section-subtitle">${homepageCopy.sections.faqSubtitle}</p>
 
 </div>
 
@@ -5317,9 +5645,9 @@ ${faqAmbientGlowHtml}
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">שאלות נפוצות</h2>
+<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">${homepageCopy.sections.faq}</h2>
 
-<p class="modern-section-subtitle opacity-70">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="modern-section-subtitle opacity-70">${homepageCopy.sections.faqSubtitle}</p>
 
 </div>
 
@@ -5341,11 +5669,11 @@ ${generateFaqAccordionHTML('dark')}
 
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">FAQ</span>
 
-<h2 class="font-headline-md text-headline-md text-on-surface">שאלות נפוצות</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.faq}</h2>
 
 <div class="faq-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
-<p class="font-body-md text-body-md text-on-surface-variant mt-md faq-section__subtitle">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="font-body-md text-body-md text-on-surface-variant mt-md faq-section__subtitle">${homepageCopy.sections.faqSubtitle}</p>
 
 </div>
 
@@ -5367,9 +5695,9 @@ ${generateMagazineFaqBodyHTML('classic')}
 
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">FAQ</span>
 
-<h2 class="font-headline-md text-headline-md">שאלות נפוצות</h2>
+<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.faq}</h2>
 
-<p class="font-body-md text-on-surface-variant opacity-70 mt-md">מצאו תשובות לשאלות הנפוצות ביותר</p>
+<p class="font-body-md text-on-surface-variant opacity-70 mt-md">${homepageCopy.sections.faqSubtitle}</p>
 
 </div>
 
@@ -5455,11 +5783,18 @@ ${accordion}
 
 
 
-    if (variant === 'classic') {
+    if (variant === 'classic' || variant === 'modern' || variant === 'dark') {
+
+      const themeModifier =
+        variant === 'classic'
+          ? 'testimonial-thumb-card--classic'
+          : variant === 'modern'
+            ? 'testimonial-thumb-card--modern'
+            : 'testimonial-thumb-card--dark'
 
       return `
 
-        <div class="testimonial-thumb-card testimonial-thumb-card--classic classic-testimonial-card italic${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
+        <div class="testimonial-thumb-card testimonial-thumb-card--classic classic-testimonial-card ${themeModifier} italic${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
 
           ${quoteHtml}
 
@@ -5497,7 +5832,7 @@ ${accordion}
 
             <div>
 
-              <div class="flex flex-row-reverse gap-1 text-accent mb-6">
+              <div class="flex flex-row rtl:flex-row-reverse gap-1 text-accent mb-6">
 
                 <span class="material-symbols-outlined fill-1">star</span>
 
@@ -5531,65 +5866,7 @@ ${accordion}
 
     }
 
-
-
-    if (variant === 'modern') {
-
-      return `
-
-        <div class="testimonial-thumb-card testimonial-thumb-card--modern italic text-lg${forMarquee ? '' : ' animate-reveal hover-scale modern-shadow'}${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
-
-          ${quoteHtml}
-
-          ${thumbHtml}
-
-          <div class="testimonial-thumb-card__content">
-
-            <p class="testimonial-thumb-card__text">${content}</p>
-
-            <div class="testimonial-thumb-card__footer not-italic">
-
-              <div class="mt-md font-bold text-on-surface">${title}</div>
-
-              ${meta ? `<div class="text-on-surface-variant text-sm mt-1">${meta}</div>` : ''}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      `
-
-    }
-
-
-
-    return `
-
-        <div class="testimonial-thumb-card testimonial-thumb-card--dark relative${extraClass ? ` ${extraClass}` : ''}"${delayAttr}>
-
-          ${quoteHtml}
-
-          ${thumbHtml}
-
-          <div class="testimonial-thumb-card__content">
-
-            <p class="testimonial-thumb-card__text font-body-md text-on-surface-variant mb-xl relative z-10 italic">${content}</p>
-
-            <div class="testimonial-thumb-card__footer relative z-10">
-
-              <div class="font-label-sm uppercase tracking-widest text-on-surface">${title}</div>
-
-              ${meta ? `<div class="text-[10px] text-on-surface-variant">${meta}</div>` : ''}
-
-            </div>
-
-          </div>
-
-        </div>
-
-      `
+    return ''
 
   }
 
@@ -5649,7 +5926,7 @@ ${accordion}
       ${slides
         .map(
           (_, i) =>
-            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="עמוד תגובות ${i + 1}"></button>`
+            `<button type="button" class="classic-testimonials-dot${i === 0 ? ' is-active' : ''}" data-index="${i}" aria-label="${homepageCopy.misc.testimonialPage} ${i + 1}"></button>`
         )
         .join('')}
     </div>`
@@ -5699,7 +5976,7 @@ ${accordion}
 
 <!DOCTYPE html>
 
-<html class="scroll-smooth" dir="rtl" lang="he" style="scroll-behavior: smooth;">
+<html class="scroll-smooth" ${htmlAttrs} style="scroll-behavior: smooth;">
 
 <head>
 
@@ -6546,6 +6823,8 @@ ${documentHead}
 
         ${sectionBgCss}
 
+        ${HOMEPAGE_LTR_CSS}
+
         ${generateSiteNavMobileStyles()}
 
     </style>
@@ -6580,7 +6859,7 @@ ${heroSlideshowHtml}
 
 <button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="bg-[#0F0F0D] text-white px-12 py-4 text-xs uppercase tracking-[0.3em] hover:bg-accent transition-all duration-300">
 
-                    לצפייה בגלריות
+                    ${homepageCopy.hero.viewGalleries}
 
                 </button>
 
@@ -6600,7 +6879,7 @@ ${hasStats ? `
 
 <span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsYears)}</span>
 
-<span class="text-xs uppercase tracking-widest opacity-60">שנות ניסיון</span>
+<span class="text-xs uppercase tracking-widest opacity-60">${homepageCopy.stats.yearsExperience}</span>
 
 </div>
 
@@ -6608,7 +6887,7 @@ ${hasStats ? `
 
 <span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsClients)}</span>
 
-<span class="text-xs uppercase tracking-widest opacity-60">לקוחות מרוצים</span>
+<span class="text-xs uppercase tracking-widest opacity-60">${homepageCopy.stats.happyClients}</span>
 
 </div>
 
@@ -6616,7 +6895,7 @@ ${hasStats ? `
 
 <span class="font-display text-5xl md:text-6xl elegant-accent block mb-2">${formatStat(statsProjects)}</span>
 
-<span class="text-xs uppercase tracking-widest opacity-60">תיקי עבודות</span>
+<span class="text-xs uppercase tracking-widest opacity-60">${homepageCopy.stats.portfolios}</span>
 
 </div>
 
@@ -6634,7 +6913,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 
 <div class="order-2 lg:order-1 max-w-2xl">
 
-<span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
+<span class="elegant-accent font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">${homepageCopy.about.label}</span>
 
 ${aboutTitle ? elegantSectionHeading(aboutTitle, 'ABOUT', { titleClass: 'mb-4' }) : ''}
 
@@ -6644,7 +6923,7 @@ ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-rel
 
 <button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
 
-                    לצפייה בגלריות
+                    ${homepageCopy.hero.viewGalleries}
 
                 </button>
 
@@ -6670,7 +6949,7 @@ ${!isPortfolioMode ? `
 
 <div class="flex flex-row-reverse justify-between items-end reveal-on-scroll">
 
-${elegantSectionHeading('קולקציות נבחרות', 'COLLECTIONS')}
+${elegantSectionHeading(homepageCopy.sections.collections, 'COLLECTIONS')}
 
 </div>
 
@@ -6678,7 +6957,7 @@ ${elegantSectionHeading('קולקציות נבחרות', 'COLLECTIONS')}
 
 <div class="homepage-gallery-grid reveal-on-scroll active">
 
-${generateUnifiedGalleryGridHTML(galleries, 'elegant')}
+${generateUnifiedGalleryGridHTML(galleries, 'elegant', siteLanguage)}
 
 </div>
 
@@ -6694,7 +6973,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="flex flex-row-reverse justify-between items-end">
 
-${elegantSectionHeading('תמונות אחרונות', 'LATEST')}
+${elegantSectionHeading(homepageCopy.sections.recentPhotos, 'LATEST')}
 
 ${portfolioCtaHtml}
 
@@ -6766,9 +7045,9 @@ ${hasContactBg ? contactBgLayers('#1c1b1b', '#1c1b1b') : ''}
 
 <div class="text-center mb-8">
 
-${elegantSectionHeading('צרי קשר', 'CONTACT', { center: true, onDark: true })}
+${elegantSectionHeading(homepageCopy.sections.contact, 'CONTACT', { center: true, onDark: true })}
 
-<p class="opacity-60 font-light">נשמח לשמוע ממך ולתאם את חווית הצילום המושלמת עבורך.</p>
+<p class="opacity-60 font-light">${homepageCopy.sections.contactElegantSubtitle}</p>
 
 </div>
 
@@ -6778,51 +7057,51 @@ ${email ? `
 
 <div class="space-y-2">
 
-<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">שם מלא</label>
+<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">${homepageCopy.contactForm.fullName}</label>
 
-<input name="name" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="השם שלך" type="text"/>
-
-</div>
-
-<div class="space-y-2">
-
-<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">אימייל</label>
-
-<input name="email" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="your@email.com" type="email"/>
+<input name="name" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.name}" type="text"/>
 
 </div>
 
 <div class="space-y-2">
 
-<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">טלפון</label>
+<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">${homepageCopy.contactForm.email}</label>
 
-<input name="phone" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="050-0000000" type="tel"/>
+<input name="email" required ${contactLtrDir} class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.placeholders.email}" type="email"/>
 
 </div>
 
 <div class="space-y-2">
 
-<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">נושא הפנייה</label>
+<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">${homepageCopy.contactForm.phone}</label>
 
-<input name="subject" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white" placeholder="נושא הפנייה" type="text"/>
+<input name="phone" ${contactLtrDir} class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.placeholders.phone}" type="tel"/>
+
+</div>
+
+<div class="space-y-2">
+
+<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">${homepageCopy.contactForm.subject}</label>
+
+<input name="subject" class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.subject}" type="text"/>
 
 </div>
 
 <div class="md:col-span-2 space-y-2">
 
-<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">הודעה</label>
+<label class="text-[10px] uppercase tracking-[0.2em] opacity-40">${homepageCopy.contactForm.message}</label>
 
-<textarea name="message" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none" placeholder="איך נוכל לעזור?"></textarea>
+<textarea name="message" required class="w-full bg-transparent border-b border-white/20 focus:border-accent outline-none py-3 px-1 transition-colors font-body text-white min-h-[120px] resize-none ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.messageHelp}"></textarea>
 
 </div>
 
-${generateContactPrivacyConsentHTML('elegant', primaryColor, 'md:col-span-2')}
+${generateContactPrivacyConsentHTML('elegant', primaryColor, homepageCopy, 'md:col-span-2')}
 
 <div class="md:col-span-2 flex justify-center mt-6">
 
 <button type="submit" class="elegant-bg-accent text-white px-16 py-4 text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300">
 
-                        שליחת הודעה
+                        ${homepageCopy.contactForm.submit}
 
                     </button>
 
@@ -6830,7 +7109,7 @@ ${generateContactPrivacyConsentHTML('elegant', primaryColor, 'md:col-span-2')}
 
 </form>
 
-` : `<div class="text-center py-20 opacity-40"><p class="font-body text-lg">אין כתובת אימייל ליצירת קשר</p></div>`}
+` : `<div class="text-center py-20 opacity-40"><p class="font-body text-lg">${homepageCopy.contactForm.noEmail}</p></div>`}
 
 </div>
 
@@ -6922,7 +7201,7 @@ ${generateSiteFooter(siteChrome('elegant'))}
 
 <script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
-${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId, homepageCopy)}</script>
 
 </body>
 
@@ -6938,7 +7217,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 <!DOCTYPE html>
 
-<html class="light" dir="rtl" lang="he" style="scroll-behavior: smooth;">
+<html class="light" ${htmlAttrs} style="scroll-behavior: smooth;">
 
 <head>
 
@@ -7538,6 +7817,8 @@ ${documentHead}
 
         ${sectionBgCss}
 
+        ${HOMEPAGE_LTR_CSS}
+
         ${generateSiteNavMobileStyles()}
 
     </style>
@@ -7634,9 +7915,9 @@ ${heroSlideshowModernHtml}
 
 <div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-start max-w-2xl">
 
-<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">About · קצת עליי</span>
+<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">${homepageCopy.about.label}</span>
 
-${aboutTitle ? '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">אמנות הרגע <br/><span class="text-primary">בצורה מודרנית</span></h1>'}
+${aboutTitle ? '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + homepageCopy.about.modernDefaultTitleLine1 + ' <br/><span class="text-primary">' + homepageCopy.about.modernDefaultTitleLine2 + '</span></h1>'}
 
 ${aboutSubtitle ? '<p class="text-lg md:text-xl modern-about-muted leading-relaxed" style="white-space: pre-line">' + aboutSubtitle + '</p>' : ''}
 
@@ -7646,13 +7927,13 @@ ${aboutDescription ? '<p class="text-lg md:text-xl modern-about-muted leading-re
 
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="bg-primary text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:shadow-xl shadow-indigo-200 transition-all">
 
-                    התחילו עכשיו
+                    ${homepageCopy.hero.getStarted}
 
                 </button>
 
 <button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="border border-white/40 text-white px-xl py-md rounded-lg text-lg font-bold btn-magnetic hover:bg-white/10 transition-all">
 
-                    לצפייה בגלריה
+                    ${homepageCopy.hero.viewGallery}
 
                 </button>
 
@@ -7682,7 +7963,7 @@ ${hasStats ? `
 
 <h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsProjects)}</h3>
 
-<p class="text-on-surface-variant font-medium">תיקי עבודות</p>
+<p class="text-on-surface-variant font-medium">${homepageCopy.stats.portfolios}</p>
 
 </div>
 
@@ -7692,7 +7973,7 @@ ${hasStats ? `
 
 <h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsClients)}</h3>
 
-<p class="text-on-surface-variant font-medium">לקוחות מרוצים</p>
+<p class="text-on-surface-variant font-medium">${homepageCopy.stats.happyClients}</p>
 
 </div>
 
@@ -7702,7 +7983,7 @@ ${hasStats ? `
 
 <h3 class="font-headline text-4xl font-bold text-on-surface">${formatStat(statsYears)}</h3>
 
-<p class="text-on-surface-variant font-medium">שנות ניסיון</p>
+<p class="text-on-surface-variant font-medium">${homepageCopy.stats.yearsExperience}</p>
 
 </div>
 
@@ -7720,13 +8001,11 @@ ${!isPortfolioMode ? `
 
 <div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">העבודות האחרונות שלנו</h2>
+<h2 class="font-headline text-4xl font-bold mb-xs">${homepageCopy.sections.modernGalleryTitle}</h2>
 
-<p class="modern-section-subtitle">מבט קצר אל הרגעים שתפסנו לאחרונה</p>
-
-</div>
+<p class="modern-section-subtitle">${homepageCopy.sections.modernGallerySubtitle}</p>
 
 </div>
 
@@ -7734,7 +8013,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-grid animate-reveal">
 
-${generateUnifiedGalleryGridHTML(galleries, 'modern')}
+${generateUnifiedGalleryGridHTML(galleries, 'modern', siteLanguage)}
 
 </div>
 
@@ -7750,11 +8029,11 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="flex flex-row-reverse justify-between items-end gap-md">
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">תמונות אחרונות</h2>
+<h2 class="font-headline text-4xl font-bold mb-xs">${homepageCopy.sections.recentPhotos}</h2>
 
-<p class="modern-section-subtitle">רגעים נבחרים מהעבודות שלנו</p>
+<p class="modern-section-subtitle">${homepageCopy.sections.modernRecentPhotosSubtitle}</p>
 
 </div>
 
@@ -7802,11 +8081,23 @@ ${elegantPackagesGlowHtml}
 
 ${hasTestimonials ? `
 
-<section class="testimonials-section testimonials-section--modern pt-xxl pb-lg max-w-7xl mx-auto px-lg" id="testimonials">
+<section class="testimonials-section testimonials-section--modern py-xxl reveal" id="testimonials">
 
-<h2 class="font-headline text-4xl font-bold text-center mb-xl animate-reveal">${escapeHtml(testimonialsSectionTitle)}</h2>
+<div class="testimonials-section__inner contact-section-content relative z-10">
+
+<div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
+
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
+
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+
+<div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
+
+</div>
 
 <div class="testimonials-section-grid">${generateTestimonialsSection('modern')}</div>
+
+</div>
 
 </section>
 
@@ -7824,11 +8115,11 @@ ${contactBgLayers('#F8FAFC')}
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
 
-<div class="modern-contact-info max-w-md text-right">
+<div class="modern-contact-info max-w-md text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-sm text-white">צרו איתנו קשר</h2>
+<h2 class="font-headline text-4xl font-bold mb-sm text-white">${homepageCopy.sections.modernContactHeading}</h2>
 
-<p class="text-lg opacity-90 text-white mb-lg">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או סשן צילומים.</p>
+<p class="text-lg opacity-90 text-white mb-lg">${homepageCopy.sections.contactModernSubtitle}</p>
 
 <div class="flex flex-col gap-md">
 
@@ -7869,13 +8160,13 @@ ${studioAddress ? `
 
 <div class="relative">
 
-<input name="name" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_name" placeholder="שם מלא" type="text"/>
+<input name="name" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 ${contactAlign}" id="contact_name" placeholder="${homepageCopy.contactForm.fullName}" type="text"/>
 
 </div>
 
 <div class="relative">
 
-<input name="email" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_email" placeholder="אימייל" type="email"/>
+<input name="email" required ${contactLtrDir} class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 ${contactLtrAlign}" id="contact_email" placeholder="${homepageCopy.contactForm.placeholders.email}" type="email"/>
 
 </div>
 
@@ -7883,21 +8174,21 @@ ${studioAddress ? `
 
 <div class="relative">
 
-<input name="phone" class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_phone" placeholder="טלפון" type="tel"/>
+<input name="phone" ${contactLtrDir} class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 ${contactLtrAlign}" id="contact_phone" placeholder="${homepageCopy.contactForm.placeholders.phone}" type="tel"/>
 
 </div>
 
 <div class="relative">
 
-<textarea name="message" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 text-right" id="contact_message" placeholder="הודעה" rows="3"></textarea>
+<textarea name="message" required class="w-full bg-white border border-outline-variant rounded-lg px-lg py-md text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-2 focus:ring-primary/50 ${contactAlign}" id="contact_message" placeholder="${homepageCopy.contactForm.placeholders.message}" rows="3"></textarea>
 
 </div>
 
-${generateContactPrivacyConsentHTML('modern', primaryColor)}
+${generateContactPrivacyConsentHTML('modern', primaryColor, homepageCopy)}
 
 <button class="bg-white text-primary px-xl py-md rounded-lg font-bold btn-magnetic hover:shadow-xl w-full transition-all" type="submit">
 
-                        שליחת הודעה
+                        ${homepageCopy.contactForm.submit}
 
                     </button>
 
@@ -7931,7 +8222,7 @@ ${generateSiteFooter(siteChrome('modern'))}
 
 <script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
-${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId, homepageCopy)}</script>
 
 </body>
 
@@ -7947,7 +8238,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 <!DOCTYPE html>
 
-<html dir="rtl" lang="he">
+<html ${htmlAttrs}>
 
 <head>
 
@@ -8712,6 +9003,8 @@ ${documentHead}
 
         ${TESTIMONIAL_THUMB_CARD_CSS}
 
+        ${CLASSIC_CONTACT_FORM_CSS}
+
         ${FAQ_ACCORDION_CSS}
 
         ${classicFaqSectionCss(primaryColor)}
@@ -8719,6 +9012,8 @@ ${documentHead}
         ${HERO_SLIDESHOW_CSS}
 
         ${sectionBgCss}
+
+        ${HOMEPAGE_LTR_CSS}
 
         ${generateSiteNavMobileStyles()}
 
@@ -8942,9 +9237,9 @@ ${studioName} · ${photographerName}
 
 <span class="block font-label-sm text-label-sm text-white/80 tracking-[0.3em] mb-2 md:mb-3 lg:mb-6 uppercase whitespace-normal">${studioName}</span>
 
-<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-2 md:mb-2 lg:mb-6 leading-tight text-white whitespace-normal break-words">${photographerName || 'אפרת כהן'} | צילום</h1>
+<h1 class="font-display-lg text-3xl md:text-4xl lg:text-5xl mb-2 md:mb-2 lg:mb-6 leading-tight text-white whitespace-normal break-words">${photographerName} | ${homepageCopy.hero.photographySuffix}</h1>
 
-<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed whitespace-normal break-words">${aboutTextHtml || 'תופסים את הקסם שקורה בין הרגעים, בסטייל קלאסי ומרגש.'}</p>
+<p class="font-body-lg text-body-lg text-white/90 mb-0 lg:mb-8 leading-relaxed whitespace-normal break-words">${aboutTextHtml || homepageCopy.about.defaultAboutText}</p>
 
 </div>
 
@@ -8952,13 +9247,13 @@ ${studioName} · ${photographerName}
 
 <button onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})" class="flex-1 bg-primary text-on-primary px-lg md:px-xl py-2.5 md:py-md rounded-none font-label-sm text-label-sm hover:brightness-110 hover:-translate-y-1 transition-all shadow-lg active:scale-95 whitespace-nowrap">
 
-                        תיאום פגישה
+                        ${homepageCopy.hero.scheduleSession}
 
                     </button>
 
 <button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="flex-1 border border-white/30 text-white px-lg md:px-xl py-2.5 md:py-md rounded-none font-label-sm text-label-sm hover:bg-white/10 transition-all whitespace-nowrap">
 
-                        לצפייה בגלריות
+                        ${homepageCopy.hero.viewGalleries}
 
                     </button>
 
@@ -8990,9 +9285,9 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 
 <div class="order-1 space-y-8 md:pr-8 max-w-2xl">
 
-<span class="about-section-label block">About — קצת עליי</span>
+<span class="about-section-label block">${homepageCopy.about.label}</span>
 
-${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title">${underlineLastWord('אודות הסטודיו')}</h2>`}
+${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title">${underlineLastWord(homepageCopy.about.defaultTitle)}</h2>`}
 
 <div class="space-y-6">
 
@@ -9006,27 +9301,27 @@ ${hasStats ? `
 
 <div class="grid grid-cols-3 gap-md md:gap-lg border-t border-outline-variant/15 pt-10 mt-4">
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsClients)}</div>
 
-<div class="about-stat-label">לקוחות מרוצים</div>
+<div class="about-stat-label">${homepageCopy.stats.happyClients}</div>
 
 </div>
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsProjects)}</div>
 
-<div class="about-stat-label">תיקי עבודות</div>
+<div class="about-stat-label">${homepageCopy.stats.portfolios}</div>
 
 </div>
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsYears)}</div>
 
-<div class="about-stat-label">שנות ניסיון</div>
+<div class="about-stat-label">${homepageCopy.stats.yearsExperience}</div>
 
 </div>
 
@@ -9038,7 +9333,7 @@ ${hasStats ? `
 
 <div class="order-2 relative">
 
-${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${about_image_url}"/>` : ''}
+${about_image_url ? `<img alt="${homepageCopy.misc.photographerPortraitAlt}" class="w-full aspect-[4/5] md:aspect-[3/4] object-cover" src="${about_image_url}"/>` : ''}
 
 <div class="about-image-quote absolute -bottom-8 -left-6 md:-bottom-10 md:-left-10 max-w-[260px] hidden md:block">
 
@@ -9064,11 +9359,11 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-header px-lg mb-xl">
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
-<h2 class="font-headline-md text-headline-md text-on-surface">עבודות נבחרות</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.classicSelectedWorks}</h2>
 
-<p class="font-body-md text-body-md mt-sm" style="color:${primaryColor};">מבט אל הרגעים שהפכו לנצח</p>
+<p class="font-body-md text-body-md mt-sm" style="color:${primaryColor};">${homepageCopy.sections.classicSelectedWorksSubtitle}</p>
 
 </div>
 
@@ -9076,7 +9371,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-grid">
 
-${generateUnifiedGalleryGridHTML(galleries, 'classic')}
+${generateUnifiedGalleryGridHTML(galleries, 'classic', siteLanguage)}
 
 </div>
 
@@ -9094,9 +9389,9 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="hp-posts-header__titles">
 
-<span class="hp-posts-eyebrow" style="color:${primaryColor};">רגעים נבחרים מהעבודות שלנו</span>
+<span class="hp-posts-eyebrow" style="color:${primaryColor};">${homepageCopy.sections.classicRecentPhotosEyebrow}</span>
 
-<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">תמונות אחרונות</h2>
+<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">${homepageCopy.sections.recentPhotos}</h2>
 
 <div class="hp-posts-divider" style="background:${primaryColor};"></div>
 
@@ -9180,40 +9475,40 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 
 <div class="max-w-7xl mx-auto px-lg contact-section-content">
 
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start lg:gap-xl lg:gap-xxl">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-xl md:gap-xxl items-start classic-contact-layout">
 
-<div class="lg:col-span-5 space-y-lg">
+<div class="lg:col-span-5 space-y-lg classic-contact-info text-start rtl:text-end">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">צרו קשר</span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">${homepageCopy.sections.contactClassicHeading}</span>
 
-<h2 class="font-headline-md text-headline-md text-on-surface">בואו ניצור זיכרונות יחד</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.classicContactHeading}</h2>
 
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">השאירו פרטים ואחזור אליכם בהקדם לתיאום פגישת היכרות נעימה, שבה נתכנן את הצילומים המושלמים עבורכם.</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">${homepageCopy.sections.contactClassicSubtitle}</p>
 
-<div class="space-y-md pt-lg">
+<div class="classic-contact-details space-y-md pt-lg">
 
 ${studioPhone ? `
-<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="tel:${studioPhoneHref}">
+<a class="classic-contact-details__link flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end group transition-colors hover:text-primary" href="tel:${studioPhoneHref}">
 
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">call</span>
 
-<span class="font-body-md text-body-md" dir="ltr">${studioPhoneHtml}</span>
+<span class="font-body-md text-body-md shrink-0" dir="ltr">${studioPhoneHtml}</span>
 
 </a>` : ''}
 
-<a class="flex items-center gap-md flex-row-reverse justify-end group transition-colors hover:text-primary" href="mailto:${email || 'hello@studiogallery.co.il'}">
+<a class="classic-contact-details__link flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end group transition-colors hover:text-primary" href="mailto:${email || 'hello@studiogallery.co.il'}">
 
 <span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">mail</span>
 
-<span class="font-body-md text-body-md">${email || 'hello@studiogallery.co.il'}</span>
+<span class="font-body-md text-body-md min-w-0 break-all">${email || 'hello@studiogallery.co.il'}</span>
 
 </a>
 
 ${studioAddress ? `
 
-<div class="flex items-center gap-md flex-row-reverse justify-end">
+<div class="classic-contact-details__item flex items-center gap-md flex-row rtl:flex-row-reverse justify-start rtl:justify-end">
 
-<span class="material-symbols-outlined text-primary">location_on</span>
+<span class="material-symbols-outlined text-primary shrink-0">location_on</span>
 
 <span class="font-body-md text-body-md">${studioAddressHtml}</span>
 
@@ -9223,51 +9518,65 @@ ${studioAddress ? `
 
 </div>
 
-<div class="lg:col-span-7">
+<div class="lg:col-span-7 min-w-0 classic-contact-form-col">
 
-<form class="${hasContactBg ? 'bg-surface/50 backdrop-blur-sm' : 'bg-surface'} p-xl lg:p-xxl rounded-sm shadow-xl border border-outline-variant/20 stagger-item">
+<form class="classic-contact-form ${hasContactBg ? 'bg-surface/50 backdrop-blur-sm' : 'bg-surface'} p-xl lg:p-xxl rounded-sm shadow-xl border border-outline-variant/20 stagger-item">
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-lg mb-lg">
+<div class="classic-contact-form__row mb-lg">
 
-<div class="space-y-xs">
+<div class="classic-contact-field space-y-xs">
 
-<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">שם מלא</label>
+<label class="font-label-sm text-label-sm text-on-surface-variant block ${contactAlign}">${homepageCopy.contactForm.fullName}</label>
 
-<input name="name" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="ישראל ישראלי" required="" type="text"/>
-
-</div>
-
-<div class="space-y-xs">
-
-<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">טלפון ליצירת קשר</label>
-
-<input name="phone" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="050-0000000" type="tel"/>
+<input name="name" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-0 ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.nameExample}" required="" type="text"/>
 
 </div>
 
-</div>
+<div class="classic-contact-field space-y-xs">
 
-<div class="space-y-xs mb-lg">
+<label class="font-label-sm text-label-sm text-on-surface-variant block ${contactAlign}">${homepageCopy.contactForm.phoneContact}</label>
 
-<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">כתובת אימייל</label>
-
-<input name="email" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-md" placeholder="example@email.com" required="" type="email"/>
+<input name="phone" ${contactLtrDir} class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-0 ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.placeholders.phone}" type="tel"/>
 
 </div>
 
-<div class="space-y-xs mb-xl">
+</div>
 
-<label class="font-label-sm text-label-sm text-on-surface-variant block px-1">ספרו לי על האירוע שלכם</label>
+<div class="classic-contact-field space-y-xs mb-lg">
 
-<textarea name="message" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} px-sm py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-md" placeholder="איזה סוג צילומים אתם מחפשים?" required="" rows="4"></textarea>
+<label class="font-label-sm text-label-sm text-on-surface-variant block ${contactAlign}">${homepageCopy.contactForm.emailAddress}</label>
+
+<input name="email" ${contactLtrDir} class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 px-0 ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.placeholders.email}" required="" type="email"/>
 
 </div>
 
-${generateContactPrivacyConsentHTML('classic', primaryColor, 'mb-lg')}
+<div class="classic-contact-form__message-block w-full flex flex-col gap-md">
+
+<div class="classic-contact-field space-y-xs">
+
+<label class="font-label-sm text-label-sm text-on-surface-variant block ${contactAlign}">${homepageCopy.contactForm.tellAboutEvent}</label>
+
+<textarea name="message" class="w-full border-b border-x-0 border-t-0 border-outline-variant/40 ${hasContactBg ? 'bg-transparent' : 'bg-surface'} py-md focus:ring-0 focus:border-primary transition-all placeholder:text-on-surface-variant/30 resize-none px-0 ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.messageEvent}" required="" rows="4"></textarea>
+
+</div>
+
+</div>
+
+<div class="contact-privacy-consent w-full flex flex-row items-start gap-sm text-start rtl:text-right">
+
+<input type="checkbox" name="privacy_consent" id="contact_privacy_consent_elegant" required class="contact-privacy-checkbox mt-1 shrink-0 size-4 cursor-pointer rounded border border-current/30" style="accent-color: ${primaryColor};"/>
+
+<p class="text-sm font-light opacity-80 leading-relaxed m-0">
+
+<label for="contact_privacy_consent_elegant" class="cursor-pointer">${homepageCopy.contactForm.privacyBefore}</label> <a href="/privacy" class="underline hover:opacity-80">${homepageCopy.contactForm.privacyLink}</a>.
+
+</p>
+
+</div>
 
 <button class="w-full bg-primary text-on-primary py-md rounded-sm font-label-sm text-label-sm hover:brightness-110 transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-md" type="submit">
 
-                        שלח פנייה
+                        ${homepageCopy.contactForm.sendInquiry}
 
 <span class="material-symbols-outlined text-sm">send</span>
 
@@ -9377,7 +9686,7 @@ ${generateSiteFooter(siteChrome('classic'))}
 
 <script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
-${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId, homepageCopy)}</script>
 
 </body>
 
@@ -9393,7 +9702,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 <!DOCTYPE html>
 
-<html class="dark" dir="rtl" lang="he">
+<html class="dark" ${htmlAttrs}>
 
 <head>
 
@@ -10267,6 +10576,8 @@ ${documentHead}
 
         }
 
+        ${HOMEPAGE_LTR_CSS}
+
         ${generateSiteNavMobileStyles()}
 
     </style>
@@ -10411,13 +10722,13 @@ ${heroSlideshowBoldHtml}
 
 <button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="bold-hero-btn-gallery border border-primary text-primary bg-transparent py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary whitespace-nowrap">
 
-                        צפו בגלריה
+                        ${homepageCopy.hero.viewGalleryShort}
 
                     </button>
 
 <button onclick="document.querySelector('#about').scrollIntoView({behavior: 'smooth'})" class="text-on-surface font-label-sm uppercase tracking-widest border-b border-on-surface/30 hover:border-primary btn-fuchsia-transition py-xs">
 
-                        הסיפור שלנו
+                        ${homepageCopy.hero.ourStory}
 
                     </button>
 
@@ -10439,7 +10750,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 
 <div class="lg:col-span-5 relative">
 
-${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] object-cover" src="${about_image_url}"/>` : ''}
+${about_image_url ? `<img alt="${homepageCopy.misc.photographerPortraitAlt}" class="w-full aspect-[4/5] object-cover" src="${about_image_url}"/>` : ''}
 
 <div class="about-image-quote absolute -bottom-10 -right-6 md:-right-12 max-w-[260px] hidden md:block">
 
@@ -10453,9 +10764,9 @@ ${about_image_url ? `<img alt="דיוקן צלמת" class="w-full aspect-[4/5] o
 
 <div class="lg:col-span-7 max-w-2xl">
 
-<span class="about-section-label block mb-6">About · קצת עליי</span>
+<span class="about-section-label block mb-6">${homepageCopy.about.label}</span>
 
-${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h2>` : '<h2 class="about-title mb-8">החזון שלנו הוא לתעד רגעים שחיים לנצח</h2>'}
+${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title mb-8">${underlineLastWord(homepageCopy.about.darkDefaultTitle)}</h2>`}
 
 <div class="space-y-5">
 
@@ -10469,27 +10780,27 @@ ${hasStats ? `
 
 <div class="grid grid-cols-3 gap-lg pt-12 mt-4 max-w-xl">
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsClients)}</div>
 
-<div class="about-stat-label">לקוחות מרוצים</div>
+<div class="about-stat-label">${homepageCopy.stats.happyClients}</div>
 
 </div>
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsProjects)}</div>
 
-<div class="about-stat-label">תיקי עבודות</div>
+<div class="about-stat-label">${homepageCopy.stats.portfolios}</div>
 
 </div>
 
-<div class="text-right">
+<div class="text-start rtl:text-right">
 
 <div class="about-stat-number">${formatStat(statsYears)}</div>
 
-<div class="about-stat-label">שנות ניסיון</div>
+<div class="about-stat-label">${homepageCopy.stats.yearsExperience}</div>
 
 </div>
 
@@ -10511,13 +10822,13 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section py-xl md:py-xxl reveal" id="gallery">
 
-<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-right">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-start rtl:text-right">
 
 <div>
 
-<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Portfolio</span>
+<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">${homepageCopy.sections.selectedPortfolio}</span>
 
-<h2 class="font-headline-md text-headline-md">תיק עבודות נבחר</h2>
+<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.selectedPortfolio}</h2>
 
 </div>
 
@@ -10525,7 +10836,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-grid">
 
-${generateUnifiedGalleryGridHTML(galleries, 'dark')}
+${generateUnifiedGalleryGridHTML(galleries, 'dark', siteLanguage)}
 
 </div>
 
@@ -10537,7 +10848,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
 
-<div class="recent-photos-header text-right">
+<div class="recent-photos-header text-start rtl:text-right">
 
 <div class="flex flex-row-reverse justify-between items-end">
 
@@ -10545,7 +10856,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
 
-<h2 class="font-headline-md text-headline-md">תמונות אחרונות</h2>
+<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.recentPhotos}</h2>
 
 </div>
 
@@ -10595,17 +10906,23 @@ ${aboutAmbientBackgroundHtml}
 
 ${hasTestimonials ? `
 
-<section class="testimonials-section py-xl md:py-xxl container mx-auto px-lg reveal" id="testimonials">
+<section class="testimonials-section py-xxl reveal" id="testimonials">
 
-<div class="text-center mb-xl md:mb-xxl">
+<div class="testimonials-section__inner contact-section-content relative z-10">
 
-<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Kind Words</span>
+<div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline-md text-headline-md">${escapeHtml(testimonialsSectionTitle)}</h2>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
+
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+
+<div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
 </div>
 
 <div class="testimonials-section-grid">${generateTestimonialsSection('dark')}</div>
+
+</div>
 
 </section>
 
@@ -10649,51 +10966,51 @@ ${hasContactBg ? contactBgLayers('#120f0d', '#1a1614') : ''}
 
 <div class="max-w-4xl mx-auto text-center contact-section-content${hasContactBg ? ' container px-lg' : ''}">
 
-<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">Join the Studio</span>
+<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">${homepageCopy.sections.contactDarkHeading}</span>
 
-<h2 class="font-headline-md text-headline-md mb-md">בואו ניצור משהו בלתי נשכח</h2>
+<h2 class="font-headline-md text-headline-md mb-md">${homepageCopy.sections.darkContactHeading}</h2>
 
-<p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">השאירו פרטים ונחזור אליכם בהקדם לתיאום פגישת ייעוץ או צילומים.</p>
+<p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">${homepageCopy.sections.contactDarkSubtitle}</p>
 
-<form class="grid grid-cols-1 md:grid-cols-2 gap-lg max-w-2xl mx-auto text-right">
+<form class="grid grid-cols-1 md:grid-cols-2 gap-lg max-w-2xl mx-auto text-start rtl:text-right">
 
 <div class="border-b border-outline-variant">
 
-<input name="name" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="שם מלא" required="" type="text"/>
+<input name="name" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 ${contactAlign}" placeholder="${homepageCopy.contactForm.fullName}" required="" type="text"/>
 
 </div>
 
 <div class="border-b border-outline-variant">
 
-<input name="email" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="כתובת אימייל" required="" type="email"/>
+<input name="email" ${contactLtrDir} class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.emailAddress}" required="" type="email"/>
 
 </div>
 
 <div class="border-b border-outline-variant">
 
-<input name="phone" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="טלפון" type="tel"/>
+<input name="phone" ${contactLtrDir} class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 ${contactLtrAlign}" placeholder="${homepageCopy.contactForm.placeholders.phone}" type="tel"/>
 
 </div>
 
 <div class="border-b border-outline-variant">
 
-<input name="subject" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20" placeholder="נושא" type="text"/>
+<input name="subject" class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 ${contactAlign}" placeholder="${homepageCopy.contactForm.placeholders.subject}" type="text"/>
 
 </div>
 
 <div class="md:col-span-2 border-b border-outline-variant">
 
-<textarea name="message" required class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 min-h-[120px]" placeholder="ההודעה שלך"></textarea>
+<textarea name="message" required class="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-md px-sm placeholder:text-white/20 min-h-[120px] ${contactAlign}" placeholder="${homepageCopy.contactForm.yourMessage}"></textarea>
 
 </div>
 
-${generateContactPrivacyConsentHTML('dark', primaryColor, 'md:col-span-2')}
+${generateContactPrivacyConsentHTML('dark', primaryColor, homepageCopy, 'md:col-span-2')}
 
 <div class="md:col-span-2 flex justify-center mt-md">
 
 <button type="submit" class="bg-primary text-on-primary px-xxl py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary/90 active:scale-95">
 
-            שלח הודעה
+            ${homepageCopy.contactForm.submit}
 
         </button>
 
@@ -10801,7 +11118,7 @@ ${generateSiteFooter(siteChrome('dark'))}
 
 <script>${HOMEPAGE_STAGGER_REVEAL_SCRIPT}</script>
 
-${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId)}</script>
+${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script>${contactFormSubmitScript(photographerId, homepageCopy)}</script>
 
 </body>
 

@@ -1,3 +1,5 @@
+import type { SiteLanguage } from '@/lib/site-language'
+
 export const PACKAGES_SECTION_DEFAULTS: Record<
   string,
   { title: string; subtitle: string }
@@ -21,12 +23,38 @@ export const PACKAGES_SECTION_DEFAULTS: Record<
   },
 }
 
+export const PACKAGES_SECTION_DEFAULTS_EN: Record<
+  string,
+  { title: string; subtitle: string }
+> = {
+  elegant: {
+    title: 'Our Packages',
+    subtitle: 'An investment in memories that last forever',
+  },
+  modern: {
+    title: 'Our Photography Packages',
+    subtitle: 'Choose the package that fits you best',
+  },
+  classic: {
+    title: 'Photography Packages',
+    subtitle: 'An investment in magical moments',
+  },
+  dark: {
+    title: 'Packages & Photography',
+    subtitle:
+      'We offer a range of options for personal and business needs, with an emphasis on uncompromising quality.',
+  },
+}
+
 export function resolvePackagesSectionCopy(
   theme: string,
   packagesTitle?: string | null,
-  packagesSubtitle?: string | null
+  packagesSubtitle?: string | null,
+  language: SiteLanguage = 'he',
 ) {
-  const fallback = PACKAGES_SECTION_DEFAULTS[theme] ?? PACKAGES_SECTION_DEFAULTS.elegant
+  const defaults =
+    language === 'en' ? PACKAGES_SECTION_DEFAULTS_EN : PACKAGES_SECTION_DEFAULTS
+  const fallback = defaults[theme] ?? defaults.elegant
 
   return {
     title: packagesTitle?.trim() || fallback.title,

@@ -498,6 +498,68 @@ html[dir="ltr"] .contact-privacy-consent p {
 
 
 
+html[dir="ltr"] .theme-classic .classic-contact-form .contact-privacy-consent {
+
+  display: grid !important;
+
+  grid-template-columns: auto 1fr !important;
+
+  column-gap: 0.5rem;
+
+  align-items: start !important;
+
+  width: 100% !important;
+
+  max-width: 100% !important;
+
+  min-width: auto !important;
+
+  overflow: visible !important;
+
+}
+
+
+
+html[dir="ltr"] .theme-classic .classic-contact-form .contact-privacy-consent > p {
+
+  flex: none !important;
+
+  width: auto !important;
+
+  max-width: 100% !important;
+
+  min-width: 0 !important;
+
+  white-space: normal !important;
+
+  word-break: normal !important;
+
+  overflow-wrap: break-word !important;
+
+}
+
+
+
+html[dir="ltr"] .theme-classic .classic-contact-form .contact-privacy-consent label,
+html[dir="ltr"] .theme-classic .classic-contact-form .contact-privacy-consent a {
+
+  display: inline !important;
+
+  white-space: normal !important;
+
+}
+
+
+
+html[dir="ltr"] .theme-classic .classic-contact-form,
+html[dir="ltr"] .theme-classic .classic-contact-form-col {
+
+  overflow: visible !important;
+
+}
+
+
+
 html[dir="ltr"] .theme-classic .classic-contact-form,
 
 html[dir="ltr"] .theme-classic .classic-contact-form__message-block {
@@ -552,7 +614,7 @@ html[dir="ltr"] .theme-classic .classic-contact-details__item {
 
 
 
-html[dir="ltr"] .theme-classic .classic-contact-form label,
+html[dir="ltr"] .theme-classic .classic-contact-form .classic-contact-field label,
 
 html[dir="ltr"] .theme-classic .classic-contact-form input,
 
