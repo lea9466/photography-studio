@@ -75,6 +75,7 @@ export type Database = {
           show_welcome_popup: boolean
           testimonial_layout_type: 'carousel' | 'marquee'
           gallery_layout_mode: GalleryLayoutMode
+          site_language: 'he' | 'en'
           last_dashboard_visit_at: string | null
           dashboard_visit_count: number
         }
@@ -125,6 +126,7 @@ export type Database = {
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
           gallery_layout_mode?: GalleryLayoutMode
+          site_language?: 'he' | 'en'
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }
@@ -175,6 +177,7 @@ export type Database = {
           show_welcome_popup?: boolean
           testimonial_layout_type?: 'carousel' | 'marquee'
           gallery_layout_mode?: GalleryLayoutMode
+          site_language?: 'he' | 'en'
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }

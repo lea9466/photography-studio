@@ -40,6 +40,7 @@ export type PublicPhotographer = Pick<
   | 'faq_items'
   | 'faq_section_image_url'
   | 'should_color_logo'
+  | 'site_language'
 >
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
@@ -79,7 +80,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   email,
   faq_items,
   faq_section_image_url,
-  should_color_logo
+  should_color_logo,
+  site_language
 `
 
 const RESERVED_SLUGS = new Set(['favicon.ico', 'robots.txt', 'sitemap.xml'])
@@ -118,25 +120,31 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('packages_subtitle') ||
     message.includes('faq_items') ||
     message.includes('faq_section_image_url') ||
-    message.includes('gallery_layout_mode')
+    message.includes('gallery_layout_mode') ||
+    message.includes('site_language')
   )
 }
 
 function stripPortfolioLayoutFields(fields: string) {
   return fields
     .split('\n')
-    .filter((line) => !line.includes('gallery_layout_mode'))
+    .filter(
+      (line) =>
+        !line.includes('gallery_layout_mode') && !line.includes('site_language')
+    )
     .join('\n')
 }
 
 function withDefaultGalleryLayoutMode(
-  photographer: Omit<PublicPhotographer, 'gallery_layout_mode'> & {
+  photographer: Omit<PublicPhotographer, 'gallery_layout_mode' | 'site_language'> & {
     gallery_layout_mode?: PublicPhotographer['gallery_layout_mode']
+    site_language?: PublicPhotographer['site_language']
   }
 ): PublicPhotographer {
   return {
     ...photographer,
     gallery_layout_mode: photographer.gallery_layout_mode ?? 'separated',
+    site_language: photographer.site_language ?? 'he',
   }
 }
 
@@ -157,6 +165,9 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   }
   if (message.includes('gallery_layout_mode')) {
     return 'Run migration 20250711000001_add_portfolio_layout.sql on Supabase.'
+  }
+  if (message.includes('site_language')) {
+    return 'Run migration 20250712000003_add_site_language.sql on Supabase.'
   }
 
   return 'Apply pending Supabase migrations (supabase db push).'
