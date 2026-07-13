@@ -333,6 +333,38 @@ const UNIFIED_GALLERY_GRID_CSS = `
 
   }
 
+  .homepage-gallery-grid.reveal {
+
+    transition-delay: 0.12s;
+
+  }
+
+  .homepage-gallery-reveal {
+
+    opacity: 0;
+
+    transform: translateY(30px);
+
+    transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+
+    will-change: opacity, transform;
+
+  }
+
+  .homepage-gallery-reveal.is-visible {
+
+    opacity: 1;
+
+    transform: translateY(0);
+
+  }
+
+  .homepage-gallery-grid.homepage-gallery-reveal {
+
+    transition-delay: 0.12s;
+
+  }
+
   @media (min-width: 768px) {
 
     .homepage-gallery-grid {
@@ -1732,6 +1764,164 @@ const CLASSIC_RECENT_PHOTOS_HEADER_CSS = `
       margin-left: 0;
     }
   }
+
+`
+
+
+
+const HOMEPAGE_REVEAL_INIT_SCRIPT = `
+
+(function initHomepageReveal() {
+
+  var observerOptions = { threshold: 0.08, rootMargin: '0px 0px 8% 0px' };
+
+  var observer = new IntersectionObserver(function(entries) {
+
+    entries.forEach(function(entry) {
+
+      if (entry.isIntersecting) entry.target.classList.add('active');
+
+    });
+
+  }, observerOptions);
+
+
+
+  function observeRevealElements() {
+
+    document.querySelectorAll('.reveal:not(.active)').forEach(function(el) {
+
+      observer.observe(el);
+
+    });
+
+  }
+
+
+
+  function activateRevealElementsInView() {
+
+    document.querySelectorAll('.reveal:not(.active)').forEach(function(el) {
+
+      var rect = el.getBoundingClientRect();
+
+      if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+
+        el.classList.add('active');
+
+      }
+
+    });
+
+  }
+
+
+
+  function boot() {
+
+    observeRevealElements();
+
+    activateRevealElementsInView();
+
+    window.addEventListener('scroll', activateRevealElementsInView, { passive: true });
+
+    window.addEventListener('resize', activateRevealElementsInView);
+
+  }
+
+
+
+  if (document.readyState === 'loading') {
+
+    document.addEventListener('DOMContentLoaded', boot);
+
+  } else {
+
+    boot();
+
+  }
+
+  window.addEventListener('load', activateRevealElementsInView);
+
+})();
+
+`
+
+
+
+const HOMEPAGE_GALLERY_REVEAL_SCRIPT = `
+
+(function initHomepageGalleryReveal() {
+
+  function boot() {
+
+    var targets = [].slice.call(document.querySelectorAll('.homepage-gallery-reveal'));
+
+    if (!targets.length) return;
+
+    function revealTarget(el) {
+
+      if (!el.classList.contains('is-visible')) el.classList.add('is-visible');
+
+    }
+
+    function revealTargetsInView() {
+
+      targets.forEach(function(el) {
+
+        var rect = el.getBoundingClientRect();
+
+        if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+
+          revealTarget(el);
+
+        }
+
+      });
+
+    }
+
+    if (!('IntersectionObserver' in window)) {
+
+      targets.forEach(revealTarget);
+
+      return;
+
+    }
+
+    var observer = new IntersectionObserver(function(entries) {
+
+      entries.forEach(function(entry) {
+
+        if (entry.isIntersecting) revealTarget(entry.target);
+
+      });
+
+    }, { threshold: 0.08, rootMargin: '0px 0px 8% 0px' });
+
+    targets.forEach(function(el) { observer.observe(el); });
+
+    revealTargetsInView();
+
+    window.addEventListener('scroll', revealTargetsInView, { passive: true });
+
+    window.addEventListener('resize', revealTargetsInView);
+
+    window.addEventListener('load', revealTargetsInView);
+
+  }
+
+  if (document.readyState === 'loading') {
+
+    document.addEventListener('DOMContentLoaded', boot);
+
+  } else {
+
+    boot();
+
+  }
+
+})();
 
 `
 
@@ -6959,7 +7149,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-8">
 
-<div class="flex flex-row-reverse justify-between items-end reveal-on-scroll">
+<div class="flex flex-row-reverse justify-between items-end homepage-gallery-reveal">
 
 ${elegantSectionHeading(homepageCopy.sections.collections, 'COLLECTIONS')}
 
@@ -6967,7 +7157,7 @@ ${elegantSectionHeading(homepageCopy.sections.collections, 'COLLECTIONS')}
 
 </div>
 
-<div class="homepage-gallery-grid reveal-on-scroll active">
+<div class="homepage-gallery-grid homepage-gallery-reveal">
 
 ${generateUnifiedGalleryGridHTML(galleries, 'elegant', siteLanguage)}
 
@@ -7208,6 +7398,8 @@ ${generateSiteFooter(siteChrome('elegant'))}
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
+
+<script>${HOMEPAGE_GALLERY_REVEAL_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -8011,7 +8203,7 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-header px-lg mb-xl">
 
-<div class="flex flex-row-reverse justify-between items-end gap-md animate-reveal">
+<div class="flex flex-row-reverse justify-between items-end gap-md homepage-gallery-reveal">
 
 <div class="text-start rtl:text-right">
 
@@ -8023,7 +8215,7 @@ ${!isPortfolioMode ? `
 
 </div>
 
-<div class="homepage-gallery-grid animate-reveal">
+<div class="homepage-gallery-grid homepage-gallery-reveal">
 
 ${generateUnifiedGalleryGridHTML(galleries, 'modern', siteLanguage)}
 
@@ -8229,6 +8421,8 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
+
+<script>${HOMEPAGE_GALLERY_REVEAL_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -9367,9 +9561,9 @@ ${about_image_url ? `<img alt="${homepageCopy.misc.photographerPortraitAlt}" cla
 
 ${!isPortfolioMode ? `
 
-<section class="homepage-gallery-section bg-surface-container-low py-xxl reveal" id="galleries">
+<section class="homepage-gallery-section bg-surface-container-low py-xxl" id="galleries">
 
-<div class="homepage-gallery-header px-lg mb-xl">
+<div class="homepage-gallery-header px-lg mb-xl homepage-gallery-reveal">
 
 <div class="text-start rtl:text-right">
 
@@ -9381,7 +9575,7 @@ ${!isPortfolioMode ? `
 
 </div>
 
-<div class="homepage-gallery-grid">
+<div class="homepage-gallery-grid homepage-gallery-reveal">
 
 ${generateUnifiedGalleryGridHTML(galleries, 'classic', siteLanguage)}
 
@@ -9648,43 +9842,9 @@ ${generateSiteFooter(siteChrome('classic'))}
 
         
 
-        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
-
-        const observer = new IntersectionObserver((entries) => {
-
-            entries.forEach(entry => {
-
-                if (entry.isIntersecting) {
-
-                    entry.target.classList.add('active');
-
-                }
-
-            });
-
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal').forEach(el => { observer.observe(el); });
-
-        window.addEventListener('load', () => {
-
-            document.querySelectorAll('.reveal').forEach(el => {
-
-                const rect = el.getBoundingClientRect();
-
-                if (rect.top < window.innerHeight) {
-
-                    el.classList.add('active');
-
-                }
-
-            });
-
-        });
-
-
-
     </script>
+
+<script>${HOMEPAGE_REVEAL_INIT_SCRIPT}</script>
 
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
 
@@ -9693,6 +9853,8 @@ ${generateSiteFooter(siteChrome('classic'))}
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
+
+<script>${HOMEPAGE_GALLERY_REVEAL_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
@@ -10190,9 +10352,35 @@ ${documentHead}
 
             max-width: 40rem;
 
-            padding: 1.5rem 1.5rem 3rem 1.5rem;
+            min-height: min(72vh, 38rem);
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: flex-start;
+
+            justify-content: flex-end;
+
+            gap: 5px;
+
+            padding: 1.5rem 1.5rem 2.25rem 1.5rem;
 
             text-align: right;
+
+        }
+
+        .bold-hero-content::before {
+
+            content: '';
+
+            margin-top: auto;
+
+            flex: 0 0 30px;
+
+            height: 30px;
+
+            width: 100%;
 
         }
 
@@ -10202,11 +10390,17 @@ ${documentHead}
 
             font-size: 13px;
 
+            font-weight: 800;
+
+            line-height: 1;
+
             letter-spacing: 0.3em;
 
             text-transform: uppercase;
 
             color: ${primaryColor};
+
+            margin: 0;
 
         }
 
@@ -10214,17 +10408,30 @@ ${documentHead}
 
             font-size: clamp(2.25rem, 5.5vw, 4.25rem);
 
-            line-height: 1.05;
+            line-height: 0.92;
 
             font-weight: 800;
 
             letter-spacing: -0.02em;
 
+            margin: 0;
+
         }
 
-        .bold-hero-title .text-primary {
+        .bold-hero-title .text-primary,
+        .bold-hero-title .font-light {
 
             color: ${primaryColor};
+
+            font-weight: 800;
+
+        }
+
+        .bold-hero-about {
+
+            margin: 0;
+
+            line-height: 1.35 !important;
 
         }
 
@@ -10236,7 +10443,11 @@ ${documentHead}
 
             align-items: flex-start;
 
-            gap: 1.5rem;
+            gap: 0.875rem;
+
+            flex-shrink: 0;
+
+            margin-top: 0;
 
         }
 
@@ -10266,7 +10477,7 @@ ${documentHead}
 
             .bold-hero-content {
 
-                padding: 2rem 2.5rem 4rem 1.5rem;
+                padding: 2rem 2.5rem 2.75rem 1.5rem;
 
             }
 
@@ -10716,21 +10927,21 @@ ${heroSlideshowBoldHtml}
 
 <div class="bold-hero-content">
 
-<span class="bold-hero-label mb-lg block">Premium Studio</span>
+<span class="bold-hero-label block">${homepageCopy.hero.premiumStudio}</span>
 
-<h1 class="bold-hero-title text-on-surface mb-md">
+<h1 class="bold-hero-title text-on-surface">
 
                     ${brandLastWord(studioName)}
 
                 </h1>
 
-<p class="font-body-md text-body-md max-w-xl mb-xl text-on-surface-variant leading-relaxed whitespace-pre-line">
+<p class="bold-hero-about font-body-md text-body-md max-w-xl text-on-surface-variant whitespace-pre-line">
 
                     ${aboutTextHtml}
 
                 </p>
 
-<div class="bold-hero-actions flex flex-col sm:flex-row gap-lg">
+<div class="bold-hero-actions flex flex-col sm:flex-row">
 
 <button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="bold-hero-btn-gallery border border-primary text-primary bg-transparent py-md font-label-sm uppercase tracking-widest btn-fuchsia-transition hover:bg-primary hover:text-on-primary whitespace-nowrap">
 
@@ -10832,9 +11043,9 @@ ${hasStats ? `
 
 ${!isPortfolioMode ? `
 
-<section class="homepage-gallery-section py-xl md:py-xxl reveal" id="gallery">
+<section class="homepage-gallery-section py-xl md:py-xxl" id="gallery">
 
-<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-start rtl:text-right">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-start rtl:text-right homepage-gallery-reveal">
 
 <div>
 
@@ -10846,7 +11057,7 @@ ${!isPortfolioMode ? `
 
 </div>
 
-<div class="homepage-gallery-grid">
+<div class="homepage-gallery-grid homepage-gallery-reveal">
 
 ${generateUnifiedGalleryGridHTML(galleries, 'dark', siteLanguage)}
 
@@ -11044,41 +11255,9 @@ ${hasContactBg ? `<div class="bold-contact-details-block max-w-4xl mx-auto conta
 
 ${generateSiteFooter(siteChrome('dark'))}
 
+<script>${HOMEPAGE_REVEAL_INIT_SCRIPT}</script>
+
 <script>
-
-        const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -100px 0px' };
-
-        const observer = new IntersectionObserver((entries) => {
-
-            entries.forEach(entry => {
-
-                if (entry.isIntersecting) {
-
-                    entry.target.classList.add('active');
-
-                }
-
-            });
-
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal').forEach(el => { observer.observe(el); });
-
-        window.addEventListener('load', () => {
-
-            document.querySelectorAll('.reveal').forEach(el => {
-
-                const rect = el.getBoundingClientRect();
-
-                if (rect.top < window.innerHeight) {
-
-                    el.classList.add('active');
-
-                }
-
-            });
-
-        });
 
         ${generateSiteNavScrollScript('dark')}
 
@@ -11125,6 +11304,8 @@ ${generateSiteFooter(siteChrome('dark'))}
 <script>${TESTIMONIALS_MARQUEE_INIT_SCRIPT}</script>
 
 <script>${TESTIMONIALS_CAROUSEL_INIT_SCRIPT}</script>
+
+<script>${HOMEPAGE_GALLERY_REVEAL_SCRIPT}</script>
 
 <script>${RECENT_PHOTOS_REVEAL_SCRIPT}</script>
 
