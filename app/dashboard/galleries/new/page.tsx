@@ -31,6 +31,7 @@ export default async function NewGalleryPage() {
     (profileData as { studio_name: string | null } | null)?.studio_name ?? ''
 
   const canCreateGallery = quota?.canCreateGallery ?? true
+  const maxGalleries = quota?.maxGalleries ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
 
   return (
     <div className="space-y-6">
@@ -41,8 +42,8 @@ export default async function NewGalleryPage() {
           <h1 className="text-xl sm:text-2xl font-semibold">גלריה חדשה</h1>
           <p className="mt-1 text-sm text-[--muted]">
             {canCreateGallery
-              ? `${quota?.galleryCount ?? 0} מתוך ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות · עד ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה`
-              : `הגעת למקסימום ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות`}
+              ? `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · עד ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה`
+              : `הגעת למקסימום ${maxGalleries} גלריות`}
           </p>
         </div>
         <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
@@ -55,7 +56,7 @@ export default async function NewGalleryPage() {
       ) : (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">
-            ניתן ליצור עד {MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות, עם עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה.
+            ניתן ליצור עד {maxGalleries} גלריות, עם עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה.
             מחקי גלריה קיימת כדי ליצור חדשה.
           </p>
           <Button asChild className="mt-6 bg-[#7D3A52] text-white hover:bg-[#6a2f44]">

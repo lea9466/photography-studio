@@ -114,6 +114,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
       galleryNames,
       accentColor,
     },
+    siteLanguage: typed.site_language,
   })
 
   return <HtmlFramePage html={html} title={`תיק עבודות | ${studioName}`} />

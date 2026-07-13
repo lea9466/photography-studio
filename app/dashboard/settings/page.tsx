@@ -5,6 +5,8 @@ import { Settings2 } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
+import { SiteLanguageSetting } from '@/components/dashboard/SiteLanguageSetting'
+import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 
 import { resolveBrandingPath, resolveBrandingPaths, padHeroUrlSlots } from '@/lib/branding-urls'
 
@@ -28,17 +30,28 @@ export default async function SettingsPage() {
 
   const { userId, supabase } = context
 
+  const PROFILE_FIELDS =
+    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
 
+  const PROFILE_FIELDS_LEGACY = PROFILE_FIELDS.replace(', site_language', '')
 
-  const { data, error } = await supabase
-
+  let { data, error } = await supabase
     .from('users')
-
-    .select('name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo')
-
+    .select(PROFILE_FIELDS)
     .eq('id', userId)
-
     .single()
+
+  if (
+    error &&
+    (error.code === '42703' || error.code === 'PGRST204') &&
+    error.message?.toLowerCase().includes('site_language')
+  ) {
+    ;({ data, error } = await supabase
+      .from('users')
+      .select(PROFILE_FIELDS_LEGACY)
+      .eq('id', userId)
+      .single())
+  }
 
 
 
@@ -114,6 +127,8 @@ export default async function SettingsPage() {
 
     should_color_logo: boolean
 
+    site_language: string | null
+
   } | null
 
 
@@ -172,6 +187,8 @@ export default async function SettingsPage() {
 
   } : null
 
+  const siteLanguage: SiteLanguage = resolveSiteLanguage(profile?.site_language)
+
 
 
   return (
@@ -210,6 +227,8 @@ export default async function SettingsPage() {
           </div>
 
         </div>
+
+        <SiteLanguageSetting key={siteLanguage} initialLanguage={siteLanguage} />
 
         <ProfileForm profile={profileWithUrls} />
 

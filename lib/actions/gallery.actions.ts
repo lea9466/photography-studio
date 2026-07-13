@@ -27,10 +27,22 @@ import {
   PUBLIC_ONLY_MVP,
   MVP_GALLERY_DB_STATUS,
   buildPublicGalleryCountLimitError,
-  MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+  getMaxPublicGalleriesForPhotographer,
 } from '@/lib/types/app.types'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
+
+async function resolvePhotographerGalleryLimit(context: DashboardAuthContext): Promise<number> {
+  const { userId, supabase } = context
+  const { data } = await supabase
+    .from('users')
+    .select('email')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const profileEmail = (data as { email: string | null } | null)?.email
+  return getMaxPublicGalleriesForPhotographer(profileEmail ?? context.actorEmail)
+}
 
 const DELETE_BATCH_SIZE = 50
 
@@ -283,7 +295,8 @@ function portfolioSlug(title: string) {
 }
 
 export async function createGallery(input: CreateGalleryInput) {
-  const { userId, supabase } = await requireDashboardContext()
+  const context = await requireDashboardContext()
+  const { userId, supabase } = context
 
   const title = input.title.trim()
   if (!title) {
@@ -301,9 +314,12 @@ export async function createGallery(input: CreateGalleryInput) {
       countQuery = countQuery.eq('is_public', true)
     }
 
-    const { count: galleryCount } = await countQuery
+    const [{ count: galleryCount }, maxGalleries] = await Promise.all([
+      countQuery,
+      resolvePhotographerGalleryLimit(context),
+    ])
 
-    const limitError = buildPublicGalleryCountLimitError(galleryCount ?? 0)
+    const limitError = buildPublicGalleryCountLimitError(galleryCount ?? 0, maxGalleries)
     if (limitError) throw new Error(limitError)
   }
 
@@ -405,7 +421,8 @@ export async function updateGallerySettings(
   }
 ) {
   console.log('updateGallerySettings called with:', { galleryId, input })
-  const { userId, supabase } = await requireDashboardContext()
+  const context = await requireDashboardContext()
+  const { userId, supabase } = context
 
   if (input.title !== undefined) {
     const { error } = await supabase
@@ -435,13 +452,19 @@ export async function updateGallerySettings(
 
       const wasPublic = (existingGallery as { is_public: boolean } | null)?.is_public ?? false
       if (!wasPublic) {
-        const { count: publicGalleryCount } = await supabase
-          .from('galleries')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('is_public', true)
+        const [{ count: publicGalleryCount }, maxGalleries] = await Promise.all([
+          supabase
+            .from('galleries')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('is_public', true),
+          resolvePhotographerGalleryLimit(context),
+        ])
 
-        const limitError = buildPublicGalleryCountLimitError(publicGalleryCount ?? 0)
+        const limitError = buildPublicGalleryCountLimitError(
+          publicGalleryCount ?? 0,
+          maxGalleries
+        )
         if (limitError) throw new Error(limitError)
       }
     }
@@ -507,14 +530,17 @@ export async function getPublicGalleryQuota() {
     countQuery = countQuery.eq('is_public', true)
   }
 
-  const { count } = await countQuery
+  const [{ count }, maxGalleries] = await Promise.all([
+    countQuery,
+    resolvePhotographerGalleryLimit(context),
+  ])
 
   const galleryCount = count ?? 0
 
   return {
     galleryCount,
-    maxGalleries: MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
-    canCreateGallery: galleryCount < MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
+    maxGalleries,
+    canCreateGallery: galleryCount < maxGalleries,
   }
 }
 

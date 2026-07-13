@@ -52,6 +52,22 @@ export function getDisplayGalleryStatus(status: GalleryStatus): GalleryStatus {
 /** Max public galleries per photographer account */
 export const MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER = 4
 
+/** Per-account gallery limits keyed by normalized account email */
+const PUBLIC_GALLERY_LIMIT_OVERRIDES: Record<string, number> = {
+  'lea0556769466@gmail.com': 6,
+}
+
+export function normalizePhotographerEmail(email: string | null | undefined): string {
+  return email?.trim().toLowerCase() ?? ''
+}
+
+export function getMaxPublicGalleriesForPhotographer(
+  email: string | null | undefined
+): number {
+  const normalized = normalizePhotographerEmail(email)
+  return PUBLIC_GALLERY_LIMIT_OVERRIDES[normalized] ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
+}
+
 /** Max photos in a single public gallery */
 export const MAX_PUBLIC_GALLERY_PHOTOS = 40
 
@@ -73,9 +89,12 @@ export function buildPublicGalleryPhotoLimitError(
   return ''
 }
 
-export function buildPublicGalleryCountLimitError(currentCount: number): string | null {
-  if (currentCount >= MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER) {
-    return `ניתן ליצור עד ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות`
+export function buildPublicGalleryCountLimitError(
+  currentCount: number,
+  maxGalleries: number = MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
+): string | null {
+  if (currentCount >= maxGalleries) {
+    return `ניתן ליצור עד ${maxGalleries} גלריות`
   }
   return null
 }

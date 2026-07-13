@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Images, Plus } from 'lucide-react'
 import { fetchDashboardGalleries } from '@/lib/actions/dashboard.actions'
-import { fetchGalleryLayoutMode } from '@/lib/actions/gallery.actions'
+import { fetchGalleryLayoutMode, getPublicGalleryQuota } from '@/lib/actions/gallery.actions'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { GalleryLayoutModeSetting } from '@/components/dashboard/GalleryLayoutModeSetting'
 import { Button } from '@/components/ui/button'
@@ -22,17 +22,20 @@ const ACCENT_BUTTON_CLASS =
 export default function GalleriesPage() {
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
   const [layoutMode, setLayoutMode] = useState<GalleryLayoutMode>('separated')
+  const [maxGalleries, setMaxGalleries] = useState(MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [galleries, mode] = await Promise.all([
+        const [galleries, mode, quota] = await Promise.all([
           fetchDashboardGalleries(),
           fetchGalleryLayoutMode(),
+          getPublicGalleryQuota(),
         ])
         setRecentGalleries(galleries)
         setLayoutMode(mode)
+        setMaxGalleries(quota?.maxGalleries ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER)
       } catch (error) {
         console.error('Failed to load galleries:', error)
       } finally {
@@ -56,7 +59,7 @@ export default function GalleriesPage() {
   }
 
   const galleryCount = recentGalleries.length
-  const canCreateGallery = galleryCount < MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
+  const canCreateGallery = galleryCount < maxGalleries
 
   return (
     <div className="animate-fade-in">
@@ -72,7 +75,7 @@ export default function GalleriesPage() {
                   כל הגלריות
                 </h1>
                 <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
-                  {galleryCount}/{MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות · עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה
+                  {galleryCount}/{maxGalleries} גלריות · עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה
                 </p>
               </div>
             </div>
@@ -87,7 +90,7 @@ export default function GalleriesPage() {
               <Button
                 disabled
                 className={cn(ACCENT_BUTTON_CLASS, 'cursor-not-allowed px-6 py-3 text-base font-semibold opacity-50')}
-                title={`מקסימום ${MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER} גלריות`}
+                title={`מקסימום ${maxGalleries} גלריות`}
               >
                 <Plus className="h-5 w-5 ml-2" />
                 גלריה חדשה
