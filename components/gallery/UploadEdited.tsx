@@ -126,6 +126,7 @@ export function UploadEdited({
             bucket: 'edited' as const,
             path: item.path,
             contentType: item.contentType,
+            fileSize: item.file.size,
           }))
         )
 

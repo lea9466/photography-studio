@@ -345,7 +345,12 @@ class BatchPipeline {
       jobs.push(job)
       const paths = this.deps.buildPaths(this.deps.userId, this.deps.entityId, job.photoId)
       requests.push(
-        { bucket: 'originals', path: paths.originalPath, contentType: job.file.type || 'image/jpeg' },
+        {
+          bucket: 'originals',
+          path: paths.originalPath,
+          contentType: job.file.type || 'image/jpeg',
+          fileSize: job.file.size,
+        },
         { bucket: 'previews', path: paths.previewPath, contentType: 'image/jpeg' },
         { bucket: 'watermarked', path: paths.watermarkedPath, contentType: 'image/jpeg' }
       )

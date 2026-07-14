@@ -2,7 +2,8 @@
 
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
-import type { R2UploadRequest } from '@/lib/r2/types'
+import type { MediaBucket, R2UploadRequest } from '@/lib/r2/types'
+import { validateGalleryPhotoUpload } from '@/lib/media-upload-limits'
 import {
   assertGalleryPhotoCountWithinLimit,
   assertReservedPhotosExist,
@@ -14,6 +15,29 @@ import {
   parsePostPhotoIdsFromUploadRequests,
 } from '@/lib/post-photo-limits'
 import { assertPostOwner } from '@/lib/auth/post-owner'
+
+// Buckets this action is actually ever asked to generate upload URLs for in
+// the real client code (grep-verified: media-upload-pipeline.ts uses
+// originals/previews/watermarked for both galleries and posts;
+// components/gallery/UploadEdited.tsx additionally uses 'edited' for
+// galleries only). Without this check, `bucket` was only constrained by the
+// TypeScript MediaBucket type — which is compile-time only and does not
+// stop a caller that bypasses the client (e.g. calling the server action
+// directly with a crafted body) from requesting a presigned PUT URL into
+// 'zips' (server-generated download archives only) or 'branding' (a
+// completely separate upload flow), reusing a path prefix that otherwise
+// passes the gallery/post ownership check.
+const GALLERY_UPLOAD_BUCKETS = new Set<MediaBucket>(['originals', 'previews', 'watermarked', 'edited'])
+const POST_UPLOAD_BUCKETS = new Set<MediaBucket>(['originals', 'previews', 'watermarked'])
+
+function assertUploadItemsValid(items: R2UploadRequest[], allowedBuckets: Set<MediaBucket>) {
+  for (const item of items) {
+    if (!allowedBuckets.has(item.bucket)) {
+      throw new Error('יעד העלאה לא תקין')
+    }
+    validateGalleryPhotoUpload(item.contentType, item.fileSize)
+  }
+}
 
 async function assertGalleryUploadPaths(
   galleryId: string,
@@ -54,6 +78,7 @@ export async function createR2UploadUrls(
   items: R2UploadRequest[]
 ) {
   console.log('👉 10. createR2UploadUrls START', { galleryId, itemCount: items.length })
+  assertUploadItemsValid(items, GALLERY_UPLOAD_BUCKETS)
   await assertGalleryUploadPaths(galleryId, items)
   console.log('👉 11. assertGalleryUploadPaths done')
 
@@ -88,6 +113,7 @@ export async function createPostR2UploadUrls(
   postId: string,
   items: R2UploadRequest[]
 ) {
+  assertUploadItemsValid(items, POST_UPLOAD_BUCKETS)
   await assertPostUploadPaths(postId, items)
 
   const urls = await Promise.all(
