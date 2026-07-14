@@ -23,61 +23,62 @@ function DefaultLogoIcon({ className = '' }: { className?: string }) {
 }
 
 export function Logo({ logoUrl, accentColor = '#7c3aed', shouldColorLogo = false, className = '' }: LogoProps) {
-  const [svgContent, setSvgContent] = useState<string | null>(null)
-  const [isSvg, setIsSvg] = useState(false)
   const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const previewUrl = getBrandingPreviewUrl(logoUrl)
 
+  const isSvg = Boolean(
+    previewUrl && (previewUrl.toLowerCase().includes('.svg') || previewUrl.includes('image/svg+xml'))
+  )
+  const useMask = isSvg && shouldColorLogo
+
   useEffect(() => {
     setImageLoadFailed(false)
-  }, [previewUrl])
 
-  useEffect(() => {
-    if (!previewUrl) {
-      setIsSvg(false)
-      setSvgContent(null)
-      return
+    if (!previewUrl || !useMask) return
+
+    // A CSS mask has no load/error event of its own, so probe the URL via
+    // Image() purely to detect unreachable files and fall back to the
+    // default icon — same failure UX as the plain <img> branch below.
+    // This never reads/parses the SVG's markup: browsers paint an SVG
+    // loaded this way as a static image resource, so any <script> or
+    // event-handler content inside an uploaded file cannot execute
+    // (unlike the previous fetch + dangerouslySetInnerHTML approach).
+    const probe = new Image()
+    probe.onerror = () => setImageLoadFailed(true)
+    probe.src = previewUrl
+
+    return () => {
+      probe.onerror = null
     }
-
-    const isSvgFile =
-      previewUrl.toLowerCase().includes('.svg') || previewUrl.includes('image/svg+xml')
-    setIsSvg(isSvgFile)
-
-    if (isSvgFile && shouldColorLogo) {
-      fetch(previewUrl)
-        .then((res) => res.text())
-        .then((content) => {
-          setSvgContent(content)
-        })
-        .catch(() => {
-          setIsSvg(false)
-          setSvgContent(null)
-          setImageLoadFailed(true)
-        })
-    } else {
-      setSvgContent(null)
-    }
-  }, [previewUrl, shouldColorLogo])
+  }, [previewUrl, useMask])
 
   if (!previewUrl || imageLoadFailed) {
     return <DefaultLogoIcon className={className} />
   }
 
-  if (isSvg && shouldColorLogo && svgContent) {
-    // Render inline SVG with color styling
+  if (useMask) {
+    // Recolors the logo with a CSS mask instead of injecting the SVG's raw
+    // markup into the DOM. Callers always render Logo inside a fixed
+    // square box (see SidebarNav/MobileHeader), so w-full h-full here
+    // fills that box and mask-size: contain scales the shape to fit it —
+    // the same visual result as object-contain on a normal <img>.
     return (
-      <div 
-        className={`w-full h-full flex items-center justify-center ${className}`}
-        style={{ '--brand-color': accentColor } as React.CSSProperties}
-      >
-        <style>{`
-          svg path, svg circle, svg rect, svg ellipse, svg polygon, svg polyline, svg line {
-            fill: var(--brand-color) !important;
-            stroke: var(--brand-color) !important;
-          }
-        `}</style>
-        <div dangerouslySetInnerHTML={{ __html: svgContent }} />
-      </div>
+      <div
+        role="img"
+        aria-label=""
+        className={`w-full h-full ${className}`}
+        style={{
+          backgroundColor: accentColor,
+          maskImage: `url("${previewUrl}")`,
+          maskSize: 'contain',
+          maskRepeat: 'no-repeat',
+          maskPosition: 'center',
+          WebkitMaskImage: `url("${previewUrl}")`,
+          WebkitMaskSize: 'contain',
+          WebkitMaskRepeat: 'no-repeat',
+          WebkitMaskPosition: 'center',
+        } as React.CSSProperties}
+      />
     )
   }
 

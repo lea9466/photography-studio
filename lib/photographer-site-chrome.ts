@@ -1,5 +1,6 @@
 import { homepageSectionHref, homepageScrollToTopAction } from '@/lib/photographer-site-paths'
 import { HOMEPAGE_LTR_CSS } from '@/lib/homepage-ltr-css'
+import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import {
   getSiteChromeCopy,
   portfolioNavLabel,
@@ -130,12 +131,23 @@ function logoBlock(cfg: SiteChromeConfig, options: { imgClass?: string; textClas
   const imgClass = options.imgClass ?? 'h-10 w-auto object-contain'
   if (cfg.logoUrl) {
     if (cfg.shouldColorLogo) {
+      // data-logo-url must be same-origin: CSS mask-image (unlike a plain <img src>)
+      // fetches its resource via a "potentially CORS-enabled fetch" per the CSS
+      // Masking spec (browsers treat mask pixel access as sensitive, similar to
+      // canvas tainting) and SILENTLY drops the mask — no console error, element
+      // just renders empty — if the response isn't same-origin or CORS-approved.
+      // cfg.logoUrl points at the R2/CDN origin (cross-origin from this page), so
+      // the coloring script below (generateLogoColoringScript) must mask against
+      // the app's own /api/gallery-media proxy instead of the raw URL. The plain
+      // <img src> above/below stays on the raw URL since basic image display has
+      // no such restriction.
+      const maskableLogoUrl = getBrandingPreviewUrl(cfg.logoUrl) ?? cfg.logoUrl
       return `<img 
         src="${cfg.logoUrl}" 
         alt="${cfg.studioName}" 
         class="${imgClass} brand-logo-colorable" 
         data-brand-color="${cfg.primaryColor}"
-        data-logo-url="${cfg.logoUrl}"
+        data-logo-url="${maskableLogoUrl}"
       />`
     }
     return `<img src="${cfg.logoUrl}" alt="${cfg.studioName}" class="${imgClass}" />`
@@ -420,42 +432,53 @@ ${generateStudioSignupFooterCta('dark', language)}
 }
 
 export function generateLogoColoringScript(): string {
+  // Recolors the logo with a CSS mask instead of fetching + parsing the
+  // SVG's raw markup and injecting it into the DOM. A CSS mask-image (like
+  // a plain <img src>) is painted by the browser as a static image
+  // resource — any <script> or event-handler content inside an uploaded
+  // SVG file cannot execute this way, unlike the previous
+  // fetch + DOMParser + replaceChild approach, which created a live,
+  // scriptable <svg> element in the page.
+  //
+  // The logo sits in a flex nav bar with `h-10 w-auto` (no explicit
+  // width) — a masked <div> has no intrinsic size for `w-auto` to resolve
+  // against (unlike a replaced <img> element), so the aspect-ratio is set
+  // explicitly from the image's own natural dimensions to preserve the
+  // exact same visual sizing as before.
   return `
   (function() {
     const colorableLogos = document.querySelectorAll('.brand-logo-colorable');
-    colorableLogos.forEach(async (img) => {
+    colorableLogos.forEach((img) => {
       const logoUrl = img.getAttribute('data-logo-url');
       const brandColor = img.getAttribute('data-brand-color');
       if (!logoUrl || !brandColor) return;
-      
+
       const isSvg = logoUrl.toLowerCase().includes('.svg') || logoUrl.includes('image/svg+xml');
       if (!isSvg) return;
-      
-      try {
-        const response = await fetch(logoUrl);
-        const svgText = await response.text();
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
-        const svg = svgDoc.documentElement;
-        
-        // Color all SVG elements
-        const elements = svg.querySelectorAll('path, circle, rect, ellipse, polygon, polyline, line');
-        elements.forEach(el => {
-          el.style.fill = brandColor;
-          el.style.stroke = brandColor;
-        });
-        
-        // Replace img with colored SVG
-        const wrapper = document.createElement('div');
-        wrapper.className = img.className;
-        wrapper.style.cssText = img.style.cssText;
-        wrapper.appendChild(svg);
-        svg.style.width = '100%';
-        svg.style.height = '100%';
-        img.parentNode?.replaceChild(wrapper, img);
-      } catch (e) {
-        console.warn('Failed to color logo:', e);
-      }
+
+      const probe = new Image();
+      probe.onload = function() {
+        const width = probe.naturalWidth || 1;
+        const height = probe.naturalHeight || 1;
+        const mask = document.createElement('div');
+        mask.className = img.className;
+        mask.setAttribute('role', 'img');
+        mask.setAttribute('aria-label', img.getAttribute('alt') || '');
+        mask.style.aspectRatio = width + ' / ' + height;
+        mask.style.backgroundColor = brandColor;
+        mask.style.maskImage = 'url("' + logoUrl + '")';
+        mask.style.maskSize = 'contain';
+        mask.style.maskRepeat = 'no-repeat';
+        mask.style.maskPosition = 'center';
+        mask.style.webkitMaskImage = 'url("' + logoUrl + '")';
+        mask.style.webkitMaskSize = 'contain';
+        mask.style.webkitMaskRepeat = 'no-repeat';
+        mask.style.webkitMaskPosition = 'center';
+        img.parentNode?.replaceChild(mask, img);
+      };
+      // On failure, leave the original <img> in place — same broken-image
+      // fallback as an uncolored logo whose URL 404s.
+      probe.src = logoUrl;
     });
   })();`
 }
