@@ -196,7 +196,7 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
   const { data, error } = await admin
     .from('users')
     .select(
-      'id, email, name, studio_name, slug, created_at, last_dashboard_visit_at, dashboard_visit_count'
+      'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
     )
     // Case-insensitive match (existing emails aren't guaranteed to be stored
     // lowercase), but escaped so user input can never be interpreted as an
@@ -216,6 +216,7 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     studio_name: string | null
     slug: string | null
     created_at: string
+    trial_end_date: string
     last_dashboard_visit_at: string | null
     dashboard_visit_count: number
   }

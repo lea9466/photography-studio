@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "supabase-studio": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=plcdiaufvczwaiojuxgo&read_only=true",
+      "headers": {
+        "Authorization": "Bearer YOUR_SUPABASE_ACCESS_TOKEN"
+      }
+    }
+  }
+}

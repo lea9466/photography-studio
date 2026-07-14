@@ -10,6 +10,7 @@ import {
   Clock3,
   ExternalLink,
   Filter,
+  Gift,
   Hash,
   LogIn,
   LogOut,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
+import { daysUntilTrialEnd } from '@/lib/referral/referral-utils'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
 import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
@@ -174,6 +176,16 @@ function getRowAccentClass(studio: AdminStudioRow) {
     return 'border-r-sky-400 bg-sky-50/25'
   }
   return 'border-r-slate-200 bg-white'
+}
+
+function getTrialDaysBadgeClass(daysLeft: number) {
+  if (daysLeft <= 0) {
+    return 'border-rose-200 bg-rose-100 text-rose-800'
+  }
+  if (daysLeft <= 7) {
+    return 'border-amber-200 bg-amber-100 text-amber-800'
+  }
+  return 'border-emerald-200 bg-emerald-100 text-emerald-800'
 }
 
 export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
@@ -451,7 +463,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
         </CardHeader>
 
         <CardContent className="overflow-x-auto bg-slate-50/60 p-4 sm:p-5">
-          <table className="w-full min-w-[1040px] border-separate border-spacing-y-3 text-sm">
+          <table className="w-full min-w-[1160px] border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr>
                 <th className="rounded-r-xl bg-slate-800 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-white">
@@ -469,6 +481,9 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                 <th className="bg-slate-800 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-sky-200">
                   תאריך פתיחה
                 </th>
+                <th className="bg-slate-800 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-amber-200">
+                  ימים חינם
+                </th>
                 <th className="rounded-l-xl bg-slate-800 px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-white">
                   פעולות
                 </th>
@@ -477,7 +492,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
             <tbody>
               {sortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center text-[--muted]">
                       אין סטודיואים שמתאימים לסינון הנוכחי
                     </div>
@@ -493,6 +508,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                     isToday(studio.last_dashboard_visit_at)
                   const rowAccent = getRowAccentClass(studio)
                   const isHighlighted = highlightedStudioId === studio.id
+                  const trialDaysLeft = daysUntilTrialEnd(studio.trial_end_date)
 
                   return (
                     <tr key={studio.id} className="group">
@@ -573,6 +589,21 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                         <div className="inline-flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800">
                           <CalendarPlus className="h-3.5 w-3.5 shrink-0" />
                           {formatDate(studio.created_at)}
+                        </div>
+                      </td>
+                      <td
+                        className={`border-y border-slate-200/80 px-4 py-4 whitespace-nowrap shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md ${rowAccent}`}
+                      >
+                        <div className="flex flex-col gap-1.5">
+                          <span
+                            className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums ${getTrialDaysBadgeClass(trialDaysLeft)}`}
+                          >
+                            <Gift className="h-3.5 w-3.5 shrink-0" />
+                            {trialDaysLeft <= 0 ? 'פג' : `${trialDaysLeft} ימים`}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            עד {formatDate(studio.trial_end_date)}
+                          </span>
                         </div>
                       </td>
                       <td
