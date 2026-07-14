@@ -10,6 +10,8 @@ import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 import type { Database, FeedbackType } from '@/lib/types/database.types'
+import { HEX_COLOR_REGEX } from '@/lib/color'
+import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
 
@@ -61,7 +63,14 @@ function buildProfileUpdateData(input: UpdateProfileInput): UsersUpdate {
   if (input.studio_name !== undefined) {
     updateData.studio_name = normalizeOptionalText(input.studio_name) ?? null
   }
-  if (input.theme_primary !== undefined) updateData.theme_primary = input.theme_primary
+  if (input.theme_primary !== undefined) {
+    // theme_primary stores a hex color value (kept in sync with accent_color
+    // by the dashboard forms), not a theme id — validate it as a color.
+    if (!HEX_COLOR_REGEX.test(input.theme_primary.trim())) {
+      throw new Error('צבע לא תקין — יש להזין קוד צבע (HEX) תקין')
+    }
+    updateData.theme_primary = input.theme_primary.trim()
+  }
   if (input.about_text !== undefined) {
     updateData.about_text = normalizeOptionalText(input.about_text) ?? null
   }
@@ -89,8 +98,18 @@ function buildProfileUpdateData(input: UpdateProfileInput): UsersUpdate {
   if (input.stat_experience_years !== undefined) {
     updateData.stat_experience_years = input.stat_experience_years
   }
-  if (input.accent_color !== undefined) updateData.accent_color = input.accent_color
-  if (input.selected_theme !== undefined) updateData.selected_theme = input.selected_theme
+  if (input.accent_color !== undefined) {
+    if (!HEX_COLOR_REGEX.test(input.accent_color.trim())) {
+      throw new Error('צבע לא תקין — יש להזין קוד צבע (HEX) תקין')
+    }
+    updateData.accent_color = input.accent_color.trim()
+  }
+  if (input.selected_theme !== undefined) {
+    if (!THEME_IDS.includes(input.selected_theme as (typeof THEME_IDS)[number])) {
+      throw new Error('ערכת עיצוב לא תקינה')
+    }
+    updateData.selected_theme = input.selected_theme
+  }
   if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
   if (input.hero_desktop_url !== undefined) {
     updateData.hero_desktop_url = input.hero_desktop_url || null

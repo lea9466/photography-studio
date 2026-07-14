@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import {
   sendPhotographerPasswordResetEmail,
   sendWelcomeEmail,
@@ -21,6 +22,8 @@ export type AuthActionState = {
   error?: string
   success?: string
 }
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function mapSignInError(message: string): string {
   const lower = message.toLowerCase()
@@ -324,13 +327,19 @@ export async function requestPasswordReset(
     return { error: 'נא להזין אימייל' }
   }
 
+  if (!EMAIL_REGEX.test(email)) {
+    return { error: 'כתובת אימייל לא תקינה' }
+  }
+
   try {
     const admin = createAdminClient()
 
     const { data: profile } = await admin
       .from('users')
       .select('id, email, name')
-      .ilike('email', email)
+      // Escaped so user input can never be interpreted as an ILIKE wildcard
+      // pattern (% / _) — matches literally, case-insensitively.
+      .ilike('email', escapeIlikePattern(email))
       .maybeSingle()
 
     if (!profile?.email) {

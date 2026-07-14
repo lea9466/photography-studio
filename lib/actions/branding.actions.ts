@@ -14,6 +14,8 @@ import {
   deleteBrandingLogoFavicon,
   syncBrandingLogoFavicon,
 } from '@/lib/branding/logo-favicon'
+import { HEX_COLOR_REGEX } from '@/lib/color'
+import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 
 const HERO_SLOT_COUNT = 3
 
@@ -315,8 +317,18 @@ export async function updateBrandingSettings(data: {
   if (data.statClients !== undefined) updateData.stat_clients = data.statClients
   if (data.statExperienceYears !== undefined)
     updateData.stat_experience_years = data.statExperienceYears
-  if (data.accentColor !== undefined) updateData.accent_color = data.accentColor
-  if (data.selectedTheme !== undefined) updateData.selected_theme = data.selectedTheme
+  if (data.accentColor !== undefined) {
+    if (!HEX_COLOR_REGEX.test(data.accentColor.trim())) {
+      throw new Error('צבע לא תקין — יש להזין קוד צבע (HEX) תקין')
+    }
+    updateData.accent_color = data.accentColor.trim()
+  }
+  if (data.selectedTheme !== undefined) {
+    if (!THEME_IDS.includes(data.selectedTheme as (typeof THEME_IDS)[number])) {
+      throw new Error('ערכת עיצוב לא תקינה')
+    }
+    updateData.selected_theme = data.selectedTheme
+  }
   if (data.heroDesktopUrl !== undefined) updateData.hero_desktop_url = data.heroDesktopUrl
   if (data.heroMobileUrl !== undefined) updateData.hero_mobile_url = data.heroMobileUrl
   if (data.heroDesktopUrls !== undefined) {

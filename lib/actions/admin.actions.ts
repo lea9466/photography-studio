@@ -29,6 +29,7 @@ import {
 } from '@/lib/admin/session'
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
@@ -54,12 +55,6 @@ async function getClientIp() {
     headerStore.get('x-real-ip')?.trim() ??
     'unknown'
   )
-}
-
-// Escapes ILIKE wildcard/escape characters so user input is always matched
-// literally (case-insensitively) instead of being interpreted as a pattern.
-function escapeIlikePattern(value: string) {
-  return value.replace(/[\\%_]/g, (match) => `\\${match}`)
 }
 
 type PersistentRateLimitResult = {

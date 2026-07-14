@@ -187,6 +187,9 @@ export const THEME_OPTIONS = [
   },
 ] as const
 
+/** Canonical whitelist of theme ids accepted when saving branding settings. */
+export const THEME_IDS = THEME_OPTIONS.map((theme) => theme.id)
+
 export const THEME_HELP = {
   classic: {
     tagline: 'קרם חם ונצחי',
