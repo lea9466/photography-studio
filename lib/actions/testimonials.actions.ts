@@ -8,6 +8,7 @@ import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import {
   formatTestimonialImageRef,
   getTestimonialImagePreviewUrl,
+  parseTestimonialImageRef,
 } from '@/lib/testimonial-image-url'
 import { PRIMARY_IMAGE_MAX_BYTES, validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import type { Database } from '@/lib/types/database.types'
@@ -29,6 +30,22 @@ export async function getTestimonials() {
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_IMAGE_SIZE = PRIMARY_IMAGE_MAX_BYTES
+
+// testimonials.image_url is always a "{bucket}:{path}" ref produced either by
+// prepareTestimonialImageUpload (own upload, path = `${userId}/testimonials_...`)
+// or getTestimonialPhotoOptions (an existing photo from one of the caller's OWN
+// galleries, already filtered by user_id in that query, path = `${userId}/{galleryId}/...`).
+// There is no free-text URL input for this field anywhere in the dashboard UI
+// (unlike branding hero/about images), so — unlike assertOwnedBrandingRef —
+// there is no legitimate external-URL case to preserve here: every non-empty
+// value must parse and must be owned by the caller.
+function assertOwnedTestimonialImageRef(userId: string, imageUrl: string | null | undefined) {
+  if (!imageUrl) return
+  const parsed = parseTestimonialImageRef(imageUrl)
+  if (!parsed || !parsed.path.startsWith(`${userId}/`)) {
+    throw new Error('תמונה לא תקינה')
+  }
+}
 
 export async function prepareTestimonialImageUpload(input: {
   fileName: string
@@ -112,6 +129,8 @@ export async function createTestimonial(data: {
 }) {
   const { userId, supabase } = await requireDashboardContext()
 
+  assertOwnedTestimonialImageRef(userId, data.imageUrl)
+
   const { error } = await supabase.from('testimonials').insert({
     user_id: userId,
     title: data.title,
@@ -146,7 +165,10 @@ export async function updateTestimonial(id: string, data: {
   if (data.reviewDate !== undefined) updateData.review_date = data.reviewDate || null
   if (data.isFeatured !== undefined) updateData.is_featured = data.isFeatured
   if (data.sortOrder !== undefined) updateData.sort_order = data.sortOrder
-  if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl || null
+  if (data.imageUrl !== undefined) {
+    assertOwnedTestimonialImageRef(userId, data.imageUrl)
+    updateData.image_url = data.imageUrl || null
+  }
 
   const { error } = await supabase
     .from('testimonials')
@@ -223,6 +245,10 @@ export async function updateTestimonialsSectionTitle(input: {
 export async function updateTestimonialLayoutType(input: {
   layoutType: 'carousel' | 'marquee'
 }): Promise<{ testimonial_layout_type: string }> {
+  if (input.layoutType !== 'carousel' && input.layoutType !== 'marquee') {
+    throw new Error('סוג תצוגה לא תקין')
+  }
+
   const { userId, supabase } = await requireDashboardContext()
 
   const payload: Database['public']['Tables']['users']['Update'] = {

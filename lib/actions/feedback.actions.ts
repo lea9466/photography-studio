@@ -12,6 +12,7 @@ import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 import type { Database, FeedbackType } from '@/lib/types/database.types'
 import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
+import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
 
@@ -56,7 +57,7 @@ function normalizeOptionalText(value: string | null | undefined) {
   return trimmed || null
 }
 
-function buildProfileUpdateData(input: UpdateProfileInput): UsersUpdate {
+function buildProfileUpdateData(userId: string, input: UpdateProfileInput): UsersUpdate {
   const updateData: UsersUpdate = {}
 
   if (input.name !== undefined) updateData.name = normalizeOptionalText(input.name) ?? null
@@ -110,34 +111,46 @@ function buildProfileUpdateData(input: UpdateProfileInput): UsersUpdate {
     }
     updateData.selected_theme = input.selected_theme
   }
-  if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
+  if (input.logo_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.logo_url)
+    updateData.logo_url = input.logo_url || null
+  }
   if (input.hero_desktop_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.hero_desktop_url)
     updateData.hero_desktop_url = input.hero_desktop_url || null
   }
   if (input.hero_mobile_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.hero_mobile_url)
     updateData.hero_mobile_url = input.hero_mobile_url || null
   }
   if (input.hero_desktop_urls !== undefined) {
+    input.hero_desktop_urls.forEach((url) => assertOwnedBrandingRef(userId, url))
     updateData.hero_desktop_urls = input.hero_desktop_urls.slice(0, 3)
     updateData.hero_desktop_url = input.hero_desktop_urls.find(Boolean) ?? null
   }
   if (input.hero_mobile_urls !== undefined) {
+    input.hero_mobile_urls.forEach((url) => assertOwnedBrandingRef(userId, url))
     updateData.hero_mobile_urls = input.hero_mobile_urls.slice(0, 3)
     updateData.hero_mobile_url = input.hero_mobile_urls.find(Boolean) ?? null
   }
   if (input.about_image_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.about_image_url)
     updateData.about_image_url = input.about_image_url || null
   }
   if (input.contact_desktop_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.contact_desktop_url)
     updateData.contact_desktop_url = input.contact_desktop_url || null
   }
   if (input.contact_mobile_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.contact_mobile_url)
     updateData.contact_mobile_url = input.contact_mobile_url || null
   }
   if (input.packages_desktop_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.packages_desktop_url)
     updateData.packages_desktop_url = input.packages_desktop_url || null
   }
   if (input.packages_mobile_url !== undefined) {
+    assertOwnedBrandingRef(userId, input.packages_mobile_url)
     updateData.packages_mobile_url = input.packages_mobile_url || null
   }
   if (input.packages_title !== undefined) {
@@ -182,6 +195,8 @@ export async function prepareFeedbackImageUpload(input: {
   }
 }
 
+const FEEDBACK_TYPES: FeedbackType[] = ['משוב', 'תקלה', 'פיצ׳ר', 'אחר']
+
 export async function submitFeedback(input: {
   type: FeedbackType
   name: string
@@ -190,6 +205,10 @@ export async function submitFeedback(input: {
   studio?: string
   imageUrl?: string | null
 }) {
+  if (!FEEDBACK_TYPES.includes(input.type)) {
+    throw new Error('סוג פנייה לא תקין')
+  }
+
   const admin = createAdminClient()
   const imageUrl = input.imageUrl?.trim() || null
 
@@ -213,7 +232,7 @@ export async function submitFeedback(input: {
 export async function updateProfile(input: UpdateProfileInput) {
   const { userId, supabase, actorEmail } = await requireDashboardContext()
 
-  const updateData = buildProfileUpdateData(input)
+  const updateData = buildProfileUpdateData(userId, input)
   if (Object.keys(updateData).length === 0) return
 
   if (input.slug !== undefined) {

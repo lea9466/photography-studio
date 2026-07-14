@@ -13,10 +13,16 @@ import {
 } from '@/lib/r2/storage'
 import type { DownloadJobType } from '@/lib/types/database.types'
 
+const DOWNLOAD_JOB_TYPES: DownloadJobType[] = ['preview', 'original', 'edited', 'watermarked']
+
 export async function createDownloadJob(
   galleryId: string,
   type: DownloadJobType
 ) {
+  if (!DOWNLOAD_JOB_TYPES.includes(type)) {
+    throw new Error('סוג הורדה לא תקין')
+  }
+
   const { supabase, user } = await assertGalleryOwner(galleryId)
 
   const { data, error } = await supabase
@@ -178,6 +184,18 @@ export async function createClientEditedDownload(galleryId: string) {
 }
 
 export async function createClientDownload(galleryId: string, type: 'watermarked' | 'original') {
+  // Found while fixing finding #9 (not in the original report): this wasn't
+  // just a missing-runtime-check gap — it was an actual authorization
+  // bypass. `downloadType` below unconditionally normalizes any non-
+  // 'watermarked' value to 'original', but the permission checks a few
+  // lines down only fire when `type === 'watermarked'` or `type === 'original'`
+  // — a garbage type value (e.g. from a hand-crafted request bypassing the
+  // client) satisfied NEITHER check, skipping the allow_download_original
+  // gate entirely while still building an 'original' zip.
+  if (type !== 'watermarked' && type !== 'original') {
+    throw new Error('סוג הורדה לא תקין')
+  }
+
   const allowed = await hasGallerySession(galleryId)
   if (!allowed) throw new Error('גישה נדחתה')
 

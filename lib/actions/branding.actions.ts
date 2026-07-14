@@ -16,6 +16,7 @@ import {
 } from '@/lib/branding/logo-favicon'
 import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
+import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
 
 const HERO_SLOT_COUNT = 3
 
@@ -329,27 +330,46 @@ export async function updateBrandingSettings(data: {
     }
     updateData.selected_theme = data.selectedTheme
   }
-  if (data.heroDesktopUrl !== undefined) updateData.hero_desktop_url = data.heroDesktopUrl
-  if (data.heroMobileUrl !== undefined) updateData.hero_mobile_url = data.heroMobileUrl
+  if (data.heroDesktopUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.heroDesktopUrl)
+    updateData.hero_desktop_url = data.heroDesktopUrl
+  }
+  if (data.heroMobileUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.heroMobileUrl)
+    updateData.hero_mobile_url = data.heroMobileUrl
+  }
   if (data.heroDesktopUrls !== undefined) {
+    data.heroDesktopUrls.forEach((url) => assertOwnedBrandingRef(userId, url))
     const slots = data.heroDesktopUrls.slice(0, HERO_SLOT_COUNT).map((url) => url || '')
     updateData.hero_desktop_urls = slots
     updateData.hero_desktop_url = slots.find(Boolean) ?? null
   }
   if (data.heroMobileUrls !== undefined) {
+    data.heroMobileUrls.forEach((url) => assertOwnedBrandingRef(userId, url))
     const slots = data.heroMobileUrls.slice(0, HERO_SLOT_COUNT).map((url) => url || '')
     updateData.hero_mobile_urls = slots
     updateData.hero_mobile_url = slots.find(Boolean) ?? null
   }
-  if (data.aboutImageUrl !== undefined) updateData.about_image_url = data.aboutImageUrl
-  if (data.contactDesktopUrl !== undefined)
+  if (data.aboutImageUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.aboutImageUrl)
+    updateData.about_image_url = data.aboutImageUrl
+  }
+  if (data.contactDesktopUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.contactDesktopUrl)
     updateData.contact_desktop_url = data.contactDesktopUrl
-  if (data.contactMobileUrl !== undefined)
+  }
+  if (data.contactMobileUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.contactMobileUrl)
     updateData.contact_mobile_url = data.contactMobileUrl
-  if (data.packagesDesktopUrl !== undefined)
+  }
+  if (data.packagesDesktopUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.packagesDesktopUrl)
     updateData.packages_desktop_url = data.packagesDesktopUrl
-  if (data.packagesMobileUrl !== undefined)
+  }
+  if (data.packagesMobileUrl !== undefined) {
+    assertOwnedBrandingRef(userId, data.packagesMobileUrl)
     updateData.packages_mobile_url = data.packagesMobileUrl
+  }
   if (data.shouldColorLogo !== undefined) updateData.should_color_logo = data.shouldColorLogo
 
   const admin = createAdminClient()

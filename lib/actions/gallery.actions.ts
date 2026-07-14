@@ -220,10 +220,23 @@ export async function resendGalleryEmail(galleryId: string) {
   throw new Error('לא ניתן לשלוח מייל בשלב זה')
 }
 
+const GALLERY_STATUSES: GalleryStatus[] = [
+  'draft',
+  'public',
+  'selection',
+  'editing',
+  'delivery_ready',
+  'locked',
+]
+
 export async function updateGalleryStatus(
   galleryId: string,
   status: GalleryStatus
 ) {
+  if (!GALLERY_STATUSES.includes(status)) {
+    throw new Error('סטטוס לא תקין')
+  }
+
   const { userId, supabase } = await requireDashboardContext()
 
   const payload: GalleriesUpdate = { status }
@@ -671,6 +684,10 @@ export async function fetchGalleryLayoutMode() {
 }
 
 export async function updateGalleryLayoutMode(mode: 'separated' | 'portfolio') {
+  if (mode !== 'separated' && mode !== 'portfolio') {
+    throw new Error('מצב תצוגה לא תקין')
+  }
+
   const { userId, supabase } = await requireDashboardContext()
 
   const { error } = await supabase
