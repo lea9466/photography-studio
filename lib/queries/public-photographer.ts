@@ -32,6 +32,8 @@ export type PublicPhotographer = Pick<
   | 'packages_mobile_url'
   | 'packages_title'
   | 'packages_subtitle'
+  | 'contact_title'
+  | 'contact_subtitle'
   | 'testimonials_title'
   | 'posts_page_title'
   | 'testimonial_layout_type'
@@ -73,6 +75,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   packages_mobile_url,
   packages_title,
   packages_subtitle,
+  contact_title,
+  contact_subtitle,
   testimonials_title,
   posts_page_title,
   testimonial_layout_type,
@@ -118,6 +122,8 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('packages_mobile_url') ||
     message.includes('packages_title') ||
     message.includes('packages_subtitle') ||
+    message.includes('contact_title') ||
+    message.includes('contact_subtitle') ||
     message.includes('faq_items') ||
     message.includes('faq_section_image_url') ||
     message.includes('gallery_layout_mode') ||
@@ -126,12 +132,17 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
 }
 
 function stripPortfolioLayoutFields(fields: string) {
+  const optionalColumns = [
+    'gallery_layout_mode',
+    'site_language',
+    'packages_title',
+    'packages_subtitle',
+    'contact_title',
+    'contact_subtitle',
+  ]
   return fields
     .split('\n')
-    .filter(
-      (line) =>
-        !line.includes('gallery_layout_mode') && !line.includes('site_language')
-    )
+    .filter((line) => !optionalColumns.some((column) => line.includes(column)))
     .join('\n')
 }
 
@@ -153,6 +164,9 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
 
   if (message.includes('packages_title') || message.includes('packages_subtitle')) {
     return 'Run migration add_packages_section_headings on Supabase.'
+  }
+  if (message.includes('contact_title') || message.includes('contact_subtitle')) {
+    return 'Run migration 20250714000001_add_contact_section_headings.sql on Supabase.'
   }
   if (message.includes('faq_items') || message.includes('faq_section_image_url')) {
     return 'Run migration add_faq_section_image on Supabase.'

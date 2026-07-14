@@ -31,9 +31,13 @@ export default async function SettingsPage() {
   const { userId, supabase } = context
 
   const PROFILE_FIELDS =
-    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
+    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
 
-  const PROFILE_FIELDS_LEGACY = PROFILE_FIELDS.replace(', site_language', '')
+  const PROFILE_FIELDS_NO_LANGUAGE = PROFILE_FIELDS.replace(', site_language', '')
+  const PROFILE_FIELDS_NO_CONTACT_HEADINGS = PROFILE_FIELDS_NO_LANGUAGE.replace(
+    ', contact_title, contact_subtitle',
+    ''
+  )
 
   let { data, error } = await supabase
     .from('users')
@@ -41,14 +45,26 @@ export default async function SettingsPage() {
     .eq('id', userId)
     .single()
 
+  function isMissingColumnError(err: typeof error | null) {
+    return !!err && (err.code === '42703' || err.code === 'PGRST204')
+  }
+
+  if (isMissingColumnError(error) && error?.message?.toLowerCase().includes('site_language')) {
+    ;({ data, error } = await supabase
+      .from('users')
+      .select(PROFILE_FIELDS_NO_LANGUAGE)
+      .eq('id', userId)
+      .single())
+  }
+
   if (
-    error &&
-    (error.code === '42703' || error.code === 'PGRST204') &&
-    error.message?.toLowerCase().includes('site_language')
+    isMissingColumnError(error) &&
+    (error?.message?.toLowerCase().includes('contact_title') ||
+      error?.message?.toLowerCase().includes('contact_subtitle'))
   ) {
     ;({ data, error } = await supabase
       .from('users')
-      .select(PROFILE_FIELDS_LEGACY)
+      .select(PROFILE_FIELDS_NO_CONTACT_HEADINGS)
       .eq('id', userId)
       .single())
   }
@@ -90,6 +106,10 @@ export default async function SettingsPage() {
     contact_card_title: string | null
 
     contact_card_description: string | null
+
+    contact_title: string | null
+
+    contact_subtitle: string | null
 
     address: string | null
 

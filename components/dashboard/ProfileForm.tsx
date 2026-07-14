@@ -71,6 +71,8 @@ type ProfileFormProps = {
     about_description: string | null
     contact_card_title: string | null
     contact_card_description: string | null
+    contact_title?: string | null
+    contact_subtitle?: string | null
     address: string | null
     phone: string | null
     stat_projects: number
@@ -207,6 +209,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [aboutDescription, setAboutDescription] = useState(profile?.about_description ?? '')
   const [contactCardTitle, setContactCardTitle] = useState(profile?.contact_card_title ?? '')
   const [contactCardDescription, setContactCardDescription] = useState(profile?.contact_card_description ?? '')
+  const [contactTitle, setContactTitle] = useState(profile?.contact_title ?? '')
+  const [contactSubtitle, setContactSubtitle] = useState(profile?.contact_subtitle ?? '')
   const [statProjects, setStatProjects] = useState(profile?.stat_projects ?? 0)
   const [statClients, setStatClients] = useState(profile?.stat_clients ?? 0)
   const [statExperienceYears, setStatExperienceYears] = useState(profile?.stat_experience_years ?? 0)
@@ -412,6 +416,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           about_description: aboutDescription,
           contact_card_title: contactCardTitle,
           contact_card_description: contactCardDescription,
+          contact_title: contactTitle,
+          contact_subtitle: contactSubtitle,
           stat_projects: statProjects,
           stat_clients: statClients,
           stat_experience_years: statExperienceYears,
@@ -850,6 +856,49 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                 />
               </div>
             </div>
+            </div>
+          </SettingsSubPanel>
+          <SettingsSubPanel>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-[--foreground]">כותרות טופס יצירת קשר (דף הבית)</h3>
+              <p className="text-xs text-[--muted]">
+                חלה על כל ערכות הנושא. שדה ריק יציג את הכותרת/הטקסט המוגדרים כברירת מחדל לערכת הנושא הנבחרת.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="space-y-2">
+                <LabelWithHelp
+                  htmlFor="contact-section-title"
+                  help={SITE_SETTINGS_HELP.fields.contactSectionTitle.content}
+                  where={SITE_SETTINGS_HELP.fields.contactSectionTitle.where}
+                >
+                  כותרת
+                </LabelWithHelp>
+                <Input
+                  id="contact-section-title"
+                  value={contactTitle}
+                  onChange={(e) => setContactTitle(e.target.value)}
+                  className={INPUT_CLASS}
+                  placeholder="לדוגמה: בואו ניצור זיכרונות יחד"
+                />
+              </div>
+              <div className="space-y-2">
+                <LabelWithHelp
+                  htmlFor="contact-section-subtitle"
+                  help={SITE_SETTINGS_HELP.fields.contactSectionSubtitle.content}
+                  where={SITE_SETTINGS_HELP.fields.contactSectionSubtitle.where}
+                >
+                  כותרת משנה
+                </LabelWithHelp>
+                <Textarea
+                  id="contact-section-subtitle"
+                  value={contactSubtitle}
+                  onChange={(e) => setContactSubtitle(e.target.value)}
+                  rows={3}
+                  className={cn(INPUT_CLASS, 'resize-none')}
+                  placeholder="לדוגמה: השאירו פרטים ואחזור אליכם בהקדם לתיאום פגישת היכרות נעימה..."
+                />
+              </div>
             </div>
           </SettingsSubPanel>
         </div>

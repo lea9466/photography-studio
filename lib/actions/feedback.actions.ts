@@ -44,6 +44,8 @@ type UpdateProfileInput = {
   packages_mobile_url?: string
   packages_title?: string
   packages_subtitle?: string
+  contact_title?: string
+  contact_subtitle?: string
   phone?: string | null
   email?: string | null
   slug?: string
@@ -158,6 +160,12 @@ function buildProfileUpdateData(userId: string, input: UpdateProfileInput): User
   }
   if (input.packages_subtitle !== undefined) {
     updateData.packages_subtitle = normalizeOptionalText(input.packages_subtitle) ?? null
+  }
+  if (input.contact_title !== undefined) {
+    updateData.contact_title = normalizeOptionalText(input.contact_title) ?? null
+  }
+  if (input.contact_subtitle !== undefined) {
+    updateData.contact_subtitle = normalizeOptionalText(input.contact_subtitle) ?? null
   }
   if (input.slug !== undefined) updateData.slug = input.slug.trim() || null
   if (input.should_color_logo !== undefined) {

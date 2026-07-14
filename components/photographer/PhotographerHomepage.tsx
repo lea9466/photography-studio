@@ -51,6 +51,7 @@ import {
 } from '@/lib/photographer-site-paths'
 
 import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
+import { resolveContactSectionCopy } from '@/lib/contact-section-copy'
 
 import { resolveTestimonialsSectionTitle, resolveTestimonialsSectionSubtitle } from '@/lib/testimonials-section-copy'
 
@@ -142,6 +143,10 @@ interface Photographer {
   packages_title: string | null
 
   packages_subtitle: string | null
+
+  contact_title?: string | null
+
+  contact_subtitle?: string | null
 
   testimonials_title: string | null
 
@@ -4864,6 +4869,10 @@ function generateHomepageHTML(
 
     packages_subtitle,
 
+    contact_title,
+
+    contact_subtitle,
+
     testimonials_title,
 
     email,
@@ -5316,6 +5325,8 @@ function generateHomepageHTML(
   const hasPackages = packages.length > 0
 
   const packagesSectionCopy = resolvePackagesSectionCopy(theme, packages_title, packages_subtitle, siteLanguage)
+
+  const contactSectionCopy = resolveContactSectionCopy(theme, contact_title, contact_subtitle, siteLanguage)
 
   const packagesGridClass =
 
@@ -7269,9 +7280,9 @@ ${hasContactBg ? contactBgLayers('#1c1b1b', '#1c1b1b') : ''}
 
 <div class="text-center mb-8">
 
-${elegantSectionHeading(homepageCopy.sections.contact, 'CONTACT', { center: true, onDark: true })}
+${elegantSectionHeading(contactSectionCopy.title, 'CONTACT', { center: true, onDark: true })}
 
-<p class="opacity-60 font-light">${homepageCopy.sections.contactElegantSubtitle}</p>
+<p class="opacity-60 font-light">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 </div>
 
@@ -8343,9 +8354,9 @@ ${contactBgLayers('#F8FAFC')}
 
 <div class="modern-contact-info max-w-md text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-sm text-white">${homepageCopy.sections.modernContactHeading}</h2>
+<h2 class="font-headline text-4xl font-bold mb-sm text-white">${escapeHtml(contactSectionCopy.title)}</h2>
 
-<p class="text-lg opacity-90 text-white mb-lg">${homepageCopy.sections.contactModernSubtitle}</p>
+<p class="text-lg opacity-90 text-white mb-lg">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 <div class="flex flex-col gap-md">
 
@@ -9709,9 +9720,9 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">${homepageCopy.sections.contactClassicHeading}</span>
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.classicContactHeading}</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(contactSectionCopy.title)}</h2>
 
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">${homepageCopy.sections.contactClassicSubtitle}</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 <div class="classic-contact-details space-y-md pt-lg">
 
@@ -11213,9 +11224,9 @@ ${hasContactBg ? contactBgLayers('#120f0d', '#1a1614') : ''}
 
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">${homepageCopy.sections.contactDarkHeading}</span>
 
-<h2 class="font-headline-md text-headline-md mb-md">${homepageCopy.sections.darkContactHeading}</h2>
+<h2 class="font-headline-md text-headline-md mb-md">${escapeHtml(contactSectionCopy.title)}</h2>
 
-<p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">${homepageCopy.sections.contactDarkSubtitle}</p>
+<p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 <form class="grid grid-cols-1 md:grid-cols-2 gap-lg max-w-2xl mx-auto text-start rtl:text-right">
 

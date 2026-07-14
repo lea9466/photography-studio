@@ -62,6 +62,8 @@ export type Database = {
           packages_mobile_url: string | null
           packages_title: string | null
           packages_subtitle: string | null
+          contact_title: string | null
+          contact_subtitle: string | null
           testimonials_title: string | null
           posts_page_title: string | null
           should_color_logo: boolean
@@ -113,6 +115,8 @@ export type Database = {
           packages_mobile_url?: string | null
           packages_title?: string | null
           packages_subtitle?: string | null
+          contact_title?: string | null
+          contact_subtitle?: string | null
           testimonials_title?: string | null
           posts_page_title?: string | null
           should_color_logo?: boolean
@@ -164,6 +168,8 @@ export type Database = {
           packages_mobile_url?: string | null
           packages_title?: string | null
           packages_subtitle?: string | null
+          contact_title?: string | null
+          contact_subtitle?: string | null
           testimonials_title?: string | null
           posts_page_title?: string | null
           should_color_logo?: boolean
