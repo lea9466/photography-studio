@@ -1,6 +1,6 @@
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { downloadMediaObject } from '@/lib/r2/storage'
-import { isR2Configured, getR2Config } from '@/lib/r2/config'
+import { isR2Configured, getR2Config, r2PublicObjectUrl } from '@/lib/r2/config'
 import { getR2Client } from '@/lib/r2/client'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -13,6 +13,14 @@ const ALLOWED_PREFIXES = [
   'watermarked/',
   'edited/',
   'zips/',
+  'branding/',
+  'cover-images/',
+] as const
+
+/** Keys safe to serve via public CDN — redirect instead of proxying bytes. */
+const PUBLIC_REDIRECT_PREFIXES = [
+  'previews/',
+  'watermarked/',
   'branding/',
   'cover-images/',
 ] as const
@@ -38,6 +46,16 @@ function isAllowedGalleryMediaKey(key: string) {
   const normalized = key.replace(/^\/+/, '').trim()
   if (!normalized || normalized.includes('..')) return false
   return ALLOWED_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+}
+
+function isPublicRedirectKey(key: string) {
+  return PUBLIC_REDIRECT_PREFIXES.some((prefix) => key.startsWith(prefix))
+}
+
+function redirectToPublicR2(normalizedKey: string): Response | null {
+  const publicUrl = r2PublicObjectUrl(normalizedKey)
+  if (!publicUrl) return null
+  return Response.redirect(publicUrl, 302)
 }
 
 function bucketFromKey(key: string): MediaBucket | null {
@@ -134,6 +152,28 @@ async function authorizeGalleryScopedMedia(
   return verifyGalleryAccess(resolvedGalleryId)
 }
 
+async function streamCoverImage(normalizedKey: string) {
+  const { bucketName } = getR2Config()
+  const response = await getR2Client().send(
+    new GetObjectCommand({
+      Bucket: bucketName,
+      Key: normalizedKey,
+    })
+  )
+
+  if (!response.Body) {
+    return textResponse('קובץ לא נמצא', 404)
+  }
+
+  const data = new Uint8Array(await response.Body.transformToByteArray())
+  return new Response(Buffer.from(data), {
+    headers: {
+      'Content-Type': response.ContentType || 'application/octet-stream',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  })
+}
+
 export async function GET(request: Request) {
   if (!isR2Configured()) {
     return textResponse('אחסון תמונות לא מוגדר', 503)
@@ -149,25 +189,9 @@ export async function GET(request: Request) {
 
   try {
     if (normalizedKey.startsWith('cover-images/')) {
-      const { bucketName } = getR2Config()
-      const response = await getR2Client().send(
-        new GetObjectCommand({
-          Bucket: bucketName,
-          Key: normalizedKey,
-        })
-      )
-
-      if (!response.Body) {
-        return textResponse('קובץ לא נמצא', 404)
-      }
-
-      const data = new Uint8Array(await response.Body.transformToByteArray())
-      return new Response(Buffer.from(data), {
-        headers: {
-          'Content-Type': response.ContentType || 'application/octet-stream',
-          'Cache-Control': 'public, max-age=31536000, immutable',
-        },
-      })
+      const redirect = redirectToPublicR2(normalizedKey)
+      if (redirect) return redirect
+      return streamCoverImage(normalizedKey)
     }
 
     const bucket = bucketFromKey(normalizedKey)
@@ -182,6 +206,11 @@ export async function GET(request: Request) {
       if (!allowed) {
         return textResponse('גישה נדחתה', 403)
       }
+    }
+
+    if (isPublicRedirectKey(normalizedKey)) {
+      const redirect = redirectToPublicR2(normalizedKey)
+      if (redirect) return redirect
     }
 
     const data = await downloadMediaObject(bucket, path)

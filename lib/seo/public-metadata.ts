@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveBrandingPath } from '@/lib/branding-urls'
+import { galleryMediaProxyUrl, r2PublicObjectUrl } from '@/lib/r2/config'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
@@ -74,10 +75,10 @@ export async function resolveGalleryCoverImagePath(
   }
 
   if (coverImage.startsWith('cover-images/')) {
-    const proxyPath = `/api/gallery-media?key=${encodeURIComponent(coverImage)}`
-    return galleryId
-      ? `${proxyPath}&galleryId=${encodeURIComponent(galleryId)}`
-      : proxyPath
+    const publicUrl = r2PublicObjectUrl(coverImage)
+    if (publicUrl) return publicUrl
+    // Fallback only when R2 public CDN is not configured
+    return galleryMediaProxyUrl(coverImage, galleryId)
   }
 
   return resolveMediaUrl('branding', coverImage, galleryId)

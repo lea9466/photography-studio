@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
     ]
   },
   images: {
+    // Previews are already compressed client-side before R2 upload.
+    // Skip Vercel Image Optimization so browsers fetch R2 URLs directly.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',

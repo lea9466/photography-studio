@@ -24,6 +24,15 @@ export function r2PublicBaseUrl() {
   )
 }
 
+/** Direct public CDN URL for an R2 object key, or null if public URL is unset. */
+export function r2PublicObjectUrl(key: string): string | null {
+  const publicUrl = r2PublicBaseUrl()
+  if (!publicUrl) return null
+  const normalizedKey = key.replace(/^\/+/, '').trim()
+  if (!normalizedKey) return null
+  return `${publicUrl}/${normalizedKey}`
+}
+
 export function galleryMediaProxyUrl(key: string, galleryId?: string) {
   const normalizedKey = key.replace(/^\/+/, '')
   const url = `/api/gallery-media?key=${encodeURIComponent(normalizedKey)}`

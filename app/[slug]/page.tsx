@@ -92,9 +92,7 @@ export default async function PhotographerPage({ params }: PageProps) {
         if (gallery.cover_image) {
           const coverUrl = gallery.cover_image.startsWith('http')
             ? gallery.cover_image
-            : gallery.cover_image.startsWith('cover-images/')
-              ? `/api/gallery-media?key=${encodeURIComponent(gallery.cover_image)}`
-              : await resolveGalleryCoverCardPath(gallery.cover_image, gallery.id)
+            : await resolveGalleryCoverCardPath(gallery.cover_image, gallery.id)
           return {
             ...gallery,
             preview_url: coverUrl,
