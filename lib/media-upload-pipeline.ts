@@ -89,9 +89,15 @@ type UploadSuccess = {
   height: number | null
 }
 
+type CleanupStoragePaths = {
+  originalPath?: string | null
+  previewPath?: string | null
+  watermarkedPath?: string | null
+}
+
 type UploadFailure = {
   photoId: string
-  paths: PhotoStoragePaths
+  paths: CleanupStoragePaths
   message: string
 }
 
