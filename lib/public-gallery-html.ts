@@ -15,6 +15,7 @@ import {
   getPublicGalleryContactLabel,
   getPublicGalleryDefaultCta,
   getPublicGalleryLightboxCopy,
+  getPublicGalleryModernHeaderEyebrow,
   getPublicGalleryPageTitleSuffix,
 } from '@/lib/public-gallery-copy'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
@@ -549,12 +550,20 @@ ${generatePublicContactCardSection(data, theme, homepagePath, language)}
 </main>`
   }
 
+  const modernEyebrow = escapeHtml(getPublicGalleryModernHeaderEyebrow(language))
+
   return `
 <main class="pt-24">
-<section class="max-w-[1280px] mx-auto px-[24px] py-24">
-<header class="text-right mb-[32px] py-[24px]">
-<h1 class="font-headline text-[48px] md:text-[64px] font-bold text-on-surface leading-tight mb-[8px]">${title}</h1>
-<p class="font-body text-[16px] text-on-surface-variant">${meta}</p>
+<section class="max-w-[1280px] mx-auto px-[24px] pt-8">
+<header class="pg-modern-header text-center mb-[48px] py-[24px] md:py-[32px]">
+<span class="pg-modern-header__eyebrow text-[12px] uppercase tracking-[0.28em] mb-[16px] block text-primary font-medium">${modernEyebrow}</span>
+<h1 class="font-headline text-[48px] md:text-[64px] font-bold text-on-surface leading-tight mb-[16px]">${title}</h1>
+<div class="pg-modern-header__ornament flex items-center justify-center gap-3 mb-[24px]" aria-hidden="true">
+<span class="h-px w-12 bg-primary/25"></span>
+<span class="size-1.5 rounded-full bg-primary"></span>
+<span class="h-px w-12 bg-primary/25"></span>
+</div>
+<p class="font-body text-[16px] md:text-[17px] text-on-surface-variant max-w-xl mx-auto">${meta}</p>
 </header>
 </section>
 <section class="pg-masonry px-1 sm:px-1.5 mb-[80px]">
@@ -609,6 +618,16 @@ tailwind.config = {
 body { font-family: 'Heebo', sans-serif; background: #F8FAFC; color: #0F172A; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
 .nav-glass { background: rgba(248, 250, 252, 0.8); backdrop-filter: blur(12px); }
+.pg-modern-header__eyebrow { letter-spacing: 0.28em; }
+.pg-modern-header__ornament span:first-child,
+.pg-modern-header__ornament span:last-child { max-width: 3rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .pg-modern-header { animation: pgModernHeaderIn 0.7s ease both; }
+}
+@keyframes pgModernHeaderIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>

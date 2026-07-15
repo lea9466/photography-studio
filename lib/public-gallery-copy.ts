@@ -16,6 +16,10 @@ export function getPublicGalleryPageTitleSuffix(language: SiteLanguage): string 
   return language === 'en' ? 'Gallery' : 'גלריה'
 }
 
+export function getPublicGalleryModernHeaderEyebrow(language: SiteLanguage): string {
+  return language === 'en' ? 'Gallery' : 'גלריה'
+}
+
 export function getPublicGalleryContactLabel(language: SiteLanguage): string {
   return language === 'en' ? 'Contact' : 'יצירת קשר'
 }
