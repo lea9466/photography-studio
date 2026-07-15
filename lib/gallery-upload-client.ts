@@ -41,6 +41,7 @@ export async function uploadGalleryPhotosWithQueue(
       entityId: galleryId,
       userId,
       isProcessed,
+      displayOnly: true,
       buildPaths: buildPhotoStoragePaths,
       reserveBatch: reservePhotosBatch,
       completeBatch: completePhotosBatch,

@@ -35,9 +35,9 @@ import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 import {
-  generateMissingGalleryCoverCardsBatch,
-  type GenerateMissingGalleryCoverCardsResult,
-} from '@/lib/admin/generate-cover-cards'
+  deleteGalleryOriginalsCleanupBatch,
+  scanGalleryOriginalsCleanupBatch,
+} from '@/lib/admin/cleanup-gallery-originals'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -398,9 +398,14 @@ export async function sendAdminBroadcast(input: {
   }
 }
 
-export async function generateMissingGalleryCoverCards(
-  offset = 0
-): Promise<GenerateMissingGalleryCoverCardsResult> {
+export async function scanGalleryOriginalsCleanup(offset = 0) {
   await requireAdmin()
-  return generateMissingGalleryCoverCardsBatch(offset)
+  return scanGalleryOriginalsCleanupBatch(offset)
+}
+
+export async function deepCleanGalleryOriginals(
+  targets: { id: string; source: 'gallery' | 'post' }[]
+) {
+  await requireAdmin()
+  return deleteGalleryOriginalsCleanupBatch(targets)
 }

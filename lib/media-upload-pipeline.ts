@@ -41,6 +41,8 @@ export type MediaUploadDeps = {
   entityId: string
   userId: string
   isProcessed?: boolean
+  /** When true, skip originals bucket — preview + watermarked only (gallery display mode). */
+  displayOnly?: boolean
   buildPaths: (userId: string, entityId: string, photoId: string) => PhotoStoragePaths
   reserveBatch: (
     entityId: string,
@@ -51,7 +53,7 @@ export type MediaUploadDeps = {
     entityId: string,
     items: {
       id: string
-      originalPath: string
+      originalPath?: string | null
       previewPath: string
       watermarkedPath: string
       width?: number | null
@@ -80,7 +82,7 @@ type ActiveJob = {
 
 type UploadSuccess = {
   id: string
-  originalPath: string
+  originalPath: string | null
   previewPath: string
   watermarkedPath: string
   width: number | null
@@ -181,7 +183,7 @@ async function uploadReservedPhoto(
   | {
       ok: true
       id: string
-      originalPath: string
+      originalPath: string | null
       previewPath: string
       watermarkedPath: string
       width: number | null
@@ -190,6 +192,7 @@ async function uploadReservedPhoto(
   | { ok: false; message: string; paths: PhotoStoragePaths }
 > {
   const paths = deps.buildPaths(deps.userId, deps.entityId, job.photoId)
+  const displayOnly = deps.displayOnly ?? false
 
   let width: number | null = null
   let height: number | null = null
@@ -214,6 +217,34 @@ async function uploadReservedPhoto(
     resolvedWatermark,
     applyAutoWatermark
   )
+
+  if (displayOnly) {
+    const [previewUrl, watermarkedUrl] = uploadUrls
+    if (!previewUrl || !watermarkedUrl) {
+      return { ok: false, message: `כתובות העלאה חסרות: ${job.file.name}`, paths }
+    }
+
+    try {
+      await withRetry(() => putToPresignedUrl(previewUrl, previewBlob))
+      await withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob))
+    } catch (error) {
+      return {
+        ok: false,
+        message: error instanceof Error ? error.message : `העלאה נכשלה: ${job.file.name}`,
+        paths,
+      }
+    }
+
+    return {
+      ok: true,
+      id: job.photoId,
+      originalPath: null,
+      previewPath: paths.previewPath,
+      watermarkedPath: paths.watermarkedPath,
+      width,
+      height,
+    }
+  }
 
   const [originalUrl, previewUrl, watermarkedUrl] = uploadUrls
   if (!originalUrl || !previewUrl || !watermarkedUrl) {
@@ -326,6 +357,7 @@ class BatchPipeline {
     const count = Math.min(URL_BATCH_SIZE, this.total - from)
     await this.ensureReserved(from + count - 1)
 
+    const displayOnly = this.deps.displayOnly ?? false
     const requests: R2UploadRequest[] = []
     const jobs: ActiveJob[] = []
 
@@ -334,21 +366,35 @@ class BatchPipeline {
       const job = this.jobsMap.get(fileIndex)!
       jobs.push(job)
       const paths = this.deps.buildPaths(this.deps.userId, this.deps.entityId, job.photoId)
-      requests.push(
-        {
-          bucket: 'originals',
-          path: paths.originalPath,
-          contentType: job.file.type || 'image/jpeg',
-          fileSize: job.file.size,
-        },
-        { bucket: 'previews', path: paths.previewPath, contentType: 'image/jpeg' },
-        { bucket: 'watermarked', path: paths.watermarkedPath, contentType: 'image/jpeg' }
-      )
+
+      if (displayOnly) {
+        requests.push(
+          { bucket: 'previews', path: paths.previewPath, contentType: 'image/jpeg' },
+          { bucket: 'watermarked', path: paths.watermarkedPath, contentType: 'image/jpeg' }
+        )
+      } else {
+        requests.push(
+          {
+            bucket: 'originals',
+            path: paths.originalPath,
+            contentType: job.file.type || 'image/jpeg',
+            fileSize: job.file.size,
+          },
+          { bucket: 'previews', path: paths.previewPath, contentType: 'image/jpeg' },
+          { bucket: 'watermarked', path: paths.watermarkedPath, contentType: 'image/jpeg' }
+        )
+      }
     }
 
     const urls = await this.deps.createUploadUrls(this.deps.entityId, requests)
+    const urlsPerPhoto = displayOnly ? 2 : 3
     jobs.forEach((job, i) => {
-      this.urlMap.set(job.photoId, [urls[i * 3]!, urls[i * 3 + 1]!, urls[i * 3 + 2]!])
+      const base = i * urlsPerPhoto
+      if (displayOnly) {
+        this.urlMap.set(job.photoId, [urls[base]!, urls[base + 1]!])
+      } else {
+        this.urlMap.set(job.photoId, [urls[base]!, urls[base + 1]!, urls[base + 2]!])
+      }
     })
 
     this.urlsFetchedUpTo = from + count
@@ -433,9 +479,15 @@ export async function uploadMediaPhotosWithQueue(
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : `שגיאה בהעלאת ${job.file.name}`
+          const fullPaths = deps.buildPaths(deps.userId, deps.entityId, job.photoId)
           failures.push({
             photoId: job.photoId,
-            paths: deps.buildPaths(deps.userId, deps.entityId, job.photoId),
+            paths: deps.displayOnly
+              ? {
+                  previewPath: fullPaths.previewPath,
+                  watermarkedPath: fullPaths.watermarkedPath,
+                }
+              : fullPaths,
             message,
           })
           callbacks?.onPhotoFailed?.(job.photoId)

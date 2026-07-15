@@ -37,6 +37,7 @@ export async function uploadPostPhotosWithQueue(
     {
       entityId: postId,
       userId,
+      displayOnly: true,
       buildPaths: buildPostPhotoStoragePaths,
       reserveBatch: (entityId, count) => reservePostPhotosBatch(entityId, count),
       completeBatch: (entityId, items) => completePostPhotosBatch(entityId, items),

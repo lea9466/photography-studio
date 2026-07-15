@@ -18,7 +18,7 @@ import { assertPostOwner } from '@/lib/auth/post-owner'
 
 // Buckets this action is actually ever asked to generate upload URLs for in
 // the real client code (grep-verified: media-upload-pipeline.ts uses
-// originals/previews/watermarked for both galleries and posts;
+// Galleries and posts use display-only uploads (previews + watermarked).
 // components/gallery/UploadEdited.tsx additionally uses 'edited' for
 // galleries only). Without this check, `bucket` was only constrained by the
 // TypeScript MediaBucket type — which is compile-time only and does not

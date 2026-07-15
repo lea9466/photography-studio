@@ -18,6 +18,7 @@ export async function cleanupOrphanedPhotos() {
     .from('photos')
     .select('id, gallery_id, galleries!inner(user_id)')
     .is('original_url', null)
+    .is('preview_url', null)
     .lt('created_at', cutoff)
 
   if (error) throw new Error(error.message)

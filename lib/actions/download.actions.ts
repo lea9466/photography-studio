@@ -91,8 +91,8 @@ async function buildZip(
       let bucket: 'originals' | 'previews' | 'watermarked' = 'previews'
 
       if (type === 'original') {
-        path = photo.original_url
-        bucket = 'originals'
+        path = photo.original_url ?? photo.preview_url
+        bucket = photo.original_url ? 'originals' : 'previews'
       } else if (type === 'watermarked') {
         path = photo.watermarked_preview_url
         bucket = 'watermarked'

@@ -72,7 +72,7 @@ export async function completePhotosBatch(
   galleryId: string,
   items: {
     id: string
-    originalPath: string
+    originalPath?: string | null
     previewPath: string
     watermarkedPath: string
     width?: number | null
@@ -98,7 +98,7 @@ export async function completePhotosBatch(
         supabase
           .from('photos')
           .update({
-            original_url: item.originalPath,
+            original_url: item.originalPath ?? null,
             preview_url: item.previewPath,
             watermarked_preview_url: item.watermarkedPath,
             is_processed: isProcessed,
@@ -136,13 +136,21 @@ export async function cleanupPhotosBatch(
 
   for (const paths of storagePaths) {
     const removals = [
-      { bucket: 'originals' as const, path: paths.originalPath },
+      paths.originalPath
+        ? { bucket: 'originals' as const, path: paths.originalPath }
+        : null,
       { bucket: 'previews' as const, path: paths.previewPath },
       { bucket: 'watermarked' as const, path: paths.watermarkedPath },
-    ].filter((entry) => entry.path)
+    ].filter((entry): entry is { bucket: MediaBucket; path: string } =>
+      Boolean(entry?.path)
+    )
 
     for (const { bucket, path } of removals) {
-      await deleteMediaObject(bucket, path!)
+      try {
+        await deleteMediaObject(bucket, path)
+      } catch {
+        // Best-effort cleanup for partial uploads.
+      }
     }
   }
 

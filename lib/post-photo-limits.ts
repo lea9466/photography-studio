@@ -44,19 +44,59 @@ export async function assertPostPhotoCountWithinLimit(
 
 const UUID_FILENAME_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jpg$/i
+const PREVIEW_FILENAME_RE =
+  /^preview-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jpg$/i
 
-export function parsePostPhotoIdsFromUploadRequests(
-  userId: string,
-  postId: string,
-  items: R2UploadRequest[]
-): string[] {
+function parseDisplayOnlyPostPhotoIds(prefix: string, items: R2UploadRequest[]): string[] {
+  if (items.length === 0 || items.length % 2 !== 0) {
+    throw new Error('בקשת העלאה לא תקינה')
+  }
+
+  const previews = items.filter((item) => item.bucket === 'previews')
+  if (previews.length * 2 !== items.length) {
+    throw new Error('בקשת העלאה לא תקינה')
+  }
+
+  const photoIds = new Set<string>()
+
+  for (const item of previews) {
+    if (!item.path.startsWith(prefix)) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+
+    const filename = item.path.slice(prefix.length)
+    const match = filename.match(PREVIEW_FILENAME_RE)
+    if (!match) {
+      throw new Error('נתיב קובץ לא תקין')
+    }
+
+    const photoId = match[1]!
+    photoIds.add(photoId)
+
+    const expectedPaths = [
+      { bucket: 'previews' as const, path: `${prefix}preview-${photoId}.jpg` },
+      { bucket: 'watermarked' as const, path: `${prefix}wm-${photoId}.jpg` },
+    ]
+
+    for (const expected of expectedPaths) {
+      const found = items.some(
+        (entry) => entry.bucket === expected.bucket && entry.path === expected.path
+      )
+      if (!found) {
+        throw new Error('בקשת העלאה לא תקינה')
+      }
+    }
+  }
+
+  return [...photoIds]
+}
+
+function parseFullPostPhotoIds(prefix: string, items: R2UploadRequest[]): string[] {
   if (items.length === 0 || items.length % 3 !== 0) {
     throw new Error('בקשת העלאה לא תקינה')
   }
 
-  const prefix = `${userId}/posts/${postId}/`
   const originals = items.filter((item) => item.bucket === 'originals')
-
   if (originals.length * 3 !== items.length) {
     throw new Error('בקשת העלאה לא תקינה')
   }
@@ -85,8 +125,7 @@ export function parsePostPhotoIdsFromUploadRequests(
 
     for (const expected of expectedPaths) {
       const found = items.some(
-        (entry) =>
-          entry.bucket === expected.bucket && entry.path === expected.path
+        (entry) => entry.bucket === expected.bucket && entry.path === expected.path
       )
       if (!found) {
         throw new Error('בקשת העלאה לא תקינה')
@@ -95,6 +134,21 @@ export function parsePostPhotoIdsFromUploadRequests(
   }
 
   return [...photoIds]
+}
+
+export function parsePostPhotoIdsFromUploadRequests(
+  userId: string,
+  postId: string,
+  items: R2UploadRequest[]
+): string[] {
+  const prefix = `${userId}/posts/${postId}/`
+  const usesOriginals = items.some((item) => item.bucket === 'originals')
+
+  if (usesOriginals) {
+    return parseFullPostPhotoIds(prefix, items)
+  }
+
+  return parseDisplayOnlyPostPhotoIds(prefix, items)
 }
 
 export async function assertReservedPostPhotosExist(

@@ -24,7 +24,7 @@ import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
 import { daysUntilTrialEnd } from '@/lib/referral/referral-utils'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
-import { AdminCoverCardMaintenance } from '@/components/admin/AdminCoverCardMaintenance'
+import { AdminGalleryOriginalsCleanup } from '@/components/admin/AdminGalleryOriginalsCleanup'
 import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
@@ -118,8 +118,36 @@ const FILTER_OPTIONS: {
   },
 ]
 
+const ADMIN_TIMEZONE = 'Asia/Jerusalem'
+
+function toDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: ADMIN_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+function toMonthKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: ADMIN_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+  }).format(date)
+}
+
+function calendarDayDiff(iso: string, now = new Date()): number {
+  const visitKey = toDateKey(new Date(iso))
+  const nowKey = toDateKey(now)
+  const visitMs = Date.parse(`${visitKey}T12:00:00Z`)
+  const nowMs = Date.parse(`${nowKey}T12:00:00Z`)
+  return Math.round((nowMs - visitMs) / 86_400_000)
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('he-IL', {
+    timeZone: ADMIN_TIMEZONE,
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -131,10 +159,7 @@ function formatDate(iso: string) {
 function formatRelativeVisit(iso: string | null) {
   if (!iso) return 'מעולם לא ביקר'
 
-  const date = new Date(iso)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  const diffDays = calendarDayDiff(iso)
 
   if (diffDays === 0) return 'היום'
   if (diffDays === 1) return 'אתמול'
@@ -144,13 +169,11 @@ function formatRelativeVisit(iso: string | null) {
 }
 
 function isToday(iso: string) {
-  return new Date(iso).toDateString() === new Date().toDateString()
+  return toDateKey(new Date(iso)) === toDateKey(new Date())
 }
 
 function isThisMonth(iso: string) {
-  const date = new Date(iso)
-  const now = new Date()
-  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+  return toMonthKey(new Date(iso)) === toMonthKey(new Date())
 }
 
 function matchesFilter(row: AdminStudioRow, filterKey: FilterKey) {
@@ -379,7 +402,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
 
       <AnnouncementManagerForm />
 
-      <AdminCoverCardMaintenance />
+      <AdminGalleryOriginalsCleanup />
 
       <AdminEmailLookupForm
         onStudioFound={(studio) => {
