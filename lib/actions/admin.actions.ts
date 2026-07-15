@@ -38,6 +38,10 @@ import {
   deleteGalleryOriginalsCleanupBatch,
   scanGalleryOriginalsCleanupBatch,
 } from '@/lib/admin/cleanup-gallery-originals'
+import {
+  generateMissingGalleryCoverCardsBatch,
+  type GenerateMissingGalleryCoverCardsResult,
+} from '@/lib/admin/generate-cover-cards'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -404,8 +408,15 @@ export async function scanGalleryOriginalsCleanup(offset = 0) {
 }
 
 export async function deepCleanGalleryOriginals(
-  targets: { id: string; source: 'gallery' | 'post' }[]
+  targets: { id: string; source: 'gallery' | 'post' | 'cover' }[]
 ) {
   await requireAdmin()
   return deleteGalleryOriginalsCleanupBatch(targets)
+}
+
+export async function generateMissingGalleryCoverCards(
+  offset = 0
+): Promise<GenerateMissingGalleryCoverCardsResult> {
+  await requireAdmin()
+  return generateMissingGalleryCoverCardsBatch(offset)
 }

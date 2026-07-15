@@ -78,8 +78,15 @@ export async function resolveGalleryCoverImagePath(
   if (coverImage.startsWith('cover-images/')) {
     const publicUrl = r2PublicObjectUrl(coverImage)
     if (publicUrl) return publicUrl
-    // Fallback only when R2 public CDN is not configured
     return galleryMediaProxyUrl(coverImage, galleryId)
+  }
+
+  const normalized = coverImage.replace(/^branding\//, '').trim()
+  if (!(await mediaObjectExists('branding', normalized))) {
+    const cardPath = deriveCoverCardStoragePath(coverImage)
+    if (cardPath && cardPath !== normalized && (await mediaObjectExists('branding', cardPath))) {
+      return resolveMediaUrl('branding', cardPath, galleryId)
+    }
   }
 
   return resolveMediaUrl('branding', coverImage, galleryId)

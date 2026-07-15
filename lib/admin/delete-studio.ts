@@ -91,7 +91,7 @@ async function collectGalleryMediaPaths(admin: ReturnType<typeof createAdminClie
     })
 
     const cardPath = deriveCoverCardStoragePath(cover)
-    if (cardPath) {
+    if (cardPath && cardPath !== cover.replace(/^branding\//, '')) {
       storageDeletes.push({ bucket: 'branding', path: cardPath })
     }
   }

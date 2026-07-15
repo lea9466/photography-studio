@@ -642,6 +642,7 @@ export async function prepareGalleryCoverUpload(input: {
   contentType: string
   fileSize: number
   includeCard?: boolean
+  displayOnly?: boolean
 }) {
   if (!isR2Configured()) {
     throw new Error('אחסון תמונות לא מוגדר')
@@ -651,7 +652,22 @@ export async function prepareGalleryCoverUpload(input: {
 
   validatePrimaryImageFile(input.contentType, input.fileSize)
 
-  const path = buildCoverStoragePath(userId, Date.now(), input.contentType)
+  const path = buildCoverStoragePath(
+    userId,
+    Date.now(),
+    input.displayOnly ? 'image/jpeg' : input.contentType
+  )
+
+  if (input.displayOnly) {
+    const cardPath = deriveCoverCardStoragePath(path)
+    if (!cardPath) {
+      throw new Error('לא ניתן ליצור נתיב תצוגה לתמונת השער')
+    }
+
+    const uploadUrl = await createPresignedUploadUrl('branding', cardPath, 'image/jpeg')
+    return { uploadUrl, path: cardPath, cardPath }
+  }
+
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
   if (!input.includeCard) {

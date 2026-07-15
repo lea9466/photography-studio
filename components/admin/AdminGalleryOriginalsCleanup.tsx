@@ -18,10 +18,10 @@ import {
 
 type CleanupCandidate = {
   photoId: string
-  source: 'gallery' | 'post'
+  source: 'gallery' | 'post' | 'cover'
   studioName: string | null
   contextTitle: string | null
-  contextKind: 'גלריה' | 'פוסט'
+  contextKind: 'גלריה' | 'פוסט' | 'שער גלריה'
   previewStorageKey: string
 }
 
@@ -83,7 +83,7 @@ export function AdminGalleryOriginalsCleanup() {
     const confirmed = window.confirm(
       `למחוק ${candidates.length} קבצי מקור מ-R2?\n\n` +
         `${formatConfirmSummary(candidates)}\n\n` +
-        `תמונות התצוגה (preview/watermarked) יישארו.\nפעולה זו בלתי הפיכה.`
+        `תמונות התצוגה (preview/watermarked/_card) יישארו.\nפעולה זו בלתי הפיכה.`
     )
     if (!confirmed) return
 
@@ -122,14 +122,15 @@ export function AdminGalleryOriginalsCleanup() {
           <div>
             <CardTitle className="text-xl">ניקוי קבצי מקור (Deep Clean)</CardTitle>
             <CardDescription className="mt-1">
-              גלריות ופוסטים — עד 50 תמונות בכל קבוצה
+              גלריות, פוסטים ותמונות שער מקוריות — עד 50 פריטים בכל קבוצה
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4 bg-slate-50/60 p-5">
         <p className="text-sm text-slate-600">
-          שלב 1: סריקה — מציג סטודיו, גלריה/פוסט ונתיב preview. שלב 2: מחיקה — דורש אישור.
+          שלב 1: סריקה — מציג סטודיו, גלריה/פוסט/שער ונתיב תצוגה. שלב 2: מחיקה — דורש אישור.
+          תמונות שער: נמחק רק המקור ב-branding כשקיים _card.
         </p>
 
         {batchOffset > 0 && hasMore ? (
@@ -166,7 +167,7 @@ export function AdminGalleryOriginalsCleanup() {
         {candidates.length > 0 ? (
           <div className="overflow-hidden rounded-xl border border-amber-200 bg-amber-50/50">
             <p className="border-b border-amber-200/80 px-4 py-3 text-sm font-medium text-amber-900">
-              קבצים שיימחקו ({candidates.length}) — המקור ב-R2, ה-preview נשאר
+              קבצים שיימחקו ({candidates.length}) — המקור ב-R2, קובץ התצוגה נשאר
             </p>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[820px] text-sm">
@@ -175,7 +176,7 @@ export function AdminGalleryOriginalsCleanup() {
                     <th className="px-4 py-2.5 font-semibold text-amber-950">סטודיו</th>
                     <th className="px-4 py-2.5 font-semibold text-amber-950">סוג</th>
                     <th className="px-4 py-2.5 font-semibold text-amber-950">גלריה / פוסט</th>
-                    <th className="px-4 py-2.5 font-semibold text-amber-950">נתיב Preview</th>
+                    <th className="px-4 py-2.5 font-semibold text-amber-950">נתיב תצוגה</th>
                   </tr>
                 </thead>
                 <tbody>

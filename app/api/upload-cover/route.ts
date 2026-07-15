@@ -3,7 +3,11 @@ import { createClient } from '@/lib/supabase/server'
 import { isR2Configured } from '@/lib/r2/config'
 import { resolveMediaUrl, uploadMediaObject } from '@/lib/r2/storage'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
-import { buildCoverStoragePath } from '@/lib/images/cover-process'
+import {
+  buildCoverStoragePath,
+  deriveCoverCardStoragePath,
+} from '@/lib/images/cover-process'
+import { compressCoverCardBuffer } from '@/lib/images/cover-card.server'
 
 function toBuffer(data: ArrayBuffer | SharedArrayBuffer): Buffer {
   return Buffer.from(new Uint8Array(data))
@@ -46,16 +50,32 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer()
     const inputBuffer = toBuffer(bytes)
-    const path = buildCoverStoragePath(user.id, Date.now(), file.type)
 
-    await uploadMediaObject('branding', path, toUploadBody(inputBuffer), file.type)
+    if (file.type === 'image/svg+xml') {
+      const path = buildCoverStoragePath(user.id, Date.now(), file.type)
+      await uploadMediaObject('branding', path, toUploadBody(inputBuffer), file.type)
+      const url = await resolveMediaUrl('branding', path)
+      if (!url) {
+        return NextResponse.json({ error: 'לא ניתן ליצור כתובת לתמונה' }, { status: 500 })
+      }
+      return NextResponse.json({ url, path })
+    }
 
-    const url = await resolveMediaUrl('branding', path)
+    const basePath = buildCoverStoragePath(user.id, Date.now(), 'image/jpeg')
+    const cardPath = deriveCoverCardStoragePath(basePath)
+    if (!cardPath) {
+      return NextResponse.json({ error: 'לא ניתן ליצור נתיב תצוגה' }, { status: 500 })
+    }
+
+    const cardBytes = await compressCoverCardBuffer(inputBuffer)
+    await uploadMediaObject('branding', cardPath, toUploadBody(cardBytes), 'image/jpeg')
+
+    const url = await resolveMediaUrl('branding', cardPath)
     if (!url) {
       return NextResponse.json({ error: 'לא ניתן ליצור כתובת לתמונה' }, { status: 500 })
     }
 
-    return NextResponse.json({ url, path })
+    return NextResponse.json({ url, path: cardPath })
   } catch (error) {
     console.error('Error uploading cover image:', error)
     return NextResponse.json(
