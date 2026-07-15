@@ -34,6 +34,10 @@ import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
+import {
+  generateMissingGalleryCoverCardsBatch,
+  type GenerateMissingGalleryCoverCardsResult,
+} from '@/lib/admin/generate-cover-cards'
 
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -392,4 +396,11 @@ export async function sendAdminBroadcast(input: {
     failed,
     total: recipients.length,
   }
+}
+
+export async function generateMissingGalleryCoverCards(
+  offset = 0
+): Promise<GenerateMissingGalleryCoverCardsResult> {
+  await requireAdmin()
+  return generateMissingGalleryCoverCardsBatch(offset)
 }

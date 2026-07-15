@@ -24,6 +24,7 @@ import type { AdminStudioRow } from '@/lib/admin/queries'
 import { adminLogout, deleteAdminStudio } from '@/lib/actions/admin.actions'
 import { daysUntilTrialEnd } from '@/lib/referral/referral-utils'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
+import { AdminCoverCardMaintenance } from '@/components/admin/AdminCoverCardMaintenance'
 import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
@@ -377,6 +378,8 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
       </div>
 
       <AnnouncementManagerForm />
+
+      <AdminCoverCardMaintenance />
 
       <AdminEmailLookupForm
         onStudioFound={(studio) => {

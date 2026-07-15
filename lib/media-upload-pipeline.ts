@@ -1,6 +1,7 @@
 'use client'
 
 import imageCompression from 'browser-image-compression'
+import { PREVIEW_COMPRESSION_OPTIONS } from '@/lib/images/preview-compression'
 import type { R2UploadRequest } from '@/lib/r2/types'
 import {
   applyWatermarkToBlob,
@@ -96,10 +97,6 @@ const UPLOAD_CONCURRENCY = 3
 const RESERVATION_BATCH_SIZE = 100
 const URL_BATCH_SIZE = 100
 const COMPLETE_BATCH_SIZE = 100
-const THUMB_MAX_MB = 0.18
-const THUMB_MAX_DIMENSION = 1200
-const THUMB_QUALITY = 0.78
-const THUMB_MAX_ITERATION = 4
 const PER_FILE_TIMEOUT_MS = 120_000
 const MAX_RETRIES = 3
 const RETRY_BASE_DELAY_MS = 1_000
@@ -171,14 +168,7 @@ export function formatMediaUploadCount(n: number): string {
 }
 
 async function compressGalleryPreview(file: File): Promise<Blob> {
-  return imageCompression(file, {
-    maxSizeMB: THUMB_MAX_MB,
-    maxWidthOrHeight: THUMB_MAX_DIMENSION,
-    useWebWorker: false,
-    fileType: 'image/jpeg',
-    initialQuality: THUMB_QUALITY,
-    maxIteration: THUMB_MAX_ITERATION,
-  })
+  return imageCompression(file, PREVIEW_COMPRESSION_OPTIONS)
 }
 
 async function uploadReservedPhoto(

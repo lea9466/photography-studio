@@ -16,7 +16,7 @@ import { processReferralBonusIfEligible } from '@/lib/referral/referral'
 import { createPresignedUploadUrl, deleteMediaObject } from '@/lib/r2/storage'
 import { isR2Configured } from '@/lib/r2/config'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
-import { buildCoverStoragePath } from '@/lib/images/cover-process'
+import { buildCoverStoragePath, deriveCoverCardStoragePath } from '@/lib/images/cover-process'
 import type { MediaBucket } from '@/lib/r2/types'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { resolveGalleryCoverImagePath, resolveGalleryCoverCardPath } from '@/lib/seo/public-metadata'
@@ -641,6 +641,7 @@ export async function resolveGalleryTableThumbnails(
 export async function prepareGalleryCoverUpload(input: {
   contentType: string
   fileSize: number
+  includeCard?: boolean
 }) {
   if (!isR2Configured()) {
     throw new Error('אחסון תמונות לא מוגדר')
@@ -653,7 +654,17 @@ export async function prepareGalleryCoverUpload(input: {
   const path = buildCoverStoragePath(userId, Date.now(), input.contentType)
   const uploadUrl = await createPresignedUploadUrl('branding', path, input.contentType)
 
-  return { uploadUrl, path }
+  if (!input.includeCard) {
+    return { uploadUrl, path }
+  }
+
+  const cardPath = deriveCoverCardStoragePath(path)
+  if (!cardPath) {
+    return { uploadUrl, path }
+  }
+
+  const cardUploadUrl = await createPresignedUploadUrl('branding', cardPath, 'image/jpeg')
+  return { uploadUrl, path, cardUploadUrl, cardPath }
 }
 
 export async function fetchGalleryLayoutMode() {

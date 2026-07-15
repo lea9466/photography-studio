@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
 } from '@aws-sdk/client-s3'
@@ -52,6 +53,28 @@ export async function createPresignedDownloadUrl(
   })
 
   return getSignedUrl(getR2Client(), command, { expiresIn })
+}
+
+export async function mediaObjectExists(bucket: MediaBucket, path: string): Promise<boolean> {
+  const normalizedPath = path.trim()
+  if (!normalizedPath) return false
+
+  const { bucketName } = getR2Config()
+  try {
+    await getR2Client().send(
+      new HeadObjectCommand({
+        Bucket: bucketName,
+        Key: r2ObjectKey(bucket, normalizedPath),
+      })
+    )
+    return true
+  } catch (error) {
+    const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode
+    if (status === 404) return false
+    const name = (error as { name?: string }).name
+    if (name === 'NotFound' || name === 'NoSuchKey') return false
+    return false
+  }
 }
 
 export async function resolveMediaUrl(bucket: MediaBucket, path: string | null, galleryId?: string) {

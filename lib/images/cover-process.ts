@@ -15,7 +15,8 @@ export function deriveCoverCardStoragePath(coverPath: string): string | null {
   const dot = normalized.lastIndexOf('.')
   if (dot === -1) return null
 
-  return `${normalized.slice(0, dot)}_card${normalized.slice(dot)}`
+  // Card variants are always JPEG previews, regardless of the original format.
+  return `${normalized.slice(0, dot)}_card.jpg`
 }
 
 export function buildCoverStoragePath(userId: string, timestamp: number, contentType: string) {
