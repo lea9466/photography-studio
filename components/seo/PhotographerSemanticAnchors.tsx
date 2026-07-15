@@ -1,10 +1,10 @@
 import {
   buildPostCanonicalPath,
-  buildPublicGalleryCanonicalPath,
   buildSeoMapPath,
   type DiscoveryGallery,
   type DiscoveryPost,
 } from '@/lib/seo/photographer-discovery'
+import { resolveValidatedGalleryPath } from '@/lib/seo/sitemap-validation'
 
 type PhotographerSemanticAnchorsProps = {
   studioPath: string
@@ -40,11 +40,15 @@ export function PhotographerSemanticAnchors({
         <section aria-labelledby="semantic-galleries-heading">
           <h3 id="semantic-galleries-heading">גלריות</h3>
           <ul>
-            {galleries.map((gallery) => (
-              <li key={gallery.id}>
-                <a href={buildPublicGalleryCanonicalPath(gallery)}>{gallery.title}</a>
-              </li>
-            ))}
+            {galleries.map((gallery) => {
+              const href = resolveValidatedGalleryPath(gallery)
+              if (!href) return null
+              return (
+                <li key={gallery.id}>
+                  <a href={href}>{gallery.title}</a>
+                </li>
+              )
+            })}
           </ul>
         </section>
       ) : null}

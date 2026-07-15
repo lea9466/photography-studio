@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import {
   buildPostCanonicalPath,
@@ -9,6 +9,7 @@ import {
   buildPostSeoTitle,
   fetchPhotographerPostById,
 } from '@/lib/seo/photographer-discovery'
+import { resolveActiveStudioPath } from '@/lib/seo/sitemap-validation'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 
 interface PostPageProps {
@@ -43,7 +44,8 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
   if (!post) notFound()
 
   const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
-  const studioPath = getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`
+  const studioPath = resolveActiveStudioPath(photographer)
+  if (!studioPath) notFound()
   const blogPath = `${studioPath}/blog`
   const siteLanguage = resolveSiteLanguage(photographer.site_language)
   const formattedDate = formatSiteDate(post.created_at, siteLanguage)
@@ -97,7 +99,9 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     if (!post) return { title: 'פוסט לא נמצא' }
 
     const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
-    const studioPath = getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`
+    const studioPath = resolveActiveStudioPath(photographer)
+    if (!studioPath) return { title: 'פוסט לא נמצא' }
+
     const canonicalPath = buildPostCanonicalPath(studioPath, post.id)
     const title = buildPostSeoTitle(post.title, studioName)
     const description = buildPostDescription(post)

@@ -1,15 +1,15 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import {
   buildPostCanonicalPath,
-  buildPublicGalleryCanonicalPath,
   buildSeoMapPath,
   fetchPhotographerDiscoveryGalleries,
   fetchPhotographerDiscoveryPosts,
 } from '@/lib/seo/photographer-discovery'
+import { resolveActiveStudioPath, resolveValidatedGalleryPath } from '@/lib/seo/sitemap-validation'
 
 interface SeoMapPageProps {
   params: Promise<{ slug: string }>
@@ -23,7 +23,8 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
   if (!photographer) notFound()
 
   const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
-  const studioPath = getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`
+  const studioPath = resolveActiveStudioPath(photographer)
+  if (!studioPath) notFound()
 
   const [galleries, posts] = await Promise.all([
     fetchPhotographerDiscoveryGalleries(photographer.id),
@@ -50,11 +51,15 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
         </h2>
         {galleries.length > 0 ? (
           <ul className="list-disc space-y-2 ps-5">
-            {galleries.map((gallery) => (
-              <li key={gallery.id}>
-                <Link href={buildPublicGalleryCanonicalPath(gallery)}>{gallery.title}</Link>
-              </li>
-            ))}
+            {galleries.map((gallery) => {
+              const href = resolveValidatedGalleryPath(gallery)
+              if (!href) return null
+              return (
+                <li key={gallery.id}>
+                  <Link href={href}>{gallery.title}</Link>
+                </li>
+              )
+            })}
           </ul>
         ) : (
           <p className="text-sm text-[--muted]">אין גלריות ציבוריות.</p>
@@ -90,7 +95,9 @@ export async function generateMetadata({ params }: SeoMapPageProps): Promise<Met
     if (!photographer) return { title: 'מפת תוכן לא נמצאה' }
 
     const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
-    const studioPath = getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`
+    const studioPath = resolveActiveStudioPath(photographer)
+    if (!studioPath) return { title: 'מפת תוכן לא נמצאה' }
+
     const seoMapPath = buildSeoMapPath(studioPath)
     const title = `מפת תוכן | ${studioName}`
     const description = `רשימת גלריות ופוסטים ציבוריים של ${studioName} לסריקה על ידי מנועי חיפוש.`

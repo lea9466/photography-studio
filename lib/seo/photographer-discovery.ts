@@ -1,12 +1,17 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
-import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import {
+  resolveActiveStudioPath,
+  resolveValidatedBlogPath,
+  resolveValidatedGalleryPath,
+  resolveValidatedPortfolioPath,
+  resolveValidatedPostPath,
+  type ValidatableGallery,
+  type ValidatablePhotographer,
+} from '@/lib/seo/sitemap-validation'
 
-export type DiscoveryGallery = {
-  id: string
+export type DiscoveryGallery = ValidatableGallery & {
   title: string
-  slug: string | null
-  gallery_type: string | null
   created_at: string | null
 }
 
@@ -18,25 +23,19 @@ export type DiscoveryPost = {
   created_at: string
 }
 
-export type PhotographerDiscoveryRecord = {
-  id: string
-  slug: string | null
-  studio_name: string | null
-  gallery_layout_mode: string | null
+export type PhotographerDiscoveryRecord = ValidatablePhotographer & {
   created_at: string | null
 }
 
+/** Returns a validated gallery URL, or null when the gallery is not publicly accessible. */
 export function buildPublicGalleryCanonicalPath(
-  gallery: Pick<DiscoveryGallery, 'id' | 'slug' | 'gallery_type'>
-): string {
-  if (gallery.gallery_type === 'portfolio' && gallery.slug?.trim()) {
-    return `/portfolio/${gallery.slug.trim()}`
-  }
-  return `/public-gallery/${gallery.id}`
+  gallery: Pick<DiscoveryGallery, 'id' | 'slug' | 'gallery_type' | 'is_public'>
+): string | null {
+  return resolveValidatedGalleryPath(gallery)
 }
 
 export function buildPostCanonicalPath(studioPath: string, postId: string): string {
-  return `${studioPath}/blog/${postId}`
+  return resolveValidatedPostPath(studioPath, postId) ?? `${studioPath}/blog/${postId}`
 }
 
 export function buildSeoMapPath(studioPath: string): string {
@@ -69,17 +68,13 @@ export async function fetchPhotographerDiscoveryGalleries(
   userId: string
 ): Promise<DiscoveryGallery[]> {
   const admin = createAdminClient()
-  let query = admin
+  const { data, error } = await admin
     .from('galleries')
-    .select('id, title, slug, gallery_type, created_at')
+    .select('id, title, slug, gallery_type, is_public, created_at')
     .eq('user_id', userId)
+    .eq('is_public', true)
     .order('created_at', { ascending: false })
 
-  if (!PUBLIC_ONLY_MVP) {
-    query = query.eq('is_public', true)
-  }
-
-  const { data, error } = await query
   if (error) {
     console.error('[photographer-discovery] galleries:', error.message)
     return []
@@ -136,10 +131,7 @@ export function buildPhotographerDiscoverySitemapEntries(input: {
   galleries: DiscoveryGallery[]
   posts: DiscoveryPost[]
 }): SitemapUrlEntry[] {
-  const studioPath = getPublicSitePath(
-    input.photographer.slug,
-    input.photographer.studio_name
-  )
+  const studioPath = resolveActiveStudioPath(input.photographer)
   if (!studioPath) return []
 
   const baseDate = input.photographer.created_at
@@ -156,17 +148,21 @@ export function buildPhotographerDiscoverySitemapEntries(input: {
   ]
 
   for (const gallery of input.galleries) {
+    const galleryPath = resolveValidatedGalleryPath(gallery)
+    if (!galleryPath) continue
+
     entries.push({
-      path: buildPublicGalleryCanonicalPath(gallery),
+      path: galleryPath,
       lastModified: gallery.created_at ? new Date(gallery.created_at) : baseDate,
       priority: 0.6,
       changeFrequency: 'monthly',
     })
   }
 
-  if (input.posts.length > 0) {
+  const blogPath = resolveValidatedBlogPath(studioPath)
+  if (blogPath && input.posts.length > 0) {
     entries.push({
-      path: `${studioPath}/blog`,
+      path: blogPath,
       lastModified: new Date(input.posts[0].created_at),
       priority: 0.7,
       changeFrequency: 'weekly',
@@ -174,17 +170,21 @@ export function buildPhotographerDiscoverySitemapEntries(input: {
   }
 
   for (const post of input.posts) {
+    const postPath = resolveValidatedPostPath(studioPath, post.id)
+    if (!postPath) continue
+
     entries.push({
-      path: buildPostCanonicalPath(studioPath, post.id),
+      path: postPath,
       lastModified: new Date(post.created_at),
       priority: 0.5,
       changeFrequency: 'monthly',
     })
   }
 
-  if ((input.photographer.gallery_layout_mode ?? 'separated') === 'portfolio') {
+  const portfolioPath = resolveValidatedPortfolioPath(input.photographer, studioPath)
+  if (portfolioPath) {
     entries.push({
-      path: `${studioPath}/portfolio`,
+      path: portfolioPath,
       lastModified: baseDate,
       priority: 0.7,
       changeFrequency: 'weekly',
@@ -198,16 +198,12 @@ export async function fetchAllDiscoveryGalleries(): Promise<
   Array<DiscoveryGallery & { user_id: string }>
 > {
   const admin = createAdminClient()
-  let query = admin
+  const { data, error } = await admin
     .from('galleries')
-    .select('id, title, slug, gallery_type, created_at, user_id')
+    .select('id, title, slug, gallery_type, is_public, created_at, user_id')
+    .eq('is_public', true)
     .order('created_at', { ascending: false })
 
-  if (!PUBLIC_ONLY_MVP) {
-    query = query.eq('is_public', true)
-  }
-
-  const { data, error } = await query
   if (error) {
     console.error('[photographer-discovery] all galleries:', error.message)
     return []
@@ -232,3 +228,6 @@ export async function fetchAllDiscoveryPosts(): Promise<
 
   return (data ?? []) as Array<Pick<DiscoveryPost, 'id' | 'created_at'> & { user_id: string }>
 }
+
+/** Re-export for callers that need the canonical studio path string. */
+export { getPublicSitePath, resolveActiveStudioPath }

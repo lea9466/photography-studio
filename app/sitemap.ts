@@ -7,6 +7,7 @@ import {
   type DiscoveryGallery,
   type DiscoveryPost,
 } from '@/lib/seo/photographer-discovery'
+import { validateStudioPathLive } from '@/lib/seo/sitemap-validation'
 
 // Revalidate the sitemap once per hour so newly published studios get discovered.
 export const revalidate = 3600
@@ -71,14 +72,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const galleriesByUser = groupByUserId(allGalleries)
     const postsByUser = groupByUserId(allPosts)
 
-    const photographerRoutes: MetadataRoute.Sitemap = (photographers ?? []).flatMap(
-      (photographer) => {
+    const validatedPhotographers = await Promise.all(
+      (photographers ?? []).map(async (photographer) => {
+        const studioPath = await validateStudioPathLive(photographer)
+        return studioPath ? { photographer, studioPath } : null
+      })
+    )
+
+    const photographerRoutes: MetadataRoute.Sitemap = validatedPhotographers.flatMap(
+      (entry) => {
+        if (!entry) return []
+
+        const { photographer } = entry
+
         const userGalleries = (galleriesByUser.get(photographer.id) ?? []).map(
           (gallery): DiscoveryGallery => ({
             id: gallery.id,
             title: gallery.title,
             slug: gallery.slug,
             gallery_type: gallery.gallery_type,
+            is_public: gallery.is_public,
             created_at: gallery.created_at,
           })
         )
@@ -112,7 +125,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       }
     )
 
-    return [...staticRoutes, ...photographerRoutes]
+    const seenUrls = new Set<string>()
+    const dedupedPhotographerRoutes = photographerRoutes.filter((entry) => {
+      if (seenUrls.has(entry.url)) return false
+      seenUrls.add(entry.url)
+      return true
+    })
+
+    return [...staticRoutes, ...dedupedPhotographerRoutes]
   } catch (error) {
     console.error('[sitemap] unexpected error:', error)
     return staticRoutes
