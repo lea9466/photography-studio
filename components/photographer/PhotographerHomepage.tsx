@@ -242,7 +242,7 @@ const UNIFIED_GALLERY_GRID_CSS = `
 
     width: 100%;
 
-    overflow: hidden;
+    overflow-x: clip;
 
     padding-top: 0 !important;
 
@@ -571,6 +571,34 @@ const UNIFIED_GALLERY_GRID_CSS = `
   }
 
   .homepage-gallery-card:hover .homepage-gallery-card-arrow { transform: translateX(-4px); }
+
+  @media (hover: none) {
+
+    .homepage-gallery-card-overlay { opacity: 0.55; }
+
+    .homepage-gallery-card-content {
+
+      opacity: 1;
+
+      transform: translateY(0);
+
+    }
+
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+
+    .homepage-gallery-reveal {
+
+      opacity: 1;
+
+      transform: none;
+
+      transition: none;
+
+    }
+
+  }
 
 `
 
@@ -1872,11 +1900,13 @@ const HOMEPAGE_GALLERY_REVEAL_SCRIPT = `
 
     function revealTargetsInView() {
 
+      var viewportBottom = window.innerHeight;
+
       targets.forEach(function(el) {
 
         var rect = el.getBoundingClientRect();
 
-        if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+        if (rect.top < viewportBottom && rect.bottom > 0) {
 
           revealTarget(el);
 
@@ -1902,7 +1932,7 @@ const HOMEPAGE_GALLERY_REVEAL_SCRIPT = `
 
       });
 
-    }, { threshold: 0.08, rootMargin: '0px 0px 8% 0px' });
+    }, { threshold: 0.01, rootMargin: '80px 0px 80px 0px' });
 
     targets.forEach(function(el) { observer.observe(el); });
 
@@ -1913,6 +1943,18 @@ const HOMEPAGE_GALLERY_REVEAL_SCRIPT = `
     window.addEventListener('resize', revealTargetsInView);
 
     window.addEventListener('load', revealTargetsInView);
+
+    window.setTimeout(revealTargetsInView, 120);
+
+    window.setTimeout(function() {
+
+      targets.forEach(function(el) {
+
+        if (!el.classList.contains('is-visible')) revealTarget(el);
+
+      });
+
+    }, 1800);
 
   }
 
@@ -7774,7 +7816,7 @@ ${documentHead}
 
         .modern-homepage-gallery-section {
 
-            padding-top: calc(clamp(3.5rem, 9vw, 6rem) + 250px) !important;
+            padding-top: clamp(3.5rem, 9vw, 6rem) !important;
 
             padding-bottom: clamp(2.5rem, 6vw, 4rem) !important;
 
@@ -8234,15 +8276,17 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section modern-homepage-gallery-section" id="portfolio">
 
-<div class="homepage-gallery-header px-lg mb-xl">
+<div class="homepage-gallery-header px-lg mb-xl homepage-gallery-reveal">
 
-<div class="flex flex-row-reverse justify-between items-end gap-md homepage-gallery-reveal">
+<div class="flex flex-row-reverse justify-between items-end gap-md">
 
 <div class="text-start rtl:text-right">
 
 <h2 class="font-headline text-4xl font-bold mb-xs">${homepageCopy.sections.modernGalleryTitle}</h2>
 
 <p class="modern-section-subtitle">${homepageCopy.sections.modernGallerySubtitle}</p>
+
+</div>
 
 </div>
 
