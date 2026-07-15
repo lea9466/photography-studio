@@ -1,11 +1,27 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import {
+  buildPhotographerDiscoverySitemapEntries,
+  fetchAllDiscoveryGalleries,
+  fetchAllDiscoveryPosts,
+  type DiscoveryGallery,
+  type DiscoveryPost,
+} from '@/lib/seo/photographer-discovery'
 
 // Revalidate the sitemap once per hour so newly published studios get discovered.
 export const revalidate = 3600
 
 const BASE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://studio-galleries.com').replace(/\/$/, '')
+
+function groupByUserId<T extends { user_id: string }>(items: T[]): Map<string, T[]> {
+  const grouped = new Map<string, T[]>()
+  for (const item of items) {
+    const existing = grouped.get(item.user_id) ?? []
+    existing.push(item)
+    grouped.set(item.user_id, existing)
+  }
+  return grouped
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -38,31 +54,61 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const admin = createAdminClient()
 
-    // Only fetch what the sitemap needs. We include studio_name so studios that
-    // don't have an explicit slug can still be linked via their name.
-    const { data: photographers, error } = await admin
-      .from('users')
-      .select('slug, studio_name, created_at')
-      .order('created_at', { ascending: false })
+    const [{ data: photographers, error }, allGalleries, allPosts] = await Promise.all([
+      admin
+        .from('users')
+        .select('id, slug, studio_name, gallery_layout_mode, created_at')
+        .order('created_at', { ascending: false }),
+      fetchAllDiscoveryGalleries(),
+      fetchAllDiscoveryPosts(),
+    ])
 
     if (error) {
       console.error('[sitemap] failed to load photographers:', error.message)
       return staticRoutes
     }
 
+    const galleriesByUser = groupByUserId(allGalleries)
+    const postsByUser = groupByUserId(allPosts)
+
     const photographerRoutes: MetadataRoute.Sitemap = (photographers ?? []).flatMap(
       (photographer) => {
-        const path = getPublicSitePath(photographer.slug, photographer.studio_name)
-        if (!path) return []
+        const userGalleries = (galleriesByUser.get(photographer.id) ?? []).map(
+          (gallery): DiscoveryGallery => ({
+            id: gallery.id,
+            title: gallery.title,
+            slug: gallery.slug,
+            gallery_type: gallery.gallery_type,
+            created_at: gallery.created_at,
+          })
+        )
 
-        return [
-          {
-            url: `${BASE_URL}${path}`,
-            lastModified: photographer.created_at ? new Date(photographer.created_at) : new Date(),
-            changeFrequency: 'weekly' as const,
-            priority: 0.8,
+        const userPosts = (postsByUser.get(photographer.id) ?? []).map(
+          (post): DiscoveryPost => ({
+            id: post.id,
+            title: '',
+            subtitle: null,
+            content: '',
+            created_at: post.created_at,
+          })
+        )
+
+        return buildPhotographerDiscoverySitemapEntries({
+          photographer: {
+            id: photographer.id,
+            slug: photographer.slug,
+            studio_name: photographer.studio_name,
+            gallery_layout_mode: photographer.gallery_layout_mode,
+            created_at: photographer.created_at,
           },
-        ]
+          galleries: userGalleries,
+          posts: userPosts,
+        }).map((entry) => ({
+          url: `${BASE_URL}${entry.path}`,
+          lastModified: entry.lastModified,
+          changeFrequency: entry.changeFrequency,
+          priority: entry.priority,
+        }))
       }
     )
 

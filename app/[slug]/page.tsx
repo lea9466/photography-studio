@@ -25,7 +25,12 @@ import {
   buildLandscapePreferredPool,
   type PhotoCandidate,
 } from '@/lib/homepage-photo-pool'
+import { PhotographerSemanticAnchors } from '@/components/seo/PhotographerSemanticAnchors'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
+import {
+  fetchPhotographerDiscoveryGalleries,
+  fetchPhotographerDiscoveryPosts,
+} from '@/lib/seo/photographer-discovery'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 
@@ -332,6 +337,12 @@ export default async function PhotographerPage({ params }: PageProps) {
 
     const canonicalPath =
       getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
+    const studioName =
+      typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
+    const [discoveryGalleries, discoveryPosts] = await Promise.all([
+      fetchPhotographerDiscoveryGalleries(typedPhotographer.id),
+      fetchPhotographerDiscoveryPosts(typedPhotographer.id),
+    ])
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
     const localBusinessJsonLd = buildPhotographerLocalBusinessJsonLd({
       name: typedPhotographer.name,
@@ -351,6 +362,12 @@ export default async function PhotographerPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(localBusinessJsonLd),
           }}
+        />
+        <PhotographerSemanticAnchors
+          studioPath={canonicalPath}
+          studioName={studioName}
+          galleries={discoveryGalleries}
+          posts={discoveryPosts}
         />
         <PhotographerHomepage
           photographer={photographerWithUrls}
