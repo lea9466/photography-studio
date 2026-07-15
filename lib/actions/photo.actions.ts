@@ -135,15 +135,17 @@ export async function cleanupPhotosBatch(
   const { supabase } = await assertGalleryOwner(galleryId)
 
   for (const paths of storagePaths) {
-    const removals = [
-      paths.originalPath
-        ? { bucket: 'originals' as const, path: paths.originalPath }
-        : null,
-      { bucket: 'previews' as const, path: paths.previewPath },
-      { bucket: 'watermarked' as const, path: paths.watermarkedPath },
-    ].filter((entry): entry is { bucket: MediaBucket; path: string } =>
-      Boolean(entry?.path)
-    )
+    const removals: { bucket: MediaBucket; path: string }[] = []
+
+    if (paths.originalPath) {
+      removals.push({ bucket: 'originals', path: paths.originalPath })
+    }
+    if (paths.previewPath) {
+      removals.push({ bucket: 'previews', path: paths.previewPath })
+    }
+    if (paths.watermarkedPath) {
+      removals.push({ bucket: 'watermarked', path: paths.watermarkedPath })
+    }
 
     for (const { bucket, path } of removals) {
       try {
