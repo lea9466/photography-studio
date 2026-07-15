@@ -10,6 +10,7 @@ import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import {
   buildCanonicalUrl,
@@ -27,6 +28,8 @@ type UserData = {
   logo_url: string | null
   accent_color: string | null
   selected_theme: string | null
+  should_color_logo: boolean | null
+  gallery_layout_mode: string | null
   contact_card_title: string | null
   contact_card_description: string | null
   phone: string | null
@@ -66,7 +69,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const { data: user, error: userError } = await admin
     .from('users')
     .select(
-      'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language'
+      'studio_name, slug, logo_url, accent_color, selected_theme, should_color_logo, gallery_layout_mode, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language'
     )
     .eq('id', galleryData.user_id)
     .maybeSingle()
@@ -79,21 +82,31 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     })
   }
 
-  const [{ count: packageCount }] = await Promise.all([
+  const [{ count: packageCount }, { count: postCount }] = await Promise.all([
     admin
       .from('photography_packages')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', galleryData.user_id)
       .eq('is_active', true),
+    admin
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', galleryData.user_id),
   ])
 
   const userData = user as UserData | null
   const hasFaq = sanitizeFaqItems(parseFaqItems(userData?.faq_items)).length > 0
   const hasPackages = (packageCount ?? 0) > 0
+  const hasBlog = (postCount ?? 0) > 0
   const accentColor = userData?.accent_color ?? '#7c3aed'
   const siteTheme = normalizeSiteTheme(userData?.selected_theme)
   const studioName = userData?.studio_name ?? 'Studio Gallery'
   const homepagePath = resolveHomepagePath(userData?.slug, userData?.studio_name)
+  const canonicalPath = getPublicSitePath(userData?.slug, userData?.studio_name) ?? homepagePath
+  const portfolioPath = `${canonicalPath}/portfolio`
+  const blogPath = `${canonicalPath}/blog`
+  const galleryLayoutMode =
+    userData?.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
   const logoUrl = userData?.logo_url ? await resolveMediaUrl('branding', userData.logo_url) : null
 
   const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id)
@@ -111,13 +124,13 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     studioName,
     logoUrl,
     homepagePath,
+    portfolioPath,
+    blogPath,
     hasFaq,
     hasPackages,
-    contact: {
-      phone: userData?.phone ?? null,
-      email: userData?.email ?? null,
-      address: userData?.address ?? null,
-    },
+    hasBlog,
+    shouldColorLogo: userData?.should_color_logo ?? false,
+    galleryLayoutMode,
     gallery: {
       title: galleryData.title,
       photoCount: photos.length,

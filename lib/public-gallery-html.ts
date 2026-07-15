@@ -1,22 +1,21 @@
 import {
   buildPublicSiteChrome,
+  generateSiteFooter,
+  generateSiteNav,
   generateSiteNavMobileStyles,
+  generateSiteNavScrollScript,
   generateSiteNavStyles,
   publicSiteLtrCss,
   publicSitePageHtmlAttrs,
-  type SiteChromeConfig,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import { homepageSectionHref, type PhotographerSiteTheme } from '@/lib/photographer-site-paths'
 import {
   formatGalleryMetaLine,
-  getPublicGalleryBackToStudioLabel,
   getPublicGalleryContactLabel,
   getPublicGalleryDefaultCta,
-  getPublicGalleryFooterCopy,
   getPublicGalleryLightboxCopy,
   getPublicGalleryPageTitleSuffix,
-  getPublicGalleryVisitWebsiteLabel,
 } from '@/lib/public-gallery-copy'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 
@@ -482,289 +481,6 @@ export function generatePublicContactCardSection(
 </section>`
 }
 
-const GALLERY_CHROME_STYLES = `
-<style>
-.pg-gallery-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--pg-nav-border);
-  background: var(--pg-nav-bg);
-  color: var(--pg-nav-text);
-}
-.pg-gallery-nav__brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.625rem;
-  min-width: 0;
-  text-decoration: none;
-  color: inherit;
-}
-.pg-gallery-nav__brand:hover { opacity: 0.85; }
-.pg-gallery-nav__logo {
-  height: 2.25rem;
-  width: auto;
-  max-width: 9rem;
-  object-fit: contain;
-}
-.pg-gallery-nav__name {
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.pg-gallery-nav__back {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 9999px;
-  border: 1px solid var(--pg-nav-back-border);
-  background: var(--pg-nav-back-bg);
-  color: var(--pg-nav-back-text);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
-.pg-gallery-nav__back:hover {
-  background: var(--pg-nav-back-hover-bg);
-  border-color: var(--pg-nav-back-hover-border);
-}
-.pg-gallery-studio-footer {
-  border-top: 1px solid var(--pg-footer-border);
-  background: var(--pg-footer-bg);
-  color: var(--pg-footer-text);
-  padding: 2.5rem 1.5rem 3rem;
-}
-.pg-gallery-studio-footer__inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  text-align: center;
-}
-.pg-gallery-studio-footer__brand {
-  font-size: 1.125rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-.pg-gallery-studio-footer__details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--pg-footer-muted);
-}
-.pg-gallery-studio-footer__detail {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-.pg-gallery-studio-footer__detail a {
-  color: inherit;
-  text-decoration: none;
-}
-.pg-gallery-studio-footer__detail a:hover {
-  color: var(--pg-footer-accent);
-}
-.pg-gallery-studio-footer__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.75rem;
-}
-.pg-gallery-studio-footer__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.65rem 1.25rem;
-  border-radius: 9999px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  transition: opacity 0.2s ease, background 0.2s ease;
-}
-.pg-gallery-studio-footer__btn--primary {
-  background: var(--pg-footer-accent);
-  color: var(--pg-footer-accent-text);
-}
-.pg-gallery-studio-footer__btn--primary:hover { opacity: 0.9; }
-.pg-gallery-studio-footer__btn--secondary {
-  border: 1px solid var(--pg-footer-border);
-  color: var(--pg-footer-text);
-}
-.pg-gallery-studio-footer__btn--secondary:hover {
-  border-color: var(--pg-footer-accent);
-  color: var(--pg-footer-accent);
-}
-.pg-gallery-nav--elegant {
-  --pg-nav-bg: rgba(250, 250, 248, 0.94);
-  --pg-nav-border: rgba(15, 15, 13, 0.08);
-  --pg-nav-text: #0F0F0D;
-  --pg-nav-back-border: rgba(15, 15, 13, 0.14);
-  --pg-nav-back-bg: transparent;
-  --pg-nav-back-text: #0F0F0D;
-  --pg-nav-back-hover-bg: rgba(15, 15, 13, 0.04);
-  --pg-nav-back-hover-border: rgba(15, 15, 13, 0.24);
-}
-.pg-gallery-nav--modern {
-  --pg-nav-bg: rgba(248, 250, 252, 0.94);
-  --pg-nav-border: rgba(203, 213, 225, 0.6);
-  --pg-nav-text: #0F172A;
-  --pg-nav-back-border: rgba(15, 23, 42, 0.12);
-  --pg-nav-back-bg: #fff;
-  --pg-nav-back-text: #0F172A;
-  --pg-nav-back-hover-bg: #f8fafc;
-  --pg-nav-back-hover-border: rgba(15, 23, 42, 0.2);
-}
-.pg-gallery-nav--classic {
-  --pg-nav-bg: rgba(250, 250, 248, 0.94);
-  --pg-nav-border: rgba(214, 211, 209, 0.7);
-  --pg-nav-text: #1c1917;
-  --pg-nav-back-border: rgba(28, 25, 23, 0.12);
-  --pg-nav-back-bg: #fff;
-  --pg-nav-back-text: #1c1917;
-  --pg-nav-back-hover-bg: #fafaf8;
-  --pg-nav-back-hover-border: rgba(28, 25, 23, 0.22);
-}
-.pg-gallery-nav--dark {
-  --pg-nav-bg: rgba(18, 18, 23, 0.94);
-  --pg-nav-border: rgba(255, 255, 255, 0.08);
-  --pg-nav-text: #F5F5F0;
-  --pg-nav-back-border: rgba(255, 255, 255, 0.14);
-  --pg-nav-back-bg: rgba(255, 255, 255, 0.04);
-  --pg-nav-back-text: #F5F5F0;
-  --pg-nav-back-hover-bg: rgba(255, 255, 255, 0.08);
-  --pg-nav-back-hover-border: rgba(255, 255, 255, 0.22);
-}
-.pg-gallery-studio-footer--elegant {
-  --pg-footer-bg: #FAFAF8;
-  --pg-footer-border: rgba(15, 15, 13, 0.08);
-  --pg-footer-text: #0F0F0D;
-  --pg-footer-muted: #5A504A;
-  --pg-footer-accent: var(--pg-accent, #7c3aed);
-  --pg-footer-accent-text: #fff;
-}
-.pg-gallery-studio-footer--modern {
-  --pg-footer-bg: #F8FAFC;
-  --pg-footer-border: rgba(203, 213, 225, 0.6);
-  --pg-footer-text: #0F172A;
-  --pg-footer-muted: #475569;
-  --pg-footer-accent: var(--pg-accent, #7c3aed);
-  --pg-footer-accent-text: #fff;
-}
-.pg-gallery-studio-footer--classic {
-  --pg-footer-bg: #FAFAF8;
-  --pg-footer-border: rgba(214, 211, 209, 0.7);
-  --pg-footer-text: #1c1917;
-  --pg-footer-muted: #57534e;
-  --pg-footer-accent: var(--pg-accent, #7c3aed);
-  --pg-footer-accent-text: #fff;
-}
-.pg-gallery-studio-footer--dark {
-  --pg-footer-bg: #121217;
-  --pg-footer-border: rgba(255, 255, 255, 0.08);
-  --pg-footer-text: #F5F5F0;
-  --pg-footer-muted: #B8B8C0;
-  --pg-footer-accent: var(--pg-accent, #7c3aed);
-  --pg-footer-accent-text: #fff;
-}
-@media (min-width: 768px) {
-  .pg-gallery-nav { padding: 0.875rem 2rem; }
-  .pg-gallery-nav__name { font-size: 1rem; }
-  .pg-gallery-nav__back { font-size: 0.8125rem; padding: 0.5rem 1rem; }
-}
-</style>`
-
-function galleryChromeThemeVars(theme: SiteChromeTheme, primaryColor: string) {
-  return `<style>:root { --pg-accent: ${primaryColor}; }</style>`
-}
-
-function generatePublicGalleryMinimalNav(cfg: SiteChromeConfig, language: SiteLanguage) {
-  const homeHref = escapeHtml(cfg.homepagePath)
-  const backLabel = escapeHtml(getPublicGalleryBackToStudioLabel(language))
-  const studioName = escapeHtml(cfg.studioName)
-  const brandInner = cfg.logoUrl
-    ? `<img src="${escapeHtml(cfg.logoUrl)}" alt="${studioName}" class="pg-gallery-nav__logo" />`
-    : `<span class="pg-gallery-nav__name">${studioName}</span>`
-
-  return `
-<header class="pg-gallery-nav pg-gallery-nav--${cfg.theme}" id="pg-gallery-nav">
-  <a href="${homeHref}" target="_parent" class="pg-gallery-nav__brand">${brandInner}</a>
-  <a href="${homeHref}" target="_parent" class="pg-gallery-nav__back" aria-label="${backLabel}">${backLabel}</a>
-</header>`
-}
-
-function generatePublicGalleryStudioFooter(
-  cfg: SiteChromeConfig,
-  contact: PublicGalleryContactInfo,
-  language: SiteLanguage
-) {
-  const footerCopy = getPublicGalleryFooterCopy(language)
-  const homeHref = escapeHtml(cfg.homepagePath)
-  const contactHref = escapeHtml(homepageSectionHref(cfg.homepagePath, 'contact'))
-  const studioName = escapeHtml(cfg.studioName)
-  const bookLabel = escapeHtml(footerCopy.bookSession)
-  const visitLabel = escapeHtml(getPublicGalleryVisitWebsiteLabel(language))
-
-  const detailLines: string[] = []
-  if (contact.phone) {
-    const phone = escapeHtml(contact.phone)
-    const tel = escapeHtml(contact.phone.replace(/\s+/g, ''))
-    detailLines.push(
-      `<div class="pg-gallery-studio-footer__detail"><span>${escapeHtml(footerCopy.phone)}:</span> <a href="tel:${tel}">${phone}</a></div>`
-    )
-  }
-  if (contact.email) {
-    const email = escapeHtml(contact.email)
-    detailLines.push(
-      `<div class="pg-gallery-studio-footer__detail"><span>${escapeHtml(footerCopy.email)}:</span> <a href="mailto:${email}">${email}</a></div>`
-    )
-  }
-  if (contact.address) {
-    detailLines.push(
-      `<div class="pg-gallery-studio-footer__detail"><span>${escapeHtml(footerCopy.address)}:</span> <span>${escapeHtml(contact.address)}</span></div>`
-    )
-  }
-
-  const detailsBlock =
-    detailLines.length > 0
-      ? `<div class="pg-gallery-studio-footer__details">${detailLines.join('')}</div>`
-      : ''
-
-  return `
-<footer class="pg-gallery-studio-footer pg-gallery-studio-footer--${cfg.theme}">
-  <div class="pg-gallery-studio-footer__inner">
-    <div class="pg-gallery-studio-footer__brand">${studioName}</div>
-    ${detailsBlock}
-    <div class="pg-gallery-studio-footer__actions">
-      <a href="${contactHref}" target="_parent" class="pg-gallery-studio-footer__btn pg-gallery-studio-footer__btn--primary">${bookLabel}</a>
-      <a href="${homeHref}" target="_parent" class="pg-gallery-studio-footer__btn pg-gallery-studio-footer__btn--secondary">${visitLabel}</a>
-    </div>
-  </div>
-</footer>`
-}
-
 function galleryBody(
   data: PublicGalleryPageData,
   theme: SiteChromeTheme,
@@ -1036,18 +752,20 @@ export function generatePublicGalleryPageHTML(options: {
   studioName: string
   logoUrl: string | null
   homepagePath: string
+  portfolioPath?: string
+  blogPath?: string
   gallery: PublicGalleryPageData
-  contact?: PublicGalleryContactInfo
   hasFaq?: boolean
   hasPackages?: boolean
+  hasBlog?: boolean
   shouldColorLogo?: boolean
+  galleryLayoutMode?: 'separated' | 'portfolio'
   siteLanguage?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.gallery.accentColor
   const language = resolveSiteLanguage(options.siteLanguage)
   const pageTitleSuffix = getPublicGalleryPageTitleSuffix(language)
-  const contact = options.contact ?? { phone: null, email: null, address: null }
   const chrome = buildPublicSiteChrome({
     theme: chromeTheme,
     studioName: options.studioName,
@@ -1057,20 +775,23 @@ export function generatePublicGalleryPageHTML(options: {
     linkMode: 'href',
     hasFaq: options.hasFaq ?? false,
     hasPackages: options.hasPackages ?? false,
+    hasBlog: options.hasBlog ?? false,
+    blogPath: options.blogPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
+    galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
+    portfolioPath: options.portfolioPath,
     siteLanguage: options.siteLanguage,
   })
 
   return `<!DOCTYPE html>
 <html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
 ${themeHead(chromeTheme, options.studioName, primaryColor, options.shouldColorLogo ?? false, pageTitleSuffix, options.siteLanguage)}
-${galleryChromeThemeVars(chromeTheme, primaryColor)}
-${GALLERY_CHROME_STYLES}
 ${MASONRY_STYLES}
-${generatePublicGalleryMinimalNav(chrome, language)}
+${generateSiteNav(chrome)}
 ${galleryBody(options.gallery, chromeTheme, options.homepagePath, language)}
 ${lightboxMarkup(language)}
-${generatePublicGalleryStudioFooter(chrome, contact, language)}
+${generateSiteFooter(chrome)}
+<script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${masonryRevealScript}</script>
 <script>${lightboxScript}</script>
 </body>
