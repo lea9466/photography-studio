@@ -39,3 +39,27 @@ export function getPublicGalleryDefaultCta(language: SiteLanguage) {
           'אנחנו זמינים לצילום פרויקטים מיוחדים. בואו נתכנן יחד את הסיפור הבא שלכם.',
       }
 }
+
+export function getPublicGalleryBackToStudioLabel(language: SiteLanguage): string {
+  return language === 'en' ? 'Back to Studio' : 'חזרה לסטודיו'
+}
+
+export function getPublicGalleryVisitWebsiteLabel(language: SiteLanguage): string {
+  return language === 'en' ? 'Visit website' : 'לאתר הסטודיו'
+}
+
+export function getPublicGalleryFooterCopy(language: SiteLanguage) {
+  return language === 'en'
+    ? {
+        phone: 'Phone',
+        email: 'Email',
+        address: 'Address',
+        bookSession: 'Book a session',
+      }
+    : {
+        phone: 'טלפון',
+        email: 'אימייל',
+        address: 'כתובת',
+        bookSession: 'לתיאום צילום',
+      }
+}

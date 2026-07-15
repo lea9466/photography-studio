@@ -29,6 +29,9 @@ type UserData = {
   selected_theme: string | null
   contact_card_title: string | null
   contact_card_description: string | null
+  phone: string | null
+  email: string | null
+  address: string | null
   faq_items: unknown
   site_language: string | null
 }
@@ -63,7 +66,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const { data: user, error: userError } = await admin
     .from('users')
     .select(
-      'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, faq_items, site_language'
+      'studio_name, slug, logo_url, accent_color, selected_theme, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language'
     )
     .eq('id', galleryData.user_id)
     .maybeSingle()
@@ -110,6 +113,11 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     homepagePath,
     hasFaq,
     hasPackages,
+    contact: {
+      phone: userData?.phone ?? null,
+      email: userData?.email ?? null,
+      address: userData?.address ?? null,
+    },
     gallery: {
       title: galleryData.title,
       photoCount: photos.length,
