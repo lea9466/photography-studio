@@ -406,9 +406,16 @@ export function buildBlogModalSupportCss(primaryColor: string): string {
 .font-display { font-family: 'Playfair Display', serif; }
 .font-body { font-family: 'Heebo', sans-serif; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; font-weight: 700; }
+.font-bold { font-weight: 700; }
 .elegant-accent { color: ${primaryColor}; }
 .elegant-bg-accent { background-color: ${primaryColor}; }
 `
+}
+
+/** Inject into the homepage iframe <head> so modal styles apply globally. */
+export function buildHomepageBlogModalHeadBlock(primaryColor: string): string {
+  return `<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet"/>
+<style id="homepage-blog-modal-styles">${buildBlogModalSupportCss(primaryColor)}${BLOG_MODAL_CSS}</style>`
 }
 
 export function getBlogThemeTokens(theme: SiteChromeTheme) {

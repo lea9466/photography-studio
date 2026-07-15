@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
@@ -17,10 +17,23 @@ interface PortfolioPageProps {
   params: Promise<{ slug: string }>
 }
 
+function gallerySectionHash(theme: string | null | undefined): string {
+  const normalized = theme ?? 'elegant'
+  if (normalized === 'modern') return 'portfolio'
+  if (normalized === 'classic') return 'galleries'
+  return 'gallery'
+}
+
 export default async function PhotographerPortfolioPage({ params }: PortfolioPageProps) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
   const photographer = await findPhotographerBySlug(decodedSlug)
+
+  console.log('[photographer-portfolio] request', {
+    slug: decodedSlug,
+    photographerFound: Boolean(photographer),
+    photographerId: photographer?.id ?? null,
+  })
 
   if (!photographer) notFound()
 
@@ -33,19 +46,40 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     faq_items: unknown
   }
 
-  if ((typed.gallery_layout_mode ?? 'separated') !== 'portfolio') {
-    notFound()
+  const layoutMode = typed.gallery_layout_mode ?? 'separated'
+  const canonicalPath =
+    getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`
+
+  console.log('[photographer-portfolio] layout', {
+    slug: decodedSlug,
+    layoutMode,
+    canonicalPath,
+  })
+
+  if (layoutMode !== 'portfolio') {
+    const galleryHash = gallerySectionHash(typed.selected_theme)
+    console.log('[photographer-portfolio] separated mode redirect', {
+      slug: decodedSlug,
+      redirectTo: `${canonicalPath}#${galleryHash}`,
+    })
+    redirect(`${canonicalPath}#${galleryHash}`)
   }
 
   const admin = createAdminClient()
 
-  const { data: galleries } = await admin
+  const { data: galleries, error: galleriesError } = await admin
     .from('galleries')
-    .select('id, title, created_at')
+    .select('id, title, created_at, gallery_type, is_public')
     .eq('user_id', typed.id)
     .eq('is_public', true)
     .eq('gallery_type', 'portfolio')
     .order('created_at', { ascending: false })
+
+  console.log('[photographer-portfolio] galleries query', {
+    slug: decodedSlug,
+    count: galleries?.length ?? 0,
+    error: galleriesError?.message ?? null,
+  })
 
   const galleryNameSet = new Set<string>()
   const allPhotos: PortfolioPhoto[] = []
@@ -80,8 +114,6 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
   const accentColor = typed.accent_color ?? '#7c3aed'
   const studioName = typed.studio_name ?? 'Studio Gallery'
   const homepagePath = resolveHomepagePath(typed.slug, typed.studio_name)
-  const canonicalPath =
-    getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`
   const portfolioPath = `${canonicalPath}/portfolio`
   const blogPath = `${canonicalPath}/blog`
   const logoUrl = await resolveBrandingPath(typed.logo_url)

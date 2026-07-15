@@ -1,12 +1,13 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { resolveMediaUrl } from '@/lib/r2/storage'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
+import { fetchGalleryForPublicPage } from '@/lib/queries/public-gallery-page'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { resolveMediaUrl } from '@/lib/r2/storage'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -15,14 +16,6 @@ import {
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
-}
-
-type GalleryData = {
-  id: string
-  title: string
-  created_at: string
-  user_id: string
-  is_public: boolean
 }
 
 type UserData = {
@@ -41,16 +34,8 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const { id } = await params
   const admin = createAdminClient()
 
-  const { data: gallery } = await admin
-    .from('galleries')
-    .select('id, title, created_at, user_id, is_public')
-    .eq('id', id)
-    .eq('is_public', true)
-    .single()
-
-  if (!gallery) notFound()
-
-  const galleryData = gallery as GalleryData
+  const galleryData = await fetchGalleryForPublicPage(admin, id)
+  if (!galleryData) notFound()
 
   const [{ data: user }, { count: packageCount }] = await Promise.all([
     admin
@@ -106,17 +91,16 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
   const { id } = await params
   const admin = createAdminClient()
 
-  const { data } = await admin
-    .from('galleries')
-    .select('title, user_id, cover_image')
-    .eq('id', id)
-    .eq('is_public', true)
-    .single()
-
-  const gallery = data as { title: string; user_id: string; cover_image: string | null } | null
+  const gallery = await fetchGalleryForPublicPage(admin, id)
   if (!gallery) {
     return { title: 'גלריה לא נמצאה' }
   }
+
+  const { data: coverRow } = await admin
+    .from('galleries')
+    .select('cover_image')
+    .eq('id', id)
+    .maybeSingle()
 
   const { data: user } = await admin
     .from('users')
@@ -128,7 +112,10 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
   const title = `${gallery.title} | ${studioName}`
   const description = `גלריה ציבורית מאת ${studioName}`
   const canonicalPath = `/public-gallery/${id}`
-  const shareImage = await resolveGalleryShareImage(id, gallery.cover_image)
+  const shareImage = await resolveGalleryShareImage(
+    id,
+    (coverRow as { cover_image: string | null } | null)?.cover_image ?? null
+  )
 
   return {
     title,

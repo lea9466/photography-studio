@@ -5,6 +5,7 @@ import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { PackageCard } from '@/components/dashboard/PackageCard'
+import { fetchPortfolioGalleryBySlug } from '@/lib/queries/portfolio-gallery-page'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -19,16 +20,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   const { slug } = await params
   const admin = createAdminClient()
 
-  const { data } = await admin
-    .from('galleries')
-    .select('id, title, user_id, is_public')
-    .eq('slug', slug)
-    .eq('gallery_type', 'portfolio')
-    .eq('is_public', true)
-    .single()
-
-  type GalleryRow = { id: string; title: string; user_id: string; is_public: boolean }
-  const gallery = data as GalleryRow | null
+  const gallery = await fetchPortfolioGalleryBySlug(admin, slug)
   if (!gallery) notFound()
 
   const { data: user } = await admin
@@ -250,28 +242,16 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
   const { slug } = await params
   const admin = createAdminClient()
 
-  const { data } = await admin
-    .from('galleries')
-    .select('id, title, is_public, user_id, cover_image')
-    .eq('slug', slug)
-    .eq('gallery_type', 'portfolio')
-    .eq('is_public', true)
-    .single()
-
-  type GalleryRow = {
-    id: string
-    title: string
-    is_public: boolean
-    user_id: string
-    cover_image: string | null
-  }
-  const gallery = data as GalleryRow | null
-
+  const gallery = await fetchPortfolioGalleryBySlug(admin, slug)
   if (!gallery) {
-    return {
-      title: 'גלריה לא נמצאה',
-    }
+    return { title: 'גלריה לא נמצאה' }
   }
+
+  const { data: coverRow } = await admin
+    .from('galleries')
+    .select('cover_image')
+    .eq('id', gallery.id)
+    .maybeSingle()
 
   const { data: user } = await admin
     .from('users')
@@ -285,7 +265,10 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
   const title = `${gallery.title} | ${studioName}`
   const description = `תיק עבודות מאת ${studioName}`
   const canonicalPath = `/portfolio/${slug}`
-  const shareImage = await resolveGalleryShareImage(gallery.id, gallery.cover_image)
+  const shareImage = await resolveGalleryShareImage(
+    gallery.id,
+    (coverRow as { cover_image: string | null } | null)?.cover_image ?? null
+  )
 
   return {
     title,

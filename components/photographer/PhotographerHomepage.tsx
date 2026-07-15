@@ -86,6 +86,7 @@ import {
   type SiteLanguage,
 } from '@/lib/site-language'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
+import { buildHomepageBlogModalHeadBlock } from '@/lib/public-blog-html'
 
 
 
@@ -5264,12 +5265,16 @@ function generateHomepageHTML(
 
   const studioName = studio_name || name || 'סטודיו גלריה'
 
-  const documentHead = generatePhotographerDocumentHead(
-    studioName,
-    logo_url,
-    faviconOrigin,
-    photographerId
-  )
+  const blogModalHeadBlock =
+    posts.length > 0 ? buildHomepageBlogModalHeadBlock(primaryColor) : ''
+
+  const documentHead =
+    generatePhotographerDocumentHead(
+      studioName,
+      logo_url,
+      faviconOrigin,
+      photographerId
+    ) + blogModalHeadBlock
 
   const photographerName = name || 'אפרת כהן'
 
