@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { fetchGalleryDetail, ensurePortfolioSlug } from '@/lib/actions/gallery.actions'
+import { resolvePortfolioPublicPath } from '@/lib/queries/portfolio-gallery-page'
+import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import { fetchGallerySelections } from '@/lib/actions/photo.actions'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchGalleryPhotos } from '@/lib/actions/photo.actions'
@@ -74,8 +76,22 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
 
   const clientLink =
     gallery.gallery_type === 'portfolio' && slug
-      ? `/portfolio/${slug}`
-      : `/g/${gallery.id}`
+      ? resolvePortfolioPublicPath({
+          id: gallery.id,
+          slug,
+          gallery_type: gallery.gallery_type,
+        })
+      : gallery.is_public || PUBLIC_ONLY_MVP
+        ? `/public-gallery/${gallery.id}`
+        : `/g/${gallery.id}`
+
+  console.log('[dashboard/gallery-detail] public link resolved', {
+    galleryId: gallery.id,
+    gallery_type: gallery.gallery_type,
+    slug,
+    is_public: gallery.is_public,
+    clientLink,
+  })
 
   const { albumPhotos, editPhotos } = await fetchGallerySelections(id)
   const photos = await fetchGalleryPhotos(id)

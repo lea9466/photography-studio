@@ -36,10 +36,10 @@ const NAV_ITEMS: NavItem[] = [
 ]
 
 type DashboardNavProps = {
-  portfolioSlug?: string | null
+  publicSitePath?: string | null
 }
 
-export function DashboardNav({ portfolioSlug }: DashboardNavProps) {
+export function DashboardNav({ publicSitePath }: DashboardNavProps) {
   const pathname = usePathname()
 
   return (
@@ -62,9 +62,9 @@ export function DashboardNav({ portfolioSlug }: DashboardNavProps) {
           </Link>
         )
       })}
-      {portfolioSlug ? (
+      {publicSitePath ? (
         <Link
-          href={`/portfolio/${portfolioSlug}`}
+          href={publicSitePath}
           target="_blank"
           className="rounded-md px-3 py-1.5 text-sm font-medium text-[--muted] transition-colors hover:text-[--foreground]"
         >

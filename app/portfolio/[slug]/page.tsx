@@ -6,6 +6,7 @@ import { signStoragePaths } from '@/lib/storage'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import { PackageCard } from '@/components/dashboard/PackageCard'
 import { fetchPortfolioGalleryBySlug } from '@/lib/queries/portfolio-gallery-page'
+import { normalizeRouteParam } from '@/lib/queries/public-gallery-page'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -17,11 +18,31 @@ type PortfolioPageProps = {
 }
 
 export default async function PortfolioPage({ params }: PortfolioPageProps) {
-  const { slug } = await params
-  const admin = createAdminClient()
+  const { slug: rawSlug } = await params
+  const normalizedSlug = normalizeRouteParam(rawSlug)
 
-  const gallery = await fetchPortfolioGalleryBySlug(admin, slug)
-  if (!gallery) notFound()
+  console.log('[portfolio/page] incoming request', {
+    rawSlug,
+    normalizedSlug,
+    pathname: `/portfolio/${normalizedSlug}`,
+  })
+
+  let admin
+  try {
+    admin = createAdminClient()
+  } catch (error) {
+    console.error('[portfolio/page] admin client unavailable', {
+      normalizedSlug,
+      error: error instanceof Error ? error.message : String(error),
+    })
+    throw error
+  }
+
+  const gallery = await fetchPortfolioGalleryBySlug(admin, rawSlug)
+  if (!gallery) {
+    console.warn('[portfolio/page] notFound()', { rawSlug, normalizedSlug })
+    notFound()
+  }
 
   const { data: user } = await admin
     .from('users')

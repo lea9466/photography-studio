@@ -32,7 +32,8 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { deleteGallery, updateGallerySettings } from '@/lib/actions/gallery.actions'
-import { getDisplayGalleryStatus } from '@/lib/types/app.types'
+import { resolvePortfolioPublicPath } from '@/lib/queries/portfolio-gallery-page'
+import { getDisplayGalleryStatus, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import type { Gallery, Client, GalleryStatus } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
@@ -79,9 +80,17 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
 
   const handleShare = async () => {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const galleryLink = gallery.gallery_type === 'portfolio' && gallery.slug
-      ? `${baseUrl}/portfolio/${gallery.slug}`
-      : `${baseUrl}/g/${gallery.id}`
+    const path =
+      gallery.gallery_type === 'portfolio' && gallery.slug
+        ? resolvePortfolioPublicPath({
+            id: gallery.id,
+            slug: gallery.slug,
+            gallery_type: gallery.gallery_type,
+          })
+        : gallery.is_public || PUBLIC_ONLY_MVP
+          ? `/public-gallery/${gallery.id}`
+          : `/g/${gallery.id}`
+    const galleryLink = `${baseUrl}${path}`
 
     await navigator.clipboard.writeText(galleryLink)
     setCopied(true)
