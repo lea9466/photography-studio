@@ -7198,7 +7198,7 @@ ${aboutSubtitle ? `<p class="font-body text-lg mb-6 leading-relaxed opacity-80" 
 
 ${aboutDescription ? `<p class="font-body text-base mb-10 opacity-60 leading-relaxed" style="white-space: pre-line">${aboutDescription}</p>` : ''}
 
-<button onclick="document.querySelector('#gallery').scrollIntoView({behavior: 'smooth'})" class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
+<button onclick="document.querySelector('${heroGalleryAnchor}').scrollIntoView({behavior: 'smooth'})" class="border border-[#0F0F0D] px-10 py-3 text-xs uppercase tracking-widest hover:bg-[#0F0F0D] hover:text-white transition-all duration-300">
 
                     ${homepageCopy.hero.viewGalleries}
 

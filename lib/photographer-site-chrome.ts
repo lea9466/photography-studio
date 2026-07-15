@@ -98,6 +98,9 @@ function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   ) {
     return cfg.portfolioPath
   }
+  if (target === 'blog' && cfg.linkMode === 'href' && cfg.blogPath) {
+    return cfg.blogPath
+  }
   const sectionId = navSectionId(cfg, target)
   if (cfg.linkMode === 'href') {
     return homepageSectionHref(cfg.homepagePath, sectionId)
@@ -117,6 +120,9 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
     cfg.portfolioPath
   ) {
     return `href="${cfg.portfolioPath}"`
+  }
+  if (target === 'blog' && cfg.linkMode === 'href' && cfg.blogPath) {
+    return `href="${cfg.blogPath}"`
   }
   if (cfg.linkMode === 'href') {
     return `href="${navHref(cfg, target)}"`

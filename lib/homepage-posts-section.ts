@@ -6,6 +6,7 @@ import {
 import {
   BLOG_MODAL_CSS,
   BLOG_MODAL_INIT_SCRIPT,
+  buildBlogModalSupportCss,
   generateBlogModalMarkup,
   generateBlogPostDetailTemplates,
   getBlogThemeTokens,
@@ -122,7 +123,7 @@ export function generateHomepageMoreLinkHTML(options: {
 const HOMEPAGE_POSTS_CSS = `
 .hp-posts-section {
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   padding-top: calc(2.5rem + 20px);
   padding-bottom: 3rem;
   padding-inline: 0;
@@ -504,10 +505,10 @@ export function generateHomepagePostsSectionHTML(options: {
   const isElegant = options.theme === 'elegant'
 
   const sectionCss = isClassic
-    ? `${HOMEPAGE_POSTS_CSS}${CLASSIC_HOMEPAGE_POSTS_CSS}${BLOG_MODAL_CSS}`
+    ? `${HOMEPAGE_POSTS_CSS}${CLASSIC_HOMEPAGE_POSTS_CSS}${buildBlogModalSupportCss(options.primaryColor)}${BLOG_MODAL_CSS}`
     : isElegant
-      ? `${HOMEPAGE_POSTS_CSS}${ELEGANT_HOMEPAGE_POSTS_CSS(options.primaryColor)}${BLOG_MODAL_CSS}`
-      : `${HOMEPAGE_POSTS_CSS}${BLOG_MODAL_CSS}`
+      ? `${HOMEPAGE_POSTS_CSS}${ELEGANT_HOMEPAGE_POSTS_CSS(options.primaryColor)}${buildBlogModalSupportCss(options.primaryColor)}${BLOG_MODAL_CSS}`
+      : `${HOMEPAGE_POSTS_CSS}${buildBlogModalSupportCss(options.primaryColor)}${BLOG_MODAL_CSS}`
 
   const headerHtml = isElegant
     ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--elegant stagger-reveal" data-reveal-delay="0">
@@ -535,8 +536,8 @@ ${headerHtml}
 <div class="hp-posts-grid">
 ${cards}
 </div>
+</section>
 ${templates}
 ${modalMarkup}
-</section>
 <script>${BLOG_MODAL_INIT_SCRIPT}</script>`
 }

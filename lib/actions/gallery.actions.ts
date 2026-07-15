@@ -21,6 +21,7 @@ import type { MediaBucket } from '@/lib/r2/types'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { resolveGalleryCoverImagePath, resolveGalleryCoverCardPath } from '@/lib/seo/public-metadata'
 import { sendGalleryInviteEmail, sendDeliveryReadyEmail } from '@/lib/email/resend'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 import type { Database, GalleryWithSettings } from '@/lib/types/database.types'
 import type { GalleryStatus } from '@/lib/types/database.types'
 import {
@@ -404,6 +405,12 @@ export async function createGallery(input: CreateGalleryInput) {
   revalidatePath('/dashboard')
   revalidatePath(`/dashboard/galleries/${gallery.id}`)
 
+  if (input.galleryType === 'portfolio') {
+    const slug = portfolioSlug(title)
+    revalidatePath(`/portfolio/${slug}`)
+    revalidatePath(`/public-gallery/${gallery.id}`)
+  }
+
   try {
     await processReferralBonusIfEligible(userId)
   } catch (referralError) {
@@ -526,6 +533,35 @@ export async function updateGallerySettings(
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}/settings`)
   revalidatePath('/dashboard')
+
+  const { data: galleryMeta } = await supabase
+    .from('galleries')
+    .select('gallery_type, slug, title, is_public')
+    .eq('id', galleryId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  const meta = galleryMeta as {
+    gallery_type: string
+    slug: string | null
+    title: string
+    is_public: boolean
+  } | null
+
+  if (meta?.gallery_type === 'portfolio') {
+    let slug = meta.slug?.trim() || null
+    if (!slug) {
+      slug = await ensurePortfolioSlug(galleryId, meta.title, meta.slug)
+    }
+    if (meta.is_public) {
+      revalidatePath(`/public-gallery/${galleryId}`)
+      if (slug) {
+        revalidatePath(`/portfolio/${slug}`)
+      }
+    }
+  } else if (meta?.is_public) {
+    revalidatePath(`/public-gallery/${galleryId}`)
+  }
 }
 
 export async function getPublicGalleryQuota() {
@@ -581,6 +617,8 @@ export async function ensurePortfolioSlug(
 
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath('/dashboard')
+  revalidatePath(`/portfolio/${slug}`)
+  revalidatePath(`/public-gallery/${galleryId}`)
   return slug
 }
 
@@ -729,14 +767,17 @@ export async function updateGalleryLayoutMode(mode: 'separated' | 'portfolio') {
 
   const { data: profile } = await supabase
     .from('users')
-    .select('slug')
+    .select('slug, studio_name')
     .eq('id', userId)
     .single()
 
-  const slug = (profile as { slug: string | null } | null)?.slug
-  if (slug) {
-    revalidatePath(`/${slug}`)
-    revalidatePath(`/${slug}/portfolio`)
+  const studioPath = getPublicSitePath(
+    (profile as { slug: string | null; studio_name: string | null } | null)?.slug,
+    (profile as { slug: string | null; studio_name: string | null } | null)?.studio_name
+  )
+  if (studioPath) {
+    revalidatePath(studioPath)
+    revalidatePath(`${studioPath}/portfolio`)
   }
 
   return { success: true }

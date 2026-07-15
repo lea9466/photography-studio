@@ -399,6 +399,18 @@ const revealScript = `
 
 export { BLOG_MODAL_CSS }
 
+/** Typography and accent utilities used inside blog modal templates on the homepage iframe. */
+export function buildBlogModalSupportCss(primaryColor: string): string {
+  return `
+.font-serif-hebrew { font-family: 'Frank Ruhl Libre', serif; }
+.font-display { font-family: 'Playfair Display', serif; }
+.font-body { font-family: 'Heebo', sans-serif; }
+.font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; font-weight: 700; }
+.elegant-accent { color: ${primaryColor}; }
+.elegant-bg-accent { background-color: ${primaryColor}; }
+`
+}
+
 export function getBlogThemeTokens(theme: SiteChromeTheme) {
   return TOKENS[theme]
 }

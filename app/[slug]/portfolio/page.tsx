@@ -44,6 +44,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     .select('id, title, created_at')
     .eq('user_id', typed.id)
     .eq('is_public', true)
+    .eq('gallery_type', 'portfolio')
     .order('created_at', { ascending: false })
 
   const galleryNameSet = new Set<string>()
