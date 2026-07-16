@@ -5,11 +5,13 @@ import {
 } from '@/lib/homepage-stagger-reveal'
 import {
   BLOG_MODAL_INIT_SCRIPT,
+  BLOG_SHARE_COPY_SCRIPT,
   generateBlogModalMarkup,
   generateBlogPostDetailTemplates,
   getBlogThemeTokens,
   type PublicBlogPost,
 } from '@/lib/public-blog-html'
+import { buildPostCanonicalPath } from '@/lib/seo/photographer-discovery'
 
 type SectionTokens = {
   cardBg: string
@@ -217,6 +219,8 @@ const HOMEPAGE_POSTS_CSS = `
   min-width: 0;
   height: 100%;
   margin-inline: 0;
+  text-decoration: none;
+  color: inherit;
   transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 .hp-post-card.is-visible:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0,0,0,0.12); }
@@ -224,16 +228,18 @@ const HOMEPAGE_POSTS_CSS = `
 .hp-post-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
   flex: 0 0 auto;
   overflow: hidden;
   background: rgba(0,0,0,0.06);
 }
+.hp-post-media--empty {
+  aspect-ratio: 4 / 3;
+}
 .hp-post-media img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
   display: block;
+  object-fit: contain;
   transition: transform 0.7s ease;
 }
 .hp-post-card:hover .hp-post-media img { transform: scale(1.05); }
@@ -341,17 +347,18 @@ const CLASSIC_HOMEPAGE_POSTS_CSS = `
 .theme-classic .hp-post-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
   height: auto;
   flex: 0 0 auto;
   overflow: hidden;
 }
+.theme-classic .hp-post-media--empty {
+  aspect-ratio: 4 / 3;
+}
 .theme-classic .hp-post-media img {
-  position: absolute;
-  inset: 0;
+  position: static;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   object-position: center;
 }
 .theme-classic .hp-post-body {
@@ -449,21 +456,30 @@ const ELEGANT_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
 }
 `
 
-function postCard(post: PublicBlogPost, t: SectionTokens, primaryColor: string, index: number): string {
+function postCard(
+  post: PublicBlogPost,
+  t: SectionTokens,
+  primaryColor: string,
+  index: number,
+  postPath: string,
+  siteLanguage: SiteLanguage
+): string {
   const cover = post.coverUrl || post.images[0] || null
+  const quickPreviewLabel = siteLanguage === 'en' ? 'Quick Preview' : 'תצוגה מקדימה'
+  const peekButton = `<button type="button" class="hp-post-card__peek" data-post-id="${escapeHtml(post.id)}" aria-label="${escapeHtml(quickPreviewLabel)}">${escapeHtml(quickPreviewLabel)}</button>`
   const media = cover
-    ? `<div class="hp-post-media"><img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" /></div>`
-    : `<div class="hp-post-media hp-post-media--empty"></div>`
+    ? `<div class="hp-post-media">${peekButton}<img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" /></div>`
+    : `<div class="hp-post-media hp-post-media--empty">${peekButton}</div>`
 
   return `
-<article class="hp-post-card stagger-reveal" data-reveal-delay="${index * 90}" data-post-id="${escapeHtml(post.id)}" role="button" tabindex="0" style="background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};">
+<a class="hp-post-card stagger-reveal" data-reveal-delay="${index * 90}" data-post-id="${escapeHtml(post.id)}" href="${escapeHtml(postPath)}" target="_parent" style="background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};">
   ${media}
   <div class="hp-post-body">
     <h3 class="hp-post-title" style="font-family:${t.titleFont};">${escapeHtml(post.title)}</h3>
     <p class="hp-post-date" style="color:${primaryColor};">${escapeHtml(post.date)}</p>
     <p class="hp-post-excerpt">${escapeHtml(post.content)}</p>
   </div>
-</article>`
+</a>`
 }
 
 export function generateHomepagePostsSectionHTML(options: {
@@ -472,6 +488,7 @@ export function generateHomepagePostsSectionHTML(options: {
   primaryColor: string
   sectionTitle: string
   blogHref: string
+  studioPath: string
   showAllLink: boolean
   language?: SiteLanguage
 }): string {
@@ -482,8 +499,25 @@ export function generateHomepagePostsSectionHTML(options: {
 
   const t = TOKENS[options.theme]
   const blogTokens = getBlogThemeTokens(options.theme)
-  const cards = options.posts.map((p, i) => postCard(p, t, options.primaryColor, i)).join('\n')
-  const templates = generateBlogPostDetailTemplates(options.posts, options.theme, options.primaryColor)
+  const cards = options.posts
+    .map((p, i) =>
+      postCard(
+        p,
+        t,
+        options.primaryColor,
+        i,
+        buildPostCanonicalPath(options.studioPath, p.id),
+        language
+      )
+    )
+    .join('\n')
+  const templates = generateBlogPostDetailTemplates(
+    options.posts,
+    options.theme,
+    options.primaryColor,
+    options.studioPath,
+    language
+  )
   const modalMarkup = generateBlogModalMarkup({
     surface: blogTokens.surface,
     text: blogTokens.text,
@@ -537,5 +571,6 @@ ${cards}
 </section>
 ${templates}
 ${modalMarkup}
-<script>${BLOG_MODAL_INIT_SCRIPT}</script>`
+<script>${BLOG_MODAL_INIT_SCRIPT}</script>
+<script>${BLOG_SHARE_COPY_SCRIPT}</script>`
 }

@@ -4341,13 +4341,15 @@ interface PhotographerHomepageProps {
 
   portfolioPath?: string
 
+  studioPath?: string
+
   posts?: PublicBlogPost[]
 
 }
 
 
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, portfolioPath, posts = [] }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, portfolioPath, studioPath, posts = [] }: PhotographerHomepageProps) {
 
   const [mounted, setMounted] = useState(false)
 
@@ -4401,6 +4403,8 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       portfolioPath,
 
+      studioPath,
+
       posts,
 
       window.location.origin
@@ -4409,7 +4413,7 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
     setHtml(generatedHtml)
 
-  }, [photographer, galleries, packages, testimonials, postCount, blogPath, portfolioPath, posts])
+  }, [photographer, galleries, packages, testimonials, postCount, blogPath, portfolioPath, studioPath, posts])
 
 
 
@@ -4856,6 +4860,8 @@ function generateHomepageHTML(
 
   portfolioPath?: string,
 
+  studioPath?: string,
+
   posts: PublicBlogPost[] = [],
 
   faviconOrigin?: string
@@ -5296,6 +5302,9 @@ function generateHomepageHTML(
 
 
 
+  const resolvedStudioPath = studioPath ?? blogPath?.replace(/\/blog$/, '') ?? '/'
+  const resolvedBlogPath = blogPath ?? `${resolvedStudioPath}/blog`
+
   const siteChrome = (themeKey: SiteChromeTheme) =>
 
     buildPublicSiteChrome({
@@ -5308,7 +5317,7 @@ function generateHomepageHTML(
 
       primaryColor,
 
-      homepagePath: '/',
+      homepagePath: resolvedStudioPath,
 
       linkMode: 'scroll',
 
@@ -5320,7 +5329,7 @@ function generateHomepageHTML(
 
       hasBlog: postCount > 0,
 
-      blogPath,
+      blogPath: postCount > 0 ? resolvedBlogPath : undefined,
 
       galleryLayoutMode:
         (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
@@ -5342,6 +5351,7 @@ function generateHomepageHTML(
     primaryColor,
     sectionTitle: resolvePostsPageTitle(theme, photographer.posts_page_title, siteLanguage),
     blogHref: blogPath ?? '#',
+    studioPath: studioPath ?? blogPath?.replace(/\/blog$/, '') ?? '/',
     showAllLink: postCount > 0,
     language: siteLanguage,
   })
@@ -10304,15 +10314,17 @@ ${documentHead}
 
         }
 
-        .bold-nav .bold-nav-logo {
+        .bold-nav .bold-nav-logo:not(.brand-logo-colorable) {
 
             transition: filter 0.7s ease;
 
+            filter: brightness(0) invert(1) !important;
+
         }
 
-        .bold-nav:not(.nav-scrolled) .bold-nav-logo {
+        .bold-nav:not(.nav-scrolled) .bold-nav-logo:not(.brand-logo-colorable) {
 
-            filter: brightness(0) invert(1);
+            filter: brightness(0) invert(1) !important;
 
         }
 
@@ -10346,9 +10358,9 @@ ${documentHead}
 
         }
 
-        .bold-nav.nav-scrolled .bold-nav-logo {
+        .bold-nav.nav-scrolled .bold-nav-logo:not(.brand-logo-colorable) {
 
-            filter: ${photographer.should_color_logo ? 'none' : 'brightness(0) invert(1)'};
+            filter: brightness(0) invert(1) !important;
 
         }
 
@@ -10366,9 +10378,9 @@ ${documentHead}
 
         .bold-hero-image {
 
-            opacity: 0.72;
+            opacity: 0.8;
 
-            filter: grayscale(10%) brightness(1.14) contrast(1.04);
+            filter: grayscale(12%) brightness(1.02) contrast(1.02) saturate(0.92);
 
         }
 

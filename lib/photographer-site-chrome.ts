@@ -28,6 +28,7 @@ export type SiteChromeConfig = {
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
   language?: SiteLanguage
+  transparentNav?: boolean
 }
 
 export function brandLastWord(text: string) {
@@ -98,7 +99,7 @@ function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   ) {
     return cfg.portfolioPath
   }
-  if (target === 'blog' && cfg.linkMode === 'href' && cfg.blogPath) {
+  if (target === 'blog' && cfg.blogPath) {
     return cfg.blogPath
   }
   const sectionId = navSectionId(cfg, target)
@@ -121,7 +122,7 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
   ) {
     return `href="${cfg.portfolioPath}"`
   }
-  if (target === 'blog' && cfg.linkMode === 'href' && cfg.blogPath) {
+  if (target === 'blog' && cfg.blogPath) {
     return `href="${cfg.blogPath}"`
   }
   if (cfg.linkMode === 'href') {
@@ -186,15 +187,16 @@ function navItems(
 
   const useHrefForGallery =
     cfg.galleryLayoutMode === 'portfolio' && Boolean(cfg.portfolioPath)
+  const useHrefForBlog = Boolean(cfg.blogPath)
 
   return targets
     .map((target) => {
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
-        (cfg.linkMode === 'href' || useHrefForGallery) && closeMenu
+        (cfg.linkMode === 'href' || useHrefForGallery || useHrefForBlog) && closeMenu
           ? ` onclick="${closeMenu}"`
           : ''
-      if (cfg.linkMode === 'href' || (target === 'gallery' && useHrefForGallery)) {
+      if (cfg.linkMode === 'href' || (target === 'gallery' && useHrefForGallery) || (target === 'blog' && useHrefForBlog)) {
         const href = navHref(cfg, target)
         return `<a href="${href}" class="${cls}" target="_parent"${closeAttr}>${labels[target]}</a>`
       }
@@ -210,8 +212,8 @@ function brandLink(cfg: SiteChromeConfig, inner: string) {
   return `<div class="flex items-center gap-sm">${inner}</div>`
 }
 
-function navInitialClasses(theme: SiteChromeTheme, linkMode: SiteChromeLinkMode): string {
-  if (linkMode !== 'href') {
+function navInitialClasses(theme: SiteChromeTheme, linkMode: SiteChromeLinkMode, transparentNav?: boolean): string {
+  if (transparentNav || linkMode !== 'href') {
     return 'border-none bg-transparent py-md'
   }
 
@@ -258,7 +260,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'modern':
       return `
-<nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('modern', cfg.linkMode)}" id="main-nav">
+<nav class="modern-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('modern', cfg.linkMode, cfg.transparentNav)}" id="main-nav">
 <div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'modern-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'modern-nav-brand font-headline text-xl font-bold' }))}
 <button onclick="toggleMobileMenu()" class="modern-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
@@ -285,7 +287,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'classic':
       return `
-<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('classic', cfg.linkMode)}" id="main-nav">
+<nav class="classic-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('classic', cfg.linkMode, cfg.transparentNav)}" id="main-nav">
 <div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'classic-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'classic-nav-brand font-headline-sm text-headline-sm tracking-tight' }))}
 <button onclick="toggleMobileMenuClassic()" class="classic-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
@@ -312,7 +314,7 @@ icon.textContent = menu.classList.contains('hidden') ? 'menu' : 'close';
 
     case 'dark':
       return `
-<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('dark', cfg.linkMode)}" id="main-nav">
+<nav class="bold-nav fixed top-0 w-full z-50 transition-all duration-700 ${navInitialClasses('dark', cfg.linkMode, cfg.transparentNav)}" id="main-nav">
 <div class="site-nav-inner flex flex-row rtl:flex-row-reverse justify-between items-center px-lg py-md max-w-7xl mx-auto w-full">
 ${brandLink(cfg, logoBlock(cfg, { imgClass: 'bold-nav-logo site-nav-logo h-10 w-auto object-contain', textClass: 'bold-nav-brand font-headline-sm text-headline-sm tracking-tighter' }))}
 <button onclick="toggleMobileMenuDark()" class="bold-nav-menu-btn site-nav-menu-btn md:hidden p-2 transition-colors">
@@ -495,24 +497,22 @@ export function generateSiteNavScrollScript(
 ): string {
   if (linkMode === 'href') return ''
 
+  let updateBody = ''
   switch (theme) {
     case 'elegant':
-      return `
-window.addEventListener('scroll', () => {
-    const nav = document.querySelector('nav');
+      updateBody = `
+    const nav = document.getElementById('main-nav');
     if (!nav) return;
-    if (window.scrollY > 100) {
-        nav.classList.add('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
+    if (window.scrollY > 80) {
+        nav.classList.add('nav-scrolled', 'bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
         nav.classList.remove('bg-transparent', 'py-md');
     } else {
-        nav.classList.remove('bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
+        nav.classList.remove('nav-scrolled', 'bg-white/80', 'backdrop-blur-lg', 'shadow-sm', 'py-4');
         nav.classList.add('bg-transparent', 'py-md');
-    }
-});`
-
+    }`
+      break
     case 'modern':
-      return `
-window.addEventListener('scroll', () => {
+      updateBody = `
     const nav = document.getElementById('main-nav');
     if (!nav) return;
     if (window.scrollY > 80) {
@@ -521,12 +521,10 @@ window.addEventListener('scroll', () => {
     } else {
         nav.classList.remove('nav-scrolled', 'bg-[#F8FAFC]/95', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
         nav.classList.add('py-md', 'border-none', 'bg-transparent');
-    }
-});`
-
+    }`
+      break
     case 'classic':
-      return `
-window.addEventListener('scroll', () => {
+      updateBody = `
     const nav = document.getElementById('main-nav');
     if (!nav) return;
     if (window.scrollY > 80) {
@@ -535,12 +533,10 @@ window.addEventListener('scroll', () => {
     } else {
         nav.classList.remove('nav-scrolled', 'bg-surface/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-outline-variant/20', 'shadow-sm');
         nav.classList.add('py-md', 'border-none', 'bg-transparent');
-    }
-});`
-
+    }`
+      break
     case 'dark':
-      return `
-window.addEventListener('scroll', () => {
+      updateBody = `
     const nav = document.getElementById('main-nav');
     if (!nav) return;
     if (window.scrollY > 80) {
@@ -549,9 +545,20 @@ window.addEventListener('scroll', () => {
     } else {
         nav.classList.remove('nav-scrolled', 'bg-background/90', 'backdrop-blur-md', 'py-sm', 'border-b', 'border-white/10', 'shadow-sm');
         nav.classList.add('py-md', 'border-none', 'bg-transparent');
-    }
-});`
+    }`
+      break
   }
+
+  return `(function initSiteNavScroll() {
+  function updateSiteNav() {${updateBody}
+  }
+  window.addEventListener('scroll', updateSiteNav, { passive: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateSiteNav);
+  } else {
+    updateSiteNav();
+  }
+})();`
 }
 
 export function generateSiteNavMobileStyles(): string {
@@ -602,6 +609,13 @@ export function generateSiteNavMobileStyles(): string {
 export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: string, shouldColorLogo: boolean = false): string {
   if (theme === 'classic') {
     return `
+        .classic-nav:not(.nav-scrolled) {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            border-bottom: none !important;
+        }
         .classic-nav .classic-nav-brand,
         .classic-nav .classic-nav-link,
         .classic-nav .classic-nav-menu-btn {
@@ -681,6 +695,13 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
 
   if (theme === 'dark') {
     return `
+        .bold-nav:not(.nav-scrolled) {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            border-bottom: none !important;
+        }
         .bold-nav .bold-nav-brand,
         .bold-nav .bold-nav-link,
         .bold-nav .bold-nav-menu-btn {
@@ -690,11 +711,11 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
         .bold-nav .bold-nav-menu-btn:hover {
             color: ${primaryColor};
         }
-        .bold-nav .bold-nav-logo {
-            filter: brightness(0) invert(1);
+        .bold-nav .bold-nav-logo:not(.brand-logo-colorable) {
+            filter: brightness(0) invert(1) !important;
         }
-        .bold-nav:not(.nav-scrolled) .bold-nav-logo {
-            filter: brightness(0) invert(1);
+        .bold-nav:not(.nav-scrolled) .bold-nav-logo:not(.brand-logo-colorable) {
+            filter: brightness(0) invert(1) !important;
         }
         .bold-nav.nav-scrolled .bold-nav-brand {
             color: #F5F5F0;
@@ -711,15 +732,22 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
         .bold-nav.nav-scrolled .bold-nav-menu-btn:hover {
             color: ${primaryColor};
         }
-        .bold-nav.nav-scrolled .bold-nav-logo {
-            filter: ${shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
+        .bold-nav.nav-scrolled .bold-nav-logo:not(.brand-logo-colorable) {
+            filter: brightness(0) invert(1) !important;
         }
         .bold-nav .bold-nav-brand .text-primary {
             color: ${primaryColor};
         }${generateSiteNavMobileStyles()}`
   }
 
-  return generateSiteNavMobileStyles()
+  return `
+        .elegant-nav:not(.nav-scrolled) {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            border-bottom: none !important;
+        }${generateSiteNavMobileStyles()}`
 }
 
 export function createSiteChromeConfig(options: {
@@ -737,6 +765,7 @@ export function createSiteChromeConfig(options: {
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
   language?: SiteLanguage
+  transparentNav?: boolean
 }): SiteChromeConfig {
   return {
     theme: options.theme,
@@ -753,6 +782,7 @@ export function createSiteChromeConfig(options: {
     galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
     portfolioPath: options.portfolioPath,
     language: options.language ?? 'he',
+    transparentNav: options.transparentNav ?? false,
   }
 }
 
@@ -772,6 +802,7 @@ export type PublicSiteChromeOptions = {
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
   siteLanguage?: string | null
+  transparentNav?: boolean
 }
 
 export function buildPublicSiteChrome(options: PublicSiteChromeOptions): SiteChromeConfig {
@@ -791,6 +822,7 @@ export function buildPublicSiteChrome(options: PublicSiteChromeOptions): SiteChr
     galleryLayoutMode: options.galleryLayoutMode,
     portfolioPath: options.portfolioPath,
     language,
+    transparentNav: options.transparentNav,
   })
 }
 

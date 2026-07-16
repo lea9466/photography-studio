@@ -377,6 +377,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           postCount={postCount ?? 0}
           blogPath={`${canonicalPath}/blog`}
           portfolioPath={`${canonicalPath}/portfolio`}
+          studioPath={canonicalPath}
           posts={homepagePosts}
         />
       </>
