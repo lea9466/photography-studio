@@ -26,6 +26,7 @@ export type PortfolioPhoto = {
 
 export type PublicPortfolioPageData = {
   pageTitle: string
+  sectionTitle?: string | null
   photos: PortfolioPhoto[]
   galleryNames: string[]
   accentColor: string
@@ -85,6 +86,15 @@ function generatePortfolioTabStyles(primaryColor: string) {
 .portfolio-tab--classic { border-radius: 4px; }
 .portfolio-tab--dark { border-radius: 2px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.75rem; }
 .portfolio-photo-count { color: ${primaryColor}; }
+.portfolio-section-title {
+  font-family: inherit;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: inherit;
+  opacity: 0.75;
+  max-width: 42rem;
+  margin: 0 auto 1rem;
+}
 #portfolio-load-sentinel { break-inside: avoid; width: 100%; height: 1px; }
 .portfolio-load-status {
   text-align: center;
@@ -295,15 +305,24 @@ function generateTabButtons(galleryNames: string[], theme: SiteChromeTheme) {
   return allTab + galleryTabs
 }
 
-function portfolioHeader(theme: SiteChromeTheme, pageTitle: string, photoCount: number) {
+function portfolioHeader(
+  theme: SiteChromeTheme,
+  pageTitle: string,
+  photoCount: number,
+  sectionTitle?: string | null,
+) {
   const title = escapeHtml(pageTitle)
   const meta = `${photoCount} תמונות`
+  const sectionTitleHtml = sectionTitle
+    ? `<p class="portfolio-section-title">${escapeHtml(sectionTitle)}</p>`
+    : ''
 
   if (theme === 'elegant') {
     return `
 <header class="text-center mb-[80px]">
 <span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block elegant-accent">Portfolio</span>
 <h1 class="font-serif-hebrew text-[48px] md:text-[68px] text-on-surface mb-[16px] font-medium">${title}</h1>
+${sectionTitleHtml}
 <div class="w-16 h-px mx-auto mb-[24px] elegant-bg-accent"></div>
 <p class="font-body text-[18px] portfolio-photo-count max-w-2xl mx-auto">${meta}</p>
 </header>`
@@ -314,6 +333,7 @@ function portfolioHeader(theme: SiteChromeTheme, pageTitle: string, photoCount: 
 <header class="text-center mb-[48px]">
 <span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block text-primary">Portfolio</span>
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
+${sectionTitleHtml}
 <div class="w-12 h-px mx-auto mb-[24px] bg-primary"></div>
 <p class="font-body-md text-body-md portfolio-photo-count italic">${meta}</p>
 </header>`
@@ -324,6 +344,7 @@ function portfolioHeader(theme: SiteChromeTheme, pageTitle: string, photoCount: 
 <header class="text-center mb-[48px]">
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-[16px] uppercase">Portfolio</span>
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
+${sectionTitleHtml}
 <p class="font-body-md text-body-md portfolio-photo-count">${meta}</p>
 </header>`
   }
@@ -331,6 +352,7 @@ function portfolioHeader(theme: SiteChromeTheme, pageTitle: string, photoCount: 
   return `
 <header class="text-center mb-[32px] py-[24px]">
 <h1 class="font-headline text-[48px] md:text-[64px] font-bold text-on-surface leading-tight mb-[8px]">${title}</h1>
+${sectionTitleHtml}
 <p class="font-body text-[16px] portfolio-photo-count">${meta}</p>
 </header>`
 }
@@ -378,7 +400,12 @@ export function generatePublicPortfolioPageHTML(options: {
   const body = `
 <main class="pt-24">
 <section class="max-w-[1280px] mx-auto px-[24px] pt-8">
-${portfolioHeader(chromeTheme, options.portfolio.pageTitle, options.portfolio.photos.length)}
+${portfolioHeader(
+  chromeTheme,
+  options.portfolio.pageTitle,
+  options.portfolio.photos.length,
+  options.portfolio.sectionTitle,
+)}
 <nav class="portfolio-tabs" aria-label="גלריות">
 ${generateTabButtons(options.portfolio.galleryNames, chromeTheme)}
 </nav>

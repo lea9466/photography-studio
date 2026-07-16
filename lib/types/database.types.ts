@@ -65,6 +65,8 @@ export type Database = {
           contact_title: string | null
           contact_subtitle: string | null
           testimonials_title: string | null
+          galleries_title: string | null
+          recent_photos_title: string | null
           posts_page_title: string | null
           should_color_logo: boolean
           faq_items: Json
@@ -118,6 +120,8 @@ export type Database = {
           contact_title?: string | null
           contact_subtitle?: string | null
           testimonials_title?: string | null
+          galleries_title?: string | null
+          recent_photos_title?: string | null
           posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json
@@ -171,6 +175,8 @@ export type Database = {
           contact_title?: string | null
           contact_subtitle?: string | null
           testimonials_title?: string | null
+          galleries_title?: string | null
+          recent_photos_title?: string | null
           posts_page_title?: string | null
           should_color_logo?: boolean
           faq_items?: Json

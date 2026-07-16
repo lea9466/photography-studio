@@ -10,10 +10,12 @@ import {
 import type { GalleryLayoutMode } from '@/lib/types/database.types'
 import { GALLERY_LAYOUT_MODE_LABELS } from '@/lib/types/app.types'
 import { Badge } from '@/components/ui/badge'
+import { GalleriesDashboardNote } from '@/components/dashboard/GalleriesDashboardNote'
 import { cn } from '@/lib/utils'
 
 type GalleryLayoutModeSettingProps = {
   initialMode: GalleryLayoutMode
+  onModeChange?: (mode: GalleryLayoutMode) => void
 }
 
 const MODE_OPTIONS: {
@@ -100,6 +102,7 @@ function GalleriesSectionHeader({
 
 export function GalleryLayoutModeSetting({
   initialMode,
+  onModeChange,
 }: GalleryLayoutModeSettingProps) {
   const [mode, setMode] = useState<GalleryLayoutMode>(initialMode)
   const [isPending, startTransition] = useTransition()
@@ -111,6 +114,7 @@ export function GalleryLayoutModeSetting({
       try {
         await updateGalleryLayoutMode(nextMode)
         setMode(nextMode)
+        onModeChange?.(nextMode)
         toast.success('מצב התצוגה עודכן בהצלחה')
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה בעדכון')
@@ -127,7 +131,29 @@ export function GalleryLayoutModeSetting({
         icon={LayoutGrid}
         title="מצב תצוגת גלריות באתר"
         description="בחרו איך הגלריות יוצגו ללקוחות בעמוד הבית ובתפריט הניווט"
+        
       />
+
+      <GalleriesDashboardNote>
+        <p>
+          <span className="font-semibold">גלריות ציבוריות:</span> ניתן לסמן עד 4 גלריות כציבוריות,
+          ויש שני מצבי תצוגה:
+        </p>
+        <ul className="list-disc space-y-1 pr-5">
+          <li>
+            <span className="font-medium">מצב מופרד</span> — 4 כרטיסי גלריה בדף הבית
+          </li>
+          <li>
+            <span className="font-medium">מצב תיק עבודות</span> — קישור לדף נפרד, שבו הגלריות
+            מוצגות לפי לשוניות
+          </li>
+        </ul>
+        <p>
+          בשני המצבים יש גם סקשן &quot;תמונות אחרונות&quot; בדף הבית — מכל גלריה מוצגות 4
+          תמונות, סה&quot;כ 16 מהכל יחד.
+        </p>
+      </GalleriesDashboardNote>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {MODE_OPTIONS.map((option) => {
           const Icon = option.icon
@@ -172,6 +198,7 @@ export function GalleryLayoutModeSetting({
           )
         })}
       </div>
+      
     </GalleriesSection>
   )
 }

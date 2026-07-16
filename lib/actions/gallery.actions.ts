@@ -782,3 +782,147 @@ export async function updateGalleryLayoutMode(mode: 'separated' | 'portfolio') {
 
   return { success: true }
 }
+
+export async function fetchGalleriesSectionSettings(): Promise<{
+  galleries_title: string | null
+  recent_photos_title: string | null
+  selected_theme: string | null
+  gallery_layout_mode: 'separated' | 'portfolio'
+}> {
+  const context = await getDashboardContext()
+  if (!context) {
+    return {
+      galleries_title: null,
+      recent_photos_title: null,
+      selected_theme: null,
+      gallery_layout_mode: 'separated',
+    }
+  }
+
+  const { userId, supabase } = context
+  const { data, error } = await supabase
+    .from('users')
+    .select('galleries_title, recent_photos_title, selected_theme, gallery_layout_mode')
+    .eq('id', userId)
+    .single()
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? ''
+    if (
+      error.code === '42703' ||
+      error.code === 'PGRST204' ||
+      message.includes('galleries_title') ||
+      message.includes('recent_photos_title') ||
+      message.includes('gallery_layout_mode')
+    ) {
+      return {
+        galleries_title: null,
+        recent_photos_title: null,
+        selected_theme: null,
+        gallery_layout_mode: 'separated',
+      }
+    }
+    throw new Error(error.message)
+  }
+
+  const row = data as {
+    galleries_title: string | null
+    recent_photos_title: string | null
+    selected_theme: string | null
+    gallery_layout_mode: string | null
+  }
+
+  return {
+    galleries_title: row.galleries_title ?? null,
+    recent_photos_title: row.recent_photos_title ?? null,
+    selected_theme: row.selected_theme ?? null,
+    gallery_layout_mode: row.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated',
+  }
+}
+
+export async function updateGalleriesSectionTitle(input: {
+  title?: string
+}): Promise<{ galleries_title: string | null }> {
+  const { userId, supabase } = await requireDashboardContext()
+
+  if (input.title === undefined) {
+    throw new Error('אין שינויים לשמירה')
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {
+    galleries_title: input.title.trim() || null,
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', userId)
+    .select('galleries_title')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/galleries')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('slug, studio_name')
+    .eq('id', userId)
+    .single()
+
+  const studioPath = getPublicSitePath(
+    (profile as { slug: string | null; studio_name: string | null } | null)?.slug,
+    (profile as { slug: string | null; studio_name: string | null } | null)?.studio_name
+  )
+  if (studioPath) {
+    revalidatePath(studioPath)
+    revalidatePath(`${studioPath}/portfolio`)
+  }
+
+  return data as { galleries_title: string | null }
+}
+
+export async function updateRecentPhotosSectionTitle(input: {
+  title?: string
+}): Promise<{ recent_photos_title: string | null }> {
+  const { userId, supabase } = await requireDashboardContext()
+
+  if (input.title === undefined) {
+    throw new Error('אין שינויים לשמירה')
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {
+    recent_photos_title: input.title.trim() || null,
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', userId)
+    .select('recent_photos_title')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/galleries')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('slug, studio_name')
+    .eq('id', userId)
+    .single()
+
+  const studioPath = getPublicSitePath(
+    (profile as { slug: string | null; studio_name: string | null } | null)?.slug,
+    (profile as { slug: string | null; studio_name: string | null } | null)?.studio_name
+  )
+  if (studioPath) {
+    revalidatePath(studioPath)
+  }
+
+  return data as { recent_photos_title: string | null }
+}

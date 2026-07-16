@@ -11,6 +11,7 @@ import {
 } from '@/lib/public-portfolio-html'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
+import { resolvePortfolioGalleriesSectionTitle } from '@/lib/galleries-section-copy'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 
 interface PortfolioPageProps {
@@ -44,6 +45,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     selected_theme: string | null
     should_color_logo: boolean
     faq_items: unknown
+    galleries_title: string | null
   }
 
   const layoutMode = typed.gallery_layout_mode ?? 'separated'
@@ -143,6 +145,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     shouldColorLogo: typed.should_color_logo ?? false,
     portfolio: {
       pageTitle: 'תיק עבודות',
+      sectionTitle: resolvePortfolioGalleriesSectionTitle(typed.galleries_title),
       photos: allPhotos,
       galleryNames,
       accentColor,

@@ -54,6 +54,8 @@ import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
 import { resolveContactSectionCopy } from '@/lib/contact-section-copy'
 
 import { resolveTestimonialsSectionTitle, resolveTestimonialsSectionSubtitle } from '@/lib/testimonials-section-copy'
+import { resolveGalleriesSectionTitle } from '@/lib/galleries-section-copy'
+import { resolveRecentPhotosSectionTitle } from '@/lib/recent-photos-section-copy'
 
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 
@@ -150,6 +152,10 @@ interface Photographer {
   contact_subtitle?: string | null
 
   testimonials_title: string | null
+
+  galleries_title: string | null
+
+  recent_photos_title: string | null
 
   email: string | null
 
@@ -4924,6 +4930,10 @@ function generateHomepageHTML(
 
     testimonials_title,
 
+    galleries_title,
+
+    recent_photos_title,
+
     email,
 
     phone,
@@ -5426,6 +5436,18 @@ function generateHomepageHTML(
   )
 
   const testimonialsSectionSubtitle = resolveTestimonialsSectionSubtitle(theme, siteLanguage)
+
+  const galleriesSectionTitle = resolveGalleriesSectionTitle(
+    theme,
+    galleries_title,
+    siteLanguage,
+  )
+
+  const recentPhotosSectionTitle = resolveRecentPhotosSectionTitle(
+    theme,
+    recent_photos_title,
+    siteLanguage,
+  )
 
   const formatStat = (value: number) => (value > 0 ? `${value}+` : `${value}`)
 
@@ -7241,7 +7263,7 @@ ${!isPortfolioMode ? `
 
 <div class="flex flex-row-reverse justify-between items-end homepage-gallery-reveal">
 
-${elegantSectionHeading(homepageCopy.sections.collections, 'COLLECTIONS')}
+${elegantSectionHeading(galleriesSectionTitle, 'COLLECTIONS')}
 
 </div>
 
@@ -7265,7 +7287,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="flex flex-row-reverse justify-between items-end">
 
-${elegantSectionHeading(homepageCopy.sections.recentPhotos, 'LATEST')}
+${elegantSectionHeading(recentPhotosSectionTitle, 'LATEST')}
 
 ${portfolioCtaHtml}
 
@@ -8297,7 +8319,7 @@ ${!isPortfolioMode ? `
 
 <div class="text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">${homepageCopy.sections.modernGalleryTitle}</h2>
+<h2 class="font-headline text-4xl font-bold mb-xs">${escapeHtml(galleriesSectionTitle)}</h2>
 
 <p class="modern-section-subtitle">${homepageCopy.sections.modernGallerySubtitle}</p>
 
@@ -8327,7 +8349,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="text-start rtl:text-right">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">${homepageCopy.sections.recentPhotos}</h2>
+<h2 class="font-headline text-4xl font-bold mb-xs">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 <p class="modern-section-subtitle">${homepageCopy.sections.modernRecentPhotosSubtitle}</p>
 
@@ -9659,7 +9681,7 @@ ${!isPortfolioMode ? `
 
 <div class="text-start rtl:text-right">
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.classicSelectedWorks}</h2>
+<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(galleriesSectionTitle)}</h2>
 
 <p class="font-body-md text-body-md mt-sm" style="color:${primaryColor};">${homepageCopy.sections.classicSelectedWorksSubtitle}</p>
 
@@ -9689,7 +9711,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <span class="hp-posts-eyebrow" style="color:${primaryColor};">${homepageCopy.sections.classicRecentPhotosEyebrow}</span>
 
-<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">${homepageCopy.sections.recentPhotos}</h2>
+<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 <div class="hp-posts-divider" style="background:${primaryColor};"></div>
 
@@ -11145,7 +11167,7 @@ ${!isPortfolioMode ? `
 
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">${homepageCopy.sections.selectedPortfolio}</span>
 
-<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.selectedPortfolio}</h2>
+<h2 class="font-headline-md text-headline-md">${escapeHtml(galleriesSectionTitle)}</h2>
 
 </div>
 
@@ -11173,7 +11195,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
 
-<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.recentPhotos}</h2>
+<h2 class="font-headline-md text-headline-md">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 </div>
 

@@ -35,6 +35,8 @@ export type PublicPhotographer = Pick<
   | 'contact_title'
   | 'contact_subtitle'
   | 'testimonials_title'
+  | 'galleries_title'
+  | 'recent_photos_title'
   | 'posts_page_title'
   | 'testimonial_layout_type'
   | 'gallery_layout_mode'
@@ -78,6 +80,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   contact_title,
   contact_subtitle,
   testimonials_title,
+  galleries_title,
+  recent_photos_title,
   posts_page_title,
   testimonial_layout_type,
   gallery_layout_mode,
@@ -124,6 +128,8 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('packages_subtitle') ||
     message.includes('contact_title') ||
     message.includes('contact_subtitle') ||
+    message.includes('galleries_title') ||
+    message.includes('recent_photos_title') ||
     message.includes('faq_items') ||
     message.includes('faq_section_image_url') ||
     message.includes('gallery_layout_mode') ||

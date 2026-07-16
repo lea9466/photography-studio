@@ -313,25 +313,6 @@ function GalleriesSection({
   )
 }
 
-function GalleriesSubPanel({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'rounded-xl border border-[--border]/60 bg-white/80 p-5 text-sm text-[--muted] shadow-sm shadow-[#7D3A52]/[0.03]',
-        className
-      )}
-    >
-      {children}
-    </div>
-  )
-}
-
 function GalleriesSectionHeader({
   title,
   description,
@@ -422,13 +403,6 @@ export function RecentGalleriesTable({
       }
     })
   }
-  const tipBox = (
-    <GalleriesSubPanel>
-      <span className="font-semibold text-[--foreground]">גלריות ציבוריות בדף הבית:</span>{' '}
-      עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
-    </GalleriesSubPanel>
-  )
-
   const tableContent = (
     <div className={cn(
       'overflow-hidden rounded-xl border border-[--border]/60 bg-white/80 shadow-sm shadow-[#7D3A52]/[0.03]',
@@ -493,23 +467,14 @@ export function RecentGalleriesTable({
     return (
       <GalleriesSection>
         <GalleriesSectionHeader
-          index={2}
+          index={4}
           title={title}
           description="ניהול, עריכה ושיתוף של כל הגלריות שלך"
         />
-        {tipBox}
         {tableContent}
       </GalleriesSection>
     )
   }
 
-  return (
-    <>
-      <div className="mb-4 rounded-xl border border-[#e8d5c4] bg-[#fdf8f4] px-5 py-4 text-sm text-[#5c4a3d] dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
-        <span className="font-semibold">גלריות ציבוריות בדף הבית:</span>{' '}
-        עד 4 גלריות המסומנות כציבוריות. בכרטיס הגלריה — תמונת השער (אם הוגדרה); בסקשן &quot;תמונות אחרונות&quot; — 4 תמונות אקראיות מכל גלריה (16 תמונות בסך הכל).
-      </div>
-      {tableContent}
-    </>
-  )
+  return tableContent
 }
