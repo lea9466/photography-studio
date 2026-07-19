@@ -61,15 +61,7 @@ export type MediaUploadDeps = {
     }[],
     isProcessed?: boolean
   ) => Promise<void>
-  cleanupBatch: (
-    entityId: string,
-    photoIds: string[],
-    storagePaths: {
-      originalPath?: string | null
-      previewPath?: string | null
-      watermarkedPath?: string | null
-    }[]
-  ) => Promise<void>
+  cleanupBatch: (entityId: string, photoIds: string[]) => Promise<void>
   finalize: (entityId: string) => Promise<void>
   createUploadUrls: (entityId: string, requests: R2UploadRequest[]) => Promise<string[]>
 }
@@ -530,8 +522,7 @@ export async function uploadMediaPhotosWithQueue(
     if (failures.length > 0) {
       await deps.cleanupBatch(
         deps.entityId,
-        failures.map((f) => f.photoId),
-        failures.map((f) => f.paths)
+        failures.map((f) => f.photoId)
       )
     }
   } finally {

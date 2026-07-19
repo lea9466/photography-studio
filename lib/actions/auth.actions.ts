@@ -2,14 +2,14 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
+import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
 import {
-  sendPhotographerPasswordResetEmail,
-  sendWelcomeEmail,
-} from '@/lib/email/resend'
+  ensureUserProfile,
+  maybeSendWelcomeEmailForCurrentUser,
+} from '@/lib/auth/user-profile'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
@@ -46,127 +46,6 @@ function mapSignUpError(message: string): string {
   return message
 }
 
-function readOAuthDisplayName(user: User, metaName?: string) {
-  if (metaName?.trim()) return metaName.trim()
-
-  const metadata = user.user_metadata ?? {}
-  if (typeof metadata.name === 'string' && metadata.name.trim()) {
-    return metadata.name.trim()
-  }
-  if (typeof metadata.full_name === 'string' && metadata.full_name.trim()) {
-    return metadata.full_name.trim()
-  }
-
-  return user.email?.split('@')[0] ?? 'User'
-}
-
-function readOAuthAvatarUrl(user: User) {
-  const metadata = user.user_metadata ?? {}
-  if (typeof metadata.avatar_url === 'string' && metadata.avatar_url.trim()) {
-    return metadata.avatar_url.trim()
-  }
-  if (typeof metadata.picture === 'string' && metadata.picture.trim()) {
-    return metadata.picture.trim()
-  }
-  return null
-}
-
-export async function ensureUserProfile(
-  user: User,
-  meta?: { name?: string; studio_name?: string | null; logo_url?: string | null }
-) {
-  const supabase = await createClient()
-  const { data: existingProfile } = await supabase
-    .from('users')
-    .select('id, email, name, logo_url')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  const existing = existingProfile as {
-    id: string
-    email: string | null
-    name: string | null
-    logo_url: string | null
-  } | null
-
-  const name = readOAuthDisplayName(user, meta?.name)
-  const studioName =
-    meta?.studio_name ??
-    (typeof user.user_metadata?.studio_name === 'string'
-      ? user.user_metadata.studio_name
-      : null)
-  const logoUrl = meta?.logo_url ?? readOAuthAvatarUrl(user)
-
-  if (existing) {
-    const updates: {
-      email?: string | null
-      name?: string
-      logo_url?: string | null
-    } = {}
-
-    if (user.email && !existing.email) updates.email = user.email
-    if (name && !existing.name) updates.name = name
-    if (logoUrl && !existing.logo_url) updates.logo_url = logoUrl
-
-    if (Object.keys(updates).length === 0) return
-
-    const { error } = await supabase
-      .from('users')
-      .update(updates as never)
-      .eq('id', user.id)
-
-    if (error) {
-      throw new Error(error.message)
-    }
-
-    return
-  }
-
-  const { error } = await supabase.from('users').insert({
-    id: user.id,
-    email: user.email,
-    name,
-    studio_name: studioName,
-    logo_url: logoUrl,
-    show_welcome_popup: true,
-  } as never)
-
-  if (error) {
-    if (error.message.includes('does not exist')) {
-      throw new Error(
-        'טבלאות המערכת לא קיימות — הריצי את קבצי ה-migration ב-Supabase SQL Editor'
-      )
-    }
-    throw new Error(error.message)
-  }
-}
-
-export async function maybeSendWelcomeEmail(user: User, name?: string) {
-  const metadata = user.user_metadata ?? {}
-  if (metadata.welcome_email_sent === true) return
-
-  const email = user.email?.trim()
-  if (!email) return
-
-  const displayName = name?.trim() || readOAuthDisplayName(user)
-
-  try {
-    await sendWelcomeEmail({ name: displayName, email })
-  } catch (emailError) {
-    console.error('[maybeSendWelcomeEmail] send failed', emailError)
-    return
-  }
-
-  try {
-    const admin = createAdminClient()
-    await admin.auth.admin.updateUserById(user.id, {
-      user_metadata: { ...metadata, welcome_email_sent: true },
-    })
-  } catch (metadataError) {
-    console.error('[maybeSendWelcomeEmail] metadata update failed', metadataError)
-  }
-}
-
 export async function signIn(
   _prevState: AuthActionState,
   formData: FormData
@@ -190,7 +69,7 @@ export async function signIn(
   }
 
   try {
-    await ensureUserProfile(data.user)
+    await ensureUserProfile()
   } catch (profileError) {
     return {
       error:
@@ -279,11 +158,11 @@ export async function signUp(
   }
 
   try {
-    await ensureUserProfile(user, {
+    await ensureUserProfile({
       name,
       studio_name: studioName || null,
     })
-    await maybeSendWelcomeEmail(user, name)
+    await maybeSendWelcomeEmailForCurrentUser(name)
   } catch (profileError) {
     return {
       error:

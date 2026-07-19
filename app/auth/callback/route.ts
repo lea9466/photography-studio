@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { ensureUserProfile, maybeSendWelcomeEmail } from '@/lib/actions/auth.actions'
+import {
+  ensureUserProfile,
+  maybeSendWelcomeEmailForCurrentUser,
+} from '@/lib/auth/user-profile'
 import { NextResponse } from 'next/server'
 
 import {
@@ -29,10 +32,13 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       try {
-        await ensureUserProfile(data.user)
-        await maybeSendWelcomeEmail(data.user)
+        await ensureUserProfile()
+        await maybeSendWelcomeEmailForCurrentUser()
       } catch (profileError) {
-        console.error('[auth/callback] ensureUserProfile failed', profileError)
+        console.error('[auth/callback] ensureUserProfile failed', {
+          message:
+            profileError instanceof Error ? profileError.message : 'unknown',
+        })
         return NextResponse.redirect(`${origin}/login?error=auth`)
       }
 

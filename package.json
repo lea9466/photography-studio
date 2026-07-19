@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs",
+    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs",
+    "test:exploit-critical": "node scripts/exploit-critical-runtime.mjs",
+    "test:regression-critical": "node scripts/regression-critical-runtime.mjs",
     "supabase:auth-urls": "node scripts/push-auth-redirect-urls.mjs"
   },
   "dependencies": {

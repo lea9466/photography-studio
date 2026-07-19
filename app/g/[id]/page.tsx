@@ -2,11 +2,9 @@ import { notFound } from 'next/navigation'
 import {
   getClientGallery,
   getClientGalleryPublicMeta,
-  getPublicPortfolioGallery,
 } from '@/lib/actions/client-gallery.actions'
 import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
-import { PublicPortfolioGalleryView } from '@/components/gallery/PublicPortfolioGalleryView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
@@ -29,9 +27,9 @@ export default async function ClientGalleryPage({
     notFound()
   }
 
-  // is_public flag takes absolute precedence - bypass ALL auth checks
+  // Public galleries: getClientGallery authorizes via is_public server-side.
   if (meta.is_public) {
-    const data = await getClientGallery(id, true)
+    const data = await getClientGallery(id)
     if (!data) notFound()
     return <ClientGalleryView gallery={data.gallery} photos={data.photos} />
   }

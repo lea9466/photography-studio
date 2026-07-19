@@ -15,6 +15,8 @@ const COMPLETE_BATCH_SIZE = 50
 const DELETE_BATCH_SIZE = 50
 
 import { assertGalleryOwner, assertPhotoInOwnedGallery } from '@/lib/auth/gallery-owner'
+import { buildPhotoStoragePaths } from '@/lib/images/process'
+import { isOwnedStorageKey } from '@/lib/r2/owned-path'
 
 export async function reservePhotosBatch(galleryId: string, count: number, isProcessed = false) {
   console.log('👉 1. reservePhotosBatch START', { galleryId, count, isProcessed })
@@ -123,31 +125,53 @@ export async function completePhotosBatch(
 
 export async function cleanupPhotosBatch(
   galleryId: string,
-  photoIds: string[],
-  storagePaths: {
-    originalPath?: string | null
-    previewPath?: string | null
-    watermarkedPath?: string | null
-  }[]
+  photoIds: string[]
 ) {
   if (photoIds.length === 0) return
 
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
-  for (const paths of storagePaths) {
-    const removals: { bucket: MediaBucket; path: string }[] = []
+  const { data: rows, error: selectError } = await supabase
+    .from('photos')
+    .select('id, original_url, preview_url, watermarked_preview_url')
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
 
-    if (paths.originalPath) {
-      removals.push({ bucket: 'originals', path: paths.originalPath })
-    }
-    if (paths.previewPath) {
-      removals.push({ bucket: 'previews', path: paths.previewPath })
-    }
-    if (paths.watermarkedPath) {
-      removals.push({ bucket: 'watermarked', path: paths.watermarkedPath })
+  if (selectError) throw new Error(selectError.message)
+
+  type PhotoCleanupRow = {
+    id: string
+    original_url: string | null
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const ownedRows = (rows ?? []) as PhotoCleanupRow[]
+  const ownedIds = ownedRows.map((row) => row.id)
+  if (ownedIds.length === 0) return
+
+  for (const row of ownedRows) {
+    const canonical = buildPhotoStoragePaths(user.id, galleryId, row.id)
+    const candidates: { bucket: MediaBucket; path: string }[] = [
+      { bucket: 'originals', path: canonical.originalPath },
+      { bucket: 'previews', path: canonical.previewPath },
+      { bucket: 'watermarked', path: canonical.watermarkedPath },
+    ]
+
+    const dbCandidates: { bucket: MediaBucket; path: string | null }[] = [
+      { bucket: 'originals', path: row.original_url },
+      { bucket: 'previews', path: row.preview_url },
+      { bucket: 'watermarked', path: row.watermarked_preview_url },
+    ]
+    for (const { bucket, path } of dbCandidates) {
+      if (!path || !isOwnedStorageKey(path, user.id, galleryId)) continue
+      if (!candidates.some((c) => c.bucket === bucket && c.path === path)) {
+        candidates.push({ bucket, path })
+      }
     }
 
-    for (const { bucket, path } of removals) {
+    for (const { bucket, path } of candidates) {
+      if (!isOwnedStorageKey(path, user.id, galleryId)) continue
       try {
         await deleteMediaObject(bucket, path)
       } catch {
@@ -160,7 +184,7 @@ export async function cleanupPhotosBatch(
     .from('photos')
     .delete()
     .eq('gallery_id', galleryId)
-    .in('id', photoIds)
+    .in('id', ownedIds)
 
   if (error) throw new Error(error.message)
 }

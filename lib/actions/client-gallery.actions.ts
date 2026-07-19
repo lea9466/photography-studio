@@ -34,6 +34,7 @@ import {
   checkRateLimit,
   resetRateLimit,
 } from '@/lib/rate-limit/gallery-password'
+import { resolveGalleryAccessMode } from '@/lib/gallery-access'
 
 export type ClientGalleryPhoto = {
   id: string
@@ -226,12 +227,26 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
   return { success: true }
 }
 
-export async function getClientGallery(galleryId: string, skipSessionCheck = false) {
-  if (!skipSessionCheck) {
-    const allowed = await hasGallerySession(galleryId)
-    if (!allowed) return null
-  }
+async function requireValidGalleryAccess(galleryId: string) {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('galleries')
+    .select('id, is_public')
+    .eq('id', galleryId)
+    .maybeSingle()
 
+  const gallery = data as { id: string; is_public: boolean } | null
+  if (!gallery) return null
+
+  const hasSessionForGallery = await hasGallerySession(galleryId)
+  return resolveGalleryAccessMode({
+    isPublic: gallery.is_public,
+    hasSessionForGallery,
+  })
+}
+
+/** Loads gallery + signed URLs. Call only after requireValidGalleryAccess. */
+async function loadClientGalleryInternal(galleryId: string) {
   const admin = createAdminClient()
 
   const { data: galleryData } = await admin
@@ -377,6 +392,17 @@ export async function getClientGallery(galleryId: string, skipSessionCheck = fal
   }
 
   return { gallery: meta, photos: clientPhotos }
+}
+
+/**
+ * Client-callable Server Action. Authorization is enforced server-side:
+ * public galleries (is_public) or a session cookie bound to this galleryId.
+ * There is no client-controlled bypass flag.
+ */
+export async function getClientGallery(galleryId: string) {
+  const access = await requireValidGalleryAccess(galleryId)
+  if (!access) return null
+  return loadClientGalleryInternal(galleryId)
 }
 
 export async function getPublicPortfolioGallery(galleryId: string) {

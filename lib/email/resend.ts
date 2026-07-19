@@ -1,8 +1,11 @@
 import { Resend } from 'resend'
 
-import { randomBytes } from 'node:crypto'
 import { getAdminName, getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
+import {
+  buildEmailStubLog,
+  mustFailWithoutResend,
+} from '@/lib/email/stub-log'
 
 function getResend() {
   const key = process.env.RESEND_API_KEY
@@ -36,16 +39,38 @@ function emailFrom() {
   )
 }
 
+/**
+ * Resolve Resend client or handle missing key safely.
+ * Production: throws (no secret logging fallback).
+ * Development: logs redacted metadata only, returns null.
+ */
+function requireResendOrSafeStub(input: {
+  template: string
+  email?: string | null
+  resourceId?: string | null
+  extra?: Record<string, string | number | boolean | null | undefined>
+}): Resend | null {
+  const resend = getResend()
+  if (resend) return resend
+
+  if (mustFailWithoutResend()) {
+    throw new Error('Email provider is not configured (RESEND_API_KEY)')
+  }
+
+  console.info('[email stub]', buildEmailStubLog(input))
+  return null
+}
+
 export async function sendPhotographerPasswordResetEmail(input: {
   email: string
   name: string
   password: string
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] photographer password reset', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'photographer-password-reset',
+    email: input.email,
+  })
+  if (!resend) return
 
   await resend.emails.send({
     from: emailFrom(),
@@ -71,11 +96,12 @@ export async function sendGalleryPasswordEmail(input: {
   studioName: string
   password: string
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] gallery password', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'gallery-password',
+    email: input.clientEmail,
+    resourceId: input.galleryId,
+  })
+  if (!resend) return
 
   await resend.emails.send({
     from: emailFrom(),
@@ -101,11 +127,12 @@ export async function sendGalleryInviteEmail(input: {
   password: string
   expiresAt?: string | null
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] gallery invite', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'gallery-invite',
+    email: input.clientEmail,
+    resourceId: input.galleryId,
+  })
+  if (!resend) return
 
   const expiry = input.expiresAt
     ? `<p>תוקף הגלריה: ${new Date(input.expiresAt).toLocaleDateString('he-IL')}</p>`
@@ -135,7 +162,6 @@ export async function sendSelectionDoneEmail(input: {
   albumCount: number
   editCount: number
 }) {
-  const resend = getResend()
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const admin = createAdminClient()
 
@@ -148,14 +174,26 @@ export async function sendSelectionDoneEmail(input: {
   const profile = user as { email: string | null; studio_name: string | null } | null
   const to = profile?.email
   if (!to) {
-    console.info('[email stub] selection done — no photographer email', input)
+    if (mustFailWithoutResend()) {
+      throw new Error('Photographer email missing for selection notification')
+    }
+    console.info(
+      '[email stub]',
+      buildEmailStubLog({
+        template: 'selection-done',
+        resourceId: input.galleryId,
+        extra: { reason: 'no-photographer-email' },
+      })
+    )
     return
   }
 
-  if (!resend) {
-    console.info('[email stub] selection done', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'selection-done',
+    email: to,
+    resourceId: input.galleryId,
+  })
+  if (!resend) return
 
   await resend.emails.send({
     from: emailFrom(),
@@ -178,11 +216,12 @@ export async function sendDeliveryReadyEmail(input: {
   clientEmail: string
   clientName: string
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] delivery ready', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'delivery-ready',
+    email: input.clientEmail,
+    resourceId: input.galleryId,
+  })
+  if (!resend) return
 
   await resend.emails.send({
     from: emailFrom(),
@@ -208,11 +247,11 @@ export async function sendContactInquiryEmail(input: {
   subject?: string
   message: string
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] contact inquiry', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'contact-inquiry',
+    email: input.photographerEmail,
+  })
+  if (!resend) return
 
   const siteLink = input.sitePath
     ? `<p><a href="${appUrl(input.sitePath)}">צפייה באתר שלך</a></p>`
@@ -246,11 +285,11 @@ export async function sendContactInquiryEmail(input: {
 }
 
 export async function sendAdminLoginCodeEmail(input: { code: string }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] admin login code', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'admin-login-code',
+    email: getFeedbackEmail(),
+  })
+  if (!resend) return
 
   await resend.emails.send({
     from: emailFrom(),
@@ -275,11 +314,11 @@ export async function sendAdminBroadcastEmail(input: {
   message: string
   imageUrl?: string | null
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] admin broadcast', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'admin-broadcast',
+    email: input.to,
+  })
+  if (!resend) return
 
   const greeting = input.recipientName ? `שלום ${input.recipientName},` : 'שלום,'
   const bodyHtml = input.message.replace(/\n/g, '<br>')
@@ -314,11 +353,11 @@ export async function sendWelcomeEmail(input: {
   name: string
   email: string
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] welcome', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'welcome',
+    email: input.email,
+  })
+  if (!resend) return
 
   const supportEmail = getFeedbackEmail()
   const adminName = getAdminName()
@@ -359,11 +398,12 @@ export async function sendFeedbackEmail(input: {
   studio?: string
   imageUrl?: string | null
 }) {
-  const resend = getResend()
-  if (!resend) {
-    console.info('[email stub] feedback', input)
-    return
-  }
+  const resend = requireResendOrSafeStub({
+    template: 'feedback',
+    email: input.email,
+    extra: { type: input.type },
+  })
+  if (!resend) return
 
   const imageHref = input.imageUrl
     ? getTestimonialImagePreviewUrl(input.imageUrl)

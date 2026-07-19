@@ -5,6 +5,8 @@ import { deleteMediaObject } from '@/lib/r2/storage'
 import type { Database } from '@/lib/types/database.types'
 import { assertPostOwner } from '@/lib/auth/post-owner'
 import { assertPostPhotoCountWithinLimit } from '@/lib/post-photo-limits'
+import { buildPostPhotoStoragePaths } from '@/lib/images/process'
+import { isOwnedStorageKey } from '@/lib/r2/owned-path'
 
 type PostPhotoInsert = Database['public']['Tables']['post_photos']['Insert']
 
@@ -86,31 +88,61 @@ export async function completePostPhotosBatch(
 
 export async function cleanupPostPhotosBatch(
   postId: string,
-  photoIds: string[],
-  storagePaths: {
-    originalPath?: string | null
-    previewPath?: string | null
-    watermarkedPath?: string | null
-  }[]
+  photoIds: string[]
 ) {
   if (photoIds.length === 0) return
 
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
 
-  for (const paths of storagePaths) {
-    const removals: { bucket: 'originals' | 'previews' | 'watermarked'; path: string }[] = []
+  const { data: rows, error: selectError } = await supabase
+    .from('post_photos')
+    .select('id, original_url, preview_url, watermarked_preview_url')
+    .eq('post_id', postId)
+    .in('id', photoIds)
 
-    if (paths.originalPath) {
-      removals.push({ bucket: 'originals', path: paths.originalPath })
-    }
-    if (paths.previewPath) {
-      removals.push({ bucket: 'previews', path: paths.previewPath })
-    }
-    if (paths.watermarkedPath) {
-      removals.push({ bucket: 'watermarked', path: paths.watermarkedPath })
+  if (selectError) throw new Error(selectError.message)
+
+  type PostPhotoCleanupRow = {
+    id: string
+    original_url: string | null
+    preview_url: string | null
+    watermarked_preview_url: string | null
+  }
+
+  const ownedRows = (rows ?? []) as PostPhotoCleanupRow[]
+  const ownedIds = ownedRows.map((row) => row.id)
+  if (ownedIds.length === 0) return
+
+  const resourcePrefix = `posts/${postId}`
+
+  for (const row of ownedRows) {
+    const canonical = buildPostPhotoStoragePaths(user.id, postId, row.id)
+    const candidates: {
+      bucket: 'originals' | 'previews' | 'watermarked'
+      path: string
+    }[] = [
+      { bucket: 'originals', path: canonical.originalPath },
+      { bucket: 'previews', path: canonical.previewPath },
+      { bucket: 'watermarked', path: canonical.watermarkedPath },
+    ]
+
+    const dbCandidates: {
+      bucket: 'originals' | 'previews' | 'watermarked'
+      path: string | null
+    }[] = [
+      { bucket: 'originals', path: row.original_url },
+      { bucket: 'previews', path: row.preview_url },
+      { bucket: 'watermarked', path: row.watermarked_preview_url },
+    ]
+    for (const { bucket, path } of dbCandidates) {
+      if (!path || !isOwnedStorageKey(path, user.id, resourcePrefix)) continue
+      if (!candidates.some((c) => c.bucket === bucket && c.path === path)) {
+        candidates.push({ bucket, path })
+      }
     }
 
-    for (const { bucket, path } of removals) {
+    for (const { bucket, path } of candidates) {
+      if (!isOwnedStorageKey(path, user.id, resourcePrefix)) continue
       try {
         await deleteMediaObject(bucket, path)
       } catch {
@@ -123,7 +155,7 @@ export async function cleanupPostPhotosBatch(
     .from('post_photos')
     .delete()
     .eq('post_id', postId)
-    .in('id', photoIds)
+    .in('id', ownedIds)
 
   if (error) throw new Error(error.message)
 }
