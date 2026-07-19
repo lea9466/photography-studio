@@ -148,9 +148,24 @@ const REVEAL_LENS_CSS = `
   line-height: 1.15;
   margin: 0;
   font-weight: 500;
+  color: var(--brand-primary);
+}
+.ba-header__flourish {
+  display: block;
+  width: min(13.5rem, 68%);
+  height: auto;
+  margin: 0.7rem auto 0;
+  overflow: visible;
+}
+.ba-header__flourish path {
+  fill: none;
+  stroke: var(--brand-primary);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .ba-header p {
-  margin: 0.75rem auto 0;
+  margin: 1rem auto 0;
   max-width: 32rem;
   font-size: 0.98rem;
   line-height: 1.7;
@@ -1237,6 +1252,9 @@ ${generateSiteNav(chrome)}
   <header class="ba-header">
     <span class="ba-header__eyebrow">${escapeHtml(copy.eyebrow)}</span>
     <h1 class="${titleClass}">${escapeHtml(options.page.pageTitle)}</h1>
+    <svg class="ba-header__flourish" viewBox="0 0 220 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+      <path d="M6 12 C 34 3, 58 18, 86 9 C 112 1, 132 17, 158 8 C 178 1, 194 14, 206 10 C 212 8, 214 6, 216 5"/>
+    </svg>
     <p>${escapeHtml(options.page.intro)}</p>
   </header>
   <div class="ba-list">
