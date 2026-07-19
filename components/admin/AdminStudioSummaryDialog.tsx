@@ -1,7 +1,17 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { BarChart3, HelpCircle, ImageIcon, Layers, MessageSquareQuote, Package, Users } from 'lucide-react'
+import {
+  BarChart3,
+  HelpCircle,
+  ImageIcon,
+  Images,
+  Layers,
+  MessageSquareQuote,
+  Package,
+  SplitSquareHorizontal,
+  Users,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import type { AdminStudioSummary } from '@/lib/admin/studio-summary'
@@ -38,6 +48,24 @@ function buildSummaryStats(summary: AdminStudioSummary): SummaryStat[] {
       label: 'תמונות בגלריות',
       value: summary.photos,
       icon: ImageIcon,
+    },
+    {
+      label: 'לפני ואחרי',
+      value: summary.photoEditComparisons,
+      hint:
+        summary.photoEditComparisons > 0
+          ? `${summary.activePhotoEditComparisons} פעילים`
+          : undefined,
+      icon: SplitSquareHorizontal,
+    },
+    {
+      label: 'תמונות הרו',
+      value: summary.heroImages,
+      hint:
+        summary.heroImages > 0
+          ? `${summary.heroDesktopImages} דסקטופ · ${summary.heroMobileImages} מובייל`
+          : undefined,
+      icon: Images,
     },
     {
       label: 'לקוחות',

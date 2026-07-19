@@ -879,6 +879,10 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
+      admin_studio_summary: {
+        Args: { p_user_id: string }
+        Returns: Record<string, number>
+      }
     }
     Enums: {
       [_ in never]: never
