@@ -777,6 +777,8 @@ export function generatePublicGalleryPageHTML(options: {
   hasFaq?: boolean
   hasPackages?: boolean
   hasBlog?: boolean
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   siteLanguage?: string | null
@@ -796,6 +798,8 @@ export function generatePublicGalleryPageHTML(options: {
     hasPackages: options.hasPackages ?? false,
     hasBlog: options.hasBlog ?? false,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons ?? false,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
     portfolioPath: options.portfolioPath,

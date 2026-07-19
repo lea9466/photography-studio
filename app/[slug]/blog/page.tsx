@@ -41,13 +41,21 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const admin = createAdminClient()
-  const { count: packageCount } = await admin
-    .from('photography_packages')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', typed.id)
-    .eq('is_active', true)
+  const [{ count: packageCount }, { count: photoEditCount }] = await Promise.all([
+    admin
+      .from('photography_packages')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typed.id)
+      .eq('is_active', true),
+    admin
+      .from('photo_edit_comparisons')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typed.id)
+      .eq('is_active', true),
+  ])
 
   const pageTitle = resolvePostsPageTitle(siteTheme, typed.posts_page_title)
+  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
 
   const html = generatePublicBlogPageHTML({
     theme: siteTheme,
@@ -58,6 +66,8 @@ export default async function BlogPage({ params }: BlogPageProps) {
     studioPath: canonicalPath,
     hasFaq,
     hasPackages: (packageCount ?? 0) > 0,
+    hasPhotoEditComparisons,
+    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,
     blog: {
       pageTitle,

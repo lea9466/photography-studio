@@ -82,22 +82,29 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     })
   }
 
-  const [{ count: packageCount }, { count: postCount }] = await Promise.all([
-    admin
-      .from('photography_packages')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', galleryData.user_id)
-      .eq('is_active', true),
-    admin
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', galleryData.user_id),
-  ])
+  const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
+    await Promise.all([
+      admin
+        .from('photography_packages')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', galleryData.user_id)
+        .eq('is_active', true),
+      admin
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', galleryData.user_id),
+      admin
+        .from('photo_edit_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', galleryData.user_id)
+        .eq('is_active', true),
+    ])
 
   const userData = user as UserData | null
   const hasFaq = sanitizeFaqItems(parseFaqItems(userData?.faq_items)).length > 0
   const hasPackages = (packageCount ?? 0) > 0
   const hasBlog = (postCount ?? 0) > 0
+  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
   const accentColor = userData?.accent_color ?? '#7c3aed'
   const siteTheme = normalizeSiteTheme(userData?.selected_theme)
   const studioName = userData?.studio_name ?? 'Studio Gallery'
@@ -129,6 +136,8 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     hasFaq,
     hasPackages,
     hasBlog,
+    hasPhotoEditComparisons,
+    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: userData?.should_color_logo ?? false,
     galleryLayoutMode,
     gallery: {

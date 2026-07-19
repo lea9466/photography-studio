@@ -705,6 +705,68 @@ export type Database = {
           },
         ]
       }
+      photo_edit_comparisons: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          description: string | null
+          original_image_url: string
+          original_watermarked_url: string
+          edited_image_url: string
+          edited_watermarked_url: string
+          auto_apply_watermark: boolean
+          watermark_text: string | null
+          display_style: string
+          sort_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string | null
+          description?: string | null
+          original_image_url: string
+          original_watermarked_url: string
+          edited_image_url: string
+          edited_watermarked_url: string
+          auto_apply_watermark?: boolean
+          watermark_text?: string | null
+          display_style?: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          description?: string | null
+          original_image_url?: string
+          original_watermarked_url?: string
+          edited_image_url?: string
+          edited_watermarked_url?: string
+          auto_apply_watermark?: boolean
+          watermark_text?: string | null
+          display_style?: string
+          sort_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'photo_edit_comparisons_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       posts: {
         Row: {
           id: string
@@ -841,6 +903,8 @@ export type SlugRedirect = Database['public']['Tables']['slug_redirects']['Row']
 export type PhotographyPackage =
   Database['public']['Tables']['photography_packages']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']
+export type PhotoEditComparisonRow =
+  Database['public']['Tables']['photo_edit_comparisons']['Row']
 export type Post = Database['public']['Tables']['posts']['Row']
 export type PostPhoto = Database['public']['Tables']['post_photos']['Row']
 

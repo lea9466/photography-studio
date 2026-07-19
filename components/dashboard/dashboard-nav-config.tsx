@@ -11,6 +11,7 @@ import {
   Mail,
   CreditCard,
   FileText,
+  Images,
 } from 'lucide-react'
 
 export type DashboardNavItem = {
@@ -63,6 +64,13 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'תגובות',
     icon: <MessageSquareQuote className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+  },
+  {
+    href: '/dashboard/photo-edits',
+    label: 'לפני ואחרי עיבוד',
+    icon: <Images className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/photo-edits'),
+    badge: 'new',
   },
   {
     href: '/dashboard/faq',

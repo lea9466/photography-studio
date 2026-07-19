@@ -150,11 +150,28 @@ export default async function PhotographerPage({ params }: PageProps) {
       .eq('is_active', true)
       .order('sort_order', { ascending: true })
 
-    // Count posts to conditionally show the blog link in the header
-    const { count: postCount } = await admin
-      .from('posts')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', typedPhotographer.id)
+    // Count posts / active before-after pairs for conditional header links
+    const [
+      { count: postCount },
+      { count: photoEditComparisonsCount, error: photoEditCountError },
+    ] = await Promise.all([
+      admin
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typedPhotographer.id),
+      admin
+        .from('photo_edit_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typedPhotographer.id)
+        .eq('is_active', true),
+    ])
+
+    if (photoEditCountError) {
+      console.error('[photographer-homepage] photo_edit_comparisons count failed', {
+        photographerId: typedPhotographer.id,
+        error: photoEditCountError.message,
+      })
+    }
 
     // Fetch the latest posts for the homepage "latest posts" section
     const { data: latestPostsData } = await admin
@@ -375,6 +392,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           packages={packages || []}
           testimonials={testimonialsWithUrls}
           postCount={postCount ?? 0}
+          photoEditComparisonsCount={photoEditComparisonsCount ?? 0}
           blogPath={`${canonicalPath}/blog`}
           portfolioPath={`${canonicalPath}/portfolio`}
           studioPath={canonicalPath}

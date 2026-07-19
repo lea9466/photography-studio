@@ -24,6 +24,8 @@ export type SiteChromeConfig = {
   hasPackages?: boolean
   hasBlog?: boolean
   blogPath?: string
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
@@ -80,7 +82,7 @@ function generateStudioSignupFooterCta(theme: SiteChromeTheme, language: SiteLan
   }
 }
 
-type NavTarget = 'home' | 'gallery' | 'blog' | 'pricing' | 'faq' | 'contact'
+type NavTarget = 'home' | 'gallery' | 'blog' | 'beforeAfter' | 'pricing' | 'faq' | 'contact'
 
 function navSectionId(cfg: SiteChromeConfig, target: NavTarget) {
   if (target === 'gallery') return gallerySectionId(cfg.theme)
@@ -101,6 +103,9 @@ function navHref(cfg: SiteChromeConfig, target: NavTarget) {
   }
   if (target === 'blog' && cfg.blogPath) {
     return cfg.blogPath
+  }
+  if (target === 'beforeAfter' && cfg.beforeAfterPath) {
+    return cfg.beforeAfterPath
   }
   const sectionId = navSectionId(cfg, target)
   if (cfg.linkMode === 'href') {
@@ -124,6 +129,9 @@ function navAction(cfg: SiteChromeConfig, target: NavTarget, closeMenu?: string)
   }
   if (target === 'blog' && cfg.blogPath) {
     return `href="${cfg.blogPath}"`
+  }
+  if (target === 'beforeAfter' && cfg.beforeAfterPath) {
+    return `href="${cfg.beforeAfterPath}"`
   }
   if (cfg.linkMode === 'href') {
     return `href="${navHref(cfg, target)}"`
@@ -175,12 +183,14 @@ function navItems(
     home: copy.nav.home,
     gallery: portfolioNavLabel(language, cfg.galleryLayoutMode ?? 'separated'),
     blog: copy.nav.blog,
+    beforeAfter: copy.nav.beforeAfter,
     pricing: copy.nav.pricing,
     faq: copy.nav.faq,
     contact: copy.nav.contact,
   }
   const targets: NavTarget[] = ['home', 'gallery']
   if (cfg.hasBlog) targets.push('blog')
+  if (cfg.hasPhotoEditComparisons) targets.push('beforeAfter')
   if (cfg.hasPackages) targets.push('pricing')
   if (cfg.hasFaq) targets.push('faq')
   targets.push('contact')
@@ -188,15 +198,25 @@ function navItems(
   const useHrefForGallery =
     cfg.galleryLayoutMode === 'portfolio' && Boolean(cfg.portfolioPath)
   const useHrefForBlog = Boolean(cfg.blogPath)
+  const useHrefForBeforeAfter = Boolean(cfg.beforeAfterPath)
 
   return targets
     .map((target) => {
       const action = navAction(cfg, target, closeMenu)
       const closeAttr =
-        (cfg.linkMode === 'href' || useHrefForGallery || useHrefForBlog) && closeMenu
+        (cfg.linkMode === 'href' ||
+          useHrefForGallery ||
+          useHrefForBlog ||
+          useHrefForBeforeAfter) &&
+        closeMenu
           ? ` onclick="${closeMenu}"`
           : ''
-      if (cfg.linkMode === 'href' || (target === 'gallery' && useHrefForGallery) || (target === 'blog' && useHrefForBlog)) {
+      if (
+        cfg.linkMode === 'href' ||
+        (target === 'gallery' && useHrefForGallery) ||
+        (target === 'blog' && useHrefForBlog) ||
+        (target === 'beforeAfter' && useHrefForBeforeAfter)
+      ) {
         const href = navHref(cfg, target)
         return `<a href="${href}" class="${cls}" target="_parent"${closeAttr}>${labels[target]}</a>`
       }
@@ -761,6 +781,8 @@ export function createSiteChromeConfig(options: {
   hasPackages?: boolean
   hasBlog?: boolean
   blogPath?: string
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
@@ -778,6 +800,8 @@ export function createSiteChromeConfig(options: {
     hasPackages: options.hasPackages ?? false,
     hasBlog: options.hasBlog ?? false,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons ?? false,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     galleryLayoutMode: options.galleryLayoutMode ?? 'separated',
     portfolioPath: options.portfolioPath,
@@ -798,6 +822,8 @@ export type PublicSiteChromeOptions = {
   hasPackages?: boolean
   hasBlog?: boolean
   blogPath?: string
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
@@ -818,6 +844,8 @@ export function buildPublicSiteChrome(options: PublicSiteChromeOptions): SiteChr
     hasPackages: options.hasPackages,
     hasBlog: options.hasBlog,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo,
     galleryLayoutMode: options.galleryLayoutMode,
     portfolioPath: options.portfolioPath,

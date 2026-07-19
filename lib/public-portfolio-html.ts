@@ -368,6 +368,8 @@ export function generatePublicPortfolioPageHTML(options: {
   hasPackages?: boolean
   hasBlog?: boolean
   blogPath?: string
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   siteLanguage?: string | null
 }) {
@@ -386,6 +388,8 @@ export function generatePublicPortfolioPageHTML(options: {
     hasPackages: options.hasPackages ?? false,
     hasBlog: options.hasBlog ?? false,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons ?? false,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     galleryLayoutMode: 'portfolio',
     portfolioPath: options.portfolioPath,

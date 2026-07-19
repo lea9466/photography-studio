@@ -158,6 +158,20 @@ export function buildPostPhotoStoragePaths(
   }
 }
 
+/** Display-only paths for before/after photo-edit pairs (no originals bucket). */
+export function buildPhotoEditStoragePaths(
+  userId: string,
+  comparisonId: string,
+  role: 'original' | 'edited'
+) {
+  const baseName = `${role}.jpg`
+  const prefix = `${userId}/photo-edits/${comparisonId}`
+  return {
+    previewPath: `${prefix}/preview-${baseName}`,
+    watermarkedPath: `${prefix}/wm-${baseName}`,
+  }
+}
+
 export async function applyWatermarkToBlob(
   preview: Blob,
   watermarkText?: string,

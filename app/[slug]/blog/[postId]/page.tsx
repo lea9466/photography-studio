@@ -62,14 +62,22 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const admin = createAdminClient()
-  const [{ count: packageCount }, { count: postCount }] = await Promise.all([
-    admin
-      .from('photography_packages')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', typed.id)
-      .eq('is_active', true),
-    admin.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', typed.id),
-  ])
+  const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
+    await Promise.all([
+      admin
+        .from('photography_packages')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typed.id)
+        .eq('is_active', true),
+      admin.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', typed.id),
+      admin
+        .from('photo_edit_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typed.id)
+        .eq('is_active', true),
+    ])
+
+  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
 
   const html = generatePublicBlogPostPageHTML({
     theme: siteTheme,
@@ -85,6 +93,8 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
     hasFaq,
     hasPackages: (packageCount ?? 0) > 0,
     hasBlog: (postCount ?? 0) > 0,
+    hasPhotoEditComparisons,
+    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,
     siteLanguage: photographer.site_language,
   })

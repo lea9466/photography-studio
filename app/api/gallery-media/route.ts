@@ -90,6 +90,32 @@ function parseGalleryScopedPath(path: string) {
   return { userId: parts[0], galleryId: parts[1] }
 }
 
+/** Display-only media outside galleries: `{userId}/posts/...` or `{userId}/photo-edits/...` */
+function isStudioDisplayMediaPath(pathAfterBucket: string) {
+  const parts = pathAfterBucket.split('/').filter(Boolean)
+  return parts.length >= 3 && (parts[1] === 'posts' || parts[1] === 'photo-edits')
+}
+
+async function authorizeStudioDisplayMedia(
+  bucket: MediaBucket,
+  pathAfterBucket: string
+): Promise<boolean> {
+  // Public display derivatives may be served like branding (CDN/proxy).
+  if (bucket === 'previews' || bucket === 'watermarked') {
+    return true
+  }
+
+  // Sensitive buckets still require the owning photographer session.
+  const ownerId = pathAfterBucket.split('/').filter(Boolean)[0]
+  if (!ownerId) return false
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  return user?.id === ownerId
+}
+
 async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
   const admin = createAdminClient()
 
@@ -202,7 +228,9 @@ export async function GET(request: Request) {
     const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
 
     if (GALLERY_SCOPED_BUCKETS.has(bucket)) {
-      const allowed = await authorizeGalleryScopedMedia(bucket, path, galleryId)
+      const allowed = isStudioDisplayMediaPath(path)
+        ? await authorizeStudioDisplayMedia(bucket, path)
+        : await authorizeGalleryScopedMedia(bucket, path, galleryId)
       if (!allowed) {
         return textResponse('גישה נדחתה', 403)
       }

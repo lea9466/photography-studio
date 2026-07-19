@@ -4343,6 +4343,8 @@ interface PhotographerHomepageProps {
 
   postCount?: number
 
+  photoEditComparisonsCount?: number
+
   blogPath?: string
 
   portfolioPath?: string
@@ -4355,7 +4357,7 @@ interface PhotographerHomepageProps {
 
 
 
-export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, blogPath, portfolioPath, studioPath, posts = [] }: PhotographerHomepageProps) {
+export function PhotographerHomepage({ photographer, galleries = [], packages = [], testimonials = [], postCount = 0, photoEditComparisonsCount = 0, blogPath, portfolioPath, studioPath, posts = [] }: PhotographerHomepageProps) {
 
   const [mounted, setMounted] = useState(false)
 
@@ -4413,13 +4415,15 @@ export function PhotographerHomepage({ photographer, galleries = [], packages = 
 
       posts,
 
-      window.location.origin
+      window.location.origin,
+
+      photoEditComparisonsCount
 
     )
 
     setHtml(generatedHtml)
 
-  }, [photographer, galleries, packages, testimonials, postCount, blogPath, portfolioPath, studioPath, posts])
+  }, [photographer, galleries, packages, testimonials, postCount, photoEditComparisonsCount, blogPath, portfolioPath, studioPath, posts])
 
 
 
@@ -4870,7 +4874,9 @@ function generateHomepageHTML(
 
   posts: PublicBlogPost[] = [],
 
-  faviconOrigin?: string
+  faviconOrigin?: string,
+
+  photoEditComparisonsCount: number = 0
 
 ): string {
 
@@ -5314,6 +5320,8 @@ function generateHomepageHTML(
 
   const resolvedStudioPath = studioPath ?? blogPath?.replace(/\/blog$/, '') ?? '/'
   const resolvedBlogPath = blogPath ?? `${resolvedStudioPath}/blog`
+  const resolvedBeforeAfterPath = `${resolvedStudioPath}/before-after`
+  const hasPhotoEditComparisons = photoEditComparisonsCount > 0
 
   const siteChrome = (themeKey: SiteChromeTheme) =>
 
@@ -5340,6 +5348,10 @@ function generateHomepageHTML(
       hasBlog: postCount > 0,
 
       blogPath: postCount > 0 ? resolvedBlogPath : undefined,
+
+      hasPhotoEditComparisons,
+
+      beforeAfterPath: hasPhotoEditComparisons ? resolvedBeforeAfterPath : undefined,
 
       galleryLayoutMode:
         (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'

@@ -1013,6 +1013,8 @@ export function generatePublicBlogPageHTML(options: {
   blog: PublicBlogPageData
   hasFaq?: boolean
   hasPackages?: boolean
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   siteLanguage?: string | null
 }) {
@@ -1031,6 +1033,8 @@ export function generatePublicBlogPageHTML(options: {
     hasPackages: options.hasPackages ?? false,
     hasBlog: true,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons ?? false,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     siteLanguage: options.siteLanguage,
   })
@@ -1158,6 +1162,8 @@ export function generatePublicBlogPostPageHTML(options: {
   hasFaq?: boolean
   hasPackages?: boolean
   hasBlog?: boolean
+  hasPhotoEditComparisons?: boolean
+  beforeAfterPath?: string
   shouldColorLogo?: boolean
   siteLanguage?: string | null
 }) {
@@ -1176,6 +1182,8 @@ export function generatePublicBlogPostPageHTML(options: {
     hasPackages: options.hasPackages ?? false,
     hasBlog: options.hasBlog ?? true,
     blogPath: options.blogPath,
+    hasPhotoEditComparisons: options.hasPhotoEditComparisons ?? false,
+    beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     siteLanguage: options.siteLanguage,
     transparentNav: true,

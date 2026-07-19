@@ -29,7 +29,7 @@ export function galleryCardArrow(language: SiteLanguage): string {
   return language === 'en' ? '→' : '←'
 }
 
-type NavTarget = 'home' | 'gallery' | 'blog' | 'pricing' | 'faq' | 'contact'
+type NavTarget = 'home' | 'gallery' | 'blog' | 'beforeAfter' | 'pricing' | 'faq' | 'contact'
 
 export type SiteChromeCopy = {
   nav: Record<NavTarget, string>
@@ -53,6 +53,7 @@ const HEBREW_CHROME: SiteChromeCopy = {
     home: 'בית',
     gallery: 'גלריות',
     blog: 'בלוג',
+    beforeAfter: 'לפני ואחרי עיבוד',
     pricing: 'חבילות צילום',
     faq: 'שאלות נפוצות',
     contact: 'יצירת קשר',
@@ -77,6 +78,7 @@ const ENGLISH_CHROME: SiteChromeCopy = {
     home: 'Home',
     gallery: 'Galleries',
     blog: 'Blog',
+    beforeAfter: 'Before & After',
     pricing: 'Packages',
     faq: 'FAQ',
     contact: 'Contact',

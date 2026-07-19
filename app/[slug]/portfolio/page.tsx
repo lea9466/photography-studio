@@ -121,16 +121,25 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
   const logoUrl = await resolveBrandingPath(typed.logo_url)
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
-  const { count: packageCount } = await admin
-    .from('photography_packages')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', typed.id)
-    .eq('is_active', true)
+  const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
+    await Promise.all([
+      admin
+        .from('photography_packages')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typed.id)
+        .eq('is_active', true),
+      admin
+        .from('posts')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typed.id),
+      admin
+        .from('photo_edit_comparisons')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', typed.id)
+        .eq('is_active', true),
+    ])
 
-  const { count: postCount } = await admin
-    .from('posts')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', typed.id)
+  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
 
   const html = generatePublicPortfolioPageHTML({
     theme: siteTheme,
@@ -142,6 +151,8 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     hasPackages: (packageCount ?? 0) > 0,
     hasBlog: (postCount ?? 0) > 0,
     blogPath,
+    hasPhotoEditComparisons,
+    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,
     portfolio: {
       pageTitle: 'תיק עבודות',
