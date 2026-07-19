@@ -385,6 +385,12 @@ export async function updatePhotoEditComparison(
         updateData.original_image_url = input.originalImageUrl
         updateData.original_watermarked_url =
           input.originalWatermarkedUrl ?? existingRow.original_watermarked_url
+      } else if (
+        input.originalWatermarkedUrl &&
+        input.originalWatermarkedUrl !== existingRow.original_watermarked_url
+      ) {
+        previousOriginalWm = existingRow.original_watermarked_url
+        updateData.original_watermarked_url = input.originalWatermarkedUrl
       }
     }
 
@@ -403,6 +409,12 @@ export async function updatePhotoEditComparison(
         updateData.edited_image_url = input.editedImageUrl
         updateData.edited_watermarked_url =
           input.editedWatermarkedUrl ?? existingRow.edited_watermarked_url
+      } else if (
+        input.editedWatermarkedUrl &&
+        input.editedWatermarkedUrl !== existingRow.edited_watermarked_url
+      ) {
+        previousEditedWm = existingRow.edited_watermarked_url
+        updateData.edited_watermarked_url = input.editedWatermarkedUrl
       }
     }
 
@@ -418,13 +430,29 @@ export async function updatePhotoEditComparison(
       .select('*')
       .single()
 
-    if (error) return actionError(error.message)
+    if (error) {
+      // Keep the previous images; remove any newly uploaded objects that were not saved.
+      if (previousOriginalPreview && input.originalImageUrl) {
+        await deletePhotoEditImagePair(
+          input.originalImageUrl,
+          input.originalWatermarkedUrl ?? null
+        )
+      }
+      if (previousEditedPreview && input.editedImageUrl) {
+        await deletePhotoEditImagePair(input.editedImageUrl, input.editedWatermarkedUrl ?? null)
+      }
+      return actionError(error.message)
+    }
 
     if (previousOriginalPreview) {
       await deletePhotoEditImagePair(previousOriginalPreview, previousOriginalWm)
+    } else if (previousOriginalWm) {
+      await deletePhotoEditStoredPath(previousOriginalWm, 'watermarked')
     }
     if (previousEditedPreview) {
       await deletePhotoEditImagePair(previousEditedPreview, previousEditedWm)
+    } else if (previousEditedWm) {
+      await deletePhotoEditStoredPath(previousEditedWm, 'watermarked')
     }
 
     await revalidatePhotoEditSurfaces(userId)

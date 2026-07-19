@@ -102,7 +102,7 @@ export function PhotoEditsManager({
               : {}),
           }))
         }
-        toast.success('הזוג עודכן בהצלחה')
+        toast.success('השינויים נשמרו בהצלחה')
       } else {
         const result = await createPhotoEditComparison(toFormData(values, true))
         if (!result.success) {

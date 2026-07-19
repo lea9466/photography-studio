@@ -127,19 +127,28 @@ export function PhotoEditForm({
   const [originalDims, setOriginalDims] = useState<{ width: number; height: number } | null>(null)
   const [editedDims, setEditedDims] = useState<{ width: number; height: number } | null>(null)
 
-  useEffect(() => {
-    setForm(initial ? fromExisting(initial, signedUrls) : createEmptyForm())
-    setAspectWarning(false)
-    setOriginalDims(null)
-    setEditedDims(null)
-  }, [initial, signedUrls])
-
+  // Remount via dialog `key` handles create vs edit. Avoid resetting the form
+  // when parent signedUrls refresh mid-edit (that wiped newly uploaded paths).
   useEffect(() => {
     if (!originalDims || !editedDims) return
     const a = aspectRatio(originalDims.width, originalDims.height)
     const b = aspectRatio(editedDims.width, editedDims.height)
     setAspectWarning(Math.abs(a - b) > 0.03)
   }, [originalDims, editedDims])
+
+  useEffect(() => {
+    const url = form.originalPreviewUrl
+    return () => {
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+    }
+  }, [form.originalPreviewUrl])
+
+  useEffect(() => {
+    const url = form.editedPreviewUrl
+    return () => {
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url)
+    }
+  }, [form.editedPreviewUrl])
 
   async function handleUpload(
     role: 'original' | 'edited',
@@ -168,20 +177,28 @@ export function PhotoEditForm({
         applyAutoWatermark: form.autoApplyWatermark,
       })
 
-      setForm((current) => ({
-        ...current,
-        ...(role === 'original'
-          ? {
-              originalImageUrl: uploaded.previewPath,
-              originalWatermarkedUrl: uploaded.watermarkedPath,
-              originalPreviewUrl: uploaded.localPreviewUrl,
-            }
-          : {
-              editedImageUrl: uploaded.previewPath,
-              editedWatermarkedUrl: uploaded.watermarkedPath,
-              editedPreviewUrl: uploaded.localPreviewUrl,
-            }),
-      }))
+      setForm((current) => {
+        const previousPreview =
+          role === 'original' ? current.originalPreviewUrl : current.editedPreviewUrl
+        if (previousPreview?.startsWith('blob:')) {
+          URL.revokeObjectURL(previousPreview)
+        }
+
+        return {
+          ...current,
+          ...(role === 'original'
+            ? {
+                originalImageUrl: uploaded.previewPath,
+                originalWatermarkedUrl: uploaded.watermarkedPath,
+                originalPreviewUrl: uploaded.localPreviewUrl,
+              }
+            : {
+                editedImageUrl: uploaded.previewPath,
+                editedWatermarkedUrl: uploaded.watermarkedPath,
+                editedPreviewUrl: uploaded.localPreviewUrl,
+              }),
+        }
+      })
       toast.success(role === 'original' ? 'התמונה המקורית הועלתה' : 'התמונה המעובדת הועלתה')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'שגיאה בהעלאת התמונה')
@@ -404,7 +421,7 @@ export function PhotoEditForm({
           ביטול
         </Button>
         <Button type="button" disabled={busy} onClick={handleSubmit}>
-          {saving ? 'שומר...' : 'שמירת הזוג'}
+          {saving ? 'שומרת שינויים...' : initial ? 'שמירת השינויים' : 'שמירת הזוג'}
         </Button>
       </div>
     </div>

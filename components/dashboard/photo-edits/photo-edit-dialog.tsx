@@ -42,6 +42,7 @@ export function PhotoEditDialog({
           </DialogDescription>
         </DialogHeader>
         <PhotoEditForm
+          key={editing?.id ?? 'create'}
           initial={editing}
           studioName={studioName}
           signedUrls={signedUrls}

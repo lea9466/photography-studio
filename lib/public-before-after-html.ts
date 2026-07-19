@@ -47,6 +47,9 @@ type ThemeTokens = {
   variant: string
   outline: string
   frameBg: string
+  /** Matches homepage gallery media radius (GALLERY_RADIUS_BY_THEME). */
+  imageRadius: string
+  cardShadow: string
 }
 
 const TOKENS: Record<SiteChromeTheme, ThemeTokens> = {
@@ -57,6 +60,8 @@ const TOKENS: Record<SiteChromeTheme, ThemeTokens> = {
     variant: '#464742',
     outline: '#c7c7c0',
     frameBg: 'rgba(28, 27, 27, 0.035)',
+    imageRadius: '0px',
+    cardShadow: 'none',
   },
   classic: {
     bg: '#FAFAF8',
@@ -65,6 +70,8 @@ const TOKENS: Record<SiteChromeTheme, ThemeTokens> = {
     variant: '#57534e',
     outline: '#d6d3d1',
     frameBg: 'rgba(28, 25, 23, 0.035)',
+    imageRadius: '4px',
+    cardShadow: '0 10px 28px rgba(28, 25, 23, 0.08)',
   },
   modern: {
     bg: '#F8FAFC',
@@ -73,6 +80,8 @@ const TOKENS: Record<SiteChromeTheme, ThemeTokens> = {
     variant: '#475569',
     outline: '#cbd5e1',
     frameBg: 'rgba(15, 23, 42, 0.035)',
+    imageRadius: '12px',
+    cardShadow: '0 18px 50px rgba(15, 23, 42, 0.1)',
   },
   dark: {
     bg: '#121217',
@@ -81,6 +90,8 @@ const TOKENS: Record<SiteChromeTheme, ThemeTokens> = {
     variant: '#B8B8C0',
     outline: 'rgba(255,255,255,0.12)',
     frameBg: 'rgba(255, 255, 255, 0.04)',
+    imageRadius: '0px',
+    cardShadow: 'none',
   },
 }
 
@@ -103,6 +114,9 @@ function pageCopy(language: SiteLanguage) {
     showOriginal: he ? 'הצגת המקור' : 'Show original',
     showResult: he ? 'חזרה לתוצאה המעובדת' : 'Back to the edited result',
     loadError: he ? 'לא הצלחנו לטעון את ההשוואה' : 'We could not load this comparison',
+    missingOriginal: he
+      ? 'תמונת המקור אינה זמינה כרגע'
+      : 'The original image is unavailable right now',
     regionLabel: he
       ? 'עדשת חשיפה — הזיזו כדי לראות את המקור'
       : 'Reveal lens — move to see the original',
@@ -111,7 +125,7 @@ function pageCopy(language: SiteLanguage) {
 
 const REVEAL_LENS_CSS = `
 .ba-page {
-  padding-top: 5.5rem;
+  padding-top: calc(7.25rem + 50px);
   padding-bottom: 3.5rem;
 }
 .ba-header {
@@ -122,7 +136,8 @@ const REVEAL_LENS_CSS = `
 }
 .ba-header__eyebrow {
   display: block;
-  margin-bottom: 0.65rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
   font-size: 0.7rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -142,18 +157,23 @@ const REVEAL_LENS_CSS = `
   opacity: 0.72;
 }
 .ba-list {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(2.5rem, 6vh, 4.5rem);
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.45fr);
+  column-gap: clamp(32px, 5vw, 72px);
+  row-gap: 0;
   max-width: 1180px;
   margin: 0 auto;
   padding-inline: 1rem;
+  align-items: start;
 }
 .comparison-section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: clamp(32px, 5vw, 72px);
+  align-items: start;
   min-height: auto;
-  max-width: 1180px;
-  margin-inline: auto;
-  padding-block: clamp(32px, 5vh, 64px);
+  padding-block: calc(clamp(48px, 7vh, 96px) + 25px);
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.55s ease, transform 0.55s ease;
@@ -163,14 +183,13 @@ const REVEAL_LENS_CSS = `
   transform: none;
 }
 .comparison-layout {
-  display: grid;
-  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.45fr);
-  align-items: center;
-  gap: clamp(32px, 5vw, 72px);
+  display: contents;
 }
 .comparison-content {
+  grid-column: 1;
   text-align: start;
   min-width: 0;
+  align-self: center;
 }
 .comparison-tag {
   display: inline-block;
@@ -180,12 +199,39 @@ const REVEAL_LENS_CSS = `
   text-transform: uppercase;
   opacity: 0.5;
 }
+.comparison-number-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
 .comparison-number {
-  margin: 0 0 0.85rem;
-  font-size: clamp(42px, 5vw, 72px);
-  line-height: 1;
-  opacity: 0.14;
+  position: relative;
+  color: var(--brand-primary);
+  font-size: clamp(42px, 4vw, 68px);
   font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  opacity: 0.9;
+}
+.comparison-number::before {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  opacity: 0.07;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+.comparison-number-line {
+  width: 54px;
+  height: 1px;
+  background: var(--brand-primary);
+  opacity: 0.35;
+  flex-shrink: 0;
 }
 .comparison-title {
   margin: 0 0 0.75rem;
@@ -233,24 +279,44 @@ const REVEAL_LENS_CSS = `
   cursor: not-allowed;
 }
 .comparison-media {
+  grid-column: 2;
+  align-self: start;
+  justify-self: stretch;
   min-width: 0;
   position: relative;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(68vh, 620px);
+  pointer-events: auto;
+  overflow: visible;
+  border-radius: var(--theme-image-radius, var(--theme-card-radius, 12px));
 }
 .comparison-frame {
   position: relative;
+  isolation: isolate;
   width: 100%;
-  height: min(68vh, 620px);
-  min-height: 380px;
-  max-height: 620px;
-  border-radius: 20px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: var(--comparison-aspect-ratio, 4 / 3);
+  max-height: min(68vh, 620px);
+  border-radius: var(--theme-image-radius, var(--theme-card-radius, 12px));
   overflow: hidden;
-  background: var(--ba-frame-bg, rgba(0, 0, 0, 0.035));
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  box-shadow: var(--theme-card-shadow, none);
+  border: none;
   touch-action: pan-y;
   outline: none;
+  pointer-events: auto;
   --lens-x: 50%;
   --lens-y: 50%;
   --lens-radius: 105px;
+  --comparison-aspect-ratio: 4 / 3;
+  cursor: default;
+}
+.comparison-frame:not(.is-ready) {
+  cursor: default;
+}
+.comparison-frame.is-ready {
   cursor: crosshair;
 }
 .comparison-frame.is-dragging {
@@ -258,28 +324,39 @@ const REVEAL_LENS_CSS = `
 }
 .comparison-frame:focus-visible {
   box-shadow:
-    0 18px 50px rgba(0, 0, 0, 0.1),
+    var(--theme-card-shadow, none),
     0 0 0 2px rgba(255,255,255,0.85),
     0 0 0 4px rgba(0,0,0,0.28);
 }
 @media (max-height: 760px) and (min-width: 900px) {
+  .comparison-media {
+    max-height: min(62vh, 520px);
+  }
   .comparison-frame {
-    height: min(62vh, 520px);
-    min-height: 340px;
+    max-height: min(62vh, 520px);
     --lens-radius: 90px;
   }
+}
+.comparison-image,
+.comparison-original-layer,
+.comparison-lens,
+.comparison-status,
+.comparison-skeleton,
+.comparison-error,
+.comparison-missing-original {
+  pointer-events: none;
 }
 .comparison-image {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   display: block;
   user-select: none;
   -webkit-user-drag: none;
-  pointer-events: none;
+  border-radius: inherit;
 }
 .comparison-image--edited {
   z-index: 1;
@@ -288,52 +365,65 @@ const REVEAL_LENS_CSS = `
   position: absolute;
   inset: 0;
   z-index: 2;
-  /* clip-path is more reliable than mask + CSS vars across browsers */
+  border-radius: inherit;
+  opacity: 0;
+  visibility: hidden;
+  clip-path: circle(0px at var(--lens-x, 50%) var(--lens-y, 50%));
+  -webkit-clip-path: circle(0px at var(--lens-x, 50%) var(--lens-y, 50%));
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms;
+}
+.comparison-frame.is-interacting .comparison-original-layer {
+  opacity: 1;
+  visibility: visible;
   clip-path: circle(var(--lens-radius) at var(--lens-x) var(--lens-y));
   -webkit-clip-path: circle(var(--lens-radius) at var(--lens-x) var(--lens-y));
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.comparison-frame.is-ready:not(.show-full-original).is-interacting .comparison-original-layer,
-.comparison-frame.is-ready:not(.show-full-original).is-touch .comparison-original-layer {
-  opacity: 1;
+  transition: opacity 120ms ease;
 }
 .comparison-frame.show-full-original .comparison-original-layer {
-  clip-path: none;
-  -webkit-clip-path: none;
   opacity: 1;
-  transition: opacity 0.3s ease;
+  visibility: visible;
+  clip-path: circle(150% at 50% 50%) !important;
+  -webkit-clip-path: circle(150% at 50% 50%) !important;
+  transition: opacity 280ms ease;
 }
 .comparison-frame.show-full-original .comparison-lens,
 .comparison-frame:not(.is-ready) .comparison-lens,
 .comparison-frame.is-edited-only .comparison-lens,
 .comparison-frame.is-error .comparison-lens {
-  opacity: 0;
-  visibility: hidden;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 .comparison-lens {
   position: absolute;
-  z-index: 4;
+  z-index: 3;
   left: var(--lens-x);
   top: var(--lens-y);
   width: calc(var(--lens-radius) * 2);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
+  height: calc(var(--lens-radius) * 2);
+  transform: translate(-50%, -50%) scale(0.92);
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.18),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    0 12px 30px rgba(0, 0, 0, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.14), transparent 55%);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease,
+    visibility 0s linear 220ms;
 }
-.comparison-frame.is-ready:not(.show-full-original).is-interacting .comparison-lens,
-.comparison-frame.is-ready:not(.show-full-original).is-touch .comparison-lens {
+.comparison-frame.is-interacting .comparison-lens {
   opacity: 1;
   visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
 }
 .comparison-lens span {
   position: absolute;
@@ -349,12 +439,13 @@ const REVEAL_LENS_CSS = `
 }
 .comparison-status {
   position: absolute;
-  z-index: 5;
-  inset-inline-start: 0.9rem;
-  top: 0.85rem;
-  padding: 0.3rem 0.65rem;
+  z-index: 8;
+  inset-inline-start: 1rem;
+  top: 0;
+  transform: translateY(-50%);
+  padding: 0.35rem 0.75rem;
   border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.55);
   color: #fff;
   font-size: 0.68rem;
   letter-spacing: 0.1em;
@@ -362,14 +453,16 @@ const REVEAL_LENS_CSS = `
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
 }
-.comparison-frame.is-ready .comparison-status {
-  opacity: 0.9;
+.comparison-media.is-ready .comparison-status {
+  opacity: 0.95;
 }
 .comparison-skeleton {
   position: absolute;
   inset: 0;
   z-index: 6;
+  pointer-events: none;
   background: linear-gradient(
     90deg,
     rgba(180,180,180,0.12),
@@ -381,7 +474,8 @@ const REVEAL_LENS_CSS = `
 }
 .comparison-frame.is-ready .comparison-skeleton,
 .comparison-frame.is-error .comparison-skeleton,
-.comparison-frame.is-edited-only .comparison-skeleton {
+.comparison-frame.is-edited-only .comparison-skeleton,
+.comparison-frame.missing-original-image .comparison-skeleton {
   display: none;
 }
 @keyframes ba-shimmer {
@@ -398,26 +492,59 @@ const REVEAL_LENS_CSS = `
   text-align: center;
   padding: 1.5rem;
   font-size: 0.95rem;
+  pointer-events: none;
   background: var(--ba-frame-bg, rgba(0, 0, 0, 0.035));
 }
 .comparison-frame.is-error .comparison-error {
   display: flex;
 }
+.comparison-missing-original {
+  position: absolute;
+  z-index: 5;
+  inset-inline: 0.9rem;
+  bottom: 0.85rem;
+  display: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.comparison-frame.missing-original-image .comparison-missing-original,
+.comparison-frame.is-edited-only .comparison-missing-original {
+  display: inline-flex;
+}
+.comparison-frame.missing-original-image .comparison-lens,
+.comparison-frame.is-edited-only .comparison-lens,
+.comparison-media.missing-original-image .comparison-status {
+  display: none !important;
+}
 @media (max-width: 850px) {
-  .comparison-layout {
+  .ba-list {
     grid-template-columns: 1fr;
-    gap: 24px;
+    row-gap: 0;
+  }
+  .comparison-section {
+    grid-template-columns: 1fr;
+    row-gap: 24px;
+  }
+  .comparison-content,
+  .comparison-media {
+    grid-column: 1;
   }
   .comparison-content { order: 1; }
-  .comparison-media { order: 2; }
+  .comparison-media {
+    order: 2;
+    max-height: min(62vh, 520px);
+  }
   .comparison-frame {
-    height: min(62vh, 520px);
-    min-height: 320px;
-    max-height: 520px;
+    max-height: min(62vh, 520px);
     --lens-radius: 78px;
   }
   .comparison-number {
-    font-size: clamp(36px, 12vw, 56px);
+    font-size: clamp(36px, 10vw, 56px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -444,83 +571,169 @@ const REVEAL_LENS_SCRIPT = `
     return Math.max(min, Math.min(max, value));
   }
 
-  function bootFrame(frame) {
-    var section = frame.closest('[data-comparison-id]');
-    var originalLayer = frame.querySelector('[data-original-layer]');
-    var lens = frame.querySelector('[data-comparison-lens]');
-    var editedImg = frame.querySelector('[data-edited-img]');
-    var originalImg = frame.querySelector('[data-original-img]');
-    var statusEl = frame.querySelector('[data-comparison-status]');
-    var toggleBtn = section ? section.querySelector('[data-comparison-toggle]') : null;
-    var showOriginalLabel = frame.getAttribute('data-label-show-original') || '';
-    var showResultLabel = frame.getAttribute('data-label-show-result') || '';
-    var statusEdited = frame.getAttribute('data-label-status-edited') || '';
-    var statusOriginal = frame.getAttribute('data-label-status-original') || '';
+  function hasDimensions(image) {
+    return image.naturalWidth > 0 && image.naturalHeight > 0;
+  }
 
-    if (!originalLayer || !lens || !editedImg || !originalImg) return;
+  /**
+   * Reliable image wait for cache + lazy + decoding=async.
+   * Important: the load event can fire before naturalWidth is populated.
+   * Rejecting immediately in that case disabled the 2nd pair incorrectly.
+   */
+  function waitForImage(image) {
+    return new Promise(function (resolve, reject) {
+      if (image.complete && hasDimensions(image)) {
+        resolve(image);
+        return;
+      }
 
-    var loaded = { edited: false, original: false };
-    var failed = { edited: false, original: false };
+      var settled = false;
+
+      function finishOk() {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(image);
+      }
+
+      function finishErr(message) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(new Error(message));
+      }
+
+      function cleanup() {
+        image.removeEventListener('load', onLoad);
+        image.removeEventListener('error', onError);
+      }
+
+      function confirmDimensions() {
+        if (hasDimensions(image)) {
+          finishOk();
+          return;
+        }
+        if (typeof image.decode === 'function') {
+          image.decode().then(function () {
+            if (hasDimensions(image)) finishOk();
+            else finishErr('Image loaded without dimensions: ' + (image.currentSrc || image.src));
+          }).catch(function () {
+            // decode can fail even when the bitmap is usable
+            if (hasDimensions(image)) finishOk();
+            else {
+              requestAnimationFrame(function () {
+                if (hasDimensions(image)) finishOk();
+                else finishErr('Image loaded without dimensions: ' + (image.currentSrc || image.src));
+              });
+            }
+          });
+          return;
+        }
+        requestAnimationFrame(function () {
+          if (hasDimensions(image)) finishOk();
+          else finishErr('Image loaded without dimensions: ' + (image.currentSrc || image.src));
+        });
+      }
+
+      function onLoad() {
+        confirmDimensions();
+      }
+
+      function onError() {
+        finishErr('Failed to load image: ' + (image.currentSrc || image.src));
+      }
+
+      image.addEventListener('load', onLoad, { once: true });
+      image.addEventListener('error', onError, { once: true });
+
+      if (image.complete && hasDimensions(image)) {
+        finishOk();
+        return;
+      }
+
+      // Broken image that already finished — load will not fire again.
+      if (image.complete && !hasDimensions(image) && image.getAttribute('loading') !== 'lazy') {
+        finishErr('Image has no natural dimensions: ' + (image.currentSrc || image.src));
+      }
+    });
+  }
+
+  function promoteLazyImage(image) {
+    if (!image || image.getAttribute('loading') !== 'lazy') return;
+    if (image.complete && hasDimensions(image)) return;
+    image.loading = 'eager';
+  }
+
+  function applyFrameAspectRatio(frame, editedImage, originalImage) {
+    var width = editedImage.naturalWidth;
+    var height = editedImage.naturalHeight;
+    if (!width || !height) return;
+
+    // Keep every pair at the full column width; only the height follows aspect-ratio.
+    frame.style.width = '';
+    frame.style.maxWidth = '';
+    frame.style.setProperty('--comparison-aspect-ratio', width + ' / ' + height);
+
+    if (originalImage.naturalWidth > 0 && originalImage.naturalHeight > 0) {
+      var editedRatio = width / height;
+      var originalRatio = originalImage.naturalWidth / originalImage.naturalHeight;
+      if (Math.abs(editedRatio - originalRatio) > 0.02) {
+        console.warn('Before/after images use different aspect ratios', {
+          comparisonId: frame.getAttribute('data-comparison-id'),
+          editedRatio: editedRatio,
+          originalRatio: originalRatio,
+        });
+      }
+    }
+  }
+
+  function initializePointerInteraction(frame, originalLayer, getShowingOriginal) {
     var dragging = false;
     var pending = null;
-    var showingOriginal = false;
 
-    function setLens(clientX, clientY) {
+    function lensRadiusPx() {
+      var raw = getComputedStyle(frame).getPropertyValue('--lens-radius').trim();
+      var parsed = parseFloat(raw);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 105;
+    }
+
+    function updatePosition(clientX, clientY, withReveal) {
       var rect = frame.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
       var x = clamp(clientX - rect.left, 0, rect.width);
       var y = clamp(clientY - rect.top, 0, rect.height);
       frame.style.setProperty('--lens-x', ((x / rect.width) * 100).toFixed(3) + '%');
       frame.style.setProperty('--lens-y', ((y / rect.height) * 100).toFixed(3) + '%');
-    }
 
-    function setReadyState() {
-      if (failed.edited) {
-        frame.classList.add('is-error');
-        frame.classList.remove('is-ready');
-        if (toggleBtn) toggleBtn.disabled = true;
-        return;
+      if (getShowingOriginal()) return;
+
+      if (withReveal) {
+        var radius = lensRadiusPx();
+        var clip = 'circle(' + radius + 'px at ' + x.toFixed(2) + 'px ' + y.toFixed(2) + 'px)';
+        originalLayer.style.clipPath = clip;
+        originalLayer.style.webkitClipPath = clip;
       }
-      if (!loaded.edited) return;
-
-      if (failed.original) {
-        frame.classList.add('is-edited-only', 'is-ready');
-        if (toggleBtn) toggleBtn.disabled = true;
-        if (statusEl) statusEl.textContent = statusEdited;
-        return;
-      }
-      if (!loaded.original) return;
-
-      frame.classList.add('is-ready');
-      if (coarse) frame.classList.add('is-touch');
-      if (toggleBtn) toggleBtn.disabled = false;
-      if (statusEl) statusEl.textContent = statusEdited;
-      frame.style.setProperty('--lens-x', '50%');
-      frame.style.setProperty('--lens-y', '50%');
     }
 
-    function beginDrag(event) {
-      if (!frame.classList.contains('is-ready') || showingOriginal || failed.original) return;
-      dragging = true;
-      pending = null;
-      frame.classList.add('is-dragging', 'is-interacting');
-      try { frame.setPointerCapture(event.pointerId); } catch (e) {}
-      setLens(event.clientX, event.clientY);
+    function hideLens() {
+      frame.classList.remove('is-interacting', 'is-dragging');
+      if (getShowingOriginal()) return;
+      var idle = 'circle(0px at 50% 50%)';
+      originalLayer.style.clipPath = idle;
+      originalLayer.style.webkitClipPath = idle;
     }
 
-    function onPointerDown(event) {
-      if (!frame.classList.contains('is-ready') || showingOriginal || failed.original) return;
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
-      if (event.pointerType === 'touch' || coarse) {
-        pending = { id: event.pointerId, x: event.clientX, y: event.clientY };
-        return;
-      }
-      beginDrag(event);
-      event.preventDefault();
-    }
+    frame.addEventListener('pointerenter', function (event) {
+      if (!frame.classList.contains('is-ready') || getShowingOriginal()) return;
+      if (event.pointerType === 'touch') return;
+      updatePosition(event.clientX, event.clientY, true);
+      requestAnimationFrame(function () {
+        frame.classList.add('is-interacting');
+      });
+    });
 
-    function onPointerMove(event) {
-      if (!frame.classList.contains('is-ready') || showingOriginal || failed.original) return;
+    frame.addEventListener('pointermove', function (event) {
+      if (!frame.classList.contains('is-ready') || getShowingOriginal()) return;
 
       if (pending && event.pointerId === pending.id) {
         var dx = event.clientX - pending.x;
@@ -528,51 +741,72 @@ const REVEAL_LENS_SCRIPT = `
         if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
         if (Math.abs(dy) > Math.abs(dx)) {
           pending = null;
+          hideLens();
           return;
         }
-        beginDrag(event);
+        pending = null;
+        dragging = true;
+        frame.classList.add('is-dragging', 'is-interacting');
+        try { frame.setPointerCapture(event.pointerId); } catch (e) {}
+        updatePosition(event.clientX, event.clientY, true);
         event.preventDefault();
         return;
       }
 
-      if (dragging) {
-        setLens(event.clientX, event.clientY);
-        event.preventDefault();
+      if (event.pointerType === 'touch' && !(frame.hasPointerCapture && frame.hasPointerCapture(event.pointerId))) {
         return;
       }
 
-      if (event.pointerType === 'mouse' && !coarse) {
+      if (dragging || frame.classList.contains('is-interacting')) {
+        updatePosition(event.clientX, event.clientY, true);
+        if (dragging) event.preventDefault();
+      }
+    });
+
+    frame.addEventListener('pointerleave', function (event) {
+      if (event.pointerType === 'touch') return;
+      if (dragging) return;
+      hideLens();
+    });
+
+    frame.addEventListener('pointerdown', function (event) {
+      if (!frame.classList.contains('is-ready') || getShowingOriginal()) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+      if (event.pointerType === 'touch' || coarse) {
+        pending = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        updatePosition(event.clientX, event.clientY, true);
         frame.classList.add('is-interacting');
-        setLens(event.clientX, event.clientY);
+        return;
       }
-    }
 
-    function onPointerUp(event) {
+      updatePosition(event.clientX, event.clientY, true);
+      frame.classList.add('is-interacting');
+    });
+
+    function endInteraction(event) {
       pending = null;
-      if (!dragging) return;
+      if (frame.hasPointerCapture && frame.hasPointerCapture(event.pointerId)) {
+        try { frame.releasePointerCapture(event.pointerId); } catch (e) {}
+      }
       dragging = false;
       frame.classList.remove('is-dragging');
-      try { frame.releasePointerCapture(event.pointerId); } catch (e) {}
+      if (event.pointerType === 'touch' || coarse) {
+        hideLens();
+      }
     }
 
-    function onPointerEnter() {
-      if (!frame.classList.contains('is-ready') || showingOriginal || failed.original) return;
-      frame.classList.add('is-interacting');
-    }
+    frame.addEventListener('pointerup', endInteraction);
+    frame.addEventListener('pointercancel', endInteraction);
 
-    function onPointerLeave() {
-      if (dragging) return;
-      frame.classList.remove('is-interacting');
-    }
-
-    function onKeyDown(event) {
-      if (!frame.classList.contains('is-ready') || showingOriginal || failed.original) return;
+    frame.addEventListener('keydown', function (event) {
+      if (!frame.classList.contains('is-ready') || getShowingOriginal()) return;
       var rect = frame.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      var stepX = rect.width * (event.shiftKey ? 0.08 : 0.03);
-      var stepY = rect.height * (event.shiftKey ? 0.08 : 0.03);
       var x = (parseFloat(frame.style.getPropertyValue('--lens-x')) || 50) / 100 * rect.width;
       var y = (parseFloat(frame.style.getPropertyValue('--lens-y')) || 50) / 100 * rect.height;
+      var stepX = rect.width * (event.shiftKey ? 0.08 : 0.03);
+      var stepY = rect.height * (event.shiftKey ? 0.08 : 0.03);
       var handled = true;
       if (event.key === 'ArrowLeft') x -= stepX;
       else if (event.key === 'ArrowRight') x += stepX;
@@ -581,56 +815,187 @@ const REVEAL_LENS_SCRIPT = `
       else handled = false;
       if (!handled) return;
       event.preventDefault();
+      updatePosition(rect.left + x, rect.top + y, true);
       frame.classList.add('is-interacting');
-      setLens(rect.left + x, rect.top + y);
+    });
+
+    return { hideLens: hideLens, updatePosition: updatePosition };
+  }
+
+  function initComparisonFrame(frame) {
+    if (frame.dataset.initialized === 'true') return;
+    frame.dataset.initialized = 'true';
+
+    var section = frame.closest('[data-comparison-section]');
+    var editedImage = frame.querySelector('[data-edited-image]');
+    var originalImage = frame.querySelector('[data-original-image]');
+    var lens = frame.querySelector('[data-comparison-lens]');
+    var originalLayer = frame.querySelector('[data-original-layer]');
+    var toggleButton = section ? section.querySelector('[data-comparison-toggle]') : null;
+    var media = frame.parentElement;
+    var statusEl = media
+      ? media.querySelector('[data-comparison-status]')
+      : frame.querySelector('[data-comparison-status]');
+    var missingEl = frame.querySelector('[data-comparison-missing-original]');
+    var showOriginalLabel = frame.getAttribute('data-label-show-original') || '';
+    var showResultLabel = frame.getAttribute('data-label-show-result') || '';
+    var statusEdited = frame.getAttribute('data-label-status-edited') || '';
+    var statusOriginal = frame.getAttribute('data-label-status-original') || '';
+
+    if (!section || !editedImage || !originalImage || !lens || !originalLayer) {
+      frame.classList.add('has-error', 'is-error');
+      if (toggleButton) toggleButton.disabled = true;
+      return;
     }
 
-    if (toggleBtn) {
-      toggleBtn.disabled = true;
-      toggleBtn.addEventListener('click', function () {
-        if (!frame.classList.contains('is-ready') || failed.original) return;
+    if (toggleButton) {
+      toggleButton.disabled = true;
+      toggleButton.setAttribute('aria-disabled', 'true');
+    }
+
+    var showingOriginal = false;
+    var interaction = null;
+
+    function bindToggle() {
+      if (!toggleButton || toggleButton.dataset.bound === 'true') return;
+      toggleButton.dataset.bound = 'true';
+      toggleButton.addEventListener('click', function () {
+        if (!frame.classList.contains('is-ready') || !frame.classList.contains('has-original-image')) {
+          return;
+        }
         showingOriginal = frame.classList.toggle('show-full-original');
-        toggleBtn.setAttribute('aria-pressed', showingOriginal ? 'true' : 'false');
-        toggleBtn.textContent = showingOriginal ? showResultLabel : showOriginalLabel;
+        toggleButton.setAttribute('aria-pressed', showingOriginal ? 'true' : 'false');
+        toggleButton.textContent = showingOriginal ? showResultLabel : showOriginalLabel;
         if (statusEl) {
           statusEl.textContent = showingOriginal ? statusOriginal : statusEdited;
         }
         if (showingOriginal) {
           frame.classList.remove('is-interacting');
+          originalLayer.style.clipPath = 'circle(150% at 50% 50%)';
+          originalLayer.style.webkitClipPath = 'circle(150% at 50% 50%)';
+        } else if (interaction) {
+          interaction.hideLens();
         }
       });
     }
 
-    frame.addEventListener('pointerdown', onPointerDown);
-    frame.addEventListener('pointermove', onPointerMove);
-    frame.addEventListener('pointerup', onPointerUp);
-    frame.addEventListener('pointercancel', onPointerUp);
-    frame.addEventListener('pointerenter', onPointerEnter);
-    frame.addEventListener('pointerleave', onPointerLeave);
-    frame.addEventListener('keydown', onKeyDown);
-
-    function bindImage(img, key) {
-      var mark = function (ok) {
-        if (ok) loaded[key] = true;
-        else failed[key] = true;
-        setReadyState();
-      };
-      if (img.complete) {
-        mark(img.naturalWidth > 0);
-      } else {
-        img.addEventListener('load', function () { mark(true); });
-        img.addEventListener('error', function () { mark(false); });
+    function markFullyReady() {
+      applyFrameAspectRatio(frame, editedImage, originalImage);
+      frame.classList.add('is-ready', 'has-original-image');
+      frame.classList.remove(
+        'is-interacting',
+        'is-error',
+        'has-error',
+        'is-edited-only',
+        'missing-original-image'
+      );
+      if (media) {
+        media.classList.add('is-ready');
+        media.classList.remove('missing-original-image');
       }
+      if (missingEl) missingEl.hidden = true;
+      if (toggleButton) {
+        toggleButton.disabled = false;
+        toggleButton.removeAttribute('aria-disabled');
+      }
+      if (statusEl) statusEl.textContent = statusEdited;
+      interaction = initializePointerInteraction(frame, originalLayer, function () {
+        return showingOriginal;
+      });
+      interaction.hideLens();
+      bindToggle();
     }
 
-    bindImage(editedImg, 'edited');
-    bindImage(originalImg, 'original');
+    function markEditedOnly() {
+      applyFrameAspectRatio(frame, editedImage, originalImage);
+      frame.classList.add('is-ready', 'is-edited-only', 'missing-original-image');
+      frame.classList.remove('is-interacting', 'is-error', 'has-error', 'has-original-image');
+      if (media) {
+        media.classList.add('is-ready', 'missing-original-image');
+      }
+      if (missingEl) missingEl.hidden = false;
+      if (toggleButton) {
+        toggleButton.disabled = true;
+        toggleButton.setAttribute('aria-disabled', 'true');
+      }
+      if (statusEl) statusEl.textContent = statusEdited;
+      bindToggle();
+    }
+
+    function runInit() {
+      waitForImage(editedImage)
+        .then(function () {
+          return waitForImage(originalImage)
+            .then(function () {
+              markFullyReady();
+            })
+            .catch(function (originalError) {
+              console.error('Comparison original image failed', {
+                comparisonId: frame.getAttribute('data-comparison-id'),
+                error: originalError && originalError.message ? originalError.message : originalError,
+                originalSrc: originalImage.currentSrc || originalImage.src,
+              });
+              markEditedOnly();
+            });
+        })
+        .catch(function (editedError) {
+          console.error('Comparison initialization failed', {
+            comparisonId: frame.getAttribute('data-comparison-id'),
+            error: editedError && editedError.message ? editedError.message : editedError,
+            editedSrc: editedImage.currentSrc || editedImage.src,
+            originalSrc: originalImage.currentSrc || originalImage.src,
+          });
+          frame.classList.add('has-error', 'is-error');
+          if (toggleButton) {
+            toggleButton.disabled = true;
+            toggleButton.setAttribute('aria-disabled', 'true');
+          }
+        });
+    }
+
+    // Promote lazy images when the pair nears the viewport (helps inside srcdoc iframes).
+    if ('IntersectionObserver' in window) {
+      var promoteIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            promoteLazyImage(editedImage);
+            promoteLazyImage(originalImage);
+            promoteIo.disconnect();
+          });
+        },
+        { root: null, rootMargin: '240px 0px', threshold: 0.01 }
+      );
+      promoteIo.observe(frame);
+    } else {
+      promoteLazyImage(editedImage);
+      promoteLazyImage(originalImage);
+    }
+
+    runInit();
+
+    window.addEventListener('resize', function () {
+      if (!frame.classList.contains('is-ready')) return;
+      if (editedImage.naturalWidth > 0 && editedImage.naturalHeight > 0) {
+        applyFrameAspectRatio(frame, editedImage, originalImage);
+      }
+    });
   }
 
-  function boot() {
-    document.querySelectorAll('[data-comparison-frame]').forEach(bootFrame);
+  function initComparisons() {
+    document.querySelectorAll('[data-comparison-frame]').forEach(function (frame) {
+      try {
+        initComparisonFrame(frame);
+      } catch (error) {
+        console.error('Comparison initialization failed', {
+          comparisonId: frame.getAttribute('data-comparison-id'),
+          error: error,
+        });
+        frame.classList.add('has-error', 'is-error');
+      }
+    });
 
-    var sections = document.querySelectorAll('[data-comparison-id]');
+    var sections = document.querySelectorAll('[data-comparison-section]');
     if (reduced || !('IntersectionObserver' in window)) {
       sections.forEach(function (el) { el.classList.add('is-visible'); });
       return;
@@ -648,9 +1013,9 @@ const REVEAL_LENS_SCRIPT = `
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
+    document.addEventListener('DOMContentLoaded', initComparisons);
   } else {
-    boot();
+    initComparisons();
   }
 })();
 `
@@ -681,12 +1046,16 @@ function renderComparisonSection(
 <section
   class="comparison-section"
   id="ba-${escapeHtml(item.id)}"
+  data-comparison-section
   data-comparison-id="${escapeHtml(item.id)}"
 >
   <div class="comparison-layout">
     <div class="comparison-content">
       <p class="comparison-tag">${escapeHtml(copy.tag)}</p>
-      <p class="comparison-number" aria-hidden="true">${padIndex(index)}</p>
+      <div class="comparison-number-row" aria-hidden="true">
+        <span class="comparison-number">${padIndex(index)}</span>
+        <span class="comparison-number-line"></span>
+      </div>
       ${hasTitle ? `<h2 class="comparison-title ${titleClass}">${escapeHtml(item.title!.trim())}</h2>` : ''}
       ${hasDescription ? `<p class="comparison-desc">${escapeHtml(item.description!.trim())}</p>` : ''}
       <p class="comparison-howto">${escapeHtml(copy.howTo)}</p>
@@ -703,6 +1072,7 @@ function renderComparisonSection(
       <div
         class="comparison-frame"
         data-comparison-frame
+        data-comparison-id="${escapeHtml(item.id)}"
         tabindex="0"
         role="application"
         aria-label="${escapeHtml(copy.regionLabel)}"
@@ -712,9 +1082,10 @@ function renderComparisonSection(
         data-label-status-original="${escapeHtml(copy.statusOriginal)}"
       >
         <div class="comparison-skeleton" aria-hidden="true"></div>
-        <div class="comparison-error">${escapeHtml(copy.loadError)}</div>
+        <div class="comparison-error" aria-hidden="true">${escapeHtml(copy.loadError)}</div>
         <img
           class="comparison-image comparison-image--edited"
+          data-edited-image
           data-edited-img
           src="${escapeHtml(item.editedImageUrl)}"
           alt="${alt}"
@@ -724,6 +1095,7 @@ function renderComparisonSection(
         <div class="comparison-original-layer" data-original-layer aria-hidden="true">
           <img
             class="comparison-image comparison-image--original"
+            data-original-image
             data-original-img
             src="${escapeHtml(item.originalImageUrl)}"
             alt=""
@@ -735,8 +1107,13 @@ function renderComparisonSection(
         <div class="comparison-lens" data-comparison-lens aria-hidden="true">
           <span>${escapeHtml(copy.lensLabel)}</span>
         </div>
-        <span class="comparison-status" data-comparison-status>${escapeHtml(copy.statusEdited)}</span>
+        <span
+          class="comparison-missing-original"
+          data-comparison-missing-original
+          hidden
+        >${escapeHtml(copy.missingOriginal)}</span>
       </div>
+      <span class="comparison-status" data-comparison-status>${escapeHtml(copy.statusEdited)}</span>
     </div>
   </div>
 </section>`
@@ -789,7 +1166,16 @@ tailwind.config = {
 body { font-family: 'Heebo', sans-serif; background: ${t.bg}; color: ${t.text}; }
 .font-serif-hebrew { font-family: 'Frank Ruhl Libre', serif; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
-:root { --ba-frame-bg: ${t.frameBg}; }
+:root {
+  --ba-frame-bg: ${t.frameBg};
+  --brand-primary: ${primaryColor};
+  --theme-image-radius: ${t.imageRadius};
+  --theme-card-radius: ${t.imageRadius};
+  --theme-card-shadow: ${t.cardShadow};
+  --theme-border-color: ${t.outline};
+  --theme-muted-background: ${t.frameBg};
+  --theme-card-background: ${t.surface};
+}
 ${REVEAL_LENS_CSS}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}

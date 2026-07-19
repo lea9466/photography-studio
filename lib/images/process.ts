@@ -164,7 +164,13 @@ export function buildPhotoEditStoragePaths(
   comparisonId: string,
   role: 'original' | 'edited'
 ) {
-  const baseName = `${role}.jpg`
+  // Unique key per upload so replacements invalidate CDN/browser cache and
+  // the DB update path always differs from the previous stored value.
+  const version =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+      : Date.now().toString(36)
+  const baseName = `${role}-${version}.jpg`
   const prefix = `${userId}/photo-edits/${comparisonId}`
   return {
     previewPath: `${prefix}/preview-${baseName}`,
