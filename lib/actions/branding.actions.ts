@@ -17,6 +17,7 @@ import {
 import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
+import { isAllowedFont } from '@/constants/fonts'
 
 const HERO_SLOT_COUNT = 3
 
@@ -297,6 +298,8 @@ export async function updateBrandingSettings(data: {
   statExperienceYears?: number
   accentColor?: string
   selectedTheme?: string
+  headingFont?: string | null
+  aboutTitleFont?: string | null
   heroDesktopUrl?: string
   heroMobileUrl?: string
   heroDesktopUrls?: string[]
@@ -329,6 +332,24 @@ export async function updateBrandingSettings(data: {
       throw new Error('ערכת עיצוב לא תקינה')
     }
     updateData.selected_theme = data.selectedTheme
+  }
+  if (data.headingFont !== undefined) {
+    if (data.headingFont === null || data.headingFont === '') {
+      updateData.heading_font = null
+    } else if (!isAllowedFont(data.headingFont)) {
+      throw new Error('פונט כותרות לא תקין')
+    } else {
+      updateData.heading_font = data.headingFont
+    }
+  }
+  if (data.aboutTitleFont !== undefined) {
+    if (data.aboutTitleFont === null || data.aboutTitleFont === '') {
+      updateData.about_title_font = null
+    } else if (!isAllowedFont(data.aboutTitleFont)) {
+      throw new Error('פונט כותרת אודות לא תקין')
+    } else {
+      updateData.about_title_font = data.aboutTitleFont
+    }
   }
   if (data.heroDesktopUrl !== undefined) {
     assertOwnedBrandingRef(userId, data.heroDesktopUrl)

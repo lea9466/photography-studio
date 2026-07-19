@@ -13,6 +13,7 @@ import type { Database, FeedbackType } from '@/lib/types/database.types'
 import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
+import { isAllowedFont } from '@/constants/fonts'
 
 type UsersUpdate = Database['public']['Tables']['users']['Update']
 
@@ -32,6 +33,8 @@ type UpdateProfileInput = {
   stat_experience_years?: number
   accent_color?: string
   selected_theme?: string
+  heading_font?: string | null
+  about_title_font?: string | null
   logo_url?: string
   hero_desktop_url?: string
   hero_mobile_url?: string
@@ -112,6 +115,24 @@ function buildProfileUpdateData(userId: string, input: UpdateProfileInput): User
       throw new Error('ערכת עיצוב לא תקינה')
     }
     updateData.selected_theme = input.selected_theme
+  }
+  if (input.heading_font !== undefined) {
+    if (input.heading_font === null || input.heading_font === '') {
+      updateData.heading_font = null
+    } else if (!isAllowedFont(input.heading_font)) {
+      throw new Error('פונט כותרות לא תקין')
+    } else {
+      updateData.heading_font = input.heading_font
+    }
+  }
+  if (input.about_title_font !== undefined) {
+    if (input.about_title_font === null || input.about_title_font === '') {
+      updateData.about_title_font = null
+    } else if (!isAllowedFont(input.about_title_font)) {
+      throw new Error('פונט כותרת אודות לא תקין')
+    } else {
+      updateData.about_title_font = input.about_title_font
+    }
   }
   if (input.logo_url !== undefined) {
     assertOwnedBrandingRef(userId, input.logo_url)

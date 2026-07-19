@@ -51,6 +51,8 @@ export type Database = {
           stat_experience_years: number | null
           accent_color: string | null
           selected_theme: string | null
+          heading_font: string | null
+          about_title_font: string | null
           hero_desktop_url: string | null
           hero_mobile_url: string | null
           hero_desktop_urls: string[]
@@ -106,6 +108,8 @@ export type Database = {
           stat_experience_years?: number | null
           accent_color?: string | null
           selected_theme?: string | null
+          heading_font?: string | null
+          about_title_font?: string | null
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           hero_desktop_urls?: string[]
@@ -161,6 +165,8 @@ export type Database = {
           stat_experience_years?: number | null
           accent_color?: string | null
           selected_theme?: string | null
+          heading_font?: string | null
+          about_title_font?: string | null
           hero_desktop_url?: string | null
           hero_mobile_url?: string | null
           hero_desktop_urls?: string[]

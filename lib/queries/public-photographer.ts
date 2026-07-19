@@ -21,6 +21,8 @@ export type PublicPhotographer = Pick<
   | 'stat_experience_years'
   | 'accent_color'
   | 'selected_theme'
+  | 'heading_font'
+  | 'about_title_font'
   | 'hero_desktop_url'
   | 'hero_mobile_url'
   | 'hero_desktop_urls'
@@ -66,6 +68,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   stat_experience_years,
   accent_color,
   selected_theme,
+  heading_font,
+  about_title_font,
   hero_desktop_url,
   hero_mobile_url,
   hero_desktop_urls,
@@ -133,7 +137,9 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('faq_items') ||
     message.includes('faq_section_image_url') ||
     message.includes('gallery_layout_mode') ||
-    message.includes('site_language')
+    message.includes('site_language') ||
+    message.includes('heading_font') ||
+    message.includes('about_title_font')
   )
 }
 
@@ -141,6 +147,8 @@ function stripPortfolioLayoutFields(fields: string) {
   const optionalColumns = [
     'gallery_layout_mode',
     'site_language',
+    'heading_font',
+    'about_title_font',
     'packages_title',
     'packages_subtitle',
     'contact_title',
@@ -153,15 +161,22 @@ function stripPortfolioLayoutFields(fields: string) {
 }
 
 function withDefaultGalleryLayoutMode(
-  photographer: Omit<PublicPhotographer, 'gallery_layout_mode' | 'site_language'> & {
+  photographer: Omit<
+    PublicPhotographer,
+    'gallery_layout_mode' | 'site_language' | 'heading_font' | 'about_title_font'
+  > & {
     gallery_layout_mode?: PublicPhotographer['gallery_layout_mode']
     site_language?: PublicPhotographer['site_language']
+    heading_font?: PublicPhotographer['heading_font']
+    about_title_font?: PublicPhotographer['about_title_font']
   }
 ): PublicPhotographer {
   return {
     ...photographer,
     gallery_layout_mode: photographer.gallery_layout_mode ?? 'separated',
     site_language: photographer.site_language ?? 'he',
+    heading_font: photographer.heading_font ?? null,
+    about_title_font: photographer.about_title_font ?? null,
   }
 }
 
@@ -188,6 +203,9 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   }
   if (message.includes('site_language')) {
     return 'Run migration 20250712000003_add_site_language.sql on Supabase.'
+  }
+  if (message.includes('heading_font') || message.includes('about_title_font')) {
+    return 'Run migration 20250720000001_add_heading_fonts.sql on Supabase.'
   }
 
   return 'Apply pending Supabase migrations (supabase db push).'

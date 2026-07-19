@@ -14,7 +14,21 @@ import { LabelWithHelp } from '@/components/ui/label-with-help'
 import { HelpTooltip } from '@/components/ui/help-tooltip'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { SITE_SETTINGS_HELP, THEME_HELP, THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
+import {
+  ALLOWED_FONTS,
+  ALLOWED_FONTS_STYLESHEET_HREF,
+  DEFAULT_ABOUT_TITLE_FONT,
+  DEFAULT_HEADING_FONT,
+  resolveAllowedFont,
+} from '@/constants/fonts'
 import { Building2, ExternalLink, Globe, Loader2, MessageCircle, Palette, Trash2, Upload, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -80,6 +94,8 @@ type ProfileFormProps = {
     stat_experience_years: number
     accent_color: string
     selected_theme: string
+    heading_font?: string | null
+    about_title_font?: string | null
     logo_url: string | null
     hero_desktop_url: string | null
     hero_mobile_url: string | null
@@ -218,6 +234,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [selectedTheme, setSelectedTheme] = useState(() =>
     normalizeThemeId(profile?.selected_theme)
   )
+  const [headingFont, setHeadingFont] = useState(() =>
+    resolveAllowedFont(profile?.heading_font, DEFAULT_HEADING_FONT)
+  )
+  const [aboutTitleFont, setAboutTitleFont] = useState(() =>
+    resolveAllowedFont(profile?.about_title_font, DEFAULT_ABOUT_TITLE_FONT)
+  )
   const [logoUrl, setLogoUrl] = useState(profile?.logo_url ?? '')
   const [heroDesktopUrls, setHeroDesktopUrls] = useState<string[]>(() =>
     initHeroSlots(profile?.hero_desktop_urls, profile?.hero_desktop_url ?? null)
@@ -271,6 +293,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     setPhone(profile?.phone ?? '')
     setAddress(profile?.address ?? '')
   }, [profile?.email, profile?.phone, profile?.address])
+
+  useEffect(() => {
+    const linkId = 'allowed-fonts-preview'
+    if (document.getElementById(linkId)) return
+    const link = document.createElement('link')
+    link.id = linkId
+    link.rel = 'stylesheet'
+    link.href = ALLOWED_FONTS_STYLESHEET_HREF
+    document.head.appendChild(link)
+  }, [])
 
   const previewPath = savedSlug.trim() ? `/${savedSlug.trim()}` : null
 
@@ -423,6 +455,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           stat_experience_years: statExperienceYears,
           accent_color: accentColor,
           selected_theme: selectedTheme,
+          heading_font: headingFont,
+          about_title_font: aboutTitleFont,
           logo_url: extractPathFromUrl(logoUrl) || undefined,
           hero_desktop_url: extractPathFromUrl(heroDesktopUrls.find(Boolean) ?? null) || undefined,
           hero_mobile_url: extractPathFromUrl(heroMobileUrls.find(Boolean) ?? null) || undefined,
@@ -1039,6 +1073,70 @@ export function ProfileForm({ profile }: ProfileFormProps) {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <LabelWithHelp
+                  htmlFor="heading-font"
+                  help="פונט הכותרות הראשיות באתר (משתנה --headline-font)."
+                  where="מופיע בכותרות הסעיפים בדף הבית ובדפים הציבוריים לפי ערכת הנושא."
+                >
+                  פונט כותרות
+                </LabelWithHelp>
+                <Select value={headingFont} onValueChange={setHeadingFont}>
+                  <SelectTrigger id="heading-font" className={INPUT_CLASS}>
+                    <SelectValue placeholder="בחרי פונט" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
+                    {ALLOWED_FONTS.map((font) => (
+                      <SelectItem
+                        key={font.value}
+                        value={font.value}
+                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
+                      >
+                        <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p
+                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
+                  style={{ fontFamily: `'${headingFont}', sans-serif` }}
+                >
+                  כך נראות הכותרות שלך
+                </p>
+              </div>
+              <div className="space-y-2">
+                <LabelWithHelp
+                  htmlFor="about-title-font"
+                  help="פונט כותרת אזור האודות (משתנה --about-title-font) בערכות שתומכות בו."
+                  where="מופיע בכותרת סעיף האודות בערכות Modern ו-Bold."
+                >
+                  פונט כותרת אודות
+                </LabelWithHelp>
+                <Select value={aboutTitleFont} onValueChange={setAboutTitleFont}>
+                  <SelectTrigger id="about-title-font" className={INPUT_CLASS}>
+                    <SelectValue placeholder="בחרי פונט" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
+                    {ALLOWED_FONTS.map((font) => (
+                      <SelectItem
+                        key={font.value}
+                        value={font.value}
+                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
+                      >
+                        <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p
+                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
+                  style={{ fontFamily: `'${aboutTitleFont}', sans-serif` }}
+                >
+                  כך נראית כותרת האודות
+                </p>
               </div>
             </div>
           </div>

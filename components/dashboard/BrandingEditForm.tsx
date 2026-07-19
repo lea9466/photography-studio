@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { updateBrandingSettings } from '@/lib/actions/branding.actions'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  ALLOWED_FONTS,
+  ALLOWED_FONTS_STYLESHEET_HREF,
+  DEFAULT_ABOUT_TITLE_FONT,
+  DEFAULT_HEADING_FONT,
+  resolveAllowedFont,
+} from '@/constants/fonts'
 
 type BrandingEditFormProps = {
   branding: {
@@ -18,6 +32,8 @@ type BrandingEditFormProps = {
     stat_experience_years: number
     accent_color: string
     selected_theme: string
+    heading_font?: string | null
+    about_title_font?: string | null
     hero_desktop_url: string | null
     hero_mobile_url: string | null
     about_image_url: string | null
@@ -41,10 +57,26 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
   const [statExperience, setStatExperience] = useState(branding.stat_experience_years.toString())
   const [accentColor, setAccentColor] = useState(branding.accent_color ?? '#B8953F')
   const [selectedTheme, setSelectedTheme] = useState(branding.selected_theme ?? 'elegant')
+  const [headingFont, setHeadingFont] = useState(() =>
+    resolveAllowedFont(branding.heading_font, DEFAULT_HEADING_FONT)
+  )
+  const [aboutTitleFont, setAboutTitleFont] = useState(() =>
+    resolveAllowedFont(branding.about_title_font, DEFAULT_ABOUT_TITLE_FONT)
+  )
   const [heroDesktopUrl, setHeroDesktopUrl] = useState(branding.hero_desktop_url ?? '')
   const [heroMobileUrl, setHeroMobileUrl] = useState(branding.hero_mobile_url ?? '')
   const [aboutImageUrl, setAboutImageUrl] = useState(branding.about_image_url ?? '')
   const [shouldColorLogo, setShouldColorLogo] = useState(branding.should_color_logo ?? false)
+
+  useEffect(() => {
+    const linkId = 'allowed-fonts-preview'
+    if (document.getElementById(linkId)) return
+    const link = document.createElement('link')
+    link.id = linkId
+    link.rel = 'stylesheet'
+    link.href = ALLOWED_FONTS_STYLESHEET_HREF
+    document.head.appendChild(link)
+  }, [])
 
   function handleSave() {
     startTransition(async () => {
@@ -57,12 +89,14 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
           statExperienceYears: statExperience ? parseInt(statExperience) : undefined,
           accentColor: accentColor || undefined,
           selectedTheme: selectedTheme || undefined,
+          headingFont,
+          aboutTitleFont,
           heroDesktopUrl: heroDesktopUrl || undefined,
           heroMobileUrl: heroMobileUrl || undefined,
           aboutImageUrl: aboutImageUrl || undefined,
           shouldColorLogo,
         }
-        
+
         await updateBrandingSettings(payload)
         toast.success('הגדרות המותג נשמרו בהצלחה')
       } catch (error) {
@@ -160,6 +194,60 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
           </div>
         </div>
 
+        {/* Font Selection */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="heading-font" className="text-[#100d1f]">פונט כותרות</Label>
+            <Select value={headingFont} onValueChange={setHeadingFont}>
+              <SelectTrigger id="heading-font" className="border-[#c9c5cd] h-12 bg-white">
+                <SelectValue placeholder="בחרי פונט" />
+              </SelectTrigger>
+              <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
+                {ALLOWED_FONTS.map((font) => (
+                  <SelectItem
+                    key={font.value}
+                    value={font.value}
+                    className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
+                  >
+                    <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p
+              className="rounded-lg border border-[#c9c5cd] bg-[#f7f2f4] px-3 py-2 text-lg text-[#100d1f]"
+              style={{ fontFamily: `'${headingFont}', sans-serif` }}
+            >
+              כך נראות הכותרות שלך
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="about-title-font" className="text-[#100d1f]">פונט כותרת אודות</Label>
+            <Select value={aboutTitleFont} onValueChange={setAboutTitleFont}>
+              <SelectTrigger id="about-title-font" className="border-[#c9c5cd] h-12 bg-white">
+                <SelectValue placeholder="בחרי פונט" />
+              </SelectTrigger>
+              <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
+                {ALLOWED_FONTS.map((font) => (
+                  <SelectItem
+                    key={font.value}
+                    value={font.value}
+                    className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
+                  >
+                    <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p
+              className="rounded-lg border border-[#c9c5cd] bg-[#f7f2f4] px-3 py-2 text-lg text-[#100d1f]"
+              style={{ fontFamily: `'${aboutTitleFont}', sans-serif` }}
+            >
+              כך נראית כותרת האודות
+            </p>
+          </div>
+        </div>
+
         {/* Accent Color */}
         <div className="space-y-2">
           <Label htmlFor="accent-color" className="text-[#100d1f]">צבע מודגש</Label>
@@ -198,7 +286,7 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
         {/* Images */}
         <div className="space-y-4">
           <Label className="text-[#100d1f]">תמונות</Label>
-          
+
           <div className="space-y-2">
             <Label htmlFor="hero-desktop" className="text-sm text-gray-600">תמונת גיבוי - דסקטופ</Label>
             <Input

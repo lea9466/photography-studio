@@ -88,6 +88,8 @@ import {
   type SiteLanguage,
 } from '@/lib/site-language'
 import type { PublicBlogPost } from '@/lib/public-blog-html'
+import { buildBrandFontVarsStyle, getGoogleFontLinkTag } from '@/lib/fonts'
+import { isAllowedFont } from '@/constants/fonts'
 import { buildHomepageBlogModalHeadBlock } from '@/lib/public-blog-html'
 
 
@@ -123,6 +125,10 @@ interface Photographer {
   accent_color: string
 
   selected_theme: string
+
+  heading_font?: string | null
+
+  about_title_font?: string | null
 
   hero_desktop_url: string | null
 
@@ -5290,13 +5296,24 @@ function generateHomepageHTML(
   const blogModalHeadBlock =
     posts.length > 0 ? buildHomepageBlogModalHeadBlock(primaryColor) : ''
 
+  const brandHeadingFont = isAllowedFont(photographer.heading_font)
+    ? photographer.heading_font
+    : null
+  const brandAboutFont = isAllowedFont(photographer.about_title_font)
+    ? photographer.about_title_font
+    : null
+  const brandFontLink = getGoogleFontLinkTag(brandHeadingFont, brandAboutFont)
+  const brandFontVarsStyle = buildBrandFontVarsStyle(brandHeadingFont, brandAboutFont)
+
   const documentHead =
     generatePhotographerDocumentHead(
       studioName,
       logo_url,
       faviconOrigin,
       photographerId
-    ) + blogModalHeadBlock
+    ) +
+    blogModalHeadBlock +
+    (brandFontLink ? `\n${brandFontLink}` : '')
 
   const photographerName = name || 'אפרת כהן'
 
@@ -6386,11 +6403,11 @@ ${documentHead}
 
             "fontFamily": {
 
-                    "display": ["Playfair Display", "serif"],
+                    "display": ["var(--headline-font)"],
 
                     "body": ["Heebo", "sans-serif"],
 
-                    "serif-hebrew": ["Frank Ruhl Libre", "serif"]
+                    "serif-hebrew": ["var(--about-title-font)"]
 
             }
 
@@ -6404,6 +6421,14 @@ ${documentHead}
 
 <style>
 
+        :root {
+
+            --headline-font: 'Playfair Display', serif;
+
+            --about-title-font: 'Frank Ruhl Libre', serif;
+
+        }
+
         body {
 
             background-color: #FAFAF8;
@@ -6413,6 +6438,12 @@ ${documentHead}
             font-family: 'Heebo', sans-serif;
 
             overflow-x: hidden;
+
+        }
+
+        .font-display {
+
+            font-family: var(--headline-font);
 
         }
 
@@ -6552,7 +6583,7 @@ ${documentHead}
 
             z-index: 1;
 
-            font-family: 'Heebo', sans-serif;
+            font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
 
             font-weight: 500;
 
@@ -7155,6 +7186,8 @@ ${documentHead}
 
     </style>
 
+${brandFontVarsStyle}
+
 </head>
 
 <body class="theme-elegant selection:bg-[${primaryColor}] selection:text-white">
@@ -7605,6 +7638,22 @@ ${documentHead}
 
             color: ${primaryColor};
 
+        }
+
+        .testimonials-section--modern .testimonials-section__header {
+            width: 100%;
+            text-align: center !important;
+            margin-bottom: 2.5rem;
+        }
+
+        .testimonials-section--modern .testimonials-section__header h2 {
+            display: inline-block;
+            width: auto;
+            max-width: 100%;
+            text-align: center !important;
+            border-bottom: 2px solid ${primaryColor};
+            padding-bottom: 0.75rem;
+            box-sizing: border-box;
         }
 
         
@@ -8219,6 +8268,8 @@ ${documentHead}
 
     </script>
 
+${brandFontVarsStyle}
+
 </head>
 
 <body class="theme-modern bg-background text-on-surface overflow-x-hidden">
@@ -8417,11 +8468,7 @@ ${hasTestimonials ? `
 
 <div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
-
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
-
-<div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
+<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
 
 </div>
 
@@ -8591,6 +8638,8 @@ ${documentHead}
         :root {
 
             --headline-font: 'Frank Ruhl Libre', serif;
+
+            --about-title-font: 'Frank Ruhl Libre', serif;
 
         }
 
@@ -9145,7 +9194,7 @@ ${documentHead}
 
         .about-title {
 
-            font-family: 'Frank Ruhl Libre', serif;
+            font-family: var(--about-title-font, var(--headline-font));
 
             font-size: clamp(2rem, 3.8vw, 3.1rem);
 
@@ -9531,6 +9580,8 @@ ${documentHead}
 
     </script>
 
+${brandFontVarsStyle}
+
 </head>
 
 <body class="theme-classic bg-surface text-on-surface overflow-x-hidden">
@@ -9723,7 +9774,7 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <span class="hp-posts-eyebrow" style="color:${primaryColor};">${homepageCopy.sections.classicRecentPhotosEyebrow}</span>
 
-<h2 class="hp-posts-title" style="font-family:'Frank Ruhl Libre', serif;color:#1c1917;">${escapeHtml(recentPhotosSectionTitle)}</h2>
+<h2 class="hp-posts-title" style="font-family:var(--headline-font);color:#1c1917;">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 <div class="hp-posts-divider" style="background:${primaryColor};"></div>
 
@@ -11032,6 +11083,8 @@ ${documentHead}
         }
 
     </script>
+
+${brandFontVarsStyle}
 
 </head>
 

@@ -23,6 +23,9 @@ type SectionTokens = {
   eyebrow: string
 }
 
+/** Section / card titles follow the theme CSS variable (and brand override). */
+const HEADLINE_FONT = 'var(--headline-font)'
+
 const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
   elegant: {
     cardBg: '#fdf8f7',
@@ -30,7 +33,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     variant: '#464742',
     cardRadius: '0px',
     cardBorder: '1px solid rgba(0,0,0,0.06)',
-    titleFont: "'Frank Ruhl Libre', serif",
+    titleFont: HEADLINE_FONT,
     eyebrow: 'Journal',
   },
   classic: {
@@ -39,7 +42,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     variant: '#57534e',
     cardRadius: '4px',
     cardBorder: '1px solid rgba(0,0,0,0.06)',
-    titleFont: "'Frank Ruhl Libre', serif",
+    titleFont: HEADLINE_FONT,
     eyebrow: 'Stories',
   },
   modern: {
@@ -48,7 +51,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     variant: '#475569',
     cardRadius: '12px',
     cardBorder: '1px solid #e2e8f0',
-    titleFont: "'Space Grotesk', 'Heebo', sans-serif",
+    titleFont: HEADLINE_FONT,
     eyebrow: 'BLOG',
   },
   dark: {
@@ -57,7 +60,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     variant: '#B8B8C0',
     cardRadius: '2px',
     cardBorder: '1px solid rgba(255,255,255,0.06)',
-    titleFont: "'Space Grotesk', 'Heebo', sans-serif",
+    titleFont: HEADLINE_FONT,
     eyebrow: 'JOURNAL',
   },
 }
@@ -431,7 +434,7 @@ const ELEGANT_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
 .hp-posts-header--elegant .elegant-section-heading__title {
   position: relative;
   z-index: 1;
-  font-family: 'Heebo', sans-serif;
+  font-family: var(--headline-font), 'Heebo', sans-serif;
   font-weight: 500;
   font-size: clamp(1.875rem, 4vw, 2.25rem);
   color: #1c1b1b;
