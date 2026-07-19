@@ -14,6 +14,7 @@ import { PhotoEditDialog } from '@/components/dashboard/photo-edits/photo-edit-d
 import { PhotoEditEmptyState } from '@/components/dashboard/photo-edits/photo-edit-empty-state'
 import { PhotoEditSortableList } from '@/components/dashboard/photo-edits/photo-edit-sortable-list'
 import type { PhotoEditFormValues } from '@/components/dashboard/photo-edits/photo-edit-form'
+import { GalleriesDashboardNote } from '@/components/dashboard/GalleriesDashboardNote'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -191,6 +192,13 @@ export function PhotoEditsManager({
 
   return (
     <div className="space-y-6">
+      <GalleriesDashboardNote>
+        <p>
+          העלי תמונה מקורית ותמונה מעובדת. הקישור «לפני ואחרי עיבוד» בהדר האתר יופיע רק אם קיים
+          לפחות זוג אחד.
+        </p>
+      </GalleriesDashboardNote>
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[--muted]">
           {items.length === 0

@@ -236,10 +236,6 @@ export function PhotoEditForm({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <Label>הטבע סימן מים על תמונות</Label>
-            <p className="mt-1 text-xs text-[--muted]">
-              בעת העלאה נשמרת גרסה מוקטנת בלבד, בדיוק כמו בגלריות ובפוסטים. סימן המים מוחל על גרסת
-              התצוגה.
-            </p>
           </div>
           <Switch
             checked={form.autoApplyWatermark}

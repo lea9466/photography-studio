@@ -188,11 +188,12 @@ function navItems(
     faq: copy.nav.faq,
     contact: copy.nav.contact,
   }
+  // Blog + before/after sit just before contact (near end of nav).
   const targets: NavTarget[] = ['home', 'gallery']
-  if (cfg.hasBlog) targets.push('blog')
-  if (cfg.hasPhotoEditComparisons) targets.push('beforeAfter')
   if (cfg.hasPackages) targets.push('pricing')
   if (cfg.hasFaq) targets.push('faq')
+  if (cfg.hasBlog) targets.push('blog')
+  if (cfg.hasPhotoEditComparisons) targets.push('beforeAfter')
   targets.push('contact')
 
   const useHrefForGallery =
