@@ -6,8 +6,10 @@ import { updateBrandingSettings } from '@/lib/actions/branding.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LabelWithHelp } from '@/components/ui/label-with-help'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { SITE_SETTINGS_HELP } from '@/lib/dashboard/site-settings-help'
 import {
   Select,
   SelectContent,
@@ -197,7 +199,14 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
         {/* Font Selection */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="heading-font" className="text-[#100d1f]">פונט כותרות</Label>
+            <LabelWithHelp
+              htmlFor="heading-font"
+              className="text-[#100d1f]"
+              help={SITE_SETTINGS_HELP.fields.headingFont.content}
+              where={SITE_SETTINGS_HELP.fields.headingFont.where}
+            >
+              פונט כותרות
+            </LabelWithHelp>
             <Select value={headingFont} onValueChange={setHeadingFont}>
               <SelectTrigger id="heading-font" className="border-[#c9c5cd] h-12 bg-white">
                 <SelectValue placeholder="בחרי פונט" />
@@ -222,7 +231,14 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="about-title-font" className="text-[#100d1f]">פונט כותרת אודות</Label>
+            <LabelWithHelp
+              htmlFor="about-title-font"
+              className="text-[#100d1f]"
+              help={SITE_SETTINGS_HELP.fields.aboutTitleFont.content}
+              where={SITE_SETTINGS_HELP.fields.aboutTitleFont.where}
+            >
+              פונט כותרת אודות
+            </LabelWithHelp>
             <Select value={aboutTitleFont} onValueChange={setAboutTitleFont}>
               <SelectTrigger id="about-title-font" className="border-[#c9c5cd] h-12 bg-white">
                 <SelectValue placeholder="בחרי פונט" />

@@ -776,7 +776,6 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
   }
 
   .theme-classic .testimonials-section__header,
-  .testimonials-section--modern .testimonials-section__header,
   .theme-bold .testimonials-section__header {
 
     width: 100%;
@@ -787,15 +786,30 @@ const CLASSIC_PACKAGES_ROWS_CSS = `
 
   }
 
+  .testimonials-section--modern .testimonials-section__header {
+
+    width: 100%;
+
+    text-align: center !important;
+
+    margin-bottom: 2.5rem;
+
+  }
+
   .theme-classic .testimonials-section__header span,
-  .testimonials-section--modern .testimonials-section__header span,
   .theme-bold .testimonials-section__header span,
 
   .theme-classic .testimonials-section__header h2,
-  .testimonials-section--modern .testimonials-section__header h2,
   .theme-bold .testimonials-section__header h2 {
 
     text-align: left !important;
+
+  }
+
+  .testimonials-section--modern .testimonials-section__header span,
+  .testimonials-section--modern .testimonials-section__header h2 {
+
+    text-align: center !important;
 
   }
 
@@ -1743,8 +1757,14 @@ const CLASSIC_RECENT_PHOTOS_HEADER_CSS = `
   }
 
   .theme-classic .recent-photos-header .hp-posts-eyebrow,
+  .theme-classic .recent-photos-header .classic-section-script,
   .theme-classic .recent-photos-header .hp-posts-title {
     text-align: left !important;
+  }
+
+  .theme-classic .recent-photos-header .classic-section-script {
+    display: block;
+    margin-bottom: 0.15rem;
   }
 
   .theme-classic .recent-photos-header .hp-posts-eyebrow {
@@ -1756,16 +1776,7 @@ const CLASSIC_RECENT_PHOTOS_HEADER_CSS = `
   }
 
   .theme-classic .recent-photos-header .hp-posts-title {
-    font-size: 32px;
-    line-height: 1.1;
-    font-weight: 500;
     margin: 0;
-  }
-
-  @media (min-width: 768px) {
-    .theme-classic .recent-photos-header .hp-posts-title {
-      font-size: 46px;
-    }
   }
 
   .theme-classic .recent-photos-header .hp-posts-divider {
@@ -1813,7 +1824,145 @@ const CLASSIC_RECENT_PHOTOS_HEADER_CSS = `
 
 `
 
-
+/** Must load AFTER shared gallery/recent header CSS (which forces RTL right-align). */
+const MODERN_SECTION_ALIGN_CSS = `
+  .theme-modern .modern-section-heading {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  .theme-modern .modern-section-eyebrow,
+  .theme-modern .modern-section-heading .modern-section-eyebrow {
+    display: block !important;
+    width: 100%;
+    text-align: left !important;
+    direction: ltr !important;
+  }
+  .theme-modern .modern-section-heading h1,
+  .theme-modern .modern-section-heading h2,
+  .theme-modern .homepage-gallery-header h2,
+  .theme-modern .recent-photos-header h2,
+  .theme-modern #contact h2,
+  .theme-modern #posts h2,
+  .theme-modern .homepage-gallery-header .modern-section-subtitle,
+  .theme-modern .recent-photos-header .modern-section-subtitle {
+    text-align: left !important;
+  }
+  .theme-modern .modern-section-heading h1,
+  .theme-modern .modern-section-heading h2,
+  .theme-modern .homepage-gallery-header h2,
+  .theme-modern .recent-photos-header h2,
+  .theme-modern #contact h2,
+  .theme-modern #posts h2 {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0 !important;
+    direction: rtl;
+  }
+  /* Packages / testimonials / FAQ: centered section titles */
+  .theme-modern #pricing .modern-section-heading,
+  .theme-modern #testimonials .modern-section-heading,
+  .theme-modern #faq .modern-section-heading,
+  .theme-modern .testimonials-section--modern .testimonials-section__header .modern-section-heading {
+    align-items: center !important;
+    text-align: center !important;
+  }
+  .theme-modern #pricing .modern-section-eyebrow,
+  .theme-modern #testimonials .modern-section-eyebrow,
+  .theme-modern #faq .modern-section-eyebrow,
+  .theme-modern #pricing .modern-section-heading h2,
+  .theme-modern #testimonials .modern-section-heading h2,
+  .theme-modern #faq .modern-section-heading h2,
+  .theme-modern #pricing .modern-section-subtitle,
+  .theme-modern #faq .modern-section-subtitle,
+  .theme-modern #pricing .text-center,
+  .theme-modern #faq .text-center,
+  .theme-modern .testimonials-section--modern .testimonials-section__header {
+    text-align: center !important;
+  }
+  .theme-modern #pricing .modern-section-heading h2,
+  .theme-modern #testimonials .modern-section-heading h2,
+  .theme-modern #faq .modern-section-heading h2 {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0 !important;
+    direction: rtl;
+  }
+  .theme-modern .homepage-gallery-header,
+  .theme-modern .recent-photos-header,
+  .theme-modern .homepage-gallery-header > div,
+  .theme-modern .recent-photos-header > div,
+  .theme-modern .recent-photos-header > div:not(.hp-posts-header--classic),
+  .theme-modern .recent-photos-header > div:not(.hp-posts-header--classic):has(.portfolio-cta-wrap),
+  .theme-modern .homepage-gallery-header .text-left,
+  .theme-modern .recent-photos-header .text-left {
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+  .theme-modern .recent-photos-header > div:not(.hp-posts-header--classic):has(.portfolio-cta-wrap),
+  .theme-modern .homepage-gallery-header > div {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+  /* Recent photos: titles left, "view all" CTA pinned right */
+  .theme-modern .recent-photos-header--modern,
+  .theme-modern .recent-photos-header--modern .recent-photos-header__row {
+    display: flex !important;
+    flex-direction: row !important;
+    direction: ltr !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 1rem;
+    width: 100%;
+    text-align: left !important;
+  }
+  .theme-modern .recent-photos-header--modern .recent-photos-header__titles {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto !important;
+    max-width: none;
+    text-align: left !important;
+  }
+  .theme-modern .recent-photos-header--modern .portfolio-cta-wrap {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin-inline-start: auto;
+    margin-inline-end: 0;
+    padding-inline: 0;
+    align-self: flex-end;
+  }
+  .theme-modern .recent-photos-header--modern .portfolio-cta-wrap .hp-posts-more {
+    justify-content: flex-end;
+    margin-top: 0;
+  }
+  .theme-modern .modern-about-content {
+    text-align: right !important;
+    direction: rtl !important;
+  }
+  .theme-modern .modern-about-content .modern-section-eyebrow {
+    text-align: right !important;
+    direction: ltr !important;
+  }
+  .theme-modern .modern-about-content h1,
+  .theme-modern .modern-about-content p {
+    text-align: right !important;
+    direction: rtl !important;
+  }
+  .theme-modern .modern-about-content .modern-about-actions {
+    direction: rtl !important;
+    justify-content: flex-start !important;
+  }
+  .theme-modern .modern-contact-info,
+  .theme-modern .modern-contact-info p {
+    text-align: left !important;
+  }
+`
 
 const HOMEPAGE_REVEAL_INIT_SCRIPT = `
 
@@ -5686,12 +5835,65 @@ function generateHomepageHTML(
 
         <span class="elegant-section-heading__watermark" aria-hidden="true">${escapeHtml(watermark)}</span>
 
-        <h2 class="elegant-section-heading__title text-3xl md:text-4xl${titleClass ? ` ${titleClass}` : ''}">${escapeHtml(title)}</h2>
+        <h2 class="elegant-section-heading__title site-section-title text-4xl font-bold${titleClass ? ` ${titleClass}` : ''}">${escapeHtml(title)}</h2>
 
       </div>
 
     `
 
+  }
+
+  /** Modern: English label above Hebrew title (left-aligned), same type style as current modern headings. */
+  const modernSectionHeading = (
+
+    title: string,
+
+    eyebrow: string,
+
+    opts?: { titleClass?: string; onDark?: boolean }
+
+  ) => {
+
+    const titleClass =
+
+      opts?.titleClass ??
+
+      'site-section-title font-headline text-4xl font-bold text-on-surface'
+
+    const eyebrowClass = opts?.onDark
+
+      ? 'modern-section-eyebrow modern-section-eyebrow--on-dark'
+
+      : 'modern-section-eyebrow'
+
+    return `
+
+<div class="modern-section-heading">
+
+<span class="${eyebrowClass}" aria-hidden="true">${escapeHtml(eyebrow)}</span>
+
+<h2 class="${titleClass}">${escapeHtml(title)}</h2>
+
+</div>
+
+`
+
+  }
+
+  /** Classic: script English label above section titles (same words as Elegant watermarks). */
+  const classicSectionScript = (label: string) =>
+    `<span class="classic-section-script" style="color:${primaryColor};" aria-hidden="true">${escapeHtml(label)}</span>`
+
+  /** Bold/dark: English label above section titles (same words as Elegant). */
+  const boldSectionEyebrow = (label: string, opts?: { align?: 'left' | 'center' | 'right' }) => {
+    const align = opts?.align ?? 'left'
+    const wrapClass =
+      align === 'center'
+        ? 'bold-section-eyebrow-wrap bold-section-eyebrow-wrap--center'
+        : align === 'right'
+          ? 'bold-section-eyebrow-wrap bold-section-eyebrow-wrap--right'
+          : 'bold-section-eyebrow-wrap'
+    return `<div class="${wrapClass}"><span class="bold-section-eyebrow" aria-hidden="true">${escapeHtml(label)}</span></div>`
   }
 
 
@@ -5962,9 +6164,7 @@ ${faqAmbientGlowHtml}
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">${homepageCopy.sections.faq}</h2>
-
-<p class="modern-section-subtitle">${homepageCopy.sections.faqSubtitle}</p>
+${modernSectionHeading(homepageCopy.sections.faq, 'FAQ', { titleClass: 'site-section-title font-headline text-4xl font-bold text-on-surface mb-sm' })}
 
 </div>
 
@@ -5988,9 +6188,9 @@ ${faqAmbientGlowHtml}
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface mb-sm">${homepageCopy.sections.faq}</h2>
+${boldSectionEyebrow('FAQ', { align: 'center' })}
 
-<p class="modern-section-subtitle opacity-70">${homepageCopy.sections.faqSubtitle}</p>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface mb-sm">${homepageCopy.sections.faq}</h2>
 
 </div>
 
@@ -6010,9 +6210,9 @@ ${generateFaqAccordionHTML('dark')}
 
 <div class="faq-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">FAQ</span>
+${classicSectionScript('FAQ')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${homepageCopy.sections.faq}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${homepageCopy.sections.faq}</h2>
 
 <div class="faq-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
@@ -6038,7 +6238,7 @@ ${generateMagazineFaqBodyHTML('classic')}
 
 <span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">FAQ</span>
 
-<h2 class="font-headline-md text-headline-md">${homepageCopy.sections.faq}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold">${homepageCopy.sections.faq}</h2>
 
 <p class="font-body-md text-on-surface-variant opacity-70 mt-md">${homepageCopy.sections.faqSubtitle}</p>
 
@@ -6584,8 +6784,6 @@ ${documentHead}
             z-index: 1;
 
             font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
-
-            font-weight: 500;
 
         }
 
@@ -7162,6 +7360,62 @@ ${documentHead}
 
         ${UNIFIED_GALLERY_GRID_CSS}
 
+        /* Elegant galleries title: flush left with gallery grid */
+        .theme-elegant .homepage-gallery-header {
+            padding-inline: 2% !important;
+            padding-left: 2% !important;
+            padding-right: 2% !important;
+            text-align: left !important;
+            direction: ltr;
+        }
+
+        .theme-elegant .homepage-gallery-header > div,
+        .theme-elegant .homepage-gallery-header > div.flex {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            direction: ltr;
+            width: 100%;
+        }
+
+        .theme-elegant .homepage-gallery-header .elegant-section-heading {
+            display: inline-grid !important;
+            width: auto !important;
+            max-width: 100%;
+            margin-left: 0 !important;
+            margin-right: auto !important;
+            justify-items: start !important;
+            justify-content: start !important;
+            text-align: left !important;
+        }
+
+        .theme-elegant .homepage-gallery-header .elegant-section-heading__watermark,
+        .theme-elegant .homepage-gallery-header .elegant-section-heading__title {
+            text-align: left !important;
+            justify-self: start !important;
+            margin-left: 0 !important;
+        }
+
+        .theme-elegant .homepage-gallery-header .elegant-section-heading__title {
+            direction: rtl;
+        }
+
+        @media (max-width: 767px) {
+            .theme-elegant .homepage-gallery-header > div,
+            .theme-elegant .homepage-gallery-header > div.flex {
+                align-items: flex-start !important;
+                text-align: left !important;
+            }
+
+            .theme-elegant .homepage-gallery-header .elegant-section-heading {
+                width: auto !important;
+                text-align: left !important;
+                justify-items: start !important;
+            }
+        }
+
         ${HOMEPAGE_PACKAGES_GRID_CSS}
 
         ${POSTS_PACKAGES_TRANSITION_CSS}
@@ -7304,9 +7558,9 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section py-24 bg-white" id="gallery">
 
-<div class="homepage-gallery-header px-margin-mobile md:px-margin-desktop mb-8">
+<div class="homepage-gallery-header mb-8">
 
-<div class="flex flex-row-reverse justify-between items-end homepage-gallery-reveal">
+<div class="homepage-gallery-reveal">
 
 ${elegantSectionHeading(galleriesSectionTitle, 'COLLECTIONS')}
 
@@ -7634,10 +7888,74 @@ ${documentHead}
 
         }
 
-        .modern-section-subtitle {
+        .modern-section-heading {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.35rem;
+            width: 100%;
+            text-align: left !important;
+            direction: ltr;
+        }
 
+        .modern-section-eyebrow {
+            display: block;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            text-align: left !important;
+            direction: ltr;
+            font-family: var(--headline-font), 'Heebo', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
             color: ${primaryColor};
+            line-height: 1.2;
+        }
 
+        .modern-section-heading h1,
+        .modern-section-heading h2 {
+            width: 100%;
+            margin-inline: 0;
+            text-align: left !important;
+            direction: rtl;
+        }
+
+        .modern-section-subtitle {
+            color: ${primaryColor};
+            text-align: left !important;
+        }
+
+        .modern-section-eyebrow--on-dark {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        /* Override shared RTL right-align for modern section headers */
+        .theme-modern .homepage-gallery-header,
+        .theme-modern .recent-photos-header {
+            text-align: left !important;
+        }
+
+        .theme-modern .homepage-gallery-header > div,
+        .theme-modern .recent-photos-header > div,
+        .theme-modern .recent-photos-header > div:not(.hp-posts-header--classic):has(.portfolio-cta-wrap) {
+            align-items: flex-start !important;
+            justify-content: space-between !important;
+            flex-direction: row !important;
+            text-align: left !important;
+        }
+
+        .theme-modern .homepage-gallery-header .modern-section-heading,
+        .theme-modern .recent-photos-header .modern-section-heading,
+        .theme-modern .homepage-gallery-header .text-left,
+        .theme-modern .recent-photos-header .text-left,
+        .theme-modern .homepage-gallery-header .modern-section-subtitle,
+        .theme-modern .recent-photos-header .modern-section-subtitle,
+        .theme-modern .modern-contact-info,
+        .theme-modern .modern-contact-info .modern-section-heading,
+        .theme-modern .modern-contact-info p {
+            text-align: left !important;
         }
 
         .testimonials-section--modern .testimonials-section__header {
@@ -7647,12 +7965,12 @@ ${documentHead}
         }
 
         .testimonials-section--modern .testimonials-section__header h2 {
-            display: inline-block;
-            width: auto;
+            display: block;
+            width: 100%;
             max-width: 100%;
             text-align: center !important;
-            border-bottom: 2px solid ${primaryColor};
-            padding-bottom: 0.75rem;
+            border-bottom: none;
+            padding-bottom: 0;
             box-sizing: border-box;
         }
 
@@ -7854,27 +8172,63 @@ ${documentHead}
 
             text-align: right;
 
+            direction: rtl;
+
             position: relative;
+
+            align-items: stretch;
+
+        }
+
+        .modern-about-content .modern-section-eyebrow {
+
+            display: block;
+
+            width: 100%;
+
+            text-align: right !important;
+
+            direction: ltr;
 
         }
 
         .modern-about-content h1,
 
-        .modern-about-content p,
+        .modern-about-content p {
 
-        .modern-about-content .modern-about-actions {
+            display: block;
 
             width: 100%;
 
             max-width: 36rem;
 
+            margin-inline: 0 0;
+
+            text-align: right !important;
+
+            direction: rtl;
+
+        }
+
+        .modern-about-content .modern-about-actions {
+
             display: flex;
 
             flex-wrap: wrap;
 
+            flex-direction: row;
+
+            direction: rtl;
+
             justify-content: flex-start;
 
+            align-items: center;
+
             gap: 1rem;
+
+            width: 100%;
+
+            max-width: 36rem;
 
         }
 
@@ -8198,6 +8552,8 @@ ${documentHead}
 
         ${generateSiteNavMobileStyles()}
 
+        ${MODERN_SECTION_ALIGN_CSS}
+
     </style>
 
 <script id="tailwind-config">
@@ -8292,9 +8648,9 @@ ${heroSlideshowModernHtml}
 
 <div class="w-full max-w-7xl mx-auto px-lg py-xxl grid grid-cols-1 md:grid-cols-2 gap-xl items-center min-h-[calc(100vh-80px)]">
 
-<div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-start max-w-2xl">
+<div class="flex flex-col gap-md animate-reveal relative z-10 modern-about-content justify-self-end md:justify-self-start max-w-2xl w-full text-right">
 
-<span class="text-primary font-label-sm text-xs uppercase tracking-[0.3em] block mb-4">${homepageCopy.about.label}</span>
+<span class="modern-section-eyebrow mb-4" aria-hidden="true">ABOUT</span>
 
 ${aboutTitle ? '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + aboutTitle + '</h1>' : '<h1 class="about-hollow-title font-headline text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">' + homepageCopy.about.modernDefaultTitleLine1 + ' <br/><span class="text-primary">' + homepageCopy.about.modernDefaultTitleLine2 + '</span></h1>'}
 
@@ -8378,13 +8734,11 @@ ${!isPortfolioMode ? `
 
 <div class="homepage-gallery-header px-lg mb-xl homepage-gallery-reveal">
 
-<div class="flex flex-row-reverse justify-between items-end gap-md">
+<div class="flex flex-row justify-between items-end gap-md">
 
-<div class="text-start rtl:text-right">
+<div class="text-left w-full">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">${escapeHtml(galleriesSectionTitle)}</h2>
-
-<p class="modern-section-subtitle">${homepageCopy.sections.modernGallerySubtitle}</p>
+${modernSectionHeading(galleriesSectionTitle, 'COLLECTIONS', { titleClass: 'site-section-title font-headline text-4xl font-bold mb-xs' })}
 
 </div>
 
@@ -8406,15 +8760,13 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section modern-recent-photos-section" id="recent-photos">
 
-<div class="recent-photos-header">
+<div class="recent-photos-header recent-photos-header--modern">
 
-<div class="flex flex-row-reverse justify-between items-end gap-md">
+<div class="recent-photos-header__row">
 
-<div class="text-start rtl:text-right">
+<div class="recent-photos-header__titles">
 
-<h2 class="font-headline text-4xl font-bold mb-xs">${escapeHtml(recentPhotosSectionTitle)}</h2>
-
-<p class="modern-section-subtitle">${homepageCopy.sections.modernRecentPhotosSubtitle}</p>
+${modernSectionHeading(recentPhotosSectionTitle, 'LATEST', { titleClass: 'site-section-title font-headline text-4xl font-bold mb-xs' })}
 
 </div>
 
@@ -8446,7 +8798,7 @@ ${elegantPackagesGlowHtml}
 
 <div class="text-center mb-xl stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+${modernSectionHeading(packagesSectionCopy.title, 'PACKAGES')}
 
 <p class="modern-section-subtitle">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 
@@ -8468,7 +8820,7 @@ ${hasTestimonials ? `
 
 <div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
 
-<h2 class="font-headline text-4xl font-bold text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+${modernSectionHeading(testimonialsSectionTitle, 'RECOMMEND')}
 
 </div>
 
@@ -8492,11 +8844,11 @@ ${contactBgLayers('#F8FAFC')}
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
 
-<div class="modern-contact-info max-w-md text-start rtl:text-right">
+<div class="modern-contact-info max-w-md text-left">
 
-<h2 class="font-headline text-4xl font-bold mb-sm text-white">${escapeHtml(contactSectionCopy.title)}</h2>
+${modernSectionHeading(contactSectionCopy.title, 'CONTACT', { titleClass: 'site-section-title font-headline text-4xl font-bold mb-sm text-white', onDark: true })}
 
-<p class="text-lg opacity-90 text-white mb-lg">${escapeHtml(contactSectionCopy.subtitle)}</p>
+<p class="text-lg opacity-90 text-white mb-lg text-left">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 <div class="flex flex-col gap-md">
 
@@ -8629,7 +8981,7 @@ ${documentHead}
 
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet"/>
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -8649,6 +9001,24 @@ ${documentHead}
 
             scroll-behavior: smooth;
 
+        }
+
+        .classic-section-script {
+            display: block;
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.25rem, 4.5vw, 3rem);
+            font-weight: 400;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            text-transform: none;
+            margin: 0 0 0.2rem;
+            direction: ltr;
+            text-align: inherit;
+        }
+
+        #about .classic-section-script {
+            width: 100%;
+            text-align: right;
         }
 
         .material-symbols-outlined {
@@ -9668,7 +10038,7 @@ ${aboutTitle || aboutSubtitle || aboutDescription ? `
 
 <div class="order-1 space-y-8 md:pr-8 max-w-2xl">
 
-<span class="about-section-label block">${homepageCopy.about.label}</span>
+${classicSectionScript('About')}
 
 ${aboutTitle ? `<h2 class="about-title">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title">${underlineLastWord(homepageCopy.about.defaultTitle)}</h2>`}
 
@@ -9744,9 +10114,9 @@ ${!isPortfolioMode ? `
 
 <div class="text-start rtl:text-right">
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(galleriesSectionTitle)}</h2>
+${classicSectionScript('Collections')}
 
-<p class="font-body-md text-body-md mt-sm" style="color:${primaryColor};">${homepageCopy.sections.classicSelectedWorksSubtitle}</p>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(galleriesSectionTitle)}</h2>
 
 </div>
 
@@ -9772,9 +10142,9 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <div class="hp-posts-header__titles">
 
-<span class="hp-posts-eyebrow" style="color:${primaryColor};">${homepageCopy.sections.classicRecentPhotosEyebrow}</span>
+${classicSectionScript('Latest')}
 
-<h2 class="hp-posts-title" style="font-family:var(--headline-font);color:#1c1917;">${escapeHtml(recentPhotosSectionTitle)}</h2>
+<h2 class="hp-posts-title site-section-title font-headline text-4xl font-bold" style="color:#1c1917;">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 <div class="hp-posts-divider" style="background:${primaryColor};"></div>
 
@@ -9808,11 +10178,13 @@ ${aboutAmbientBackgroundHtml}
 
 <div class="homepage-packages-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(packagesSectionCopy.subtitle)}</span>
+${classicSectionScript('Packages')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
 <div class="homepage-packages-section__divider w-12 h-px bg-outline-variant mt-md"></div>
+
+<p class="font-body-md text-body-md text-on-surface-variant mt-md">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 
 </div>
 
@@ -9832,9 +10204,9 @@ ${hasTestimonials ? `
 
 <div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
+${classicSectionScript('Recommend')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
 
 <div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
@@ -9862,9 +10234,9 @@ ${contactBgLayers('#fdf8f7', '#f7f3f2')}
 
 <div class="lg:col-span-5 space-y-lg classic-contact-info text-start rtl:text-right">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block">${homepageCopy.sections.contactClassicHeading}</span>
+${classicSectionScript('Contact')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(contactSectionCopy.title)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(contactSectionCopy.title)}</h2>
 
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-md">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
@@ -10063,7 +10435,7 @@ ${sectionScrollScript ? `<script>${sectionScrollScript}</script>\n` : ''}<script
 
 ${documentHead}
 
-<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Rubik:wght@500;600;700;800&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Frank+Ruhl+Libre:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Rubik:wght@500;600;700;800&family=Space+Grotesk:wght@300;700;800&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 
@@ -10083,6 +10455,75 @@ ${documentHead}
 
             --light-bg: "#FAFAFA";
 
+        }
+
+        .bold-section-eyebrow-wrap {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            width: 100%;
+            direction: ltr;
+            text-align: left;
+            margin: 0 0 0.25rem;
+        }
+
+        .bold-section-eyebrow-wrap--center {
+            justify-content: center !important;
+            text-align: center;
+        }
+
+        .bold-section-eyebrow-wrap--right {
+            justify-content: flex-end !important;
+            text-align: right;
+        }
+
+        .bold-section-eyebrow {
+            display: block;
+            width: max-content;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Bebas Neue', 'Space Grotesk', sans-serif;
+            font-size: clamp(1.35rem, 3.2vw, 2rem);
+            font-weight: 400;
+            line-height: 0.9;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            direction: ltr;
+            text-align: left !important;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            -webkit-text-stroke: 1.2px ${primaryColor};
+            paint-order: stroke fill;
+            transform: skewX(-8deg);
+            transform-origin: left center;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+            opacity: 0.95;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .bold-section-eyebrow-wrap--center .bold-section-eyebrow {
+            transform-origin: center;
+        }
+
+        .bold-section-eyebrow-wrap--right .bold-section-eyebrow {
+            transform-origin: right center;
+        }
+
+        .theme-bold #pricing .bold-section-eyebrow-wrap,
+        .theme-bold #testimonials .bold-section-eyebrow-wrap {
+            justify-content: flex-start !important;
+            direction: ltr !important;
+        }
+
+        .theme-bold #faq .bold-section-eyebrow-wrap--center,
+        .theme-bold #contact .bold-section-eyebrow-wrap--center {
+            justify-content: center !important;
+        }
+
+        .theme-bold #about .bold-section-eyebrow-wrap--right {
+            justify-content: flex-end !important;
         }
 
         body {
@@ -10928,6 +11369,22 @@ ${documentHead}
 
         ${sectionBgCss}
 
+        .theme-bold .homepage-gallery-header,
+        .theme-bold .homepage-gallery-header > div,
+        .theme-bold .recent-photos-header,
+        .theme-bold .recent-photos-header > div {
+            text-align: left !important;
+            align-items: flex-start !important;
+            direction: ltr;
+        }
+
+        .theme-bold .recent-photos-header > div:has(.portfolio-cta-wrap),
+        .theme-bold .recent-photos-header > div:not(.hp-posts-header--classic):has(.portfolio-cta-wrap) {
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            align-items: flex-end !important;
+        }
+
         #contact .bold-contact-form-block.contact-section-has-bg .contact-section-bg-desktop,
 
         #contact .bold-contact-form-block.contact-section-has-bg .contact-section-bg-mobile,
@@ -11168,7 +11625,7 @@ ${about_image_url ? `<img alt="${homepageCopy.misc.photographerPortraitAlt}" cla
 
 <div class="lg:col-span-7 max-w-2xl">
 
-<span class="about-section-label block mb-6">${homepageCopy.about.label}</span>
+${boldSectionEyebrow('ABOUT', { align: 'right' })}
 
 ${aboutTitle ? `<h2 class="about-title mb-8">${underlineLastWord(aboutTitle)}</h2>` : `<h2 class="about-title mb-8">${underlineLastWord(homepageCopy.about.darkDefaultTitle)}</h2>`}
 
@@ -11226,13 +11683,13 @@ ${!isPortfolioMode ? `
 
 <section class="homepage-gallery-section py-xl md:py-xxl" id="gallery">
 
-<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-start rtl:text-right homepage-gallery-reveal">
+<div class="homepage-gallery-header px-lg mb-lg md:mb-xxl text-start homepage-gallery-reveal">
 
 <div>
 
-<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">${homepageCopy.sections.selectedPortfolio}</span>
+${boldSectionEyebrow('COLLECTIONS')}
 
-<h2 class="font-headline-md text-headline-md">${escapeHtml(galleriesSectionTitle)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold">${escapeHtml(galleriesSectionTitle)}</h2>
 
 </div>
 
@@ -11252,15 +11709,15 @@ ${galleries.some((g) => (g.photo_pool?.length ?? 0) > 0) ? `
 
 <section class="recent-photos-section" id="recent-photos">
 
-<div class="recent-photos-header text-start rtl:text-right">
+<div class="recent-photos-header text-start">
 
-<div class="flex flex-row-reverse justify-between items-end">
+<div class="flex flex-row justify-between items-end gap-md">
 
 <div>
 
-<span class="text-primary font-label-sm tracking-[0.2em] block mb-xs uppercase">Latest</span>
+${boldSectionEyebrow('LATEST')}
 
-<h2 class="font-headline-md text-headline-md">${escapeHtml(recentPhotosSectionTitle)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold">${escapeHtml(recentPhotosSectionTitle)}</h2>
 
 </div>
 
@@ -11292,11 +11749,13 @@ ${aboutAmbientBackgroundHtml}
 
 <div class="homepage-packages-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(packagesSectionCopy.subtitle)}</span>
+${boldSectionEyebrow('PACKAGES')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(packagesSectionCopy.title)}</h2>
 
 <div class="homepage-packages-section__divider w-12 h-px bg-outline-variant mt-md"></div>
+
+<p class="font-body-md text-body-md text-on-surface-variant mt-md opacity-70">${escapeHtml(packagesSectionCopy.subtitle)}</p>
 
 </div>
 
@@ -11316,9 +11775,9 @@ ${hasTestimonials ? `
 
 <div class="testimonials-section__header stagger-reveal" data-reveal-delay="0">
 
-<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest block mb-xs">${escapeHtml(testimonialsSectionSubtitle)}</span>
+${boldSectionEyebrow('RECOMMEND')}
 
-<h2 class="font-headline-md text-headline-md text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold text-on-surface">${escapeHtml(testimonialsSectionTitle)}</h2>
 
 <div class="testimonials-section__divider w-12 h-px bg-outline-variant mt-md"></div>
 
@@ -11370,9 +11829,9 @@ ${hasContactBg ? contactBgLayers('#120f0d', '#1a1614') : ''}
 
 <div class="max-w-4xl mx-auto text-center contact-section-content${hasContactBg ? ' container px-lg' : ''}">
 
-<span class="text-primary font-label-sm tracking-[0.3em] block mb-sm uppercase">${homepageCopy.sections.contactDarkHeading}</span>
+${boldSectionEyebrow('CONTACT', { align: 'center' })}
 
-<h2 class="font-headline-md text-headline-md mb-md">${escapeHtml(contactSectionCopy.title)}</h2>
+<h2 class="site-section-title font-headline text-4xl font-bold mb-md">${escapeHtml(contactSectionCopy.title)}</h2>
 
 <p class="font-body-md mb-xl text-on-surface-variant max-w-xl mx-auto opacity-70">${escapeHtml(contactSectionCopy.subtitle)}</p>
 

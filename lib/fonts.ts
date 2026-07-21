@@ -1,6 +1,6 @@
-import { isAllowedFont } from '@/constants/fonts'
+import { isAllowedFont, isGoogleFont } from '@/constants/fonts'
 
-/** Weight axes used when requesting each allowed family from Google Fonts. */
+/** Weight axes used when requesting each allowed Google family. */
 const FONT_WEIGHT_QUERY: Record<string, string> = {
   Assistant: 'wght@300;400;500;600;700',
   Heebo: 'wght@300;400;500;700',
@@ -9,7 +9,18 @@ const FONT_WEIGHT_QUERY: Record<string, string> = {
   Rubik: 'wght@400;500;600;700',
 }
 
-const SERIF_FONTS = new Set(['Frank Ruhl Libre'])
+const SERIF_FONTS = new Set(['Frank Ruhl Libre', 'Georgia', 'Times New Roman'])
+
+/** Explicit stacks for system fonts (no webfont download). */
+const SYSTEM_FONT_STACKS: Record<string, string> = {
+  Arial: 'Arial, Helvetica, sans-serif',
+  Tahoma: 'Tahoma, Geneva, sans-serif',
+  Verdana: 'Verdana, Geneva, sans-serif',
+  Georgia: 'Georgia, "Times New Roman", Times, serif',
+  'Times New Roman': '"Times New Roman", Times, serif',
+  'system-ui':
+    'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+}
 
 function toGoogleFamilyParam(fontName: string): string {
   const family = fontName.replace(/ /g, '+')
@@ -19,7 +30,7 @@ function toGoogleFamilyParam(fontName: string): string {
 
 /**
  * Builds a Google Fonts CSS2 URL for the selected heading / about fonts only.
- * Invalid or null names are ignored. Returns null when nothing valid is selected.
+ * System fonts are skipped. Returns null when nothing needs loading.
  */
 export function getGoogleFontUrl(
   headingFont: string | null,
@@ -27,7 +38,9 @@ export function getGoogleFontUrl(
 ): string | null {
   const unique = Array.from(
     new Set(
-      [headingFont, aboutFont].filter((name): name is string => isAllowedFont(name))
+      [headingFont, aboutFont].filter(
+        (name): name is string => isAllowedFont(name) && isGoogleFont(name)
+      )
     )
   )
 
@@ -46,8 +59,9 @@ export function getGoogleFontLinkTag(
   return `<link href="${href}" rel="stylesheet"/>`
 }
 
-/** CSS font-family stack for a whitelisted Google Font name. */
+/** CSS font-family stack for a whitelisted font name. */
 export function toCssFontStack(fontName: string): string {
+  if (SYSTEM_FONT_STACKS[fontName]) return SYSTEM_FONT_STACKS[fontName]
   if (fontName === 'Heebo') return `'Heebo', sans-serif`
   if (SERIF_FONTS.has(fontName)) return `'${fontName}', serif`
   return `'${fontName}', 'Heebo', sans-serif`
@@ -64,25 +78,74 @@ function resolveBrandFonts(
 }
 
 /**
- * Binds section headings to --headline-font so theme defaults and brand
- * overrides both win over hardcoded font-family rules / inline styles.
+ * Shared look for homepage section titles across every theme:
+ * same font (--headline-font), size, and weight.
+ */
+const SITE_SECTION_TITLE_SELECTOR = `
+.elegant-section-heading__title,
+.hp-posts-section .elegant-section-heading__title,
+.hp-posts-header .elegant-section-heading__title,
+.hp-posts-title,
+.hp-posts-section .hp-posts-title,
+.homepage-gallery-header h2,
+.recent-photos-header h2,
+.homepage-packages-section__header h2,
+.testimonials-section__header h2,
+.faq-section__header h2,
+.faq-section h2.font-headline,
+.faq-section h2.font-headline-md,
+section#gallery h2,
+section#portfolio h2,
+section#recent-photos h2,
+section#posts h2,
+section#pricing h2,
+section#testimonials h2,
+section#faq h2,
+section#contact h2,
+.site-section-title
+`
+
+/**
+ * Binds headings / nav to --headline-font, and unifies section-title size + weight.
  */
 const SECTION_HEADING_FONT_CSS = `
-.elegant-section-heading__title,
 .font-headline,
 .font-headline-md,
 .font-headline-sm,
 .font-display,
-.font-display-lg,
-.hp-posts-title,
-.homepage-packages-section__header h2,
-.testimonials-section__header h2,
-.faq-section__header h2,
-.about-hollow-title {
+.font-display-lg {
   font-family: var(--headline-font) !important;
 }
-.about-title {
+${SITE_SECTION_TITLE_SELECTOR} {
+  font-family: var(--headline-font) !important;
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+}
+/* About title keeps its large theme-specific size; only the font is brand-controlled */
+.about-title,
+.about-hollow-title,
+.theme-modern .modern-about-content h1 {
   font-family: var(--about-title-font, var(--headline-font)) !important;
+}
+.modern-section-eyebrow {
+  font-family: var(--headline-font) !important;
+}
+/* Header / nav links + brand text follow the global heading font */
+#main-nav a,
+.elegant-nav a,
+.modern-nav-link,
+.classic-nav-link,
+.bold-nav-link,
+.modern-nav-brand,
+.classic-nav-brand,
+.bold-nav-brand,
+.site-nav-mobile-menu a {
+  font-family: var(--headline-font) !important;
+}
+#main-nav .material-symbols-outlined,
+.site-nav-menu-btn .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
 }
 `
 

@@ -43,7 +43,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     cardRadius: '4px',
     cardBorder: '1px solid rgba(0,0,0,0.06)',
     titleFont: HEADLINE_FONT,
-    eyebrow: 'Stories',
+    eyebrow: 'Blog',
   },
   modern: {
     cardBg: '#ffffff',
@@ -61,7 +61,7 @@ const TOKENS: Record<SiteChromeTheme, SectionTokens> = {
     cardRadius: '2px',
     cardBorder: '1px solid rgba(255,255,255,0.06)',
     titleFont: HEADLINE_FONT,
-    eyebrow: 'JOURNAL',
+    eyebrow: 'BLOG',
   },
 }
 
@@ -182,13 +182,66 @@ const HOMEPAGE_POSTS_CSS = `
   text-transform: uppercase;
   margin-bottom: 4px;
 }
+.hp-posts-header--modern {
+  direction: ltr;
+  text-align: left !important;
+  align-items: flex-start;
+}
+.hp-posts-header--modern.hp-posts-header--with-more {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.hp-posts-header--modern .hp-posts-header__titles {
+  align-items: flex-start;
+  text-align: left !important;
+}
+.hp-posts-header--modern .modern-section-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left !important;
+  direction: ltr;
+}
+.hp-posts-header--modern .modern-section-eyebrow {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left !important;
+  direction: ltr;
+  font-family: var(--headline-font), 'Heebo', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+.hp-posts-header--modern .modern-section-heading h2,
+.hp-posts-header--modern .hp-posts-title {
+  width: 100%;
+  text-align: left !important;
+  direction: rtl;
+}
+@media (max-width: 767px) {
+  .hp-posts-header--modern.hp-posts-header--with-more {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hp-posts-header--modern .hp-posts-header__more {
+    align-self: flex-end;
+  }
+}
+/* Size/weight come from the same theme classes as other section titles. */
 .hp-posts-title {
-  font-size: 32px;
-  line-height: 1.1;
-  font-weight: 500;
+  font-family: var(--headline-font);
   margin: 0;
 }
-@media (min-width: 768px) { .hp-posts-title { font-size: 46px; } }
+.hp-posts-section .elegant-section-heading__title {
+  font-family: var(--headline-font);
+}
 .hp-posts-divider { width: 56px; height: 1px; margin: 8px 0 0; }
 .hp-posts-grid {
   display: grid;
@@ -314,8 +367,20 @@ const CLASSIC_HOMEPAGE_POSTS_CSS = `
   order: 1;
 }
 .theme-classic .hp-posts-header__titles .hp-posts-eyebrow,
+.theme-classic .hp-posts-header__titles .classic-section-script,
 .theme-classic .hp-posts-header__titles .hp-posts-title {
   text-align: left !important;
+}
+.theme-classic .hp-posts-header__titles .classic-section-script {
+  display: block;
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2.25rem, 4.5vw, 3rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin: 0 0 0.2rem;
+  direction: ltr;
 }
 .theme-classic .hp-posts-header__more {
   order: 2;
@@ -434,9 +499,6 @@ const ELEGANT_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
 .hp-posts-header--elegant .elegant-section-heading__title {
   position: relative;
   z-index: 1;
-  font-family: var(--headline-font), 'Heebo', sans-serif;
-  font-weight: 500;
-  font-size: clamp(1.875rem, 4vw, 2.25rem);
   color: #1c1b1b;
   direction: rtl;
 }
@@ -455,6 +517,66 @@ const ELEGANT_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
   .hp-posts-header--elegant .elegant-section-heading {
     text-align: left !important;
     justify-items: left !important;
+  }
+}
+`
+
+const BOLD_HOMEPAGE_POSTS_CSS = (primaryColor: string) => `
+.hp-posts-header--bold {
+  direction: ltr;
+  text-align: left !important;
+  align-items: flex-end !important;
+}
+.hp-posts-header--bold.hp-posts-header--with-more {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.hp-posts-header--bold .hp-posts-header__titles {
+  align-items: flex-start;
+  text-align: left !important;
+}
+.hp-posts-header--bold .bold-section-eyebrow-wrap {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  direction: ltr;
+  margin: 0 0 0.25rem;
+}
+.hp-posts-header--bold .bold-section-eyebrow {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  font-family: 'Bebas Neue', 'Space Grotesk', sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  direction: ltr;
+  text-align: left !important;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.2px ${primaryColor};
+  paint-order: stroke fill;
+  transform: skewX(-8deg);
+  transform-origin: left center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  opacity: 0.95;
+}
+.hp-posts-header--bold .hp-posts-title {
+  text-align: left !important;
+  direction: rtl;
+}
+@media (max-width: 767px) {
+  .hp-posts-header--bold.hp-posts-header--with-more {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .hp-posts-header--bold .hp-posts-header__more {
+    align-self: flex-end;
   }
 }
 `
@@ -538,27 +660,62 @@ export function generateHomepagePostsSectionHTML(options: {
 
   const isClassic = options.theme === 'classic'
   const isElegant = options.theme === 'elegant'
+  const isModern = options.theme === 'modern'
+  const isDark = options.theme === 'dark'
 
   const sectionCss = isClassic
     ? `${HOMEPAGE_POSTS_CSS}${CLASSIC_HOMEPAGE_POSTS_CSS}`
     : isElegant
       ? `${HOMEPAGE_POSTS_CSS}${ELEGANT_HOMEPAGE_POSTS_CSS(options.primaryColor)}`
-      : HOMEPAGE_POSTS_CSS
+      : isDark
+        ? `${HOMEPAGE_POSTS_CSS}${BOLD_HOMEPAGE_POSTS_CSS(options.primaryColor)}`
+        : HOMEPAGE_POSTS_CSS
+
+  // Same size/weight/font as every other homepage section title.
+  const sectionTitleClass =
+    'hp-posts-title site-section-title font-headline text-4xl font-bold'
 
   const headerHtml = isElegant
     ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--elegant stagger-reveal" data-reveal-delay="0">
 <div class="hp-posts-header__titles">
 <div class="elegant-section-heading">
 <span class="elegant-section-heading__watermark" aria-hidden="true">BLOG</span>
-<h2 class="elegant-section-heading__title text-3xl md:text-4xl">${escapeHtml(options.sectionTitle)}</h2>
+<h2 class="elegant-section-heading__title site-section-title text-4xl font-bold">${escapeHtml(options.sectionTitle)}</h2>
 </div>
 </div>
 ${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
 </div>`
-    : `<div class="hp-posts-header hp-posts-header--with-more${isClassic ? ' hp-posts-header--classic' : ''} stagger-reveal" data-reveal-delay="0">
+    : isModern
+      ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--modern stagger-reveal" data-reveal-delay="0">
+<div class="hp-posts-header__titles">
+<div class="modern-section-heading">
+<span class="modern-section-eyebrow" aria-hidden="true" style="color:${options.primaryColor};">${escapeHtml(t.eyebrow)}</span>
+<h2 class="${sectionTitleClass}" style="color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
+</div>
+</div>
+${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
+</div>`
+    : isClassic
+      ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--classic stagger-reveal" data-reveal-delay="0">
+<div class="hp-posts-header__titles">
+<span class="classic-section-script" style="color:${options.primaryColor};" aria-hidden="true">${escapeHtml(t.eyebrow)}</span>
+<h2 class="${sectionTitleClass}" style="color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
+<div class="hp-posts-divider" style="background:${options.primaryColor};"></div>
+</div>
+${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
+</div>`
+    : isDark
+      ? `<div class="hp-posts-header hp-posts-header--with-more hp-posts-header--bold stagger-reveal" data-reveal-delay="0">
+<div class="hp-posts-header__titles">
+<div class="bold-section-eyebrow-wrap"><span class="bold-section-eyebrow" aria-hidden="true">${escapeHtml(t.eyebrow)}</span></div>
+<h2 class="${sectionTitleClass}" style="color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
+</div>
+${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
+</div>`
+    : `<div class="hp-posts-header hp-posts-header--with-more stagger-reveal" data-reveal-delay="0">
 <div class="hp-posts-header__titles">
 <span class="hp-posts-eyebrow" style="color:${options.primaryColor};">${escapeHtml(t.eyebrow)}</span>
-<h2 class="hp-posts-title" style="font-family:${t.titleFont};color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
+<h2 class="${sectionTitleClass}" style="color:${t.text};">${escapeHtml(options.sectionTitle)}</h2>
 <div class="hp-posts-divider" style="background:${options.primaryColor};"></div>
 </div>
 ${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}

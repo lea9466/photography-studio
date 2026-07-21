@@ -1079,8 +1079,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <div className="space-y-2">
                 <LabelWithHelp
                   htmlFor="heading-font"
-                  help="פונט הכותרות הראשיות באתר (משתנה --headline-font)."
-                  where="מופיע בכותרות הסעיפים בדף הבית ובדפים הציבוריים לפי ערכת הנושא."
+                  help={SITE_SETTINGS_HELP.fields.headingFont.content}
+                  where={SITE_SETTINGS_HELP.fields.headingFont.where}
                 >
                   פונט כותרות
                 </LabelWithHelp>
@@ -1110,8 +1110,8 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <div className="space-y-2">
                 <LabelWithHelp
                   htmlFor="about-title-font"
-                  help="פונט כותרת אזור האודות (משתנה --about-title-font) בערכות שתומכות בו."
-                  where="מופיע בכותרת סעיף האודות בערכות Modern ו-Bold."
+                  help={SITE_SETTINGS_HELP.fields.aboutTitleFont.content}
+                  where={SITE_SETTINGS_HELP.fields.aboutTitleFont.where}
                 >
                   פונט כותרת אודות
                 </LabelWithHelp>
