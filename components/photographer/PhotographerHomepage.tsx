@@ -1848,7 +1848,6 @@ const MODERN_SECTION_ALIGN_CSS = `
   .theme-modern .modern-section-heading h2,
   .theme-modern .homepage-gallery-header h2,
   .theme-modern .recent-photos-header h2,
-  .theme-modern #contact h2,
   .theme-modern #posts h2,
   .theme-modern .homepage-gallery-header .modern-section-subtitle,
   .theme-modern .recent-photos-header .modern-section-subtitle {
@@ -1858,7 +1857,6 @@ const MODERN_SECTION_ALIGN_CSS = `
   .theme-modern .modern-section-heading h2,
   .theme-modern .homepage-gallery-header h2,
   .theme-modern .recent-photos-header h2,
-  .theme-modern #contact h2,
   .theme-modern #posts h2 {
     width: 100%;
     max-width: 100%;
@@ -1958,9 +1956,23 @@ const MODERN_SECTION_ALIGN_CSS = `
     direction: rtl !important;
     justify-content: flex-start !important;
   }
-  .theme-modern .modern-contact-info,
-  .theme-modern .modern-contact-info p {
-    text-align: left !important;
+  .theme-modern #contact .modern-contact-info,
+  .theme-modern #contact .modern-contact-info .modern-section-heading,
+  .theme-modern #contact .modern-contact-info .modern-section-heading h2,
+  .theme-modern #contact .modern-contact-info h2,
+  .theme-modern #contact .modern-contact-info > p {
+    text-align: right !important;
+    direction: rtl;
+  }
+  .theme-modern #contact .modern-contact-info .modern-section-heading {
+    align-items: flex-end !important;
+    text-align: right !important;
+    direction: rtl !important;
+  }
+  .theme-modern #contact .modern-contact-info .modern-section-eyebrow {
+    text-align: right !important;
+    direction: ltr !important;
+    width: 100%;
   }
 `
 
@@ -7951,11 +7963,25 @@ ${documentHead}
         .theme-modern .homepage-gallery-header .text-left,
         .theme-modern .recent-photos-header .text-left,
         .theme-modern .homepage-gallery-header .modern-section-subtitle,
-        .theme-modern .recent-photos-header .modern-section-subtitle,
+        .theme-modern .recent-photos-header .modern-section-subtitle {
+            text-align: left !important;
+        }
+
         .theme-modern .modern-contact-info,
         .theme-modern .modern-contact-info .modern-section-heading,
-        .theme-modern .modern-contact-info p {
-            text-align: left !important;
+        .theme-modern .modern-contact-info .modern-section-heading h2,
+        .theme-modern .modern-contact-info > p {
+            text-align: right !important;
+        }
+
+        .theme-modern .modern-contact-info .modern-section-heading {
+            align-items: flex-end !important;
+        }
+
+        .theme-modern .modern-contact-info .modern-section-eyebrow {
+            text-align: right !important;
+            direction: ltr !important;
+            width: 100%;
         }
 
         .testimonials-section--modern .testimonials-section__header {
@@ -8844,11 +8870,11 @@ ${contactBgLayers('#F8FAFC')}
 
 <div class="grid grid-cols-1 md:grid-cols-2 gap-xl items-center">
 
-<div class="modern-contact-info max-w-md text-left">
+<div class="modern-contact-info max-w-md text-right">
 
 ${modernSectionHeading(contactSectionCopy.title, 'CONTACT', { titleClass: 'site-section-title font-headline text-4xl font-bold mb-sm text-white', onDark: true })}
 
-<p class="text-lg opacity-90 text-white mb-lg text-left">${escapeHtml(contactSectionCopy.subtitle)}</p>
+<p class="text-lg opacity-90 text-white mb-lg text-right">${escapeHtml(contactSectionCopy.subtitle)}</p>
 
 <div class="flex flex-col gap-md">
 
