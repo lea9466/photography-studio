@@ -11,6 +11,7 @@ import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import { resolveSiteLanguage } from '@/lib/site-language'
 import type { PhotoEditComparisonRow as DbRow } from '@/lib/types/database.types'
+import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
 interface BeforeAfterPageProps {
   params: Promise<{ slug: string }>
@@ -64,7 +65,6 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
         description: row.description,
         originalImageUrl: originalImageUrl ?? '',
         editedImageUrl: editedImageUrl ?? '',
-        displayStyle: row.display_style,
       }
     })
   )
@@ -83,11 +83,16 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const logoUrl = await resolveBrandingPath(typed.logo_url)
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
   const language = resolveSiteLanguage(typed.site_language)
+  const displayStyle = normalizeBeforeAfterDisplayStyle(typed.before_after_display_style)
   const pageTitle = language === 'en' ? 'Before & After Editing' : 'לפני ואחרי עיבוד'
   const intro =
     language === 'en'
-      ? 'Move the lens and discover the path from the original image to the final result.'
-      : 'הזיזו את העדשה וגלו את הדרך מהתמונה המקורית אל התוצאה הסופית.'
+      ? displayStyle === 'split_slider'
+        ? 'Drag the divider to compare the original image with the final result.'
+        : 'Move the lens and discover the path from the original image to the final result.'
+      : displayStyle === 'split_slider'
+        ? 'גררו את המחיצה והשוו בין התמונה המקורית לבין התוצאה הסופית.'
+        : 'הזיזו את העדשה וגלו את הדרך מהתמונה המקורית אל התוצאה הסופית.'
 
   const [{ count: packageCount }, { count: postCount }] = await Promise.all([
     admin
@@ -114,6 +119,7 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
     shouldColorLogo: typed.should_color_logo ?? false,
     galleryLayoutMode,
     portfolioPath: galleryLayoutMode === 'portfolio' ? portfolioPath : undefined,
+    displayStyle,
     page: {
       pageTitle,
       intro,

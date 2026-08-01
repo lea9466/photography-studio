@@ -1,12 +1,7 @@
 import type {
   PhotoEditComparison,
   PhotoEditComparisonRow,
-  PhotoEditDisplayStyle,
 } from '@/lib/types/photo-edit-comparison'
-
-function asDisplayStyle(value: string | null | undefined): PhotoEditDisplayStyle {
-  return value === 'reveal' ? 'reveal' : 'development'
-}
 
 export function mapPhotoEditComparisonRow(row: PhotoEditComparisonRow): PhotoEditComparison {
   return {
@@ -20,7 +15,6 @@ export function mapPhotoEditComparisonRow(row: PhotoEditComparisonRow): PhotoEdi
     editedWatermarkedUrl: row.edited_watermarked_url,
     autoApplyWatermark: row.auto_apply_watermark ?? true,
     watermarkText: row.watermark_text ?? null,
-    displayStyle: asDisplayStyle(row.display_style),
     sortOrder: row.sort_order,
     isActive: row.is_active,
     createdAt: row.created_at,

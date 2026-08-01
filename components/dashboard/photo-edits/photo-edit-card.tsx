@@ -107,9 +107,6 @@ export function PhotoEditCard({
             <Badge variant={item.isActive ? 'default' : 'outline'}>
               {item.isActive ? 'פעיל' : 'מוסתר'}
             </Badge>
-            <Badge variant="outline">
-              {item.displayStyle === 'development' ? 'פיתוח תמונה' : 'חשיפה'}
-            </Badge>
           </div>
           {descriptionPreview ? (
             <p className="text-sm leading-relaxed text-[--muted]">{descriptionPreview}</p>

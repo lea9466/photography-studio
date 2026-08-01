@@ -1,5 +1,3 @@
-export type PhotoEditDisplayStyle = 'development' | 'reveal'
-
 export type PhotoEditComparison = {
   id: string
   /** Photographer / studio owner id (DB column: user_id) */
@@ -16,7 +14,6 @@ export type PhotoEditComparison = {
   editedWatermarkedUrl: string
   autoApplyWatermark: boolean
   watermarkText: string | null
-  displayStyle: PhotoEditDisplayStyle
   sortOrder: number
   isActive: boolean
   createdAt: string

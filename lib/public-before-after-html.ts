@@ -10,6 +10,7 @@ import {
 } from '@/lib/photographer-site-chrome'
 import type { PhotographerSiteTheme } from '@/lib/photographer-site-paths'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import type { BeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
 export type PublicBeforeAfterItem = {
   id: string
@@ -17,7 +18,6 @@ export type PublicBeforeAfterItem = {
   description: string | null
   originalImageUrl: string
   editedImageUrl: string
-  displayStyle: string
 }
 
 export type PublicBeforeAfterPageData = {
@@ -120,6 +120,13 @@ function pageCopy(language: SiteLanguage) {
     regionLabel: he
       ? 'עדשת חשיפה — הזיזו כדי לראות את המקור'
       : 'Reveal lens — move to see the original',
+    sliderHowTo: he
+      ? 'גררו את המחיצה כדי להשוות בין המקור לתוצאה הסופית.'
+      : 'Drag the divider to compare the original with the final edit.',
+    sliderRegionLabel: he
+      ? 'השוואת לפני ואחרי — גררו את המחיצה'
+      : 'Before and after comparison — drag the divider',
+    sliderLabel: he ? 'מיקום מחיצת ההשוואה' : 'Comparison divider position',
   }
 }
 
@@ -574,6 +581,95 @@ const REVEAL_LENS_CSS = `
   .comparison-status {
     transition: none;
   }
+}
+`
+
+const SPLIT_SLIDER_CSS = `
+.comparison-frame--split {
+  --split-position: 50%;
+  cursor: default;
+}
+.comparison-frame--split.is-ready {
+  cursor: default;
+}
+.split-original-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  clip-path: inset(0 calc(100% - var(--split-position)) 0 0);
+  -webkit-clip-path: inset(0 calc(100% - var(--split-position)) 0 0);
+  pointer-events: none;
+}
+.split-divider {
+  position: absolute;
+  z-index: 4;
+  top: 0;
+  bottom: 0;
+  left: var(--split-position);
+  width: 2px;
+  transform: translateX(-50%);
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.18), 0 0 18px rgba(0,0,0,0.22);
+  pointer-events: none;
+}
+.split-divider__handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255,255,255,0.92);
+  border-radius: 9999px;
+  background: var(--brand-primary);
+  color: #fff;
+  box-shadow: 0 5px 18px rgba(0,0,0,0.3);
+  font-size: 18px;
+  line-height: 1;
+}
+.split-range {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  direction: ltr;
+}
+.split-range::-webkit-slider-thumb {
+  width: 48px;
+  height: 100%;
+  cursor: ew-resize;
+  -webkit-appearance: none;
+}
+.split-range::-moz-range-thumb {
+  width: 48px;
+  height: 100%;
+  border: 0;
+  cursor: ew-resize;
+}
+.split-label {
+  position: absolute;
+  z-index: 3;
+  top: 0.8rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 9999px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.split-label--original { left: 0.8rem; }
+.split-label--edited { right: 0.8rem; }
+.comparison-frame--split:not(.is-ready) .split-divider,
+.comparison-frame--split:not(.is-ready) .split-label {
+  opacity: 0;
 }
 `
 
@@ -1035,11 +1131,182 @@ const REVEAL_LENS_SCRIPT = `
 })();
 `
 
+const SPLIT_SLIDER_SCRIPT = `
+(function () {
+  function hasDimensions(image) {
+    return image.naturalWidth > 0 && image.naturalHeight > 0;
+  }
+
+  function waitForImage(image) {
+    return new Promise(function (resolve, reject) {
+      if (image.complete && hasDimensions(image)) {
+        resolve(image);
+        return;
+      }
+      if (image.complete) {
+        reject(new Error('Image unavailable'));
+        return;
+      }
+      image.addEventListener('load', function () { resolve(image); }, { once: true });
+      image.addEventListener('error', function () { reject(new Error('Image unavailable')); }, { once: true });
+    });
+  }
+
+  function initSplitSlider(frame) {
+    if (frame.dataset.initialized === 'true') return;
+    frame.dataset.initialized = 'true';
+
+    var editedImage = frame.querySelector('[data-edited-image]');
+    var originalImage = frame.querySelector('[data-original-image]');
+    var range = frame.querySelector('[data-split-range]');
+    if (!editedImage || !originalImage || !range) {
+      frame.classList.add('is-error');
+      return;
+    }
+
+    function updatePosition() {
+      var value = Math.max(0, Math.min(100, Number(range.value) || 50));
+      frame.style.setProperty('--split-position', value + '%');
+      range.setAttribute('aria-valuenow', String(value));
+    }
+
+    range.addEventListener('input', updatePosition);
+    range.addEventListener('change', updatePosition);
+    updatePosition();
+
+    Promise.all([waitForImage(editedImage), waitForImage(originalImage)])
+      .then(function () {
+        frame.style.setProperty(
+          '--comparison-aspect-ratio',
+          editedImage.naturalWidth + ' / ' + editedImage.naturalHeight
+        );
+        frame.classList.add('is-ready');
+      })
+      .catch(function () {
+        frame.classList.add('is-error');
+        range.disabled = true;
+      });
+  }
+
+  function initSplitSliders() {
+    document.querySelectorAll('[data-split-frame]').forEach(function (frame) {
+      initSplitSlider(frame);
+    });
+
+    var sections = document.querySelectorAll('[data-comparison-section]');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      sections.forEach(function (section) { section.classList.add('is-visible'); });
+      return;
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    sections.forEach(function (section) { observer.observe(section); });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSplitSliders);
+  } else {
+    initSplitSliders();
+  }
+})();
+`
+
 function padIndex(index: number) {
   return String(index + 1).padStart(2, '0')
 }
 
-function renderComparisonSection(
+function renderSplitSliderComparisonSection(
+  item: PublicBeforeAfterItem,
+  index: number,
+  language: SiteLanguage,
+  titleClass: string
+): string {
+  const copy = pageCopy(language)
+  const hasTitle = Boolean(item.title?.trim())
+  const hasDescription = Boolean(item.description?.trim())
+  const loading = index === 0 ? 'eager' : 'lazy'
+  const alt = item.title?.trim()
+    ? escapeHtml(
+        language === 'en'
+          ? `${item.title.trim()} — final edit`
+          : `${item.title.trim()} — תוצאה סופית`
+      )
+    : escapeHtml(copy.statusEdited)
+
+  return `
+<section
+  class="comparison-section"
+  id="ba-${escapeHtml(item.id)}"
+  data-comparison-section
+  data-comparison-id="${escapeHtml(item.id)}"
+>
+  <div class="comparison-layout">
+    <div class="comparison-content">
+      <p class="comparison-tag">${escapeHtml(copy.tag)}</p>
+      <div class="comparison-number-row" aria-hidden="true">
+        <span class="comparison-number">${padIndex(index)}</span>
+        <span class="comparison-number-line"></span>
+      </div>
+      ${hasTitle ? `<h2 class="comparison-title ${titleClass}">${escapeHtml(item.title!.trim())}</h2>` : ''}
+      ${hasDescription ? `<p class="comparison-desc">${escapeHtml(item.description!.trim())}</p>` : ''}
+      <p class="comparison-howto">${escapeHtml(copy.sliderHowTo)}</p>
+    </div>
+
+    <div class="comparison-media">
+      <div
+        class="comparison-frame comparison-frame--split"
+        data-split-frame
+        data-comparison-id="${escapeHtml(item.id)}"
+        role="group"
+        aria-label="${escapeHtml(copy.sliderRegionLabel)}"
+      >
+        <div class="comparison-skeleton" aria-hidden="true"></div>
+        <div class="comparison-error" aria-hidden="true">${escapeHtml(copy.loadError)}</div>
+        <img
+          class="comparison-image comparison-image--edited"
+          data-edited-image
+          src="${escapeHtml(item.editedImageUrl)}"
+          alt="${alt}"
+          loading="${loading}"
+          decoding="async"
+        />
+        <div class="split-original-layer" aria-hidden="true">
+          <img
+            class="comparison-image comparison-image--original"
+            data-original-image
+            src="${escapeHtml(item.originalImageUrl)}"
+            alt=""
+            loading="${loading}"
+            decoding="async"
+          />
+        </div>
+        <span class="split-label split-label--original">${escapeHtml(copy.statusOriginal)}</span>
+        <span class="split-label split-label--edited">${escapeHtml(copy.statusEdited)}</span>
+        <div class="split-divider" aria-hidden="true">
+          <span class="split-divider__handle">↔</span>
+        </div>
+        <input
+          class="split-range"
+          data-split-range
+          type="range"
+          min="0"
+          max="100"
+          value="50"
+          aria-label="${escapeHtml(copy.sliderLabel)}"
+        />
+      </div>
+    </div>
+  </div>
+</section>`
+}
+
+function renderRevealLensComparisonSection(
   item: PublicBeforeAfterItem,
   index: number,
   language: SiteLanguage,
@@ -1192,6 +1459,7 @@ body { font-family: 'Heebo', sans-serif; background: ${t.bg}; color: ${t.text}; 
   --theme-card-background: ${t.surface};
 }
 ${REVEAL_LENS_CSS}
+${SPLIT_SLIDER_CSS}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>
@@ -1214,6 +1482,7 @@ export function generatePublicBeforeAfterPageHTML(options: {
   galleryLayoutMode?: 'separated' | 'portfolio'
   portfolioPath?: string
   siteLanguage?: string | null
+  displayStyle: BeforeAfterDisplayStyle
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.page.accentColor
@@ -1241,7 +1510,11 @@ export function generatePublicBeforeAfterPageHTML(options: {
   })
 
   const itemsHtml = options.page.items
-    .map((item, index) => renderComparisonSection(item, index, language, titleClass))
+    .map((item, index) =>
+      options.displayStyle === 'split_slider'
+        ? renderSplitSliderComparisonSection(item, index, language, titleClass)
+        : renderRevealLensComparisonSection(item, index, language, titleClass)
+    )
     .join('\n')
 
   return `<!DOCTYPE html>
@@ -1263,7 +1536,9 @@ ${generateSiteNav(chrome)}
 </main>
 ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
-<script>${REVEAL_LENS_SCRIPT}</script>
+<script>${
+    options.displayStyle === 'split_slider' ? SPLIT_SLIDER_SCRIPT : REVEAL_LENS_SCRIPT
+  }</script>
 </body>
 </html>`
 }

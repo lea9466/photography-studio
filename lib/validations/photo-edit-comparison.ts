@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-export const photoEditDisplayStyleSchema = z.enum(['development', 'reveal'])
-
 export const photoEditComparisonFieldsSchema = z.object({
   title: z
     .string()
@@ -15,7 +13,6 @@ export const photoEditComparisonFieldsSchema = z.object({
     .max(180, 'התיאור יכול להכיל עד 180 תווים')
     .optional()
     .or(z.literal('')),
-  displayStyle: photoEditDisplayStyleSchema.default('development'),
   sortOrder: z.coerce.number().int().min(0).default(0),
   isActive: z.coerce.boolean().default(true),
   autoApplyWatermark: z.coerce.boolean().default(true),

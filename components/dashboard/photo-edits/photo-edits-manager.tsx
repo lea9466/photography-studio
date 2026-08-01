@@ -11,6 +11,7 @@ import {
   updatePhotoEditComparison,
 } from '@/lib/actions/photo-edit-comparisons.actions'
 import { PhotoEditDialog } from '@/components/dashboard/photo-edits/photo-edit-dialog'
+import { BeforeAfterDisplayStyleSetting } from '@/components/dashboard/photo-edits/before-after-display-style-setting'
 import { PhotoEditEmptyState } from '@/components/dashboard/photo-edits/photo-edit-empty-state'
 import { PhotoEditSortableList } from '@/components/dashboard/photo-edits/photo-edit-sortable-list'
 import type { PhotoEditFormValues } from '@/components/dashboard/photo-edits/photo-edit-form'
@@ -25,11 +26,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { PhotoEditComparison } from '@/lib/types/photo-edit-comparison'
+import type { BeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
 type PhotoEditsManagerProps = {
   initialItems: PhotoEditComparison[]
   studioName?: string | null
   signedUrls?: Record<string, string>
+  initialDisplayStyle: BeforeAfterDisplayStyle
 }
 
 function toFormData(values: PhotoEditFormValues, includeId = false) {
@@ -41,7 +44,6 @@ function toFormData(values: PhotoEditFormValues, includeId = false) {
   formData.set('originalWatermarkedUrl', values.originalWatermarkedUrl)
   formData.set('editedImageUrl', values.editedImageUrl)
   formData.set('editedWatermarkedUrl', values.editedWatermarkedUrl)
-  formData.set('displayStyle', values.displayStyle)
   formData.set('isActive', String(values.isActive))
   formData.set('autoApplyWatermark', String(values.autoApplyWatermark))
   formData.set('watermarkText', values.watermarkText)
@@ -52,6 +54,7 @@ export function PhotoEditsManager({
   initialItems,
   studioName,
   signedUrls = {},
+  initialDisplayStyle,
 }: PhotoEditsManagerProps) {
   const [items, setItems] = useState(initialItems)
   const [urlMap, setUrlMap] = useState(signedUrls)
@@ -192,6 +195,8 @@ export function PhotoEditsManager({
 
   return (
     <div className="space-y-6">
+      <BeforeAfterDisplayStyleSetting initialStyle={initialDisplayStyle} />
+
       <GalleriesDashboardNote>
         <p>
           העלי תמונה מקורית ותמונה מעובדת. הקישור «לפני ואחרי עיבוד» בהדר האתר יופיע רק אם קיים

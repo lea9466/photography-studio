@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
@@ -16,6 +17,10 @@ import { buildPhotoEditStoragePaths } from '@/lib/images/process'
 import { GALLERY_PHOTO_MAX_BYTES, validateGalleryPhotoUpload } from '@/lib/media-upload-limits'
 import type { PhotoEditComparison } from '@/lib/types/photo-edit-comparison'
 import type { PhotoEditComparisonRow as DbRow } from '@/lib/types/database.types'
+import {
+  BEFORE_AFTER_DISPLAY_STYLES,
+  type BeforeAfterDisplayStyle,
+} from '@/lib/types/before-after-display-style'
 import {
   createPhotoEditComparisonSchema,
   updatePhotoEditComparisonSchema,
@@ -103,9 +108,6 @@ function formDataToObject(formData: FormData) {
     editedWatermarkedUrl: formData.has('editedWatermarkedUrl')
       ? String(formData.get('editedWatermarkedUrl') ?? '')
       : undefined,
-    displayStyle: formData.has('displayStyle')
-      ? String(formData.get('displayStyle') ?? 'development')
-      : undefined,
     sortOrder: formData.has('sortOrder') ? Number(formData.get('sortOrder')) : undefined,
     isActive: formData.has('isActive')
       ? String(formData.get('isActive')) === 'true' || formData.get('isActive') === 'on'
@@ -136,6 +138,42 @@ export async function getStudioPhotoEditComparisons(): Promise<ActionResult<Phot
     return actionSuccess(mapPhotoEditComparisonRows(data as DbRow[]))
   } catch (error) {
     return actionError(error instanceof Error ? error.message : 'יש להתחבר מחדש')
+  }
+}
+
+const beforeAfterDisplayStyleSchema = z.enum(BEFORE_AFTER_DISPLAY_STYLES)
+
+export async function updateBeforeAfterDisplayStyle(
+  style: BeforeAfterDisplayStyle
+): Promise<ActionResult<BeforeAfterDisplayStyle>> {
+  try {
+    const { userId, supabase } = await requireDashboardContext()
+    const parsed = beforeAfterDisplayStyleSchema.safeParse(style)
+
+    if (!parsed.success) {
+      return actionError('סגנון תצוגה לא תקין')
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update({ before_after_display_style: parsed.data } as never)
+      .eq('id', userId)
+      .select('slug')
+      .maybeSingle<{ slug: string | null }>()
+
+    if (error) return actionError(error.message)
+    if (!data) return actionError('הגדרות האתר לא נמצאו')
+
+    revalidatePath('/dashboard/photo-edits')
+    const slug = data.slug?.trim()
+    if (slug) {
+      revalidatePath(`/${slug}/before-after`)
+      revalidatePath(`/${slug}`)
+    }
+
+    return actionSuccess(parsed.data)
+  } catch (error) {
+    return actionError(error instanceof Error ? error.message : 'שגיאה בעדכון סגנון התצוגה')
   }
 }
 
@@ -257,12 +295,6 @@ export async function createPhotoEditComparison(
 
     const input = parsed.data
 
-    if (input.displayStyle !== 'development') {
-      return actionError('סגנון התצוגה שנבחר עדיין לא זמין', {
-        displayStyle: ['סגנון התצוגה שנבחר עדיין לא זמין'],
-      })
-    }
-
     try {
       assertOwnedPhotoEditImagePath(userId, input.originalImageUrl)
       assertOwnedPhotoEditImagePath(userId, input.originalWatermarkedUrl)
@@ -332,12 +364,6 @@ export async function updatePhotoEditComparison(
 
     const input = parsed.data
 
-    if (input.displayStyle && input.displayStyle !== 'development') {
-      return actionError('סגנון התצוגה שנבחר עדיין לא זמין', {
-        displayStyle: ['סגנון התצוגה שנבחר עדיין לא זמין'],
-      })
-    }
-
     const { data: existing, error: existingError } = await supabase
       .from('photo_edit_comparisons')
       .select('*')
@@ -355,7 +381,6 @@ export async function updatePhotoEditComparison(
     if (input.description !== undefined) {
       updateData.description = normalizeOptionalText(input.description)
     }
-    if (input.displayStyle !== undefined) updateData.display_style = input.displayStyle
     if (input.sortOrder !== undefined) updateData.sort_order = input.sortOrder
     if (input.isActive !== undefined) updateData.is_active = input.isActive
     if (input.autoApplyWatermark !== undefined) {

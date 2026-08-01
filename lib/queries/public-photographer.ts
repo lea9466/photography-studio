@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
+import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
 export type PublicPhotographer = Pick<
   Database['public']['Tables']['users']['Row'],
@@ -47,6 +48,7 @@ export type PublicPhotographer = Pick<
   | 'faq_section_image_url'
   | 'should_color_logo'
   | 'site_language'
+  | 'before_after_display_style'
 >
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
@@ -93,7 +95,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   faq_items,
   faq_section_image_url,
   should_color_logo,
-  site_language
+  site_language,
+  before_after_display_style
 `
 
 const RESERVED_SLUGS = new Set(['favicon.ico', 'robots.txt', 'sitemap.xml'])
@@ -138,6 +141,7 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('faq_section_image_url') ||
     message.includes('gallery_layout_mode') ||
     message.includes('site_language') ||
+    message.includes('before_after_display_style') ||
     message.includes('heading_font') ||
     message.includes('about_title_font')
   )
@@ -147,6 +151,7 @@ function stripPortfolioLayoutFields(fields: string) {
   const optionalColumns = [
     'gallery_layout_mode',
     'site_language',
+    'before_after_display_style',
     'heading_font',
     'about_title_font',
     'packages_title',
@@ -158,17 +163,23 @@ function stripPortfolioLayoutFields(fields: string) {
     .split('\n')
     .filter((line) => !optionalColumns.some((column) => line.includes(column)))
     .join('\n')
+    .replace(/,\s*$/, '')
 }
 
 function withDefaultGalleryLayoutMode(
   photographer: Omit<
     PublicPhotographer,
-    'gallery_layout_mode' | 'site_language' | 'heading_font' | 'about_title_font'
+    | 'gallery_layout_mode'
+    | 'site_language'
+    | 'heading_font'
+    | 'about_title_font'
+    | 'before_after_display_style'
   > & {
     gallery_layout_mode?: PublicPhotographer['gallery_layout_mode']
     site_language?: PublicPhotographer['site_language']
     heading_font?: PublicPhotographer['heading_font']
     about_title_font?: PublicPhotographer['about_title_font']
+    before_after_display_style?: PublicPhotographer['before_after_display_style']
   }
 ): PublicPhotographer {
   return {
@@ -177,6 +188,9 @@ function withDefaultGalleryLayoutMode(
     site_language: photographer.site_language ?? 'he',
     heading_font: photographer.heading_font ?? null,
     about_title_font: photographer.about_title_font ?? null,
+    before_after_display_style: normalizeBeforeAfterDisplayStyle(
+      photographer.before_after_display_style
+    ),
   }
 }
 
@@ -206,6 +220,9 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   }
   if (message.includes('heading_font') || message.includes('about_title_font')) {
     return 'Run migration 20250720000001_add_heading_fonts.sql on Supabase.'
+  }
+  if (message.includes('before_after_display_style')) {
+    return 'Run migration 20260801225134_add_before_after_display_style.sql on Supabase.'
   }
 
   return 'Apply pending Supabase migrations (supabase db push).'

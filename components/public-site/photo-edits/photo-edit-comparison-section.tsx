@@ -5,7 +5,6 @@ type PhotoEditComparisonSectionProps = {
   editedImageUrl: string
   title?: string | null
   description?: string | null
-  displayStyle?: string
   priority?: boolean
   index?: number
   language?: 'he' | 'en'

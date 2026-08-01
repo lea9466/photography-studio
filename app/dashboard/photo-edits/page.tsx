@@ -3,6 +3,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { getStudioPhotoEditComparisons } from '@/lib/actions/photo-edit-comparisons.actions'
 import { PhotoEditsManager } from '@/components/dashboard/photo-edits/photo-edits-manager'
 import { signStoragePaths } from '@/lib/storage'
+import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
 export default async function PhotoEditsPage() {
   let context
@@ -16,9 +17,12 @@ export default async function PhotoEditsPage() {
   const [{ data: profile }, result] = await Promise.all([
     supabase
       .from('users')
-      .select('studio_name')
+      .select('studio_name, before_after_display_style')
       .eq('id', userId)
-      .maybeSingle<{ studio_name: string | null }>(),
+      .maybeSingle<{
+        studio_name: string | null
+        before_after_display_style: string | null
+      }>(),
     getStudioPhotoEditComparisons(),
   ])
 
@@ -62,6 +66,9 @@ export default async function PhotoEditsPage() {
         initialItems={items}
         studioName={profile?.studio_name ?? null}
         signedUrls={signedUrls}
+        initialDisplayStyle={normalizeBeforeAfterDisplayStyle(
+          profile?.before_after_display_style
+        )}
       />
     </div>
   )

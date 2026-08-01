@@ -1,3 +1,5 @@
+import type { BeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
+
 export type Json =
   | string
   | number
@@ -82,6 +84,7 @@ export type Database = {
           testimonial_layout_type: 'carousel' | 'marquee'
           gallery_layout_mode: GalleryLayoutMode
           site_language: 'he' | 'en'
+          before_after_display_style: BeforeAfterDisplayStyle
           last_dashboard_visit_at: string | null
           dashboard_visit_count: number
         }
@@ -139,6 +142,7 @@ export type Database = {
           testimonial_layout_type?: 'carousel' | 'marquee'
           gallery_layout_mode?: GalleryLayoutMode
           site_language?: 'he' | 'en'
+          before_after_display_style?: BeforeAfterDisplayStyle
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }
@@ -196,6 +200,7 @@ export type Database = {
           testimonial_layout_type?: 'carousel' | 'marquee'
           gallery_layout_mode?: GalleryLayoutMode
           site_language?: 'he' | 'en'
+          before_after_display_style?: BeforeAfterDisplayStyle
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
         }

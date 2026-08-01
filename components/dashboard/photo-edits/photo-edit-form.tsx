@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Check, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { toast } from 'sonner'
 import { resolveWatermarkText } from '@/lib/images/process'
 import { getPhotoEditDisplayPreviewUrl } from '@/lib/photo-edit-image-url'
 import { uploadPhotoEditDisplayImage } from '@/lib/photo-edit-upload-client'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +21,6 @@ export type PhotoEditFormValues = {
   originalWatermarkedUrl: string
   editedImageUrl: string
   editedWatermarkedUrl: string
-  displayStyle: 'development'
   isActive: boolean
   autoApplyWatermark: boolean
   watermarkText: string
@@ -48,7 +46,6 @@ function createEmptyForm(): PhotoEditFormValues {
     originalWatermarkedUrl: '',
     editedImageUrl: '',
     editedWatermarkedUrl: '',
-    displayStyle: 'development',
     isActive: true,
     autoApplyWatermark: true,
     watermarkText: '',
@@ -69,7 +66,6 @@ function fromExisting(
     originalWatermarkedUrl: item.originalWatermarkedUrl,
     editedImageUrl: item.editedImageUrl,
     editedWatermarkedUrl: item.editedWatermarkedUrl,
-    displayStyle: 'development',
     isActive: item.isActive,
     autoApplyWatermark: item.autoApplyWatermark,
     watermarkText: item.watermarkText ?? '',
@@ -370,30 +366,6 @@ export function PhotoEditForm({
           onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
         />
         <p className="text-xs text-[--muted]">{form.description.length}/180</p>
-      </div>
-
-      <div className="space-y-3">
-        <Label>סגנון תצוגה</Label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border-2 border-[#7D3A52] bg-[#7D3A52]/5 p-4">
-            <div className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#7D3A52] text-white">
-                <Check className="h-3 w-3" />
-              </span>
-              <span className="font-medium">פיתוח תמונה</span>
-            </div>
-            <p className="mt-2 pr-7 text-xs text-[--muted]">
-              התמונה המקורית מתפתחת בהדרגה והופכת לתוצאה המעובדת.
-            </p>
-          </div>
-          <div className="rounded-xl border border-[--border] bg-[--muted]/10 p-4 opacity-70">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-medium text-[--muted]">חשיפה אינטראקטיבית</span>
-              <Badge variant="outline">בקרוב</Badge>
-            </div>
-            <p className="mt-2 text-xs text-[--muted]">אפשרות זו תהיה זמינה בקרוב.</p>
-          </div>
-        </div>
       </div>
 
       <div className="space-y-4 rounded-xl border border-[--border] px-4 py-3">
