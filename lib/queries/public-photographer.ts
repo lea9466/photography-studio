@@ -28,6 +28,8 @@ export type PublicPhotographer = Pick<
   | 'hero_mobile_url'
   | 'hero_desktop_urls'
   | 'hero_mobile_urls'
+  | 'hero_type'
+  | 'hero_video_url'
   | 'about_image_url'
   | 'contact_desktop_url'
   | 'contact_mobile_url'
@@ -76,6 +78,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   hero_mobile_url,
   hero_desktop_urls,
   hero_mobile_urls,
+  hero_type,
+  hero_video_url,
   about_image_url,
   contact_desktop_url,
   contact_mobile_url,
@@ -144,6 +148,8 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('before_after_display_style') ||
     message.includes('heading_font') ||
     message.includes('about_title_font')
+    || message.includes('hero_type')
+    || message.includes('hero_video_url')
   )
 }
 
@@ -154,6 +160,8 @@ function stripPortfolioLayoutFields(fields: string) {
     'before_after_display_style',
     'heading_font',
     'about_title_font',
+    'hero_type',
+    'hero_video_url',
     'packages_title',
     'packages_subtitle',
     'contact_title',
@@ -174,12 +182,16 @@ function withDefaultGalleryLayoutMode(
     | 'heading_font'
     | 'about_title_font'
     | 'before_after_display_style'
+    | 'hero_type'
+    | 'hero_video_url'
   > & {
     gallery_layout_mode?: PublicPhotographer['gallery_layout_mode']
     site_language?: PublicPhotographer['site_language']
     heading_font?: PublicPhotographer['heading_font']
     about_title_font?: PublicPhotographer['about_title_font']
     before_after_display_style?: PublicPhotographer['before_after_display_style']
+    hero_type?: PublicPhotographer['hero_type']
+    hero_video_url?: PublicPhotographer['hero_video_url']
   }
 ): PublicPhotographer {
   return {
@@ -191,6 +203,8 @@ function withDefaultGalleryLayoutMode(
     before_after_display_style: normalizeBeforeAfterDisplayStyle(
       photographer.before_after_display_style
     ),
+    hero_type: photographer.hero_type === 'video' ? 'video' : 'images',
+    hero_video_url: photographer.hero_video_url ?? null,
   }
 }
 

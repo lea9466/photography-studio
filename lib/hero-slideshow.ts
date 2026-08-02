@@ -138,6 +138,77 @@ export const HERO_SLIDESHOW_CSS = `
   }
 `
 
+export const HERO_VIDEO_CSS = `
+  .hero-video-root,
+  .hero-video-fallback,
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hero-video-fallback {
+    opacity: 1;
+    transition: opacity 420ms ease;
+  }
+  .hero-video {
+    z-index: 3;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 420ms ease;
+  }
+  .hero-video-root.is-video-ready .hero-video {
+    opacity: 1;
+  }
+  .hero-video-root.is-video-ready .hero-video-fallback {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-video,
+    .hero-video-fallback {
+      transition-duration: 1ms;
+    }
+  }
+`
+
+export const HERO_VIDEO_INIT_SCRIPT = `
+(function initHeroVideos() {
+  function fallback(root) {
+    if (!root || root.classList.contains('video-fallback')) return;
+    root.classList.add('video-fallback');
+    root.dispatchEvent(new CustomEvent('hero-video-fallback', { bubbles: true }));
+  }
+
+  document.querySelectorAll('[data-hero-video-root]').forEach(function(root) {
+    var video = root.querySelector('[data-hero-video]');
+    if (!video) return;
+    var activating = false;
+    var ready = false;
+
+    async function activate() {
+      if (activating || ready) return;
+      activating = true;
+      try {
+        await video.play();
+        ready = true;
+        root.classList.add('is-video-ready');
+      } catch (error) {
+        fallback(root);
+      } finally {
+        activating = false;
+      }
+    }
+
+    video.addEventListener('canplay', activate, { once: true });
+    video.addEventListener('error', function() { fallback(root); }, { once: true });
+    if (video.error) fallback(root);
+    else if (video.readyState >= 3) activate();
+  });
+})();
+`
+
 export const MODERN_HERO_FILM_BELT_CSS = `
   .modern-hero-film-belt {
     position: absolute;
@@ -211,6 +282,8 @@ export const MODERN_HERO_FILM_INIT_SCRIPT = `
   // Drive the belt entirely via Web Animations API using measured pixels.
   // No CSS percentages / keyframes / vw -> zero ambiguity, zero gaps.
   function setupLayer(layer) {
+    var videoRoot = layer.closest('[data-hero-video-root]');
+    if (videoRoot && !videoRoot.classList.contains('video-fallback')) return;
     var track = layer.querySelector('.modern-hero-film-track');
     if (!track) return;
     var slides = [].slice.call(track.querySelectorAll('.modern-hero-film-slide'));
@@ -290,6 +363,7 @@ export const MODERN_HERO_FILM_INIT_SCRIPT = `
   function boot() {
     setupAll();
     window.addEventListener('load', setupAll);
+    document.addEventListener('hero-video-fallback', setupAll);
     var t;
     window.addEventListener('resize', function() {
       clearTimeout(t);
@@ -323,6 +397,8 @@ export const MODERN_HERO_FILM_INIT_SCRIPT = `
 export const HERO_SLIDESHOW_FILM_INIT_SCRIPT = `
 (function initHeroFilmStrips() {
   function syncFilmStrip(layer) {
+    var videoRoot = layer.closest('[data-hero-video-root]');
+    if (videoRoot && !videoRoot.classList.contains('video-fallback')) return true;
     var track = layer.querySelector('.hero-film-track');
     if (!track) return true;
     if (getComputedStyle(layer).display === 'none') return true;
@@ -354,6 +430,7 @@ export const HERO_SLIDESHOW_FILM_INIT_SCRIPT = `
   boot();
   window.addEventListener('resize', syncAll);
   window.addEventListener('load', syncAll);
+  document.addEventListener('hero-video-fallback', syncAll);
   document.querySelectorAll('.hero-slideshow--film .hero-film-frame').forEach(function(img) {
     if (img.complete) return;
     img.addEventListener('load', syncAll);
@@ -393,8 +470,12 @@ export const HERO_SLIDESHOW_INIT_SCRIPT = `
   // Start preloading immediately
   preloadHeroImages();
 
-  document.querySelectorAll('[data-hero-slideshow]').forEach(function(root) {
+  function startSlideshow(root) {
     if (root.getAttribute('data-transition') === 'film') return;
+    if (root.dataset.heroInitialized === 'true') return;
+    var videoRoot = root.closest('[data-hero-video-root]');
+    if (videoRoot && !videoRoot.classList.contains('video-fallback')) return;
+    root.dataset.heroInitialized = 'true';
     var transitionMs = parseInt(root.getAttribute('data-transition-ms') || '${HERO_SLIDESHOW_FADE_MS}', 10);
     var interval = parseInt(root.getAttribute('data-interval') || '${HERO_SLIDESHOW_INTERVAL_MS}', 10);
     ['desktop', 'mobile'].forEach(function(layer) {
@@ -425,6 +506,13 @@ export const HERO_SLIDESHOW_INIT_SCRIPT = `
         index = nextIndex;
       }, interval);
     });
+  }
+
+  document.querySelectorAll('[data-hero-slideshow]').forEach(startSlideshow);
+  document.addEventListener('hero-video-fallback', function(event) {
+    var videoRoot = event.target;
+    if (!videoRoot || !videoRoot.querySelectorAll) return;
+    videoRoot.querySelectorAll('[data-hero-slideshow]').forEach(startSlideshow);
   });
 })();
 `
@@ -448,6 +536,27 @@ export function normalizeHeroUrlList(
   if (fallbackSingle) return [fallbackSingle]
   if (crossVariantFallback) return [crossVariantFallback]
   return []
+}
+
+function escapeHtmlAttribute(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+export function wrapHeroWithVideo(options: {
+  fallbackHtml: string
+  videoUrl: string | null | undefined
+}): string {
+  const { fallbackHtml, videoUrl } = options
+  if (!videoUrl) return fallbackHtml
+
+  return `<div class="hero-video-root" data-hero-video-root>
+<div class="hero-video-fallback" data-hero-poster>${fallbackHtml}</div>
+<video class="hero-video" data-hero-video src="${escapeHtmlAttribute(videoUrl)}" autoplay muted loop playsinline preload="metadata" aria-hidden="true" tabindex="-1"></video>
+</div>`
 }
 
 function generateHeroEmptyPlaceholderHTML(options: {

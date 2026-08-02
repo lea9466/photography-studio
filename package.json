@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs",
+    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs && node --experimental-strip-types scripts/test-hero-video-security.mjs",
     "test:exploit-critical": "node scripts/exploit-critical-runtime.mjs",
     "test:regression-critical": "node scripts/regression-critical-runtime.mjs",
     "supabase:auth-urls": "node scripts/push-auth-redirect-urls.mjs"
@@ -37,6 +37,7 @@
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",
     "lucide-react": "^0.511.0",
+    "mp4box": "^2.4.1",
     "next": "^15.3.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

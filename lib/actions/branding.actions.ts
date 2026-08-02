@@ -18,8 +18,10 @@ import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
 import { isAllowedFont } from '@/constants/fonts'
+import { isOwnedHeroVideoPath } from '@/lib/hero-video-constraints'
 
 const HERO_SLOT_COUNT = 3
+export type HeroType = 'images' | 'video'
 
 type BrandingImageType =
   | 'logo'
@@ -287,6 +289,61 @@ export async function removeBrandingImage(type: SingleBrandingImageType) {
     revalidatePath('/[slug]', 'page')
   }
 
+  return { success: true }
+}
+
+export async function updateHeroType(heroType: HeroType) {
+  if (heroType !== 'images' && heroType !== 'video') {
+    throw new Error('סוג ההירו אינו תקין')
+  }
+
+  const { userId } = await requireDashboardContext()
+  const admin = createAdminClient()
+  const { data, error: readError } = await admin
+    .from('users')
+    .select(
+      'hero_video_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls'
+    )
+    .eq('id', userId)
+    .single()
+
+  if (readError) throw new Error(readError.message)
+
+  if (heroType === 'video') {
+    const profile = data as {
+      hero_video_url: string | null
+      hero_desktop_url: string | null
+      hero_mobile_url: string | null
+      hero_desktop_urls: string[] | null
+      hero_mobile_urls: string[] | null
+    }
+    const videoPath = profile.hero_video_url?.trim()
+    const posterPath =
+      profile.hero_desktop_urls?.[0]?.trim() ||
+      profile.hero_desktop_url?.trim() ||
+      profile.hero_mobile_urls?.[0]?.trim() ||
+      profile.hero_mobile_url?.trim()
+
+    if (!isOwnedHeroVideoPath(userId, videoPath)) {
+      throw new Error('יש להעלות סרטון Hero תקין לפני הפעלת מצב סרטון')
+    }
+    if (!posterPath) {
+      throw new Error('יש להעלות תמונת Hero ראשונה לפני הפעלת מצב סרטון')
+    }
+  }
+
+  const { data: updated, error } = await admin
+    .from('users')
+    .update({ hero_type: heroType })
+    .eq('id', userId)
+    .select('id')
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!updated) throw new Error('הבחירה לא נשמרה — נסי להתחבר מחדש')
+
+  revalidatePath('/dashboard/settings')
+  revalidatePath('/[slug]', 'page')
   return { success: true }
 }
 

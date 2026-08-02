@@ -275,6 +275,7 @@ export default async function PhotographerPage({ params }: PageProps) {
             ? [typedPhotographer.hero_mobile_url]
             : []
       ),
+      hero_video_url: await resolveBrandingPath(typedPhotographer.hero_video_url),
       about_image_url: await resolveBrandingPath(typedPhotographer.about_image_url),
       contact_desktop_url: await resolveBrandingPath(typedPhotographer.contact_desktop_url),
       contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),

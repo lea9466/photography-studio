@@ -8,6 +8,7 @@ function contentTypeFromPath(path: string) {
   if (lower.endsWith('.webp')) return 'image/webp'
   if (lower.endsWith('.svg')) return 'image/svg+xml'
   if (lower.endsWith('.gif')) return 'image/gif'
+  if (lower.endsWith('.mp4')) return 'video/mp4'
   return 'application/octet-stream'
 }
 

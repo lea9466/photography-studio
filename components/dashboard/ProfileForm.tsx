@@ -4,10 +4,18 @@ import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { updateProfile } from '@/lib/actions/feedback.actions'
-import { finalizeBrandingUpload, prepareBrandingUpload, removeBrandingImage, removeHeroImageSlot } from '@/lib/actions/branding.actions'
+import {
+  finalizeBrandingUpload,
+  prepareBrandingUpload,
+  removeBrandingImage,
+  removeHeroImageSlot,
+  updateHeroType,
+  type HeroType,
+} from '@/lib/actions/branding.actions'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
+import { HeroVideoSettings } from '@/components/dashboard/HeroVideoSettings'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWithHelp } from '@/components/ui/label-with-help'
@@ -101,6 +109,8 @@ type ProfileFormProps = {
     hero_mobile_url: string | null
     hero_desktop_urls?: string[] | null
     hero_mobile_urls?: string[] | null
+    hero_type?: HeroType | null
+    hero_video_url?: string | null
     about_image_url: string | null
     contact_desktop_url: string | null
     contact_mobile_url: string | null
@@ -247,6 +257,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const [heroMobileUrls, setHeroMobileUrls] = useState<string[]>(() =>
     initHeroSlots(profile?.hero_mobile_urls, profile?.hero_mobile_url ?? null)
   )
+  const [heroType, setHeroType] = useState<HeroType>(profile?.hero_type === 'video' ? 'video' : 'images')
+  const [heroVideoUrl, setHeroVideoUrl] = useState(profile?.hero_video_url ?? '')
+  const [heroVideoBusy, setHeroVideoBusy] = useState(false)
   const [aboutImageUrl, setAboutImageUrl] = useState(profile?.about_image_url ?? '')
   const [contactDesktopUrl, setContactDesktopUrl] = useState(profile?.contact_desktop_url ?? '')
   const [contactMobileUrl, setContactMobileUrl] = useState(profile?.contact_mobile_url ?? '')
@@ -475,6 +488,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           slug: slug.trim(),
           should_color_logo: shouldColorLogo,
         })
+        await updateHeroType(heroType)
         setSavedSlug(slug.trim())
         toast.success('הפרופיל עודכן')
         document.documentElement.style.setProperty('--client-accent', accentColor)
@@ -621,6 +635,17 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           where={SITE_SETTINGS_HELP.sections.content.where}
         />
         <div className="space-y-10">
+          <SettingsSubPanel>
+            <HeroVideoSettings
+              heroType={heroType}
+              videoUrl={heroVideoUrl}
+              hasPoster={Boolean(heroDesktopUrls[0] || heroMobileUrls[0])}
+              onTypeChange={setHeroType}
+              onVideoUrlChange={setHeroVideoUrl}
+              onUploadingChange={setHeroVideoBusy}
+            />
+          </SettingsSubPanel>
+
           <SettingsSubPanel>
             <div className="space-y-2">
               <LabelWithHelp
@@ -1382,11 +1407,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         <div className="rounded-2xl border border-[#7D3A52]/15 bg-white/95 p-1.5 shadow-xl shadow-[#7D3A52]/10 backdrop-blur-md">
           <Button
             onClick={handleSave}
-            disabled={isPending}
+            disabled={isPending || heroVideoBusy}
             size="lg"
             className="min-w-[180px] bg-[#7D3A52] px-8 font-semibold text-white shadow-md shadow-[#7D3A52]/30 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40"
           >
-            {isPending ? 'שומר...' : 'שמור שינויים'}
+            {heroVideoBusy ? 'מעלה סרטון...' : isPending ? 'שומר...' : 'שמור שינויים'}
           </Button>
         </div>
       </div>

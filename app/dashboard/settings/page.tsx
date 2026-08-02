@@ -31,9 +31,10 @@ export default async function SettingsPage() {
   const { userId, supabase } = context
 
   const PROFILE_FIELDS =
-    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
+    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_type, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
 
-  const PROFILE_FIELDS_NO_FONTS = PROFILE_FIELDS.replace(', heading_font, about_title_font', '')
+  const PROFILE_FIELDS_NO_HERO_VIDEO = PROFILE_FIELDS.replace(', hero_type, hero_video_url', '')
+  const PROFILE_FIELDS_NO_FONTS = PROFILE_FIELDS_NO_HERO_VIDEO.replace(', heading_font, about_title_font', '')
   const PROFILE_FIELDS_NO_LANGUAGE = PROFILE_FIELDS_NO_FONTS.replace(', site_language', '')
   const PROFILE_FIELDS_NO_CONTACT_HEADINGS = PROFILE_FIELDS_NO_LANGUAGE.replace(
     ', contact_title, contact_subtitle',
@@ -48,6 +49,18 @@ export default async function SettingsPage() {
 
   function isMissingColumnError(err: typeof error | null) {
     return !!err && (err.code === '42703' || err.code === 'PGRST204')
+  }
+
+  if (
+    isMissingColumnError(error) &&
+    (error?.message?.toLowerCase().includes('hero_type') ||
+      error?.message?.toLowerCase().includes('hero_video_url'))
+  ) {
+    ;({ data, error } = await supabase
+      .from('users')
+      .select(PROFILE_FIELDS_NO_HERO_VIDEO)
+      .eq('id', userId)
+      .single())
   }
 
   if (
@@ -152,6 +165,10 @@ export default async function SettingsPage() {
 
     hero_mobile_urls: string[] | null
 
+    hero_type?: 'images' | 'video' | null
+
+    hero_video_url?: string | null
+
     about_image_url: string | null
 
     contact_desktop_url: string | null
@@ -169,6 +186,9 @@ export default async function SettingsPage() {
   } | null
 
 
+
+  const resolvedHeroType: 'images' | 'video' =
+    profile?.hero_type === 'video' ? 'video' : 'images'
 
   const profileWithUrls = profile ? {
 
@@ -215,6 +235,10 @@ export default async function SettingsPage() {
       )
 
     ),
+
+    hero_type: resolvedHeroType,
+
+    hero_video_url: await resolveBrandingUrl(profile.hero_video_url ?? null),
 
     about_image_url: await resolveBrandingUrl(profile.about_image_url),
 

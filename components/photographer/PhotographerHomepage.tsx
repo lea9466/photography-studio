@@ -10,9 +10,15 @@ import {
 
   generateModernHeroFilmBeltHTML,
 
+  wrapHeroWithVideo,
+
   HERO_SLIDESHOW_CSS,
 
   HERO_SLIDESHOW_INIT_SCRIPT,
+
+  HERO_VIDEO_INIT_SCRIPT,
+
+  HERO_VIDEO_CSS,
 
   MODERN_HERO_FILM_BELT_CSS,
 
@@ -137,6 +143,10 @@ interface Photographer {
   hero_desktop_urls?: string[] | null
 
   hero_mobile_urls?: string[] | null
+
+  hero_type?: 'images' | 'video' | null
+
+  hero_video_url?: string | null
 
   about_image_url: string | null
 
@@ -5087,6 +5097,10 @@ function generateHomepageHTML(
 
     hero_mobile_urls,
 
+    hero_type,
+
+    hero_video_url,
+
     about_image_url,
 
     contact_desktop_url,
@@ -5408,40 +5422,60 @@ function generateHomepageHTML(
 
   )
 
-  const heroSlideshowHtml = generateHeroSlideshowHTML({
+  const activeHeroVideoUrl =
+    hero_type === 'video' &&
+    hero_video_url &&
+    (desktopHeroImages[0] || mobileHeroImages[0])
+      ? hero_video_url
+      : null
+  const heroVideoCss = activeHeroVideoUrl ? HERO_VIDEO_CSS : ''
+  const heroVideoScriptHtml = activeHeroVideoUrl
+    ? `<script>${HERO_VIDEO_INIT_SCRIPT}</script>`
+    : ''
 
-    desktopImages: desktopHeroImages,
+  const heroSlideshowHtml = wrapHeroWithVideo({
+    videoUrl: activeHeroVideoUrl,
+    fallbackHtml: generateHeroSlideshowHTML({
 
-    mobileImages: mobileHeroImages,
+      desktopImages: desktopHeroImages,
 
-    alt: studio_name || homepageCopy.misc.photographyAlt,
+      mobileImages: mobileHeroImages,
 
+      alt: studio_name || homepageCopy.misc.photographyAlt,
+
+    }),
   })
 
-  const heroSlideshowModernHtml = generateModernHeroFilmBeltHTML({
+  const heroSlideshowModernHtml = wrapHeroWithVideo({
+    videoUrl: activeHeroVideoUrl,
+    fallbackHtml: generateModernHeroFilmBeltHTML({
 
-    desktopImages: desktopHeroImages,
+      desktopImages: desktopHeroImages,
 
-    mobileImages: mobileHeroImages,
+      mobileImages: mobileHeroImages,
 
-    alt: studio_name || homepageCopy.misc.photographyAlt,
+      alt: studio_name || homepageCopy.misc.photographyAlt,
 
-    heroId: 'hero-slideshow-modern',
+      heroId: 'hero-slideshow-modern',
 
+    }),
   })
 
-  const heroSlideshowBoldHtml = generateHeroSlideshowHTML({
+  const heroSlideshowBoldHtml = wrapHeroWithVideo({
+    videoUrl: activeHeroVideoUrl,
+    fallbackHtml: generateHeroSlideshowHTML({
 
-    desktopImages: desktopHeroImages,
+      desktopImages: desktopHeroImages,
 
-    mobileImages: mobileHeroImages,
+      mobileImages: mobileHeroImages,
 
-    alt: studio_name || homepageCopy.misc.photographyAlt,
+      alt: studio_name || homepageCopy.misc.photographyAlt,
 
-    heroId: 'hero-slideshow-bold',
+      heroId: 'hero-slideshow-bold',
 
-    imgClass: 'bold-hero-image',
+      imgClass: 'bold-hero-image',
 
+    }),
   })
 
   const aboutImageHtml = about_image_url
@@ -7444,6 +7478,8 @@ ${documentHead}
 
         ${HERO_SLIDESHOW_CSS}
 
+        ${heroVideoCss}
+
         ${sectionBgCss}
 
         ${HOMEPAGE_LTR_CSS}
@@ -7815,6 +7851,8 @@ ${generateSiteFooter(siteChrome('elegant'))}
 </script>
 
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+
+${heroVideoScriptHtml}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
@@ -8572,6 +8610,8 @@ ${documentHead}
 
         ${MODERN_HERO_FILM_BELT_CSS}
 
+        ${heroVideoCss}
+
         ${sectionBgCss}
 
         ${HOMEPAGE_LTR_CSS}
@@ -8966,6 +9006,8 @@ ${generateSiteFooter(siteChrome('modern'))}
 <script>${generateLogoColoringScript()}</script>
 
 <script>${MODERN_HERO_FILM_INIT_SCRIPT}</script>
+
+${heroVideoScriptHtml}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
@@ -9788,6 +9830,8 @@ ${documentHead}
 
         ${HERO_SLIDESHOW_CSS}
 
+        ${heroVideoCss}
+
         ${sectionBgCss}
 
         ${HOMEPAGE_LTR_CSS}
@@ -10422,6 +10466,8 @@ ${generateSiteFooter(siteChrome('classic'))}
 <script>${HOMEPAGE_REVEAL_INIT_SCRIPT}</script>
 
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+
+${heroVideoScriptHtml}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 
@@ -11393,6 +11439,8 @@ ${documentHead}
 
         ${HERO_SLIDESHOW_CSS}
 
+        ${heroVideoCss}
+
         ${sectionBgCss}
 
         .theme-bold .homepage-gallery-header,
@@ -11964,6 +12012,8 @@ ${generateSiteFooter(siteChrome('dark'))}
     </script>
 
 <script>${HERO_SLIDESHOW_INIT_SCRIPT}</script>
+
+${heroVideoScriptHtml}
 
 <script>${TESTIMONIALS_EQUAL_HEIGHT_SCRIPT}</script>
 

@@ -29,6 +29,7 @@ type UserProfileRow = {
   hero_mobile_url: string | null
   hero_desktop_urls: string[] | null
   hero_mobile_urls: string[] | null
+  hero_video_url: string | null
   about_image_url: string | null
   contact_desktop_url: string | null
   contact_mobile_url: string | null
@@ -42,6 +43,7 @@ function collectBrandingPaths(profile: UserProfileRow) {
     profile.logo_url,
     profile.hero_desktop_url,
     profile.hero_mobile_url,
+    profile.hero_video_url,
     profile.about_image_url,
     profile.contact_desktop_url,
     profile.contact_mobile_url,
@@ -156,7 +158,7 @@ async function deleteUserR2Media(userId: string) {
   const { data: profile, error: profileError } = await admin
     .from('users')
     .select(
-      'id, slug, studio_name, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, about_image_url, contact_desktop_url, contact_mobile_url, packages_desktop_url, packages_mobile_url'
+      'id, slug, studio_name, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, packages_desktop_url, packages_mobile_url'
     )
     .eq('id', userId)
     .maybeSingle()

@@ -81,6 +81,7 @@ function contentTypeFromKey(key: string) {
   if (lower.endsWith('.webp')) return 'image/webp'
   if (lower.endsWith('.svg')) return 'image/svg+xml'
   if (lower.endsWith('.gif')) return 'image/gif'
+  if (lower.endsWith('.mp4')) return 'video/mp4'
   return 'application/octet-stream'
 }
 
@@ -200,6 +201,30 @@ async function streamCoverImage(normalizedKey: string) {
   })
 }
 
+async function streamVideo(normalizedKey: string, range: string | null) {
+  const { bucketName } = getR2Config()
+  const response = await getR2Client().send(
+    new GetObjectCommand({
+      Bucket: bucketName,
+      Key: normalizedKey,
+      ...(range ? { Range: range } : {}),
+    })
+  )
+  if (!response.Body) return textResponse('קובץ לא נמצא', 404)
+
+  const data = new Uint8Array(await response.Body.transformToByteArray())
+  return new Response(Buffer.from(data), {
+    status: response.ContentRange ? 206 : 200,
+    headers: {
+      'Content-Type': 'video/mp4',
+      'Content-Length': String(response.ContentLength ?? data.byteLength),
+      'Accept-Ranges': 'bytes',
+      ...(response.ContentRange ? { 'Content-Range': response.ContentRange } : {}),
+      'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800',
+    },
+  })
+}
+
 export async function GET(request: Request) {
   if (!isR2Configured()) {
     return textResponse('אחסון תמונות לא מוגדר', 503)
@@ -239,6 +264,10 @@ export async function GET(request: Request) {
     if (isPublicRedirectKey(normalizedKey)) {
       const redirect = redirectToPublicR2(normalizedKey)
       if (redirect) return redirect
+    }
+
+    if (normalizedKey.endsWith('.mp4')) {
+      return streamVideo(normalizedKey, request.headers.get('range'))
     }
 
     const data = await downloadMediaObject(bucket, path)
