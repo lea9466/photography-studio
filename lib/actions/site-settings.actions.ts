@@ -88,3 +88,44 @@ export async function updateSiteLanguage(language: SiteLanguage) {
 
   return { success: true }
 }
+
+function isMissingUnderConstructionColumn(error: { code?: string; message?: string }) {
+  const message = error.message?.toLowerCase() ?? ''
+  return (
+    error.code === '42703' ||
+    error.code === 'PGRST204' ||
+    message.includes('is_under_construction')
+  )
+}
+
+export async function updateSiteUnderConstruction(underConstruction: boolean) {
+  if (typeof underConstruction !== 'boolean') {
+    throw new Error('ערך לא תקין')
+  }
+
+  const { userId, supabase } = await requireDashboardContext()
+
+  const { data, error } = await supabase
+    .from('users')
+    .update({ is_under_construction: underConstruction } as never)
+    .eq('id', userId)
+    .select('is_under_construction')
+    .maybeSingle()
+
+  if (error) {
+    if (isMissingUnderConstructionColumn(error)) {
+      throw new Error('יש להריץ את מיגרציית add_site_access_flags ב-Supabase')
+    }
+    throw new Error(error.message)
+  }
+
+  await revalidatePublicSitePaths(supabase, userId)
+  revalidatePath('/dashboard/settings')
+
+  return {
+    success: true as const,
+    is_under_construction: Boolean(
+      (data as { is_under_construction?: boolean } | null)?.is_under_construction
+    ),
+  }
+}

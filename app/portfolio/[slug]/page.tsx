@@ -13,7 +13,10 @@ import {
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
-import { resolvePublicSiteGateByUserId } from '@/lib/site-access/public-gate'
+import {
+  applyOwnerPreviewBypass,
+  resolvePublicSiteGateByUserId,
+} from '@/lib/site-access/public-gate'
 
 type PortfolioPageProps = {
   params: Promise<{ slug: string }>
@@ -46,7 +49,9 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     notFound()
   }
 
-  const siteGate = await resolvePublicSiteGateByUserId(gallery.user_id)
+  const siteGate = await applyOwnerPreviewBypass(
+    await resolvePublicSiteGateByUserId(gallery.user_id)
+  )
   if (siteGate) {
     return (
       <SiteGateScreen

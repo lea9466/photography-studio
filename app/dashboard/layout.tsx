@@ -41,6 +41,7 @@ export default async function DashboardLayout({
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
       siteUnavailableLocked={siteUnavailableLocked}
+      isUnderConstruction={Boolean(profile?.is_under_construction)}
       announcement={isImpersonating || siteUnavailableLocked ? null : announcement}
       onSignOut={async () => {
         'use server'

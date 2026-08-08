@@ -6,6 +6,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
 import { SiteLanguageSetting } from '@/components/dashboard/SiteLanguageSetting'
+import { SiteVisibilitySetting } from '@/components/dashboard/SiteVisibilitySetting'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 
 import { resolveBrandingPath, resolveBrandingPaths, padHeroUrlSlots } from '@/lib/branding-urls'
@@ -31,9 +32,13 @@ export default async function SettingsPage() {
   const { userId, supabase } = context
 
   const PROFILE_FIELDS =
-    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_type, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language'
+    'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_type, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language, is_under_construction'
 
-  const PROFILE_FIELDS_NO_HERO_VIDEO = PROFILE_FIELDS.replace(', hero_type, hero_video_url', '')
+  const PROFILE_FIELDS_NO_VISIBILITY = PROFILE_FIELDS.replace(', is_under_construction', '')
+  const PROFILE_FIELDS_NO_HERO_VIDEO = PROFILE_FIELDS_NO_VISIBILITY.replace(
+    ', hero_type, hero_video_url',
+    ''
+  )
   const PROFILE_FIELDS_NO_FONTS = PROFILE_FIELDS_NO_HERO_VIDEO.replace(', heading_font, about_title_font', '')
   const PROFILE_FIELDS_NO_LANGUAGE = PROFILE_FIELDS_NO_FONTS.replace(', site_language', '')
   const PROFILE_FIELDS_NO_CONTACT_HEADINGS = PROFILE_FIELDS_NO_LANGUAGE.replace(
@@ -49,6 +54,17 @@ export default async function SettingsPage() {
 
   function isMissingColumnError(err: typeof error | null) {
     return !!err && (err.code === '42703' || err.code === 'PGRST204')
+  }
+
+  if (
+    isMissingColumnError(error) &&
+    error?.message?.toLowerCase().includes('is_under_construction')
+  ) {
+    ;({ data, error } = await supabase
+      .from('users')
+      .select(PROFILE_FIELDS_NO_VISIBILITY)
+      .eq('id', userId)
+      .single())
   }
 
   if (
@@ -183,6 +199,8 @@ export default async function SettingsPage() {
 
     site_language: string | null
 
+    is_under_construction?: boolean | null
+
   } | null
 
 
@@ -292,6 +310,11 @@ export default async function SettingsPage() {
         <SiteLanguageSetting key={siteLanguage} initialLanguage={siteLanguage} />
 
         <ProfileForm profile={profileWithUrls} />
+
+        <SiteVisibilitySetting
+          key={Boolean(profile?.is_under_construction) ? 'hidden' : 'public'}
+          initialUnderConstruction={Boolean(profile?.is_under_construction)}
+        />
 
       </div>
 

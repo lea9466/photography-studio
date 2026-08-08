@@ -18,7 +18,10 @@ import {
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
-import { resolvePublicSiteGateByUserId } from '@/lib/site-access/public-gate'
+import {
+  applyOwnerPreviewBypass,
+  resolvePublicSiteGateByUserId,
+} from '@/lib/site-access/public-gate'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -68,7 +71,9 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     notFound()
   }
 
-  const siteGate = await resolvePublicSiteGateByUserId(galleryData.user_id)
+  const siteGate = await applyOwnerPreviewBypass(
+    await resolvePublicSiteGateByUserId(galleryData.user_id)
+  )
   if (siteGate) {
     return (
       <SiteGateScreen

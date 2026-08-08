@@ -12,6 +12,7 @@ export type DashboardProfile = {
   show_referral_popup: boolean
   show_welcome_popup: boolean
   is_site_unavailable: boolean
+  is_under_construction: boolean
   created_at: string
 }
 
@@ -28,7 +29,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
   const { supabase, userId } = context
 
   const fullSelect =
-    'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, is_site_unavailable, created_at'
+    'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, is_site_unavailable, is_under_construction, created_at'
 
   const { data: full, error: fullError } = await supabase
     .from('users')
@@ -44,6 +45,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
       show_referral_popup: row.show_referral_popup ?? false,
       show_welcome_popup: row.show_welcome_popup ?? false,
       is_site_unavailable: Boolean(row.is_site_unavailable),
+      is_under_construction: Boolean(row.is_under_construction),
     }
   }
 
@@ -57,13 +59,17 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
     .single()
 
   if (!legacyError && legacy) {
-    const row = legacy as Omit<DashboardProfile, 'is_site_unavailable'>
+    const row = legacy as Omit<
+      DashboardProfile,
+      'is_site_unavailable' | 'is_under_construction'
+    >
     return {
       ...row,
       trial_end_date: row.trial_end_date || defaultTrialEndDate(row.created_at),
       show_referral_popup: row.show_referral_popup ?? false,
       show_welcome_popup: row.show_welcome_popup ?? false,
       is_site_unavailable: false,
+      is_under_construction: false,
     }
   }
 
@@ -84,6 +90,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
     | 'show_referral_popup'
     | 'show_welcome_popup'
     | 'is_site_unavailable'
+    | 'is_under_construction'
   >
 
   return {
@@ -93,5 +100,6 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
     show_referral_popup: false,
     show_welcome_popup: false,
     is_site_unavailable: false,
+    is_under_construction: false,
   }
 }

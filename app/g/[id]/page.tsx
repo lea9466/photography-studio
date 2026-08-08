@@ -8,7 +8,10 @@ import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { resolvePublicSiteGateByGalleryId } from '@/lib/site-access/public-gate'
+import {
+  applyOwnerPreviewBypass,
+  resolvePublicSiteGateByGalleryId,
+} from '@/lib/site-access/public-gate'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -24,7 +27,9 @@ export default async function ClientGalleryPage({
 }: ClientGalleryPageProps) {
   const { id } = await params
 
-  const siteGate = await resolvePublicSiteGateByGalleryId(id)
+  const siteGate = await applyOwnerPreviewBypass(
+    await resolvePublicSiteGateByGalleryId(id)
+  )
   if (siteGate) {
     return (
       <SiteGateScreen

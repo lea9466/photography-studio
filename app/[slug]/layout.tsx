@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
-import { resolvePublicSiteGateBySlug } from '@/lib/site-access/public-gate'
+import {
+  applyOwnerPreviewBypass,
+  resolvePublicSiteGateBySlug,
+} from '@/lib/site-access/public-gate'
 
 type PhotographerSiteLayoutProps = {
   children: ReactNode
@@ -13,7 +16,9 @@ export default async function PhotographerSiteLayout({
 }: PhotographerSiteLayoutProps) {
   const { slug } = await params
   const decodedSlug = decodeURIComponent(slug)
-  const gate = await resolvePublicSiteGateBySlug(decodedSlug)
+  const gate = await applyOwnerPreviewBypass(
+    await resolvePublicSiteGateBySlug(decodedSlug)
+  )
 
   if (gate) {
     return (

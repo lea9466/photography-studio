@@ -1,9 +1,12 @@
 'use client'
 
+import { useEffect, useState, useTransition } from 'react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Menu, X, LogOut, ExternalLink } from 'lucide-react'
+import { Menu, X, LogOut, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import { Logo } from './Logo'
 import { DashboardNavMenu } from './DashboardNavMenu'
+import { updateSiteUnderConstruction } from '@/lib/actions/site-settings.actions'
 
 type SidebarNavProps = {
   userName?: string
@@ -18,6 +21,7 @@ type SidebarNavProps = {
   accentColor?: string
   shouldColorLogo?: boolean
   siteUnavailableLocked?: boolean
+  isUnderConstruction?: boolean
 }
 
 export function SidebarNav({
@@ -33,8 +37,33 @@ export function SidebarNav({
   accentColor,
   shouldColorLogo,
   siteUnavailableLocked = false,
+  isUnderConstruction = false,
 }: SidebarNavProps) {
   const showExpanded = isMobileOpen || !isCollapsed
+  const [underConstruction, setUnderConstruction] = useState(isUnderConstruction)
+  const [visibilityPending, startVisibilityTransition] = useTransition()
+
+  useEffect(() => {
+    setUnderConstruction(isUnderConstruction)
+  }, [isUnderConstruction])
+
+  function handleVisibilityToggle() {
+    if (siteUnavailableLocked || visibilityPending) return
+    const next = !underConstruction
+    startVisibilityTransition(async () => {
+      try {
+        await updateSiteUnderConstruction(next)
+        setUnderConstruction(next)
+        toast.success(
+          next
+            ? 'האתר הוסתר מצפייה ציבורית'
+            : 'האתר פתוח לצפייה ציבורית'
+        )
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'עדכון נכשל')
+      }
+    })
+  }
 
   return (
     <aside
@@ -103,17 +132,54 @@ export function SidebarNav({
           showExpanded ? 'p-4' : 'p-2 flex flex-col items-center gap-2'
         )}
       >
-        {showExpanded && portfolioSlug ? (
-          <a
-            href={`/${portfolioSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={onMobileClose}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200"
-          >
-            <ExternalLink className="h-5 w-5" />
-            <span className="text-sm">צפי באתר שלי</span>
-          </a>
+        {showExpanded ? (
+          <div className="space-y-2">
+            {portfolioSlug ? (
+              <a
+                href={`/${portfolioSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onMobileClose}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200"
+              >
+                <ExternalLink className="h-5 w-5" />
+                <span className="text-sm">צפי באתר שלי</span>
+              </a>
+            ) : null}
+            {!siteUnavailableLocked ? (
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  disabled={visibilityPending}
+                  onClick={handleVisibilityToggle}
+                  className={cn(
+                    'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-right transition-all duration-200',
+                    underConstruction
+                      ? 'border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100'
+                      : 'border-[--dashboard-border] bg-[--dashboard-surface] text-[--dashboard-muted] hover:text-[--dashboard-foreground] hover:bg-[--dashboard-surface]'
+                  )}
+                >
+                  {underConstruction ? (
+                    <EyeOff className="h-5 w-5 shrink-0" />
+                  ) : (
+                    <Eye className="h-5 w-5 shrink-0" />
+                  )}
+                  <span className="text-sm font-medium leading-snug">
+                    {visibilityPending
+                      ? 'מעדכן...'
+                      : underConstruction
+                        ? 'האתר מוסתר מצפייה — לחצי לפתיחה'
+                        : 'הסתירי את האתר מצפייה'}
+                  </span>
+                </button>
+                {underConstruction ? (
+                  <p className="px-1 text-[11px] leading-relaxed text-orange-800/80">
+                    אצלך בדפדפן הזה האתר פתוח. בדפדפן אחר — חסום.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         ) : null}
 
         {!showExpanded ? (
