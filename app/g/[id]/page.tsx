@@ -6,7 +6,9 @@ import {
 import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
+import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { resolvePublicSiteGateByGalleryId } from '@/lib/site-access/public-gate'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -21,6 +23,18 @@ export default async function ClientGalleryPage({
   params,
 }: ClientGalleryPageProps) {
   const { id } = await params
+
+  const siteGate = await resolvePublicSiteGateByGalleryId(id)
+  if (siteGate) {
+    return (
+      <SiteGateScreen
+        mode={siteGate.mode}
+        studioName={siteGate.studioName}
+        siteLanguage={siteGate.siteLanguage}
+      />
+    )
+  }
+
   const meta = await getClientGalleryPublicMeta(id)
 
   if (!meta || (meta.status === 'draft' && !meta.is_public)) {

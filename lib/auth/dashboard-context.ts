@@ -2,6 +2,7 @@ import {
   canUseImpersonation,
   getImpersonatedUserIdFromCookies,
 } from '@/lib/auth/impersonation'
+import { isSiteUnavailableLocked } from '@/lib/site-access/dashboard-lock'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
@@ -12,6 +13,11 @@ export type DashboardAuthContext = {
   supabase: DashboardSupabaseClient
   isImpersonating: boolean
   actorEmail: string | null
+}
+
+export type RequireDashboardOptions = {
+  /** Allow access while the public site is admin-locked as unavailable (billing only). */
+  allowWhenSiteUnavailable?: boolean
 }
 
 export async function getDashboardContext(): Promise<DashboardAuthContext | null> {
@@ -51,10 +57,21 @@ export async function getDashboardContext(): Promise<DashboardAuthContext | null
   }
 }
 
-export async function requireDashboardContext() {
+export async function requireDashboardContext(options?: RequireDashboardOptions) {
   const context = await getDashboardContext()
   if (!context) {
     throw new Error('יש להתחבר מחדש')
   }
+
+  if (!options?.allowWhenSiteUnavailable && !context.isImpersonating) {
+    const locked = await isSiteUnavailableLocked({
+      userId: context.userId,
+      supabase: context.supabase,
+    })
+    if (locked) {
+      throw new Error('האתר אינו זמין כרגע. ניתן לגשת רק לעמוד המינוי.')
+    }
+  }
+
   return context
 }

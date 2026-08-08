@@ -17,6 +17,8 @@ import {
   buildPublicOpenGraph,
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
+import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
+import { resolvePublicSiteGateByUserId } from '@/lib/site-access/public-gate'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -64,6 +66,17 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   if (!galleryData) {
     console.warn('[public-gallery/page] notFound()', { rawId, normalizedId })
     notFound()
+  }
+
+  const siteGate = await resolvePublicSiteGateByUserId(galleryData.user_id)
+  if (siteGate) {
+    return (
+      <SiteGateScreen
+        mode={siteGate.mode}
+        studioName={siteGate.studioName}
+        siteLanguage={siteGate.siteLanguage}
+      />
+    )
   }
 
   const { data: user, error: userError } = await admin

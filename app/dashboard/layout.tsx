@@ -17,6 +17,8 @@ export default async function DashboardLayout({
   const portfolioSlug = profile?.slug?.trim() || null
   const welcomePreviewUrl = portfolioSlug ? `/${portfolioSlug}` : null
   const isImpersonating = context?.isImpersonating ?? false
+  const siteUnavailableLocked =
+    !isImpersonating && Boolean(profile?.is_site_unavailable)
 
   return (
     <DashboardLayoutWrapper
@@ -24,13 +26,22 @@ export default async function DashboardLayout({
       studioName={profile?.studio_name || undefined}
       logoUrl={profile?.logo_url || undefined}
       portfolioSlug={portfolioSlug}
-      showReferralPopup={isImpersonating ? false : (profile?.show_referral_popup ?? false)}
-      showWelcomePopup={isImpersonating ? false : (profile?.show_welcome_popup ?? false)}
+      showReferralPopup={
+        isImpersonating || siteUnavailableLocked
+          ? false
+          : (profile?.show_referral_popup ?? false)
+      }
+      showWelcomePopup={
+        isImpersonating || siteUnavailableLocked
+          ? false
+          : (profile?.show_welcome_popup ?? false)
+      }
       welcomePreviewUrl={welcomePreviewUrl}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
-      announcement={isImpersonating ? null : announcement}
+      siteUnavailableLocked={siteUnavailableLocked}
+      announcement={isImpersonating || siteUnavailableLocked ? null : announcement}
       onSignOut={async () => {
         'use server'
         await signOut()

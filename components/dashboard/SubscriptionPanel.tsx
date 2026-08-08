@@ -92,7 +92,13 @@ function SubscriptionSectionHeader({
 
 type SubscriptionPanelProps = {
   trialEndDate: string
-  referralCode: string
+  referralCode: string | null
+}
+
+function formatTrialEndDate(value: string) {
+  return new Intl.DateTimeFormat('he-IL', { dateStyle: 'long' }).format(
+    new Date(value)
+  )
 }
 
 export function SubscriptionPanel({
@@ -101,8 +107,8 @@ export function SubscriptionPanel({
 }: SubscriptionPanelProps) {
   const [copied, setCopied] = useState(false)
   const daysLeft = daysUntilTrialEnd(trialEndDate)
-  const shareText = buildReferralShareText(referralCode)
-  const referralLink = buildReferralLink(referralCode)
+  const shareText = referralCode ? buildReferralShareText(referralCode) : ''
+  const referralLink = referralCode ? buildReferralLink(referralCode) : ''
 
   async function handleCopy() {
     await navigator.clipboard.writeText(shareText)
@@ -130,40 +136,54 @@ export function SubscriptionPanel({
                 {daysLeft}
                 <span className="mr-2 text-lg font-semibold text-[--muted]">ימים</span>
               </p>
+              <p className="mt-3 text-sm text-[--muted]">
+                תאריך סיום:{' '}
+                <span className="font-medium text-[--foreground]">
+                  {formatTrialEndDate(trialEndDate)}
+                </span>
+              </p>
+              {daysLeft === 0 ? (
+                <p className="mt-2 text-sm text-[--foreground]">
+                  כרגע מערכת התשלומים נמצאת בשלבי סיום. הגישה שלך נשארת פתוחה עד
+                  לפתיחת התשלומים.
+                </p>
+              ) : null}
             </div>
           </div>
         </SubscriptionSubPanel>
       </SubscriptionSection>
 
-      <SubscriptionSection>
-        <SubscriptionSectionHeader
-          index={2}
-          icon={Gift}
-          title="חברה מביאה חברה"
-          description="שתפי את הקישור האישי שלך עם צלמות אחרות וקבלי 30 יום נוספים לתקופת הניסיון"
-        />
+      {referralCode ? (
+        <SubscriptionSection>
+          <SubscriptionSectionHeader
+            index={2}
+            icon={Gift}
+            title="חברה מביאה חברה"
+            description="שתפי את הקישור האישי שלך עם צלמות אחרות וקבלי 30 יום נוספים לתקופת הניסיון"
+          />
 
-        <SubscriptionSubPanel className="space-y-5">
-          <p className="text-sm leading-relaxed text-[--muted]">
-            כשחברה נרשמת דרך הקישור שלך ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
-            <strong className="text-[--foreground]">30 יום נוספים</strong> לתקופת הניסיון.
-          </p>
-
-          <div className="rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] p-4 md:p-5">
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-[--foreground]">
-              {shareText}
+          <SubscriptionSubPanel className="space-y-5">
+            <p className="text-sm leading-relaxed text-[--muted]">
+              כשחברה נרשמת דרך הקישור שלך ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
+              <strong className="text-[--foreground]">30 יום נוספים</strong> לתקופת הניסיון.
             </p>
-          </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="break-all text-xs text-[--muted]">{referralLink}</p>
-            <Button type="button" onClick={handleCopy} className={cn(ACCENT_BUTTON_CLASS, 'shrink-0 gap-2')}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}
-            </Button>
-          </div>
-        </SubscriptionSubPanel>
-      </SubscriptionSection>
+            <div className="rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] p-4 md:p-5">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[--foreground]">
+                {shareText}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="break-all text-xs text-[--muted]">{referralLink}</p>
+              <Button type="button" onClick={handleCopy} className={cn(ACCENT_BUTTON_CLASS, 'shrink-0 gap-2')}>
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}
+              </Button>
+            </div>
+          </SubscriptionSubPanel>
+        </SubscriptionSection>
+      ) : null}
     </div>
   )
 }

@@ -78,6 +78,7 @@ export type Database = {
           faq_items: Json
           faq_section_image_url: string | null
           trial_end_date: string
+          trial_ending_email_sent_at: string | null
           referral_code: string | null
           referred_by_user_id: string | null
           has_triggered_referral_bonus: boolean
@@ -89,6 +90,8 @@ export type Database = {
           before_after_display_style: BeforeAfterDisplayStyle
           last_dashboard_visit_at: string | null
           dashboard_visit_count: number
+          is_under_construction: boolean
+          is_site_unavailable: boolean
         }
         Insert: {
           id: string
@@ -138,6 +141,7 @@ export type Database = {
           faq_items?: Json
           faq_section_image_url?: string | null
           trial_end_date?: string
+          trial_ending_email_sent_at?: string | null
           referral_code?: string | null
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean
@@ -149,6 +153,8 @@ export type Database = {
           before_after_display_style?: BeforeAfterDisplayStyle
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
+          is_under_construction?: boolean
+          is_site_unavailable?: boolean
         }
         Update: {
           id?: string
@@ -198,6 +204,7 @@ export type Database = {
           faq_items?: Json
           faq_section_image_url?: string | null
           trial_end_date?: string
+          trial_ending_email_sent_at?: string | null
           referral_code?: string | null
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean
@@ -209,6 +216,8 @@ export type Database = {
           before_after_display_style?: BeforeAfterDisplayStyle
           last_dashboard_visit_at?: string | null
           dashboard_visit_count?: number
+          is_under_construction?: boolean
+          is_site_unavailable?: boolean
         }
         Relationships: []
       }
@@ -257,6 +266,225 @@ export type Database = {
           key?: string
           count?: number
           reset_at?: string
+        }
+        Relationships: []
+      }
+      billing_customers: {
+        Row: {
+          id: string
+          user_id: string
+          provider: string
+          provider_customer_id: string | null
+          email: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          provider: string
+          provider_customer_id?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          provider?: string
+          provider_customer_id?: string | null
+          email?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          description: string | null
+          amount_agorot: number
+          currency: string
+          billing_interval: 'month' | 'year'
+          is_active: boolean
+          provider: string | null
+          provider_plan_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          name: string
+          description?: string | null
+          amount_agorot: number
+          currency?: string
+          billing_interval: 'month' | 'year'
+          is_active?: boolean
+          provider?: string | null
+          provider_plan_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          name?: string
+          description?: string | null
+          amount_agorot?: number
+          currency?: string
+          billing_interval?: 'month' | 'year'
+          is_active?: boolean
+          provider?: string | null
+          provider_plan_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          billing_customer_id: string | null
+          plan_id: string
+          provider: string
+          provider_subscription_id: string | null
+          status: 'pending' | 'active' | 'past_due' | 'payment_failed' | 'cancelled' | 'expired' | 'paused'
+          current_period_start: string | null
+          current_period_end: string | null
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
+          last_payment_at: string | null
+          next_payment_at: string | null
+          provider_metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          billing_customer_id?: string | null
+          plan_id: string
+          provider: string
+          provider_subscription_id?: string | null
+          status?: 'pending' | 'active' | 'past_due' | 'payment_failed' | 'cancelled' | 'expired' | 'paused'
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          last_payment_at?: string | null
+          next_payment_at?: string | null
+          provider_metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          billing_customer_id?: string | null
+          plan_id?: string
+          provider?: string
+          provider_subscription_id?: string | null
+          status?: 'pending' | 'active' | 'past_due' | 'payment_failed' | 'cancelled' | 'expired' | 'paused'
+          current_period_start?: string | null
+          current_period_end?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
+          last_payment_at?: string | null
+          next_payment_at?: string | null
+          provider_metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_transactions: {
+        Row: {
+          id: string
+          user_id: string | null
+          subscription_id: string | null
+          provider: string
+          provider_transaction_id: string | null
+          status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partially_refunded' | 'disputed' | 'cancelled'
+          amount_agorot: number
+          currency: string
+          failure_code: string | null
+          failure_message: string | null
+          paid_at: string | null
+          raw_metadata: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          subscription_id?: string | null
+          provider: string
+          provider_transaction_id?: string | null
+          status: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partially_refunded' | 'disputed' | 'cancelled'
+          amount_agorot: number
+          currency?: string
+          failure_code?: string | null
+          failure_message?: string | null
+          paid_at?: string | null
+          raw_metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          subscription_id?: string | null
+          provider?: string
+          provider_transaction_id?: string | null
+          status?: 'pending' | 'succeeded' | 'failed' | 'refunded' | 'partially_refunded' | 'disputed' | 'cancelled'
+          amount_agorot?: number
+          currency?: string
+          failure_code?: string | null
+          failure_message?: string | null
+          paid_at?: string | null
+          raw_metadata?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_webhook_events: {
+        Row: {
+          id: string
+          provider: string
+          provider_event_id: string
+          event_type: string
+          payload: Json
+          processing_status: 'pending' | 'processing' | 'processed' | 'ignored' | 'failed'
+          processing_error: string | null
+          received_at: string
+          processed_at: string | null
+        }
+        Insert: {
+          id?: string
+          provider: string
+          provider_event_id: string
+          event_type: string
+          payload: Json
+          processing_status?: 'pending' | 'processing' | 'processed' | 'ignored' | 'failed'
+          processing_error?: string | null
+          received_at?: string
+          processed_at?: string | null
+        }
+        Update: {
+          id?: string
+          provider?: string
+          provider_event_id?: string
+          event_type?: string
+          payload?: Json
+          processing_status?: 'pending' | 'processing' | 'processed' | 'ignored' | 'failed'
+          processing_error?: string | null
+          received_at?: string
+          processed_at?: string | null
         }
         Relationships: []
       }
@@ -900,6 +1128,19 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: Record<string, number>
       }
+      claim_payment_webhook_event: {
+        Args: {
+          p_provider: string
+          p_provider_event_id: string
+          p_event_type: string
+          p_payload: Json
+        }
+        Returns: {
+          webhook_event_id: string
+          claimed: boolean
+          current_status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -912,6 +1153,10 @@ export type Database = {
 
 export type User = Database['public']['Tables']['users']['Row']
 export type Announcement = Database['public']['Tables']['announcements']['Row']
+export type BillingCustomer = Database['public']['Tables']['billing_customers']['Row']
+export type SubscriptionPlan = Database['public']['Tables']['subscription_plans']['Row']
+export type Subscription = Database['public']['Tables']['subscriptions']['Row']
+export type PaymentTransaction = Database['public']['Tables']['payment_transactions']['Row']
 export type Client = Database['public']['Tables']['clients']['Row']
 export type Gallery = Database['public']['Tables']['galleries']['Row']
 export type Photo = Database['public']['Tables']['photos']['Row']

@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
+import { resolvePublicSiteGateBySlug } from '@/lib/site-access/public-gate'
 import { NextResponse } from 'next/server'
 
 export async function GET(
@@ -9,7 +10,21 @@ export async function GET(
   try {
     const admin = createAdminClient()
     const { slug } = await params
-    const photographer = await findPhotographerBySlug(decodeURIComponent(slug))
+    const decodedSlug = decodeURIComponent(slug)
+
+    const gate = await resolvePublicSiteGateBySlug(decodedSlug)
+    if (gate) {
+      return NextResponse.json(
+        {
+          gate: gate.mode,
+          studio_name: gate.studioName,
+          site_language: gate.siteLanguage,
+        },
+        { status: 200 }
+      )
+    }
+
+    const photographer = await findPhotographerBySlug(decodedSlug)
 
     if (!photographer) {
       return NextResponse.json(

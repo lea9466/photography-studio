@@ -390,6 +390,112 @@ export async function sendWelcomeEmail(input: {
   })
 }
 
+/**
+ * Soft status update while checkout is closed.
+ * No payment CTA / checkout link.
+ */
+export async function sendTrialUpdateEmail(input: {
+  name: string
+  email: string
+}): Promise<{ sent: boolean }> {
+  const resend = requireResendOrSafeStub({
+    template: 'trial-update',
+    email: input.email,
+  })
+  if (!resend) return { sent: false }
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'עדכון קטן לגבי Studio Gallery 💛',
+    text: [
+      'היי,',
+      '',
+      'רצינו לעדכן שאנחנו נמצאים בשלבים האחרונים של פתיחת מערכת המנויים.',
+      '',
+      'בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של 40 ₪ לחודש.',
+      '',
+      'בינתיים אין צורך לעשות שום דבר.',
+      '',
+      'תקופת הניסיון שלך ממשיכה לפעול כרגיל,',
+      'והגישה שלך לא תיחסם לפני שמערכת התשלומים תהיה זמינה.',
+      '',
+      'ברגע שהאפשרות תיפתח,',
+      'נשלח לך מייל נוסף עם קישור ישיר להצטרפות.',
+      '',
+      'תודה שאת חלק מ-Studio Gallery ❤️',
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי,</p>
+        <p>רצינו לעדכן שאנחנו נמצאים בשלבים האחרונים של פתיחת מערכת המנויים.</p>
+        <p>בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של 40 ₪ לחודש.</p>
+        <p>בינתיים אין צורך לעשות שום דבר.</p>
+        <p>
+          תקופת הניסיון שלך ממשיכה לפעול כרגיל,<br />
+          והגישה שלך לא תיחסם לפני שמערכת התשלומים תהיה זמינה.
+        </p>
+        <p>
+          ברגע שהאפשרות תיפתח,<br />
+          נשלח לך מייל נוסף עם קישור ישיר להצטרפות.
+        </p>
+        <p>תודה שאת חלק מ-Studio Gallery ❤️</p>
+      </div>
+    `,
+  })
+
+  return { sent: true }
+}
+
+/** Payment CTA email — only used when PAYMENTS_CHECKOUT_ENABLED=true. */
+export async function sendTrialEndingReminderEmail(input: {
+  name: string
+  email: string
+}): Promise<{ sent: boolean }> {
+  const resend = requireResendOrSafeStub({
+    template: 'trial-ending-reminder',
+    email: input.email,
+  })
+  if (!resend) return { sent: false }
+
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+  const displayName = input.name.trim() || 'שם'
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'תקופת הניסיון שלך עומדת להסתיים',
+    text: [
+      `היי ${displayName},`,
+      '',
+      'רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.',
+      'כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של 40 ₪.',
+      '',
+      `המשך למנוי: ${subscriptionUrl}`,
+      '',
+      'אם לא תבחרי להמשיך, החשבון לא יחויב אוטומטית.',
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.</p>
+        <p>כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של 40 ₪.</p>
+        <p style="margin: 24px 0;">
+          <a
+            href="${subscriptionUrl}"
+            style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
+          >
+            המשך למנוי
+          </a>
+        </p>
+        <p>אם לא תבחרי להמשיך, החשבון לא יחויב אוטומטית.</p>
+      </div>
+    `,
+  })
+
+  return { sent: true }
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

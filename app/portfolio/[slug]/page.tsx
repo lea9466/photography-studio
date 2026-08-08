@@ -12,6 +12,8 @@ import {
   buildPublicOpenGraph,
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
+import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
+import { resolvePublicSiteGateByUserId } from '@/lib/site-access/public-gate'
 
 type PortfolioPageProps = {
   params: Promise<{ slug: string }>
@@ -42,6 +44,17 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
   if (!gallery) {
     console.warn('[portfolio/page] notFound()', { rawSlug, normalizedSlug })
     notFound()
+  }
+
+  const siteGate = await resolvePublicSiteGateByUserId(gallery.user_id)
+  if (siteGate) {
+    return (
+      <SiteGateScreen
+        mode={siteGate.mode}
+        studioName={siteGate.studioName}
+        siteLanguage={siteGate.siteLanguage}
+      />
+    )
   }
 
   const { data: user } = await admin

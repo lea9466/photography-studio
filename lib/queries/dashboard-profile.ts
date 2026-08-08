@@ -11,6 +11,7 @@ export type DashboardProfile = {
   referral_code: string | null
   show_referral_popup: boolean
   show_welcome_popup: boolean
+  is_site_unavailable: boolean
   created_at: string
 }
 
@@ -27,7 +28,7 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
   const { supabase, userId } = context
 
   const fullSelect =
-    'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, created_at'
+    'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, is_site_unavailable, created_at'
 
   const { data: full, error: fullError } = await supabase
     .from('users')
@@ -42,6 +43,27 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
       trial_end_date: row.trial_end_date || defaultTrialEndDate(row.created_at),
       show_referral_popup: row.show_referral_popup ?? false,
       show_welcome_popup: row.show_welcome_popup ?? false,
+      is_site_unavailable: Boolean(row.is_site_unavailable),
+    }
+  }
+
+  const legacySelect =
+    'name, studio_name, slug, logo_url, accent_color, should_color_logo, trial_end_date, referral_code, show_referral_popup, show_welcome_popup, created_at'
+
+  const { data: legacy, error: legacyError } = await supabase
+    .from('users')
+    .select(legacySelect)
+    .eq('id', userId)
+    .single()
+
+  if (!legacyError && legacy) {
+    const row = legacy as Omit<DashboardProfile, 'is_site_unavailable'>
+    return {
+      ...row,
+      trial_end_date: row.trial_end_date || defaultTrialEndDate(row.created_at),
+      show_referral_popup: row.show_referral_popup ?? false,
+      show_welcome_popup: row.show_welcome_popup ?? false,
+      is_site_unavailable: false,
     }
   }
 
@@ -57,7 +79,11 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
 
   const row = basic as Omit<
     DashboardProfile,
-    'trial_end_date' | 'referral_code' | 'show_referral_popup' | 'show_welcome_popup'
+    | 'trial_end_date'
+    | 'referral_code'
+    | 'show_referral_popup'
+    | 'show_welcome_popup'
+    | 'is_site_unavailable'
   >
 
   return {
@@ -66,5 +92,6 @@ export async function getDashboardProfile(): Promise<DashboardProfile | null> {
     referral_code: row.slug,
     show_referral_popup: false,
     show_welcome_popup: false,
+    is_site_unavailable: false,
   }
 }

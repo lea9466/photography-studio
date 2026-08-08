@@ -201,16 +201,43 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
   }
 
   const admin = createAdminClient()
-  const { data, error } = await admin
+  const selectWithFlags =
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, hero_video_url'
+  const selectWithoutHero =
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable'
+  const selectLegacy =
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
+
+  let { data, error } = await admin
     .from('users')
-    .select(
-      'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
-    )
+    .select(selectWithFlags)
     // Case-insensitive match (existing emails aren't guaranteed to be stored
     // lowercase), but escaped so user input can never be interpreted as an
     // ILIKE wildcard pattern (% / _).
     .ilike('email', escapeIlikePattern(normalized))
     .maybeSingle()
+
+  if (error && error.message?.toLowerCase().includes('hero_video_url')) {
+    ;({ data, error } = await admin
+      .from('users')
+      .select(selectWithoutHero)
+      .ilike('email', escapeIlikePattern(normalized))
+      .maybeSingle())
+  }
+
+  if (
+    error &&
+    (error.code === '42703' ||
+      error.code === 'PGRST204' ||
+      error.message?.toLowerCase().includes('is_under_construction') ||
+      error.message?.toLowerCase().includes('is_site_unavailable'))
+  ) {
+    ;({ data, error } = await admin
+      .from('users')
+      .select(selectLegacy)
+      .ilike('email', escapeIlikePattern(normalized))
+      .maybeSingle())
+  }
 
   if (error) throw new Error(error.message)
   if (!data) {
@@ -227,13 +254,26 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     trial_end_date: string
     last_dashboard_visit_at: string | null
     dashboard_visit_count: number
+    is_under_construction?: boolean | null
+    is_site_unavailable?: boolean | null
+    hero_video_url?: string | null
   }
 
   return {
     exists: true,
     studio: {
-      ...row,
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      studio_name: row.studio_name,
+      slug: row.slug,
+      created_at: row.created_at,
+      trial_end_date: row.trial_end_date,
+      last_dashboard_visit_at: row.last_dashboard_visit_at,
       dashboard_visit_count: row.dashboard_visit_count ?? 0,
+      is_under_construction: Boolean(row.is_under_construction),
+      is_site_unavailable: Boolean(row.is_site_unavailable),
+      has_hero_video: Boolean(row.hero_video_url?.trim()),
       site_path: getPublicSitePath(row.slug, row.studio_name),
     },
   }
@@ -258,6 +298,81 @@ export async function deleteAdminStudio(userId: string) {
   revalidatePath('/manage')
   revalidatePath('/sitemap.xml')
   return { success: true }
+}
+
+export async function updateAdminStudioSiteAccess(
+  userId: string,
+  patch: { is_under_construction?: boolean; is_site_unavailable?: boolean }
+) {
+  await requireAdmin()
+
+  const trimmedId = userId.trim()
+  if (!trimmedId) {
+    throw new Error('מזהה סטודיו חסר')
+  }
+
+  const updates: {
+    is_under_construction?: boolean
+    is_site_unavailable?: boolean
+  } = {}
+
+  if (typeof patch.is_under_construction === 'boolean') {
+    updates.is_under_construction = patch.is_under_construction
+  }
+  if (typeof patch.is_site_unavailable === 'boolean') {
+    updates.is_site_unavailable = patch.is_site_unavailable
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new Error('לא התקבלו שינויים לעדכון')
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .update(updates)
+    .eq('id', trimmedId)
+    .select('id, slug, studio_name, is_under_construction, is_site_unavailable')
+    .maybeSingle()
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? ''
+    if (
+      error.code === '42703' ||
+      error.code === 'PGRST204' ||
+      message.includes('is_under_construction') ||
+      message.includes('is_site_unavailable')
+    ) {
+      throw new Error(
+        'יש להריץ את המיגרציה add_site_access_flags ב-Supabase לפני סימון מצב אתר'
+      )
+    }
+    throw new Error(error.message)
+  }
+  if (!data) throw new Error('הסטודיו לא נמצא')
+
+  const row = data as {
+    id: string
+    slug: string | null
+    studio_name: string | null
+    is_under_construction: boolean
+    is_site_unavailable: boolean
+  }
+
+  const sitePath = getPublicSitePath(row.slug, row.studio_name)
+  revalidatePath('/manage')
+  if (sitePath) {
+    revalidatePath(sitePath)
+    revalidatePath(`${sitePath}/portfolio`)
+    revalidatePath(`${sitePath}/blog`)
+    revalidatePath(`${sitePath}/before-after`)
+  }
+
+  return {
+    id: row.id,
+    is_under_construction: Boolean(row.is_under_construction),
+    is_site_unavailable: Boolean(row.is_site_unavailable),
+  }
 }
 
 export async function getAdminAuthState() {

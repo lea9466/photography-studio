@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { resolvePublicSiteGateBySlug } from '@/lib/site-access/public-gate'
 import { resolveSlugRedirect } from '@/lib/referral/slug-redirect'
 import {
   buildPhotographerDescription,
@@ -64,6 +65,12 @@ export default async function PhotographerPage({ params }: PageProps) {
   try {
     const admin = createAdminClient()
     const decodedSlug = decodeURIComponent(slug)
+
+    // Layout already renders the gate UI; bail early to skip heavy homepage work.
+    if (await resolvePublicSiteGateBySlug(decodedSlug)) {
+      return null
+    }
+
     const photographer = await findPhotographerBySlug(decodedSlug)
 
     if (!photographer) {

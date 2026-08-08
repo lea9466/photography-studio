@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs && node --experimental-strip-types scripts/test-hero-video-security.mjs",
+    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs && node --experimental-strip-types scripts/test-hero-video-security.mjs && tsx --test scripts/test-payments.ts && tsx --test scripts/test-trial-ending-reminders.ts",
+    "test:payments-rls:local": "node scripts/test-payments-rls-local.mjs",
     "test:exploit-critical": "node scripts/exploit-critical-runtime.mjs",
     "test:regression-critical": "node scripts/regression-critical-runtime.mjs",
     "supabase:auth-urls": "node scripts/push-auth-redirect-urls.mjs"
@@ -42,6 +43,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "resend": "^6.12.4",
+    "server-only": "^0.0.1",
     "sharp": "^0.35.3",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.3.0",
@@ -55,6 +57,7 @@
     "eslint": "^9.27.0",
     "eslint-config-next": "^15.3.3",
     "tailwindcss": "^4.1.7",
+    "tsx": "^4.23.7",
     "typescript": "^5.8.3"
   },
   "overrides": {

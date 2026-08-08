@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DASHBOARD_NAV_ITEMS } from './dashboard-nav-config'
 import { SubscriptionPlanBadge } from './SubscriptionPlanBadge'
@@ -9,32 +10,53 @@ import { SubscriptionPlanBadge } from './SubscriptionPlanBadge'
 type DashboardNavMenuProps = {
   onNavigate?: () => void
   className?: string
+  siteUnavailableLocked?: boolean
 }
 
-export function DashboardNavMenu({ onNavigate, className }: DashboardNavMenuProps) {
+export function DashboardNavMenu({
+  onNavigate,
+  className,
+  siteUnavailableLocked = false,
+}: DashboardNavMenuProps) {
   const pathname = usePathname()
 
   return (
     <nav className={cn('space-y-1', className)}>
+      {siteUnavailableLocked ? (
+        <p className="mb-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-relaxed text-rose-800">
+          האתר אינו זמין כרגע. ניתן לגשת רק לעמוד המינוי כדי לחדש גישה.
+        </p>
+      ) : null}
       {DASHBOARD_NAV_ITEMS.map((item) => {
         const active = item.isActive(pathname)
+        const lockedByUnavailable =
+          siteUnavailableLocked && item.href !== '/dashboard/subscription'
 
-        if (item.frozen) {
+        if (item.frozen || lockedByUnavailable) {
           return (
             <span
               key={item.href}
               aria-disabled="true"
+              title={lockedByUnavailable ? 'לא זמין כרגע' : 'בקרוב'}
               className={cn(
-                'relative flex items-center gap-3 px-4 py-3 rounded-xl border border-[#c9c5cd]',
-                'opacity-40 cursor-not-allowed select-none pointer-events-none',
-                'text-[--dashboard-muted] pr-4'
+                'relative flex items-center gap-3 px-4 py-3 rounded-xl border',
+                'opacity-45 cursor-not-allowed select-none pointer-events-none',
+                'text-[--dashboard-muted] pr-4',
+                lockedByUnavailable
+                  ? 'border-rose-200/80 bg-rose-50/40'
+                  : 'border-[#c9c5cd]'
               )}
             >
-              <span className="absolute top-1.5 left-2 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
-                בקרוב
-              </span>
+              {item.frozen && !lockedByUnavailable ? (
+                <span className="absolute top-1.5 left-2 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+                  בקרוב
+                </span>
+              ) : null}
               {item.icon}
-              <span className="text-sm">{item.label}</span>
+              <span className="text-sm flex-1">{item.label}</span>
+              {lockedByUnavailable ? (
+                <Lock className="h-4 w-4 shrink-0 text-rose-500" aria-hidden />
+              ) : null}
             </span>
           )
         }

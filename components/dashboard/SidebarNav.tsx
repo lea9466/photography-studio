@@ -17,6 +17,7 @@ type SidebarNavProps = {
   onMobileClose?: () => void
   accentColor?: string
   shouldColorLogo?: boolean
+  siteUnavailableLocked?: boolean
 }
 
 export function SidebarNav({
@@ -31,6 +32,7 @@ export function SidebarNav({
   onMobileClose,
   accentColor,
   shouldColorLogo,
+  siteUnavailableLocked = false,
 }: SidebarNavProps) {
   const showExpanded = isMobileOpen || !isCollapsed
 
@@ -89,7 +91,10 @@ export function SidebarNav({
           showExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden px-0'
         )}
       >
-        <DashboardNavMenu onNavigate={onMobileClose} />
+        <DashboardNavMenu
+          onNavigate={onMobileClose}
+          siteUnavailableLocked={siteUnavailableLocked}
+        />
       </div>
 
       <div

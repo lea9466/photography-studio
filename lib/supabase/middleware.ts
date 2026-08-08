@@ -18,6 +18,10 @@ import {
   canUseImpersonationFromRequest,
   getImpersonatedUserIdFromRequest,
 } from '@/lib/auth/impersonation-middleware'
+import {
+  DASHBOARD_SUBSCRIPTION_PATH,
+  isDashboardSubscriptionPath,
+} from '@/lib/site-access/dashboard-lock'
 
 export async function updateSession(request: NextRequest, event?: NextFetchEvent) {
   const pathname = request.nextUrl.pathname
@@ -96,8 +100,39 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
     )
   }
 
+  async function userHasSiteUnavailableLock() {
+    if (!user) return false
+    if (impersonatedUserId && manageAdminSession) return false
+
+    const { data: profile, error } = await supabase
+      .from('users')
+      .select('is_site_unavailable')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      const message = error.message?.toLowerCase() ?? ''
+      if (
+        error.code === '42703' ||
+        error.code === 'PGRST204' ||
+        message.includes('is_site_unavailable')
+      ) {
+        return false
+      }
+      return false
+    }
+
+    return Boolean(
+      (profile as { is_site_unavailable?: boolean } | null)?.is_site_unavailable
+    )
+  }
+
   async function resolveAuthenticatedDashboardPath() {
     if (!user) return MVP_DEFAULT_DASHBOARD_PATH
+
+    if (await userHasSiteUnavailableLock()) {
+      return DASHBOARD_SUBSCRIPTION_PATH
+    }
 
     if (await userNeedsWelcomePopup()) {
       return ONBOARDING_SETTINGS_PATH
@@ -128,8 +163,20 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
   if (
     user &&
     pathname.startsWith('/dashboard') &&
+    !isDashboardSubscriptionPath(pathname) &&
+    (await userHasSiteUnavailableLock())
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = DASHBOARD_SUBSCRIPTION_PATH
+    return NextResponse.redirect(url)
+  }
+
+  if (
+    user &&
+    pathname.startsWith('/dashboard') &&
     pathname !== ONBOARDING_SETTINGS_PATH &&
-    pathname !== `${ONBOARDING_SETTINGS_PATH}/`
+    pathname !== `${ONBOARDING_SETTINGS_PATH}/` &&
+    !isDashboardSubscriptionPath(pathname)
   ) {
     if (await userNeedsWelcomePopup()) {
       const url = request.nextUrl.clone()
