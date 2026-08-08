@@ -88,6 +88,21 @@ function isMissingHeroVideoColumnError(error: { message?: string; code?: string 
   return message.includes('hero_video_url')
 }
 
+type AdminStudioQueryRow = {
+  id: string
+  email: string | null
+  name: string | null
+  studio_name: string | null
+  slug: string | null
+  created_at: string
+  trial_end_date: string
+  last_dashboard_visit_at: string | null
+  dashboard_visit_count: number
+  is_under_construction?: boolean | null
+  is_site_unavailable?: boolean | null
+  hero_video_url?: string | null
+}
+
 export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const admin = createAdminClient()
   const selectWithFlags =
@@ -97,62 +112,55 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const selectLegacy =
     'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
 
+  let data: AdminStudioQueryRow[] | null = null
+  let error: { message: string; code?: string } | null = null
+
   const primary = await admin
     .from('users')
     .select(selectWithFlags)
     .order('created_at', { ascending: false })
 
-  let result = primary
-  if (primary.error && isMissingHeroVideoColumnError(primary.error)) {
-    result = await admin
+  data = (primary.data as AdminStudioQueryRow[] | null) ?? null
+  error = primary.error
+
+  if (error && isMissingHeroVideoColumnError(error)) {
+    const fallback = await admin
       .from('users')
       .select(selectWithoutHero)
       .order('created_at', { ascending: false })
+    data = (fallback.data as AdminStudioQueryRow[] | null) ?? null
+    error = fallback.error
   }
-  if (result.error && isMissingSiteAccessColumnError(result.error)) {
-    result = await admin
+
+  if (error && isMissingSiteAccessColumnError(error)) {
+    const legacy = await admin
       .from('users')
       .select(selectLegacy)
       .order('created_at', { ascending: false })
+    data = (legacy.data as AdminStudioQueryRow[] | null) ?? null
+    error = legacy.error
   }
 
-  if (result.error) {
-    const message = result.error.message.includes('fetch failed')
+  if (error) {
+    const message = error.message.includes('fetch failed')
       ? 'לא ניתן להתחבר ל-Supabase. בדקי חיבור לאינטרנט ונסי שוב.'
-      : result.error.message
+      : error.message
     throw new Error(message)
   }
 
-  return (result.data ?? []).map((row) => {
-    const studio = row as {
-      id: string
-      email: string | null
-      name: string | null
-      studio_name: string | null
-      slug: string | null
-      created_at: string
-      trial_end_date: string
-      last_dashboard_visit_at: string | null
-      dashboard_visit_count: number
-      is_under_construction?: boolean | null
-      is_site_unavailable?: boolean | null
-      hero_video_url?: string | null
-    }
-
-    return {
-      id: studio.id,
-      email: studio.email,
-      name: studio.name,
-      studio_name: studio.studio_name,
-      slug: studio.slug,
-      created_at: studio.created_at,
-      trial_end_date: studio.trial_end_date,
-      last_dashboard_visit_at: studio.last_dashboard_visit_at,
-      dashboard_visit_count: studio.dashboard_visit_count ?? 0,
-      is_under_construction: Boolean(studio.is_under_construction),
-      is_site_unavailable: Boolean(studio.is_site_unavailable),
-      has_hero_video: Boolean(studio.hero_video_url?.trim()),
-      site_path: getPublicSitePath(studio.slug, studio.studio_name),
-    }
-  })
+  return (data ?? []).map((studio) => ({
+    id: studio.id,
+    email: studio.email,
+    name: studio.name,
+    studio_name: studio.studio_name,
+    slug: studio.slug,
+    created_at: studio.created_at,
+    trial_end_date: studio.trial_end_date,
+    last_dashboard_visit_at: studio.last_dashboard_visit_at,
+    dashboard_visit_count: studio.dashboard_visit_count ?? 0,
+    is_under_construction: Boolean(studio.is_under_construction),
+    is_site_unavailable: Boolean(studio.is_site_unavailable),
+    has_hero_video: Boolean(studio.hero_video_url?.trim()),
+    site_path: getPublicSitePath(studio.slug, studio.studio_name),
+  }))
 }
