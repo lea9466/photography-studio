@@ -101,20 +101,31 @@ export async function getLatestAnnouncementForAdmin(): Promise<Announcement | nu
   }
 }
 
+type BroadcastUserRow = {
+  id: string
+  email: string | null
+  name: string | null
+  studio_name: string | null
+  hero_desktop_url: string | null
+  hero_mobile_url: string | null
+  hero_desktop_urls: string[] | null
+  hero_mobile_urls: string[] | null
+}
+
 export async function getAdminBroadcastRecipients(
   filters?: AdminBroadcastRecipientFilters | null
 ): Promise<AdminBroadcastRecipient[]> {
   const admin = createAdminClient()
   const activeFilters = normalizeBroadcastFilters(filters)
 
-  const selectFields = activeFilters.requireHeroImage
-    ? 'id, email, name, studio_name, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls'
-    : 'id, email, name, studio_name'
-
+  // Keep select fields static so Supabase client typing stays valid.
   const { data, error } = await admin
     .from('users')
-    .select(selectFields)
+    .select(
+      'id, email, name, studio_name, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls'
+    )
     .not('email', 'is', null)
+    .returns<BroadcastUserRow[]>()
 
   if (error) throw new Error(error.message)
 
@@ -126,18 +137,7 @@ export async function getAdminBroadcastRecipients(
   const seen = new Set<string>()
   const recipients: AdminBroadcastRecipient[] = []
 
-  for (const row of data ?? []) {
-    const user = row as {
-      id: string
-      email: string | null
-      name: string | null
-      studio_name: string | null
-      hero_desktop_url?: string | null
-      hero_mobile_url?: string | null
-      hero_desktop_urls?: string[] | null
-      hero_mobile_urls?: string[] | null
-    }
-
+  for (const user of data ?? []) {
     if (galleryUserIds && !galleryUserIds.has(user.id)) continue
     if (postUserIds && !postUserIds.has(user.id)) continue
     if (activeFilters.requireHeroImage && !userHasHeroImage(user)) continue
