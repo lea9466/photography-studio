@@ -20,7 +20,7 @@ export async function getPhotographerPublicPhotoCount(
   const { data: galleries, error: galleriesError } = await galleryQuery
   if (galleriesError) throw new Error(galleriesError.message)
 
-  const galleryIds = (galleries ?? []).map((gallery) => gallery.id as string)
+  const galleryIds = ((galleries ?? []) as { id: string }[]).map((gallery) => gallery.id)
   if (galleryIds.length === 0) return 0
 
   const { count, error } = await supabase
