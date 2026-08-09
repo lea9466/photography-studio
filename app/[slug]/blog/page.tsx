@@ -75,6 +75,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
       accentColor,
     },
     siteLanguage: typed.site_language,
+    displayStyle: typed.posts_display_style,
   })
 
   return <HtmlFramePage html={html} title={`${pageTitle} | ${studioName}`} />

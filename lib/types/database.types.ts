@@ -1,4 +1,5 @@
 import type { BeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 
 export type Json =
   | string
@@ -74,6 +75,7 @@ export type Database = {
           galleries_title: string | null
           recent_photos_title: string | null
           posts_page_title: string | null
+          posts_display_style: PostsDisplayStyle
           should_color_logo: boolean
           faq_items: Json
           faq_section_image_url: string | null
@@ -137,6 +139,7 @@ export type Database = {
           galleries_title?: string | null
           recent_photos_title?: string | null
           posts_page_title?: string | null
+          posts_display_style?: PostsDisplayStyle
           should_color_logo?: boolean
           faq_items?: Json
           faq_section_image_url?: string | null
@@ -200,6 +203,7 @@ export type Database = {
           galleries_title?: string | null
           recent_photos_title?: string | null
           posts_page_title?: string | null
+          posts_display_style?: PostsDisplayStyle
           should_color_logo?: boolean
           faq_items?: Json
           faq_section_image_url?: string | null

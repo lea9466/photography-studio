@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { FileText, Heading, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileText, Heading, LayoutGrid, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createPost,
@@ -12,6 +12,8 @@ import {
 } from '@/lib/actions/post.actions'
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { PostPhotosSection } from '@/components/dashboard/PostPhotosSection'
+import { PostsDisplayStyleSetting } from '@/components/dashboard/PostsDisplayStyleSetting'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { resolveWatermarkText } from '@/lib/images/process'
 import { Button } from '@/components/ui/button'
 import {
@@ -116,6 +118,7 @@ type PostsManagerProps = {
   studioName?: string | null
   selectedTheme?: string
   initialPageTitle?: string | null
+  initialDisplayStyle?: PostsDisplayStyle
   signedUrls: Record<string, string>
 }
 
@@ -159,6 +162,7 @@ export function PostsManager({
   studioName,
   selectedTheme = 'elegant',
   initialPageTitle,
+  initialDisplayStyle = 'cards',
   signedUrls,
 }: PostsManagerProps) {
   const [posts, setPosts] = useState(initialPosts)
@@ -342,6 +346,16 @@ export function PostsManager({
       <PostsSection>
         <PostsSectionHeader
           index={2}
+          icon={LayoutGrid}
+          title="תצוגת פוסטים באתר"
+          description="בחרי איך הפוסטים יוצגו בדף הבית ובעמוד הבלוג."
+        />
+        <PostsDisplayStyleSetting initialStyle={initialDisplayStyle} />
+      </PostsSection>
+
+      <PostsSection>
+        <PostsSectionHeader
+          index={3}
           icon={FileText}
           title="הפוסטים שלי"
           description="צרי, ערכי ונהלי את הפוסטים שמוצגים בבלוג ובדף הבית."

@@ -187,6 +187,8 @@ interface Photographer {
 
   posts_page_title?: string | null
 
+  posts_display_style?: string | null
+
   gallery_layout_mode?: string | null
 
   site_language?: string | null
@@ -5588,6 +5590,7 @@ function generateHomepageHTML(
     studioPath: studioPath ?? blogPath?.replace(/\/blog$/, '') ?? '/',
     showAllLink: postCount > 0,
     language: siteLanguage,
+    displayStyle: photographer.posts_display_style,
   })
 
   const aboutText = about_text || ''

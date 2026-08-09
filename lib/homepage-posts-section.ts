@@ -12,6 +12,10 @@ import {
   type PublicBlogPost,
 } from '@/lib/public-blog-html'
 import { buildPostCanonicalPath } from '@/lib/seo/photographer-discovery'
+import {
+  normalizePostsDisplayStyle,
+  type PostsDisplayStyle,
+} from '@/lib/types/posts-display-style'
 
 type SectionTokens = {
   cardBg: string
@@ -336,6 +340,291 @@ const HOMEPAGE_POSTS_CSS = `
 }
 ${HOMEPAGE_MORE_LINK_CSS}
 ${HOMEPAGE_STAGGER_REVEAL_CSS}
+
+/* Circles — editorial composition (no card chrome) */
+.hp-posts-section--circles .hp-posts-header {
+  max-width: 100%;
+  width: 100%;
+  margin-inline: 0;
+  margin-bottom: clamp(2.75rem, 5.5vw, 4.5rem);
+  padding-inline: 2%;
+}
+.hp-posts-grid--circles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(2.5rem, 5vw, 4rem) clamp(2.25rem, 5vw, 4rem);
+  align-items: start;
+  justify-items: center;
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 2.5rem);
+  padding-top: 4.5rem;
+  overflow: visible;
+  box-sizing: border-box;
+}
+@media (max-width: 767px) {
+  .hp-posts-grid--circles {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 26rem;
+    gap: 2.75rem;
+    padding-top: 3rem;
+    padding-inline: 1.25rem;
+  }
+}
+.hp-post-card--circle {
+  --circle-size: 98%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+  transition: transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+}
+.hp-post-card--circle.stagger-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+}
+.hp-post-card--circle.stagger-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.65s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+}
+.hp-post-card--circle.stagger-reveal.is-visible:hover,
+.hp-post-card--circle.is-visible:hover {
+  transform: translateY(-0.35rem);
+  box-shadow: none !important;
+}
+@media (max-width: 767px) {
+  .hp-post-card--circle {
+    --circle-size: min(84vw, 22rem);
+  }
+}
+@keyframes hp-circle-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(-72px) scale(0.72);
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 0%, transparent),
+      0 28px 40px rgba(0,0,0,0.12);
+  }
+  18% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08, 0.9);
+    box-shadow:
+      0 0 0 10px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 18%, transparent),
+      0 6px 18px rgba(0,0,0,0.28);
+  }
+  34% {
+    transform: translateY(-38px) scale(0.94, 1.05);
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 14%, transparent),
+      0 22px 34px rgba(0,0,0,0.16);
+  }
+  50% {
+    transform: translateY(0) scale(1.05, 0.94);
+    box-shadow:
+      0 0 0 8px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 16%, transparent),
+      0 8px 20px rgba(0,0,0,0.24);
+  }
+  66% {
+    transform: translateY(-16px) scale(0.98, 1.02);
+  }
+  80% {
+    transform: translateY(0) scale(1.02, 0.98);
+  }
+  90% {
+    transform: translateY(-5px) scale(0.995, 1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 18%, transparent),
+      0 12px 36px rgba(0,0,0,0.22);
+  }
+}
+@keyframes hp-circle-body-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.hp-post-card--circle .hp-post-media {
+  position: relative;
+  width: var(--circle-size);
+  max-width: var(--circle-size);
+  aspect-ratio: 1;
+  height: auto;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 3px;
+  opacity: 0;
+  transform: translateY(-72px) scale(0.72);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 88%, #fff) 0%,
+      color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 35%, transparent) 42%,
+      rgba(255,255,255,0.22) 68%,
+      color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 70%, #1a1a22) 100%
+    );
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 18%, transparent),
+    0 12px 36px rgba(0,0,0,0.22);
+}
+.hp-post-card--circle.is-visible .hp-post-media {
+  animation: hp-circle-enter 1.15s cubic-bezier(0.22, 0.9, 0.3, 1.15) both;
+}
+.hp-post-card--circle .hp-post-media--empty { aspect-ratio: 1; }
+.hp-post-card--circle .hp-post-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  transition: transform 0.85s cubic-bezier(0.2, 0, 0.2, 1);
+}
+.hp-post-card--circle .hp-post-media--empty::after {
+  border-radius: 50%;
+  inset: 3px;
+}
+.hp-post-card--circle:hover .hp-post-media img {
+  transform: scale(1.03);
+}
+.hp-post-card--circle .hp-post-media__veil {
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.22);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+  z-index: 2;
+}
+.hp-post-card--circle:hover .hp-post-media__veil {
+  opacity: 1;
+}
+.hp-post-card--circle .hp-post-body {
+  flex: 0 0 auto;
+  padding: 1.15rem 0.35rem 0;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 16rem;
+  align-items: center;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(14px);
+}
+.hp-post-card--circle.is-visible .hp-post-body {
+  animation: hp-circle-body-enter 0.65s cubic-bezier(0.2, 0, 0.2, 1) 0.28s both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-post-card--circle.stagger-reveal,
+  .hp-post-card--circle .hp-post-media,
+  .hp-post-card--circle .hp-post-body {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none !important;
+  }
+}
+.hp-post-card--circle .hp-post-label {
+  display: block;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  line-height: 1.2;
+}
+.hp-post-card--circle .hp-post-title {
+  font-size: clamp(17px, 1.55vw, 22px);
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+  letter-spacing: 0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hp-post-card--circle .hp-post-date { display: none; }
+.hp-post-card--circle .hp-post-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0.15rem 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  opacity: 0.68;
+  min-height: 0;
+  white-space: normal;
+}
+.hp-post-card--circle .hp-post-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.hp-post-card--circle:hover .hp-post-cta,
+.hp-post-card--circle:focus-within .hp-post-cta {
+  opacity: 0.92;
+  transform: translateY(0);
+}
+.hp-post-card--circle .hp-post-media .hp-post-card__peek {
+  top: auto !important;
+  bottom: 16% !important;
+  left: 50% !important;
+  right: auto !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: auto !important;
+  transform: translate(-50%, 6px) !important;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+  padding: 7px 12px;
+  font-size: 11px;
+  background: rgba(0,0,0,0.62);
+  max-width: calc(100% - 28px);
+}
+.hp-post-card--circle:hover .hp-post-media .hp-post-card__peek,
+.hp-post-card--circle:focus-within .hp-post-media .hp-post-card__peek {
+  opacity: 1;
+  transform: translate(-50%, 0) !important;
+  pointer-events: auto;
+}
+@media (max-width: 767px) {
+  .hp-post-card--circle .hp-post-cta {
+    opacity: 0.85;
+    transform: none;
+  }
+  .hp-post-card--circle .hp-post-media .hp-post-card__peek {
+    opacity: 1;
+    transform: translate(-50%, 0) !important;
+    pointer-events: auto;
+  }
+}
 `
 
 const CLASSIC_HOMEPAGE_POSTS_CSS = `
@@ -587,23 +876,52 @@ function postCard(
   primaryColor: string,
   index: number,
   postPath: string,
-  siteLanguage: SiteLanguage
+  siteLanguage: SiteLanguage,
+  displayStyle: PostsDisplayStyle
 ): string {
+  const isCircles = displayStyle === 'circles'
   const cover = post.coverUrl || post.images[0] || null
   const quickPreviewLabel = siteLanguage === 'en' ? 'Quick Preview' : 'תצוגה מקדימה'
+  const readCtaLabel = siteLanguage === 'en' ? 'Read' : 'לקריאה'
+  const arrow = galleryCardArrow(siteLanguage)
   const peekButton = `<button type="button" class="hp-post-card__peek" data-post-id="${escapeHtml(post.id)}" aria-label="${escapeHtml(quickPreviewLabel)}">${escapeHtml(quickPreviewLabel)}</button>`
+  const veil = isCircles
+    ? `<span class="hp-post-media__veil" aria-hidden="true"></span>`
+    : ''
   const media = cover
-    ? `<div class="hp-post-media">${peekButton}<img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" /></div>`
-    : `<div class="hp-post-media hp-post-media--empty">${peekButton}</div>`
+    ? `<div class="hp-post-media">${peekButton}<img src="${escapeHtml(cover)}" alt="${escapeHtml(post.title)}" loading="lazy" />${veil}</div>`
+    : `<div class="hp-post-media hp-post-media--empty">${peekButton}${veil}</div>`
 
-  return `
-<a class="hp-post-card stagger-reveal" data-reveal-delay="${index * 90}" data-post-id="${escapeHtml(post.id)}" href="${escapeHtml(postPath)}" target="_parent" style="background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};">
-  ${media}
-  <div class="hp-post-body">
+  const posClass = isCircles ? ` hp-post-card--pos-${index % 3}` : ''
+  const cardClass = isCircles
+    ? `hp-post-card hp-post-card--circle${posClass} stagger-reveal`
+    : 'hp-post-card stagger-reveal'
+  const cardStyle = isCircles
+    ? `color:${t.text};--hp-circle-accent:${primaryColor};`
+    : `background:${t.cardBg};color:${t.text};border-radius:${t.cardRadius};border:${t.cardBorder};`
+  const excerptHtml =
+    isCircles && post.content.trim()
+      ? `<p class="hp-post-excerpt">${escapeHtml(post.content)}</p>`
+      : isCircles
+        ? ''
+        : `<p class="hp-post-excerpt">${escapeHtml(post.content)}</p>`
+  const body = isCircles
+    ? `<div class="hp-post-body">
+    <span class="hp-post-label" style="color:${primaryColor};">${escapeHtml(post.date)}</span>
+    <h3 class="hp-post-title" style="font-family:${t.titleFont};">${escapeHtml(post.title)}</h3>
+    ${excerptHtml}
+    <span class="hp-post-cta" style="color:${primaryColor};">${escapeHtml(readCtaLabel)} <span aria-hidden="true">${arrow}</span></span>
+  </div>`
+    : `<div class="hp-post-body">
     <h3 class="hp-post-title" style="font-family:${t.titleFont};">${escapeHtml(post.title)}</h3>
     <p class="hp-post-date" style="color:${primaryColor};">${escapeHtml(post.date)}</p>
-    <p class="hp-post-excerpt">${escapeHtml(post.content)}</p>
-  </div>
+    ${excerptHtml}
+  </div>`
+
+  return `
+<a class="${cardClass}" data-reveal-delay="${index * 150}" data-post-id="${escapeHtml(post.id)}" href="${escapeHtml(postPath)}" target="_parent" style="${cardStyle}">
+  ${media}
+  ${body}
 </a>`
 }
 
@@ -616,11 +934,13 @@ export function generateHomepagePostsSectionHTML(options: {
   studioPath: string
   showAllLink: boolean
   language?: SiteLanguage
+  displayStyle?: PostsDisplayStyle | string | null
 }): string {
   if (!options.posts.length) return ''
 
   const language = options.language ?? 'he'
   const chromeCopy = getSiteChromeCopy(language)
+  const displayStyle = normalizePostsDisplayStyle(options.displayStyle)
 
   const t = TOKENS[options.theme]
   const blogTokens = getBlogThemeTokens(options.theme)
@@ -632,7 +952,8 @@ export function generateHomepagePostsSectionHTML(options: {
         options.primaryColor,
         i,
         buildPostCanonicalPath(options.studioPath, p.id),
-        language
+        language,
+        displayStyle
       )
     )
     .join('\n')
@@ -721,11 +1042,19 @@ ${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div
 ${options.showAllLink ? `<div class="hp-posts-header__more">${moreLinkHtml}</div>` : ''}
 </div>`
 
+  const isCircles = displayStyle === 'circles'
+  const gridClass = isCircles
+    ? 'hp-posts-grid hp-posts-grid--circles'
+    : 'hp-posts-grid'
+  const sectionClass = isCircles
+    ? 'hp-posts-section hp-posts-section--circles'
+    : 'hp-posts-section'
+
   return `
-<section class="hp-posts-section" id="posts">
+<section class="${sectionClass}" id="posts">
 <style>${sectionCss}</style>
 ${headerHtml}
-<div class="hp-posts-grid">
+<div class="${gridClass}">
 ${cards}
 </div>
 </section>

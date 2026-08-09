@@ -1,10 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { Database } from '@/lib/types/database.types'
 import { assertPostOwner } from '@/lib/auth/post-owner'
+import {
+  POSTS_DISPLAY_STYLES,
+  type PostsDisplayStyle,
+} from '@/lib/types/posts-display-style'
 
 type PostInsert = Database['public']['Tables']['posts']['Insert']
 type PostUpdate = Database['public']['Tables']['posts']['Update']
@@ -180,6 +185,41 @@ export async function updatePostsPageTitle(input: {
   revalidatePath('/[slug]/blog', 'page')
 
   return data as { posts_page_title: string | null }
+}
+
+const postsDisplayStyleSchema = z.enum(POSTS_DISPLAY_STYLES)
+
+export async function updatePostsDisplayStyle(
+  style: PostsDisplayStyle
+): Promise<PostsDisplayStyle> {
+  const { userId, supabase } = await requireDashboardContext()
+  const parsed = postsDisplayStyleSchema.safeParse(style)
+
+  if (!parsed.success) {
+    throw new Error('סגנון תצוגה לא תקין')
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update({ posts_display_style: parsed.data } as never)
+    .eq('id', userId)
+    .select('slug')
+    .maybeSingle<{ slug: string | null }>()
+
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error('הגדרות האתר לא נמצאו')
+
+  revalidatePath('/dashboard/posts')
+  const slug = data.slug?.trim()
+  if (slug) {
+    revalidatePath(`/${slug}`)
+    revalidatePath(`/${slug}/blog`)
+  } else {
+    revalidatePath('/[slug]', 'page')
+    revalidatePath('/[slug]/blog', 'page')
+  }
+
+  return parsed.data
 }
 
 export async function deletePost(postId: string) {
