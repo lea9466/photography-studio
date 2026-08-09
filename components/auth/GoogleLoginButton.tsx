@@ -8,6 +8,7 @@ import { MVP_DEFAULT_DASHBOARD_PATH, resolveMvpDashboardPath } from '@/lib/types
 type GoogleLoginButtonProps = {
   next?: string
   label?: string
+  referralCode?: string
 }
 
 function GoogleIcon() {
@@ -40,6 +41,7 @@ function GoogleIcon() {
 export function GoogleLoginButton({
   next,
   label = 'המשיכי עם Google',
+  referralCode,
 }: GoogleLoginButtonProps) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +57,14 @@ export function GoogleLoginButton({
       const redirectPath = resolveMvpDashboardPath(
         next ?? MVP_DEFAULT_DASHBOARD_PATH
       )
-      const redirectTo = `${appUrl}/auth/callback?next=${encodeURIComponent(redirectPath)}`
+      const callbackParams = new URLSearchParams({
+        next: redirectPath,
+      })
+      const trimmedRef = referralCode?.trim()
+      if (trimmedRef) {
+        callbackParams.set('ref', trimmedRef)
+      }
+      const redirectTo = `${appUrl}/auth/callback?${callbackParams.toString()}`
 
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',

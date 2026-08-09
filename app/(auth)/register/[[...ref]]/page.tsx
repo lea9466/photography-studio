@@ -70,7 +70,11 @@ export default async function RegisterPage({
                   </Link>
                 </Button>
               </div>
-              <AuthForm mode="register" action={registerAction} />
+              <AuthForm
+                mode="register"
+                action={registerAction}
+                referralCode={referralCode}
+              />
             </div>
           </div>
 

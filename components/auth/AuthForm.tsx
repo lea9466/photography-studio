@@ -22,9 +22,10 @@ type AuthFormProps = {
     formData: FormData
   ) => Promise<AuthActionState>
   next?: string
+  referralCode?: string
 }
 
-export function AuthForm({ mode, action, next }: AuthFormProps) {
+export function AuthForm({ mode, action, next, referralCode }: AuthFormProps) {
   const [state, formAction, pending] = useActionState(action, {})
 
   const isLogin = mode === 'login'
@@ -40,7 +41,7 @@ export function AuthForm({ mode, action, next }: AuthFormProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <GoogleLoginButton next={next} />
+        <GoogleLoginButton next={next} referralCode={referralCode} />
 
         <div className="my-6 flex items-center gap-3">
           <span className="h-px flex-1 bg-[--border]" aria-hidden="true" />

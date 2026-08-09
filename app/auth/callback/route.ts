@@ -3,6 +3,7 @@ import {
   ensureUserProfile,
   maybeSendWelcomeEmailForCurrentUser,
 } from '@/lib/auth/user-profile'
+import { applyReferralOnSignup } from '@/lib/referral/referral'
 import { NextResponse } from 'next/server'
 
 import {
@@ -11,12 +12,15 @@ import {
   ONBOARDING_SETTINGS_PATH,
 } from '@/lib/types/app.types'
 
+const NEW_OAUTH_USER_WINDOW_MS = 15 * 60 * 1000
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = resolveMvpDashboardPath(
     searchParams.get('next') ?? MVP_DEFAULT_DASHBOARD_PATH
   )
+  const referralCode = searchParams.get('ref')?.trim() ?? ''
   const authError = searchParams.get('error')
   const errorCode = searchParams.get('error_code')
 
@@ -40,6 +44,21 @@ export async function GET(request: Request) {
             profileError instanceof Error ? profileError.message : 'unknown',
         })
         return NextResponse.redirect(`${origin}/login?error=auth`)
+      }
+
+      if (referralCode) {
+        const createdAtMs = new Date(data.user.created_at).getTime()
+        const isNewOAuthUser =
+          Number.isFinite(createdAtMs) &&
+          Date.now() - createdAtMs < NEW_OAUTH_USER_WINDOW_MS
+
+        if (isNewOAuthUser) {
+          try {
+            await applyReferralOnSignup(data.user.id, referralCode)
+          } catch (referralError) {
+            console.error('[auth/callback] referral apply failed', referralError)
+          }
+        }
       }
 
       const { data: profile } = await supabase
