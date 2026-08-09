@@ -359,7 +359,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
   max-width: 1280px;
   margin-inline: auto;
   padding-inline: clamp(1.25rem, 4vw, 2.5rem);
-  padding-top: 4.5rem;
+  padding-top: 0.75rem;
   overflow: visible;
   box-sizing: border-box;
 }
@@ -368,7 +368,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
     grid-template-columns: minmax(0, 1fr);
     max-width: 26rem;
     gap: 2.75rem;
-    padding-top: 3rem;
+    padding-top: 0.5rem;
     padding-inline: 1.25rem;
   }
 }
@@ -388,7 +388,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
 }
 .hp-post-card--circle.stagger-reveal {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(12px);
 }
 .hp-post-card--circle.stagger-reveal.is-visible {
   opacity: 1;
@@ -410,45 +410,11 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
 @keyframes hp-circle-enter {
   0% {
     opacity: 0;
-    transform: translateY(-72px) scale(0.72);
-    box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 0%, transparent),
-      0 28px 40px rgba(0,0,0,0.12);
-  }
-  18% {
-    opacity: 1;
-    transform: translateY(0) scale(1.08, 0.9);
-    box-shadow:
-      0 0 0 10px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 18%, transparent),
-      0 6px 18px rgba(0,0,0,0.28);
-  }
-  34% {
-    transform: translateY(-38px) scale(0.94, 1.05);
-    box-shadow:
-      0 0 0 6px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 14%, transparent),
-      0 22px 34px rgba(0,0,0,0.16);
-  }
-  50% {
-    transform: translateY(0) scale(1.05, 0.94);
-    box-shadow:
-      0 0 0 8px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 16%, transparent),
-      0 8px 20px rgba(0,0,0,0.24);
-  }
-  66% {
-    transform: translateY(-16px) scale(0.98, 1.02);
-  }
-  80% {
-    transform: translateY(0) scale(1.02, 0.98);
-  }
-  90% {
-    transform: translateY(-5px) scale(0.995, 1.01);
+    transform: translateY(28px) scale(0.9);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--hp-circle-accent, #e85a8c) 18%, transparent),
-      0 12px 36px rgba(0,0,0,0.22);
   }
 }
 @keyframes hp-circle-body-enter {
@@ -473,7 +439,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
   overflow: hidden;
   padding: 3px;
   opacity: 0;
-  transform: translateY(-72px) scale(0.72);
+  transform: translateY(28px) scale(0.9);
   background:
     linear-gradient(
       145deg,
@@ -487,7 +453,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
     0 12px 36px rgba(0,0,0,0.22);
 }
 .hp-post-card--circle.is-visible .hp-post-media {
-  animation: hp-circle-enter 1.15s cubic-bezier(0.22, 0.9, 0.3, 1.15) both;
+  animation: hp-circle-enter 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .hp-post-card--circle .hp-post-media--empty { aspect-ratio: 1; }
 .hp-post-card--circle .hp-post-media img {
@@ -530,7 +496,7 @@ ${HOMEPAGE_STAGGER_REVEAL_CSS}
   transform: translateY(14px);
 }
 .hp-post-card--circle.is-visible .hp-post-body {
-  animation: hp-circle-body-enter 0.65s cubic-bezier(0.2, 0, 0.2, 1) 0.28s both;
+  animation: hp-circle-body-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
 }
 @media (prefers-reduced-motion: reduce) {
   .hp-post-card--circle.stagger-reveal,
@@ -919,7 +885,7 @@ function postCard(
   </div>`
 
   return `
-<a class="${cardClass}" data-reveal-delay="${index * 150}" data-post-id="${escapeHtml(post.id)}" href="${escapeHtml(postPath)}" target="_parent" style="${cardStyle}">
+<a class="${cardClass}" data-reveal-delay="${index * 180}" data-post-id="${escapeHtml(post.id)}" href="${escapeHtml(postPath)}" target="_parent" style="${cardStyle}">
   ${media}
   ${body}
 </a>`
