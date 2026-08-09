@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { getFeedbackEmail } from '@/lib/feedback-email'
+import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
 import { deleteStudioCompletely } from '@/lib/admin/delete-studio'
 import {
   getAdminBroadcastRecipients,
@@ -379,9 +380,11 @@ export async function getAdminAuthState() {
   return { authenticated: await isAdminAuthenticated() }
 }
 
-export async function fetchAdminBroadcastRecipientCount() {
+export async function fetchAdminBroadcastRecipientCount(
+  filters?: AdminBroadcastRecipientFilters | null
+) {
   await requireAdmin()
-  const recipients = await getAdminBroadcastRecipients()
+  const recipients = await getAdminBroadcastRecipients(filters)
   return { count: recipients.length }
 }
 
@@ -472,6 +475,7 @@ export async function sendAdminBroadcast(input: {
   subject: string
   message: string
   imageUrl?: string | null
+  filters?: AdminBroadcastRecipientFilters | null
 }) {
   await requireAdmin()
 
@@ -482,9 +486,9 @@ export async function sendAdminBroadcast(input: {
   if (!subject) throw new Error('נא להזין נושא למייל')
   if (!message) throw new Error('נא להזין תוכן למייל')
 
-  const recipients = await getAdminBroadcastRecipients()
+  const recipients = await getAdminBroadcastRecipients(input.filters)
   if (recipients.length === 0) {
-    throw new Error('אין נמענים עם כתובת מייל')
+    throw new Error('אין נמענים שתואמים לסינון שנבחר')
   }
 
   let sent = 0

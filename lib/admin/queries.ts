@@ -1,7 +1,10 @@
+import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
 import { normalizeAnnouncementIcon } from '@/lib/announcements/icons'
 import type { Announcement } from '@/lib/announcements/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
+
+export type { AdminBroadcastRecipientFilters }
 
 export type AdminStudioRow = {
   id: string
@@ -24,6 +27,60 @@ export type AdminBroadcastRecipient = {
   name: string | null
 }
 
+function normalizeBroadcastFilters(
+  filters?: AdminBroadcastRecipientFilters | null
+): Required<AdminBroadcastRecipientFilters> {
+  return {
+    requireGallery: Boolean(filters?.requireGallery),
+    requirePost: Boolean(filters?.requirePost),
+    requireHeroImage: Boolean(filters?.requireHeroImage),
+  }
+}
+
+function userHasHeroImage(user: {
+  hero_desktop_url?: string | null
+  hero_mobile_url?: string | null
+  hero_desktop_urls?: string[] | null
+  hero_mobile_urls?: string[] | null
+}): boolean {
+  const desktopUrls = user.hero_desktop_urls ?? []
+  const mobileUrls = user.hero_mobile_urls ?? []
+  if (desktopUrls.some((path) => Boolean(path?.trim()))) return true
+  if (mobileUrls.some((path) => Boolean(path?.trim()))) return true
+  if (user.hero_desktop_url?.trim()) return true
+  if (user.hero_mobile_url?.trim()) return true
+  return false
+}
+
+async function fetchDistinctUserIds(
+  table: 'galleries' | 'posts'
+): Promise<Set<string>> {
+  const admin = createAdminClient()
+  const ids = new Set<string>()
+  const pageSize = 1000
+  let from = 0
+
+  while (true) {
+    const { data, error } = await admin
+      .from(table)
+      .select('user_id')
+      .range(from, from + pageSize - 1)
+
+    if (error) throw new Error(error.message)
+
+    const rows = data ?? []
+    for (const row of rows) {
+      const userId = (row as { user_id: string | null }).user_id
+      if (userId) ids.add(userId)
+    }
+
+    if (rows.length < pageSize) break
+    from += pageSize
+  }
+
+  return ids
+}
+
 export async function getLatestAnnouncementForAdmin(): Promise<Announcement | null> {
   const admin = createAdminClient()
   const { data, error } = await admin
@@ -44,24 +101,47 @@ export async function getLatestAnnouncementForAdmin(): Promise<Announcement | nu
   }
 }
 
-export async function getAdminBroadcastRecipients(): Promise<AdminBroadcastRecipient[]> {
+export async function getAdminBroadcastRecipients(
+  filters?: AdminBroadcastRecipientFilters | null
+): Promise<AdminBroadcastRecipient[]> {
   const admin = createAdminClient()
+  const activeFilters = normalizeBroadcastFilters(filters)
+
+  const selectFields = activeFilters.requireHeroImage
+    ? 'id, email, name, studio_name, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls'
+    : 'id, email, name, studio_name'
+
   const { data, error } = await admin
     .from('users')
-    .select('email, name, studio_name')
+    .select(selectFields)
     .not('email', 'is', null)
 
   if (error) throw new Error(error.message)
+
+  const [galleryUserIds, postUserIds] = await Promise.all([
+    activeFilters.requireGallery ? fetchDistinctUserIds('galleries') : Promise.resolve(null),
+    activeFilters.requirePost ? fetchDistinctUserIds('posts') : Promise.resolve(null),
+  ])
 
   const seen = new Set<string>()
   const recipients: AdminBroadcastRecipient[] = []
 
   for (const row of data ?? []) {
     const user = row as {
+      id: string
       email: string | null
       name: string | null
       studio_name: string | null
+      hero_desktop_url?: string | null
+      hero_mobile_url?: string | null
+      hero_desktop_urls?: string[] | null
+      hero_mobile_urls?: string[] | null
     }
+
+    if (galleryUserIds && !galleryUserIds.has(user.id)) continue
+    if (postUserIds && !postUserIds.has(user.id)) continue
+    if (activeFilters.requireHeroImage && !userHasHeroImage(user)) continue
+
     const email = user.email?.trim().toLowerCase()
     if (!email || seen.has(email)) continue
 

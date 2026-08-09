@@ -15,6 +15,7 @@ import {
   Hash,
   LogIn,
   LogOut,
+  Search,
   ShieldOff,
   Sparkles,
   Trash2,
@@ -22,6 +23,7 @@ import {
   UserX,
   Users,
   Video,
+  X,
 } from 'lucide-react'
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import {
@@ -37,6 +39,7 @@ import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
 import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Card,
   CardContent,
@@ -197,6 +200,18 @@ function matchesFilter(row: AdminStudioRow, filterKey: FilterKey) {
   return true
 }
 
+function matchesSearch(row: AdminStudioRow, query: string) {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+
+  const haystack = [row.email, row.studio_name, row.name, row.slug]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  return haystack.includes(normalized)
+}
+
 function getRowAccentClass(studio: AdminStudioRow) {
   if (!studio.last_dashboard_visit_at) {
     return 'border-r-amber-400 bg-amber-50/30'
@@ -227,6 +242,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('last_visit')
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [highlightedStudioId, setHighlightedStudioId] = useState<string | null>(null)
   const [logoutPending, startLogout] = useTransition()
 
@@ -252,8 +268,11 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   }, [rows])
 
   const filteredRows = useMemo(
-    () => rows.filter((row) => matchesFilter(row, filterKey)),
-    [rows, filterKey]
+    () =>
+      rows.filter(
+        (row) => matchesFilter(row, filterKey) && matchesSearch(row, searchQuery)
+      ),
+    [rows, filterKey, searchQuery]
   )
 
   const sortedRows = useMemo(() => {
@@ -475,6 +494,32 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                   ? 'מספר ביקורים'
                   : 'תאריך פתיחה'}
             </span>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <Search className="h-4 w-4 text-rose-600" />
+              חיפוש
+            </div>
+            <div className="relative max-w-xl">
+              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="חיפוש לפי מייל או שם סטודיו..."
+                className="border-slate-200 bg-white pr-10 pl-10 focus-visible:ring-rose-300"
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute left-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="נקה חיפוש"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <div className="space-y-3">
