@@ -65,7 +65,7 @@ async function assertGalleryUploadPaths(
   await assertReservedPhotosExist(supabase, galleryId, photoIds)
   await assertGalleryPhotoCountWithinLimit(
     supabase,
-    galleryId,
+    userId,
     (gallery as { is_public: boolean }).is_public,
     0
   )

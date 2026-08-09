@@ -3,18 +3,30 @@ import {
   PUBLIC_ONLY_MVP,
   buildPublicGalleryPhotoLimitError,
 } from '@/lib/types/app.types'
-import type { MediaBucket, R2UploadRequest } from '@/lib/r2/types'
+import type { R2UploadRequest } from '@/lib/r2/types'
 
 type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>
 
-export async function getGalleryPhotoCount(
+export async function getPhotographerPublicPhotoCount(
   supabase: AppSupabaseClient,
-  galleryId: string
+  userId: string
 ): Promise<number> {
+  let galleryQuery = supabase.from('galleries').select('id').eq('user_id', userId)
+
+  if (!PUBLIC_ONLY_MVP) {
+    galleryQuery = galleryQuery.eq('is_public', true)
+  }
+
+  const { data: galleries, error: galleriesError } = await galleryQuery
+  if (galleriesError) throw new Error(galleriesError.message)
+
+  const galleryIds = (galleries ?? []).map((gallery) => gallery.id as string)
+  if (galleryIds.length === 0) return 0
+
   const { count, error } = await supabase
     .from('photos')
     .select('id', { count: 'exact', head: true })
-    .eq('gallery_id', galleryId)
+    .in('gallery_id', galleryIds)
 
   if (error) throw new Error(error.message)
   return count ?? 0
@@ -22,13 +34,13 @@ export async function getGalleryPhotoCount(
 
 export async function assertGalleryPhotoCountWithinLimit(
   supabase: AppSupabaseClient,
-  galleryId: string,
+  userId: string,
   isPublic: boolean,
   adding = 0
 ): Promise<number> {
   if (!isPublic && !PUBLIC_ONLY_MVP) return 0
 
-  const currentCount = await getGalleryPhotoCount(supabase, galleryId)
+  const currentCount = await getPhotographerPublicPhotoCount(supabase, userId)
   const limitError = buildPublicGalleryPhotoLimitError(currentCount, adding)
   if (limitError) throw new Error(limitError)
 

@@ -20,7 +20,7 @@ import { isOwnedStorageKey } from '@/lib/r2/owned-path'
 
 export async function reservePhotosBatch(galleryId: string, count: number, isProcessed = false) {
   console.log('👉 1. reservePhotosBatch START', { galleryId, count, isProcessed })
-  const { supabase, gallery } = await assertGalleryOwner(galleryId)
+  const { supabase, gallery, user } = await assertGalleryOwner(galleryId)
   console.log('👉 2. assertGalleryOwner done')
   if (count <= 0) {
     console.log('👉 3. count <= 0, returning early')
@@ -30,7 +30,7 @@ export async function reservePhotosBatch(galleryId: string, count: number, isPro
   if (gallery.is_public || PUBLIC_ONLY_MVP) {
     await assertGalleryPhotoCountWithinLimit(
       supabase,
-      galleryId,
+      user.id,
       gallery.is_public,
       count
     )

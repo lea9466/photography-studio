@@ -68,11 +68,11 @@ export function getMaxPublicGalleriesForPhotographer(
   return PUBLIC_GALLERY_LIMIT_OVERRIDES[normalized] ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
 }
 
-/** Max photos in a single public gallery */
-export const MAX_PUBLIC_GALLERY_PHOTOS = 40
+/** Max photos across all public galleries per photographer account */
+export const MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER = 160
 
 export function getRemainingPublicGalleryPhotoSlots(currentCount: number): number {
-  return Math.max(0, MAX_PUBLIC_GALLERY_PHOTOS - currentCount)
+  return Math.max(0, MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER - currentCount)
 }
 
 export function buildPublicGalleryPhotoLimitError(
@@ -81,10 +81,10 @@ export function buildPublicGalleryPhotoLimitError(
 ): string {
   const remaining = getRemainingPublicGalleryPhotoSlots(currentCount)
   if (remaining === 0) {
-    return `גלריה ציבורית מוגבלת ל-${MAX_PUBLIC_GALLERY_PHOTOS} תמונות`
+    return `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
   }
-  if (currentCount + adding > MAX_PUBLIC_GALLERY_PHOTOS) {
-    return `ניתן להעלות עוד ${remaining} תמונות בלבד (מקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} בגלריה ציבורית)`
+  if (currentCount + adding > MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER) {
+    return `ניתן להעלות עוד ${remaining} תמונות בלבד (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות)`
   }
   return ''
 }

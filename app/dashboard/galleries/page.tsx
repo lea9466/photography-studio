@@ -18,7 +18,7 @@ import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesT
 import type { GalleryLayoutMode } from '@/lib/types/database.types'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
-  MAX_PUBLIC_GALLERY_PHOTOS,
+  MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
 } from '@/lib/types/app.types'
 import { cn } from '@/lib/utils'
 
@@ -32,6 +32,8 @@ export default function GalleriesPage() {
   const [recentPhotosTitle, setRecentPhotosTitle] = useState<string | null>(null)
   const [selectedTheme, setSelectedTheme] = useState('elegant')
   const [maxGalleries, setMaxGalleries] = useState(MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER)
+  const [photoCount, setPhotoCount] = useState(0)
+  const [maxPhotos, setMaxPhotos] = useState(MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -49,6 +51,8 @@ export default function GalleriesPage() {
         setRecentPhotosTitle(sectionSettings.recent_photos_title)
         setSelectedTheme(sectionSettings.selected_theme ?? 'elegant')
         setMaxGalleries(quota?.maxGalleries ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER)
+        setPhotoCount(quota?.photoCount ?? 0)
+        setMaxPhotos(quota?.maxPhotos ?? MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER)
       } catch (error) {
         console.error('Failed to load galleries:', error)
       } finally {
@@ -111,7 +115,7 @@ export default function GalleriesPage() {
                 כל הגלריות
               </h1>
               <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
-                {galleryCount}/{maxGalleries} גלריות · עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה
+                {galleryCount}/{maxGalleries} גלריות · {photoCount}/{maxPhotos} תמונות
               </p>
             </div>
           </div>

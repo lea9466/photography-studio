@@ -8,7 +8,7 @@ import { GalleryWizard } from '@/components/gallery/GalleryWizard'
 import { Button } from '@/components/ui/button'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
-  MAX_PUBLIC_GALLERY_PHOTOS,
+  MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
 } from '@/lib/types/app.types'
 
 export default async function NewGalleryPage() {
@@ -32,6 +32,8 @@ export default async function NewGalleryPage() {
 
   const canCreateGallery = quota?.canCreateGallery ?? true
   const maxGalleries = quota?.maxGalleries ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
+  const photoCount = quota?.photoCount ?? 0
+  const maxPhotos = quota?.maxPhotos ?? MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER
 
   return (
     <div className="space-y-6">
@@ -42,7 +44,7 @@ export default async function NewGalleryPage() {
           <h1 className="text-xl sm:text-2xl font-semibold">גלריה חדשה</h1>
           <p className="mt-1 text-sm text-[--muted]">
             {canCreateGallery
-              ? `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · עד ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה`
+              ? `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · ${photoCount}/${maxPhotos} תמונות`
               : `הגעת למקסימום ${maxGalleries} גלריות`}
           </p>
         </div>
@@ -56,7 +58,7 @@ export default async function NewGalleryPage() {
       ) : (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">
-            ניתן ליצור עד {maxGalleries} גלריות, עם עד {MAX_PUBLIC_GALLERY_PHOTOS} תמונות בכל גלריה.
+            ניתן ליצור עד {maxGalleries} גלריות, עם עד {maxPhotos} תמונות בסך הכל.
             מחקי גלריה קיימת כדי ליצור חדשה.
           </p>
           <Button asChild className="mt-6 bg-[#7D3A52] text-white hover:bg-[#6a2f44]">

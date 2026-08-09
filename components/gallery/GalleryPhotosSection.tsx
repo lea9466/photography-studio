@@ -21,7 +21,8 @@ import {
   type GalleryUploadProgress,
 } from '@/lib/gallery-upload-client'
 import { deletePhotosBulk, setPhotosVisibilityBulk, setPhotosProcessedBulk } from '@/lib/actions/photo.actions'
-import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS, MAX_PUBLIC_GALLERY_PHOTOS, getRemainingPublicGalleryPhotoSlots, buildPublicGalleryPhotoLimitError } from '@/lib/types/app.types'
+import { getPublicGalleryQuota } from '@/lib/actions/gallery.actions'
+import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS, MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER, getRemainingPublicGalleryPhotoSlots, buildPublicGalleryPhotoLimitError } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
@@ -68,6 +69,7 @@ export function GalleryPhotosSection({
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState<GalleryUploadProgress | null>(null)
   const [showAllPhotos, setShowAllPhotos] = useState(false)
+  const [accountPhotoCount, setAccountPhotoCount] = useState(photos.length)
   // MVP: public-only — force uploads to "מעובדות" (final/public) photos only.
   const [activeTab, setActiveTab] = useState<'regular' | 'processed'>(
     PUBLIC_ONLY_MVP ? 'processed' : 'regular'
@@ -75,6 +77,20 @@ export function GalleryPhotosSection({
   const activeTabRef = useRef<'regular' | 'processed'>(
     PUBLIC_ONLY_MVP ? 'processed' : 'regular'
   )
+
+  useEffect(() => {
+    let cancelled = false
+    getPublicGalleryQuota()
+      .then((quota) => {
+        if (!cancelled && quota) setAccountPhotoCount(quota.photoCount)
+      })
+      .catch(() => {
+        if (!cancelled) setAccountPhotoCount(photos.length)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [photos.length])
 
   useEffect(() => {
     return () => {
@@ -142,7 +158,7 @@ export function GalleryPhotosSection({
         return
       }
 
-      const limitError = buildPublicGalleryPhotoLimitError(photos.length, selected.length)
+      const limitError = buildPublicGalleryPhotoLimitError(accountPhotoCount, selected.length)
       if (limitError) {
         toast.error(limitError)
         return
@@ -191,7 +207,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, photos.length]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount]
   )
 
   const regularPhotos = useMemo(
@@ -314,7 +330,7 @@ export function GalleryPhotosSection({
   const displayPhotos = showAllPhotos ? currentPhotos : currentPhotos.slice(0, initialPhotoLimit)
   const hasMorePhotos = currentPhotos.length > initialPhotoLimit
   const shouldShowToggleButton = currentPhotos.length > 0
-  const remainingPhotoSlots = getRemainingPublicGalleryPhotoSlots(photos.length)
+  const remainingPhotoSlots = getRemainingPublicGalleryPhotoSlots(accountPhotoCount)
   const atPhotoLimit = remainingPhotoSlots === 0
 
   return (
@@ -395,8 +411,8 @@ export function GalleryPhotosSection({
             </h3>
             <p className="text-[#48464c] text-sm sm:text-base max-w-sm px-2">
               {atPhotoLimit
-                ? `הגעת למקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} תמונות בגלריה ציבורית`
-                : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_GALLERY_PHOTOS} בגלריה).`}
+                ? `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
+                : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`}
             </p>
             <button
               className="mt-4 sm:mt-6 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

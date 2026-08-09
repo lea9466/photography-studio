@@ -27,9 +27,11 @@ import type { GalleryStatus } from '@/lib/types/database.types'
 import {
   PUBLIC_ONLY_MVP,
   MVP_GALLERY_DB_STATUS,
+  MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
   buildPublicGalleryCountLimitError,
   getMaxPublicGalleriesForPhotographer,
 } from '@/lib/types/app.types'
+import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -579,16 +581,21 @@ export async function getPublicGalleryQuota() {
     countQuery = countQuery.eq('is_public', true)
   }
 
-  const [{ count }, maxGalleries] = await Promise.all([
+  const [{ count }, maxGalleries, photoCount] = await Promise.all([
     countQuery,
     resolvePhotographerGalleryLimit(context),
+    getPhotographerPublicPhotoCount(supabase, userId),
   ])
 
   const galleryCount = count ?? 0
+  const maxPhotos = MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER
 
   return {
     galleryCount,
     maxGalleries,
+    photoCount,
+    maxPhotos,
+    remainingPhotos: Math.max(0, maxPhotos - photoCount),
     canCreateGallery: galleryCount < maxGalleries,
   }
 }
