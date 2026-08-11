@@ -30,6 +30,7 @@ import {
   type HeroVideoAvailabilityStatus,
 } from '@/lib/hero-video-availability'
 import { cn } from '@/lib/utils'
+import { putToPresignedUrl } from '@/lib/r2/upload-client'
 
 type UploadResponse = {
   path: string
@@ -157,35 +158,55 @@ async function readClientMetadata(file: File): Promise<SelectedVideo> {
   }
 }
 
-function uploadVideo(
+async function uploadVideo(
   file: File,
+  metadata: SelectedVideo,
   onProgress: (progress: number) => void
 ): Promise<UploadResponse> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/hero-video')
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100))
-    }
-    xhr.onerror = () => reject(new Error(HERO_VIDEO_ERRORS.upload))
-    xhr.onload = () => {
-      let response: UploadResponse
-      try {
-        response = JSON.parse(xhr.responseText) as UploadResponse
-      } catch {
-        reject(new Error(HERO_VIDEO_ERRORS.upload))
-        return
-      }
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error(response.error || HERO_VIDEO_ERRORS.upload))
-        return
-      }
-      resolve(response)
-    }
-    const body = new FormData()
-    body.set('file', file)
-    xhr.send(body)
+  const prepareResponse = await fetch('/api/hero-video', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      action: 'prepare',
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size,
+    }),
   })
+
+  if (!prepareResponse.ok) {
+    const body = await prepareResponse.json().catch(() => ({}))
+    throw new Error((body as { error?: string }).error || HERO_VIDEO_ERRORS.upload)
+  }
+
+  const prepared = (await prepareResponse.json()) as { path: string; uploadUrl: string }
+  await putToPresignedUrl(prepared.uploadUrl, file)
+
+  const finalizeResponse = await fetch('/api/hero-video', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      action: 'finalize',
+      path: prepared.path,
+      metadata: {
+        duration: metadata.duration,
+        width: metadata.width,
+        height: metadata.height,
+        codec: metadata.codec,
+        hasAudio: metadata.hasAudio,
+        audioCodec: metadata.audioCodec,
+      },
+    }),
+  })
+
+  if (!finalizeResponse.ok) {
+    const body = await finalizeResponse.json().catch(() => ({}))
+    throw new Error((body as { error?: string }).error || HERO_VIDEO_ERRORS.upload)
+  }
+
+  const finalized = (await finalizeResponse.json()) as UploadResponse
+  onProgress(100)
+  return finalized
 }
 
 export function HeroVideoSettings({
@@ -278,7 +299,7 @@ export function HeroVideoSettings({
       setPreviewUrl(localUrl)
       setUploading(true)
       setProgress(0)
-      const response = await uploadVideo(file, setProgress)
+      const response = await uploadVideo(file, metadata, setProgress)
       if (localUrl) URL.revokeObjectURL(localUrl)
       const storedUrl = response.url || response.path
       setPreviewUrl(storedUrl)

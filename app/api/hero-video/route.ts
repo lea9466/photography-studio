@@ -4,6 +4,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isR2Configured } from '@/lib/r2/config'
 import {
+  createPresignedUploadUrl,
   deleteMediaObject,
   resolveMediaUrl,
   uploadMediaObject,
@@ -15,6 +16,7 @@ import {
   validateHeroVideoBasics,
 } from '@/lib/hero-video-constraints'
 import { inspectHeroVideo } from '@/lib/hero-video.server'
+import { buildHeroVideoStoragePath, parseHeroVideoUploadRequest } from '@/lib/hero-video-upload'
 
 export const runtime = 'nodejs'
 
@@ -56,6 +58,54 @@ export async function POST(request: NextRequest) {
       return jsonError(HERO_VIDEO_ERRORS.size, 413)
     }
 
+    const body = await request.json().catch(() => null)
+    const parsed = body ? parseHeroVideoUploadRequest(body) : null
+
+    if (parsed?.action === 'prepare') {
+      validateHeroVideoBasics({
+        name: parsed.fileName,
+        type: parsed.contentType,
+        size: parsed.fileSize,
+      })
+      const path = buildHeroVideoStoragePath(userId)
+      const uploadUrl = await createPresignedUploadUrl('branding', path, parsed.contentType)
+      return NextResponse.json({ path, uploadUrl })
+    }
+
+    if (parsed?.action === 'finalize') {
+      const admin = createAdminClient()
+      const { data: current, error: readError } = await admin
+        .from('users')
+        .select('hero_video_url')
+        .eq('id', userId)
+        .single()
+      if (readError) throw readError
+
+      const oldPath = (current as { hero_video_url: string | null }).hero_video_url
+      const newPath = parsed.path
+      const metadata = parsed.metadata
+
+      const { data: updated, error: updateError } = await admin
+        .from('users')
+        .update({ hero_video_url: newPath })
+        .eq('id', userId)
+        .select('id')
+        .maybeSingle()
+
+      if (updateError || !updated) {
+        throw updateError ?? new Error('שמירת הסרטון נכשלה')
+      }
+
+      if (isOwnedHeroVideoPath(userId, oldPath) && oldPath !== newPath) {
+        await deleteMediaObject('branding', oldPath!).catch((deleteError) => {
+          console.error('[hero-video] old video cleanup failed:', deleteError)
+        })
+      }
+
+      const url = await resolveMediaUrl('branding', newPath)
+      return NextResponse.json({ path: newPath, url, metadata })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file')
     if (!(file instanceof File)) return jsonError('לא נבחר סרטון', 400)
@@ -73,7 +123,7 @@ export async function POST(request: NextRequest) {
     if (readError) throw readError
 
     const oldPath = (current as { hero_video_url: string | null }).hero_video_url
-    const newPath = `${userId}/hero-video/${randomUUID()}.mp4`
+    const newPath = buildHeroVideoStoragePath(userId)
 
     await uploadMediaObject('branding', newPath, bytes, 'video/mp4')
 

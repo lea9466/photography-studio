@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto'
 import { PaymentError } from './errors'
 import { isPaymentsCheckoutEnabled } from './flags'
 import type { PaymentProvider } from './provider'
@@ -24,6 +25,14 @@ const safeLogger: PaymentLogger = {
   },
 }
 
+export type PlanView = {
+  code: string
+  name: string
+  amountAgorot: number
+  currency: string
+  billingInterval: string
+}
+
 export type CurrentSubscriptionView = {
   configured: boolean
   /** False until PAYMENTS_CHECKOUT_ENABLED=true after PayMe approval. */
@@ -34,21 +43,11 @@ export type CurrentSubscriptionView = {
     currentPeriodEnd: string | null
     nextPaymentAt: string | null
     cancelAtPeriodEnd: boolean
-    plan: {
-      code: string
-      name: string
-      amountAgorot: number
-      currency: string
-      billingInterval: string
-    }
+    plan: PlanView
   } | null
-  availablePlan: {
-    code: string
-    name: string
-    amountAgorot: number
-    currency: string
-    billingInterval: string
-  } | null
+  /** @deprecated prefer availablePlans — kept for compatibility */
+  availablePlan: PlanView | null
+  availablePlans: PlanView[]
 }
 
 export class PaymentService {
@@ -101,6 +100,26 @@ export class PaymentService {
       })
     }
 
+    const localSubscriptionId = `sub_${randomBytes(16).toString('hex')}`
+
+    // Pending local row + correlation id are prepared before the provider call.
+    // generate-subscription remains blocked until the correlation field name is confirmed.
+    await this.repository.upsertSubscription({
+      userId: input.userId,
+      planId: plan.id,
+      billingCustomerId: customerRow?.id ?? null,
+      provider: provider.name,
+      externalSubscriptionId: localSubscriptionId,
+      status: 'pending',
+      metadata: {
+        local_subscription_id: localSubscriptionId,
+        plan_code: plan.code,
+        amount_agorot: plan.amountAgorot,
+        currency: plan.currency,
+        billing_interval: plan.billingInterval,
+      },
+    })
+
     this.logger.info('creating checkout', {
       provider: provider.name,
       userId: input.userId,
@@ -113,6 +132,7 @@ export class PaymentService {
       plan,
       successUrl: input.successUrl,
       cancelUrl: input.cancelUrl,
+      localSubscriptionId,
     })
   }
 
@@ -182,14 +202,16 @@ export class PaymentService {
   }
 
   async getCurrentSubscription(userId: string): Promise<CurrentSubscriptionView> {
-    const [subscription, availablePlan] = await Promise.all([
+    const [subscription, availablePlans] = await Promise.all([
       this.repository.getCurrentSubscription(userId),
-      this.repository.getActivePlanByCode('studio_monthly'),
+      this.repository.listActivePlans(),
     ])
 
     const plan = subscription
       ? await this.repository.getPlanById(subscription.plan_id)
       : null
+
+    const planViews = availablePlans.map(toPlanView)
 
     return {
       configured: true,
@@ -205,7 +227,8 @@ export class PaymentService {
               plan: toPlanView(plan),
             }
           : null,
-      availablePlan: availablePlan ? toPlanView(availablePlan) : null,
+      availablePlan: planViews[0] ?? null,
+      availablePlans: planViews,
     }
   }
 
@@ -286,7 +309,7 @@ function toPlanView(row: {
   amount_agorot: number
   currency: string
   billing_interval: string
-}) {
+}): PlanView {
   return {
     code: row.code,
     name: row.name,

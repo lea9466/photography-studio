@@ -4,16 +4,25 @@ This document describes the provider-neutral billing foundation. PayMe is the
 first adapter, but its external API calls are intentionally disabled until the
 official account-specific integration contract is verified.
 
-## Current pause (awaiting PayMe answers)
+## Current pause (remaining unknowns)
 
-Real PayMe connection is paused until official answers cover:
+Sandbox scaffolding is in place for `get-subscriptions`, `get-transactions`,
+plan-driven S2S verification, dual plans (`studio_monthly` / `studio_yearly`),
+and webhook inbox parsing. Checkout activation remains blocked.
 
-1. Subscription Statuses (which `sub_status` means active)
-2. Transaction Statuses
-3. Correlation between subscriptions and transactions
-4. Callback / notify contract and signature verification
+Resolved officially:
+- Subscription statuses (`sub_status` 1/2/3/4/5/6/76)
+- Transaction statuses (`transaction_status` 1–11, complementary only)
+- `POST /get-subscriptions` request/response DTOs
 
-Until then:
+Still required before sandbox checkout calls:
+
+1. Exact generate-subscription request field for our correlation id
+   (PayMe echoes the value as `subscription_id`, outbound field name TBD)
+2. Official subscription callback Content-Type
+   (`application/json` vs `application/x-www-form-urlencoded`)
+
+Until those are confirmed:
 
 - `PAYMENTS_CHECKOUT_ENABLED=false` — UI shows disabled **זמין בקרוב**;
   `POST /api/payments/checkout` returns 503 before any provider or pending
@@ -29,8 +38,9 @@ Until then:
   “המשך למנוי” link).
 - `ENFORCE_SUBSCRIPTION_ACCESS=false` — documented only; not wired to
   middleware, layouts, or product guards. Expired trial users keep full access.
-- PayMe adapter remains fail-closed (`provider_not_configured`); no HTTP to
-  PayMe, no generate-subscription, no callback activation from reminders.
+- `generate-subscription` builds the known payload then fails closed until the
+  correlation field name is confirmed. Callbacks never activate billing without
+  S2S + confirmed `sub_status` mapping.
 
 ## Safety boundary
 

@@ -47,6 +47,7 @@ export default async function SubscriptionPage() {
     checkoutEnabled: false,
     subscription: null,
     availablePlan: null,
+    availablePlans: [],
   }
   try {
     billingStatus = await createPaymentService().getCurrentSubscription(userId)

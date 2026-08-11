@@ -25,6 +25,7 @@ export type WebhookClaim = {
 export interface BillingRepository {
   getUserEmail(userId: string): Promise<string | null>
   getActivePlanByCode(code: string): Promise<SubscriptionPlan | null>
+  listActivePlans(): Promise<SubscriptionPlan[]>
   getPlanById(id: string): Promise<SubscriptionPlan | null>
   getBillingCustomer(userId: string, provider: PaymentProviderName): Promise<BillingCustomer | null>
   getBillingCustomerByExternalId(
@@ -66,6 +67,7 @@ export interface BillingRepository {
       lastPaymentAt?: string | null
       cancelAtPeriodEnd?: boolean
       cancelledAt?: string | null
+      providerSubscriptionId?: string | null
     }
   ): Promise<Subscription>
   upsertTransaction(input: {
@@ -81,6 +83,10 @@ export interface BillingRepository {
     paidAt?: string | null
     metadata?: Record<string, unknown>
   }): Promise<PaymentTransaction>
+  getTransactionByExternalId(
+    provider: PaymentProviderName,
+    externalTransactionId: string
+  ): Promise<PaymentTransaction | null>
   claimWebhook(event: WebhookEvent): Promise<WebhookClaim>
   finishWebhook(eventId: string, status: 'processed' | 'ignored' | 'failed', error?: string): Promise<void>
 }
@@ -115,6 +121,16 @@ export class SupabaseBillingRepository implements BillingRepository {
       .maybeSingle()
     throwIfError(error)
     return data
+  }
+
+  async listActivePlans() {
+    const { data, error } = await this.db
+      .from('subscription_plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('amount_agorot', { ascending: true })
+    throwIfError(error)
+    return data ?? []
   }
 
   async getPlanById(id: string) {
@@ -252,6 +268,7 @@ export class SupabaseBillingRepository implements BillingRepository {
       lastPaymentAt?: string | null
       cancelAtPeriodEnd?: boolean
       cancelledAt?: string | null
+      providerSubscriptionId?: string | null
     }
   ) {
     const update: Database['public']['Tables']['subscriptions']['Update'] = {}
@@ -262,6 +279,9 @@ export class SupabaseBillingRepository implements BillingRepository {
     if (input.lastPaymentAt !== undefined) update.last_payment_at = input.lastPaymentAt
     if (input.cancelAtPeriodEnd !== undefined) update.cancel_at_period_end = input.cancelAtPeriodEnd
     if (input.cancelledAt !== undefined) update.cancelled_at = input.cancelledAt
+    if (input.providerSubscriptionId !== undefined) {
+      update.provider_subscription_id = input.providerSubscriptionId
+    }
 
     const { data, error } = await this.db
       .from('subscriptions')
@@ -309,6 +329,20 @@ export class SupabaseBillingRepository implements BillingRepository {
       .single()
     throwIfError(error)
     if (!data) throw new Error('Payment transaction was not saved')
+    return data
+  }
+
+  async getTransactionByExternalId(
+    provider: PaymentProviderName,
+    externalTransactionId: string
+  ) {
+    const { data, error } = await this.db
+      .from('payment_transactions')
+      .select('*')
+      .eq('provider', provider)
+      .eq('provider_transaction_id', externalTransactionId)
+      .maybeSingle()
+    throwIfError(error)
     return data
   }
 

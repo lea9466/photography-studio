@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { AlertCircle, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
+import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
 
 type Props = {
   initialStatus: CurrentSubscriptionView
@@ -24,8 +24,12 @@ function formatPrice(amountAgorot: number, currency: string) {
   return new Intl.NumberFormat('he-IL', {
     style: 'currency',
     currency,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 0,
   }).format(amountAgorot / 100)
+}
+
+function formatInterval(plan: PlanView) {
+  return plan.billingInterval === 'year' ? 'לשנה' : 'לחודש'
 }
 
 function formatDate(value: string | null) {
@@ -40,6 +44,13 @@ export function SubscriptionBillingPanel({
   isImpersonating,
 }: Props) {
   const [status, setStatus] = useState(initialStatus)
+  const [selectedPlanCode, setSelectedPlanCode] = useState<string>(
+    initialStatus.availablePlans?.find((plan) => plan.code === 'studio_yearly')
+      ?.code ??
+      initialStatus.availablePlans?.[0]?.code ??
+      initialStatus.availablePlan?.code ??
+      'studio_monthly'
+  )
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -99,13 +110,21 @@ export function SubscriptionBillingPanel({
   }
 
   const subscription = status.subscription
-  const plan = subscription?.plan ?? status.availablePlan
+  const availablePlans =
+    status.availablePlans?.length > 0
+      ? status.availablePlans
+      : status.availablePlan
+        ? [status.availablePlan]
+        : []
+  const selectedPlan =
+    availablePlans.find((plan) => plan.code === selectedPlanCode) ??
+    availablePlans[0] ??
+    null
+  const activePlan = subscription?.plan ?? null
   const isActive = subscription?.status === 'active'
   const checkoutEnabled = status.checkoutEnabled === true
-  const canStartCheckout =
-    checkoutEnabled && !subscription && Boolean(status.availablePlan)
   const showComingSoon =
-    !checkoutEnabled && !isActive && Boolean(status.availablePlan || !subscription)
+    !checkoutEnabled && !isActive && (availablePlans.length > 0 || !subscription)
   const failed =
     subscription?.status === 'payment_failed' || subscription?.status === 'past_due'
 
@@ -123,22 +142,25 @@ export function SubscriptionBillingPanel({
         </div>
       </div>
 
-      {plan ? (
+      {activePlan ? (
         <div className="grid gap-4 rounded-xl border border-[--border]/60 bg-white/80 p-5 sm:grid-cols-3">
           <div>
             <p className="text-xs text-[--muted]">מסלול</p>
-            <p className="mt-1 font-semibold text-[--foreground]">{plan.name}</p>
+            <p className="mt-1 font-semibold text-[--foreground]">{activePlan.name}</p>
           </div>
           <div>
             <p className="text-xs text-[--muted]">מחיר</p>
             <p className="mt-1 font-semibold text-[--foreground]">
-              {formatPrice(plan.amountAgorot, plan.currency)} לחודש
+              {formatPrice(activePlan.amountAgorot, activePlan.currency)}{' '}
+              {formatInterval(activePlan)}
             </p>
           </div>
           <div>
             <p className="text-xs text-[--muted]">סטטוס</p>
             <p className="mt-1 font-semibold text-[--foreground]">
-              {subscription ? STATUS_LABELS[subscription.status] ?? subscription.status : 'ללא מינוי'}
+              {subscription
+                ? STATUS_LABELS[subscription.status] ?? subscription.status
+                : 'ללא מינוי'}
             </p>
           </div>
           {subscription ? (
@@ -149,6 +171,92 @@ export function SubscriptionBillingPanel({
               </p>
             </div>
           ) : null}
+        </div>
+      ) : availablePlans.length > 0 ? (
+        <div className="space-y-3">
+          <p className="text-sm text-[--muted]">בחרי מסלול מינוי:</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {availablePlans.map((plan) => {
+              const selected = selectedPlan?.code === plan.code
+              const isYearly = plan.code === 'studio_yearly'
+              const planDisabled = Boolean(subscription) || !checkoutEnabled
+              return (
+                <div
+                  key={plan.code}
+                  className={`rounded-xl border p-5 text-right ${
+                    selected
+                      ? 'border-[#7D3A52] bg-[#7D3A52]/5 ring-1 ring-[#7D3A52]/30'
+                      : 'border-[--border]/60 bg-white/80'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    disabled={planDisabled}
+                    onClick={() => setSelectedPlanCode(plan.code)}
+                    className="w-full text-right disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-[--foreground]">
+                          {plan.code === 'studio_monthly'
+                            ? 'חודשי'
+                            : plan.code === 'studio_yearly'
+                              ? 'שנתי'
+                              : plan.name}
+                        </p>
+                        <p className="mt-2 text-lg font-bold text-[--foreground]">
+                          {plan.code === 'studio_monthly'
+                            ? '40 ₪ לחודש'
+                            : plan.code === 'studio_yearly'
+                              ? '400 ₪ לשנה'
+                              : `${formatPrice(plan.amountAgorot, plan.currency)} ${formatInterval(plan)}`}
+                        </p>
+                        {isYearly ? (
+                          <p className="mt-2 text-xs leading-relaxed text-[--muted]">
+                            חיסכון של 80 ₪ בשנה לעומת המסלול החודשי
+                          </p>
+                        ) : null}
+                      </div>
+                      {isYearly ? (
+                        <span className="shrink-0 text-[11px] font-semibold text-[#7D3A52]">
+                          הכי משתלם
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                  <div className="mt-4">
+                    {!checkoutEnabled ? (
+                      <Button type="button" disabled className="w-full">
+                        זמין בקרוב
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        className="w-full"
+                        disabled={
+                          Boolean(busy) ||
+                          isImpersonating ||
+                          Boolean(subscription) ||
+                          !selected
+                        }
+                        onClick={() =>
+                          callAction('/api/payments/checkout', {
+                            planCode: plan.code,
+                          })
+                        }
+                      >
+                        {busy === '/api/payments/checkout' &&
+                        selectedPlanCode === plan.code ? (
+                          <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        המשך למנוי
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       ) : (
         <p className="text-sm text-[--muted]">אין כרגע מסלול פעיל להצטרפות.</p>
@@ -172,7 +280,7 @@ export function SubscriptionBillingPanel({
         </p>
       ) : null}
 
-      {canStartCheckout ? (
+      {checkoutEnabled && !subscription && availablePlans.length > 0 ? (
         <p className="text-sm leading-relaxed text-[--muted]">
           לא יתבצע חיוב אוטומטי ללא בחירתך והזנת אמצעי תשלום.
         </p>
@@ -187,29 +295,6 @@ export function SubscriptionBillingPanel({
       {message ? <p className="text-sm text-[--muted]">{message}</p> : null}
 
       <div className="flex flex-wrap gap-3">
-        {showComingSoon ? (
-          <Button type="button" disabled>
-            זמין בקרוב
-          </Button>
-        ) : null}
-
-        {canStartCheckout ? (
-          <Button
-            type="button"
-            disabled={Boolean(busy) || isImpersonating}
-            onClick={() =>
-              callAction('/api/payments/checkout', {
-                planCode: status.availablePlan?.code,
-              })
-            }
-          >
-            {busy === '/api/payments/checkout' ? (
-              <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-            ) : null}
-            המשך למנוי
-          </Button>
-        ) : null}
-
         {checkoutEnabled && subscription ? (
           <>
             <Button
