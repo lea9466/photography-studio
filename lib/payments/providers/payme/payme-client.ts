@@ -143,14 +143,49 @@ export class PayMeClient {
     })
   }
 
+  /**
+   * Cancels a PayMe subscription. PayMe returns HTTP 500 (with a machine-readable
+   * status_error_code in the body) when the subscription is already cancelled or
+   * scheduled for cancellation. Because of that we do NOT treat a non-2xx status
+   * as a hard failure here — the caller inspects both the HTTP status and the
+   * parsed body to decide whether the cancellation is effectively complete.
+   */
   async cancelSubscription(
     subPaymeId: string
-  ): Promise<PayMeCancelSubscriptionResponse> {
-    return this.postJson<PayMeCancelSubscriptionResponse>('/cancel-subscription', {
-      ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
-      seller_payme_id: this.environment.sellerId,
-      sub_payme_id: subPaymeId,
-    })
+  ): Promise<{ httpStatus: number; body: PayMeCancelSubscriptionResponse | null }> {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs)
+    try {
+      const response = await fetch(`${this.environment.apiBaseUrl}/cancel-subscription`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
+          seller_payme_id: this.environment.sellerId,
+          sub_payme_id: subPaymeId,
+        }),
+        signal: controller.signal,
+        cache: 'no-store',
+      })
+      const bodyText = await response.text().catch(() => '')
+      let parsed: PayMeCancelSubscriptionResponse | null = null
+      try {
+        parsed = bodyText ? (JSON.parse(bodyText) as PayMeCancelSubscriptionResponse) : null
+      } catch {
+        parsed = null
+      }
+      return { httpStatus: response.status, body: parsed }
+    } catch (error) {
+      throw new PaymentError('provider_unavailable', {
+        status: 502,
+        cause: error instanceof Error ? error.message : String(error),
+      })
+    } finally {
+      clearTimeout(timer)
+    }
   }
 
   /**

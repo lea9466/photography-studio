@@ -184,6 +184,9 @@ export type PayMeCancelSubscriptionResponse = {
   status_code?: number | string
   payme_status?: string
   status_error_code?: number
+  status_error_details?: string
+  status_additional_info?: number
+  session?: string
   sub_payme_id?: string
   seller_payme_id?: string
 }

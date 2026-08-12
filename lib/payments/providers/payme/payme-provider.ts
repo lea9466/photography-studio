@@ -192,27 +192,37 @@ export class PayMeProvider implements PaymentProvider {
     const subPaymeId = input.externalSubscriptionId
     if (!subPaymeId) throw new PaymentError('subscription_not_found')
 
-    const response = await this.client().cancelSubscription(subPaymeId)
+    const { httpStatus, body } = await this.client().cancelSubscription(subPaymeId)
 
-    const statusCode =
-      typeof response.status_code === 'string'
-        ? Number(response.status_code)
-        : response.status_code
-    const hasError =
-      (typeof statusCode === 'number' && statusCode !== 0) ||
-      response.status_error_code != null
-    if (hasError) {
-      // PayMe often returns a non-zero status_code even though the cancellation
-      // was processed (it also sends the "subscription cancelled" email). We
-      // cannot reliably parse every response shape, so we surface the ambiguity
-      // for diagnosis but treat the cancellation as successful from the local
-      // state's perspective — the user's intent and PayMe's side-effect both
-      // indicate cancellation, and the local record must reflect it.
-      console.warn('[payments] payme cancel returned an ambiguous status', {
-        subPaymeId,
-        status_code: response.status_code,
-        status_error_code: response.status_error_code,
-        payme_status: response.payme_status,
+    const statusErrorCode = body?.status_error_code
+    const statusErrorDetails: string = body?.status_error_details ?? ''
+    // PayMe returns HTTP 500 with status_error_code 305 ("סטטוס מכירה לא מתאים")
+    // when the subscription is already cancelled or already scheduled for
+    // cancellation. In both cases the cancellation is effectively complete from
+    // the local state's perspective, so we treat it as success rather than an
+    // error that would block the local record from being updated.
+    const alreadyCancelled =
+      statusErrorCode === 305 ||
+      /מבוטל|בוטל|לא מתאים|already cancelled|not cancellable/i.test(statusErrorDetails)
+
+    if (httpStatus < 200 || httpStatus >= 300) {
+      if (alreadyCancelled) {
+        console.warn('[payments] payme cancel: subscription already cancelled', {
+          subPaymeId,
+          httpStatus,
+          statusErrorCode,
+          statusErrorDetails,
+        })
+      } else {
+        throw new PaymentError('provider_unavailable', {
+          status: 502,
+          cause: `PayMe cancel failed: http=${httpStatus} status_code=${body?.status_code} status_error_code=${statusErrorCode} details=${statusErrorDetails}`,
+        })
+      }
+    } else if (statusErrorCode != null && statusErrorCode !== 0 && !alreadyCancelled) {
+      throw new PaymentError('provider_unavailable', {
+        status: 502,
+        cause: `PayMe cancel returned an error: status_error_code=${statusErrorCode} details=${statusErrorDetails}`,
       })
     }
 

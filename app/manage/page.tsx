@@ -62,8 +62,8 @@ export default async function ManagePage() {
   return (
     <main className={`${pageShellClass} px-3 py-8 sm:px-4 lg:px-5`}>
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
-        <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
         <PlanPricingManager />
+        <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>
     </main>
   )
