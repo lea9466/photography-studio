@@ -31,7 +31,10 @@ function cookieOptions(maxAge: number) {
     sameSite: 'lax' as const,
     secure: process.env.NODE_ENV === 'production',
     maxAge,
-    path: '/manage',
+    // Scoped to the whole origin (not just /manage) so the admin session cookie
+    // is also sent to /api/admin/* routes — otherwise the browser withholds it
+    // for requests outside the /manage path and those routes return 403.
+    path: '/',
   }
 }
 
