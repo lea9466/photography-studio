@@ -95,20 +95,56 @@ function asJson(value: Record<string, unknown>): Json {
   return JSON.parse(JSON.stringify(value)) as Json
 }
 
+/**
+ * Serializes a PostgREST/Supabase error for tracing.
+ * PostgREST errors are plain objects ({ code, message, details, hint }) that are
+ * not Error instances; String() on them yields "[object Object]" and hides the
+ * real cause. This helper always exposes the meaningful fields.
+ */
+function describeDbError(error: unknown) {
+  const errAny = error as {
+    name?: unknown
+    message?: unknown
+    code?: unknown
+    details?: unknown
+    hint?: unknown
+  }
+  const isError = error instanceof Error
+  return {
+    errorName:
+      typeof errAny?.name === 'string'
+        ? errAny.name
+        : isError
+          ? (error as Error).name
+          : 'PostgrestError',
+    errorMessage:
+      typeof errAny?.message === 'string'
+        ? errAny.message
+        : isError
+          ? (error as Error).message
+          : (() => {
+              try {
+                return JSON.stringify(error ?? null)
+              } catch {
+                return String(error)
+              }
+            })(),
+    errorCode:
+      typeof errAny?.code === 'string' || typeof errAny?.code === 'number'
+        ? String(errAny.code)
+        : null,
+    details: typeof errAny?.details === 'string' ? errAny.details : null,
+    hint: typeof errAny?.hint === 'string' ? errAny.hint : null,
+  }
+}
+
 function throwIfError(error: { message: string } | null) {
   if (error) {
     // Log PostgREST/Supabase error safely for tracing without PII or payloads.
-    try {
-      const errAny = error as any
-      console.error('[payments-trace][db] postgrest-error', {
-        step: 'db.throwIfError',
-        errorName: errAny?.name ?? 'PostgrestError',
-        errorMessage: errAny?.message ?? String(errAny),
-        postgrestCode: errAny?.code ?? null,
-      })
-    } catch (__) {
-      console.error('[payments-trace][db] postgrest-error', { step: 'db.throwIfError', errorMessage: 'unknown' })
-    }
+    console.error('[payments-trace][db] postgrest-error', {
+      step: 'db.throwIfError',
+      ...describeDbError(error),
+    })
     throw error
   }
 }
@@ -211,8 +247,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         table: 'billing_customers',
         action: 'upsert',
         correlationId: input?.externalCustomerId ?? null,
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
@@ -234,8 +269,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         step: 'getCurrentSubscription',
         table: 'subscriptions',
         action: 'select',
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
@@ -300,8 +334,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         table: 'subscriptions',
         action: 'upsert',
         correlationId: input?.externalSubscriptionId ?? null,
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
@@ -348,8 +381,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         table: 'subscriptions',
         action: 'update',
         id,
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
@@ -398,8 +430,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         table: 'payment_transactions',
         action: 'upsert',
         correlationId: input?.externalTransactionId ?? null,
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
@@ -458,8 +489,7 @@ export class SupabaseBillingRepository implements BillingRepository {
         table: 'payment_webhook_events',
         action: 'update',
         eventId,
-        errorName: err instanceof Error ? err.name : 'Error',
-        errorMessage: err instanceof Error ? err.message : String(err),
+        ...describeDbError(err),
       })
       throw err
     }
