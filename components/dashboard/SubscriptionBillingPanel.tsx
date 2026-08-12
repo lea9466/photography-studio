@@ -176,6 +176,11 @@ export function SubscriptionBillingPanel({
   const isActive = subscription?.status === 'active'
   const checkoutEnabled =
     status.checkoutEnabled === true || status.isSmokeTestUser === true
+  // Block starting a new checkout only while a subscription is live or a
+  // checkout is already in progress. A cancelled/expired subscription should
+  // still let the user re-subscribe.
+  const blockCheckout =
+    subscription?.status === 'active' || subscription?.status === 'pending'
   const showComingSoon =
     !checkoutEnabled && !isActive && (smokeTestPlans.length > 0 || !subscription)
   const failed =
@@ -246,9 +251,8 @@ export function SubscriptionBillingPanel({
                   plan.billingInterval === 'year' && monthlyPlan
                     ? monthlyPlan.amountAgorot * 12 - plan.amountAgorot
                     : null
-                const planDisabled =
-                !checkoutEnabled ||
-                (subscription != null && subscription.status !== 'pending')
+                 const planDisabled =
+                 !checkoutEnabled || blockCheckout
               return (
                 <div
                   key={plan.code}
@@ -317,8 +321,7 @@ export function SubscriptionBillingPanel({
                         disabled={
                           Boolean(busy) ||
                           isImpersonating ||
-                          (subscription != null &&
-                            subscription.status !== 'pending') ||
+                          blockCheckout ||
                           !selected
                         }
                         onClick={() =>
