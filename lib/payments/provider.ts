@@ -21,5 +21,8 @@ export interface PaymentProvider {
   getSubscription(externalSubscriptionId: string): Promise<PaymentSubscription>
   cancelSubscription(input: CancelSubscriptionInput): Promise<PaymentSubscription>
   updatePaymentMethod(input: UpdatePaymentMethodInput): Promise<CheckoutSession>
+  verifySubscriptionByCorrelation(
+    localSubscriptionId: string
+  ): Promise<PaymentSubscription | null>
   parseWebhook(input: ParseWebhookInput): Promise<WebhookEvent>
 }

@@ -32,6 +32,7 @@ import {
   mapPayMeCheckoutFromGenerate,
   mapPayMeCustomer,
   mapPayMeSubscriptionRecord,
+  mapPayMeSubscriptionRecordVerified,
 } from './payme-mapper'
 import { parsePayMeWebhook } from './payme-webhook'
 import type { PayMeGenerateSubscriptionResponse } from './payme-types'
@@ -107,6 +108,22 @@ export class PayMeProvider implements PaymentProvider {
     const record = firstSubscriptionRecord(response)
     if (!record) throw new PaymentError('subscription_not_found')
     return mapPayMeSubscriptionRecord(record)
+  }
+
+  /**
+   * Verifies a local pending subscription against PayMe via S2S lookup using the
+   * local correlation id (subscription_id). Used on return from PayMe instead of
+   * trusting an unverified webhook callback. Returns null when PayMe has no record.
+   */
+  async verifySubscriptionByCorrelation(
+    localSubscriptionId: string
+  ): Promise<PaymentSubscription | null> {
+    const response = await this.client().getSubscriptions({
+      subscription_id: localSubscriptionId,
+    })
+    const record = firstSubscriptionRecord(response)
+    if (!record) return null
+    return mapPayMeSubscriptionRecordVerified(record)
   }
 
   /**

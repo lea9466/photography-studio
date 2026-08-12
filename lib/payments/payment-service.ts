@@ -268,6 +268,56 @@ export class PaymentService {
     return this.subscriptions.hasActiveSubscription(userId)
   }
 
+  /**
+   * Activates the local pending subscription by verifying it against PayMe via a
+   * server-to-server lookup (using the local correlation id). This is the safe
+   * alternative to an unverified webhook callback and is triggered when the user
+   * returns from PayMe. Returns the refreshed subscription view.
+   */
+  async verifySubscription(userId: string): Promise<CurrentSubscriptionView> {
+    const subscription = await this.repository.getCurrentSubscription(userId)
+    if (!subscription || subscription.user_id !== userId) {
+      return this.getCurrentSubscription(userId)
+    }
+
+    const localId = subscription.provider_subscription_id
+    const alreadyReal =
+      localId && !localId.startsWith('sub_') && subscription.status === 'active'
+    if (alreadyReal) {
+      return this.getCurrentSubscription(userId)
+    }
+
+    // Try every pending local subscription (most recent first) until PayMe
+    // confirms one. This tolerates multiple abandoned checkout attempts.
+    const all = await this.repository.getSubscriptions(userId)
+    const pending = all.filter(
+      (s) =>
+        s.provider_subscription_id?.startsWith('sub_') && s.status === 'pending'
+    )
+    const provider = this.resolveProvider(
+      subscription.provider as PaymentProviderName
+    )
+
+    for (const candidate of pending) {
+      const verified = await provider.verifySubscriptionByCorrelation(
+        candidate.provider_subscription_id as string
+      )
+      if (!verified) continue
+
+      await this.repository.updateSubscription(candidate.id, {
+        status: verified.status,
+        periodStart: verified.currentPeriodStart,
+        periodEnd: verified.currentPeriodEnd,
+        nextPaymentAt: verified.nextPaymentAt,
+        lastPaymentAt: new Date().toISOString(),
+        providerSubscriptionId: verified.id,
+      })
+      return this.getCurrentSubscription(userId)
+    }
+
+    return this.getCurrentSubscription(userId)
+  }
+
   async processWebhook(input: {
     providerName: PaymentProviderName
     rawBody: Uint8Array

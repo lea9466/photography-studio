@@ -39,6 +39,7 @@ export interface BillingRepository {
     email: string
   }): Promise<BillingCustomer>
   getCurrentSubscription(userId: string): Promise<Subscription | null>
+  getSubscriptions(userId: string): Promise<Subscription[]>
   getSubscriptionByExternalId(
     provider: PaymentProviderName,
     externalSubscriptionId: string
@@ -273,6 +274,16 @@ export class SupabaseBillingRepository implements BillingRepository {
       })
       throw err
     }
+  }
+
+  async getSubscriptions(userId: string) {
+    const { data, error } = await this.db
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    throwIfError(error)
+    return data ?? []
   }
 
   async getSubscriptionByExternalId(

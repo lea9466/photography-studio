@@ -7,7 +7,14 @@ import { SubscriptionPlanBadge } from '@/components/dashboard/SubscriptionPlanBa
 import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
 import { createPaymentService } from '@/lib/payments/server'
 
-export default async function SubscriptionPage() {
+export default async function SubscriptionPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const sp = await searchParams
+  const checkoutSuccess = sp?.checkout === 'success'
+
   let context
   try {
     context = await requireDashboardContext({ allowWhenSiteUnavailable: true })
@@ -51,7 +58,14 @@ export default async function SubscriptionPage() {
     availablePlans: [],
   }
   try {
-    billingStatus = await createPaymentService().getCurrentSubscription(userId)
+    const service = createPaymentService()
+    if (checkoutSuccess) {
+      // S2S verification: activate the local subscription from PayMe's record
+      // instead of trusting an unverified webhook callback.
+      billingStatus = await service.verifySubscription(userId)
+    } else {
+      billingStatus = await service.getCurrentSubscription(userId)
+    }
   } catch (error) {
     console.info('[payments] billing status unavailable', {
       reason: error instanceof Error ? error.name : 'unknown',
@@ -88,6 +102,7 @@ export default async function SubscriptionPage() {
         <SubscriptionBillingPanel
           initialStatus={billingStatus}
           isImpersonating={isImpersonating}
+          checkoutSuccess={checkoutSuccess}
         />
         {row?.trial_end_date ? (
           <SubscriptionPanel

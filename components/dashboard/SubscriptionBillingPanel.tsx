@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, CreditCard, Loader2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
 
 type Props = {
   initialStatus: CurrentSubscriptionView
   isImpersonating: boolean
+  checkoutSuccess?: boolean
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -42,6 +43,7 @@ function formatDate(value: string | null) {
 export function SubscriptionBillingPanel({
   initialStatus,
   isImpersonating,
+  checkoutSuccess,
 }: Props) {
   const [status, setStatus] = useState(initialStatus)
   const [selectedPlanCode, setSelectedPlanCode] = useState<string>(
@@ -134,6 +136,12 @@ export function SubscriptionBillingPanel({
 
   return (
     <section className="space-y-6 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+      {checkoutSuccess && subscription?.status === 'active' ? (
+        <div className="flex gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          <p>התשלום הצליח! המינוי שלך פעיל.</p>
+        </div>
+      ) : null}
       <div className="flex items-start gap-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52]">
           <CreditCard className="h-5 w-5" />
@@ -295,6 +303,12 @@ export function SubscriptionBillingPanel({
       {isActive ? (
         <p className="text-sm leading-relaxed text-[--muted]">
           המנוי שלך פעיל. אין צורך להצטרף מחדש.
+        </p>
+      ) : null}
+
+      {subscription?.cancelAtPeriodEnd ? (
+        <p className="text-sm leading-relaxed text-[--muted]">
+          המינוי יבוטל בתום תקופת החיוב הנוכחית — לא יחויבו חיובים נוספים.
         </p>
       ) : null}
 

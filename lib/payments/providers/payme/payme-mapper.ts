@@ -9,6 +9,7 @@ import type {
   PayMeCallbackIdentifiers,
   PayMeGenerateSubscriptionResponse,
   PayMeNotifyType,
+  PayMeSubStatus,
   PayMeSubscriptionRecord,
 } from './payme-types'
 import { PAYME_NOTIFY_TYPES } from './payme-types'
@@ -76,6 +77,51 @@ export function mapPayMeSubscriptionRecord(
       sub_currency: record.sub_currency ?? null,
       sub_iteration_type: record.sub_iteration_type ?? null,
       // Intentionally omit sub_buyer_details — never persist card/social PII.
+    },
+  }
+}
+
+/**
+ * Maps a verified PayMe subscription record to a local status after a successful
+ * S2S lookup (used when the user returns from PayMe with a completed payment).
+ * The architecture keeps the generic webhook path fail-closed; this mapping is
+ * only applied to explicitly verified lookups.
+ */
+export function payMeVerifiedSubStatusToLocal(
+  subStatus?: PayMeSubStatus | null
+): PaymentSubscription['status'] {
+  if (subStatus === 5) return 'paused'
+  if (subStatus === 76) return 'payment_failed'
+  if (subStatus === 2) return 'active'
+  // Found and paid after a successful return (incl. completed one-time charge).
+  return 'active'
+}
+
+export function mapPayMeSubscriptionRecordVerified(
+  record: PayMeSubscriptionRecord
+): PaymentSubscription {
+  const externalId = asString(record.sub_payme_id)
+  if (!externalId) throw new PaymentError('verification_failed')
+
+  return {
+    id: externalId,
+    provider: 'payme',
+    customerId: null,
+    planId: null,
+    status: payMeVerifiedSubStatusToLocal(record.sub_status),
+    currentPeriodStart: asString(record.sub_start_date),
+    currentPeriodEnd: asString(record.sub_next_date),
+    cancelAtPeriodEnd: false,
+    cancelledAt: null,
+    nextPaymentAt: asString(record.sub_next_date),
+    metadata: {
+      subscription_id: record.subscription_id ?? null,
+      payme_sub_code: record.payme_sub_code ?? record.sub_payme_code ?? null,
+      sub_status_raw: record.sub_status ?? null,
+      sub_paid: record.sub_paid ?? null,
+      sub_price: record.sub_price ?? null,
+      sub_currency: record.sub_currency ?? null,
+      sub_iteration_type: record.sub_iteration_type ?? null,
     },
   }
 }

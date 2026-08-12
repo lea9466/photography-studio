@@ -345,6 +345,9 @@ class FakeProvider {
   async updatePaymentMethod() {
     throw new Error('not used')
   }
+  async verifySubscriptionByCorrelation() {
+    return null
+  }
   async parseWebhook() {
     throw new Error('not used')
   }
