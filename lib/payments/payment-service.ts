@@ -189,6 +189,9 @@ export class PaymentService {
     ) {
       throw new PaymentError('subscription_not_found')
     }
+    if (subscription.status === 'pending') {
+      throw new PaymentError('subscription_not_active')
+    }
 
     const provider = this.resolveProvider(subscription.provider as PaymentProviderName)
     const cancelled = await provider.cancelSubscription({
@@ -213,6 +216,9 @@ export class PaymentService {
       !subscription.provider_subscription_id
     ) {
       throw new PaymentError('subscription_not_found')
+    }
+    if (subscription.status === 'pending') {
+      throw new PaymentError('subscription_not_active')
     }
 
     const provider = this.resolveProvider(subscription.provider as PaymentProviderName)

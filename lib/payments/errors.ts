@@ -9,6 +9,7 @@ export type PaymentErrorCode =
   | 'invalid_webhook'
   | 'verification_failed'
   | 'billing_not_initialized'
+  | 'subscription_not_active'
   | 'internal_error'
 
 const SAFE_MESSAGES: Record<PaymentErrorCode, string> = {
@@ -22,6 +23,7 @@ const SAFE_MESSAGES: Record<PaymentErrorCode, string> = {
   invalid_webhook: 'Webhook verification failed.',
   verification_failed: 'אימות התשלום נכשל.',
   billing_not_initialized: 'תשתית החיוב טרם הופעלה.',
+  subscription_not_active: 'המנוי עדיין לא פעיל. השלימי תשלום תחילה כדי לעדכן או לבטל.',
   internal_error: 'לא הצלחנו להשלים את הפעולה.',
 }
 
@@ -49,6 +51,7 @@ function defaultStatus(code: PaymentErrorCode) {
     return 400
   }
   if (code === 'provider_not_configured' || code === 'billing_not_initialized') return 503
+  if (code === 'subscription_not_active') return 409
   if (code === 'provider_unavailable') return 502
   return 500
 }

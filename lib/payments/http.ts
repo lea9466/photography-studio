@@ -11,6 +11,13 @@ export function paymentErrorResponse(error: unknown) {
   const safe = isMissingBillingSchemaError(error)
     ? new PaymentError('billing_not_initialized')
     : toPaymentError(error)
+  if (safe.code === 'provider_unavailable' || safe.code === 'internal_error') {
+    console.error('[payments] request failed', {
+      code: safe.code,
+      message: safe.message,
+      cause: error instanceof Error ? error.message : String(error),
+    })
+  }
   return NextResponse.json(
     { error: safe.message, code: safe.code },
     { status: safe.status }

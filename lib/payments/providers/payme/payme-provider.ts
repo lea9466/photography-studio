@@ -220,6 +220,15 @@ export class PayMeProvider implements PaymentProvider {
       returnUrl: input.returnUrl,
     })
 
+    if (!response.sub_url) {
+      console.error('[payments] payme update-payment returned no sub_url', {
+        subPaymeId,
+        statusCode: response.status_code,
+        paymeStatus: response.payme_status,
+        statusErrorCode: response.status_error_code,
+      })
+    }
+
     return mapPayMeCheckoutFromGenerate(response)
   }
 
