@@ -10,7 +10,7 @@ export const PAYME_CORRELATION_FIELD_NAME = 'subscription_id'
 export const PAYME_CORRELATION_FIELD_UNKNOWN = false
 
 export type BuildGenerateSubscriptionInput = {
-  paymeClientKey: string
+  paymeClientKey?: string | null
   sellerPaymeId: string
   plan: PaymentPlan
   description?: string
@@ -25,6 +25,9 @@ export type BuildGenerateSubscriptionInput = {
     email?: string
     name?: string
   }
+  subPrice?: number
+  subIterations?: number
+  test?: boolean
 }
 
 /**
@@ -42,20 +45,19 @@ export function buildGenerateSubscriptionRequest(
   const year = start.getUTCFullYear()
 
   return {
-    payme_client_key: input.paymeClientKey,
+    ...(input.paymeClientKey ? { payme_client_key: input.paymeClientKey } : {}),
     seller_payme_id: input.sellerPaymeId,
     subscription_id: input.localSubscriptionId,
-    sub_price: input.plan.amountAgorot,
+    sub_price: input.subPrice ?? input.plan.amountAgorot,
     sub_currency: input.plan.currency.toUpperCase(),
     sub_description: input.description ?? input.plan.name,
     sub_iteration_type: payMeIterationTypeForPlan(input.plan),
-    sub_iterations: -1,
+    sub_iterations: input.subIterations ?? -1,
     sub_start_date: `${day}/${month}/${year}`,
     sub_callback_url: input.callbackUrl,
     sub_return_url: input.returnUrl,
     language: 'he',
-    // Sandbox integration only — never call live.payme.io from this client.
-    test: 1,
+    ...(input.test ? { test: 1 } : {}),
   }
 }
 

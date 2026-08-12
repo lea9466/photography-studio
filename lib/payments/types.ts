@@ -128,6 +128,11 @@ export type CreateCheckoutSessionInput = {
   cancelUrl: string
   /** Local correlation id echoed by PayMe as subscription_id once field name is confirmed. */
   localSubscriptionId?: string
+  smokeTest?: {
+    priceAgorot: number
+    iterations: number
+    iterationType: number
+  }
 }
 
 export type CreateSubscriptionInput = {

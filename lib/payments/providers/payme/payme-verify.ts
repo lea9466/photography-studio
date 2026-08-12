@@ -17,6 +17,7 @@ export type PlanVerificationContext = {
   expectedSubscriptionId?: string | null
   /** PayMe subscription id already bound locally, if any. */
   expectedSubPaymeId?: string | null
+  expectedAmountAgorot?: number
 }
 
 export type TransactionVerificationContext = {
@@ -24,6 +25,7 @@ export type TransactionVerificationContext = {
   sellerPaymeId: string
   /** When true, the transaction id was already processed locally. */
   alreadyProcessed?: boolean
+  expectedAmountAgorot?: number
 }
 
 function asNumber(value: unknown): number | null {
@@ -73,8 +75,10 @@ export function verifySubscriptionAgainstPlan(
     }
   }
 
+  const expectedPrice =
+    context.expectedAmountAgorot ?? context.plan.amountAgorot
   const price = asNumber(record.sub_price)
-  if (price === null || price !== context.plan.amountAgorot) {
+  if (price === null || price !== expectedPrice) {
     throw new PaymentError('verification_failed')
   }
 
@@ -144,9 +148,11 @@ export function verifySuccessfulTransaction(
     throw new PaymentError('verification_failed')
   }
 
+  const expectedAmount =
+    context.expectedAmountAgorot ?? context.plan.amountAgorot
   const amount =
     asNumber(record.transaction_price) ?? asNumber(record.sale_price)
-  if (amount === null || amount !== context.plan.amountAgorot) {
+  if (amount === null || amount !== expectedAmount) {
     throw new PaymentError('verification_failed')
   }
 

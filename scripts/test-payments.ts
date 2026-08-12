@@ -8,7 +8,11 @@ import {
   isSubscriptionEnforcementEnabled,
 } from '../lib/payments/access'
 import { PaymentError } from '../lib/payments/errors'
-import { isPaymentsCheckoutEnabled } from '../lib/payments/flags'
+import {
+  isPaymentsCheckoutEnabled,
+  isPaymentsCheckoutAllowed,
+  isPaymentsSmokeTestUser,
+} from '../lib/payments/flags'
 import { PaymentService } from '../lib/payments/payment-service'
 import { createPaymentProvider } from '../lib/payments/provider-factory'
 import { payMeIterationTypeForPlan } from '../lib/payments/providers/payme/payme-iteration'
@@ -386,7 +390,7 @@ test('generate-subscription uses the official subscription_id correlation in san
   process.env.PAYMENT_PROVIDER = 'payme'
   process.env.PAYME_ENV = 'sandbox'
   process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
-  process.env.PAYME_API_KEY = 'test-key'
+  process.env.PAYME_CLIENT_KEY = 'test-key'
   process.env.PAYME_SELLER_ID = 'MPL-TEST'
   process.env.PAYME_WEBHOOK_SECRET = 'whsec'
   process.env.NEXT_PUBLIC_APP_URL = 'https://app.example'
@@ -559,6 +563,61 @@ test('checkout flag defaults off and gates before provider work', async () => {
   assert.match(source, /billing_not_initialized/)
 })
 
+test('smoke-test allowlist enables checkout only for monthly plan', async () => {
+  const previousEnv = {
+    PAYMENTS_CHECKOUT_ENABLED: process.env.PAYMENTS_CHECKOUT_ENABLED,
+    PAYMENTS_SMOKE_TEST_USER_ID: process.env.PAYMENTS_SMOKE_TEST_USER_ID,
+  }
+
+  try {
+    process.env.PAYMENTS_CHECKOUT_ENABLED = 'false'
+    process.env.PAYMENTS_SMOKE_TEST_USER_ID = 'test-user-123'
+
+    assert.equal(isPaymentsCheckoutAllowed('test-user-123'), true)
+    assert.equal(isPaymentsCheckoutAllowed('other-user'), false)
+
+    const source = await readFile(
+      path.join(root, 'app/api/payments/checkout/route.ts'),
+      'utf8'
+    )
+    assert.match(source, /isPaymentsCheckoutAllowed\(context.userId\)/)
+    assert.match(source, /planCode !== 'studio_monthly'/)
+  } finally {
+    for (const [key, value] of Object.entries(previousEnv)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test('smoke-test override payload uses 500 agorot and 1 iteration', () => {
+  const body = buildGenerateSubscriptionRequest({
+    paymeClientKey: 'test-key',
+    sellerPaymeId: 'MPL-TEST',
+    plan: {
+      id: plan.id,
+      code: plan.code,
+      name: plan.name,
+      description: null,
+      amountAgorot: 4000,
+      currency: 'ILS',
+      billingInterval: 'month',
+      providerPlanId: null,
+    },
+    callbackUrl: 'https://app.example/api/payments/webhooks/payme',
+    returnUrl: 'https://app.example/dashboard/subscription',
+    localSubscriptionId: 'sub_smoke_test',
+    subPrice: 500,
+    subIterations: 1,
+    test: false,
+  })
+
+  assert.equal(body.sub_price, 500)
+  assert.equal(body.sub_iterations, 1)
+  assert.equal(body.sub_iteration_type, 3)
+  assert.equal(body.subscription_id, 'sub_smoke_test')
+})
+
 test('subscription view exposes both plans and enforcement stays off', async () => {
   const previousCheckout = process.env.PAYMENTS_CHECKOUT_ENABLED
   const previousEnforce = process.env.ENFORCE_SUBSCRIPTION_ACCESS
@@ -603,17 +662,143 @@ test('subscription view exposes both plans and enforcement stays off', async () 
   }
 })
 
-test('sandbox client rejects live endpoint and non-sandbox PAYME_ENV', async () => {
+test('seller-only sandbox config can build generate-subscription without client key', async () => {
   const previous = {
     PAYME_ENV: process.env.PAYME_ENV,
     PAYME_API_BASE_URL: process.env.PAYME_API_BASE_URL,
+    PAYME_CLIENT_KEY: process.env.PAYME_CLIENT_KEY,
     PAYME_API_KEY: process.env.PAYME_API_KEY,
     PAYME_SELLER_ID: process.env.PAYME_SELLER_ID,
     PAYME_WEBHOOK_SECRET: process.env.PAYME_WEBHOOK_SECRET,
   }
   try {
-    process.env.PAYME_API_KEY = 'key'
-    process.env.PAYME_SELLER_ID = 'seller'
+    delete process.env.PAYME_CLIENT_KEY
+    delete process.env.PAYME_API_KEY
+    process.env.PAYME_SELLER_ID = 'sandbox-seller'
+    process.env.PAYME_WEBHOOK_SECRET = 'secret'
+    process.env.PAYME_ENV = 'sandbox'
+    process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
+
+    const { readPayMeEnvironment } = await import(
+      '../lib/payments/providers/payme/payme-client'
+    )
+    const env = readPayMeEnvironment()
+    assert.equal(env.sellerId, 'sandbox-seller')
+    assert.equal(env.clientKey, null)
+
+    const body = buildGenerateSubscriptionRequest({
+      paymeClientKey: env.clientKey ?? undefined,
+      sellerPaymeId: env.sellerId,
+      plan: {
+        id: plan.id,
+        code: plan.code,
+        name: plan.name,
+        description: null,
+        amountAgorot: 4000,
+        currency: 'ILS',
+        billingInterval: 'month',
+        providerPlanId: null,
+      },
+      callbackUrl: 'https://app.example/api/payments/webhooks/payme',
+      returnUrl: 'https://app.example/dashboard/subscription',
+      localSubscriptionId: 'sub_seller_only',
+    })
+
+    assert.equal(body.seller_payme_id, 'sandbox-seller')
+    assert.equal(body.payme_client_key, undefined)
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test('missing seller id fails closed', async () => {
+  const previous = {
+    PAYME_ENV: process.env.PAYME_ENV,
+    PAYME_API_BASE_URL: process.env.PAYME_API_BASE_URL,
+    PAYME_CLIENT_KEY: process.env.PAYME_CLIENT_KEY,
+    PAYME_API_KEY: process.env.PAYME_API_KEY,
+    PAYME_SELLER_ID: process.env.PAYME_SELLER_ID,
+    PAYME_WEBHOOK_SECRET: process.env.PAYME_WEBHOOK_SECRET,
+  }
+  try {
+    delete process.env.PAYME_SELLER_ID
+    delete process.env.PAYME_CLIENT_KEY
+    delete process.env.PAYME_API_KEY
+    process.env.PAYME_WEBHOOK_SECRET = 'secret'
+    process.env.PAYME_ENV = 'sandbox'
+    process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
+
+    const { readPayMeEnvironment } = await import(
+      '../lib/payments/providers/payme/payme-client'
+    )
+    assert.throws(
+      () => readPayMeEnvironment(),
+      (error) =>
+        error instanceof PaymentError && error.code === 'provider_not_configured'
+    )
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test('client key is optional and only sent when configured', () => {
+  const bodyWithKey = buildGenerateSubscriptionRequest({
+    paymeClientKey: 'partner-key',
+    sellerPaymeId: 'seller-123',
+    plan: {
+      id: plan.id,
+      code: plan.code,
+      name: plan.name,
+      description: null,
+      amountAgorot: 4000,
+      currency: 'ILS',
+      billingInterval: 'month',
+      providerPlanId: null,
+    },
+    callbackUrl: 'https://app.example/api/payments/webhooks/payme',
+    returnUrl: 'https://app.example/dashboard/subscription',
+    localSubscriptionId: 'sub_with_key',
+  })
+  assert.equal(bodyWithKey.payme_client_key, 'partner-key')
+
+  const bodyWithoutKey = buildGenerateSubscriptionRequest({
+    paymeClientKey: undefined,
+    sellerPaymeId: 'seller-123',
+    plan: {
+      id: plan.id,
+      code: plan.code,
+      name: plan.name,
+      description: null,
+      amountAgorot: 4000,
+      currency: 'ILS',
+      billingInterval: 'month',
+      providerPlanId: null,
+    },
+    callbackUrl: 'https://app.example/api/payments/webhooks/payme',
+    returnUrl: 'https://app.example/dashboard/subscription',
+    localSubscriptionId: 'sub_without_key',
+  })
+  assert.equal(bodyWithoutKey.payme_client_key, undefined)
+})
+
+test('sandbox client rejects live endpoint and non-sandbox PAYME_ENV', async () => {
+  const previous = {
+    PAYME_ENV: process.env.PAYME_ENV,
+    PAYME_API_BASE_URL: process.env.PAYME_API_BASE_URL,
+    PAYME_CLIENT_KEY: process.env.PAYME_CLIENT_KEY,
+    PAYME_API_KEY: process.env.PAYME_API_KEY,
+    PAYME_SELLER_ID: process.env.PAYME_SELLER_ID,
+    PAYME_WEBHOOK_SECRET: process.env.PAYME_WEBHOOK_SECRET,
+  }
+  try {
+    process.env.PAYME_CLIENT_KEY = 'key'
+    process.env.PAYME_SELLER_ID = 'sandbox-seller'
     process.env.PAYME_WEBHOOK_SECRET = 'secret'
     process.env.PAYME_ENV = 'sandbox'
     process.env.PAYME_API_BASE_URL = 'https://live.payme.io/api'
@@ -628,6 +813,48 @@ test('sandbox client rejects live endpoint and non-sandbox PAYME_ENV', async () 
 
     process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
     process.env.PAYME_ENV = 'production'
+    assert.throws(
+      () => readPayMeEnvironment(),
+      (error) =>
+        error instanceof PaymentError && error.code === 'provider_not_configured'
+    )
+
+    process.env.PAYME_ENV = 'sandbox'
+    process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
+    const env = readPayMeEnvironment()
+    assert.equal(env.sellerId, 'sandbox-seller')
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
+test('production PayMe environment is accepted only with live base url', async () => {
+  const previous = {
+    PAYME_ENV: process.env.PAYME_ENV,
+    PAYME_API_BASE_URL: process.env.PAYME_API_BASE_URL,
+    PAYME_CLIENT_KEY: process.env.PAYME_CLIENT_KEY,
+    PAYME_API_KEY: process.env.PAYME_API_KEY,
+    PAYME_SELLER_ID: process.env.PAYME_SELLER_ID,
+    PAYME_WEBHOOK_SECRET: process.env.PAYME_WEBHOOK_SECRET,
+  }
+  try {
+    process.env.PAYME_CLIENT_KEY = 'key'
+    process.env.PAYME_SELLER_ID = 'live-seller'
+    process.env.PAYME_WEBHOOK_SECRET = 'secret'
+    process.env.PAYME_ENV = 'production'
+    process.env.PAYME_API_BASE_URL = 'https://live.payme.io/api'
+    const { readPayMeEnvironment } = await import(
+      '../lib/payments/providers/payme/payme-client'
+    )
+    const env = readPayMeEnvironment()
+    assert.equal(env.env, 'production')
+    assert.equal(env.apiBaseUrl, 'https://live.payme.io/api')
+    assert.equal(env.sellerId, 'live-seller')
+
+    process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
     assert.throws(
       () => readPayMeEnvironment(),
       (error) =>
@@ -697,7 +924,7 @@ test('iteration types and generate payload are plan-driven', () => {
   assert.equal(body.sub_price, 40000)
   assert.equal(body.sub_iteration_type, 4)
   assert.equal(body.sub_currency, 'ILS')
-  assert.equal(body.test, 1)
+  assert.equal(body.test, undefined)
   assert.equal(PAYME_CORRELATION_FIELD_UNKNOWN, false)
   assert.equal(monthlyBody.payme_client_key, 'test-key')
   assert.equal(monthlyBody.subscription_id, 'sub_monthly')
@@ -848,6 +1075,81 @@ test('S2S subscription verification is plan-driven', () => {
   )
 })
 
+test('smoke-test expectedAmountAgorot is server-side metadata only', () => {
+  const monthly: PaymentPlan = {
+    id: plan.id,
+    code: plan.code,
+    name: plan.name,
+    description: null,
+    amountAgorot: 4000,
+    currency: 'ILS',
+    billingInterval: 'month',
+    providerPlanId: null,
+  }
+
+  const smokeTestSubscription = {
+    seller_payme_id: 'MPL-TEST',
+    subscription_id: 'sub_smoke',
+    sub_payme_id: 'SUB-SMOKE',
+    sub_price: 500,
+    sub_currency: 'ILS',
+    sub_iteration_type: 3,
+    sub_paid: true,
+  }
+
+  verifySubscriptionAgainstPlan(smokeTestSubscription, {
+    plan: monthly,
+    sellerPaymeId: 'MPL-TEST',
+    expectedSubscriptionId: 'sub_smoke',
+    expectedSubPaymeId: 'SUB-SMOKE',
+    expectedAmountAgorot: 500,
+  })
+
+  assert.equal(monthly.amountAgorot, 4000)
+
+  assert.throws(
+    () =>
+      verifySubscriptionAgainstPlan(smokeTestSubscription, {
+        plan: monthly,
+        sellerPaymeId: 'MPL-TEST',
+        expectedSubscriptionId: 'sub_smoke',
+        expectedSubPaymeId: 'SUB-SMOKE',
+      })
+    ,
+    (error) => error instanceof PaymentError && error.code === 'verification_failed'
+  )
+
+  assert.throws(
+    () =>
+      verifySubscriptionAgainstPlan(
+        { ...smokeTestSubscription, sub_price: 4000 },
+        {
+          plan: monthly,
+          sellerPaymeId: 'MPL-TEST',
+          expectedSubscriptionId: 'sub_smoke',
+          expectedSubPaymeId: 'SUB-SMOKE',
+          expectedAmountAgorot: 500,
+        }
+      ),
+    (error) => error instanceof PaymentError && error.code === 'verification_failed'
+  )
+
+  assert.throws(
+    () =>
+      verifySubscriptionAgainstPlan(
+        { ...smokeTestSubscription, sub_price: 99 },
+        {
+          plan: monthly,
+          sellerPaymeId: 'MPL-TEST',
+          expectedSubscriptionId: 'sub_smoke',
+          expectedSubPaymeId: 'SUB-SMOKE',
+          expectedAmountAgorot: 500,
+        }
+      ),
+    (error) => error instanceof PaymentError && error.code === 'verification_failed'
+  )
+})
+
 test('S2S transaction happy-path and rejection cases', () => {
   const monthly: PaymentPlan = {
     id: plan.id,
@@ -917,6 +1219,53 @@ test('S2S transaction happy-path and rejection cases', () => {
           sale_currency: 'ILS',
         },
         { plan: monthly, sellerPaymeId: 'MPL-TEST', alreadyProcessed: true }
+      ),
+    (error) => error instanceof PaymentError && error.code === 'verification_failed'
+  )
+
+  verifySuccessfulTransaction(
+    {
+      seller_payme_id: 'MPL-TEST',
+      sale_status: 'completed',
+      transaction_error_code: 20000,
+      status_code: 0,
+      transaction_price: 500,
+      sale_currency: 'ILS',
+      payme_sale_id: 'sale-smoke-1',
+    },
+    { plan: monthly, sellerPaymeId: 'MPL-TEST', expectedAmountAgorot: 500 }
+  )
+
+  assert.throws(
+    () =>
+      verifySuccessfulTransaction(
+        {
+          seller_payme_id: 'MPL-TEST',
+          sale_status: 'completed',
+          transaction_error_code: 20000,
+          status_code: 0,
+          transaction_price: 4000,
+          sale_currency: 'ILS',
+          payme_sale_id: 'sale-smoke-2',
+        },
+        { plan: monthly, sellerPaymeId: 'MPL-TEST', expectedAmountAgorot: 500 }
+      ),
+    (error) => error instanceof PaymentError && error.code === 'verification_failed'
+  )
+
+  assert.throws(
+    () =>
+      verifySuccessfulTransaction(
+        {
+          seller_payme_id: 'MPL-TEST',
+          sale_status: 'completed',
+          transaction_error_code: 20000,
+          status_code: 0,
+          transaction_price: 99,
+          sale_currency: 'ILS',
+          payme_sale_id: 'sale-smoke-3',
+        },
+        { plan: monthly, sellerPaymeId: 'MPL-TEST', expectedAmountAgorot: 500 }
       ),
     (error) => error instanceof PaymentError && error.code === 'verification_failed'
   )

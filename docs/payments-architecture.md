@@ -151,7 +151,7 @@ source of verified financial events, not a dependency on every page load.
 ```text
 PAYMENT_PROVIDER=payme
 PAYME_API_BASE_URL=
-PAYME_API_KEY=
+PAYME_CLIENT_KEY=
 PAYME_SELLER_ID=
 PAYME_WEBHOOK_SECRET=
 NEXT_PUBLIC_APP_URL=https://your-app.example
@@ -163,8 +163,17 @@ ENFORCE_SUBSCRIPTION_ACCESS=false
 Only the exact string `true` enables each feature flag. Unset / `false` / any
 other value keeps the feature off.
 
-The PayMe variable names are proposed placeholders until confirmed in API &
-Integration. No payment secret has a `NEXT_PUBLIC_` prefix.
+`PAYMENTS_SMOKE_TEST_USER_ID` is a production-only checkout allowlist for a
+single internal test user. When `PAYMENTS_CHECKOUT_ENABLED=false`, only the
+exact user ID configured in `PAYMENTS_SMOKE_TEST_USER_ID` may reach PayMe
+checkout, and only for the `studio_monthly` plan.
+
+When `PAYMENTS_CHECKOUT_ENABLED=false`, all other users keep the disabled
+"זמין בקרוב" checkout experience and cannot send a payment request.
+
+This exception is intended for controlled production smoke testing only, and
+it requires `PAYME_ENV=production` with `PAYME_API_BASE_URL=https://live.payme.io/api`.
+The real `studio_monthly` catalog price remains 4,000 agorot in the database.
 
 ## PayMe TODO before enabling external calls
 

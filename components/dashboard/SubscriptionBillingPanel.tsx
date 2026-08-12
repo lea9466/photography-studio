@@ -116,15 +116,19 @@ export function SubscriptionBillingPanel({
       : status.availablePlan
         ? [status.availablePlan]
         : []
+  const smokeTestPlans = status.isSmokeTestUser
+    ? availablePlans.filter((plan) => plan.code === 'studio_monthly')
+    : availablePlans
   const selectedPlan =
-    availablePlans.find((plan) => plan.code === selectedPlanCode) ??
-    availablePlans[0] ??
+    smokeTestPlans.find((plan) => plan.code === selectedPlanCode) ??
+    smokeTestPlans[0] ??
     null
   const activePlan = subscription?.plan ?? null
   const isActive = subscription?.status === 'active'
-  const checkoutEnabled = status.checkoutEnabled === true
+  const checkoutEnabled =
+    status.checkoutEnabled === true || status.isSmokeTestUser === true
   const showComingSoon =
-    !checkoutEnabled && !isActive && (availablePlans.length > 0 || !subscription)
+    !checkoutEnabled && !isActive && (smokeTestPlans.length > 0 || !subscription)
   const failed =
     subscription?.status === 'payment_failed' || subscription?.status === 'past_due'
 
@@ -176,7 +180,7 @@ export function SubscriptionBillingPanel({
         <div className="space-y-3">
           <p className="text-sm text-[--muted]">בחרי מסלול מינוי:</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {availablePlans.map((plan) => {
+            {smokeTestPlans.map((plan) => {
               const selected = selectedPlan?.code === plan.code
               const isYearly = plan.code === 'studio_yearly'
               const planDisabled = Boolean(subscription) || !checkoutEnabled
@@ -249,7 +253,7 @@ export function SubscriptionBillingPanel({
                         selectedPlanCode === plan.code ? (
                           <Loader2 className="ml-2 h-4 w-4 animate-spin" />
                         ) : null}
-                        המשך למנוי
+                        {status.isSmokeTestUser ? 'בדיקת תשלום' : 'המשך למנוי'}
                       </Button>
                     )}
                   </div>
@@ -280,7 +284,7 @@ export function SubscriptionBillingPanel({
         </p>
       ) : null}
 
-      {checkoutEnabled && !subscription && availablePlans.length > 0 ? (
+      {checkoutEnabled && !subscription && smokeTestPlans.length > 0 ? (
         <p className="text-sm leading-relaxed text-[--muted]">
           לא יתבצע חיוב אוטומטי ללא בחירתך והזנת אמצעי תשלום.
         </p>

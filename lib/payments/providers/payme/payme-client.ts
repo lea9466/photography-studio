@@ -9,6 +9,7 @@ import type {
 import {
   PAYME_LIVE_HOST,
   PAYME_SANDBOX_API_BASE_URL,
+  PAYME_PRODUCTION_API_BASE_URL,
 } from './payme-types'
 
 const DEFAULT_TIMEOUT_MS = 10_000
@@ -21,11 +22,16 @@ function required(name: keyof NodeJS.ProcessEnv) {
   return value
 }
 
+function optional(name: keyof NodeJS.ProcessEnv) {
+  const value = process.env[name]?.trim()
+  return value || null
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function assertSandboxOnly(apiBaseUrl: string): URL {
+function assertPayMeEnvironment(apiBaseUrl: string): URL {
   let parsed: URL
   try {
     parsed = new URL(apiBaseUrl)
@@ -37,39 +43,59 @@ function assertSandboxOnly(apiBaseUrl: string): URL {
     throw new PaymentError('provider_not_configured')
   }
 
-  const paymeEnv = process.env.PAYME_ENV?.trim().toLowerCase() || 'sandbox'
-  if (paymeEnv !== 'sandbox') {
+  const paymeEnv = process.env.PAYME_ENV?.trim().toLowerCase()
+  if (
+    paymeEnv !== undefined &&
+    paymeEnv !== 'sandbox' &&
+    paymeEnv !== 'production'
+  ) {
     throw new PaymentError('provider_not_configured')
   }
 
   const host = parsed.hostname.toLowerCase()
+  const normalized = `${parsed.origin}${parsed.pathname}`.replace(/\/$/, '')
+
+  if (paymeEnv === 'production') {
+    if (host !== PAYME_LIVE_HOST) {
+      throw new PaymentError('provider_not_configured')
+    }
+    if (normalized !== PAYME_PRODUCTION_API_BASE_URL) {
+      throw new PaymentError('provider_not_configured')
+    }
+    return new URL(PAYME_PRODUCTION_API_BASE_URL)
+  }
+
+  // Default sandbox behavior when PAYME_ENV is unset.
   if (host === PAYME_LIVE_HOST || host.endsWith(`.${PAYME_LIVE_HOST}`)) {
     throw new PaymentError('provider_not_configured')
   }
   if (host !== 'sandbox.payme.io') {
     throw new PaymentError('provider_not_configured')
   }
-
-  const normalized = `${parsed.origin}${parsed.pathname}`.replace(/\/$/, '')
-  const expected = PAYME_SANDBOX_API_BASE_URL.replace(/\/$/, '')
-  if (normalized !== expected) {
+  if (normalized !== PAYME_SANDBOX_API_BASE_URL) {
     throw new PaymentError('provider_not_configured')
   }
 
-  return new URL(expected)
+  return new URL(PAYME_SANDBOX_API_BASE_URL)
 }
 
 export function readPayMeEnvironment(): PayMeEnvironment {
   const configuredBase =
     process.env.PAYME_API_BASE_URL?.trim() || PAYME_SANDBOX_API_BASE_URL
-  const parsed = assertSandboxOnly(configuredBase)
+  const parsed = assertPayMeEnvironment(configuredBase)
+
+  const paymeEnv = process.env.PAYME_ENV?.trim().toLowerCase()
+  const env =
+    paymeEnv === 'production'
+      ? 'production'
+      : 'sandbox'
 
   return {
     apiBaseUrl: parsed.toString().replace(/\/$/, ''),
-    clientKey: required('PAYME_API_KEY'),
+    clientKey: optional('PAYME_CLIENT_KEY'),
     sellerId: required('PAYME_SELLER_ID'),
     webhookSecret: required('PAYME_WEBHOOK_SECRET'),
-    env: 'sandbox',
+    env,
   }
 }
 
@@ -95,7 +121,7 @@ export class PayMeClient {
     > = {}
   ): Promise<PayMeGetSubscriptionsResponse> {
     return this.postJson<PayMeGetSubscriptionsResponse>('/get-subscriptions', {
-      payme_client_key: this.environment.clientKey,
+      ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
       seller_payme_id: this.environment.sellerId,
       ...filters,
     })
@@ -108,7 +134,7 @@ export class PayMeClient {
     > = {}
   ): Promise<PayMeGetTransactionsResponse> {
     return this.postJson<PayMeGetTransactionsResponse>('/get-transactions', {
-      payme_client_key: this.environment.clientKey,
+      ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
       seller_payme_id: this.environment.sellerId,
       ...filters,
     })

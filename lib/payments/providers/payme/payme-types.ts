@@ -1,16 +1,17 @@
-/** PayMe sandbox environment. Live endpoints are rejected by the client. */
+/** PayMe environment configuration. */
 export type PayMeEnvironment = {
   apiBaseUrl: string
-  /** Sent as `payme_client_key` on query APIs. */
-  clientKey: string
+  /** Optional partner/platform key; omitted for regular Seller sandbox flows. */
+  clientKey: string | null
   /** Sent as `seller_payme_id`. */
   sellerId: string
   /** Reserved for future signature verification — algorithm not yet provided. */
   webhookSecret: string
-  env: 'sandbox'
+  env: 'sandbox' | 'production'
 }
 
 export const PAYME_SANDBOX_API_BASE_URL = 'https://sandbox.payme.io/api'
+export const PAYME_PRODUCTION_API_BASE_URL = 'https://live.payme.io/api'
 export const PAYME_LIVE_HOST = 'live.payme.io'
 
 /** Official notify_type values for subscription callbacks. */
@@ -152,20 +153,20 @@ export type PayMeGetTransactionsResponse = {
  * Includes the official correlation field `subscription_id` and the sandbox client key.
  */
 export type PayMeGenerateSubscriptionRequestKnown = {
-  payme_client_key: string
+  payme_client_key?: string
   seller_payme_id: string
   subscription_id: string
   sub_price: number
   sub_currency: string
   sub_description: string
   sub_iteration_type: PayMeIterationType
-  /** Unlimited recurring charges. */
-  sub_iterations: -1
+  /** Recurrence count. Use -1 for indefinite recurring charges. */
+  sub_iterations: number
   sub_start_date: string
   sub_callback_url: string
   sub_return_url: string
   language: 'he'
-  test: 1
+  test?: 1
 }
 
 export type PayMeGenerateSubscriptionResponse = {

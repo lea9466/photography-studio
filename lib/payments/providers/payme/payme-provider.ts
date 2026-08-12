@@ -1,6 +1,10 @@
 import { randomBytes } from 'node:crypto'
 import { PaymentError } from '../../errors'
 import type { PaymentProvider } from '../../provider'
+import {
+  isPaymentsCheckoutEnabled,
+  isPaymentsSmokeTestUser,
+} from '../../flags'
 import type {
   CancelSubscriptionInput,
   CheckoutSession,
@@ -60,6 +64,12 @@ export class PayMeProvider implements PaymentProvider {
     const localSubscriptionId =
       input.localSubscriptionId ?? createLocalSubscriptionCorrelationId()
 
+    const isSmokeTestProduction =
+      env.env === 'production' &&
+      !isPaymentsCheckoutEnabled() &&
+      isPaymentsSmokeTestUser(input.userId) &&
+      input.plan.code === 'studio_monthly'
+
     const body = buildGenerateSubscriptionRequest({
       paymeClientKey: env.clientKey,
       sellerPaymeId: env.sellerId,
@@ -67,6 +77,9 @@ export class PayMeProvider implements PaymentProvider {
       callbackUrl: webhookCallbackUrl(),
       returnUrl: input.successUrl,
       localSubscriptionId,
+      subPrice: isSmokeTestProduction ? 500 : undefined,
+      subIterations: isSmokeTestProduction ? 1 : undefined,
+      test: env.env === 'sandbox',
     })
 
     assertGenerateSubscriptionCorrelationReady()
@@ -103,6 +116,7 @@ export class PayMeProvider implements PaymentProvider {
     plan: PaymentPlan
     subPaymeId?: string
     subscriptionId?: string
+    expectedAmountAgorot?: number
   }) {
     const env = this.client().credentials
     const response = await this.client().getSubscriptions({
@@ -119,6 +133,7 @@ export class PayMeProvider implements PaymentProvider {
       sellerPaymeId: env.sellerId,
       expectedSubscriptionId: input.subscriptionId ?? null,
       expectedSubPaymeId: input.subPaymeId ?? null,
+      expectedAmountAgorot: input.expectedAmountAgorot,
     })
 
     return record
@@ -132,6 +147,7 @@ export class PayMeProvider implements PaymentProvider {
     paymeSaleId?: string
     paymeTransactionId?: string
     alreadyProcessed?: boolean
+    expectedAmountAgorot?: number
   }) {
     const env = this.client().credentials
     const response = await this.client().getTransactions({
@@ -147,6 +163,7 @@ export class PayMeProvider implements PaymentProvider {
       plan: input.plan,
       sellerPaymeId: env.sellerId,
       alreadyProcessed: input.alreadyProcessed,
+      expectedAmountAgorot: input.expectedAmountAgorot,
     })
 
     return record

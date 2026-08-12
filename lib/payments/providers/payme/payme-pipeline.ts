@@ -35,6 +35,7 @@ export type CorrelatedSubscription = {
   localSubscriptionId: string | null
   providerSubscriptionId: string | null
   currentStatus: SubscriptionStatus | null
+  expectedAmountAgorot?: number
 }
 
 /**
@@ -90,6 +91,14 @@ export async function correlateLocalSubscription(
     if (byLocal) {
       const plan = await repository.getPlanById(byLocal.plan_id)
       if (!plan) return null
+
+      const providerMetadata = byLocal.provider_metadata
+      const isSmokeTestMetadata =
+        typeof providerMetadata === 'object' &&
+        providerMetadata !== null &&
+        !Array.isArray(providerMetadata) &&
+        (providerMetadata as Record<string, unknown>).smoke_test === true
+
       return {
         localRowId: byLocal.id,
         userId: byLocal.user_id,
@@ -106,6 +115,12 @@ export async function correlateLocalSubscription(
         localSubscriptionId: identifiers.subscriptionId,
         providerSubscriptionId: byLocal.provider_subscription_id,
         currentStatus: byLocal.status,
+        expectedAmountAgorot: isSmokeTestMetadata
+          ? Number(
+              ((providerMetadata as Record<string, unknown>)
+                .smoke_test_price_agorot ?? 100)
+            )
+          : undefined,
       }
     }
   }
@@ -118,12 +133,14 @@ export type PayMeVerificationProvider = {
     plan: PaymentPlan
     subPaymeId?: string
     subscriptionId?: string
+    expectedAmountAgorot?: number
   }): Promise<PayMeSubscriptionRecord>
   verifyTransactionWithPlan(input: {
     plan: PaymentPlan
     paymeSaleId?: string
     paymeTransactionId?: string
     alreadyProcessed?: boolean
+    expectedAmountAgorot?: number
   }): Promise<PayMeTransactionRecord>
 }
 
@@ -150,6 +167,7 @@ export async function processPayMeCallbackLifecycle(input: {
     plan,
     subPaymeId: expectedSubPaymeId ?? undefined,
     subscriptionId: expectedSubscriptionId ?? undefined,
+    expectedAmountAgorot: correlated.expectedAmountAgorot,
   })
 
   const isMonetary = notifyType === 'sub-iteration-success' || notifyType === 'sub-active' || notifyType === 'sub-failure'
@@ -164,6 +182,7 @@ export async function processPayMeCallbackLifecycle(input: {
       plan,
       paymeSaleId: input.identifiers.paymeSaleId ?? undefined,
       alreadyProcessed: Boolean(existing),
+      expectedAmountAgorot: correlated.expectedAmountAgorot,
     })
   }
 

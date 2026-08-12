@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto'
 import { PaymentError } from './errors'
-import { isPaymentsCheckoutEnabled } from './flags'
+import {
+  isPaymentsCheckoutAllowed,
+  isPaymentsCheckoutEnabled,
+  isPaymentsSmokeTestUser,
+} from './flags'
+import { payMeIterationTypeForPlan } from './providers/payme/payme-iteration'
 import type { PaymentProvider } from './provider'
 import type { BillingRepository } from './repository'
 import { SubscriptionService } from './subscription-service'
@@ -37,6 +42,7 @@ export type CurrentSubscriptionView = {
   configured: boolean
   /** False until PAYMENTS_CHECKOUT_ENABLED=true after PayMe approval. */
   checkoutEnabled: boolean
+  isSmokeTestUser: boolean
   subscription: {
     id: string
     status: string
@@ -101,6 +107,10 @@ export class PaymentService {
     }
 
     const localSubscriptionId = `sub_${randomBytes(16).toString('hex')}`
+    const isSmokeTest =
+      !isPaymentsCheckoutEnabled() &&
+      isPaymentsSmokeTestUser(input.userId) &&
+      plan.code === 'studio_monthly'
 
     // Pending local row + correlation id are prepared before the provider call.
     // generate-subscription remains blocked until the correlation field name is confirmed.
@@ -117,6 +127,14 @@ export class PaymentService {
         amount_agorot: plan.amountAgorot,
         currency: plan.currency,
         billing_interval: plan.billingInterval,
+        ...(isSmokeTest
+          ? {
+              smoke_test: true,
+              smoke_test_price_agorot: 500,
+              smoke_test_iterations: 1,
+              smoke_test_iteration_type: payMeIterationTypeForPlan(plan),
+            }
+          : {}),
       },
     })
 
@@ -133,6 +151,13 @@ export class PaymentService {
       successUrl: input.successUrl,
       cancelUrl: input.cancelUrl,
       localSubscriptionId,
+      smokeTest: isSmokeTest
+        ? {
+            priceAgorot: 500,
+            iterations: 1,
+            iterationType: payMeIterationTypeForPlan(plan),
+          }
+        : undefined,
     })
   }
 
@@ -215,7 +240,8 @@ export class PaymentService {
 
     return {
       configured: true,
-      checkoutEnabled: isPaymentsCheckoutEnabled(),
+      checkoutEnabled: isPaymentsCheckoutAllowed(userId),
+      isSmokeTestUser: isPaymentsSmokeTestUser(userId),
       subscription:
         subscription && plan
           ? {
