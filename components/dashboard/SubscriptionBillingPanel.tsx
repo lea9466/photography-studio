@@ -22,11 +22,14 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 function formatPrice(amountAgorot: number, currency: string) {
+  const value = amountAgorot / 100
+  const fractionDigits = Number.isInteger(value) ? 0 : 2
   return new Intl.NumberFormat('he-IL', {
     style: 'currency',
     currency,
-    maximumFractionDigits: 0,
-  }).format(amountAgorot / 100)
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(value)
 }
 
 function formatInterval(plan: PlanView) {
@@ -199,10 +202,16 @@ export function SubscriptionBillingPanel({
         <div className="space-y-3">
           <p className="text-sm text-[--muted]">בחרי מסלול מינוי:</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {smokeTestPlans.map((plan) => {
-              const selected = selectedPlan?.code === plan.code
-              const isYearly = plan.code === 'studio_yearly'
-              const planDisabled =
+              {smokeTestPlans.map((plan) => {
+                const selected = selectedPlan?.code === plan.code
+                const monthlyPlan = smokeTestPlans.find(
+                  (p) => p.billingInterval === 'month'
+                )
+                const yearlySavings =
+                  plan.billingInterval === 'year' && monthlyPlan
+                    ? monthlyPlan.amountAgorot * 12 - plan.amountAgorot
+                    : null
+                const planDisabled =
                 !checkoutEnabled ||
                 (subscription != null && subscription.status !== 'pending')
               return (
@@ -210,7 +219,9 @@ export function SubscriptionBillingPanel({
                   key={plan.code}
                   className={`rounded-xl border p-5 text-right ${selected
                       ? 'border-[#7D3A52] bg-[#7D3A52]/5 ring-1 ring-[#7D3A52]/30'
-                      : 'border-[--border]/60 bg-white/80'
+                      : plan.isHighlighted
+                        ? 'border-[#7D3A52]/40 bg-[#7D3A52]/5'
+                        : 'border-[--border]/60 bg-white/80'
                     }`}
                 >
                   <button
@@ -222,28 +233,39 @@ export function SubscriptionBillingPanel({
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-semibold text-[--foreground]">
-                          {plan.code === 'studio_monthly'
-                            ? 'חודשי'
-                            : plan.code === 'studio_yearly'
-                              ? 'שנתי'
-                              : plan.name}
+                          {plan.name}
                         </p>
-                        <p className="mt-2 text-lg font-bold text-[--foreground]">
-                          {plan.code === 'studio_monthly'
-                            ? '40 ₪ לחודש'
-                            : plan.code === 'studio_yearly'
-                              ? '400 ₪ לשנה'
-                              : `${formatPrice(plan.amountAgorot, plan.currency)} ${formatInterval(plan)}`}
+                        <p className="mt-2 flex flex-wrap items-baseline gap-2 text-lg font-bold text-[--foreground]">
+                          {plan.compareAtAgorot && plan.compareAtAgorot > plan.amountAgorot ? (
+                            <span className="text-sm font-medium text-[--muted] line-through decoration-1">
+                              {formatPrice(plan.compareAtAgorot, plan.currency)}
+                            </span>
+                          ) : null}
+                          <span>{formatPrice(plan.amountAgorot, plan.currency)}</span>
+                          <span className="text-sm font-medium text-[--muted]">
+                            {formatInterval(plan)}
+                          </span>
                         </p>
-                        {isYearly ? (
+                        {plan.billingInterval === 'year' ? (
+                          <p className="mt-1 text-xs text-[--muted]">
+                            יוצא{' '}
+                            {formatPrice(
+                              Math.round(plan.amountAgorot / 12),
+                              plan.currency
+                            )}{' '}
+                            לחודש
+                          </p>
+                        ) : null}
+                        {yearlySavings != null ? (
                           <p className="mt-2 text-xs leading-relaxed text-[--muted]">
-                            חיסכון של 80 ₪ בשנה לעומת המסלול החודשי
+                            חיסכון של {formatPrice(yearlySavings, plan.currency)} בשנה
+                            לעומת המסלול החודשי
                           </p>
                         ) : null}
                       </div>
-                      {isYearly ? (
-                        <span className="shrink-0 text-[11px] font-semibold text-[#7D3A52]">
-                          הכי משתלם
+                      {plan.badge ? (
+                        <span className="shrink-0 rounded-full bg-[#7D3A52]/10 px-2.5 py-1 text-[11px] font-semibold text-[#7D3A52]">
+                          {plan.badge}
                         </span>
                       ) : null}
                     </div>

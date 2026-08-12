@@ -36,6 +36,12 @@ export type PlanView = {
   amountAgorot: number
   currency: string
   billingInterval: string
+  /** Display-only "official" price shown struck-through. Null = no discount. */
+  compareAtAgorot: number | null
+  /** Short label shown on the plan card (e.g. "מחיר השקה מיוחד"). */
+  badge: string | null
+  /** When true the plan card is visually emphasized. */
+  isHighlighted: boolean
 }
 
 export type CurrentSubscriptionView = {
@@ -391,6 +397,9 @@ function toPlanView(row: {
   amount_agorot: number
   currency: string
   billing_interval: string
+  compare_at_amount_agorot?: number | null
+  badge?: string | null
+  is_highlighted?: boolean
 }): PlanView {
   return {
     code: row.code,
@@ -398,5 +407,8 @@ function toPlanView(row: {
     amountAgorot: row.amount_agorot,
     currency: row.currency,
     billingInterval: row.billing_interval,
+    compareAtAgorot: row.compare_at_amount_agorot ?? null,
+    badge: row.badge ?? null,
+    isHighlighted: Boolean(row.is_highlighted),
   }
 }

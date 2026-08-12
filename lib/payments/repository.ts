@@ -27,6 +27,10 @@ export interface BillingRepository {
   getActivePlanByCode(code: string): Promise<SubscriptionPlan | null>
   listActivePlans(): Promise<SubscriptionPlan[]>
   getPlanById(id: string): Promise<SubscriptionPlan | null>
+  updatePlan(
+    id: string,
+    patch: Partial<Pick<SubscriptionPlan, 'name' | 'amount_agorot' | 'compare_at_amount_agorot' | 'badge' | 'is_highlighted' | 'is_active'>>
+  ): Promise<SubscriptionPlan>
   getBillingCustomer(userId: string, provider: PaymentProviderName): Promise<BillingCustomer | null>
   getBillingCustomerByExternalId(
     provider: PaymentProviderName,
@@ -192,6 +196,24 @@ export class SupabaseBillingRepository implements BillingRepository {
       .maybeSingle()
     throwIfError(error)
     return data
+  }
+
+  async updatePlan(
+    id: string,
+    patch: Partial<Pick<
+      SubscriptionPlan,
+      'name' | 'amount_agorot' | 'compare_at_amount_agorot' | 'badge' | 'is_highlighted' | 'is_active'
+    >>
+  ): Promise<SubscriptionPlan> {
+    const { data, error } = await this.db
+      .from('subscription_plans')
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('*')
+      .maybeSingle()
+    throwIfError(error)
+    if (!data) throw new Error('תוכנית לא נמצאה')
+    return data as SubscriptionPlan
   }
 
   async getBillingCustomer(userId: string, provider: PaymentProviderName) {

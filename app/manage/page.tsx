@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
 import { AdminStudioList } from '@/components/admin/AdminStudioList'
+import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
 import { fetchAdminStudios } from '@/lib/actions/admin.actions'
 import { isAdminAuthenticated } from '@/lib/admin/session'
 
@@ -60,8 +61,9 @@ export default async function ManagePage() {
 
   return (
     <main className={`${pageShellClass} px-3 py-8 sm:px-4 lg:px-5`}>
-      <div className="mx-auto flex w-full max-w-[1800px] justify-center">
+      <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
+        <PlanPricingManager />
       </div>
     </main>
   )

@@ -1624,8 +1624,9 @@ test('UI sends only planCode and never client amount', async () => {
   )
   assert.match(ui, /planCode:\s*plan\.code/)
   assert.match(ui, /זמין בקרוב/)
-  assert.match(ui, /הכי משתלם/)
-  assert.match(ui, /חיסכון של 80 ₪ בשנה לעומת המסלול החודשי/)
+  assert.match(ui, /plan\.badge/)
+  assert.match(ui, /חיסכון של/)
+  assert.match(ui, /לעומת המסלול החודשי/)
   const checkoutCall = ui.match(
     /callAction\(\s*'\/api\/payments\/checkout',\s*\{[\s\S]*?\}\s*\)/
   )?.[0]

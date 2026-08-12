@@ -315,6 +315,9 @@ export type Database = {
           is_active: boolean
           provider: string | null
           provider_plan_id: string | null
+          compare_at_amount_agorot: number | null
+          badge: string | null
+          is_highlighted: boolean
           created_at: string
           updated_at: string
         }
@@ -329,6 +332,9 @@ export type Database = {
           is_active?: boolean
           provider?: string | null
           provider_plan_id?: string | null
+          compare_at_amount_agorot?: number | null
+          badge?: string | null
+          is_highlighted?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -343,6 +349,9 @@ export type Database = {
           is_active?: boolean
           provider?: string | null
           provider_plan_id?: string | null
+          compare_at_amount_agorot?: number | null
+          badge?: string | null
+          is_highlighted?: boolean
           created_at?: string
           updated_at?: string
         }
