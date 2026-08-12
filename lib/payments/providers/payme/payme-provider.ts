@@ -215,13 +215,13 @@ export class PayMeProvider implements PaymentProvider {
         })
       } else {
         throw new PaymentError('provider_unavailable', {
-          status: 502,
+          status: 422,
           cause: `PayMe cancel failed: http=${httpStatus} status_code=${body?.status_code} status_error_code=${statusErrorCode} details=${statusErrorDetails}`,
         })
       }
     } else if (statusErrorCode != null && statusErrorCode !== 0 && !alreadyCancelled) {
       throw new PaymentError('provider_unavailable', {
-        status: 502,
+        status: 422,
         cause: `PayMe cancel returned an error: status_error_code=${statusErrorCode} details=${statusErrorDetails}`,
       })
     }

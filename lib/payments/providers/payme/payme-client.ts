@@ -180,7 +180,7 @@ export class PayMeClient {
       return { httpStatus: response.status, body: parsed }
     } catch (error) {
       throw new PaymentError('provider_unavailable', {
-        status: 502,
+        status: 422,
         cause: error instanceof Error ? error.message : String(error),
       })
     } finally {
@@ -201,6 +201,9 @@ export class PayMeClient {
       ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
       seller_payme_id: this.environment.sellerId,
       sub_payme_id: input.subPaymeId,
+      // `sub_update=1` tells PayMe to update the existing subscription's
+      // payment method instead of creating a new one (which would fail / 500).
+      sub_update: '1',
       sub_callback_url: input.callbackUrl,
       sub_return_url: input.returnUrl,
       language: 'he',
@@ -231,7 +234,7 @@ export class PayMeClient {
         if (response.status >= 500 || response.status === 429) {
           const bodyText = await response.text().catch(() => '')
           lastError = new PaymentError('provider_unavailable', {
-            status: 502,
+            status: 422,
             cause: `[${response.status}] ${path} ${bodyText}`,
           })
           if (attempt < MAX_ATTEMPTS) {
@@ -244,7 +247,7 @@ export class PayMeClient {
         if (!response.ok) {
           const bodyText = await response.text().catch(() => '')
           throw new PaymentError('provider_unavailable', {
-            status: 502,
+            status: 422,
             cause: `[${response.status}] ${path} ${bodyText}`,
           })
         }
