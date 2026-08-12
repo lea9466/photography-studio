@@ -233,10 +233,17 @@ export class PaymentService {
     const customer = await this.repository.getBillingCustomer(userId, provider.name)
     if (!customer?.provider_customer_id) throw new PaymentError('invalid_request')
 
+    const planRow = subscription.plan_id
+      ? await this.repository.getPlanById(subscription.plan_id)
+      : null
+    if (!planRow) throw new PaymentError('plan_not_found')
+    const plan = toPaymentPlan(planRow)
+
     return provider.updatePaymentMethod({
       externalCustomerId: customer.provider_customer_id,
       externalSubscriptionId: subscription.provider_subscription_id,
       returnUrl,
+      plan,
     })
   }
 

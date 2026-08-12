@@ -150,6 +150,10 @@ export type UpdatePaymentMethodInput = {
   externalCustomerId: string
   externalSubscriptionId: string | null
   returnUrl: string
+  /** Active plan for the subscription being updated — PayMe requires the full
+   *  subscription parameters (price/currency/iteration) even when only the
+   *  payment method is being refreshed. */
+  plan: PaymentPlan
 }
 
 export type ParseWebhookInput = {

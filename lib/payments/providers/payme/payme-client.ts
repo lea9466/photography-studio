@@ -1,4 +1,5 @@
 import { PaymentError } from '../../errors'
+import type { PaymentPlan } from '../../types'
 import type {
   PayMeCancelSubscriptionRequest,
   PayMeCancelSubscriptionResponse,
@@ -14,6 +15,7 @@ import {
   PAYME_SANDBOX_API_BASE_URL,
   PAYME_PRODUCTION_API_BASE_URL,
 } from './payme-types'
+import { payMeIterationTypeForPlan } from './payme-iteration'
 
 const DEFAULT_TIMEOUT_MS = 10_000
 const MAX_ATTEMPTS = 3
@@ -196,14 +198,29 @@ export class PayMeClient {
     subPaymeId: string
     callbackUrl: string
     returnUrl: string
+    plan: PaymentPlan
   }): Promise<PayMeGenerateSubscriptionResponse> {
+    const plan = input.plan
+    const start = new Date()
+    const day = String(start.getUTCDate()).padStart(2, '0')
+    const month = String(start.getUTCMonth() + 1).padStart(2, '0')
+    const year = start.getUTCFullYear()
+
     return this.postJson<PayMeGenerateSubscriptionResponse>('/generate-subscription', {
       ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
       seller_payme_id: this.environment.sellerId,
       sub_payme_id: input.subPaymeId,
       // `sub_update=1` tells PayMe to update the existing subscription's
-      // payment method instead of creating a new one (which would fail / 500).
+      // payment method instead of creating a new one. Even for an update, PayMe
+      // requires the full subscription parameters, so we resend the plan's
+      // price/currency/iteration along with the existing sub_payme_id.
       sub_update: '1',
+      sub_price: plan.amountAgorot,
+      sub_currency: plan.currency.toUpperCase(),
+      sub_description: plan.name,
+      sub_iteration_type: payMeIterationTypeForPlan(plan),
+      sub_iterations: -1,
+      sub_start_date: `${day}/${month}/${year}`,
       sub_callback_url: input.callbackUrl,
       sub_return_url: input.returnUrl,
       language: 'he',

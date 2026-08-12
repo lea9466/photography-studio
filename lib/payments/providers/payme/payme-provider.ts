@@ -256,6 +256,7 @@ export class PayMeProvider implements PaymentProvider {
       subPaymeId,
       callbackUrl: webhookCallbackUrl(),
       returnUrl: input.returnUrl,
+      plan: input.plan,
     })
 
     if (!response.sub_url) {
