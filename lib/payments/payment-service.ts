@@ -90,10 +90,10 @@ export class PaymentService {
     let customerRow = await this.repository.getBillingCustomer(input.userId, provider.name)
     let customer = customerRow?.provider_customer_id
       ? {
-          id: customerRow.provider_customer_id,
-          provider: provider.name,
-          email: customerRow.email,
-        }
+        id: customerRow.provider_customer_id,
+        provider: provider.name,
+        email: customerRow.email,
+      }
       : null
 
     if (!customer) {
@@ -129,11 +129,11 @@ export class PaymentService {
         billing_interval: plan.billingInterval,
         ...(isSmokeTest
           ? {
-              smoke_test: true,
-              smoke_test_price_agorot: 500,
-              smoke_test_iterations: 1,
-              smoke_test_iteration_type: payMeIterationTypeForPlan(plan),
-            }
+            smoke_test: true,
+            smoke_test_price_agorot: 500,
+            smoke_test_iterations: 1,
+            smoke_test_iteration_type: payMeIterationTypeForPlan(plan),
+          }
           : {}),
       },
     })
@@ -153,10 +153,10 @@ export class PaymentService {
       localSubscriptionId,
       smokeTest: isSmokeTest
         ? {
-            priceAgorot: 500,
-            iterations: 1,
-            iterationType: payMeIterationTypeForPlan(plan),
-          }
+          priceAgorot: 500,
+          iterations: 1,
+          iterationType: payMeIterationTypeForPlan(plan),
+        }
         : undefined,
     })
   }
@@ -245,13 +245,13 @@ export class PaymentService {
       subscription:
         subscription && plan
           ? {
-              id: subscription.id,
-              status: subscription.status,
-              currentPeriodEnd: subscription.current_period_end,
-              nextPaymentAt: subscription.next_payment_at,
-              cancelAtPeriodEnd: subscription.cancel_at_period_end,
-              plan: toPlanView(plan),
-            }
+            id: subscription.id,
+            status: subscription.status,
+            currentPeriodEnd: subscription.current_period_end,
+            nextPaymentAt: subscription.next_payment_at,
+            cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            plan: toPlanView(plan),
+          }
           : null,
       availablePlan: planViews[0] ?? null,
       availablePlans: planViews,

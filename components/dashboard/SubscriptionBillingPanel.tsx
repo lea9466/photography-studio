@@ -47,9 +47,9 @@ export function SubscriptionBillingPanel({
   const [selectedPlanCode, setSelectedPlanCode] = useState<string>(
     initialStatus.availablePlans?.find((plan) => plan.code === 'studio_yearly')
       ?.code ??
-      initialStatus.availablePlans?.[0]?.code ??
-      initialStatus.availablePlan?.code ??
-      'studio_monthly'
+    initialStatus.availablePlans?.[0]?.code ??
+    initialStatus.availablePlan?.code ??
+    'studio_monthly'
   )
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -187,11 +187,10 @@ export function SubscriptionBillingPanel({
               return (
                 <div
                   key={plan.code}
-                  className={`rounded-xl border p-5 text-right ${
-                    selected
+                  className={`rounded-xl border p-5 text-right ${selected
                       ? 'border-[#7D3A52] bg-[#7D3A52]/5 ring-1 ring-[#7D3A52]/30'
                       : 'border-[--border]/60 bg-white/80'
-                  }`}
+                    }`}
                 >
                   <button
                     type="button"
@@ -250,7 +249,7 @@ export function SubscriptionBillingPanel({
                         }
                       >
                         {busy === '/api/payments/checkout' &&
-                        selectedPlanCode === plan.code ? (
+                          selectedPlanCode === plan.code ? (
                           <Loader2 className="ml-2 h-4 w-4 animate-spin" />
                         ) : null}
                         {status.isSmokeTestUser ? 'בדיקת תשלום' : 'המשך למנוי'}

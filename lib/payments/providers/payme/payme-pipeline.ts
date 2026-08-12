@@ -70,12 +70,12 @@ export async function correlateLocalSubscription(
         },
         localSubscriptionId:
           typeof byProvider.provider_metadata === 'object' &&
-          byProvider.provider_metadata &&
-          'local_subscription_id' in byProvider.provider_metadata
+            byProvider.provider_metadata &&
+            'local_subscription_id' in byProvider.provider_metadata
             ? String(
-                (byProvider.provider_metadata as { local_subscription_id?: unknown })
-                  .local_subscription_id ?? ''
-              ) || null
+              (byProvider.provider_metadata as { local_subscription_id?: unknown })
+                .local_subscription_id ?? ''
+            ) || null
             : byProvider.provider_subscription_id,
         providerSubscriptionId: byProvider.provider_subscription_id,
         currentStatus: byProvider.status,
@@ -117,9 +117,9 @@ export async function correlateLocalSubscription(
         currentStatus: byLocal.status,
         expectedAmountAgorot: isSmokeTestMetadata
           ? Number(
-              ((providerMetadata as Record<string, unknown>)
-                .smoke_test_price_agorot ?? 100)
-            )
+            ((providerMetadata as Record<string, unknown>)
+              .smoke_test_price_agorot ?? 100)
+          )
           : undefined,
       }
     }
@@ -188,22 +188,22 @@ export async function processPayMeCallbackLifecycle(input: {
 
   const verifiedSubscription = isActiveLifecycle
     ? pipelineVerifyActiveSubscription(subscriptionRecord, {
-        plan,
-        sellerPaymeId: subscriptionRecord.seller_payme_id ?? '',
-        expectedSubscriptionId,
-        expectedSubPaymeId,
-      })
+      plan,
+      sellerPaymeId: subscriptionRecord.seller_payme_id ?? '',
+      expectedSubscriptionId,
+      expectedSubPaymeId,
+    })
     : pipelineVerifySubscription(subscriptionRecord, {
-        plan,
-        sellerPaymeId: subscriptionRecord.seller_payme_id ?? '',
-        expectedSubscriptionId,
-        expectedSubPaymeId,
-      })
+      plan,
+      sellerPaymeId: subscriptionRecord.seller_payme_id ?? '',
+      expectedSubscriptionId,
+      expectedSubPaymeId,
+    })
 
   const subscriptionForStatus =
     typeof verifiedSubscription === 'object' &&
-    verifiedSubscription !== null &&
-    'record' in verifiedSubscription
+      verifiedSubscription !== null &&
+      'record' in verifiedSubscription
       ? verifiedSubscription.record
       : verifiedSubscription
 

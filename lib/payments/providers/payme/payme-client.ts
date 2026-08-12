@@ -103,7 +103,7 @@ export class PayMeClient {
   constructor(
     private readonly environment = readPayMeEnvironment(),
     private readonly timeoutMs = DEFAULT_TIMEOUT_MS
-  ) {}
+  ) { }
 
   get credentials() {
     return {
