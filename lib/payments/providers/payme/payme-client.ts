@@ -145,6 +145,29 @@ export class PayMeClient {
       throw new PaymentError('invalid_request')
     }
 
+    // Temporary trace: if this is the live generate-subscription endpoint,
+    // stop here to avoid sending real requests during tracing.
+    try {
+      const normalizedBase = this.environment.apiBaseUrl.replace(/\/$/, '')
+      if (
+        normalizedBase === PAYME_PRODUCTION_API_BASE_URL &&
+        path === '/generate-subscription'
+      ) {
+        console.error('[payments-trace][payme-client] reached-generate-subscription', {
+          step: 'postJson',
+          note: 'TRACE_STOP_BEFORE_POST',
+          apiBaseUrl: 'live.payme.io',
+          path,
+        })
+        // Signal to the caller that we'd reach PayMe; do not perform network I/O.
+        const e = new Error('PAYME_TRACE_STOP: would POST to PayMe')
+        e.name = 'PAYME_TRACE_STOP'
+        throw e
+      }
+    } catch (__) {
+      // continue to normal behavior if any issue determining trace condition
+    }
+
     let lastError: unknown
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
       const controller = new AbortController()

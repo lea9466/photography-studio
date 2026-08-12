@@ -96,7 +96,21 @@ function asJson(value: Record<string, unknown>): Json {
 }
 
 function throwIfError(error: { message: string } | null) {
-  if (error) throw error
+  if (error) {
+    // Log PostgREST/Supabase error safely for tracing without PII or payloads.
+    try {
+      const errAny = error as any
+      console.error('[payments-trace][db] postgrest-error', {
+        step: 'db.throwIfError',
+        errorName: errAny?.name ?? 'PostgrestError',
+        errorMessage: errAny?.message ?? String(errAny),
+        postgrestCode: errAny?.code ?? null,
+      })
+    } catch (__) {
+      console.error('[payments-trace][db] postgrest-error', { step: 'db.throwIfError', errorMessage: 'unknown' })
+    }
+    throw error
+  }
 }
 
 export class SupabaseBillingRepository implements BillingRepository {
@@ -187,9 +201,21 @@ export class SupabaseBillingRepository implements BillingRepository {
       )
       .select('*')
       .single()
-    throwIfError(error)
-    if (!data) throw new Error('Billing customer was not saved')
-    return data
+    try {
+      throwIfError(error)
+      if (!data) throw new Error('Billing customer was not saved')
+      return data
+    } catch (err) {
+      console.error('[payments-trace][db] saveBillingCustomer failed', {
+        step: 'saveBillingCustomer',
+        table: 'billing_customers',
+        action: 'upsert',
+        correlationId: input?.externalCustomerId ?? null,
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 
   async getCurrentSubscription(userId: string) {
@@ -200,8 +226,19 @@ export class SupabaseBillingRepository implements BillingRepository {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
-    throwIfError(error)
-    return data
+    try {
+      throwIfError(error)
+      return data
+    } catch (err) {
+      console.error('[payments-trace][db] getCurrentSubscription failed', {
+        step: 'getCurrentSubscription',
+        table: 'subscriptions',
+        action: 'select',
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 
   async getSubscriptionByExternalId(
@@ -253,9 +290,21 @@ export class SupabaseBillingRepository implements BillingRepository {
       )
       .select('*')
       .single()
-    throwIfError(error)
-    if (!data) throw new Error('Subscription was not saved')
-    return data
+    try {
+      throwIfError(error)
+      if (!data) throw new Error('Subscription was not saved')
+      return data
+    } catch (err) {
+      console.error('[payments-trace][db] upsertSubscription failed', {
+        step: 'upsertSubscription',
+        table: 'subscriptions',
+        action: 'upsert',
+        correlationId: input?.externalSubscriptionId ?? null,
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 
   async updateSubscription(
@@ -289,9 +338,21 @@ export class SupabaseBillingRepository implements BillingRepository {
       .eq('id', id)
       .select('*')
       .single()
-    throwIfError(error)
-    if (!data) throw new Error('Subscription was not updated')
-    return data
+    try {
+      throwIfError(error)
+      if (!data) throw new Error('Subscription was not updated')
+      return data
+    } catch (err) {
+      console.error('[payments-trace][db] updateSubscription failed', {
+        step: 'updateSubscription',
+        table: 'subscriptions',
+        action: 'update',
+        id,
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 
   async upsertTransaction(input: {
@@ -327,9 +388,21 @@ export class SupabaseBillingRepository implements BillingRepository {
       )
       .select('*')
       .single()
-    throwIfError(error)
-    if (!data) throw new Error('Payment transaction was not saved')
-    return data
+    try {
+      throwIfError(error)
+      if (!data) throw new Error('Payment transaction was not saved')
+      return data
+    } catch (err) {
+      console.error('[payments-trace][db] upsertTransaction failed', {
+        step: 'upsertTransaction',
+        table: 'payment_transactions',
+        action: 'upsert',
+        correlationId: input?.externalTransactionId ?? null,
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 
   async getTransactionByExternalId(
@@ -377,6 +450,18 @@ export class SupabaseBillingRepository implements BillingRepository {
         processed_at: new Date().toISOString(),
       })
       .eq('id', eventId)
-    throwIfError(updateError)
+    try {
+      throwIfError(updateError)
+    } catch (err) {
+      console.error('[payments-trace][db] finishWebhook failed', {
+        step: 'finishWebhook',
+        table: 'payment_webhook_events',
+        action: 'update',
+        eventId,
+        errorName: err instanceof Error ? err.name : 'Error',
+        errorMessage: err instanceof Error ? err.message : String(err),
+      })
+      throw err
+    }
   }
 }
