@@ -114,7 +114,7 @@ function throwIfError(error: { message: string } | null) {
 }
 
 export class SupabaseBillingRepository implements BillingRepository {
-  constructor(private readonly db: AdminClient) {}
+  constructor(private readonly db: AdminClient) { }
 
   async getUserEmail(userId: string) {
     const { data, error } = await this.db
