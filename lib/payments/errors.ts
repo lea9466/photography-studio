@@ -30,12 +30,17 @@ const SAFE_MESSAGES: Record<PaymentErrorCode, string> = {
 export class PaymentError extends Error {
   readonly code: PaymentErrorCode
   readonly status: number
+  readonly detail?: string
 
-  constructor(code: PaymentErrorCode, options?: { status?: number; cause?: unknown }) {
+  constructor(
+    code: PaymentErrorCode,
+    options?: { status?: number; cause?: unknown; detail?: string }
+  ) {
     super(SAFE_MESSAGES[code], { cause: options?.cause })
     this.name = 'PaymentError'
     this.code = code
     this.status = options?.status ?? defaultStatus(code)
+    this.detail = options?.detail
   }
 }
 
@@ -52,7 +57,7 @@ function defaultStatus(code: PaymentErrorCode) {
   }
   if (code === 'provider_not_configured' || code === 'billing_not_initialized') return 503
   if (code === 'subscription_not_active') return 409
-  if (code === 'provider_unavailable') return 502
+  if (code === 'provider_unavailable') return 422
   return 500
 }
 

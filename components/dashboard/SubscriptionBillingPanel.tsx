@@ -65,11 +65,22 @@ export function SubscriptionBillingPanel({
         headers: body ? { 'content-type': 'application/json' } : undefined,
         body: body ? JSON.stringify(body) : undefined,
       })
-      const payload = (await response.json()) as {
+      let payload: {
         error?: string
+        detail?: string
         checkout?: { url?: string | null }
       }
-      if (!response.ok) throw new Error(payload.error || 'הפעולה נכשלה')
+      try {
+        payload = (await response.json()) as typeof payload
+      } catch {
+        throw new Error('הפעולה נכשלה. נסי שוב בעוד רגע או צרי קשר בתמיכה.')
+      }
+      if (!response.ok) {
+        const msg = payload.detail
+          ? `${payload.error ?? 'הפעולה נכשלה'} (${payload.detail})`
+          : payload.error || 'הפעולה נכשלה'
+        throw new Error(msg)
+      }
       if (payload.checkout?.url) {
         window.location.assign(payload.checkout.url)
         return

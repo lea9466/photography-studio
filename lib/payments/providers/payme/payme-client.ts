@@ -194,7 +194,11 @@ export class PayMeClient {
         })
 
         if (response.status >= 500 || response.status === 429) {
-          lastError = new PaymentError('provider_unavailable', { status: 502 })
+          const bodyText = await response.text().catch(() => '')
+          lastError = new PaymentError('provider_unavailable', {
+            status: 502,
+            cause: `[${response.status}] ${path} ${bodyText}`,
+          })
           if (attempt < MAX_ATTEMPTS) {
             await sleep(RETRY_BASE_DELAY_MS * attempt)
             continue
@@ -203,7 +207,11 @@ export class PayMeClient {
         }
 
         if (!response.ok) {
-          throw new PaymentError('provider_unavailable', { status: 502 })
+          const bodyText = await response.text().catch(() => '')
+          throw new PaymentError('provider_unavailable', {
+            status: 502,
+            cause: `[${response.status}] ${path} ${bodyText}`,
+          })
         }
 
         return (await response.json()) as T

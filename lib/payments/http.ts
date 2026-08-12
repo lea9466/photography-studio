@@ -12,14 +12,38 @@ export function paymentErrorResponse(error: unknown) {
     ? new PaymentError('billing_not_initialized')
     : toPaymentError(error)
   if (safe.code === 'provider_unavailable' || safe.code === 'internal_error') {
+    const underlying = error instanceof Error ? (error as Error & { cause?: unknown }) : null
+    const causeText = underlying?.cause
+      ? JSON.stringify(underlying.cause).slice(0, 1000)
+      : error instanceof Error
+        ? error.message
+        : String(error)
     console.error('[payments] request failed', {
       code: safe.code,
       message: safe.message,
-      cause: error instanceof Error ? error.message : String(error),
+      cause: causeText,
     })
+    const detail = safe.detail ?? causeText
+    return NextResponse.json(
+      { error: safe.message, code: safe.code, detail: detail.slice(0, 500) },
+      { status: safe.status }
+    )
   }
+
   return NextResponse.json(
-    { error: safe.message, code: safe.code },
+    {
+      error: safe.message,
+      code: safe.code,
+      ...(safe.detail ? { detail: safe.detail } : {}),
+    },
+    { status: safe.status }
+  )
+  return NextResponse.json(
+    {
+      error: safe.message,
+      code: safe.code,
+      ...(safe.detail ? { detail: safe.detail } : {}),
+    },
     { status: safe.status }
   )
 }

@@ -202,7 +202,9 @@ export class PayMeProvider implements PaymentProvider {
       (typeof statusCode === 'number' && statusCode !== 0) ||
       response.status_error_code != null
     if (hasError) {
-      throw new PaymentError('provider_unavailable')
+      throw new PaymentError('provider_unavailable', {
+        detail: `PayMe cancel failed: status_code=${response.status_code} status_error_code=${response.status_error_code} payme_status=${response.payme_status}`,
+      })
     }
 
     const now = new Date().toISOString()
@@ -243,6 +245,9 @@ export class PayMeProvider implements PaymentProvider {
         statusCode: response.status_code,
         paymeStatus: response.payme_status,
         statusErrorCode: response.status_error_code,
+      })
+      throw new PaymentError('provider_unavailable', {
+        detail: `PayMe update-payment returned no sub_url: status_code=${response.status_code} status_error_code=${response.status_error_code} payme_status=${response.payme_status}`,
       })
     }
 
