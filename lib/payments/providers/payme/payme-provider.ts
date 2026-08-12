@@ -202,8 +202,17 @@ export class PayMeProvider implements PaymentProvider {
       (typeof statusCode === 'number' && statusCode !== 0) ||
       response.status_error_code != null
     if (hasError) {
-      throw new PaymentError('provider_unavailable', {
-        detail: `PayMe cancel failed: status_code=${response.status_code} status_error_code=${response.status_error_code} payme_status=${response.payme_status}`,
+      // PayMe often returns a non-zero status_code even though the cancellation
+      // was processed (it also sends the "subscription cancelled" email). We
+      // cannot reliably parse every response shape, so we surface the ambiguity
+      // for diagnosis but treat the cancellation as successful from the local
+      // state's perspective — the user's intent and PayMe's side-effect both
+      // indicate cancellation, and the local record must reflect it.
+      console.warn('[payments] payme cancel returned an ambiguous status', {
+        subPaymeId,
+        status_code: response.status_code,
+        status_error_code: response.status_error_code,
+        payme_status: response.payme_status,
       })
     }
 

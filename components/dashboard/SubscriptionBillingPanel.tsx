@@ -43,6 +43,39 @@ function formatDate(value: string | null) {
   )
 }
 
+/**
+ * End of the current paid period — i.e. until when access continues after a
+ * cancellation. The stored period-end is sometimes missing/unset, so we derive
+ * it from the period start / last payment + the billing interval when needed.
+ */
+function computeActiveUntil(
+  subscription: NonNullable<CurrentSubscriptionView['subscription']>
+): string {
+  const interval = subscription.plan?.billingInterval
+  const addInterval = (date: Date) => {
+    const next = new Date(date)
+    if (interval === 'year') next.setFullYear(next.getFullYear() + 1)
+    else next.setMonth(next.getMonth() + 1)
+    return next
+  }
+
+  if (subscription.currentPeriodEnd) {
+    const end = new Date(subscription.currentPeriodEnd)
+    if (!Number.isNaN(end.getTime()) && end.getTime() > Date.now()) {
+      return formatDate(subscription.currentPeriodEnd)
+    }
+  }
+  for (const raw of [subscription.currentPeriodStart, subscription.lastPaymentAt]) {
+    if (raw) {
+      const base = new Date(raw)
+      if (!Number.isNaN(base.getTime())) {
+        return formatDate(addInterval(base).toISOString())
+      }
+    }
+  }
+  return formatDate(addInterval(new Date()).toISOString())
+}
+
 export function SubscriptionBillingPanel({
   initialStatus,
   isImpersonating,
@@ -95,7 +128,7 @@ export function SubscriptionBillingPanel({
       if (refreshed.ok) {
         setStatus((await refreshed.json()) as CurrentSubscriptionView)
       }
-      setMessage('הבקשה התקבלה.')
+      setMessage('המינוי יבוטל בתום תקופת החיוב הנוכחית — תהני מגישה מלאה עד לתום התקופה.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'הפעולה נכשלה')
     } finally {
@@ -184,16 +217,18 @@ export function SubscriptionBillingPanel({
           <div>
             <p className="text-xs text-[--muted]">סטטוס</p>
             <p className="mt-1 font-semibold text-[--foreground]">
-              {subscription
-                ? STATUS_LABELS[subscription.status] ?? subscription.status
-                : 'ללא מינוי'}
+              {subscription.cancelAtPeriodEnd
+                ? `פעיל עד ${computeActiveUntil(subscription)}`
+                : STATUS_LABELS[subscription.status] ?? subscription.status}
             </p>
           </div>
           {subscription ? (
             <div className="sm:col-span-3">
-              <p className="text-xs text-[--muted]">החיוב הבא</p>
+              <p className="text-xs text-[--muted]">
+                {subscription.cancelAtPeriodEnd ? 'הגישה פעילה עד' : 'החיוב הבא'}
+              </p>
               <p className="mt-1 text-sm text-[--foreground]">
-                {formatDate(subscription.nextPaymentAt ?? subscription.currentPeriodEnd)}
+                {computeActiveUntil(subscription)}
               </p>
             </div>
           ) : null}
@@ -340,9 +375,13 @@ export function SubscriptionBillingPanel({
       ) : null}
 
       {subscription?.cancelAtPeriodEnd ? (
-        <p className="text-sm leading-relaxed text-[--muted]">
-          המינוי יבוטל בתום תקופת החיוב הנוכחית — לא יחויבו חיובים נוספים.
-        </p>
+        <div className="flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p>
+            המינוי יבוטל בתום תקופת החיוב הנוכחית. תהני מגישה מלאה עד לתאריך{' '}
+            {computeActiveUntil(subscription)} — לא יחויבו חיובים נוספים.
+          </p>
+        </div>
       ) : null}
 
       {message ? <p className="text-sm text-[--muted]">{message}</p> : null}

@@ -52,8 +52,10 @@ export type CurrentSubscriptionView = {
   subscription: {
     id: string
     status: string
+    currentPeriodStart: string | null
     currentPeriodEnd: string | null
     nextPaymentAt: string | null
+    lastPaymentAt: string | null
     cancelAtPeriodEnd: boolean
     plan: PlanView
   } | null
@@ -259,8 +261,10 @@ export class PaymentService {
           ? {
             id: subscription.id,
             status: subscription.status,
+            currentPeriodStart: subscription.current_period_start,
             currentPeriodEnd: subscription.current_period_end,
             nextPaymentAt: subscription.next_payment_at,
+            lastPaymentAt: subscription.last_payment_at,
             cancelAtPeriodEnd: subscription.cancel_at_period_end,
             plan: toPlanView(plan),
           }
