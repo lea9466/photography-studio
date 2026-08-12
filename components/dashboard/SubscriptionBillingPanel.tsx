@@ -146,7 +146,7 @@ export function SubscriptionBillingPanel({
         </div>
       </div>
 
-      {activePlan ? (
+      {subscription?.status === 'active' && activePlan ? (
         <div className="grid gap-4 rounded-xl border border-[--border]/60 bg-white/80 p-5 sm:grid-cols-3">
           <div>
             <p className="text-xs text-[--muted]">מסלול</p>
@@ -301,7 +301,7 @@ export function SubscriptionBillingPanel({
       {message ? <p className="text-sm text-[--muted]">{message}</p> : null}
 
       <div className="flex flex-wrap gap-3">
-        {checkoutEnabled && subscription ? (
+        {checkoutEnabled && isActive ? (
           <>
             <Button
               type="button"
