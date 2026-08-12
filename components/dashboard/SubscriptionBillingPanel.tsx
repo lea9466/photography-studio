@@ -183,7 +183,9 @@ export function SubscriptionBillingPanel({
             {smokeTestPlans.map((plan) => {
               const selected = selectedPlan?.code === plan.code
               const isYearly = plan.code === 'studio_yearly'
-              const planDisabled = Boolean(subscription) || !checkoutEnabled
+              const planDisabled =
+                !checkoutEnabled ||
+                (subscription != null && subscription.status !== 'pending')
               return (
                 <div
                   key={plan.code}
@@ -239,7 +241,8 @@ export function SubscriptionBillingPanel({
                         disabled={
                           Boolean(busy) ||
                           isImpersonating ||
-                          Boolean(subscription) ||
+                          (subscription != null &&
+                            subscription.status !== 'pending') ||
                           !selected
                         }
                         onClick={() =>
