@@ -1,6 +1,9 @@
 import { PaymentError } from '../../errors'
 import type {
+  PayMeCancelSubscriptionRequest,
+  PayMeCancelSubscriptionResponse,
   PayMeEnvironment,
+  PayMeGenerateSubscriptionResponse,
   PayMeGetSubscriptionsRequest,
   PayMeGetSubscriptionsResponse,
   PayMeGetTransactionsRequest,
@@ -137,6 +140,35 @@ export class PayMeClient {
       ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
       seller_payme_id: this.environment.sellerId,
       ...filters,
+    })
+  }
+
+  async cancelSubscription(
+    subPaymeId: string
+  ): Promise<PayMeCancelSubscriptionResponse> {
+    return this.postJson<PayMeCancelSubscriptionResponse>('/cancel-subscription', {
+      ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
+      seller_payme_id: this.environment.sellerId,
+      sub_payme_id: subPaymeId,
+    })
+  }
+
+  /**
+   * Generates a hosted payment page that updates the payment method of an
+   * existing PayMe subscription (re-collect card details for sub_payme_id).
+   */
+  async updateSubscriptionPayment(input: {
+    subPaymeId: string
+    callbackUrl: string
+    returnUrl: string
+  }): Promise<PayMeGenerateSubscriptionResponse> {
+    return this.postJson<PayMeGenerateSubscriptionResponse>('/generate-subscription', {
+      ...(this.environment.clientKey ? { payme_client_key: this.environment.clientKey } : {}),
+      seller_payme_id: this.environment.sellerId,
+      sub_payme_id: input.subPaymeId,
+      sub_callback_url: input.callbackUrl,
+      sub_return_url: input.returnUrl,
+      language: 'he',
     })
   }
 

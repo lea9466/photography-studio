@@ -170,16 +170,57 @@ export class PayMeProvider implements PaymentProvider {
   }
 
   async cancelSubscription(
-    _input: CancelSubscriptionInput
+    input: CancelSubscriptionInput
   ): Promise<PaymentSubscription> {
-    // Cancel local mapping depends on confirmed sub_status after S2S.
-    throw new PaymentError('provider_not_configured')
+    const subPaymeId = input.externalSubscriptionId
+    if (!subPaymeId) throw new PaymentError('subscription_not_found')
+
+    const response = await this.client().cancelSubscription(subPaymeId)
+
+    const statusCode =
+      typeof response.status_code === 'string'
+        ? Number(response.status_code)
+        : response.status_code
+    const hasError =
+      (typeof statusCode === 'number' && statusCode !== 0) ||
+      response.status_error_code != null
+    if (hasError) {
+      throw new PaymentError('provider_unavailable')
+    }
+
+    const now = new Date().toISOString()
+    const cancelAtPeriodEnd = input.atPeriodEnd
+    return {
+      id: subPaymeId,
+      provider: 'payme',
+      customerId: null,
+      planId: null,
+      status: cancelAtPeriodEnd ? 'active' : 'cancelled',
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd,
+      cancelledAt: cancelAtPeriodEnd ? null : now,
+      nextPaymentAt: null,
+      metadata: {
+        sub_payme_id: subPaymeId,
+        cancelled_via: 'payme-cancel-subscription',
+      },
+    }
   }
 
   async updatePaymentMethod(
-    _input: UpdatePaymentMethodInput
+    input: UpdatePaymentMethodInput
   ): Promise<CheckoutSession> {
-    throw new PaymentError('provider_not_configured')
+    const subPaymeId = input.externalSubscriptionId
+    if (!subPaymeId) throw new PaymentError('subscription_not_found')
+
+    const response = await this.client().updateSubscriptionPayment({
+      subPaymeId,
+      callbackUrl: webhookCallbackUrl(),
+      returnUrl: input.returnUrl,
+    })
+
+    return mapPayMeCheckoutFromGenerate(response)
   }
 
   async parseWebhook(input: ParseWebhookInput): Promise<WebhookEvent> {

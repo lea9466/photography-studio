@@ -169,6 +169,25 @@ export type PayMeGenerateSubscriptionRequestKnown = {
   test?: 1
 }
 
+/**
+ * Known fields for cancel-subscription.
+ * Endpoint: https://live.payme.io/api/cancel-subscription
+ * Content-Type: application/json
+ */
+export type PayMeCancelSubscriptionRequest = {
+  payme_client_key?: string
+  seller_payme_id: string
+  sub_payme_id: string
+}
+
+export type PayMeCancelSubscriptionResponse = {
+  status_code?: number | string
+  payme_status?: string
+  status_error_code?: number
+  sub_payme_id?: string
+  seller_payme_id?: string
+}
+
 export type PayMeGenerateSubscriptionResponse = {
   sub_url?: string
   status_code?: number | string
