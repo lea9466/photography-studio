@@ -94,7 +94,7 @@ export function readPayMeEnvironment(): PayMeEnvironment {
     apiBaseUrl: parsed.toString().replace(/\/$/, ''),
     clientKey: optional('PAYME_CLIENT_KEY'),
     sellerId: required('PAYME_SELLER_ID'),
-    webhookSecret: required('PAYME_WEBHOOK_SECRET'),
+    webhookSecret: optional('PAYME_WEBHOOK_SECRET'),
     env,
   }
 }

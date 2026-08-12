@@ -378,6 +378,53 @@ test('provider factory returns PayMe for PAYMENT_PROVIDER=payme', () => {
   assert.equal(createPaymentProvider().name, 'payme')
 })
 
+test('provider factory rejects missing PAYMENT_PROVIDER', () => {
+  const previous = process.env.PAYMENT_PROVIDER
+  try {
+    delete process.env.PAYMENT_PROVIDER
+    assert.throws(
+      () => createPaymentProvider(),
+      (error) => error instanceof PaymentError && error.code === 'provider_not_configured'
+    )
+  } finally {
+    if (previous === undefined) delete process.env.PAYMENT_PROVIDER
+    else process.env.PAYMENT_PROVIDER = previous
+  }
+})
+
+test('PayMe provider can initialize without PAYME_WEBHOOK_SECRET', async () => {
+  const previous = {
+    PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER,
+    PAYME_ENV: process.env.PAYME_ENV,
+    PAYME_API_BASE_URL: process.env.PAYME_API_BASE_URL,
+    PAYME_CLIENT_KEY: process.env.PAYME_CLIENT_KEY,
+    PAYME_SELLER_ID: process.env.PAYME_SELLER_ID,
+    PAYME_WEBHOOK_SECRET: process.env.PAYME_WEBHOOK_SECRET,
+  }
+
+  try {
+    process.env.PAYMENT_PROVIDER = 'payme'
+    process.env.PAYME_ENV = 'sandbox'
+    process.env.PAYME_API_BASE_URL = 'https://sandbox.payme.io/api'
+    process.env.PAYME_CLIENT_KEY = 'test-key'
+    process.env.PAYME_SELLER_ID = 'MPL-TEST'
+    delete process.env.PAYME_WEBHOOK_SECRET
+
+    const { readPayMeEnvironment } = await import(
+      '../lib/payments/providers/payme/payme-client'
+    )
+    const env = readPayMeEnvironment()
+    assert.equal(env.sellerId, 'MPL-TEST')
+    assert.equal(env.clientKey, 'test-key')
+    assert.equal(env.webhookSecret, null)
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key]
+      else process.env[key] = value
+    }
+  }
+})
+
 test('PayMe mapper fails closed until official fields are verified', () => {
   assert.throws(
     () => mapPayMeCheckout({ anything: 'unverified' }),

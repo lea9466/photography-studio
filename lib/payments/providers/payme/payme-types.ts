@@ -6,7 +6,7 @@ export type PayMeEnvironment = {
   /** Sent as `seller_payme_id`. */
   sellerId: string
   /** Reserved for future signature verification — algorithm not yet provided. */
-  webhookSecret: string
+  webhookSecret: string | null
   env: 'sandbox' | 'production'
 }
 
