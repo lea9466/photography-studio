@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
@@ -57,6 +58,7 @@ export async function prepareTestimonialImageUpload(input: {
   }
 
   const { userId } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   if (!ALLOWED_IMAGE_TYPES.includes(input.contentType)) {
     throw new Error('סוג הקובץ לא נתמך')
@@ -128,6 +130,7 @@ export async function createTestimonial(data: {
   imageUrl?: string | null
 }) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   assertOwnedTestimonialImageRef(userId, data.imageUrl)
 
@@ -156,6 +159,7 @@ export async function updateTestimonial(id: string, data: {
   imageUrl?: string | null
 }) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   const updateData: Record<string, any> = {}
 
@@ -183,6 +187,7 @@ export async function updateTestimonial(id: string, data: {
 
 export async function deleteTestimonial(id: string) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   const { error } = await supabase
     .from('testimonials')
@@ -197,6 +202,7 @@ export async function deleteTestimonial(id: string) {
 
 export async function reorderTestimonials(testimonials: { id: string; sortOrder: number }[]) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   for (const testimonial of testimonials) {
     const { error } = await supabase
@@ -215,6 +221,7 @@ export async function updateTestimonialsSectionTitle(input: {
   title?: string
 }): Promise<{ testimonials_title: string | null }> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   if (input.title === undefined) {
     throw new Error('אין שינויים לשמירה')
@@ -250,6 +257,7 @@ export async function updateTestimonialLayoutType(input: {
   }
 
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'testimonials')
 
   const payload: Database['public']['Tables']['users']['Update'] = {
     testimonial_layout_type: input.layoutType,

@@ -1,0 +1,169 @@
+import { PaymentError } from '../../errors'
+import type { CheckoutSession, PaymentCustomer, PaymentSubscription } from '../../types'
+import type {
+  SumitCreateCustomerResponse,
+  SumitBeginRedirectResponse,
+  SumitChargeRecurringResponse,
+  SumitRecurringItem,
+  SumitRecurringStatus,
+} from './sumit-types'
+
+/**
+ * SUMIT amounts are decimal ILS (e.g. 100.00), while the rest of this codebase
+ * (and PayMe) work in integer agorot. Every amount crossing the SUMIT boundary
+ * must go through these two conversions — getting this wrong is a 100x
+ * over/undercharge, not a rounding error.
+ */
+export function agorotToSumitAmount(agorot: number): number {
+  return Math.round(agorot) / 100
+}
+
+export function sumitAmountToAgorot(amount: number): number {
+  return Math.round(amount * 100)
+}
+
+export function mapSumitCustomer(input: {
+  customerId: number
+  email: string
+}): PaymentCustomer {
+  return {
+    id: String(input.customerId),
+    provider: 'sumit',
+    email: input.email,
+  }
+}
+
+/**
+ * `CancelSubscriptionInput`/`getSubscription` in the generic `PaymentProvider`
+ * interface only carry a single opaque `externalSubscriptionId` string — but
+ * every SUMIT recurring-item call (cancel, and the only way to look one up)
+ * requires BOTH `Customer.ID` and the recurring item id together (confirmed by
+ * a live test call: /billing/recurring/cancel/ rejects a request missing
+ * Customer). Since this id is opaque to the rest of the codebase (just stored
+ * as text and echoed back verbatim), we encode both pieces into the id we
+ * return from the first charge — this stays entirely inside providers/sumit.
+ */
+export function buildSumitSubscriptionId(customerId: number, recurringItemId: number): string {
+  return `${customerId}:${recurringItemId}`
+}
+
+export function parseSumitSubscriptionId(
+  value: string
+): { customerId: number; recurringItemId: number } | null {
+  const [customerIdRaw, recurringItemIdRaw] = value.split(':')
+  const customerId = Number(customerIdRaw)
+  const recurringItemId = Number(recurringItemIdRaw)
+  if (!Number.isFinite(customerId) || !Number.isFinite(recurringItemId)) return null
+  return { customerId, recurringItemId }
+}
+
+export function assertSumitCustomerCreated(
+  response: SumitCreateCustomerResponse
+): number {
+  if ((response.Status ?? 1) !== 0 || !response.Data?.CustomerID) {
+    throw new PaymentError('provider_unavailable', {
+      detail: `SUMIT customer create failed: status=${response.Status} message=${response.UserErrorMessage ?? ''}`,
+    })
+  }
+  return response.Data.CustomerID
+}
+
+export function mapSumitCheckoutFromRedirect(
+  response: SumitBeginRedirectResponse
+): CheckoutSession {
+  const url = response.Data?.RedirectURL
+  if (!url) {
+    throw new PaymentError('provider_unavailable', {
+      detail: `SUMIT beginredirect returned no RedirectURL: status=${response.Status} message=${response.UserErrorMessage ?? ''}`,
+    })
+  }
+  return {
+    id: 'sumit-checkout',
+    provider: 'sumit',
+    url,
+    token: null,
+    expiresAt: null,
+  }
+}
+
+/**
+ * Maps the response of the FIRST /billing/recurring/charge/ call, which both
+ * charges the customer and establishes the recurring authorization.
+ */
+export function mapSumitFirstRecurringCharge(
+  response: SumitChargeRecurringResponse
+): PaymentSubscription {
+  const payment = response.Data?.Payment
+  const recurringItemId =
+    response.Data?.RecurringCustomerItemIDs?.[0] ?? payment?.RecurringCustomerItemIDs?.[0]
+  const customerId = response.Data?.CustomerID
+  if ((response.Status ?? 1) !== 0 || !payment?.ValidPayment || !recurringItemId || !customerId) {
+    throw new PaymentError('verification_failed', {
+      detail: `SUMIT recurring charge not valid: status=${response.Status} description=${payment?.StatusDescription ?? response.UserErrorMessage ?? ''}`,
+    })
+  }
+
+  return {
+    id: buildSumitSubscriptionId(customerId, recurringItemId),
+    provider: 'sumit',
+    customerId: String(customerId),
+    planId: null,
+    status: 'active',
+    currentPeriodStart: null,
+    currentPeriodEnd: null,
+    cancelAtPeriodEnd: false,
+    cancelledAt: null,
+    nextPaymentAt: null,
+    metadata: {
+      recurring_item_id: recurringItemId,
+      payment_id: payment.ID ?? null,
+      auth_number: payment.AuthNumber ?? null,
+    },
+  }
+}
+
+/**
+ * 0=Active is confirmed (default state of a freshly-created recurring item).
+ * 1/2/3 come from the third-party SDK's docs (Paused/Cancelled/Expired) and
+ * are NOT independently confirmed — a live test call to /billing/recurring/cancel/
+ * left the item at Status=1, which only proves 1 means "excluded from the
+ * IncludeInactive:false listing", not that it specifically means "paused" as
+ * opposed to "cancelled". Treat both 1 and 2 as terminal/inactive until SUMIT
+ * support confirms the exact split.
+ */
+const RECURRING_STATUS_MAP: Record<SumitRecurringStatus, PaymentSubscription['status']> = {
+  0: 'active',
+  1: 'paused',
+  2: 'cancelled',
+  3: 'expired',
+}
+
+export function mapSumitRecurringItem(
+  customerId: number,
+  record: SumitRecurringItem
+): PaymentSubscription {
+  const recurringItemId = record.ID != null ? Number(record.ID) : null
+  if (!recurringItemId) throw new PaymentError('verification_failed')
+
+  const status =
+    record.Status != null ? RECURRING_STATUS_MAP[record.Status] ?? 'pending' : 'pending'
+
+  return {
+    id: buildSumitSubscriptionId(customerId, recurringItemId),
+    provider: 'sumit',
+    customerId: String(customerId),
+    planId: null,
+    status,
+    currentPeriodStart: record.Date_Start ?? null,
+    currentPeriodEnd: record.Date_NextBilling ?? null,
+    cancelAtPeriodEnd: false,
+    cancelledAt: null,
+    nextPaymentAt: record.Date_NextBilling ?? null,
+    metadata: {
+      recurring_item_id: recurringItemId,
+      unit_price: record.UnitPrice ?? null,
+      quantity: record.Quantity ?? null,
+      previous_billing: record.Date_PreviousBilling ?? null,
+    },
+  }
+}

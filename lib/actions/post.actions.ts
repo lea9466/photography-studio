@@ -6,6 +6,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { Database } from '@/lib/types/database.types'
 import { assertPostOwner } from '@/lib/auth/post-owner'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import {
   POSTS_DISPLAY_STYLES,
   type PostsDisplayStyle,
@@ -65,6 +66,7 @@ export async function createPost(input: {
   autoApplyWatermark?: boolean
 }) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'posts')
 
   const title = input.title.trim()
   const content = input.content.trim()
@@ -102,7 +104,8 @@ export async function updatePost(
     autoApplyWatermark?: boolean
   }
 ) {
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   const updates: PostUpdate = { updated_at: new Date().toISOString() }
 
@@ -141,7 +144,8 @@ export async function updatePost(
 }
 
 export async function setPostCoverPhoto(postId: string, photoId: string | null) {
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   if (photoId) {
     const { data: photo } = await supabase
@@ -168,6 +172,7 @@ export async function updatePostsPageTitle(input: {
   title?: string
 }): Promise<{ posts_page_title: string | null }> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'posts')
 
   const title = input.title?.trim() || null
 
@@ -193,6 +198,7 @@ export async function updatePostsDisplayStyle(
   style: PostsDisplayStyle
 ): Promise<PostsDisplayStyle> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'posts')
   const parsed = postsDisplayStyleSchema.safeParse(style)
 
   if (!parsed.success) {
@@ -223,7 +229,8 @@ export async function updatePostsDisplayStyle(
 }
 
 export async function deletePost(postId: string) {
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   const { data: photos, error: photosError } = await supabase
     .from('post_photos')

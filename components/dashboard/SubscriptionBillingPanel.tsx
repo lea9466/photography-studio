@@ -352,7 +352,7 @@ export function SubscriptionBillingPanel({
           <AlertCircle className="h-5 w-5 shrink-0" />
           <p>
             החיוב האחרון לא הושלם. הנתונים שלך לא נמחקו והגישה אינה נחסמת מיד.
-            ניתן לעדכן אמצעי תשלום לאחר חיבור PayMe.
+            ניתן לעדכן אמצעי תשלום למטה.
           </p>
         </div>
       ) : null}

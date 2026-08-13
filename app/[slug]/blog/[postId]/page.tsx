@@ -18,6 +18,8 @@ import {
   buildPostSeoTitle,
 } from '@/lib/seo/photographer-discovery'
 import { resolveActiveStudioPath } from '@/lib/seo/sitemap-validation'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature } from '@/lib/subscriptions/entitlements'
 
 interface PostPageProps {
   params: Promise<{ slug: string; postId: string }>
@@ -40,6 +42,12 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
 
   const studioPath = resolveActiveStudioPath(photographer)
   if (!studioPath) notFound()
+
+  // Check entitlements for posts feature
+  const entitlements = await getStudioEntitlements(typed.id)
+  if (!canUseFeature(entitlements, 'posts')) {
+    notFound()
+  }
 
   const post = await fetchPublicBlogPostById(typed.id, postId, photographer.site_language)
   if (!post) notFound()

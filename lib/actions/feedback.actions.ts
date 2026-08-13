@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { recordSlugRedirect } from '@/lib/referral/slug-redirect'
 import { sendFeedbackEmail } from '@/lib/email/resend'
@@ -260,6 +261,15 @@ export async function submitFeedback(input: {
 
 export async function updateProfile(input: UpdateProfileInput) {
   const { userId, supabase, actorEmail } = await requireDashboardContext()
+
+  if (
+    input.packages_title !== undefined ||
+    input.packages_subtitle !== undefined ||
+    input.packages_desktop_url !== undefined ||
+    input.packages_mobile_url !== undefined
+  ) {
+    await assertFeatureAllowed(userId, 'packages')
+  }
 
   const updateData = buildProfileUpdateData(userId, input)
   if (Object.keys(updateData).length === 0) return

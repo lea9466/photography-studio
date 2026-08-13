@@ -15,6 +15,7 @@ import {
   parsePostPhotoIdsFromUploadRequests,
 } from '@/lib/post-photo-limits'
 import { assertPostOwner } from '@/lib/auth/post-owner'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 
 // Buckets this action is actually ever asked to generate upload URLs for in
 // the real client code (grep-verified: media-upload-pipeline.ts uses
@@ -94,6 +95,7 @@ export async function createR2UploadUrls(
 
 async function assertPostUploadPaths(postId: string, items: R2UploadRequest[]) {
   const { user, supabase } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   const prefix = `${user.id}/posts/${postId}/`
   for (const item of items) {

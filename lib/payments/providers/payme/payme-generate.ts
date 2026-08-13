@@ -39,7 +39,10 @@ export function buildGenerateSubscriptionRequest(
 ): PayMeGenerateSubscriptionRequestKnown {
   void input.buyer
 
+  // All UTC — mixing local setDate() with UTC getters here previously could
+  // compute the wrong calendar day depending on the server's timezone offset.
   const start = new Date()
+  start.setUTCDate(start.getUTCDate() + 1) // תאריך מחר (UTC) — ה-API של PayMe דורש תאריך עתידי
   const day = String(start.getUTCDate()).padStart(2, '0')
   const month = String(start.getUTCMonth() + 1).padStart(2, '0')
   const year = start.getUTCFullYear()

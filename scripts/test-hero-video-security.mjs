@@ -156,13 +156,31 @@ assert.equal(isOwnedHeroVideoPath('user-a', 'user-a/hero-video/../id.mp4'), fals
 assert.equal(isOwnedHeroVideoPath('user-a', 'https://cdn.test/user-a/hero-video/id.mp4'), false)
 
 assert.equal(routeSource.includes("formData.get('userId')"), false)
-const uploadIndex = routeSource.indexOf("uploadMediaObject('branding', newPath")
-const dbUpdateIndex = routeSource.indexOf(".update({ hero_video_url: newPath })")
-const rollbackIndex = routeSource.indexOf("deleteMediaObject('branding', newPath)")
-const oldDeleteIndex = routeSource.indexOf("deleteMediaObject('branding', oldPath!)")
-assert.ok(uploadIndex >= 0 && dbUpdateIndex > uploadIndex, 'DB must update only after upload')
-assert.ok(rollbackIndex > dbUpdateIndex, 'new upload must be deleted when DB update fails')
-assert.ok(oldDeleteIndex > rollbackIndex, 'old video must be deleted last')
+// Verify each flow's security invariant separately
+// Flow 1: finalize (presigned URL) - lines 77-109
+//   No uploadMediaObject here (client uploads directly to R2)
+//   DB update at line 92 happens after client already uploaded
+const finalizeFlow = routeSource.substring(
+  routeSource.indexOf("if (parsed?.action === 'finalize')"),
+  routeSource.indexOf("const formData = await request.formData()")
+)
+assert.ok(finalizeFlow.includes(".update({ hero_video_url: newPath })"), 'finalize flow has DB update')
+assert.ok(!finalizeFlow.includes("uploadMediaObject"), 'finalize flow does NOT upload directly (client uses presigned URL)')
+
+// Flow 2: direct upload - lines 111-153
+//   uploadMediaObject at line 130, then DB update at line 134
+const directFlow = routeSource.substring(
+  routeSource.indexOf("const formData = await request.formData()"),
+  routeSource.indexOf("export async function DELETE()")
+)
+const directUploadIndex = directFlow.indexOf("uploadMediaObject('branding', newPath")
+const directDbUpdateIndex = directFlow.indexOf(".update({ hero_video_url: newPath })")
+const directRollbackIndex = directFlow.indexOf("deleteMediaObject('branding', newPath)")
+const directOldDeleteIndex = directFlow.indexOf("deleteMediaObject('branding', oldPath!)")
+
+assert.ok(directUploadIndex >= 0 && directDbUpdateIndex > directUploadIndex, 'direct flow: DB update only after upload')
+assert.ok(directRollbackIndex > directDbUpdateIndex, 'direct flow: new upload deleted on DB failure')
+assert.ok(directOldDeleteIndex > directRollbackIndex, 'direct flow: old video deleted last')
 
 const unchangedFallback = '<div data-hero-slideshow>images</div>'
 assert.equal(

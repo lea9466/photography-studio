@@ -13,9 +13,11 @@ import {
   Filter,
   Gift,
   Hash,
+  Lock,
   LogIn,
   LogOut,
   Search,
+  ShieldCheck,
   ShieldOff,
   Sparkles,
   Trash2,
@@ -30,7 +32,10 @@ import {
   adminLogout,
   deleteAdminStudio,
   updateAdminStudioSiteAccess,
+  updateAdminStudioSubscriptionOverride,
 } from '@/lib/actions/admin.actions'
+import { resolveTierBadge } from '@/lib/subscriptions/entitlements'
+import type { StudioEntitlements } from '@/lib/subscriptions/types'
 import { daysUntilTrialEnd } from '@/lib/referral/referral-utils'
 import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
 import { AdminCoverCardMaintenance } from '@/components/admin/AdminCoverCardMaintenance'
@@ -235,10 +240,39 @@ function getTrialDaysBadgeClass(daysLeft: number) {
   return 'border-emerald-200 bg-emerald-100 text-emerald-800'
 }
 
+function getTierBadgeClass(badge: ReturnType<typeof resolveTierBadge>) {
+  switch (badge) {
+    case 'FORCED PRO':
+      return 'border-emerald-300 bg-emerald-600 text-white'
+    case 'PRO':
+      return 'border-emerald-200 bg-emerald-100 text-emerald-800'
+    case 'TRIAL':
+      return 'border-sky-200 bg-sky-100 text-sky-800'
+    case 'FORCED FREE':
+      return 'border-rose-300 bg-rose-500 text-white'
+    default:
+      return 'border-slate-200 bg-slate-100 text-slate-600'
+  }
+}
+
+function TierBadge({ entitlements }: { entitlements: StudioEntitlements }) {
+  const badge = resolveTierBadge(entitlements)
+  const Icon = badge === 'FORCED PRO' ? ShieldCheck : badge === 'FORCED FREE' ? ShieldOff : badge === 'PRO' ? Sparkles : Lock
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${getTierBadgeClass(badge)}`}
+    >
+      <Icon className="h-3 w-3 shrink-0" />
+      {badge}
+    </span>
+  )
+}
+
 export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [rows, setRows] = useState(studios)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [accessPendingId, setAccessPendingId] = useState<string | null>(null)
+  const [overridePendingId, setOverridePendingId] = useState<string | null>(null)
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('last_visit')
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
@@ -356,6 +390,42 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
       await adminLogout()
       window.location.reload()
     })
+  }
+
+  async function handleOverrideChange(
+    studio: AdminStudioRow,
+    override: 'auto' | 'pro' | 'free'
+  ) {
+    setOverridePendingId(studio.id)
+    try {
+      const updated = await updateAdminStudioSubscriptionOverride(
+        studio.id,
+        override
+      )
+      setRows((current) =>
+        current.map((row) =>
+          row.id === studio.id
+            ? {
+                ...row,
+                subscription_tier_override: updated.subscription_tier_override,
+                tier: updated.tier,
+                tier_source: updated.tier_source,
+                entitlements: updated.entitlements,
+              }
+            : row
+        )
+      )
+      const labels: Record<string, string> = {
+        auto: 'רמת המנוי הוגדרה לאוטומטי',
+        pro: 'הסטודיו נכפה ל-PRO',
+        free: 'הסטודיו נכפה ל-FREE',
+      }
+      toast.success(labels[override])
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'עדכון נכשל')
+    } finally {
+      setOverridePendingId(null)
+    }
   }
 
   async function handleImpersonate(studio: AdminStudioRow) {
@@ -602,6 +672,9 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                 <th className="bg-slate-800 px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-amber-200">
                   ימים חינם
                 </th>
+                <th className="bg-slate-800 px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-emerald-200">
+                  רמת מנוי
+                </th>
                 <th className="bg-slate-800 px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-orange-200">
                   מצב אתר
                 </th>
@@ -613,7 +686,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
             <tbody>
               {sortedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-14 text-center text-[--muted]">
                       אין סטודיואים שמתאימים לסינון הנוכחי
                     </div>
@@ -759,6 +832,28 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                           <span className="text-[11px] text-slate-500">
                             עד {formatDate(studio.trial_end_date)}
                           </span>
+                        </div>
+                      </td>
+                      <td
+                        className={`border-y border-slate-200/80 px-2.5 py-3 shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:shadow-md ${rowAccent}`}
+                      >
+                        <div className="flex min-w-28 flex-col gap-1.5">
+                          <TierBadge entitlements={studio.entitlements} />
+                          <select
+                            value={studio.subscription_tier_override}
+                            disabled={overridePendingId === studio.id}
+                            onChange={(event) =>
+                              handleOverrideChange(
+                                studio,
+                                event.target.value as 'auto' | 'pro' | 'free'
+                              )
+                            }
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-[11px] font-medium text-slate-700 outline-none focus:border-emerald-300 focus:ring-2 focus:ring-emerald-100 disabled:opacity-50"
+                          >
+                            <option value="auto">אוטומטי</option>
+                            <option value="pro">Force PRO</option>
+                            <option value="free">Force FREE</option>
+                          </select>
                         </div>
                       </td>
                       <td

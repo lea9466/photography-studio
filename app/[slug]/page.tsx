@@ -37,6 +37,9 @@ import {
 } from '@/lib/seo/photographer-discovery'
 import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature } from '@/lib/subscriptions/entitlements'
+import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
 
 interface PageProps {
   params: Promise<{
@@ -90,15 +93,54 @@ export default async function PhotographerPage({ params }: PageProps) {
     // Type assertion to fix TypeScript inference
     const typedPhotographer = photographer as any
 
+    // Fetch entitlements for public gating
+    const entitlements = await getStudioEntitlements(typedPhotographer.id)
+    const isFree = !entitlements.isPro
+
+    // For FREE users: determine the single displayed gallery
+    let displayedGalleryId: string | null = null
+    if (isFree) {
+      // Use user-selected gallery if set, otherwise pick earliest public gallery
+      displayedGalleryId = typedPhotographer.displayed_gallery_id ?? null
+    }
+
     let galleriesQuery = admin
       .from('galleries')
       .select('id, title, slug, created_at, cover_image')
       .eq('user_id', typedPhotographer.id)
       .order('created_at', { ascending: false })
-      .limit(4)
 
-    if (!PUBLIC_ONLY_MVP) {
+    if (isFree) {
+      // FREE: only show the selected displayed gallery — and only if it's
+      // still public. A gallery can be switched to private after being
+      // selected as "displayed", so this must be re-checked on every read,
+      // not just at selection time.
+      if (displayedGalleryId) {
+        galleriesQuery = galleriesQuery
+          .eq('id', displayedGalleryId)
+          .eq('is_public', true)
+      } else {
+        // Fallback: pick earliest public gallery deterministically
+        const { data: allGalleries } = await admin
+          .from('galleries')
+          .select('id, is_public, created_at')
+          .eq('user_id', typedPhotographer.id)
+        const fallbackGallery = pickFreeDisplayedGallery(allGalleries || [])
+        if (fallbackGallery) {
+          galleriesQuery = galleriesQuery.eq('id', fallbackGallery.id)
+        } else {
+          // No public galleries - return empty
+          galleriesQuery = galleriesQuery.eq('id', '00000000-0000-0000-0000-000000000000')
+        }
+      }
+    } else if (!PUBLIC_ONLY_MVP) {
+      // PRO: filter to public galleries (unless MVP mode)
       galleriesQuery = galleriesQuery.eq('is_public', true)
+    }
+
+    // PRO: limit to 4 galleries for homepage; FREE: limit to 1 (already filtered above)
+    if (!isFree) {
+      galleriesQuery = galleriesQuery.limit(4)
     }
 
     const { data: galleries } = await galleriesQuery
@@ -155,121 +197,156 @@ export default async function PhotographerPage({ params }: PageProps) {
       })
     )
 
-    // Fetch active photography packages
-    const { data: packages } = await admin
-      .from('photography_packages')
-      .select('id, name, price_amount, duration_text, includes, sort_order, is_featured')
-      .eq('user_id', typedPhotographer.id)
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
-
-    // Count posts / active before-after pairs for conditional header links
-    const [
-      { count: postCount },
-      { count: photoEditComparisonsCount, error: photoEditCountError },
-    ] = await Promise.all([
-      admin
-        .from('posts')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', typedPhotographer.id),
-      admin
-        .from('photo_edit_comparisons')
-        .select('id', { count: 'exact', head: true })
+    // Fetch active photography packages (PRO only)
+    let packages = [] as any[]
+    if (canUseFeature(entitlements, 'packages')) {
+      const { data } = await admin
+        .from('photography_packages')
+        .select('id, name, price_amount, duration_text, includes, sort_order, is_featured')
         .eq('user_id', typedPhotographer.id)
-        .eq('is_active', true),
-    ])
-
-    if (photoEditCountError) {
-      console.error('[photographer-homepage] photo_edit_comparisons count failed', {
-        photographerId: typedPhotographer.id,
-        error: photoEditCountError.message,
-      })
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+      packages = data || []
+    } else {
+      packages = []
     }
 
-    // Fetch the latest posts for the homepage "latest posts" section
-    const { data: latestPostsData } = await admin
-      .from('posts')
-      .select(
-        'id, title, subtitle, content, auto_apply_watermark, cover_photo_id, created_at, post_photos!post_photos_post_id_fkey(id, preview_url, watermarked_preview_url, sort_order)'
-      )
-      .eq('user_id', typedPhotographer.id)
-      .order('created_at', { ascending: false })
-      .limit(3)
+    // Count posts / active before-after pairs (PRO only)
+    let postCount = 0
+    let photoEditComparisonsCount = 0
+    if (canUseFeature(entitlements, 'posts') || canUseFeature(entitlements, 'before_after')) {
+      const [
+        { count: postCountResult },
+        { count: photoEditComparisonsCountResult, error: photoEditCountError },
+      ] = await Promise.all([
+        admin
+          .from('posts')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', typedPhotographer.id),
+        admin
+          .from('photo_edit_comparisons')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', typedPhotographer.id)
+          .eq('is_active', true),
+      ])
+      postCount = postCountResult ?? 0
+      photoEditComparisonsCount = photoEditComparisonsCountResult ?? 0
+    } else {
+      postCount = 0
+      photoEditComparisonsCount = 0
+    }
 
-    const latestPosts = (latestPostsData ?? []) as HomepagePostRow[]
+    // Fetch the latest posts for the homepage "latest posts" section (PRO only)
+    let latestPosts: HomepagePostRow[] = []
+    if (canUseFeature(entitlements, 'posts')) {
+      const { data: latestPostsData } = await admin
+        .from('posts')
+        .select(
+          'id, title, subtitle, content, auto_apply_watermark, cover_photo_id, created_at, post_photos!post_photos_post_id_fkey(id, preview_url, watermarked_preview_url, sort_order)'
+        )
+        .eq('user_id', typedPhotographer.id)
+        .order('created_at', { ascending: false })
+        .limit(3)
 
-    const postPreviewPaths: string[] = []
-    const postWatermarkedPaths: string[] = []
-    for (const post of latestPosts) {
-      for (const photo of post.post_photos ?? []) {
-        if (post.auto_apply_watermark) {
-          if (photo.watermarked_preview_url) postWatermarkedPaths.push(photo.watermarked_preview_url)
-        } else if (photo.preview_url) {
-          postPreviewPaths.push(photo.preview_url)
+      latestPosts = (latestPostsData ?? []) as HomepagePostRow[]
+    } else {
+      latestPosts = []
+    }
+
+    // Process posts for homepage (only if posts feature is enabled)
+    let homepagePosts: PublicBlogPost[] = []
+    if (canUseFeature(entitlements, 'posts') && latestPosts.length > 0) {
+      const postPreviewPaths: string[] = []
+      const postWatermarkedPaths: string[] = []
+      for (const post of latestPosts) {
+        for (const photo of post.post_photos ?? []) {
+          if (post.auto_apply_watermark) {
+            if (photo.watermarked_preview_url) postWatermarkedPaths.push(photo.watermarked_preview_url)
+          } else if (photo.preview_url) {
+            postPreviewPaths.push(photo.preview_url)
+          }
         }
       }
+
+      const emptyUrlMap: Record<string, string> = {}
+      const [postPreviewUrls, postWatermarkedUrls] = await Promise.all([
+        postPreviewPaths.length
+          ? signStoragePaths('previews', postPreviewPaths)
+          : Promise.resolve(emptyUrlMap),
+        postWatermarkedPaths.length
+          ? signStoragePaths('watermarked', postWatermarkedPaths)
+          : Promise.resolve(emptyUrlMap),
+      ])
+
+      const resolvePostPhotoUrl = (
+        post: HomepagePostRow,
+        photo: HomepagePostPhotoRow
+      ): string | null => {
+        if (post.auto_apply_watermark) {
+          return photo.watermarked_preview_url
+            ? postWatermarkedUrls[photo.watermarked_preview_url] ?? null
+            : photo.preview_url
+              ? postPreviewUrls[photo.preview_url] ?? null
+              : null
+        }
+        return photo.preview_url ? postPreviewUrls[photo.preview_url] ?? null : null
+      }
+
+      const siteLanguage = resolveSiteLanguage(typedPhotographer.site_language)
+
+      homepagePosts = latestPosts.map((post) => {
+        const orderedPhotos = [...(post.post_photos ?? [])].sort(
+          (a, b) => a.sort_order - b.sort_order
+        )
+        const images = orderedPhotos
+          .map((photo) => resolvePostPhotoUrl(post, photo))
+          .filter((url): url is string => Boolean(url))
+        const coverPhoto = post.cover_photo_id
+          ? orderedPhotos.find((photo) => photo.id === post.cover_photo_id)
+          : null
+        const coverUrl = coverPhoto ? resolvePostPhotoUrl(post, coverPhoto) : images[0] ?? null
+
+        return {
+          id: post.id,
+          title: post.title,
+          subtitle: post.subtitle,
+          content: post.content,
+          date: formatSiteDate(post.created_at, siteLanguage),
+          coverUrl,
+          images,
+        }
+      })
+    } else {
+      homepagePosts = []
     }
 
-    const emptyUrlMap: Record<string, string> = {}
-    const [postPreviewUrls, postWatermarkedUrls] = await Promise.all([
-      postPreviewPaths.length
-        ? signStoragePaths('previews', postPreviewPaths)
-        : Promise.resolve(emptyUrlMap),
-      postWatermarkedPaths.length
-        ? signStoragePaths('watermarked', postWatermarkedPaths)
-        : Promise.resolve(emptyUrlMap),
-    ])
-
-    const resolvePostPhotoUrl = (
-      post: HomepagePostRow,
-      photo: HomepagePostPhotoRow
-    ): string | null => {
-      if (post.auto_apply_watermark) {
-        return photo.watermarked_preview_url
-          ? postWatermarkedUrls[photo.watermarked_preview_url] ?? null
-          : photo.preview_url
-            ? postPreviewUrls[photo.preview_url] ?? null
-            : null
-      }
-      return photo.preview_url ? postPreviewUrls[photo.preview_url] ?? null : null
+    // Fetch client testimonials/reviews (PRO only)
+    let testimonials = [] as any[]
+    if (canUseFeature(entitlements, 'testimonials')) {
+      const { data } = await admin
+        .from('testimonials')
+        .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order, image_url')
+        .eq('user_id', typedPhotographer.id)
+        .order('is_featured', { ascending: false })
+        .order('sort_order', { ascending: true })
+        .order('review_date', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
+      testimonials = data || []
+    } else {
+      testimonials = []
     }
-
-    const siteLanguage = resolveSiteLanguage(typedPhotographer.site_language)
-
-    const homepagePosts: PublicBlogPost[] = latestPosts.map((post) => {
-      const orderedPhotos = [...(post.post_photos ?? [])].sort(
-        (a, b) => a.sort_order - b.sort_order
-      )
-      const images = orderedPhotos
-        .map((photo) => resolvePostPhotoUrl(post, photo))
-        .filter((url): url is string => Boolean(url))
-      const coverPhoto = post.cover_photo_id
-        ? orderedPhotos.find((photo) => photo.id === post.cover_photo_id)
-        : null
-      const coverUrl = coverPhoto ? resolvePostPhotoUrl(post, coverPhoto) : images[0] ?? null
-
-      return {
-        id: post.id,
-        title: post.title,
-        subtitle: post.subtitle,
-        content: post.content,
-        date: formatSiteDate(post.created_at, siteLanguage),
-        coverUrl,
-        images,
-      }
-    })
-
-    // Fetch client testimonials/reviews (public)
-    const { data: testimonials } = await admin
-      .from('testimonials')
-      .select('id, title, content, shoot_type, review_date, created_at, is_featured, sort_order, image_url')
-      .eq('user_id', typedPhotographer.id)
-      .order('is_featured', { ascending: false })
-      .order('sort_order', { ascending: true })
-      .order('review_date', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false })
 
     // Resolve R2 paths to signed URLs (only if not already a full URL)
+    // For FREE users: force hero_type to 'images' and hide hero video
+    const isVideoHero = typedPhotographer.hero_type === 'video' && canUseFeature(entitlements, 'hero_video')
+    const heroVideoUrl = isVideoHero ? await resolveBrandingPath(typedPhotographer.hero_video_url) : null
+
+    // For FREE users: hide FAQ items and FAQ section image
+    const faqItems = canUseFeature(entitlements, 'faq') ? typedPhotographer.faq_items : []
+    const faqSectionImageUrl = canUseFeature(entitlements, 'faq')
+      ? await resolveBrandingPath(typedPhotographer.faq_section_image_url)
+      : null
+
     const photographerWithUrls = {
       ...typedPhotographer,
       hero_desktop_url: await resolveBrandingPath(typedPhotographer.hero_desktop_url),
@@ -288,13 +365,14 @@ export default async function PhotographerPage({ params }: PageProps) {
             ? [typedPhotographer.hero_mobile_url]
             : []
       ),
-      hero_video_url: await resolveBrandingPath(typedPhotographer.hero_video_url),
+      hero_video_url: heroVideoUrl,
       about_image_url: await resolveBrandingPath(typedPhotographer.about_image_url),
       contact_desktop_url: await resolveBrandingPath(typedPhotographer.contact_desktop_url),
       contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),
       packages_desktop_url: await resolveBrandingPath(typedPhotographer.packages_desktop_url),
       packages_mobile_url: await resolveBrandingPath(typedPhotographer.packages_mobile_url),
-      faq_section_image_url: await resolveBrandingPath(typedPhotographer.faq_section_image_url),
+      faq_section_image_url: faqSectionImageUrl,
+      faq_items: faqItems,
       logo_url: await resolveBrandingPath(typedPhotographer.logo_url),
     }
 

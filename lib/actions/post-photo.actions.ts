@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { deleteMediaObject } from '@/lib/r2/storage'
 import type { Database } from '@/lib/types/database.types'
 import { assertPostOwner } from '@/lib/auth/post-owner'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { assertPostPhotoCountWithinLimit } from '@/lib/post-photo-limits'
 import { buildPostPhotoStoragePaths } from '@/lib/images/process'
 import { isOwnedStorageKey } from '@/lib/r2/owned-path'
@@ -14,7 +15,8 @@ const COMPLETE_BATCH_SIZE = 50
 const DELETE_BATCH_SIZE = 50
 
 export async function reservePostPhotosBatch(postId: string, count: number) {
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
   if (count <= 0) return []
 
   await assertPostPhotoCountWithinLimit(supabase, postId, count)
@@ -60,7 +62,8 @@ export async function completePostPhotosBatch(
 ) {
   if (items.length === 0) return
 
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   for (let offset = 0; offset < items.length; offset += COMPLETE_BATCH_SIZE) {
     const chunk = items.slice(offset, offset + COMPLETE_BATCH_SIZE)
@@ -93,6 +96,7 @@ export async function cleanupPostPhotosBatch(
   if (photoIds.length === 0) return
 
   const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   const { data: rows, error: selectError } = await supabase
     .from('post_photos')
@@ -161,7 +165,8 @@ export async function cleanupPostPhotosBatch(
 }
 
 export async function finalizePostUpload(postId: string) {
-  await assertPostOwner(postId)
+  const { user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
   revalidatePath('/dashboard/posts')
   revalidatePath('/[slug]/blog', 'page')
 }
@@ -169,7 +174,8 @@ export async function finalizePostUpload(postId: string) {
 export async function deletePostPhotosBulk(postId: string, photoIds: string[]) {
   if (photoIds.length === 0) return { deleted: 0 }
 
-  const { supabase } = await assertPostOwner(postId)
+  const { supabase, user } = await assertPostOwner(postId)
+  await assertFeatureAllowed(user.id, 'posts')
 
   const { data: photos, error: fetchError } = await supabase
     .from('post_photos')

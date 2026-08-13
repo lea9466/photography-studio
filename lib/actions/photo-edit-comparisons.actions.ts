@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { isR2Configured } from '@/lib/r2/config'
@@ -148,6 +149,7 @@ export async function updateBeforeAfterDisplayStyle(
 ): Promise<ActionResult<BeforeAfterDisplayStyle>> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
     const parsed = beforeAfterDisplayStyleSchema.safeParse(style)
 
     if (!parsed.success) {
@@ -231,6 +233,7 @@ export async function preparePhotoEditImageUpload(input: {
     }
 
     const { userId } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
 
     if (!input.comparisonId || !/^[0-9a-f-]{36}$/i.test(input.comparisonId)) {
       return actionError('מזהה זוג לא תקין')
@@ -287,6 +290,7 @@ export async function createPhotoEditComparison(
 ): Promise<ActionResult<PhotoEditComparison>> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
     const parsed = createPhotoEditComparisonSchema.safeParse(formDataToObject(formData))
 
     if (!parsed.success) {
@@ -354,6 +358,7 @@ export async function updatePhotoEditComparison(
 ): Promise<ActionResult<PhotoEditComparison>> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
 
     if (!id) return actionError('מזהה לא תקין')
 
@@ -490,6 +495,7 @@ export async function updatePhotoEditComparison(
 export async function deletePhotoEditComparison(id: string): Promise<ActionResult> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
 
     const { data: existing, error: existingError } = await supabase
       .from('photo_edit_comparisons')
@@ -536,6 +542,7 @@ export async function togglePhotoEditComparisonActive(
 ): Promise<ActionResult<PhotoEditComparison>> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
 
     const { data, error } = await supabase
       .from('photo_edit_comparisons')
@@ -560,6 +567,7 @@ export async function reorderPhotoEditComparisons(
 ): Promise<ActionResult> {
   try {
     const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'before_after')
 
     if (!Array.isArray(items) || items.length === 0) {
       return actionError('רשימת סדר לא תקינה')

@@ -6,6 +6,7 @@ import { getFeedbackEmail } from '@/lib/feedback-email'
 import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
 import { deleteStudioCompletely } from '@/lib/admin/delete-studio'
 import {
+  fetchActiveSubscriptionByIds,
   getAdminBroadcastRecipients,
   getAdminStudios,
   getLatestAnnouncementForAdmin,
@@ -31,6 +32,11 @@ import {
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
+import {
+  hasActiveSubscriptionLike,
+  resolveStudioEntitlements,
+} from '@/lib/subscriptions/entitlements'
+import type { SubscriptionTierOverride } from '@/lib/subscriptions/types'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import { isR2Configured } from '@/lib/r2/config'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
@@ -203,11 +209,11 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
 
   const admin = createAdminClient()
   const selectWithFlags =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, hero_video_url'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, hero_video_url, subscription_tier_override'
   const selectWithoutHero =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, subscription_tier_override'
   const selectLegacy =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, subscription_tier_override'
 
   let { data, error } = await admin
     .from('users')
@@ -258,7 +264,18 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     is_under_construction?: boolean | null
     is_site_unavailable?: boolean | null
     hero_video_url?: string | null
+    subscription_tier_override?: string | null
   }
+
+  const override = (row.subscription_tier_override as SubscriptionTierOverride) ?? 'auto'
+  const activeSubscriptions = await fetchActiveSubscriptionByIds([row.id])
+  const entitlements = resolveStudioEntitlements({
+    trialEndDate: row.trial_end_date,
+    subscriptionTierOverride: override,
+    hasActiveSubscription: hasActiveSubscriptionLike(
+      activeSubscriptions.get(row.id) ?? null
+    ),
+  })
 
   return {
     exists: true,
@@ -276,6 +293,10 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
       is_site_unavailable: Boolean(row.is_site_unavailable),
       has_hero_video: Boolean(row.hero_video_url?.trim()),
       site_path: getPublicSitePath(row.slug, row.studio_name),
+      subscription_tier_override: override,
+      tier: entitlements.tier,
+      tier_source: entitlements.source,
+      entitlements,
     },
   }
 }
@@ -378,6 +399,85 @@ export async function updateAdminStudioSiteAccess(
 
 export async function getAdminAuthState() {
   return { authenticated: await isAdminAuthenticated() }
+}
+
+const SUBSCRIPTION_TIER_OVERRIDES: SubscriptionTierOverride[] = [
+  'auto',
+  'pro',
+  'free',
+]
+
+export async function updateAdminStudioSubscriptionOverride(
+  userId: string,
+  override: SubscriptionTierOverride
+) {
+  await requireAdmin()
+
+  const trimmedId = userId.trim()
+  if (!trimmedId) {
+    throw new Error('מזהה סטודיו חסר')
+  }
+  if (!SUBSCRIPTION_TIER_OVERRIDES.includes(override)) {
+    throw new Error('ערך override לא תקין')
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .update({ subscription_tier_override: override })
+    .eq('id', trimmedId)
+    .select('id, slug, studio_name, trial_end_date, subscription_tier_override')
+    .maybeSingle()
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? ''
+    if (
+      error.code === '42703' ||
+      error.code === 'PGRST204' ||
+      message.includes('subscription_tier_override')
+    ) {
+      throw new Error(
+        'יש להריץ את המיגרציה add_subscription_tier_override ב-Supabase לפני עדכון הרמת מנוי'
+      )
+    }
+    throw new Error(error.message)
+  }
+  if (!data) throw new Error('הסטודיו לא נמצא')
+
+  const row = data as {
+    id: string
+    slug: string | null
+    studio_name: string | null
+    trial_end_date: string
+    subscription_tier_override: SubscriptionTierOverride
+  }
+
+  revalidatePath('/manage')
+
+  const sitePath = getPublicSitePath(row.slug, row.studio_name)
+  if (sitePath) {
+    revalidatePath(sitePath)
+    revalidatePath(`${sitePath}/portfolio`)
+    revalidatePath(`${sitePath}/blog`)
+    revalidatePath(`${sitePath}/before-after`)
+  }
+
+  const activeSubscriptions = await fetchActiveSubscriptionByIds([row.id])
+  const entitlements = resolveStudioEntitlements({
+    trialEndDate: row.trial_end_date,
+    subscriptionTierOverride: row.subscription_tier_override,
+    hasActiveSubscription: hasActiveSubscriptionLike(
+      activeSubscriptions.get(row.id) ?? null
+    ),
+  })
+
+  return {
+    id: row.id,
+    subscription_tier_override: row.subscription_tier_override,
+    tier: entitlements.tier,
+    tier_source: entitlements.source,
+    entitlements,
+  }
 }
 
 export async function fetchAdminBroadcastRecipientCount(

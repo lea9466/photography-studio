@@ -81,6 +81,9 @@ export type Database = {
           faq_section_image_url: string | null
           trial_end_date: string
           trial_ending_email_sent_at: string | null
+          trial_expired_email_sent_at: string | null
+          subscription_tier_override: string
+          displayed_gallery_id: string | null
           referral_code: string | null
           referred_by_user_id: string | null
           has_triggered_referral_bonus: boolean
@@ -145,6 +148,9 @@ export type Database = {
           faq_section_image_url?: string | null
           trial_end_date?: string
           trial_ending_email_sent_at?: string | null
+          trial_expired_email_sent_at?: string | null
+          subscription_tier_override?: string
+          displayed_gallery_id?: string | null
           referral_code?: string | null
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean
@@ -209,6 +215,9 @@ export type Database = {
           faq_section_image_url?: string | null
           trial_end_date?: string
           trial_ending_email_sent_at?: string | null
+          trial_expired_email_sent_at?: string | null
+          subscription_tier_override?: string
+          displayed_gallery_id?: string | null
           referral_code?: string | null
           referred_by_user_id?: string | null
           has_triggered_referral_bonus?: boolean

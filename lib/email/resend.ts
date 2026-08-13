@@ -496,6 +496,81 @@ export async function sendTrialEndingReminderEmail(input: {
   return { sent: true }
 }
 
+/**
+ * Day-zero notification: trial just ended, account moved to the FREE plan.
+ * `checkoutEnabled` selects whether an upgrade CTA is shown — mirrors the
+ * update/payment split in sendTrialUpdateEmail/sendTrialEndingReminderEmail.
+ */
+export async function sendTrialExpiredEmail(input: {
+  name: string
+  email: string
+  checkoutEnabled: boolean
+}): Promise<{ sent: boolean }> {
+  const resend = requireResendOrSafeStub({
+    template: 'trial-expired',
+    email: input.email,
+  })
+  if (!resend) return { sent: false }
+
+  const displayName = input.name.trim() || 'שם'
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+
+  const limitsLines = [
+    'תקופת הניסיון החינמית שלך הסתיימה, והחשבון עבר למסלול החינמי.',
+    '',
+    'שום דבר לא נמחק — כל הגלריות והתמונות שלך נשארות בדיוק כמו שהיו.',
+    '',
+    'במסלול החינמי יש כמה הבדלים:',
+    '• עד 3 תמונות hero בעמוד הבית',
+    '• גלריה ציבורית אחת מוצגת בכל רגע נתון',
+    '• עד 30 תמונות בגלריה ציבורית',
+    '• כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם',
+  ]
+
+  const ctaLines = input.checkoutEnabled
+    ? ['', `אפשר לחזור למסלול המלא בכל רגע: ${subscriptionUrl}`]
+    : ['', 'מערכת המנויים עדיין לא פתוחה לתשלום — נשלח מייל נוסף ברגע שהיא תיפתח.']
+
+  const text = [`היי ${displayName},`, '', ...limitsLines, ...ctaLines].join('\n')
+
+  const ctaHtml = input.checkoutEnabled
+    ? `
+      <p style="margin: 24px 0;">
+        <a
+          href="${subscriptionUrl}"
+          style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
+        >
+          חזרה למסלול המלא
+        </a>
+      </p>
+    `
+    : '<p>מערכת המנויים עדיין לא פתוחה לתשלום — נשלח מייל נוסף ברגע שהיא תיפתח.</p>'
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'תקופת הניסיון שלך הסתיימה',
+    text,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>תקופת הניסיון החינמית שלך הסתיימה, והחשבון עבר למסלול החינמי.</p>
+        <p>שום דבר לא נמחק — כל הגלריות והתמונות שלך נשארות בדיוק כמו שהיו.</p>
+        <p>במסלול החינמי יש כמה הבדלים:</p>
+        <ul>
+          <li>עד 3 תמונות hero בעמוד הבית</li>
+          <li>גלריה ציבורית אחת מוצגת בכל רגע נתון</li>
+          <li>עד 30 תמונות בגלריה ציבורית</li>
+          <li>כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם</li>
+        </ul>
+        ${ctaHtml}
+      </div>
+    `,
+  })
+
+  return { sent: true }
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

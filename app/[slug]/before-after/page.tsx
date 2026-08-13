@@ -12,6 +12,8 @@ import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metada
 import { resolveSiteLanguage } from '@/lib/site-language'
 import type { PhotoEditComparisonRow as DbRow } from '@/lib/types/database.types'
 import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature } from '@/lib/subscriptions/entitlements'
 
 interface BeforeAfterPageProps {
   params: Promise<{ slug: string }>
@@ -27,6 +29,12 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const typed = photographer as typeof photographer & {
     id: string
     gallery_layout_mode: string | null
+  }
+
+  // Check entitlements for before_after feature
+  const entitlements = await getStudioEntitlements(typed.id)
+  if (!canUseFeature(entitlements, 'before_after')) {
+    notFound()
   }
 
   const admin = createAdminClient()

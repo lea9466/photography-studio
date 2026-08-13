@@ -1,6 +1,17 @@
 import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
 import { normalizeAnnouncementIcon } from '@/lib/announcements/icons'
 import type { Announcement } from '@/lib/announcements/types'
+import {
+  hasActiveSubscriptionLike,
+  resolveStudioEntitlements,
+  type ActiveSubscriptionLike,
+} from '@/lib/subscriptions/entitlements'
+import type {
+  EntitlementSource,
+  EntitlementTier,
+  StudioEntitlements,
+  SubscriptionTierOverride,
+} from '@/lib/subscriptions/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
@@ -20,6 +31,10 @@ export type AdminStudioRow = {
   is_site_unavailable: boolean
   has_hero_video: boolean
   site_path: string | null
+  subscription_tier_override: SubscriptionTierOverride
+  tier: EntitlementTier
+  tier_source: EntitlementSource
+  entitlements: StudioEntitlements
 }
 
 export type AdminBroadcastRecipient = {
@@ -181,16 +196,38 @@ type AdminStudioQueryRow = {
   is_under_construction?: boolean | null
   is_site_unavailable?: boolean | null
   hero_video_url?: string | null
+  subscription_tier_override?: SubscriptionTierOverride | null
+}
+
+export async function fetchActiveSubscriptionByIds(
+  userIds: string[]
+): Promise<Map<string, ActiveSubscriptionLike>> {
+  if (userIds.length === 0) return new Map()
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('subscriptions')
+    .select('user_id, status, current_period_end, updated_at')
+    .in('user_id', userIds)
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(error.message)
+
+  const map = new Map<string, ActiveSubscriptionLike>()
+  for (const row of data ?? []) {
+    const existing = map.get(row.user_id)
+    if (!existing) map.set(row.user_id, row)
+  }
+  return map
 }
 
 export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const admin = createAdminClient()
   const selectWithFlags =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, hero_video_url'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, hero_video_url, subscription_tier_override'
   const selectWithoutHero =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, is_under_construction, is_site_unavailable, subscription_tier_override'
   const selectLegacy =
-    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count'
+    'id, email, name, studio_name, slug, created_at, trial_end_date, last_dashboard_visit_at, dashboard_visit_count, subscription_tier_override'
 
   let data: AdminStudioQueryRow[] | null = null
   let error: { message: string; code?: string } | null = null
@@ -228,19 +265,41 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
     throw new Error(message)
   }
 
-  return (data ?? []).map((studio) => ({
-    id: studio.id,
-    email: studio.email,
-    name: studio.name,
-    studio_name: studio.studio_name,
-    slug: studio.slug,
-    created_at: studio.created_at,
-    trial_end_date: studio.trial_end_date,
-    last_dashboard_visit_at: studio.last_dashboard_visit_at,
-    dashboard_visit_count: studio.dashboard_visit_count ?? 0,
-    is_under_construction: Boolean(studio.is_under_construction),
-    is_site_unavailable: Boolean(studio.is_site_unavailable),
-    has_hero_video: Boolean(studio.hero_video_url?.trim()),
-    site_path: getPublicSitePath(studio.slug, studio.studio_name),
-  }))
+  const rows = (data ?? []) as AdminStudioQueryRow[]
+  const activeSubscriptions = await fetchActiveSubscriptionByIds(
+    rows.map((studio) => studio.id)
+  )
+
+  return rows.map((studio) => {
+    const entitlements = resolveStudioEntitlements({
+      trialEndDate: studio.trial_end_date,
+      subscriptionTierOverride:
+        (studio.subscription_tier_override as SubscriptionTierOverride) ??
+        'auto',
+      hasActiveSubscription: hasActiveSubscriptionLike(
+        activeSubscriptions.get(studio.id) ?? null
+      ),
+    })
+    return {
+      id: studio.id,
+      email: studio.email,
+      name: studio.name,
+      studio_name: studio.studio_name,
+      slug: studio.slug,
+      created_at: studio.created_at,
+      trial_end_date: studio.trial_end_date,
+      last_dashboard_visit_at: studio.last_dashboard_visit_at,
+      dashboard_visit_count: studio.dashboard_visit_count ?? 0,
+      is_under_construction: Boolean(studio.is_under_construction),
+      is_site_unavailable: Boolean(studio.is_site_unavailable),
+      has_hero_video: Boolean(studio.hero_video_url?.trim()),
+      site_path: getPublicSitePath(studio.slug, studio.studio_name),
+      subscription_tier_override:
+        (studio.subscription_tier_override as SubscriptionTierOverride) ??
+        'auto',
+      tier: entitlements.tier,
+      tier_source: entitlements.source,
+      entitlements,
+    }
+  })
 }

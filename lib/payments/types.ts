@@ -1,4 +1,4 @@
-export const PAYMENT_PROVIDER_NAMES = ['payme', 'grow', 'stripe', 'tranzila'] as const
+export const PAYMENT_PROVIDER_NAMES = ['payme', 'sumit', 'grow', 'stripe', 'tranzila'] as const
 export type PaymentProviderName = (typeof PAYMENT_PROVIDER_NAMES)[number]
 
 export const SUBSCRIPTION_STATUSES = [

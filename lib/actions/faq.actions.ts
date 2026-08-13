@@ -2,10 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { sanitizeFaqItems, type FaqItem } from '@/lib/faq'
 
 export async function updateFaqItems(items: FaqItem[]) {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'faq')
 
   const faq_items = sanitizeFaqItems(items)
 

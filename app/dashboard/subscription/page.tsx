@@ -60,8 +60,10 @@ export default async function SubscriptionPage({
   try {
     const service = createPaymentService()
     if (checkoutSuccess) {
-      // S2S verification: activate the local subscription from PayMe's record
-      // instead of trusting an unverified webhook callback.
+      // S2S verification: activate the local subscription from the provider's
+      // record instead of trusting an unverified webhook callback. For SUMIT
+      // this is a no-op fallback — activation happens via the dedicated
+      // callback route (app/api/payments/webhooks/sumit/return).
       billingStatus = await service.verifySubscription(userId)
     } else {
       billingStatus = await service.getCurrentSubscription(userId)

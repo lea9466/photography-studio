@@ -22,6 +22,8 @@ import {
   applyOwnerPreviewBypass,
   resolvePublicSiteGateByUserId,
 } from '@/lib/site-access/public-gate'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -42,6 +44,7 @@ type UserData = {
   address: string | null
   faq_items: unknown
   site_language: string | null
+  displayed_gallery_id: string | null
 }
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
@@ -84,13 +87,36 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     )
   }
 
+  // Fetch user data and entitlements
   const { data: user, error: userError } = await admin
     .from('users')
     .select(
-      'studio_name, slug, logo_url, accent_color, selected_theme, should_color_logo, gallery_layout_mode, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language'
+      'studio_name, slug, logo_url, accent_color, selected_theme, should_color_logo, gallery_layout_mode, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language, displayed_gallery_id'
     )
     .eq('id', galleryData.user_id)
     .maybeSingle()
+
+  if (userError) {
+    console.error('[public-gallery/page] user lookup failed', {
+      galleryId: galleryData.id,
+      userId: galleryData.user_id,
+      error: userError.message,
+    })
+  }
+
+  // Fetch entitlements for public gating
+  const entitlements = await getStudioEntitlements(galleryData.user_id)
+  const isFree = !entitlements.isPro
+
+  // For FREE users: only allow access to the displayed gallery
+  if (isFree) {
+    const displayedGalleryId = user?.displayed_gallery_id ?? null
+    if (displayedGalleryId && displayedGalleryId !== galleryData.id) {
+      // This gallery is not the displayed one for this FREE user
+      notFound()
+    }
+    // If no displayed_gallery_id is set, allow access (fallback to first public gallery)
+  }
 
   if (userError) {
     console.error('[public-gallery/page] user lookup failed', {
@@ -134,7 +160,10 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     userData?.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
   const logoUrl = userData?.logo_url ? await resolveMediaUrl('branding', userData.logo_url) : null
 
-  const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id)
+  const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id, {
+    limit: isFree ? getGalleryPhotoLimit(entitlements) : undefined,
+    random: isFree,
+  })
   console.log('[public-gallery/page] render', {
     galleryId: galleryData.id,
     photoCount: photos.length,

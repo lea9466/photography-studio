@@ -53,6 +53,7 @@ export type PublicPhotographer = Pick<
   | 'should_color_logo'
   | 'site_language'
   | 'before_after_display_style'
+  | 'displayed_gallery_id'
 >
 
 export const PHOTOGRAPHER_PUBLIC_FIELDS = `
@@ -103,7 +104,8 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   faq_section_image_url,
   should_color_logo,
   site_language,
-  before_after_display_style
+  before_after_display_style,
+  displayed_gallery_id
 `
 
 const RESERVED_SLUGS = new Set(['favicon.ico', 'robots.txt', 'sitemap.xml'])

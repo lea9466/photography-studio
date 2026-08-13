@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import type { Database } from '@/lib/types/database.types'
 import type { PhotographyPackage } from '@/lib/types/database.types'
 
@@ -67,6 +68,7 @@ export async function createPackage(input: {
   includesText: string
 }): Promise<PhotographyPackage> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'packages')
 
   const includes = parseIncludes(input.includesText)
   const validated = validatePackageInput({
@@ -114,6 +116,7 @@ export async function updatePackage(
   }
 ): Promise<PhotographyPackage> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'packages')
 
   const payload: PackageUpdate = {}
 
@@ -175,6 +178,7 @@ export async function updatePackage(
 
 export async function deletePackage(packageId: string): Promise<void> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'packages')
 
   const { error } = await supabase
     .from('photography_packages')
@@ -195,6 +199,7 @@ export async function updatePackagesSectionHeadings(input: {
   subtitle?: string
 }): Promise<{ packages_title: string | null; packages_subtitle: string | null }> {
   const { userId, supabase } = await requireDashboardContext()
+  await assertFeatureAllowed(userId, 'packages')
 
   const payload: Database['public']['Tables']['users']['Update'] = {}
 

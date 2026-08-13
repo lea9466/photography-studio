@@ -11,6 +11,8 @@ import {
 } from '@/lib/gallery-password-store'
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext, getDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFreeGalleryCanBecomePublic } from '@/lib/subscriptions/gallery-gate'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import type { DashboardAuthContext } from '@/lib/auth/dashboard-context'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
 import { createPresignedUploadUrl, deleteMediaObject } from '@/lib/r2/storage'
@@ -321,22 +323,30 @@ export async function createGallery(input: CreateGalleryInput) {
 
   const willBePublic = PUBLIC_ONLY_MVP ? true : Boolean(input.isPublic)
   if (willBePublic) {
-    let countQuery = supabase
-      .from('galleries')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-
-    if (!PUBLIC_ONLY_MVP) {
-      countQuery = countQuery.eq('is_public', true)
+    const entitlements = await getStudioEntitlements(userId)
+    // FREE: only one displayed gallery. PRO: unlimited gallery creation —
+    // only the flat count cap below applies.
+    if (!PUBLIC_ONLY_MVP && !entitlements.isPro) {
+      await assertFreeGalleryCanBecomePublic(supabase, userId, '')
     }
+    if (entitlements.isPro) {
+      let countQuery = supabase
+        .from('galleries')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
 
-    const [{ count: galleryCount }, maxGalleries] = await Promise.all([
-      countQuery,
-      resolvePhotographerGalleryLimit(context),
-    ])
+      if (!PUBLIC_ONLY_MVP) {
+        countQuery = countQuery.eq('is_public', true)
+      }
 
-    const limitError = buildPublicGalleryCountLimitError(galleryCount ?? 0, maxGalleries)
-    if (limitError) throw new Error(limitError)
+      const [{ count: galleryCount }, maxGalleries] = await Promise.all([
+        countQuery,
+        resolvePhotographerGalleryLimit(context),
+      ])
+
+      const limitError = buildPublicGalleryCountLimitError(galleryCount ?? 0, maxGalleries)
+      if (limitError) throw new Error(limitError)
+    }
   }
 
   const plainPassword = input.password?.trim() || generatePassword()
@@ -474,20 +484,27 @@ export async function updateGallerySettings(
 
       const wasPublic = (existingGallery as { is_public: boolean } | null)?.is_public ?? false
       if (!wasPublic) {
-        const [{ count: publicGalleryCount }, maxGalleries] = await Promise.all([
-          supabase
-            .from('galleries')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', userId)
-            .eq('is_public', true),
-          resolvePhotographerGalleryLimit(context),
-        ])
+        const entitlements = await getStudioEntitlements(userId)
+        // FREE: only one displayed gallery. PRO: the flat count cap below applies.
+        if (!PUBLIC_ONLY_MVP && !entitlements.isPro) {
+          await assertFreeGalleryCanBecomePublic(supabase, userId, galleryId)
+        }
+        if (entitlements.isPro) {
+          const [{ count: publicGalleryCount }, maxGalleries] = await Promise.all([
+            supabase
+              .from('galleries')
+              .select('id', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .eq('is_public', true),
+            resolvePhotographerGalleryLimit(context),
+          ])
 
-        const limitError = buildPublicGalleryCountLimitError(
-          publicGalleryCount ?? 0,
-          maxGalleries
-        )
-        if (limitError) throw new Error(limitError)
+          const limitError = buildPublicGalleryCountLimitError(
+            publicGalleryCount ?? 0,
+            maxGalleries
+          )
+          if (limitError) throw new Error(limitError)
+        }
       }
     }
 
@@ -581,22 +598,32 @@ export async function getPublicGalleryQuota() {
     countQuery = countQuery.eq('is_public', true)
   }
 
-  const [{ count }, maxGalleries, photoCount] = await Promise.all([
-    countQuery,
-    resolvePhotographerGalleryLimit(context),
-    getPhotographerPublicPhotoCount(supabase, userId),
-  ])
+  const [{ count }, maxGalleries, photoCount, entitlements, { data: userRow }] =
+    await Promise.all([
+      countQuery,
+      resolvePhotographerGalleryLimit(context),
+      getPhotographerPublicPhotoCount(supabase, userId),
+      getStudioEntitlements(userId),
+      supabase.from('users').select('displayed_gallery_id').eq('id', userId).maybeSingle(),
+    ])
 
   const galleryCount = count ?? 0
   const maxPhotos = MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER
+  const isPro = entitlements.isPro
+  const displayedGalleryId =
+    (userRow as { displayed_gallery_id: string | null } | null)?.displayed_gallery_id ?? null
 
   return {
     galleryCount,
-    maxGalleries,
+    // FREE: unlimited gallery creation — maxGalleries/canCreateGallery only
+    // constrain PRO accounts (see createGallery/updateGallerySettings).
+    maxGalleries: isPro ? maxGalleries : Infinity,
     photoCount,
     maxPhotos,
     remainingPhotos: Math.max(0, maxPhotos - photoCount),
-    canCreateGallery: galleryCount < maxGalleries,
+    canCreateGallery: isPro ? galleryCount < maxGalleries : true,
+    isPro,
+    displayedGalleryId,
   }
 }
 
@@ -932,4 +959,43 @@ export async function updateRecentPhotosSectionTitle(input: {
   }
 
   return data as { recent_photos_title: string | null }
+}
+
+export async function updateDisplayedGallery(input: {
+  galleryId: string | null
+}): Promise<{ displayed_gallery_id: string | null }> {
+  const { userId, supabase } = await requireDashboardContext()
+
+  if (input.galleryId) {
+    const { data: gallery } = await supabase
+      .from('galleries')
+      .select('id, is_public')
+      .eq('id', input.galleryId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (!gallery) throw new Error('גלריה לא נמצאה')
+    if (!(gallery as { is_public: boolean }).is_public) {
+      throw new Error('אפשר להציג רק גלריה ציבורית')
+    }
+  }
+
+  const payload: Database['public']['Tables']['users']['Update'] = {
+    displayed_gallery_id: input.galleryId,
+  }
+
+  const { data, error } = await supabase
+    .from('users')
+    .update(payload as never)
+    .eq('id', userId)
+    .select('displayed_gallery_id')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/galleries')
+  revalidatePath('/[slug]', 'page')
+
+  return data as { displayed_gallery_id: string | null }
 }

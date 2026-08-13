@@ -13,6 +13,9 @@ import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { resolvePortfolioGalleriesSectionTitle } from '@/lib/galleries-section-copy'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
+import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
 
 interface PortfolioPageProps {
   params: Promise<{ slug: string }>
@@ -46,6 +49,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     should_color_logo: boolean
     faq_items: unknown
     galleries_title: string | null
+    displayed_gallery_id: string | null
   }
 
   const layoutMode = typed.gallery_layout_mode ?? 'separated'
@@ -67,15 +71,52 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     redirect(`${canonicalPath}#${galleryHash}`)
   }
 
+  // Fetch entitlements for public gating
+  const entitlements = await getStudioEntitlements(typed.id)
+  const isFree = !entitlements.isPro
+
+  // For FREE users: determine the single displayed gallery
+  let displayedGalleryId: string | null = null
+  if (isFree) {
+    displayedGalleryId = typed.displayed_gallery_id ?? null
+  }
+
   const admin = createAdminClient()
 
-  const { data: galleries, error: galleriesError } = await admin
+  let galleriesQuery = admin
     .from('galleries')
     .select('id, title, created_at, gallery_type, is_public')
     .eq('user_id', typed.id)
-    .eq('is_public', true)
     .eq('gallery_type', 'portfolio')
-    .order('created_at', { ascending: false })
+
+  if (isFree) {
+    // FREE: only show the selected displayed gallery — and only if it's
+    // still public (it may have been switched to private after selection).
+    if (displayedGalleryId) {
+      galleriesQuery = galleriesQuery
+        .eq('id', displayedGalleryId)
+        .eq('is_public', true)
+    } else {
+      // Fallback: pick earliest public portfolio gallery deterministically
+      const { data: allGalleries } = await admin
+        .from('galleries')
+        .select('id, is_public, created_at')
+        .eq('user_id', typed.id)
+        .eq('gallery_type', 'portfolio')
+      const fallbackGallery = pickFreeDisplayedGallery(allGalleries || [])
+      if (fallbackGallery) {
+        galleriesQuery = galleriesQuery.eq('id', fallbackGallery.id)
+      } else {
+        // No public portfolio galleries - return empty
+        galleriesQuery = galleriesQuery.eq('id', '00000000-0000-0000-0000-000000000000')
+      }
+    }
+  } else {
+    // PRO: show all public portfolio galleries
+    galleriesQuery = galleriesQuery.eq('is_public', true)
+  }
+
+  const { data: galleries, error: galleriesError } = await galleriesQuery.order('created_at', { ascending: false })
 
   console.log('[photographer-portfolio] galleries query', {
     slug: decodedSlug,
@@ -94,7 +135,10 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     const galleryName = galleryRow.title.trim()
     if (galleryName) galleryNameSet.add(galleryName)
 
-    const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryRow.id)
+    const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryRow.id, {
+      limit: isFree ? getGalleryPhotoLimit(entitlements) : undefined,
+      random: isFree,
+    })
 
     for (const photo of photos) {
       if (photo.url) {

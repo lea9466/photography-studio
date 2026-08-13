@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isR2Configured } from '@/lib/r2/config'
 import {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     if (!isR2Configured()) return jsonError('אחסון הסרטונים לא מוגדר', 503)
 
     const { userId } = await requireDashboardContext()
+    await assertFeatureAllowed(userId, 'hero_video')
     if (!(await checkUploadRateLimit(userId))) {
       return jsonError('בוצעו יותר מדי ניסיונות העלאה. נסי שוב בעוד כמה דקות.', 429)
     }

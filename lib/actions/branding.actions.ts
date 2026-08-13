@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
 import { isR2Configured } from '@/lib/r2/config'
@@ -145,6 +146,13 @@ export async function finalizeBrandingUpload(
     throw new Error('נתיב קובץ לא תקין')
   }
 
+  if (type === 'packages_desktop' || type === 'packages_mobile') {
+    await assertFeatureAllowed(userId, 'packages')
+  }
+  if (type === 'faq_section') {
+    await assertFeatureAllowed(userId, 'faq')
+  }
+
   const updateData: UsersUpdate = {}
 
   if (type === 'logo') {
@@ -271,6 +279,13 @@ const SINGLE_BRANDING_FIELD: Record<
 export async function removeBrandingImage(type: SingleBrandingImageType) {
   const { userId } = await requireDashboardContext()
 
+  if (type === 'packages_desktop' || type === 'packages_mobile') {
+    await assertFeatureAllowed(userId, 'packages')
+  }
+  if (type === 'faq_section') {
+    await assertFeatureAllowed(userId, 'faq')
+  }
+
   if (type === 'logo') {
     await deleteBrandingLogoFavicon(userId)
   }
@@ -298,6 +313,10 @@ export async function updateHeroType(heroType: HeroType) {
   }
 
   const { userId } = await requireDashboardContext()
+  if (heroType === 'video') {
+    await assertFeatureAllowed(userId, 'hero_video')
+  }
+
   const admin = createAdminClient()
   const { data, error: readError } = await admin
     .from('users')
@@ -369,6 +388,10 @@ export async function updateBrandingSettings(data: {
   shouldColorLogo?: boolean
 }) {
   const { userId } = await requireDashboardContext()
+
+  if (data.packagesDesktopUrl !== undefined || data.packagesMobileUrl !== undefined) {
+    await assertFeatureAllowed(userId, 'packages')
+  }
 
   const updateData: Record<string, any> = {}
 

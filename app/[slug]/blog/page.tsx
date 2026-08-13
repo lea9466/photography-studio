@@ -10,6 +10,8 @@ import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature } from '@/lib/subscriptions/entitlements'
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>
@@ -25,6 +27,12 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const typed = photographer as typeof photographer & {
     id: string
     posts_page_title: string | null
+  }
+
+  // Check entitlements for posts feature
+  const entitlements = await getStudioEntitlements(typed.id)
+  if (!canUseFeature(entitlements, 'posts')) {
+    notFound()
   }
 
   const blogPosts = await fetchPublicBlogPosts(typed.id, {
