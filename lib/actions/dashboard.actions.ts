@@ -3,6 +3,7 @@
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 type GalleryRow = GalleryWithDetails & {
   photos?: Array<{ count: number }>
 }
@@ -95,5 +96,16 @@ export async function fetchDashboardOverview() {
       userName: (userData as { name: string | null } | null)?.name || 'משתמש',
       galleries: transformedGalleries,
     }
+  }
+}
+
+export async function fetchUserEntitlements() {
+  const { userId } = await requireDashboardContext()
+  const entitlements = await getStudioEntitlements(userId)
+  return {
+    isPro: entitlements.isPro,
+    tier: entitlements.tier,
+    source: entitlements.source,
+    limits: entitlements.limits,
   }
 }
