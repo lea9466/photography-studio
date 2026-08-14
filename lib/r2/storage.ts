@@ -77,15 +77,31 @@ export async function mediaObjectExists(bucket: MediaBucket, path: string): Prom
   }
 }
 
-export async function resolveMediaUrl(bucket: MediaBucket, path: string | null, galleryId?: string) {
+/**
+ * `forceProxy` must be true whenever the caller cannot guarantee the media
+ * belongs to a genuinely public gallery. `previews`/`watermarked` are
+ * bucket-type "public-eligible", but that says nothing about whether THIS
+ * gallery is private — the direct public-CDN URL, once handed out, stays
+ * fetchable forever with no auth check, even after the gallery is later
+ * locked or its password rotated. The gallery-media proxy re-checks access
+ * per request (session cookie or public-portfolio status) and only then
+ * redirects to the CDN for genuinely public content — see
+ * app/api/gallery-media/route.ts's verifyGalleryAccess.
+ */
+export async function resolveMediaUrl(
+  bucket: MediaBucket,
+  path: string | null,
+  galleryId?: string,
+  forceProxy = false
+) {
   if (!path) return null
 
   const { publicUrl } = getR2Config()
   const key = r2ObjectKey(bucket, path)
-  if (canUsePublicUrl(bucket) && publicUrl) {
+  if (canUsePublicUrl(bucket) && publicUrl && !forceProxy) {
     return `${publicUrl}/${key}`
   }
-  if (canUsePublicUrl(bucket) && !publicUrl) {
+  if (canUsePublicUrl(bucket) && (!publicUrl || forceProxy)) {
     return galleryMediaProxyUrl(key, galleryId)
   }
 
@@ -95,14 +111,15 @@ export async function resolveMediaUrl(bucket: MediaBucket, path: string | null, 
 export async function signMediaPaths(
   bucket: MediaBucket,
   paths: (string | null)[],
-  galleryId?: string
+  galleryId?: string,
+  forceProxy = false
 ) {
   const unique = [...new Set(paths.filter(Boolean))] as string[]
   const map: Record<string, string> = {}
 
   await Promise.all(
     unique.map(async (path) => {
-      const url = await resolveMediaUrl(bucket, path, galleryId)
+      const url = await resolveMediaUrl(bucket, path, galleryId, forceProxy)
       if (url) map[path] = url
     })
   )

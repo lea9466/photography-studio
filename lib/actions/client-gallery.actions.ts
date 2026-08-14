@@ -71,8 +71,18 @@ export type ClientGalleryData = {
   allow_download_original: boolean
 }
 
-async function signPath(bucket: MediaBucket, path: string | null, galleryId?: string) {
-  return resolveMediaUrl(bucket, path, galleryId)
+/**
+ * `forceProxy` must be true for any non-public gallery — see the comment on
+ * resolveMediaUrl in lib/r2/storage.ts for why the bucket-level public/private
+ * split alone isn't enough to protect a private gallery's photos.
+ */
+async function signPath(
+  bucket: MediaBucket,
+  path: string | null,
+  galleryId?: string,
+  forceProxy = false
+) {
+  return resolveMediaUrl(bucket, path, galleryId, forceProxy)
 }
 
 export async function getClientGalleryPublicMeta(galleryId: string) {
@@ -354,6 +364,11 @@ async function loadClientGalleryInternal(galleryId: string) {
             ? 'watermarked'
             : 'previews'
 
+      // Only a genuinely public gallery may use the direct public-CDN
+      // shortcut — a private gallery's previews/watermarked images must
+      // always go through the session-gated proxy.
+      const forceProxy = !gallery.is_public
+
       return {
         id: photo.id,
         preview_url: photo.preview_url,
@@ -362,9 +377,9 @@ async function loadClientGalleryInternal(galleryId: string) {
         selected_album: selection?.selected_album ?? false,
         selected_edit: selection?.selected_edit ?? false,
         edited_url: editedPath,
-        preview_signed_url: await signPath(gridBucket, gridPath, galleryId),
-        lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId),
-        edited_signed_url: await signPath('edited', editedPath, galleryId),
+        preview_signed_url: await signPath(gridBucket, gridPath, galleryId, forceProxy),
+        lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId, forceProxy),
+        edited_signed_url: await signPath('edited', editedPath, galleryId, forceProxy),
       }
     })
   )
