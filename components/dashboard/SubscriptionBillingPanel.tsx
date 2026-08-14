@@ -176,10 +176,8 @@ export function SubscriptionBillingPanel({
   const isActive = subscription?.status === 'active'
   const checkoutEnabled =
     status.checkoutEnabled === true || status.isSmokeTestUser === true
-  // Block starting a new checkout only while a subscription is live or a
-  // checkout is still genuinely in progress. A cancelled/expired subscription
-  // — or a pending one abandoned more than 30 minutes ago — should still let
-  // the customer start a fresh checkout instead of being stuck forever.
+  // Only a genuinely active subscription blocks a new checkout. A pending
+  // (never completed) attempt never blocks one — see canStartNewCheckout.
   const blockCheckout = status.canStartNewCheckout === false
   const showComingSoon =
     !checkoutEnabled && !isActive && (smokeTestPlans.length > 0 || !subscription)

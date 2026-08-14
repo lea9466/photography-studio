@@ -44,32 +44,19 @@ export type PlanView = {
   isHighlighted: boolean
 }
 
-/**
- * A checkout attempt that never returns (browser closed, network drop, user
- * changes their mind) leaves its subscription row stuck in `pending` forever
- * — with nothing to distinguish it from an attempt that's genuinely still in
- * progress. Past this age we treat it as abandoned and let the customer start
- * a fresh checkout rather than being permanently locked out. Short on purpose
- * — a customer who just clicked back should be able to retry right away, not
- * wait around; the only real risk of a short window is a harmless extra
- * pending row if two attempts overlap, not a double charge (only the specific
- * attempt that's actually verified S2S ever activates a subscription).
- */
-const PENDING_CHECKOUT_STALE_MS = 2 * 60 * 1000
-
-function isPendingCheckoutStale(createdAt: string, now = new Date()): boolean {
-  return now.getTime() - new Date(createdAt).getTime() > PENDING_CHECKOUT_STALE_MS
-}
-
 export type CurrentSubscriptionView = {
   configured: boolean
   /** False until PAYMENTS_CHECKOUT_ENABLED=true after PayMe approval. */
   checkoutEnabled: boolean
   isSmokeTestUser: boolean
   /**
-   * False only for a truly active subscription or a pending checkout still
-   * within its window — an abandoned/stale pending row does not block a new
-   * attempt. See PENDING_CHECKOUT_STALE_MS.
+   * False only for a genuinely active subscription. A `pending` row never
+   * blocks a new attempt, at any age — a checkout that never returns
+   * (closed tab, changed mind) must not lock the customer out forever, and
+   * multiple pending rows are harmless: only the one specific attempt that's
+   * actually verified server-to-server (via the provider callback) ever
+   * activates a subscription or charges a card. The button's own in-flight
+   * lock already prevents an accidental real double-click.
    */
   canStartNewCheckout: boolean
   subscription: {
@@ -282,13 +269,7 @@ export class PaymentService {
 
     const planViews = availablePlans.map(toPlanView)
 
-    const canStartNewCheckout = !subscription
-      ? true
-      : subscription.status === 'active'
-        ? false
-        : subscription.status === 'pending'
-          ? isPendingCheckoutStale(subscription.created_at)
-          : true
+    const canStartNewCheckout = subscription?.status !== 'active'
 
     return {
       configured: true,
