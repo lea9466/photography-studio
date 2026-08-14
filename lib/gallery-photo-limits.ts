@@ -7,6 +7,17 @@ import type { R2UploadRequest } from '@/lib/r2/types'
 
 type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>
 
+/**
+ * Temporary, single-account bypass for large-batch upload testing — same
+ * pattern as PAYMENTS_SMOKE_TEST_USER_ID in lib/payments/flags.ts. Remove
+ * PHOTO_LIMIT_TEST_USER_ID from the environment once testing is done; there
+ * is no separate code change needed to turn this back off.
+ */
+export function isPhotoLimitTestUser(userId: string): boolean {
+  const testUserId = process.env.PHOTO_LIMIT_TEST_USER_ID?.trim()
+  return Boolean(testUserId) && testUserId === userId
+}
+
 export async function getPhotographerPublicPhotoCount(
   supabase: AppSupabaseClient,
   userId: string
@@ -38,6 +49,7 @@ export async function assertGalleryPhotoCountWithinLimit(
   isPublic: boolean,
   adding = 0
 ): Promise<number> {
+  if (isPhotoLimitTestUser(userId)) return 0
   if (!isPublic && !PUBLIC_ONLY_MVP) return 0
 
   const currentCount = await getPhotographerPublicPhotoCount(supabase, userId)
