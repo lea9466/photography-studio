@@ -3,6 +3,12 @@ import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { GalleryEditForm } from '@/components/gallery/GalleryEditForm'
 import type { Gallery, GallerySettings, Client } from '@/lib/types/database.types'
+import {
+  PUBLIC_ONLY_MVP,
+  DOWNLOAD_PERMISSIONS_ENABLED,
+  isMvpBypassUser,
+} from '@/lib/types/app.types'
+import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 
 type EditPageProps = {
   params: Promise<{ id: string }>
@@ -47,6 +53,11 @@ export default async function GalleryEditPage({ params }: EditPageProps) {
         client={client}
         settings={settings}
         clients={clients}
+        publicOnlyMvp={PUBLIC_ONLY_MVP && !isMvpBypassUser(gallery.user_id)}
+        downloadPermissionsEnabled={
+          DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(gallery.user_id)
+        }
+        photoCountLimitBypassed={isPhotoLimitTestUser(gallery.user_id)}
       />
     </div>
   )

@@ -26,9 +26,16 @@ type GalleryEditFormProps = {
     allow_download_preview: boolean
     allow_download_original: boolean
   } | null
+  /** Per-account override, computed server-side — see isMvpBypassUser. */
+  downloadPermissionsEnabled?: boolean
 }
 
-export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
+export function GalleryEditForm({
+  gallery,
+  settings,
+  downloadPermissionsEnabled: downloadPermissionsEnabledProp,
+}: GalleryEditFormProps) {
+  const downloadPermissionsEnabled = downloadPermissionsEnabledProp ?? DOWNLOAD_PERMISSIONS_ENABLED
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState(gallery.title)
   const [password, setPassword] = useState('')
@@ -74,10 +81,10 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           autoApplyWatermark,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit) : undefined,
-          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED
+          allowDownloadPreview: downloadPermissionsEnabled
             ? allowDownloadPreview
             : false,
-          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED
+          allowDownloadOriginal: downloadPermissionsEnabled
             ? allowDownloadOriginal
             : false,
         }
@@ -266,8 +273,8 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
         </div>
       </div>
 
-      <div className={`relative space-y-4 rounded-xl border border-[#c9c5cd] p-4 bg-[#f7f2f4] sm:p-6 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
-        {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+      <div className={`relative space-y-4 rounded-xl border border-[#c9c5cd] p-4 bg-[#f7f2f4] sm:p-6 ${downloadPermissionsEnabled ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+        {!downloadPermissionsEnabled ? (
           <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
             לא זמין כרגע
           </span>
@@ -276,7 +283,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           <Label className="text-[#100d1f]">הורדת preview</Label>
           <Switch
             checked={allowDownloadPreview}
-            disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+            disabled={!downloadPermissionsEnabled}
             onCheckedChange={setAllowDownloadPreview}
           />
         </div>
@@ -284,7 +291,7 @@ export function GalleryEditForm({ gallery, settings }: GalleryEditFormProps) {
           <Label className="text-[#100d1f]">הורדת מקור</Label>
           <Switch
             checked={allowDownloadOriginal}
-            disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+            disabled={!downloadPermissionsEnabled}
             onCheckedChange={setAllowDownloadOriginal}
           />
         </div>

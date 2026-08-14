@@ -31,6 +31,10 @@ type GalleryEditFormProps = {
   client: Client | null
   settings: GallerySettings | null
   clients: Client[]
+  /** Per-account overrides, computed server-side — see isMvpBypassUser / isPhotoLimitTestUser. */
+  publicOnlyMvp?: boolean
+  downloadPermissionsEnabled?: boolean
+  photoCountLimitBypassed?: boolean
 }
 
 export function GalleryEditForm({
@@ -38,7 +42,12 @@ export function GalleryEditForm({
   client,
   settings,
   clients,
+  publicOnlyMvp: publicOnlyMvpProp,
+  downloadPermissionsEnabled: downloadPermissionsEnabledProp,
+  photoCountLimitBypassed = false,
 }: GalleryEditFormProps) {
+  const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
+  const downloadPermissionsEnabled = downloadPermissionsEnabledProp ?? DOWNLOAD_PERMISSIONS_ENABLED
   const [isPending, startTransition] = useTransition()
   const [title, setTitle] = useState(gallery.title)
   const [galleryType, setGalleryType] = useState<GalleryType>(gallery.gallery_type)
@@ -75,8 +84,8 @@ export function GalleryEditForm({
           maxEditSelection: maxEdit ? Number(maxEdit) : null,
           watermarkText: watermark || null,
           autoApplyWatermark,
-          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED ? allowPreview : false,
-          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED ? allowOriginal : false,
+          allowDownloadPreview: downloadPermissionsEnabled ? allowPreview : false,
+          allowDownloadOriginal: downloadPermissionsEnabled ? allowOriginal : false,
         })
         toast.success('הגלריה עודכנה בהצלחה')
       } catch (error) {
@@ -127,7 +136,7 @@ export function GalleryEditForm({
       </Card>
 
       {/* Security Section */}
-      <Card className={PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}>
+      <Card className={publicOnlyMvp ? 'opacity-35 pointer-events-none select-none' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lock className="w-5 h-5 text-[#7D3A52]" />
@@ -165,7 +174,7 @@ export function GalleryEditForm({
       </Card>
 
       {/* Limits Section */}
-      <Card className={PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}>
+      <Card className={publicOnlyMvp ? 'opacity-35 pointer-events-none select-none' : ''}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="w-5 h-5 text-[#7D3A52]" />
@@ -234,8 +243,8 @@ export function GalleryEditForm({
       </Card>
 
       {/* Download Permissions Section */}
-      <Card className={`relative ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
-        {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+      <Card className={`relative ${downloadPermissionsEnabled ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+        {!downloadPermissionsEnabled ? (
           <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
             לא זמין כרגע
           </span>
@@ -255,7 +264,7 @@ export function GalleryEditForm({
             </div>
             <Switch
               checked={allowPreview}
-              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              disabled={!downloadPermissionsEnabled}
               onCheckedChange={setAllowPreview}
             />
           </div>
@@ -267,7 +276,7 @@ export function GalleryEditForm({
             </div>
             <Switch
               checked={allowOriginal}
-              disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+              disabled={!downloadPermissionsEnabled}
               onCheckedChange={setAllowOriginal}
             />
           </div>
@@ -288,6 +297,8 @@ export function GalleryEditForm({
             applyAutoWatermark={autoApplyWatermark}
             photos={[]}
             signedUrls={{}}
+            publicOnlyMvp={publicOnlyMvp}
+            photoCountLimitBypassed={photoCountLimitBypassed}
           />
         </CardContent>
       </Card>

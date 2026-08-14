@@ -46,6 +46,10 @@ type GalleryPhotosSectionProps = {
   signedUrls: Record<string, string>
   showWizardHeader?: boolean
   initialPhotoLimit?: number
+  /** Per-account override, computed server-side — see isMvpBypassUser. */
+  publicOnlyMvp?: boolean
+  /** Per-account override, computed server-side — see isPhotoLimitTestUser. */
+  photoCountLimitBypassed?: boolean
 }
 
 export function GalleryPhotosSection({
@@ -57,7 +61,10 @@ export function GalleryPhotosSection({
   signedUrls,
   showWizardHeader = true,
   initialPhotoLimit = 20,
+  publicOnlyMvp: publicOnlyMvpProp,
+  photoCountLimitBypassed = false,
 }: GalleryPhotosSectionProps) {
+  const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const router = useRouter()
   const objectUrlsRef = useRef<string[]>([])
   const [pendingPhotos, setPendingPhotos] = useState<PendingGalleryPhoto[]>([])
@@ -72,10 +79,10 @@ export function GalleryPhotosSection({
   const [accountPhotoCount, setAccountPhotoCount] = useState(photos.length)
   // MVP: public-only — force uploads to "מעובדות" (final/public) photos only.
   const [activeTab, setActiveTab] = useState<'regular' | 'processed'>(
-    PUBLIC_ONLY_MVP ? 'processed' : 'regular'
+    publicOnlyMvp ? 'processed' : 'regular'
   )
   const activeTabRef = useRef<'regular' | 'processed'>(
-    PUBLIC_ONLY_MVP ? 'processed' : 'regular'
+    publicOnlyMvp ? 'processed' : 'regular'
   )
 
   useEffect(() => {
@@ -158,7 +165,9 @@ export function GalleryPhotosSection({
         return
       }
 
-      const limitError = buildPublicGalleryPhotoLimitError(accountPhotoCount, selected.length)
+      const limitError = photoCountLimitBypassed
+        ? ''
+        : buildPublicGalleryPhotoLimitError(accountPhotoCount, selected.length)
       if (limitError) {
         toast.error(limitError)
         return
@@ -206,7 +215,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed]
   )
 
   const regularPhotos = useMemo(
@@ -445,7 +454,7 @@ export function GalleryPhotosSection({
 
           {/* Upload Grid */}
           <div className="space-y-4">
-            {activeTab === 'regular' && !PUBLIC_ONLY_MVP && (
+            {activeTab === 'regular' && !publicOnlyMvp && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
                 <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב &quot;מעובדות&quot; למטה
               </div>
@@ -460,13 +469,13 @@ export function GalleryPhotosSection({
                 <Button
                   variant={activeTab === 'regular' ? 'default' : 'outline'}
                   size="sm"
-                  disabled={PUBLIC_ONLY_MVP}
+                  disabled={publicOnlyMvp}
                   onClick={() => {
-                    if (PUBLIC_ONLY_MVP) return
+                    if (publicOnlyMvp) return
                     setActiveTab('regular')
                     activeTabRef.current = 'regular'
                   }}
-                  className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'} ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none cursor-not-allowed' : ''}`}
+                  className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'regular' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'} ${publicOnlyMvp ? 'opacity-35 pointer-events-none cursor-not-allowed' : ''}`}
                 >
                   רגילות ({regularPhotos.length})
                 </Button>

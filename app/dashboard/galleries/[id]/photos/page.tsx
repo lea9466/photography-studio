@@ -7,6 +7,8 @@ import { signStoragePaths } from '@/lib/storage'
 import { unwrapOne } from '@/lib/unwrap'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import type { GallerySettings } from '@/lib/types/database.types'
+import { PUBLIC_ONLY_MVP, isMvpBypassUser } from '@/lib/types/app.types'
+import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 
 type PhotosPageProps = {
   params: Promise<{ id: string }>
@@ -54,6 +56,8 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
       applyAutoWatermark={settings?.auto_apply_watermark ?? true}
       photos={photos as never}
       signedUrls={signedUrls}
+      publicOnlyMvp={PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)}
+      photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
     />
   )
 }

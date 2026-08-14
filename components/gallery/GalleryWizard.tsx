@@ -56,6 +56,9 @@ const GALLERY_TYPES: GalleryType[] = ['selection', 'portfolio']
 type GalleryWizardProps = {
   clients: Client[]
   defaultWatermarkText?: string
+  /** Per-account override, computed server-side — see isMvpBypassUser. */
+  publicOnlyMvp?: boolean
+  downloadPermissionsEnabled?: boolean
 }
 
 type WizardState = {
@@ -105,21 +108,25 @@ const initialState: WizardState = {
 export function GalleryWizard({
   clients,
   defaultWatermarkText = '',
+  publicOnlyMvp: publicOnlyMvpProp,
+  downloadPermissionsEnabled: downloadPermissionsEnabledProp,
 }: GalleryWizardProps) {
   const router = useRouter()
+  const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
+  const downloadPermissionsEnabled = downloadPermissionsEnabledProp ?? DOWNLOAD_PERMISSIONS_ENABLED
   // MVP: Step 1 (client selection) is skipped. Start on the gallery-type step.
-  const [step, setStep] = useState(PUBLIC_ONLY_MVP ? 2 : 1)
+  const [step, setStep] = useState(publicOnlyMvp ? 2 : 1)
   const [state, setState] = useState<WizardState>({
     ...initialState,
     clientId: clients[0]?.id ?? '',
     // MVP: force "No Client (Public Showcase)" as the default state.
-    clientMode: PUBLIC_ONLY_MVP
+    clientMode: publicOnlyMvp
       ? 'public'
       : clients.length > 0
       ? 'existing'
       : 'new',
-    galleryType: PUBLIC_ONLY_MVP ? 'portfolio' : initialState.galleryType,
-    isPublic: PUBLIC_ONLY_MVP ? true : initialState.isPublic,
+    galleryType: publicOnlyMvp ? 'portfolio' : initialState.galleryType,
+    isPublic: publicOnlyMvp ? true : initialState.isPublic,
     watermarkText: defaultWatermarkText,
   })
   const [isPending, startTransition] = useTransition()
@@ -160,7 +167,7 @@ export function GalleryWizard({
 
   function handleBack() {
     // MVP: never return to the frozen client-selection step.
-    setStep((prev) => Math.max(prev - 1, PUBLIC_ONLY_MVP ? 2 : 1))
+    setStep((prev) => Math.max(prev - 1, publicOnlyMvp ? 2 : 1))
   }
 
   function handlePublish() {
@@ -214,10 +221,10 @@ export function GalleryWizard({
           maxEditSelection: state.maxEditSelection
             ? Number(state.maxEditSelection)
             : undefined,
-          allowDownloadPreview: DOWNLOAD_PERMISSIONS_ENABLED
+          allowDownloadPreview: downloadPermissionsEnabled
             ? state.allowDownloadPreview
             : false,
-          allowDownloadOriginal: DOWNLOAD_PERMISSIONS_ENABLED
+          allowDownloadOriginal: downloadPermissionsEnabled
             ? state.allowDownloadOriginal
             : false,
           watermarkText: state.watermarkText || undefined,
@@ -248,7 +255,7 @@ export function GalleryWizard({
       {/* Progress Stepper - Visible on all steps */}
       <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2 -mx-1 px-1">
         {/* MVP: client-selection step is frozen and hidden */}
-        {!PUBLIC_ONLY_MVP && (
+        {!publicOnlyMvp && (
           <>
             <div className="flex shrink-0 items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
@@ -264,7 +271,7 @@ export function GalleryWizard({
         <div className="flex shrink-0 items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 2 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-          }`}>{PUBLIC_ONLY_MVP ? '1' : '2'}</div>
+          }`}>{publicOnlyMvp ? '1' : '2'}</div>
           <span className={`font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
             step === 2 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>סוג גלריה</span>
@@ -273,7 +280,7 @@ export function GalleryWizard({
         <div className="flex shrink-0 items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
             step === 3 ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-          }`}>{PUBLIC_ONLY_MVP ? '2' : '3'}</div>
+          }`}>{publicOnlyMvp ? '2' : '3'}</div>
           <span className={`font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
             step === 3 ? 'text-[#100d1f] font-bold' : 'text-[#48464c]'
           }`}>הגדרות מתקדמות</span>
@@ -476,7 +483,7 @@ export function GalleryWizard({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               {GALLERY_TYPES.map((type) => {
                 // MVP: private "selection" gallery is frozen (coming soon).
-                const isFrozen = PUBLIC_ONLY_MVP && type === 'selection'
+                const isFrozen = publicOnlyMvp && type === 'selection'
                 return (
                 <label
                   key={type}
@@ -538,7 +545,7 @@ export function GalleryWizard({
           {/* Bento Grid Layout for Sections */}
           <form className="grid grid-cols-12 gap-4 sm:gap-6">
             {/* Security Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-7 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${publicOnlyMvp ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Lock className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">אבטחה ופרטיות</h2>
@@ -574,7 +581,7 @@ export function GalleryWizard({
             </section>
             
             {/* Limits Section — MVP: frozen for public-only */}
-            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${PUBLIC_ONLY_MVP ? 'opacity-35 pointer-events-none select-none' : ''}`}>
+            <section className={`col-span-12 lg:col-span-5 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${publicOnlyMvp ? 'opacity-35 pointer-events-none select-none' : ''}`}>
               <div className="flex items-center gap-2 mb-6">
                 <Zap className="w-5 h-5 text-[#7D3A52]" />
                 <h2 className="text-base font-semibold text-[#100d1f]">מגבלות אלבום</h2>
@@ -697,8 +704,8 @@ export function GalleryWizard({
             </section>
             
             {/* Download Permissions Section */}
-            <section className={`relative col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${DOWNLOAD_PERMISSIONS_ENABLED ? '' : 'opacity-35 pointer-events-none select-none'}`}>
-              {!DOWNLOAD_PERMISSIONS_ENABLED ? (
+            <section className={`relative col-span-12 lg:col-span-6 bg-white border border-[#ebebe8] rounded-xl p-4 sm:p-6 md:p-8 ${downloadPermissionsEnabled ? '' : 'opacity-35 pointer-events-none select-none'}`}>
+              {!downloadPermissionsEnabled ? (
                 <span className="absolute top-4 left-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
                   לא זמין כרגע
                 </span>
@@ -715,7 +722,7 @@ export function GalleryWizard({
                   </div>
                   <Switch
                     checked={state.allowDownloadPreview}
-                    disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+                    disabled={!downloadPermissionsEnabled}
                     onCheckedChange={(checked) => updateState('allowDownloadPreview', checked)}
                   />
                 </div>
@@ -727,7 +734,7 @@ export function GalleryWizard({
                   </div>
                   <Switch
                     checked={state.allowDownloadOriginal}
-                    disabled={!DOWNLOAD_PERMISSIONS_ENABLED}
+                    disabled={!downloadPermissionsEnabled}
                     onCheckedChange={(checked) => updateState('allowDownloadOriginal', checked)}
                   />
                 </div>

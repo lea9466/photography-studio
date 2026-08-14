@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/button'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
   MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
+  PUBLIC_ONLY_MVP,
+  DOWNLOAD_PERMISSIONS_ENABLED,
+  isMvpBypassUser,
 } from '@/lib/types/app.types'
 
 export default async function NewGalleryPage() {
@@ -54,7 +57,12 @@ export default async function NewGalleryPage() {
       </div>
 
       {canCreateGallery ? (
-        <GalleryWizard clients={clients} defaultWatermarkText={studioName} />
+        <GalleryWizard
+          clients={clients}
+          defaultWatermarkText={studioName}
+          publicOnlyMvp={PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)}
+          downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)}
+        />
       ) : (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">

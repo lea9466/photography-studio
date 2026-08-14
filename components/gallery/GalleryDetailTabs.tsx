@@ -28,6 +28,9 @@ type GalleryDetailTabsProps = {
   signedUrls: Record<string, string>
   userId: string
   watermarkText: string | null
+  /** Per-account overrides, computed server-side — see isMvpBypassUser / isPhotoLimitTestUser. */
+  publicOnlyMvp?: boolean
+  photoCountLimitBypassed?: boolean
 }
 
 export function GalleryDetailTabs({
@@ -41,6 +44,8 @@ export function GalleryDetailTabs({
   signedUrls,
   userId,
   watermarkText,
+  publicOnlyMvp,
+  photoCountLimitBypassed,
 }: GalleryDetailTabsProps) {
   return (
     <div className="space-y-8">
@@ -165,6 +170,8 @@ export function GalleryDetailTabs({
           applyAutoWatermark={settings?.auto_apply_watermark ?? true}
           photos={photos}
           signedUrls={signedUrls}
+          publicOnlyMvp={publicOnlyMvp}
+          photoCountLimitBypassed={photoCountLimitBypassed}
         />
       </section>
 

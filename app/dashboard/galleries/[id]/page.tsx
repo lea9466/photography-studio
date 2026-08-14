@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { fetchGalleryDetail, ensurePortfolioSlug } from '@/lib/actions/gallery.actions'
 import { resolvePortfolioPublicPath } from '@/lib/queries/portfolio-gallery-page'
-import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import { PUBLIC_ONLY_MVP, DOWNLOAD_PERMISSIONS_ENABLED, isMvpBypassUser } from '@/lib/types/app.types'
+import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { fetchGallerySelections } from '@/lib/actions/photo.actions'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchGalleryPhotos } from '@/lib/actions/photo.actions'
@@ -43,6 +44,11 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
   }
 
   const { userId, supabase } = context
+  const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
+  const effectiveDownloadPermissionsEnabled = DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)
+  const frozenSectionClass = effectiveMvp
+    ? 'relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none'
+    : 'relative space-y-6 rounded-xl border border-[#c9c5cd] p-6'
 
   const { data: profileData } = await supabase
     .from('users')
@@ -81,7 +87,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           slug,
           gallery_type: gallery.gallery_type,
         })
-      : gallery.is_public || PUBLIC_ONLY_MVP
+      : gallery.is_public || effectiveMvp
         ? `/public-gallery/${gallery.id}`
         : `/g/${gallery.id}`
 
@@ -104,10 +110,12 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">
       {/* Section 1: Overview - Actions — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
-        <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
-          בקרוב
-        </span>
+      <section className={frozenSectionClass}>
+        {effectiveMvp && (
+          <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+            בקרוב
+          </span>
+        )}
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-[#100d1f] flex items-center gap-2">
             <Zap className="w-5 h-5" />
@@ -127,10 +135,12 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
       </section>
 
       {/* Section 2: Info and Actions - Details — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
-        <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
-          בקרוב
-        </span>
+      <section className={frozenSectionClass}>
+        {effectiveMvp && (
+          <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+            בקרוב
+          </span>
+        )}
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-[#100d1f] flex items-center gap-2">
             <Info className="w-5 h-5" />
@@ -231,16 +241,19 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
                 cover_image: gallery.cover_image,
               }}
               settings={settings}
+              downloadPermissionsEnabled={effectiveDownloadPermissionsEnabled}
             />
           </CardContent>
         </Card>
       </section>
 
       {/* Section 4: Photos - Selections — MVP: frozen */}
-      <section className="relative space-y-6 rounded-xl border border-[#c9c5cd] p-6 opacity-35 pointer-events-none select-none">
-        <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
-          בקרוב
-        </span>
+      <section className={frozenSectionClass}>
+        {effectiveMvp && (
+          <span className="absolute top-3 left-3 z-10 rounded-full bg-[#79767d] px-2.5 py-0.5 text-[10px] font-semibold text-white leading-none">
+            בקרוב
+          </span>
+        )}
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-[#100d1f] flex items-center gap-2">
             <ImageIcon className="w-5 h-5" />
@@ -277,6 +290,8 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           signedUrls={signedUrls}
           showWizardHeader={false}
           initialPhotoLimit={20}
+          publicOnlyMvp={effectiveMvp}
+          photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
         />
       </section>
     </div>

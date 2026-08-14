@@ -7,6 +7,20 @@ export const PUBLIC_ONLY_MVP = true
 export const DOWNLOAD_PERMISSIONS_ENABLED = false
 
 /**
+ * Temporary, single-account bypass for testing the private-gallery/client
+ * workflow before it opens to everyone — same pattern as
+ * PAYMENTS_SMOKE_TEST_USER_ID and PHOTO_LIMIT_TEST_USER_ID. Turning it off
+ * later needs no code change, just remove MVP_BYPASS_USER_ID from the
+ * environment. Server call sites compute `PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)`
+ * themselves — this only flags the one user id, it doesn't touch the
+ * site-wide default.
+ */
+export function isMvpBypassUser(userId: string | null | undefined): boolean {
+  const bypassUserId = process.env.MVP_BYPASS_USER_ID?.trim()
+  return Boolean(bypassUserId) && Boolean(userId) && bypassUserId === userId
+}
+
+/**
  * Status persisted in DB during MVP when `public` is not yet in galleries_status_check.
  * UI still shows "ציבורי" via getDisplayGalleryStatus().
  * After migration 20250707000002, switch to 'public'.

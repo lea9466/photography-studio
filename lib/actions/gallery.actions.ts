@@ -32,6 +32,7 @@ import {
   MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
   buildPublicGalleryCountLimitError,
   getMaxPublicGalleriesForPhotographer,
+  isMvpBypassUser,
 } from '@/lib/types/app.types'
 import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
 
@@ -315,18 +316,19 @@ function portfolioSlug(title: string) {
 export async function createGallery(input: CreateGalleryInput) {
   const context = await requireDashboardContext()
   const { userId, supabase } = context
+  const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
 
   const title = input.title.trim()
   if (!title) {
     throw new Error('שם הגלריה הוא שדה חובה')
   }
 
-  const willBePublic = PUBLIC_ONLY_MVP ? true : Boolean(input.isPublic)
+  const willBePublic = effectiveMvp ? true : Boolean(input.isPublic)
   if (willBePublic) {
     const entitlements = await getStudioEntitlements(userId)
     // FREE: only one displayed gallery. PRO: unlimited gallery creation —
     // only the flat count cap below applies.
-    if (!PUBLIC_ONLY_MVP && !entitlements.isPro) {
+    if (!effectiveMvp && !entitlements.isPro) {
       await assertFreeGalleryCanBecomePublic(supabase, userId, '')
     }
     if (entitlements.isPro) {
@@ -335,7 +337,7 @@ export async function createGallery(input: CreateGalleryInput) {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
 
-      if (!PUBLIC_ONLY_MVP) {
+      if (!effectiveMvp) {
         countQuery = countQuery.eq('is_public', true)
       }
 
@@ -359,12 +361,12 @@ export async function createGallery(input: CreateGalleryInput) {
     gallery_type: input.galleryType,
     password: hashedPassword,
     expires_at: input.expiresAt || null,
-    status: PUBLIC_ONLY_MVP
+    status: effectiveMvp
       ? MVP_GALLERY_DB_STATUS
       : input.isPublic || input.galleryType === 'portfolio'
       ? 'public'
       : 'draft',
-    is_public: PUBLIC_ONLY_MVP ? true : input.isPublic || false,
+    is_public: effectiveMvp ? true : input.isPublic || false,
     cover_image: input.coverImage || null,
     ...(input.galleryType === 'portfolio'
       ? { slug: portfolioSlug(title) }
@@ -455,6 +457,7 @@ export async function updateGallerySettings(
   console.log('updateGallerySettings called with:', { galleryId, input })
   const context = await requireDashboardContext()
   const { userId, supabase } = context
+  const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
 
   if (input.title !== undefined) {
     const { error } = await supabase
@@ -486,7 +489,7 @@ export async function updateGallerySettings(
       if (!wasPublic) {
         const entitlements = await getStudioEntitlements(userId)
         // FREE: only one displayed gallery. PRO: the flat count cap below applies.
-        if (!PUBLIC_ONLY_MVP && !entitlements.isPro) {
+        if (!effectiveMvp && !entitlements.isPro) {
           await assertFreeGalleryCanBecomePublic(supabase, userId, galleryId)
         }
         if (entitlements.isPro) {
@@ -510,7 +513,7 @@ export async function updateGallerySettings(
 
     galleryUpdate.is_public = input.isPublic
     if (input.isPublic) {
-      galleryUpdate.status = PUBLIC_ONLY_MVP ? MVP_GALLERY_DB_STATUS : 'public'
+      galleryUpdate.status = effectiveMvp ? MVP_GALLERY_DB_STATUS : 'public'
     }
   }
   if (input.coverImage !== undefined) galleryUpdate.cover_image = input.coverImage
@@ -588,13 +591,14 @@ export async function getPublicGalleryQuota() {
   if (!context) return null
 
   const { userId, supabase } = context
+  const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
 
   let countQuery = supabase
     .from('galleries')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
 
-  if (!PUBLIC_ONLY_MVP) {
+  if (!effectiveMvp) {
     countQuery = countQuery.eq('is_public', true)
   }
 
