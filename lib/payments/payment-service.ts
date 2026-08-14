@@ -49,9 +49,13 @@ export type PlanView = {
  * changes their mind) leaves its subscription row stuck in `pending` forever
  * — with nothing to distinguish it from an attempt that's genuinely still in
  * progress. Past this age we treat it as abandoned and let the customer start
- * a fresh checkout rather than being permanently locked out.
+ * a fresh checkout rather than being permanently locked out. Short on purpose
+ * — a customer who just clicked back should be able to retry right away, not
+ * wait around; the only real risk of a short window is a harmless extra
+ * pending row if two attempts overlap, not a double charge (only the specific
+ * attempt that's actually verified S2S ever activates a subscription).
  */
-const PENDING_CHECKOUT_STALE_MS = 30 * 60 * 1000
+const PENDING_CHECKOUT_STALE_MS = 2 * 60 * 1000
 
 function isPendingCheckoutStale(createdAt: string, now = new Date()): boolean {
   return now.getTime() - new Date(createdAt).getTime() > PENDING_CHECKOUT_STALE_MS

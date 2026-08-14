@@ -334,7 +334,7 @@ export function SubscriptionBillingPanel({
                           selectedPlanCode === plan.code ? (
                           <Loader2 className="ml-2 h-4 w-4 animate-spin" />
                         ) : null}
-                        {status.isSmokeTestUser ? 'בדיקת תשלום' : 'המשך למנוי'}
+                        המשך לתשלום
                       </Button>
                     )}
                   </div>
