@@ -38,7 +38,6 @@ function logDbError(scope: string, context: Record<string, unknown>, error: unkn
 }
 
 function isGalleryAccessible(gallery: PortfolioGalleryPageRow): boolean {
-  if (PUBLIC_ONLY_MVP) return true
   return gallery.is_public === true
 }
 
@@ -57,9 +56,7 @@ async function queryPortfolioGallery(
       ? query.eq('slug', slug)
       : query.ilike('slug', slug)
 
-  if (!PUBLIC_ONLY_MVP) {
-    query = query.eq('is_public', true)
-  }
+  query = query.eq('is_public', true)
 
   return query.maybeSingle()
 }

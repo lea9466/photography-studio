@@ -54,7 +54,6 @@ function logDbError(scope: string, context: Record<string, unknown>, error: unkn
 }
 
 function isGalleryAccessible(gallery: PublicGalleryPageRow): boolean {
-  if (PUBLIC_ONLY_MVP) return true
   return gallery.is_public === true
 }
 
@@ -95,11 +94,11 @@ async function fetchGalleryByUuid(
   admin: AdminClient,
   galleryId: string
 ): Promise<{ gallery: PublicGalleryPageRow | null; error: unknown }> {
-  let query = admin.from('galleries').select(GALLERY_PUBLIC_FIELDS).eq('id', galleryId)
-
-  if (!PUBLIC_ONLY_MVP) {
-    query = query.eq('is_public', true)
-  }
+  const query = admin
+    .from('galleries')
+    .select(GALLERY_PUBLIC_FIELDS)
+    .eq('id', galleryId)
+    .eq('is_public', true)
 
   const { data, error } = await query.maybeSingle()
   return { gallery: (data as PublicGalleryPageRow | null) ?? null, error }
@@ -109,11 +108,11 @@ async function fetchGalleryBySlug(
   admin: AdminClient,
   slug: string
 ): Promise<{ gallery: PublicGalleryPageRow | null; error: unknown }> {
-  let query = admin.from('galleries').select(GALLERY_PUBLIC_FIELDS).eq('slug', slug)
-
-  if (!PUBLIC_ONLY_MVP) {
-    query = query.eq('is_public', true)
-  }
+  const query = admin
+    .from('galleries')
+    .select(GALLERY_PUBLIC_FIELDS)
+    .eq('slug', slug)
+    .eq('is_public', true)
 
   const { data, error } = await query.maybeSingle()
   return { gallery: (data as PublicGalleryPageRow | null) ?? null, error }

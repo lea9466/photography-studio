@@ -35,7 +35,6 @@ import {
   fetchPhotographerDiscoveryGalleries,
   fetchPhotographerDiscoveryPosts,
 } from '@/lib/seo/photographer-discovery'
-import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
@@ -133,8 +132,11 @@ export default async function PhotographerPage({ params }: PageProps) {
           galleriesQuery = galleriesQuery.eq('id', '00000000-0000-0000-0000-000000000000')
         }
       }
-    } else if (!PUBLIC_ONLY_MVP) {
-      // PRO: filter to public galleries (unless MVP mode)
+    } else {
+      // PRO: only show public galleries. Under plain MVP mode every gallery
+      // is forced public at creation, so this is a no-op for most accounts —
+      // but bypass accounts (see isMvpBypassUser) can have real private
+      // galleries, and those must never appear on the public homepage.
       galleriesQuery = galleriesQuery.eq('is_public', true)
     }
 
