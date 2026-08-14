@@ -173,7 +173,6 @@ export function GalleryPhotosSection({
           phase: 'preparing',
         })
 
-        console.log('👉 About to upload photos, activeTab:', activeTab, 'activeTabRef:', activeTabRef.current, 'isProcessed:', activeTabRef.current === 'processed')
         const result = await uploadGalleryPhotosWithQueue(
           galleryId,
           userId,

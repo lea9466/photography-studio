@@ -97,10 +97,25 @@ const UPLOAD_CONCURRENCY = 3
 const RESERVATION_BATCH_SIZE = 100
 const URL_BATCH_SIZE = 100
 const COMPLETE_BATCH_SIZE = 100
-const PER_FILE_TIMEOUT_MS = 120_000
 const MAX_RETRIES = 3
 const RETRY_BASE_DELAY_MS = 1_000
 const RETRY_MAX_DELAY_MS = 10_000
+
+/**
+ * A flat 2-minute timeout was too short for a large original on a slow
+ * connection — the whole photo (compress + watermark + all its uploads)
+ * would get killed mid-transfer and reported as a failure, which is exactly
+ * the "breaks partway through" symptom. Scale the budget with the original
+ * file's size instead: a floor for small files, plus an allowance generous
+ * enough to survive a genuinely slow (~2 Mbps) upload, not just a fast one.
+ */
+const BASE_TIMEOUT_MS = 60_000
+const TIMEOUT_MS_PER_MB = 4_000
+
+function timeoutForFile(file: File): number {
+  const sizeMb = file.size / (1024 * 1024)
+  return BASE_TIMEOUT_MS + sizeMb * TIMEOUT_MS_PER_MB
+}
 
 let tabHiddenWaiters: Array<() => void> = []
 
@@ -223,8 +238,13 @@ async function uploadReservedPhoto(
     }
 
     try {
-      await withRetry(() => putToPresignedUrl(previewUrl, previewBlob))
-      await withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob))
+      // Independent uploads — run together instead of one-after-another so
+      // concurrency actually buys parallel network transfers, not just
+      // parallel photos.
+      await Promise.all([
+        withRetry(() => putToPresignedUrl(previewUrl, previewBlob)),
+        withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob)),
+      ])
     } catch (error) {
       return {
         ok: false,
@@ -250,9 +270,14 @@ async function uploadReservedPhoto(
   }
 
   try {
-    await withRetry(() => putToPresignedUrl(originalUrl, job.file))
-    await withRetry(() => putToPresignedUrl(previewUrl, previewBlob))
-    await withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob))
+    // Independent uploads — run together instead of one-after-another so
+    // concurrency actually buys parallel network transfers, not just
+    // parallel photos.
+    await Promise.all([
+      withRetry(() => putToPresignedUrl(originalUrl, job.file)),
+      withRetry(() => putToPresignedUrl(previewUrl, previewBlob)),
+      withRetry(() => putToPresignedUrl(watermarkedUrl, watermarkedBlob)),
+    ])
   } catch (error) {
     return {
       ok: false,
@@ -450,10 +475,11 @@ export async function uploadMediaPhotosWithQueue(
         const urls = pipeline.urlMap.get(job.photoId)!
 
         try {
+          const timeoutMs = timeoutForFile(job.file)
           const result = await withTimeout(
             uploadReservedPhoto(deps, job, watermarkText, applyAutoWatermark, urls),
-            PER_FILE_TIMEOUT_MS,
-            `${job.file.name}: פג תוקף ההעלאה (${PER_FILE_TIMEOUT_MS / 1000} שניות)`
+            timeoutMs,
+            `${job.file.name}: פג תוקף ההעלאה (${Math.round(timeoutMs / 1000)} שניות)`
           )
 
           if (result.ok) {
