@@ -53,6 +53,7 @@ export default async function SubscriptionPage({
     configured: false,
     checkoutEnabled: false,
     isSmokeTestUser: false,
+    canStartNewCheckout: true,
     subscription: null,
     availablePlan: null,
     availablePlans: [],

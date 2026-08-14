@@ -44,11 +44,30 @@ export type PlanView = {
   isHighlighted: boolean
 }
 
+/**
+ * A checkout attempt that never returns (browser closed, network drop, user
+ * changes their mind) leaves its subscription row stuck in `pending` forever
+ * — with nothing to distinguish it from an attempt that's genuinely still in
+ * progress. Past this age we treat it as abandoned and let the customer start
+ * a fresh checkout rather than being permanently locked out.
+ */
+const PENDING_CHECKOUT_STALE_MS = 30 * 60 * 1000
+
+function isPendingCheckoutStale(createdAt: string, now = new Date()): boolean {
+  return now.getTime() - new Date(createdAt).getTime() > PENDING_CHECKOUT_STALE_MS
+}
+
 export type CurrentSubscriptionView = {
   configured: boolean
   /** False until PAYMENTS_CHECKOUT_ENABLED=true after PayMe approval. */
   checkoutEnabled: boolean
   isSmokeTestUser: boolean
+  /**
+   * False only for a truly active subscription or a pending checkout still
+   * within its window — an abandoned/stale pending row does not block a new
+   * attempt. See PENDING_CHECKOUT_STALE_MS.
+   */
+  canStartNewCheckout: boolean
   subscription: {
     id: string
     status: string
@@ -259,10 +278,19 @@ export class PaymentService {
 
     const planViews = availablePlans.map(toPlanView)
 
+    const canStartNewCheckout = !subscription
+      ? true
+      : subscription.status === 'active'
+        ? false
+        : subscription.status === 'pending'
+          ? isPendingCheckoutStale(subscription.created_at)
+          : true
+
     return {
       configured: true,
       checkoutEnabled: isPaymentsCheckoutAllowed(userId),
       isSmokeTestUser: isPaymentsSmokeTestUser(userId),
+      canStartNewCheckout,
       subscription:
         subscription && plan
           ? {
