@@ -50,6 +50,8 @@ type GalleryPhotosSectionProps = {
   publicOnlyMvp?: boolean
   /** Per-account override, computed server-side — see isPhotoLimitTestUser. */
   photoCountLimitBypassed?: boolean
+  /** Per-account override, computed server-side — see isMvpBypassUser / DOWNLOAD_PERMISSIONS_ENABLED. */
+  downloadPermissionsEnabled?: boolean
 }
 
 export function GalleryPhotosSection({
@@ -63,6 +65,7 @@ export function GalleryPhotosSection({
   initialPhotoLimit = 20,
   publicOnlyMvp: publicOnlyMvpProp,
   photoCountLimitBypassed = false,
+  downloadPermissionsEnabled = false,
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const router = useRouter()
@@ -190,7 +193,8 @@ export function GalleryPhotosSection({
           setUploadProgress,
           uploadCallbacks,
           activeTabRef.current === 'processed',
-          applyAutoWatermark
+          applyAutoWatermark,
+          downloadPermissionsEnabled
         )
 
         if (result.ok) {
@@ -215,7 +219,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, downloadPermissionsEnabled]
   )
 
   const regularPhotos = useMemo(

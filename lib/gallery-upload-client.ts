@@ -34,14 +34,16 @@ export async function uploadGalleryPhotosWithQueue(
   onProgress: (progress: GalleryUploadProgress) => void,
   callbacks?: GalleryUploadCallbacks,
   isProcessed = false,
-  applyAutoWatermark = true
+  applyAutoWatermark = true,
+  /** Per-account override, computed server-side — see isMvpBypassUser / DOWNLOAD_PERMISSIONS_ENABLED. */
+  storeOriginals = false
 ): Promise<GalleryUploadResult> {
   return uploadMediaPhotosWithQueue(
     {
       entityId: galleryId,
       userId,
       isProcessed,
-      displayOnly: true,
+      displayOnly: !storeOriginals,
       buildPaths: buildPhotoStoragePaths,
       reserveBatch: reservePhotosBatch,
       completeBatch: completePhotosBatch,

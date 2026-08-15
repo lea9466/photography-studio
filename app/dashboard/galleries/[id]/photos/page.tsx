@@ -7,7 +7,7 @@ import { signStoragePaths } from '@/lib/storage'
 import { unwrapOne } from '@/lib/unwrap'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import type { GallerySettings } from '@/lib/types/database.types'
-import { PUBLIC_ONLY_MVP, isMvpBypassUser } from '@/lib/types/app.types'
+import { PUBLIC_ONLY_MVP, DOWNLOAD_PERMISSIONS_ENABLED, isMvpBypassUser } from '@/lib/types/app.types'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 
 type PhotosPageProps = {
@@ -58,6 +58,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
       signedUrls={signedUrls}
       publicOnlyMvp={PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)}
       photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
+      downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)}
     />
   )
 }

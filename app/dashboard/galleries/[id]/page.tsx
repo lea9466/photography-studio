@@ -292,6 +292,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           initialPhotoLimit={20}
           publicOnlyMvp={effectiveMvp}
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
+          downloadPermissionsEnabled={effectiveDownloadPermissionsEnabled}
         />
       </section>
     </div>
