@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
 import {
   hasActiveSubscriptionLike,
   resolveStudioEntitlements,
@@ -61,6 +62,7 @@ export async function getStudioEntitlements(
     latestSubscription as StudioEntitlementSubscriptionRow | null,
     now
   )
+  const paymentsCheckoutEnabled = isPaymentsCheckoutEnabled()
 
   if (userError && isMissingOverrideColumnError(userError.message)) {
     const { data: fallback } = await admin
@@ -73,16 +75,19 @@ export async function getStudioEntitlements(
       trialEndDate: row?.trial_end_date ?? null,
       subscriptionTierOverride: null,
       hasActiveSubscription,
+      paymentsCheckoutEnabled,
       now,
     })
   }
 
   if (userError || !user) {
-    // Unknown user — never grant PRO. Resolver treats a null trial as FREE.
+    // Unknown user — never grant PRO, not even the pre-launch grace (that
+    // grace only applies to real 'auto' accounts).
     return resolveStudioEntitlements({
       trialEndDate: null,
-      subscriptionTierOverride: null,
+      subscriptionTierOverride: 'free',
       hasActiveSubscription,
+      paymentsCheckoutEnabled,
       now,
     })
   }
@@ -92,6 +97,7 @@ export async function getStudioEntitlements(
     trialEndDate: row.trial_end_date,
     subscriptionTierOverride: row.subscription_tier_override,
     hasActiveSubscription,
+    paymentsCheckoutEnabled,
     now,
   })
 }

@@ -27,6 +27,7 @@ export type EntitlementSource =
   | 'subscription'
   | 'admin_override'
   | 'free'
+  | 'pre_launch'
 
 /**
  * Platform-admin override stored on `users.subscription_tier_override`.

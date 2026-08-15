@@ -32,6 +32,7 @@ import {
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
+import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
 import {
   hasActiveSubscriptionLike,
   resolveStudioEntitlements,
@@ -275,6 +276,7 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     hasActiveSubscription: hasActiveSubscriptionLike(
       activeSubscriptions.get(row.id) ?? null
     ),
+    paymentsCheckoutEnabled: isPaymentsCheckoutEnabled(),
   })
 
   return {
@@ -469,6 +471,7 @@ export async function updateAdminStudioSubscriptionOverride(
     hasActiveSubscription: hasActiveSubscriptionLike(
       activeSubscriptions.get(row.id) ?? null
     ),
+    paymentsCheckoutEnabled: isPaymentsCheckoutEnabled(),
   })
 
   return {

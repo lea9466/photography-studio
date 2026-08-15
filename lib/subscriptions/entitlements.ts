@@ -84,6 +84,10 @@ export type ResolveStudioEntitlementsInput = {
   trialEndDate: string | Date | null
   subscriptionTierOverride: SubscriptionTierOverride | null | undefined
   hasActiveSubscription: boolean
+  /** From `isPaymentsCheckoutEnabled()` (lib/payments/flags.ts). No caller may
+   *  default this — omitting it would silently mask the pre-launch grace
+   *  below, so passing the real flag is mandatory. */
+  paymentsCheckoutEnabled: boolean
   now?: Date
 }
 
@@ -94,7 +98,9 @@ export type ResolveStudioEntitlementsInput = {
  *   forced PRO   → PRO (admin_override)
  *   forced FREE  → FREE (admin_override)  — even with an active trial/subscription
  *   auto         → PRO while trial is active OR a subscription is active,
- *                  otherwise FREE
+ *                  otherwise FREE — UNLESS checkout isn't live yet, in which
+ *                  case auto users stay PRO (pre_launch) since there is no
+ *                  way for them to pay to keep it.
  */
 export function resolveStudioEntitlements(
   input: ResolveStudioEntitlementsInput
@@ -113,7 +119,12 @@ export function resolveStudioEntitlements(
   }
 
   const trialActive = isTrialActive(input.trialEndDate, now)
-  const isPro = override === 'pro' || trialActive || input.hasActiveSubscription
+  const preLaunchGrace = override === 'auto' && !input.paymentsCheckoutEnabled
+  const isPro =
+    override === 'pro' ||
+    trialActive ||
+    input.hasActiveSubscription ||
+    preLaunchGrace
 
   if (!isPro) {
     return {
@@ -130,7 +141,9 @@ export function resolveStudioEntitlements(
       ? 'admin_override'
       : trialActive
         ? 'trial'
-        : 'subscription'
+        : input.hasActiveSubscription
+          ? 'subscription'
+          : 'pre_launch'
 
   return {
     tier: 'pro',
@@ -148,18 +161,21 @@ export function canUseFeature(
   return entitlements.features[feature]
 }
 
-/** Platform-admin badge: PRO / FREE / TRIAL / FORCED PRO / FORCED FREE. */
+/** Platform-admin badge: PRO / FREE / TRIAL / PRE-LAUNCH / FORCED PRO / FORCED FREE. */
 export function resolveTierBadge(entitlements: StudioEntitlements):
   | 'PRO'
   | 'FREE'
   | 'TRIAL'
+  | 'PRE-LAUNCH'
   | 'FORCED PRO'
   | 'FORCED FREE' {
   if (entitlements.source === 'admin_override') {
     return entitlements.isPro ? 'FORCED PRO' : 'FORCED FREE'
   }
   if (!entitlements.isPro) return 'FREE'
-  return entitlements.source === 'trial' ? 'TRIAL' : 'PRO'
+  if (entitlements.source === 'trial') return 'TRIAL'
+  if (entitlements.source === 'pre_launch') return 'PRE-LAUNCH'
+  return 'PRO'
 }
 
 export function getHeroImageLimit(entitlements: StudioEntitlements): number {

@@ -248,6 +248,8 @@ function getTierBadgeClass(badge: ReturnType<typeof resolveTierBadge>) {
       return 'border-emerald-200 bg-emerald-100 text-emerald-800'
     case 'TRIAL':
       return 'border-sky-200 bg-sky-100 text-sky-800'
+    case 'PRE-LAUNCH':
+      return 'border-violet-200 bg-violet-100 text-violet-800'
     case 'FORCED FREE':
       return 'border-rose-300 bg-rose-500 text-white'
     default:
@@ -257,7 +259,14 @@ function getTierBadgeClass(badge: ReturnType<typeof resolveTierBadge>) {
 
 function TierBadge({ entitlements }: { entitlements: StudioEntitlements }) {
   const badge = resolveTierBadge(entitlements)
-  const Icon = badge === 'FORCED PRO' ? ShieldCheck : badge === 'FORCED FREE' ? ShieldOff : badge === 'PRO' ? Sparkles : Lock
+  const Icon =
+    badge === 'FORCED PRO'
+      ? ShieldCheck
+      : badge === 'FORCED FREE'
+        ? ShieldOff
+        : badge === 'PRO' || badge === 'PRE-LAUNCH'
+          ? Sparkles
+          : Lock
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${getTierBadgeClass(badge)}`}

@@ -1,6 +1,7 @@
 import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
 import { normalizeAnnouncementIcon } from '@/lib/announcements/icons'
 import type { Announcement } from '@/lib/announcements/types'
+import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
 import {
   hasActiveSubscriptionLike,
   resolveStudioEntitlements,
@@ -269,6 +270,7 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   const activeSubscriptions = await fetchActiveSubscriptionByIds(
     rows.map((studio) => studio.id)
   )
+  const paymentsCheckoutEnabled = isPaymentsCheckoutEnabled()
 
   return rows.map((studio) => {
     const entitlements = resolveStudioEntitlements({
@@ -279,6 +281,7 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
       hasActiveSubscription: hasActiveSubscriptionLike(
         activeSubscriptions.get(studio.id) ?? null
       ),
+      paymentsCheckoutEnabled,
     })
     return {
       id: studio.id,

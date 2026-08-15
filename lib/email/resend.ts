@@ -515,6 +515,34 @@ export async function sendTrialExpiredEmail(input: {
   const displayName = input.name.trim() || 'שם'
   const subscriptionUrl = appUrl('/dashboard/subscription')
 
+  if (!input.checkoutEnabled) {
+    // Payments aren't live yet, so there's no way to pay to keep PRO — the
+    // account stays on full access. Don't tell users they were downgraded.
+    const text = [
+      `היי ${displayName},`,
+      '',
+      'תקופת הניסיון החינמית שלך הסתיימה — אבל מערכת המנויים עדיין לא פתוחה לתשלום, אז החשבון שלך ממשיך לפעול במלואו בינתיים, בלי שום הגבלה.',
+      '',
+      'נשלח לך מייל נוסף כשהתשלום ייפתח.',
+    ].join('\n')
+
+    await resend.emails.send({
+      from: emailFrom(),
+      to: input.email,
+      subject: 'תקופת הניסיון שלך הסתיימה',
+      text,
+      html: `
+        <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+          <p>היי ${displayName},</p>
+          <p>תקופת הניסיון החינמית שלך הסתיימה — אבל מערכת המנויים עדיין לא פתוחה לתשלום, אז החשבון שלך ממשיך לפעול במלואו בינתיים, בלי שום הגבלה.</p>
+          <p>נשלח לך מייל נוסף כשהתשלום ייפתח.</p>
+        </div>
+      `,
+    })
+
+    return { sent: true }
+  }
+
   const limitsLines = [
     'תקופת הניסיון החינמית שלך הסתיימה, והחשבון עבר למסלול החינמי.',
     '',
@@ -525,26 +553,11 @@ export async function sendTrialExpiredEmail(input: {
     '• גלריה ציבורית אחת מוצגת בכל רגע נתון',
     '• עד 30 תמונות בגלריה ציבורית',
     '• כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם',
+    '',
+    `אפשר לחזור למסלול המלא בכל רגע: ${subscriptionUrl}`,
   ]
 
-  const ctaLines = input.checkoutEnabled
-    ? ['', `אפשר לחזור למסלול המלא בכל רגע: ${subscriptionUrl}`]
-    : ['', 'מערכת המנויים עדיין לא פתוחה לתשלום — נשלח מייל נוסף ברגע שהיא תיפתח.']
-
-  const text = [`היי ${displayName},`, '', ...limitsLines, ...ctaLines].join('\n')
-
-  const ctaHtml = input.checkoutEnabled
-    ? `
-      <p style="margin: 24px 0;">
-        <a
-          href="${subscriptionUrl}"
-          style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
-        >
-          חזרה למסלול המלא
-        </a>
-      </p>
-    `
-    : '<p>מערכת המנויים עדיין לא פתוחה לתשלום — נשלח מייל נוסף ברגע שהיא תיפתח.</p>'
+  const text = [`היי ${displayName},`, '', ...limitsLines].join('\n')
 
   await resend.emails.send({
     from: emailFrom(),
@@ -563,7 +576,14 @@ export async function sendTrialExpiredEmail(input: {
           <li>עד 30 תמונות בגלריה ציבורית</li>
           <li>כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם</li>
         </ul>
-        ${ctaHtml}
+        <p style="margin: 24px 0;">
+          <a
+            href="${subscriptionUrl}"
+            style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
+          >
+            חזרה למסלול המלא
+          </a>
+        </p>
       </div>
     `,
   })
