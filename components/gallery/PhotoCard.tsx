@@ -2,12 +2,14 @@
 
 import Image from 'next/image'
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
-import { useTransition } from 'react'
+import { useRef, useTransition } from 'react'
 import { toast } from 'sonner'
 import { deletePhoto, togglePhotoVisibility } from '@/lib/actions/photo.actions'
 import type { Photo } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+
+const IMAGE_RETRY_DELAYS_MS = [600, 1800, 4000]
 
 type PhotoCardProps = {
   photo: Photo
@@ -27,6 +29,27 @@ export function PhotoCard({
   onToggleSelect,
 }: PhotoCardProps) {
   const [isPending, startTransition] = useTransition()
+  const imgRef = useRef<HTMLImageElement>(null)
+  const retryCountRef = useRef(0)
+
+  // Lazy-loaded thumbnails occasionally fail on a transient hiccup (network
+  // blip, CDN hiccup, a burst of concurrent loads) with no browser-level
+  // retry — same gap as the public gallery pages, see
+  // lib/public-gallery-html.ts's imageRetryScript. Re-assigning `src` (via
+  // an empty-string reset, since some browsers no-op on an unchanged value)
+  // forces a fresh request for the same URL.
+  function handleImageError() {
+    if (retryCountRef.current >= IMAGE_RETRY_DELAYS_MS.length) return
+    const delay = IMAGE_RETRY_DELAYS_MS[retryCountRef.current]
+    retryCountRef.current += 1
+    setTimeout(() => {
+      const img = imgRef.current
+      if (!img) return
+      const src = img.src
+      img.src = ''
+      img.src = src
+    }, delay)
+  }
 
   function handleToggleVisibility() {
     startTransition(async () => {
@@ -72,11 +95,13 @@ export function PhotoCard({
       <div className="relative aspect-square">
         {previewUrl ? (
           <Image
+            ref={imgRef}
             src={previewUrl}
             alt=""
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 33vw"
+            onError={handleImageError}
           />
         ) : (
           <div className="flex h-full items-center justify-center text-[--muted]">

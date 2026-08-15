@@ -13,6 +13,7 @@ import {
   getMasonryCellStyle,
   PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
   PUBLIC_GALLERY_MASONRY_STYLES,
+  PUBLIC_GALLERY_IMAGE_RETRY_SCRIPT,
 } from '@/lib/public-gallery-html'
 import { resolveSiteLanguage } from '@/lib/site-language'
 import type { PhotographerSiteTheme } from '@/lib/photographer-site-paths'
@@ -445,6 +446,7 @@ ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${generatePortfolioLazyLoadScript(options.portfolio.pageTitle, chromeTheme)}</script>
 <script>${PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT}</script>
+<script>${PUBLIC_GALLERY_IMAGE_RETRY_SCRIPT}</script>
 </body>
 </html>`
 }

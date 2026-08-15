@@ -371,6 +371,37 @@ const lightboxDelegationScript = `
 })();
 `
 
+/**
+ * Masonry images use native `loading="lazy"` with no built-in recovery —
+ * a transient failure (CDN hiccup, a burst of concurrent lazy-loaded
+ * requests exceeding the browser's per-host connection limit, momentary
+ * network blip) leaves the `<img>` permanently broken, showing its alt
+ * text, even though the same URL succeeds on a fresh request (e.g.
+ * clicking it open in the lightbox). `error` doesn't bubble, so this
+ * listens on the capture phase instead of attaching per-image handlers.
+ */
+const imageRetryScript = `
+(function initPublicGalleryImageRetry() {
+  var MAX_ATTEMPTS = 3;
+  var RETRY_DELAYS = [600, 1800, 4000];
+
+  function onError(event) {
+    var img = event.target;
+    if (!img || img.tagName !== 'IMG' || !img.hasAttribute('data-lightbox-src')) return;
+    var attempts = parseInt(img.getAttribute('data-retry-count') || '0', 10);
+    if (attempts >= MAX_ATTEMPTS) return;
+    img.setAttribute('data-retry-count', String(attempts + 1));
+    var src = img.getAttribute('data-lightbox-src');
+    if (!src) return;
+    setTimeout(function() {
+      img.src = src;
+    }, RETRY_DELAYS[attempts] || RETRY_DELAYS[RETRY_DELAYS.length - 1]);
+  }
+
+  document.addEventListener('error', onError, true);
+})();
+`
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -817,6 +848,7 @@ ${generateSiteFooter(chrome)}
 <script>${generateSiteNavScrollScript(chromeTheme, 'href')}</script>
 <script>${masonryRevealScript}</script>
 <script>${lightboxScript}</script>
+<script>${imageRetryScript}</script>
 </body>
 </html>`
 }
@@ -865,4 +897,5 @@ export {
   lightboxMarkup as generatePublicGalleryLightboxMarkup,
   lightboxScript as PUBLIC_GALLERY_LIGHTBOX_SCRIPT,
   lightboxDelegationScript as PUBLIC_GALLERY_LIGHTBOX_DELEGATION_SCRIPT,
+  imageRetryScript as PUBLIC_GALLERY_IMAGE_RETRY_SCRIPT,
 }
