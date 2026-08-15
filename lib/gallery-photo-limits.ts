@@ -22,13 +22,15 @@ export async function getPhotographerPublicPhotoCount(
   supabase: AppSupabaseClient,
   userId: string
 ): Promise<number> {
-  let galleryQuery = supabase.from('galleries').select('id').eq('user_id', userId)
-
-  if (!PUBLIC_ONLY_MVP) {
-    galleryQuery = galleryQuery.eq('is_public', true)
-  }
-
-  const { data: galleries, error: galleriesError } = await galleryQuery
+  // Always scoped to public galleries — under plain MVP mode every gallery
+  // is forced public anyway, so this is a no-op for most accounts, but
+  // bypass accounts can have real private galleries whose photos must never
+  // count against the *public* gallery quota (see MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER).
+  const { data: galleries, error: galleriesError } = await supabase
+    .from('galleries')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_public', true)
   if (galleriesError) throw new Error(galleriesError.message)
 
   const galleryIds = ((galleries ?? []) as { id: string }[]).map((gallery) => gallery.id)
