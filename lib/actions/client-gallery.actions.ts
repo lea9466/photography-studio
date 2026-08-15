@@ -134,7 +134,7 @@ export async function requestGalleryPassword(galleryId: string) {
       `
       id, title, password, expires_at, status,
       clients (name, email),
-      users (studio_name)
+      users!galleries_user_id_fkey (studio_name)
     `
     )
     .eq('id', galleryId)
@@ -266,7 +266,7 @@ async function loadClientGalleryInternal(galleryId: string) {
     .select(
       `
       id, title, status, gallery_type, user_id, is_public,
-      users (studio_name, logo_url),
+      users!galleries_user_id_fkey (studio_name, logo_url),
       gallery_settings (
         max_album_selection, max_edit_selection,
         allow_download_preview, allow_download_original
@@ -430,7 +430,7 @@ export async function getPublicPortfolioGallery(galleryId: string) {
     .select(
       `
       id, title, created_at, gallery_type,
-      users (studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url)
+      users!galleries_user_id_fkey (studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url)
     `
     )
     .eq('id', galleryId)
