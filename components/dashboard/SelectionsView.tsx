@@ -4,7 +4,8 @@ import { useTransition, useState } from 'react'
 import Image from 'next/image'
 import { Download, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
-import { createDownloadJob } from '@/lib/actions/download.actions'
+import { getGalleryDownloadFiles } from '@/lib/actions/download.actions'
+import { downloadFilesAsZip } from '@/lib/client-zip-download'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -29,16 +30,6 @@ type SelectionsViewProps = {
   editPhotos: SelectionPhoto[]
 }
 
-function triggerBrowserDownload(url: string) {
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.rel = 'noopener noreferrer'
-  anchor.style.display = 'none'
-  document.body.appendChild(anchor)
-  anchor.click()
-  document.body.removeChild(anchor)
-}
-
 export function SelectionsView({
   galleryId,
   albumPhotos,
@@ -49,23 +40,17 @@ export function SelectionsView({
   const [editExpanded, setEditExpanded] = useState(false)
 
   function handleDownload(type: 'preview' | 'original') {
-    const downloadWindow = window.open('', '_blank')
-    toast.info('מכין קובץ ZIP...')
+    const toastId = toast.loading('מכינה רשימת קבצים...')
 
     startTransition(async () => {
       try {
-        const { downloadUrl } = await createDownloadJob(galleryId, type)
-
-        if (downloadWindow && !downloadWindow.closed) {
-          downloadWindow.location.href = downloadUrl
-        } else {
-          triggerBrowserDownload(downloadUrl)
-        }
-
-        toast.success('ההורדה התחילה')
+        const files = await getGalleryDownloadFiles(galleryId, type)
+        await downloadFilesAsZip(files, `${type}-${galleryId.slice(0, 8)}.zip`, (completed, total) => {
+          toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
+        })
+        toast.success('ה-ZIP מוכן להורדה', { id: toastId })
       } catch (error) {
-        downloadWindow?.close()
-        toast.error(error instanceof Error ? error.message : 'שגיאה')
+        toast.error(error instanceof Error ? error.message : 'שגיאה', { id: toastId })
       }
     })
   }

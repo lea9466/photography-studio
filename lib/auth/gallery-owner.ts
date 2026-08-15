@@ -57,37 +57,3 @@ export async function assertPhotoInOwnedGallery(photoId: string) {
   }
 }
 
-export async function assertDownloadJobOwner(jobId: string) {
-  const context = await requireDashboardContext()
-
-  const { data: job } = await context.supabase
-    .from('download_jobs')
-    .select('id, file_url, status, gallery_id')
-    .eq('id', jobId)
-    .single()
-
-  type JobRow = {
-    id: string
-    file_url: string | null
-    status: string
-    gallery_id: string
-  }
-
-  const row = job as JobRow | null
-  if (!row) throw new Error('הורדה לא נמצאה')
-
-  const { data: gallery } = await context.supabase
-    .from('galleries')
-    .select('id')
-    .eq('id', row.gallery_id)
-    .eq('user_id', context.userId)
-    .single()
-
-  if (!gallery) throw new Error('הורדה לא נמצאה')
-
-  return {
-    supabase: context.supabase,
-    job: row,
-    isImpersonating: context.isImpersonating,
-  }
-}

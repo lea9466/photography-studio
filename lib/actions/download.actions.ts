@@ -1,80 +1,38 @@
 'use server'
 
-import JSZip from 'jszip'
-import { assertGalleryOwner, assertDownloadJobOwner } from '@/lib/auth/gallery-owner'
-import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
+import { assertGalleryOwner } from '@/lib/auth/gallery-owner'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { hasGallerySession } from '@/lib/gallery-session'
-import {
-  createPresignedDownloadUrl,
-  downloadMediaObject,
-  uploadMediaObject,
-} from '@/lib/r2/storage'
-import type { DownloadJobType } from '@/lib/types/database.types'
+import { createPresignedDownloadUrl } from '@/lib/r2/storage'
+import type { MediaBucket } from '@/lib/r2/types'
 
-const DOWNLOAD_JOB_TYPES: DownloadJobType[] = ['preview', 'original', 'edited', 'watermarked']
-
-export async function createDownloadJob(
-  galleryId: string,
-  type: DownloadJobType
-) {
-  if (!DOWNLOAD_JOB_TYPES.includes(type)) {
-    throw new Error('סוג הורדה לא תקין')
-  }
-
-  const { supabase, user } = await assertGalleryOwner(galleryId)
-
-  const { data, error } = await supabase
-    .from('download_jobs')
-    .insert({ gallery_id: galleryId, type, status: 'processing' } as never)
-    .select('id')
-    .single()
-
-  if (error) throw new Error(error.message)
-
-  const jobId = (data as { id: string }).id
-
-  try {
-    const fileUrl = await buildZip(galleryId, type, user.id)
-    await supabase
-      .from('download_jobs')
-      .update({
-        status: 'ready',
-        file_url: fileUrl,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      } as never)
-      .eq('id', jobId)
-
-    const downloadUrl = await createPresignedDownloadUrl('zips', fileUrl, 3600, {
-      filename: `${type}-${galleryId.slice(0, 8)}.zip`,
-    })
-
-    revalidatePath(`/dashboard/galleries/${galleryId}/selections`)
-    return { jobId, downloadUrl }
-  } catch (err) {
-    await supabase
-      .from('download_jobs')
-      .update({ status: 'failed' } as never)
-      .eq('id', jobId)
-    throw err
-  }
+export type DownloadFileEntry = {
+  filename: string
+  url: string
 }
 
-async function buildZip(
-  galleryId: string,
-  type: DownloadJobType,
-  userId: string
-) {
-  const admin = createAdminClient()
-  const zip = new JSZip()
+type ResolvableDownloadType = 'preview' | 'original' | 'watermarked' | 'edited'
 
-  let fileCount = 0
+/**
+ * Returns presigned R2 GET URLs for the requested files instead of building
+ * a zip on the server. The old flow downloaded every file into the
+ * serverless function's memory, zipped it there, then re-uploaded the zip —
+ * for a gallery with hundreds of full-resolution originals that's multiple
+ * GB flowing through (and buffered by) the function, risking an OOM kill or
+ * timeout. Presigning is a cheap crypto operation; the actual file bytes
+ * now go straight from R2 to the browser, which zips them client-side.
+ */
+async function resolveDownloadFiles(
+  galleryId: string,
+  type: ResolvableDownloadType
+): Promise<DownloadFileEntry[]> {
+  const admin = createAdminClient()
+  const candidates: { bucket: MediaBucket; path: string }[] = []
 
   if (type === 'preview' || type === 'original' || type === 'watermarked') {
     const { data: photos } = await admin
       .from('photos')
-      .select('id, original_url, preview_url, watermarked_preview_url, is_visible_to_client')
+      .select('id, original_url, preview_url, watermarked_preview_url')
       .eq('gallery_id', galleryId)
       .eq('is_visible_to_client', true)
 
@@ -83,12 +41,11 @@ async function buildZip(
       original_url: string | null
       preview_url: string | null
       watermarked_preview_url: string | null
-      is_visible_to_client: boolean
     }
 
     for (const photo of (photos ?? []) as PhotoRow[]) {
       let path: string | null = null
-      let bucket: 'originals' | 'previews' | 'watermarked' = 'previews'
+      let bucket: MediaBucket = 'previews'
 
       if (type === 'original') {
         path = photo.original_url ?? photo.preview_url
@@ -101,11 +58,7 @@ async function buildZip(
         bucket = 'previews'
       }
 
-      if (!path) continue
-
-      const file = await downloadMediaObject(bucket, path)
-      zip.file(path.split('/').pop()!, file)
-      fileCount++
+      if (path) candidates.push({ bucket, path })
     }
   }
 
@@ -117,81 +70,39 @@ async function buildZip(
 
     for (const row of edited ?? []) {
       const path = (row as { final_url: string | null }).final_url
-      if (!path) continue
-      const file = await downloadMediaObject('edited', path)
-      zip.file(path.split('/').pop()!, file)
-      fileCount++
+      if (path) candidates.push({ bucket: 'edited', path })
     }
   }
 
-  if (fileCount === 0) {
+  if (candidates.length === 0) {
     throw new Error('אין קבצים להורדה')
   }
 
-  const content = await zip.generateAsync({ type: 'uint8array' })
-  const zipPath = `${userId}/${galleryId}/${type}-${Date.now()}.zip`
-
-  await uploadMediaObject('zips', zipPath, content, 'application/zip')
-  return zipPath
+  return Promise.all(
+    candidates.map(async ({ bucket, path }) => ({
+      filename: path.split('/').pop()!,
+      url: await createPresignedDownloadUrl(bucket, path, 3600),
+    }))
+  )
 }
 
-export async function getDownloadJobUrl(jobId: string) {
-  const { job } = await assertDownloadJobOwner(jobId)
-
-  if (job.status !== 'ready' || !job.file_url) {
-    throw new Error('הורדה לא מוכנה')
-  }
-
-  return createPresignedDownloadUrl('zips', job.file_url)
+/** Photographer's own dashboard download (SelectionsView). */
+export async function getGalleryDownloadFiles(
+  galleryId: string,
+  type: 'preview' | 'original'
+): Promise<DownloadFileEntry[]> {
+  await assertGalleryOwner(galleryId)
+  return resolveDownloadFiles(galleryId, type)
 }
 
-export async function pollDownloadJob(jobId: string) {
-  const { job } = await assertDownloadJobOwner(jobId)
-
-  return { status: job.status, file_url: job.file_url }
-}
-
-export async function createClientEditedDownload(galleryId: string) {
-  const allowed = await hasGallerySession(galleryId)
-  if (!allowed) throw new Error('גישה נדחתה')
-
-  const admin = createAdminClient()
-  const { data: galleryData } = await admin
-    .from('galleries')
-    .select('id, status, user_id, title')
-    .eq('id', galleryId)
-    .single()
-
-  type GalleryRow = {
-    id: string
-    status: string
-    user_id: string
-    title: string
-  }
-
-  const gallery = galleryData as GalleryRow | null
-  if (!gallery) throw new Error('גלריה לא נמצאה')
-  if (!['delivery_ready', 'locked'].includes(gallery.status)) {
-    throw new Error('ההורדה תיפתח כשהגלריה מוכנה למסירה')
-  }
-
-  const fileUrl = await buildZip(galleryId, 'edited', gallery.user_id)
-  const downloadUrl = await createPresignedDownloadUrl('zips', fileUrl, 3600, {
-    filename: `${gallery.title}-edited.zip`.replace(/[^\w\u0590-\u05FF.-]+/g, '_'),
-  })
-
-  return { downloadUrl }
-}
-
-export async function createClientDownload(galleryId: string, type: 'watermarked' | 'original') {
-  // Found while fixing finding #9 (not in the original report): this wasn't
-  // just a missing-runtime-check gap — it was an actual authorization
-  // bypass. `downloadType` below unconditionally normalizes any non-
-  // 'watermarked' value to 'original', but the permission checks a few
-  // lines down only fire when `type === 'watermarked'` or `type === 'original'`
-  // — a garbage type value (e.g. from a hand-crafted request bypassing the
-  // client) satisfied NEITHER check, skipping the allow_download_original
-  // gate entirely while still building an 'original' zip.
+/** Client-facing download of regular/watermarked photos, gated by the photographer's allow_download_* settings. */
+export async function getClientGalleryDownloadFiles(
+  galleryId: string,
+  type: 'watermarked' | 'original'
+): Promise<DownloadFileEntry[]> {
+  // A hand-crafted request bypassing the client could pass a garbage type
+  // value — validate strictly before anything downstream defaults it to
+  // 'original', or the permission checks below would never fire.
   if (type !== 'watermarked' && type !== 'original') {
     throw new Error('סוג הורדה לא תקין')
   }
@@ -202,19 +113,16 @@ export async function createClientDownload(galleryId: string, type: 'watermarked
   const admin = createAdminClient()
   const { data: galleryData } = await admin
     .from('galleries')
-    .select('id, status, user_id, title, gallery_settings(allow_download_preview, allow_download_original)')
+    .select('id, gallery_settings(allow_download_preview, allow_download_original)')
     .eq('id', galleryId)
     .single()
 
   type GalleryRow = {
     id: string
-    status: string
-    user_id: string
-    title: string
-    gallery_settings: {
-      allow_download_preview: boolean
-      allow_download_original: boolean
-    } | { allow_download_preview: boolean; allow_download_original: boolean }[] | null
+    gallery_settings:
+      | { allow_download_preview: boolean; allow_download_original: boolean }
+      | { allow_download_preview: boolean; allow_download_original: boolean }[]
+      | null
   }
 
   const gallery = galleryData as GalleryRow | null
@@ -232,11 +140,28 @@ export async function createClientDownload(galleryId: string, type: 'watermarked
     throw new Error('הורדת תמונות מקור לא מורשית')
   }
 
-  const downloadType = type === 'watermarked' ? 'watermarked' : 'original'
-  const fileUrl = await buildZip(galleryId, downloadType, gallery.user_id)
-  const downloadUrl = await createPresignedDownloadUrl('zips', fileUrl, 3600, {
-    filename: `${gallery.title}-${type}.zip`.replace(/[^\w\u0590-\u05FF.-]+/g, '_'),
-  })
+  return resolveDownloadFiles(galleryId, type)
+}
 
-  return { downloadUrl }
+/** Client-facing download of the photographer's edited/delivered photos. */
+export async function getClientEditedDownloadFiles(
+  galleryId: string
+): Promise<DownloadFileEntry[]> {
+  const allowed = await hasGallerySession(galleryId)
+  if (!allowed) throw new Error('גישה נדחתה')
+
+  const admin = createAdminClient()
+  const { data: galleryData } = await admin
+    .from('galleries')
+    .select('id, status')
+    .eq('id', galleryId)
+    .single()
+
+  const gallery = galleryData as { id: string; status: string } | null
+  if (!gallery) throw new Error('גלריה לא נמצאה')
+  if (!['delivery_ready', 'locked'].includes(gallery.status)) {
+    throw new Error('ההורדה תיפתח כשהגלריה מוכנה למסירה')
+  }
+
+  return resolveDownloadFiles(galleryId, 'edited')
 }
