@@ -52,11 +52,16 @@ export function ClientEditedDownloadButton({
 
   return (
     <Button
-      variant="outline"
+      variant={canDownload ? 'default' : 'outline'}
       size="sm"
       disabled={isPending || !canDownload}
       onClick={handleDownload}
       title={title}
+      className={
+        canDownload
+          ? 'rounded-full bg-accent text-white shadow-sm transition-all hover:shadow-md'
+          : 'rounded-full border-[--border] bg-[--background] shadow-sm'
+      }
     >
       <Download className="h-4 w-4" />
       {isPending ? 'מכין ZIP...' : 'הורד מעובדות (ZIP)'}

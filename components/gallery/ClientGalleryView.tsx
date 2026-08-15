@@ -230,15 +230,35 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-3 sm:px-4">
-            <TabsList>
-              <TabsTrigger value="regular">תמונות רגילות</TabsTrigger>
-              <TabsTrigger value="edit">לעיבוד</TabsTrigger>
-              <TabsTrigger value="album">אלבום</TabsTrigger>
-              <TabsTrigger value="processed">מעובדות</TabsTrigger>
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-[--border] bg-[--background] p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-[--foreground]/[0.05] p-1 sm:w-auto">
+              <TabsTrigger
+                value="regular"
+                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                תמונות רגילות
+              </TabsTrigger>
+              <TabsTrigger
+                value="edit"
+                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                לעיבוד
+              </TabsTrigger>
+              <TabsTrigger
+                value="album"
+                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                אלבום
+              </TabsTrigger>
+              <TabsTrigger
+                value="processed"
+                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                מעובדות
+              </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 border-t border-[--border] pt-3 sm:border-t-0 sm:pt-0">
               {gallery.allow_download_preview && (
                 <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
               )}

@@ -50,6 +50,7 @@ export function ClientDownloadButton({
       size="sm"
       disabled={isPending}
       onClick={handleDownload}
+      className="rounded-full border-[--border] bg-[--background] shadow-sm transition-all hover:border-accent hover:text-accent hover:shadow-md"
     >
       <Download className="h-4 w-4" />
       {isPending ? 'מכין ZIP...' : label}
