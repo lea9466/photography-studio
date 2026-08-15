@@ -152,7 +152,7 @@ const HEBREW_COPY: HomepageCopy = {
     viewGalleryShort: 'צפו בגלריה',
     ourStory: 'הסיפור שלנו',
     getStarted: 'התחילו עכשיו',
-    scheduleSession: 'תיאום פגישה',
+    scheduleSession: 'יצירת קשר',
     photographySuffix: 'צילום',
   },
   packages: {
@@ -259,7 +259,7 @@ const ENGLISH_COPY: HomepageCopy = {
     viewGalleryShort: 'View Gallery',
     ourStory: 'Our Story',
     getStarted: 'Get Started',
-    scheduleSession: 'Book a Session',
+    scheduleSession: 'Contact Us',
     photographySuffix: 'Photography',
   },
   packages: {
