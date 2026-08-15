@@ -18,8 +18,6 @@ const MEDIA_BUCKETS: MediaBucket[] = [
   'branding',
 ]
 
-const DELETE_BATCH_SIZE = 50
-
 type UserProfileRow = {
   id: string
   slug: string | null
@@ -187,10 +185,7 @@ async function deleteUserR2Media(userId: string) {
     }
   }
 
-  for (let offset = 0; offset < storageDeletes.length; offset += DELETE_BATCH_SIZE) {
-    const chunk = storageDeletes.slice(offset, offset + DELETE_BATCH_SIZE)
-    await deleteMediaObjects(chunk)
-  }
+  await deleteMediaObjects(storageDeletes)
 
   await Promise.all(
     [...new Set(rawKeys)].map((key) =>

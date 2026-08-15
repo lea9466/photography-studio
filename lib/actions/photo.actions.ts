@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
-import { deleteMediaObject, resolveMediaUrl } from '@/lib/r2/storage'
+import { deleteMediaObject, deleteMediaObjects, resolveMediaUrl } from '@/lib/r2/storage'
 import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
@@ -12,11 +12,56 @@ import { assertGalleryPhotoCountWithinLimit } from '@/lib/gallery-photo-limits'
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
 const COMPLETE_BATCH_SIZE = 50
-const DELETE_BATCH_SIZE = 50
 
 import { assertGalleryOwner, assertPhotoInOwnedGallery } from '@/lib/auth/gallery-owner'
 import { buildPhotoStoragePaths } from '@/lib/images/process'
 import { isOwnedStorageKey } from '@/lib/r2/owned-path'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
+
+type ActionSupabaseClient = Awaited<ReturnType<typeof assertGalleryOwner>>['supabase']
+
+/**
+ * Photo mutations (upload/delete/hide/reprocess) only revalidated the
+ * dashboard and `/g/[id]` — never the public portfolio pages, which read
+ * gallery photos independently. Since those routes have no dynamic API
+ * calls, Next's Full Route Cache serves them statically until explicitly
+ * revalidated, so a stale copy (including photos since deleted or hidden)
+ * could linger indefinitely after any photo change. Gallery-level actions
+ * (lib/actions/gallery.actions.ts) already revalidate these same paths on
+ * settings/title changes — this mirrors that pattern for photo changes.
+ */
+async function revalidatePublicPortfolioPaths(
+  supabase: ActionSupabaseClient,
+  userId: string,
+  galleryId: string
+) {
+  const { data: gallery } = await supabase
+    .from('galleries')
+    .select('gallery_type, slug, is_public')
+    .eq('id', galleryId)
+    .maybeSingle()
+
+  const meta = gallery as { gallery_type: string; slug: string | null; is_public: boolean } | null
+  if (!meta || meta.gallery_type !== 'portfolio' || !meta.is_public) return
+
+  revalidatePath(`/public-gallery/${galleryId}`)
+  if (meta.slug) revalidatePath(`/portfolio/${meta.slug}`)
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('slug, studio_name')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const studioPath = getPublicSitePath(
+    (profile as { slug: string | null; studio_name: string | null } | null)?.slug,
+    (profile as { slug: string | null; studio_name: string | null } | null)?.studio_name
+  )
+  if (studioPath) {
+    revalidatePath(studioPath)
+    revalidatePath(`${studioPath}/portfolio`)
+  }
+}
 
 export async function reservePhotosBatch(galleryId: string, count: number, isProcessed = false) {
   const { supabase, gallery, user } = await assertGalleryOwner(galleryId)
@@ -173,10 +218,11 @@ export async function cleanupPhotosBatch(
 }
 
 export async function finalizeGalleryUpload(galleryId: string) {
-  await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath('/dashboard')
+  await revalidatePublicPortfolioPaths(supabase, user.id, galleryId)
 }
 
 export async function registerPhoto(input: {
@@ -186,7 +232,7 @@ export async function registerPhoto(input: {
   watermarkedPath: string
   sortOrder?: number
 }) {
-  const { supabase } = await assertGalleryOwner(input.galleryId)
+  const { supabase, user } = await assertGalleryOwner(input.galleryId)
 
   const payload: PhotoInsert = {
     gallery_id: input.galleryId,
@@ -206,6 +252,7 @@ export async function registerPhoto(input: {
 
   revalidatePath(`/dashboard/galleries/${input.galleryId}`)
   revalidatePath('/dashboard')
+  await revalidatePublicPortfolioPaths(supabase, user.id, input.galleryId)
 
   return { id: (data as { id: string }).id }
 }
@@ -217,7 +264,7 @@ export async function setPhotosVisibilityBulk(
 ) {
   if (photoIds.length === 0) return
 
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
   const { error } = await supabase
     .from('photos')
@@ -229,6 +276,7 @@ export async function setPhotosVisibilityBulk(
 
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath(`/g/${galleryId}`)
+  await revalidatePublicPortfolioPaths(supabase, user.id, galleryId)
 }
 
 export async function setPhotosProcessedBulk(
@@ -238,7 +286,7 @@ export async function setPhotosProcessedBulk(
 ) {
   if (photoIds.length === 0) return
 
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
   const { error } = await supabase
     .from('photos')
@@ -250,6 +298,7 @@ export async function setPhotosProcessedBulk(
 
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath(`/dashboard/galleries/${galleryId}`)
+  await revalidatePublicPortfolioPaths(supabase, user.id, galleryId)
 }
 
 export async function signPreviewUrls(previewUrls: (string | null)[]) {
@@ -271,7 +320,7 @@ export async function signPreviewUrls(previewUrls: (string | null)[]) {
 }
 
 export async function prepareGalleryForDelivery(galleryId: string) {
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
   // Ensure all photos are visible to client
   const { error } = await supabase
@@ -283,10 +332,11 @@ export async function prepareGalleryForDelivery(galleryId: string) {
 
   revalidatePath(`/dashboard/galleries/${galleryId}/photos`)
   revalidatePath(`/g/${galleryId}`)
+  await revalidatePublicPortfolioPaths(supabase, user.id, galleryId)
 }
 
 export async function togglePhotoVisibility(photoId: string, visible: boolean) {
-  const { supabase, photo } = await assertPhotoInOwnedGallery(photoId)
+  const { supabase, user, photo } = await assertPhotoInOwnedGallery(photoId)
 
   const { error } = await supabase
     .from('photos')
@@ -296,12 +346,13 @@ export async function togglePhotoVisibility(photoId: string, visible: boolean) {
   if (error) throw new Error(error.message)
 
   revalidatePath(`/dashboard/galleries/${photo.gallery_id}`)
+  await revalidatePublicPortfolioPaths(supabase, user.id, photo.gallery_id)
 }
 
 export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
   if (photoIds.length === 0) return { deleted: 0 }
 
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
 
   const { data: photos, error: fetchError } = await supabase
     .from('photos')
@@ -357,12 +408,7 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
     }
   }
 
-  for (let offset = 0; offset < storageDeletes.length; offset += DELETE_BATCH_SIZE) {
-    const chunk = storageDeletes.slice(offset, offset + DELETE_BATCH_SIZE)
-    await Promise.all(
-      chunk.map(({ bucket, path }) => deleteMediaObject(bucket, path))
-    )
-  }
+  await deleteMediaObjects(storageDeletes)
 
   const { error } = await supabase
     .from('photos')
@@ -376,12 +422,13 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath(`/g/${galleryId}`)
   revalidatePath('/dashboard')
+  await revalidatePublicPortfolioPaths(supabase, user.id, galleryId)
 
   return { deleted: ids.length }
 }
 
 export async function deletePhoto(photoId: string) {
-  const { supabase, photo } = await assertPhotoInOwnedGallery(photoId)
+  const { supabase, user, photo } = await assertPhotoInOwnedGallery(photoId)
 
   const paths = [
     { bucket: 'originals' as const, path: photo.original_url },
@@ -398,6 +445,7 @@ export async function deletePhoto(photoId: string) {
 
   revalidatePath(`/dashboard/galleries/${photo.gallery_id}`)
   revalidatePath('/dashboard')
+  await revalidatePublicPortfolioPaths(supabase, user.id, photo.gallery_id)
 }
 
 export async function getSignedPhotoUrl(

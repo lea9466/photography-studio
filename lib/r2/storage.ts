@@ -221,17 +221,36 @@ export async function deleteR2ObjectKey(key: string) {
   )
 }
 
+/**
+ * Batches deletes via S3's DeleteObjects (up to 1000 keys/call), grouped by
+ * bucket, instead of one DeleteObjectCommand round-trip per file. A bulk
+ * gallery delete with hundreds of photos previously issued thousands of
+ * sequential single-object deletes and could blow the serverless function's
+ * execution timeout.
+ */
 export async function deleteMediaObjects(
   objects: { bucket: MediaBucket; path: string }[]
 ) {
-  const unique = new Map<string, { bucket: MediaBucket; path: string }>()
-  for (const object of objects) {
-    const path = object.path.trim()
-    if (!path) continue
-    unique.set(`${object.bucket}:${path}`, { bucket: object.bucket, path })
+  const { bucketName } = getR2Config()
+
+  const keysByBucket = new Map<MediaBucket, Set<string>>()
+  for (const { bucket, path } of objects) {
+    const trimmed = path.trim()
+    if (!trimmed) continue
+    if (!keysByBucket.has(bucket)) keysByBucket.set(bucket, new Set())
+    keysByBucket.get(bucket)!.add(r2ObjectKey(bucket, trimmed))
   }
 
-  await Promise.all(
-    [...unique.values()].map(({ bucket, path }) => deleteMediaObject(bucket, path))
-  )
+  for (const [, keys] of keysByBucket) {
+    const keyList = [...keys]
+    for (let offset = 0; offset < keyList.length; offset += DELETE_OBJECTS_BATCH_SIZE) {
+      const chunk = keyList.slice(offset, offset + DELETE_OBJECTS_BATCH_SIZE)
+      await getR2Client().send(
+        new DeleteObjectsCommand({
+          Bucket: bucketName,
+          Delete: { Objects: chunk.map((Key) => ({ Key })) },
+        })
+      )
+    }
+  }
 }
