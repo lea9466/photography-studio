@@ -89,7 +89,9 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
-    .select('id, title, status, gallery_type, is_public, users(studio_name), clients(email)')
+    .select(
+      'id, title, status, gallery_type, is_public, users!galleries_user_id_fkey(studio_name), clients(email)'
+    )
     .eq('id', galleryId)
     .single()
 

@@ -221,7 +221,9 @@ async function fetchGalleryCandidates(
 
   const { data, error } = await admin
     .from('photos')
-    .select('id, original_url, preview_url, galleries(title, users(studio_name, name))')
+    .select(
+      'id, original_url, preview_url, galleries(title, users!galleries_user_id_fkey(studio_name, name))'
+    )
     .not('original_url', 'is', null)
     .not('preview_url', 'is', null)
     .order('created_at', { ascending: true })
@@ -265,7 +267,7 @@ async function fetchCoverCandidates(
 
   const { data, error } = await admin
     .from('galleries')
-    .select('id, title, cover_image, users(studio_name, name)')
+    .select('id, title, cover_image, users!galleries_user_id_fkey(studio_name, name)')
     .not('cover_image', 'is', null)
     .ilike('cover_image', '%gallery_cover_v2_%')
     .order('created_at', { ascending: true })
@@ -433,7 +435,7 @@ export async function deleteGalleryOriginalsCleanupBatch(
     coverIds.length > 0
       ? admin
           .from('galleries')
-          .select('id, title, cover_image, users(studio_name, name)')
+          .select('id, title, cover_image, users!galleries_user_id_fkey(studio_name, name)')
           .in('id', coverIds)
       : Promise.resolve({ data: [], error: null }),
   ])
