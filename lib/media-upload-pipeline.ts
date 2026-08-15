@@ -444,6 +444,8 @@ export async function uploadMediaPhotosWithQueue(
 
   reportProgress('uploading')
 
+  let fatalError: Error | null = null
+
   try {
     async function worker() {
       for (;;) {
@@ -506,9 +508,18 @@ export async function uploadMediaPhotosWithQueue(
       }
     }
 
-    await Promise.all(
-      Array.from({ length: Math.min(UPLOAD_CONCURRENCY, total) }, () => worker())
-    )
+    try {
+      await Promise.all(
+        Array.from({ length: Math.min(UPLOAD_CONCURRENCY, total) }, () => worker())
+      )
+    } catch (error) {
+      // A setup-level failure (e.g. the gallery's photo-count limit was hit
+      // reserving the next batch) previously escaped as an unhandled
+      // rejection instead of the structured { ok, message } result every
+      // other failure path returns — the caller's catch block then showed a
+      // generic "upload failed" toast instead of the actual reason.
+      fatalError = error instanceof Error ? error : new Error('שגיאה בהעלאת תמונות')
+    }
 
     if (successes.length > 0) {
       reportProgress('registering')
@@ -534,6 +545,18 @@ export async function uploadMediaPhotosWithQueue(
     }
   } finally {
     releaseWakeLock()
+  }
+
+  if (fatalError) {
+    if (completed > 0) callbacks?.onComplete?.()
+    return {
+      ok: false,
+      uploaded: completed,
+      message:
+        completed > 0
+          ? `הועלו ${formatMediaUploadCount(completed)} מתוך ${formatMediaUploadCount(total)}. ${fatalError.message}`
+          : fatalError.message,
+    }
   }
 
   const failCount = failures.length

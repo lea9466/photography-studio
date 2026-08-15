@@ -6,8 +6,10 @@ import { deleteMediaObject, deleteMediaObjects, resolveMediaUrl } from '@/lib/r2
 import { signStoragePaths } from '@/lib/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { Database } from '@/lib/types/database.types'
-import { PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
-import { assertGalleryPhotoCountWithinLimit } from '@/lib/gallery-photo-limits'
+import {
+  assertGalleryPhotoCountWithinLimit,
+  assertPrivateGalleryPhotoCountWithinLimit,
+} from '@/lib/gallery-photo-limits'
 
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
@@ -69,13 +71,15 @@ export async function reservePhotosBatch(galleryId: string, count: number, isPro
     return []
   }
 
-  if (gallery.is_public || PUBLIC_ONLY_MVP) {
+  if (gallery.is_public) {
     await assertGalleryPhotoCountWithinLimit(
       supabase,
       user.id,
       gallery.is_public,
       count
     )
+  } else {
+    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, count)
   }
 
   const { data: lastPhoto } = await supabase

@@ -6,6 +6,7 @@ import type { MediaBucket, R2UploadRequest } from '@/lib/r2/types'
 import { validateGalleryPhotoUpload } from '@/lib/media-upload-limits'
 import {
   assertGalleryPhotoCountWithinLimit,
+  assertPrivateGalleryPhotoCountWithinLimit,
   assertReservedPhotosExist,
   parsePhotoIdsFromUploadRequests,
 } from '@/lib/gallery-photo-limits'
@@ -64,12 +65,13 @@ async function assertGalleryUploadPaths(
 
   const photoIds = parsePhotoIdsFromUploadRequests(userId, galleryId, items)
   await assertReservedPhotosExist(supabase, galleryId, photoIds)
-  await assertGalleryPhotoCountWithinLimit(
-    supabase,
-    userId,
-    (gallery as { is_public: boolean }).is_public,
-    0
-  )
+
+  const isPublic = (gallery as { is_public: boolean }).is_public
+  if (isPublic) {
+    await assertGalleryPhotoCountWithinLimit(supabase, userId, isPublic, 0)
+  } else {
+    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, 0)
+  }
 
   return { id: userId }
 }

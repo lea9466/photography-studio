@@ -59,6 +59,39 @@ export async function assertGalleryPhotoCountWithinLimit(
   return currentCount
 }
 
+/** Max photos (regular + processed combined) in a single private gallery. */
+export const MAX_PRIVATE_GALLERY_PHOTOS = 1000
+
+/**
+ * Private galleries skip the account-wide public-photo quota entirely, but
+ * with no cap of their own a single gallery could grow unbounded — exactly
+ * the scale that made bulk delete/download start timing out before those
+ * were fixed to batch/stream. This is a flat per-gallery sanity ceiling,
+ * independent of isPhotoLimitTestUser — that flag exists to bypass the
+ * *public* quota for large-batch testing, not to exempt anyone from this.
+ */
+export async function assertPrivateGalleryPhotoCountWithinLimit(
+  supabase: AppSupabaseClient,
+  galleryId: string,
+  adding = 0
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('photos')
+    .select('id', { count: 'exact', head: true })
+    .eq('gallery_id', galleryId)
+
+  if (error) throw new Error(error.message)
+
+  const currentCount = count ?? 0
+  if (currentCount + adding > MAX_PRIVATE_GALLERY_PHOTOS) {
+    throw new Error(
+      `ניתן להעלות עד ${MAX_PRIVATE_GALLERY_PHOTOS} תמונות בגלריה פרטית (יש כרגע ${currentCount})`
+    )
+  }
+
+  return currentCount
+}
+
 const UUID_FILENAME_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jpg$/i
 const PREVIEW_FILENAME_RE =
