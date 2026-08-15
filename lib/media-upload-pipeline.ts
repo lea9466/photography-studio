@@ -117,24 +117,6 @@ function timeoutForFile(file: File): number {
   return BASE_TIMEOUT_MS + sizeMb * TIMEOUT_MS_PER_MB
 }
 
-let tabHiddenWaiters: Array<() => void> = []
-
-if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-      const wake = tabHiddenWaiters.splice(0)
-      wake.forEach((resolve) => resolve())
-    }
-  })
-}
-
-function waitWhileTabHidden(): Promise<void> {
-  if (typeof document === 'undefined' || !document.hidden) return Promise.resolve()
-  return new Promise<void>((resolve) => {
-    tabHiddenWaiters.push(resolve)
-  })
-}
-
 async function withTimeout<T>(promise: Promise<T>, ms: number, msg: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
@@ -469,7 +451,6 @@ export async function uploadMediaPhotosWithQueue(
         if (index >= total) return
 
         await pipeline.ensureUrls(index)
-        await waitWhileTabHidden()
 
         const job = pipeline.jobsMap.get(index)!
         const urls = pipeline.urlMap.get(job.photoId)!
