@@ -22,7 +22,6 @@ import {
 import { GalleryActions } from '@/components/dashboard/GalleryActions'
 import { ClientEditForm } from '@/components/dashboard/ClientEditForm'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
-import { UploadEdited } from '@/components/gallery/UploadEdited'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { GalleryEditForm } from '@/components/dashboard/GalleryEditForm'
 import { galleryHasPassword } from '@/lib/gallery-password-store'
@@ -269,14 +268,6 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           albumPhotos={albumPhotos}
           editPhotos={editPhotos}
         />
-        <div className="space-y-3 pt-6">
-          <h3 className="text-sm font-semibold text-[#48464c]">העלאת תמונות מעובדות ללקוח</h3>
-          <UploadEdited
-            galleryId={gallery.id}
-            userId={userId}
-            selectedPhotos={editPhotos}
-          />
-        </div>
       </section>
 
       {/* Section 5: Upload and Management */}

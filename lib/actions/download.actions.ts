@@ -60,14 +60,37 @@ async function resolveDownloadFiles(
   }
 
   if (type === 'edited') {
+    // A "delivered" photo is either a precise per-selection match
+    // (edited_photos, from the dedicated Selections page) or simply marked
+    // processed through the general upload tab — same as the client-facing
+    // gallery view treats it. Dedupe so a photo matched both ways isn't
+    // included twice.
+    const matchedPhotoIds = new Set<string>()
+
     const { data: edited } = await admin
       .from('edited_photos')
-      .select('final_url')
+      .select('photo_id, final_url')
       .eq('gallery_id', galleryId)
 
-    for (const row of edited ?? []) {
-      const path = (row as { final_url: string | null }).final_url
-      if (path) candidates.push({ bucket: 'edited', path })
+    for (const row of (edited ?? []) as { photo_id: string; final_url: string | null }[]) {
+      if (!row.final_url) continue
+      candidates.push({ bucket: 'edited', path: row.final_url })
+      matchedPhotoIds.add(row.photo_id)
+    }
+
+    const { data: processedPhotos } = await admin
+      .from('photos')
+      .select('id, original_url, preview_url')
+      .eq('gallery_id', galleryId)
+      .eq('is_processed', true)
+      .eq('is_visible_to_client', true)
+
+    type ProcessedRow = { id: string; original_url: string | null; preview_url: string | null }
+
+    for (const photo of (processedPhotos ?? []) as ProcessedRow[]) {
+      if (matchedPhotoIds.has(photo.id)) continue
+      const path = photo.original_url ?? photo.preview_url
+      if (path) candidates.push({ bucket: photo.original_url ? 'originals' : 'previews', path })
     }
   }
 

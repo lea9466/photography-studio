@@ -303,7 +303,7 @@ async function loadClientGalleryInternal(galleryId: string) {
     .from('photos')
     .select(
       `
-      id, preview_url, watermarked_preview_url, is_visible_to_client,
+      id, preview_url, watermarked_preview_url, is_visible_to_client, is_processed,
       photo_selections (selected_album, selected_edit),
       edited_photos (final_url)
     `
@@ -317,6 +317,7 @@ async function loadClientGalleryInternal(galleryId: string) {
     preview_url: string | null
     watermarked_preview_url: string | null
     is_visible_to_client: boolean
+    is_processed: boolean
     photo_selections: { selected_album: boolean; selected_edit: boolean } | { selected_album: boolean; selected_edit: boolean }[] | null
     edited_photos: { final_url: string | null } | { final_url: string | null }[] | null
   }
@@ -334,7 +335,13 @@ async function loadClientGalleryInternal(galleryId: string) {
         ? photo.edited_photos[0]
         : photo.edited_photos
 
-      const editedPath = edited?.final_url ?? null
+      // A photo counts as delivered either through the precise per-selection
+      // match (edited_photos, uploaded via the dedicated "Selections" page)
+      // or simply by being marked processed through the general upload
+      // tab — whichever the photographer used. Same end result either way.
+      const matchedEditPath = edited?.final_url ?? null
+      const editedPath = matchedEditPath ?? (photo.is_processed ? photo.preview_url : null)
+      const editedBucket: MediaBucket = matchedEditPath ? 'edited' : 'previews'
 
       const lightboxPath = forcePublicWatermarked
         ? photo.watermarked_preview_url
@@ -353,7 +360,7 @@ async function loadClientGalleryInternal(galleryId: string) {
       const gridBucket: MediaBucket = forcePublicWatermarked
         ? 'watermarked'
         : isDelivered && editedPath
-          ? 'edited'
+          ? editedBucket
           : useWatermarked && photo.watermarked_preview_url
             ? 'watermarked'
             : 'previews'
@@ -361,7 +368,7 @@ async function loadClientGalleryInternal(galleryId: string) {
       const lightboxBucket: MediaBucket = forcePublicWatermarked
         ? 'watermarked'
         : isDelivered && editedPath
-          ? 'edited'
+          ? editedBucket
           : useWatermarked
             ? 'watermarked'
             : 'previews'
@@ -381,7 +388,7 @@ async function loadClientGalleryInternal(galleryId: string) {
         edited_url: editedPath,
         preview_signed_url: await signPath(gridBucket, gridPath, galleryId, forceProxy),
         lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId, forceProxy),
-        edited_signed_url: await signPath('edited', editedPath, galleryId, forceProxy),
+        edited_signed_url: await signPath(editedBucket, editedPath, galleryId, forceProxy),
       }
     })
   )
