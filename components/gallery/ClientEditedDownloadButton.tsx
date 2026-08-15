@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 type ClientEditedDownloadButtonProps = {
   galleryId: string
   hasProcessed: boolean
+  isDelivered: boolean
 }
 
 function triggerBrowserDownload(url: string) {
@@ -24,8 +25,15 @@ function triggerBrowserDownload(url: string) {
 export function ClientEditedDownloadButton({
   galleryId,
   hasProcessed,
+  isDelivered,
 }: ClientEditedDownloadButtonProps) {
   const [isPending, startTransition] = useTransition()
+  const canDownload = hasProcessed && isDelivered
+  const title = !hasProcessed
+    ? 'אין תמונות מעובדות להורדה'
+    : !isDelivered
+      ? 'ההורדה תיפתח כשהגלריה תסומן כמוכנה למסירה'
+      : undefined
 
   function handleDownload() {
     const downloadWindow = window.open('', '_blank')
@@ -53,9 +61,9 @@ export function ClientEditedDownloadButton({
     <Button
       variant="outline"
       size="sm"
-      disabled={isPending || !hasProcessed}
+      disabled={isPending || !canDownload}
       onClick={handleDownload}
-      title={!hasProcessed ? 'אין תמונות מעובדות להורדה' : undefined}
+      title={title}
     >
       <Download className="h-4 w-4" />
       {isPending ? 'מכין ZIP...' : 'הורד מעובדות (ZIP)'}

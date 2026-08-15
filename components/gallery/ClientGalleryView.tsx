@@ -245,7 +245,11 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
               {gallery.allow_download_original && (
                 <ClientDownloadButton galleryId={gallery.id} type="original" />
               )}
-              <ClientEditedDownloadButton galleryId={gallery.id} hasProcessed={showEdited} />
+              <ClientEditedDownloadButton
+                galleryId={gallery.id}
+                hasProcessed={showEdited}
+                isDelivered={isDelivered}
+              />
             </div>
           </div>
 
