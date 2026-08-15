@@ -11,7 +11,7 @@ import {
 } from '@/lib/actions/gallery.actions'
 import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
 import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
-import { GALLERY_STATUS_LABELS } from '@/lib/types/app.types'
+import { GALLERY_STATUS_LABELS, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
 import type { GalleryStatus, GalleryType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,6 +32,8 @@ type GalleryActionsProps = {
   status: GalleryStatus
   galleryType: GalleryType
   clientLink: string
+  /** Per-account override, computed server-side — see isMvpBypassUser. */
+  publicOnlyMvp?: boolean
 }
 
 function resendEmailLabel(status: GalleryStatus): string | null {
@@ -57,9 +59,12 @@ export function GalleryActions({
   status,
   galleryType,
   clientLink,
+  publicOnlyMvp: publicOnlyMvpProp,
 }: GalleryActionsProps) {
+  const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const [isPending, startTransition] = useTransition()
   const resendLabel = galleryType !== 'portfolio' ? resendEmailLabel(status) : null
+  const canSendToClient = galleryType !== 'portfolio' && status === 'draft'
 
   function run(action: () => Promise<void>, message: string) {
     startTransition(async () => {
@@ -79,12 +84,19 @@ export function GalleryActions({
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-[#48464c]">תקשורת עם לקוח</h3>
           <div className="flex flex-wrap gap-2">
-            {status === 'draft' ? (
-              // MVP: private client sending is frozen (public-only)
-              <span className="opacity-35 pointer-events-none select-none">
+            {canSendToClient ? (
+              publicOnlyMvp ? (
+                // MVP: private client sending is frozen (public-only) for accounts without the bypass.
+                <span className="opacity-35 pointer-events-none select-none">
+                  <Button size="sm" disabled className="bg-[#6b2d43] hover:bg-[#5a2538]">
+                    <Send className="h-4 w-4" />
+                    שלח ללקוח
+                  </Button>
+                </span>
+              ) : (
                 <Button
                   size="sm"
-                  disabled
+                  disabled={isPending}
                   onClick={() =>
                     run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
                   }
@@ -93,7 +105,7 @@ export function GalleryActions({
                   <Send className="h-4 w-4" />
                   שלח ללקוח
                 </Button>
-              </span>
+              )
             ) : null}
 
 

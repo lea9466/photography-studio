@@ -131,6 +131,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           status={gallery.status}
           galleryType={gallery.gallery_type}
           clientLink={clientLink}
+          publicOnlyMvp={effectiveMvp}
         />
       </section>
 
