@@ -1,10 +1,10 @@
 'use client'
 
-import { useTransition, useState } from 'react'
+import { useTransition, useState, useMemo } from 'react'
 import Image from 'next/image'
 import { Download, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
-import { getGalleryDownloadFiles } from '@/lib/actions/download.actions'
+import { getSelectedPhotosOriginalFiles } from '@/lib/actions/download.actions'
 import { downloadFilesAsZip } from '@/lib/client-zip-download'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,16 +39,29 @@ export function SelectionsView({
   const [albumExpanded, setAlbumExpanded] = useState(false)
   const [editExpanded, setEditExpanded] = useState(false)
 
-  function handleDownload(type: 'preview' | 'original') {
+  const selectedPhotoIds = useMemo(
+    () => [...new Set([...albumPhotos, ...editPhotos].map((photo) => photo.id))],
+    [albumPhotos, editPhotos]
+  )
+
+  function handleDownload() {
     const toastId = toast.loading('מכינה רשימת קבצים...')
 
     startTransition(async () => {
       try {
-        const files = await getGalleryDownloadFiles(galleryId, type)
-        await downloadFilesAsZip(files, `${type}-${galleryId.slice(0, 8)}.zip`, (completed, total) => {
-          toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
-        })
-        toast.success('ה-ZIP מוכן להורדה', { id: toastId })
+        const files = await getSelectedPhotosOriginalFiles(galleryId, selectedPhotoIds)
+        const { failed } = await downloadFilesAsZip(
+          files,
+          `selected-${galleryId.slice(0, 8)}.zip`,
+          (completed, total) => {
+            toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
+          }
+        )
+        if (failed.length > 0) {
+          toast.warning(`ה-ZIP מוכן, אך ${failed.length} תמונות נכשלו בהורדה`, { id: toastId })
+        } else {
+          toast.success('ה-ZIP מוכן להורדה', { id: toastId })
+        }
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה', { id: toastId })
       }
@@ -61,20 +74,11 @@ export function SelectionsView({
         <Button
           variant="outline"
           size="sm"
-          disabled={isPending}
-          onClick={() => handleDownload('preview')}
+          disabled={isPending || selectedPhotoIds.length === 0}
+          onClick={handleDownload}
         >
           <Download className="h-4 w-4" />
-          הורד previews (ZIP)
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isPending}
-          onClick={() => handleDownload('original')}
-        >
-          <Download className="h-4 w-4" />
-          הורד מקור (ZIP)
+          הורד תמונות נבחרות ({selectedPhotoIds.length}, ZIP)
         </Button>
       </div>
 

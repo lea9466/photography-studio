@@ -11,7 +11,7 @@ export type DownloadFileEntry = {
   url: string
 }
 
-type ResolvableDownloadType = 'preview' | 'original' | 'watermarked' | 'edited'
+type ResolvableDownloadType = 'original' | 'watermarked' | 'edited'
 
 /**
  * Returns presigned R2 GET URLs for the requested files instead of building
@@ -29,7 +29,7 @@ async function resolveDownloadFiles(
   const admin = createAdminClient()
   const candidates: { bucket: MediaBucket; path: string }[] = []
 
-  if (type === 'preview' || type === 'original' || type === 'watermarked') {
+  if (type === 'original' || type === 'watermarked') {
     const { data: photos } = await admin
       .from('photos')
       .select('id, original_url, preview_url, watermarked_preview_url')
@@ -50,12 +50,9 @@ async function resolveDownloadFiles(
       if (type === 'original') {
         path = photo.original_url ?? photo.preview_url
         bucket = photo.original_url ? 'originals' : 'previews'
-      } else if (type === 'watermarked') {
+      } else {
         path = photo.watermarked_preview_url
         bucket = 'watermarked'
-      } else {
-        path = photo.preview_url
-        bucket = 'previews'
       }
 
       if (path) candidates.push({ bucket, path })
@@ -74,6 +71,12 @@ async function resolveDownloadFiles(
     }
   }
 
+  return presignCandidates(candidates)
+}
+
+async function presignCandidates(
+  candidates: { bucket: MediaBucket; path: string }[]
+): Promise<DownloadFileEntry[]> {
   if (candidates.length === 0) {
     throw new Error('אין קבצים להורדה')
   }
@@ -86,13 +89,39 @@ async function resolveDownloadFiles(
   )
 }
 
-/** Photographer's own dashboard download (SelectionsView). */
-export async function getGalleryDownloadFiles(
+/**
+ * Photographer's own dashboard download of the client's actual selections
+ * (album + edit picks) — not every photo in the gallery. A private
+ * selection gallery can hold hundreds of photos the client never chose;
+ * downloading all of them at original quality just to find the handful
+ * that need editing defeats the point of the selection step.
+ */
+export async function getSelectedPhotosOriginalFiles(
   galleryId: string,
-  type: 'preview' | 'original'
+  photoIds: string[]
 ): Promise<DownloadFileEntry[]> {
   await assertGalleryOwner(galleryId)
-  return resolveDownloadFiles(galleryId, type)
+
+  if (photoIds.length === 0) {
+    throw new Error('אין תמונות נבחרות להורדה')
+  }
+
+  const admin = createAdminClient()
+  const { data: photos } = await admin
+    .from('photos')
+    .select('id, original_url, preview_url')
+    .eq('gallery_id', galleryId)
+    .in('id', photoIds)
+
+  type PhotoRow = { id: string; original_url: string | null; preview_url: string | null }
+
+  const candidates: { bucket: MediaBucket; path: string }[] = []
+  for (const photo of (photos ?? []) as PhotoRow[]) {
+    const path = photo.original_url ?? photo.preview_url
+    if (path) candidates.push({ bucket: photo.original_url ? 'originals' : 'previews', path })
+  }
+
+  return presignCandidates(candidates)
 }
 
 /** Client-facing download of regular/watermarked photos, gated by the photographer's allow_download_* settings. */

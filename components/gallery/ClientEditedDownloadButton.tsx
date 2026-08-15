@@ -32,10 +32,18 @@ export function ClientEditedDownloadButton({
     startTransition(async () => {
       try {
         const files = await getClientEditedDownloadFiles(galleryId)
-        await downloadFilesAsZip(files, `edited-${galleryId.slice(0, 8)}.zip`, (completed, total) => {
-          toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
-        })
-        toast.success('ה-ZIP מוכן להורדה', { id: toastId })
+        const { failed } = await downloadFilesAsZip(
+          files,
+          `edited-${galleryId.slice(0, 8)}.zip`,
+          (completed, total) => {
+            toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
+          }
+        )
+        if (failed.length > 0) {
+          toast.warning(`ה-ZIP מוכן, אך ${failed.length} תמונות נכשלו בהורדה`, { id: toastId })
+        } else {
+          toast.success('ה-ZIP מוכן להורדה', { id: toastId })
+        }
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שגיאה', { id: toastId })
       }
