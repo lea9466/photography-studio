@@ -215,11 +215,13 @@ export async function resendGalleryEmail(galleryId: string) {
 
   if (['delivery_ready', 'locked'].includes(gallery.status)) {
     await sendDeliveryEmailForGallery(gallery)
+    revalidatePath(`/g/${galleryId}`)
     return
   }
 
   if (['selection', 'editing'].includes(gallery.status)) {
     await sendInviteEmailForGallery(gallery)
+    revalidatePath(`/g/${galleryId}`)
     return
   }
 
@@ -259,6 +261,7 @@ export async function updateGalleryStatus(
 
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath('/dashboard')
+  revalidatePath(`/g/${galleryId}`)
 }
 
 export async function sendGallery(galleryId: string, plainPasswordForEmail?: string) {
