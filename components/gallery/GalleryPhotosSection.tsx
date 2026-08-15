@@ -50,8 +50,13 @@ type GalleryPhotosSectionProps = {
   publicOnlyMvp?: boolean
   /** Per-account override, computed server-side — see isPhotoLimitTestUser. */
   photoCountLimitBypassed?: boolean
-  /** Per-account override, computed server-side — see isMvpBypassUser / DOWNLOAD_PERMISSIONS_ENABLED. */
-  downloadPermissionsEnabled?: boolean
+  /**
+   * Computed server-side: download permissions enabled for this account AND
+   * the gallery is private (is_public === false). Only then is it worth
+   * paying the storage/bandwidth cost of the full-resolution original —
+   * public galleries never expose a download-original control.
+   */
+  storeOriginalPhotos?: boolean
 }
 
 export function GalleryPhotosSection({
@@ -65,7 +70,7 @@ export function GalleryPhotosSection({
   initialPhotoLimit = 20,
   publicOnlyMvp: publicOnlyMvpProp,
   photoCountLimitBypassed = false,
-  downloadPermissionsEnabled = false,
+  storeOriginalPhotos = false,
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const router = useRouter()
@@ -194,7 +199,7 @@ export function GalleryPhotosSection({
           uploadCallbacks,
           activeTabRef.current === 'processed',
           applyAutoWatermark,
-          downloadPermissionsEnabled
+          storeOriginalPhotos
         )
 
         if (result.ok) {
@@ -219,7 +224,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, downloadPermissionsEnabled]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, storeOriginalPhotos]
   )
 
   const regularPhotos = useMemo(

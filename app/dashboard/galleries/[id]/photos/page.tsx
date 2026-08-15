@@ -38,9 +38,11 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   if (!galleryData) notFound()
 
   type Detail = {
+    is_public: boolean
     gallery_settings: GallerySettings | GallerySettings[] | null
   }
-  const settings = unwrapOne((galleryData as Detail).gallery_settings)
+  const galleryDetail = galleryData as Detail
+  const settings = unwrapOne(galleryDetail.gallery_settings)
 
   const photos = await fetchGalleryPhotos(id)
   const signedUrls = await signStoragePaths(
@@ -58,7 +60,9 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
       signedUrls={signedUrls}
       publicOnlyMvp={PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)}
       photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
-      downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)}
+      storeOriginalPhotos={
+        (DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)) && !galleryDetail.is_public
+      }
     />
   )
 }
