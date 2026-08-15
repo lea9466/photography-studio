@@ -269,6 +269,14 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           albumPhotos={albumPhotos}
           editPhotos={editPhotos}
         />
+        <div className="space-y-3 pt-6">
+          <h3 className="text-sm font-semibold text-[#48464c]">העלאת תמונות מעובדות ללקוח</h3>
+          <UploadEdited
+            galleryId={gallery.id}
+            userId={userId}
+            selectedPhotos={editPhotos}
+          />
+        </div>
       </section>
 
       {/* Section 5: Upload and Management */}
