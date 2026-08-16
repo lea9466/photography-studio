@@ -102,7 +102,7 @@ export async function MarketingHome() {
         />
         <div className="relative mx-auto max-w-6xl text-center">
           <Reveal>
-            <h2 className="text-3xl font-bold tracking-tight">חבילות צילום</h2>
+            <h2 className="text-3xl font-bold tracking-tight">חבילות שימוש</h2>
             <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[--muted]">
               כל צלמת מתחילה עם חודש ראשון חינם ברמת Pro — אין צורך בכרטיס אשראי.
             </p>

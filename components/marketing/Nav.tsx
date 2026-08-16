@@ -25,7 +25,7 @@ export function Nav() {
             גלריות
           </Link>
           <Link href="#pricing" className="text-sm text-[--muted] hover:text-[--foreground] transition-colors">
-            חבילות צילום
+            חבילות שימוש
           </Link>
           <Link href="#contact" className="text-sm text-[--muted] hover:text-[--foreground] transition-colors">
             יצירת קשר
