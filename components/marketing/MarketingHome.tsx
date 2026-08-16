@@ -10,6 +10,7 @@ import { ExampleSiteShowcase } from '@/components/marketing/ExampleSiteShowcase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Reveal } from '@/components/marketing/Reveal'
+import { getMarketingProPricing } from '@/lib/payments/marketing-pricing'
 
 const FREE_FEATURES = ['סקשן הירו ואודות', 'גלריה ציבורית אחת', 'טופס יצירת קשר', 'מופיעים בחיפוש בגוגל']
 
@@ -26,7 +27,9 @@ const PLUS_FEATURES_HE = [
   'בחירת תמונות ללקוח — לאלבום ולעיבוד',
 ]
 
-export function MarketingHome() {
+export async function MarketingHome() {
+  const pricing = await getMarketingProPricing()
+
   return (
     <main className="min-h-screen">
       <Nav />
@@ -135,17 +138,25 @@ export function MarketingHome() {
                 <CardContent className="p-8">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold">Pro</h3>
-                    <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
-                      מחיר השקה
-                    </span>
+                    {pricing.monthlyBadge ? (
+                      <span className="rounded-full bg-violet-100 px-2.5 py-1 text-[11px] font-semibold text-violet-700">
+                        {pricing.monthlyBadge}
+                      </span>
+                    ) : null}
                   </div>
                   <p className="mt-1 text-sm text-[--muted]">כל הכלים לניהול סטודיו מקצועי</p>
                   <p className="mt-6 flex items-baseline gap-2">
-                    <span className="text-3xl font-bold">₪5</span>
+                    <span className="text-3xl font-bold">₪{pricing.monthlyPrice}</span>
                     <span className="text-sm text-[--muted]">לחודש</span>
-                    <span className="text-sm text-[--muted] line-through">₪40</span>
+                    {pricing.monthlyCompareAt ? (
+                      <span className="text-sm text-[--muted] line-through">₪{pricing.monthlyCompareAt}</span>
+                    ) : null}
                   </p>
-                  <p className="mt-1 text-xs text-[--muted]">או ₪349 לשנה במקום ₪400 — הכי משתלם</p>
+                  <p className="mt-1 text-xs text-[--muted]">
+                    או ₪{pricing.yearlyPrice} לשנה
+                    {pricing.yearlyCompareAt ? ` במקום ₪${pricing.yearlyCompareAt}` : ''}
+                    {pricing.yearlyBadge ? ` — ${pricing.yearlyBadge}` : ''}
+                  </p>
                   <ul className="mt-6 space-y-3">
                     {PRO_FEATURES_HE.map((item) => (
                       <li key={item} className="flex items-start justify-start gap-2.5 text-sm text-[--muted]">
