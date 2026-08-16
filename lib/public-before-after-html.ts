@@ -1165,7 +1165,8 @@ const SPLIT_SLIDER_SCRIPT = `
     }
 
     function updatePosition() {
-      var value = Math.max(0, Math.min(100, Number(range.value) || 50));
+      var raw = Number(range.value);
+      var value = Math.max(0, Math.min(100, Number.isFinite(raw) ? raw : 50));
       frame.style.setProperty('--split-position', value + '%');
       range.setAttribute('aria-valuenow', String(value));
     }
