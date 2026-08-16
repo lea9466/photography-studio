@@ -79,7 +79,6 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
   const [isPending, startTransition] = useTransition()
 
   const handleShare = async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const path =
       gallery.gallery_type === 'portfolio' && gallery.slug
         ? resolvePortfolioPublicPath({
@@ -90,6 +89,12 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
         : gallery.is_public || PUBLIC_ONLY_MVP
           ? `/public-gallery/${gallery.id}`
           : `/g/${gallery.id}`
+    // Private galleries are meant to live on their own isolated subdomain
+    // (see middleware.ts) — falls back to the main app domain until it's
+    // actually configured.
+    const baseUrl = path.startsWith('/g/')
+      ? process.env.NEXT_PUBLIC_PRIVATE_GALLERY_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const galleryLink = `${baseUrl}${path}`
 
     await navigator.clipboard.writeText(galleryLink)

@@ -28,6 +28,7 @@ import { galleryHasPassword } from '@/lib/gallery-password-store'
 import { Upload, Image as ImageIcon, Settings, Lock, Link as LinkIcon, Zap, Droplets, Download, UserCheck, Eye, ImageIcon as ImageIcon2, Rocket, User, Info } from 'lucide-react'
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
+import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 
 type GalleryPageProps = {
   params: Promise<{ id: string }>
@@ -181,7 +182,9 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
                 </div>
                 <div className="bg-[#f7f2f4] rounded-lg p-3 border border-[#c9c5cd]">
                   <p className="break-all text-sm text-[#100d1f] font-medium" dir="ltr">
-                    {process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}
+                    {clientLink.startsWith('/g/')
+                      ? getPrivateGalleryBaseUrl()
+                      : (process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000')}
                     {clientLink}
                   </p>
                 </div>

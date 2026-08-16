@@ -33,6 +33,17 @@ function appUrl(path: string) {
   return `${base}${path}`
 }
 
+/**
+ * Private galleries are meant to live on their own isolated subdomain (see
+ * middleware.ts) — until it's actually configured in DNS/Vercel this env
+ * var stays unset and the link falls back to the main app domain exactly
+ * as before.
+ */
+function privateGalleryUrl(galleryId: string) {
+  const base = process.env.NEXT_PUBLIC_PRIVATE_GALLERY_URL?.trim().replace(/\/$/, '')
+  return `${base || getAppBaseUrl()}/g/${galleryId}`
+}
+
 function emailFrom() {
   return (
     process.env.EMAIL_FROM ?? 'Studio Gallery <onboarding@resend.dev>'
@@ -112,7 +123,7 @@ export async function sendGalleryPasswordEmail(input: {
         <h2>שלום ${input.clientName},</h2>
         <p>הסיסמה לגלריה <strong>${input.galleryTitle}</strong> היא:</p>
         <p style="font-size: 1.25rem;"><strong>${input.password}</strong></p>
-        <p><a href="${appUrl(`/g/${input.galleryId}`)}">כניסה לגלריה</a></p>
+        <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,
   })
@@ -148,7 +159,7 @@ export async function sendGalleryInviteEmail(input: {
         <p>${input.studioName} שלחו לך גלריה חדשה: <strong>${input.galleryTitle}</strong></p>
         <p>סיסמה: <strong>${input.password}</strong></p>
         ${expiry}
-        <p><a href="${appUrl(`/g/${input.galleryId}`)}">כניסה לגלריה</a></p>
+        <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,
   })
@@ -231,7 +242,7 @@ export async function sendDeliveryReadyEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${input.clientName},</h2>
         <p>התמונות המעובדות שלך בגלריה <strong>${input.galleryTitle}</strong> מוכנות!</p>
-        <p><a href="${appUrl(`/g/${input.galleryId}`)}">כניסה לגלריה</a></p>
+        <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,
   })
