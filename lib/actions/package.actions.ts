@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import type { Database } from '@/lib/types/database.types'
@@ -236,7 +237,7 @@ export async function updatePackagesSectionHeadings(input: {
 export async function fetchPublicPackages(
   userId: string
 ): Promise<PhotographyPackage[]> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('photography_packages')
