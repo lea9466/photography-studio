@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
@@ -7,6 +8,7 @@ import { resolveMediaUrl } from '@/lib/r2/storage'
 import { PackageCard } from '@/components/dashboard/PackageCard'
 import { fetchPortfolioGalleryBySlug } from '@/lib/queries/portfolio-gallery-page'
 import { normalizeRouteParam } from '@/lib/queries/public-gallery-page'
+import { resolveHomepagePath } from '@/lib/photographer-site-paths'
 import {
   buildCanonicalUrl,
   buildPublicOpenGraph,
@@ -64,11 +66,12 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
 
   const { data: user } = await admin
     .from('users')
-    .select('studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url, about_text, about_image_url, stat_projects, stat_clients, stat_experience_years')
+    .select('slug, studio_name, logo_url, accent_color, selected_theme, hero_desktop_url, hero_mobile_url, about_text, about_image_url, stat_projects, stat_clients, stat_experience_years')
     .eq('id', gallery.user_id)
     .single()
 
   const profile = user as {
+    slug: string | null
     studio_name: string | null
     logo_url: string | null
     accent_color: string | null
@@ -82,6 +85,7 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
     stat_experience_years: number | null
   } | null
 
+  const homepagePath = resolveHomepagePath(profile?.slug, profile?.studio_name)
   const accentColor = profile?.accent_color ?? '#7c3aed'
   const selectedTheme = profile?.selected_theme ?? 'classic'
   const heroPath = profile?.hero_desktop_url || profile?.hero_mobile_url
@@ -139,6 +143,16 @@ export default async function PortfolioPage({ params }: PortfolioPageProps) {
       data-theme={selectedTheme}
       style={{ '--client-accent': accentColor } as React.CSSProperties}
     >
+      <div className="border-b border-[--border] px-4 py-3 text-center">
+        <Link
+          href={homepagePath}
+          className="text-sm font-medium underline-offset-4 hover:underline"
+          style={{ color: 'var(--client-accent)' }}
+        >
+          ← לאתר של {profile?.studio_name ?? 'הסטודיו'}
+        </Link>
+      </div>
+
       {/* Hero Section */}
       {heroImageUrl && (
         <div className="relative h-64 w-full overflow-hidden sm:h-96 lg:h-[500px]">
