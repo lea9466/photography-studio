@@ -16,6 +16,7 @@ import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { BrandingPreviewImage } from '@/components/dashboard/BrandingPreviewImage'
 import { HeroVideoSettings } from '@/components/dashboard/HeroVideoSettings'
+import { ProFeatureGate } from '@/components/dashboard/ProFeatureGate'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { LabelWithHelp } from '@/components/ui/label-with-help'
@@ -118,6 +119,7 @@ type ProfileFormProps = {
     slug: string | null
     should_color_logo: boolean
   } | null
+  isPro?: boolean
 }
 
 const THEMES = THEME_OPTIONS
@@ -224,7 +226,7 @@ function SettingsFieldGroup({
   )
 }
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(profile?.name ?? '')
@@ -636,14 +638,20 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         />
         <div className="space-y-10">
           <SettingsSubPanel>
-            <HeroVideoSettings
-              heroType={heroType}
-              videoUrl={heroVideoUrl}
-              hasPoster={Boolean(heroDesktopUrls[0] || heroMobileUrls[0])}
-              onTypeChange={setHeroType}
-              onVideoUrlChange={setHeroVideoUrl}
-              onUploadingChange={setHeroVideoBusy}
-            />
+            <ProFeatureGate
+              isPro={isPro}
+              title="וידאו רקע (Hero) זמין בגרסת PRO"
+              description="שדרגי כדי להציג סרטון רקע בעמוד הבית במקום תמונות."
+            >
+              <HeroVideoSettings
+                heroType={heroType}
+                videoUrl={heroVideoUrl}
+                hasPoster={Boolean(heroDesktopUrls[0] || heroMobileUrls[0])}
+                onTypeChange={setHeroType}
+                onVideoUrlChange={setHeroVideoUrl}
+                onUploadingChange={setHeroVideoBusy}
+              />
+            </ProFeatureGate>
           </SettingsSubPanel>
 
           <SettingsSubPanel>

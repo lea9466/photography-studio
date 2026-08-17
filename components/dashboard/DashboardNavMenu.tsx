@@ -11,12 +11,14 @@ type DashboardNavMenuProps = {
   onNavigate?: () => void
   className?: string
   siteUnavailableLocked?: boolean
+  isPro?: boolean
 }
 
 export function DashboardNavMenu({
   onNavigate,
   className,
   siteUnavailableLocked = false,
+  isPro = true,
 }: DashboardNavMenuProps) {
   const pathname = usePathname()
 
@@ -31,6 +33,7 @@ export function DashboardNavMenu({
         const active = item.isActive(pathname)
         const lockedByUnavailable =
           siteUnavailableLocked && item.href !== '/dashboard/subscription'
+        const lockedByPlan = !isPro && item.proFeature != null
 
         if (item.frozen || lockedByUnavailable) {
           return (
@@ -67,7 +70,7 @@ export function DashboardNavMenu({
             href={item.href}
             onClick={onNavigate}
             className={cn(
-              'flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
+              'group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
               active
                 ? 'bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border-r-4 border-[--dashboard-accent] pr-3'
                 : 'text-[--dashboard-muted] hover:text-[--dashboard-foreground] hover:bg-[--dashboard-surface] pr-4'
@@ -75,7 +78,19 @@ export function DashboardNavMenu({
           >
             {item.icon}
             <span className="text-sm flex-1">{item.label}</span>
-            {item.badge ? <SubscriptionPlanBadge plan={item.badge} /> : null}
+            {lockedByPlan ? (
+              <>
+                <Lock className="h-4 w-4 shrink-0 text-[#7D3A52]/60" aria-hidden />
+                <span
+                  role="tooltip"
+                  className="pointer-events-none absolute end-2 top-full z-[100] mt-1.5 w-64 max-w-[80vw] rounded-lg bg-[#2b2530] px-3 py-2.5 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100"
+                >
+                  {item.lockedTooltip ?? 'התכונה הזו חסומה בגרסה החינמית — שדרגי לפרו'}
+                </span>
+              </>
+            ) : item.badge ? (
+              <SubscriptionPlanBadge plan={item.badge} />
+            ) : null}
           </Link>
         )
       })}

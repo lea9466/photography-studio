@@ -14,6 +14,8 @@ import {
   Images,
 } from 'lucide-react'
 
+import type { ProFeature } from '@/lib/subscriptions/types'
+
 export type DashboardNavItem = {
   href: string
   label: string
@@ -21,6 +23,10 @@ export type DashboardNavItem = {
   isActive: (pathname: string) => boolean
   frozen?: boolean
   badge?: 'free' | 'new'
+  /** Set for tabs whose destination page is a PRO-only feature — shows a lock + upgrade tooltip when the studio is FREE. */
+  proFeature?: ProFeature
+  /** Hover tooltip shown on the lock icon when the studio is FREE. Required alongside `proFeature`. */
+  lockedTooltip?: string
 }
 
 export const PUBLIC_ONLY_MVP = true
@@ -52,18 +58,24 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: <FileText className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/posts'),
     badge: 'new',
+    proFeature: 'posts',
+    lockedTooltip: 'פוסטים חסומים בגרסה החינמית — שדרגי לפרו כדי לכתוב ולפרסם פוסטים עם תמונות בבלוג ובדף הבית',
   },
   {
     href: '/dashboard/packages',
     label: 'חבילות צילום',
     icon: <Package className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
+    proFeature: 'packages',
+    lockedTooltip: 'חבילות צילום חסומות בגרסה החינמית — שדרגי לפרו כדי להציג חבילות עם מחיר ורשימת מה כלול',
   },
   {
     href: '/dashboard/reviews',
     label: 'תגובות',
     icon: <MessageSquareQuote className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+    proFeature: 'testimonials',
+    lockedTooltip: 'תגובות לקוחות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג תגובות בדף הבית שלך',
   },
   {
     href: '/dashboard/photo-edits',
@@ -71,12 +83,16 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     icon: <Images className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/photo-edits'),
     badge: 'new',
+    proFeature: 'before_after',
+    lockedTooltip: 'לפני ואחרי עיבוד חסום בגרסה החינמית — שדרגי לפרו כדי להציג ללקוחות את ההבדל בין התמונה המקורית לתוצאה המעובדת',
   },
   {
     href: '/dashboard/faq',
     label: 'שאלות נפוצות',
     icon: <CircleHelp className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/faq'),
+    proFeature: 'faq',
+    lockedTooltip: 'שאלות נפוצות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג סקשן שאלות נפוצות בדף הבית הציבורי שלך',
   },
   {
     href: '/dashboard/settings',

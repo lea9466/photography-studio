@@ -26,6 +26,7 @@ type DashboardLayoutWrapperProps = {
   siteUnavailableLocked?: boolean
   isUnderConstruction?: boolean
   announcement?: Announcement | null
+  isPro?: boolean
 }
 
 export function DashboardLayoutWrapper({
@@ -44,6 +45,7 @@ export function DashboardLayoutWrapper({
   siteUnavailableLocked = false,
   isUnderConstruction = false,
   announcement = null,
+  isPro = true,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -71,6 +73,7 @@ export function DashboardLayoutWrapper({
         shouldColorLogo={shouldColorLogo}
         siteUnavailableLocked={siteUnavailableLocked}
         isUnderConstruction={isUnderConstruction}
+        isPro={isPro}
       />
 
       <MobileHeader

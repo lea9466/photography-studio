@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { getTestimonials } from '@/lib/actions/testimonials.actions'
 import { TestimonialsManager } from '@/components/dashboard/TestimonialsManager'
+import { ProFeatureLockedPage } from '@/components/dashboard/ProFeatureLockedPage'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import type { Testimonial } from '@/lib/types/database.types'
 
 export default async function ReviewsPage() {
@@ -13,6 +15,24 @@ export default async function ReviewsPage() {
   }
 
   const { userId, supabase } = context
+  const entitlements = await getStudioEntitlements(userId)
+
+  if (!entitlements.isPro) {
+    return (
+      <div className="animate-fade-in space-y-6 p-6 md:p-10 max-w-5xl mx-auto">
+        <div>
+          <h1 className="text-2xl font-semibold">תגובות לקוחות</h1>
+          <p className="mt-1 text-sm text-[--muted]">
+            נהלי תגובות שיוצגו בדף הבית שלך. אם אין תגובות — סקשן התגובות לא יופיע באתר.
+          </p>
+        </div>
+        <ProFeatureLockedPage
+          title="תגובות לקוחות זמינות בגרסת PRO"
+          description="שדרגי כדי להציג תגובות לקוחות בדף הבית שלך."
+        />
+      </div>
+    )
+  }
 
   const [{ data: profile }, testimonials] = await Promise.all([
     supabase

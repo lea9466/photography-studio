@@ -22,6 +22,7 @@ type SidebarNavProps = {
   shouldColorLogo?: boolean
   siteUnavailableLocked?: boolean
   isUnderConstruction?: boolean
+  isPro?: boolean
 }
 
 export function SidebarNav({
@@ -38,6 +39,7 @@ export function SidebarNav({
   shouldColorLogo,
   siteUnavailableLocked = false,
   isUnderConstruction = false,
+  isPro = true,
 }: SidebarNavProps) {
   const showExpanded = isMobileOpen || !isCollapsed
   const [underConstruction, setUnderConstruction] = useState(isUnderConstruction)
@@ -123,6 +125,7 @@ export function SidebarNav({
         <DashboardNavMenu
           onNavigate={onMobileClose}
           siteUnavailableLocked={siteUnavailableLocked}
+          isPro={isPro}
         />
       </div>
 

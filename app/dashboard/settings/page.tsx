@@ -8,6 +8,7 @@ import { ProfileForm } from '@/components/dashboard/ProfileForm'
 import { SiteLanguageSetting } from '@/components/dashboard/SiteLanguageSetting'
 import { SiteVisibilitySetting } from '@/components/dashboard/SiteVisibilitySetting'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 
 import { resolveBrandingPath, resolveBrandingPaths, padHeroUrlSlots } from '@/lib/branding-urls'
 
@@ -30,6 +31,8 @@ export default async function SettingsPage() {
 
 
   const { userId, supabase } = context
+
+  const entitlements = await getStudioEntitlements(userId)
 
   const PROFILE_FIELDS =
     'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_type, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language, is_under_construction'
@@ -309,7 +312,7 @@ export default async function SettingsPage() {
 
         <SiteLanguageSetting key={siteLanguage} initialLanguage={siteLanguage} />
 
-        <ProfileForm profile={profileWithUrls} />
+        <ProfileForm profile={profileWithUrls} isPro={entitlements.isPro} />
 
         <SiteVisibilitySetting
           key={Boolean(profile?.is_under_construction) ? 'hidden' : 'public'}

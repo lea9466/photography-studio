@@ -3,6 +3,7 @@ import { getDashboardContext } from '@/lib/auth/dashboard-context'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
 import { getActiveAnnouncement } from '@/lib/queries/announcement'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +15,7 @@ export default async function DashboardLayout({
     getDashboardContext(),
     getActiveAnnouncement(),
   ])
+  const entitlements = context ? await getStudioEntitlements(context.userId) : null
   const portfolioSlug = profile?.slug?.trim() || null
   const welcomePreviewUrl = portfolioSlug ? `/${portfolioSlug}` : null
   const isImpersonating = context?.isImpersonating ?? false
@@ -41,6 +43,7 @@ export default async function DashboardLayout({
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
       siteUnavailableLocked={siteUnavailableLocked}
+      isPro={entitlements?.isPro ?? true}
       isUnderConstruction={Boolean(profile?.is_under_construction)}
       announcement={isImpersonating || siteUnavailableLocked ? null : announcement}
       onSignOut={async () => {

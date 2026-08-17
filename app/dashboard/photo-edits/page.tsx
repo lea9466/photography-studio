@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { getStudioPhotoEditComparisons } from '@/lib/actions/photo-edit-comparisons.actions'
 import { PhotoEditsManager } from '@/components/dashboard/photo-edits/photo-edits-manager'
+import { ProFeatureLockedPage } from '@/components/dashboard/ProFeatureLockedPage'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { signStoragePaths } from '@/lib/storage'
 import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 
@@ -14,6 +16,25 @@ export default async function PhotoEditsPage() {
   }
 
   const { userId, supabase } = context
+  const entitlements = await getStudioEntitlements(userId)
+
+  if (!entitlements.isPro) {
+    return (
+      <div className="animate-fade-in mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+        <div>
+          <h1 className="text-2xl font-semibold">לפני ואחרי עיבוד</h1>
+          <p className="mt-1 text-sm text-[--muted]">
+            הציגי ללקוחות את ההבדל בין התמונה המקורית לבין התוצאה המעובדת.
+          </p>
+        </div>
+        <ProFeatureLockedPage
+          title="לפני ואחרי עיבוד זמין בגרסת PRO"
+          description="שדרגי כדי להציג ללקוחות את ההבדל בין התמונה המקורית לתוצאה המעובדת."
+        />
+      </div>
+    )
+  }
+
   const [{ data: profile }, result] = await Promise.all([
     supabase
       .from('users')
