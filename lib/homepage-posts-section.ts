@@ -646,7 +646,7 @@ const CLASSIC_HOMEPAGE_POSTS_CSS = `
   margin-top: 0;
   justify-content: flex-end;
 }
-.theme-classic .hp-posts-grid {
+.theme-classic .hp-posts-grid:not(.hp-posts-grid--circles) {
   width: 100%;
   max-width: 100%;
   margin-inline: 0;
@@ -656,35 +656,35 @@ const CLASSIC_HOMEPAGE_POSTS_CSS = `
   box-sizing: border-box;
 }
 @media (min-width: 768px) {
-  .theme-classic .hp-posts-grid {
+  .theme-classic .hp-posts-grid:not(.hp-posts-grid--circles) {
     gap: 4px;
   }
 }
-.theme-classic .hp-post-card {
+.theme-classic .hp-post-card:not(.hp-post-card--circle) {
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
   max-width: none;
 }
-.theme-classic .hp-post-media {
+.theme-classic .hp-post-card:not(.hp-post-card--circle) .hp-post-media {
   position: relative;
   width: 100%;
   height: auto;
   flex: 0 0 auto;
   overflow: hidden;
 }
-.theme-classic .hp-post-media--empty {
+.theme-classic .hp-post-card:not(.hp-post-card--circle) .hp-post-media--empty {
   aspect-ratio: 4 / 3;
 }
-.theme-classic .hp-post-media img {
+.theme-classic .hp-post-card:not(.hp-post-card--circle) .hp-post-media img {
   position: static;
   width: 100%;
   height: auto;
   object-fit: contain;
   object-position: center;
 }
-.theme-classic .hp-post-body {
+.theme-classic .hp-post-card:not(.hp-post-card--circle) .hp-post-body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
