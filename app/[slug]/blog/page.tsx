@@ -84,6 +84,8 @@ export default async function BlogPage({ params }: BlogPageProps) {
     },
     siteLanguage: typed.site_language,
     displayStyle: typed.posts_display_style,
+    headingFont: typed.heading_font,
+    aboutTitleFont: typed.about_title_font,
   })
 
   return <HtmlFramePage html={html} title={`${pageTitle} | ${studioName}`} />

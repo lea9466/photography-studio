@@ -105,6 +105,8 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
     beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,
     siteLanguage: photographer.site_language,
+    headingFont: typed.heading_font,
+    aboutTitleFont: typed.about_title_font,
   })
 
   return <HtmlFramePage html={html} title={`${post.title} | ${studioName}`} />

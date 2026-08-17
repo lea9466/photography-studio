@@ -19,6 +19,7 @@ import {
   getPublicGalleryPageTitleSuffix,
 } from '@/lib/public-gallery-copy'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import { buildBrandFontHeadHtml } from '@/lib/fonts'
 
 export type PublicGalleryPhoto = {
   id: string
@@ -612,7 +613,9 @@ function themeHead(
   primaryColor: string,
   shouldColorLogo: boolean = false,
   pageTitleSuffix = 'גלריה',
-  siteLanguage?: string | null
+  siteLanguage?: string | null,
+  headingFont?: string | null,
+  aboutTitleFont?: string | null
 ) {
   const title = escapeHtml(`${studioName} | ${pageTitleSuffix}`)
   const ltrCss = publicSiteLtrCss(siteLanguage)
@@ -646,6 +649,7 @@ tailwind.config = {
 };
 </script>
 <style>
+:root { --headline-font: 'Space Grotesk', 'Heebo', sans-serif; --about-title-font: 'Heebo', sans-serif; }
 body { font-family: 'Heebo', sans-serif; background: #F8FAFC; color: #0F172A; }
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
 .nav-glass { background: rgba(248, 250, 252, 0.8); backdrop-filter: blur(12px); }
@@ -662,6 +666,7 @@ body { font-family: 'Heebo', sans-serif; background: #F8FAFC; color: #0F172A; }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>
+${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden">`
   }
@@ -703,10 +708,12 @@ tailwind.config = {
 };
 </script>
 <style>
+:root { --headline-font: 'Heebo', sans-serif; --about-title-font: 'Heebo', sans-serif; }
 body { font-family: 'Heebo', sans-serif; background: #FAFAF8; }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>
+${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 </head>
 <body class="bg-surface text-on-surface overflow-x-hidden">`
   }
@@ -743,11 +750,13 @@ tailwind.config = {
 };
 </script>
 <style>
+:root { --headline-font: 'Heebo', sans-serif; --about-title-font: 'Heebo', sans-serif; }
 body { font-family: 'Heebo', sans-serif; background: #121217; color: #F5F5F0; }
 .btn-fuchsia-transition { transition: color 0.3s ease; }
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>
+${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 </head>
 <body class="bg-background text-on-surface">`
   }
@@ -783,6 +792,7 @@ tailwind.config = {
 };
 </script>
 <style>
+:root { --headline-font: 'Playfair Display', serif; --about-title-font: 'Frank Ruhl Libre', serif; }
 body { background: #FAFAF8; color: #0F0F0D; font-family: 'Heebo', sans-serif; }
 .elegant-accent { color: ${primaryColor}; }
 .elegant-bg-accent { background-color: ${primaryColor}; }
@@ -793,6 +803,7 @@ ${generateSiteNavStyles('elegant', primaryColor, shouldColorLogo)}
 ${generateSiteNavMobileStyles()}
 ${ltrCss}
 </style>
+${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 </head>
 <body class="selection:bg-[${primaryColor}] selection:text-white">`
 }
@@ -859,9 +870,11 @@ export function generatePublicGalleryThemeHead(
   primaryColor: string,
   pageTitleSuffix = 'גלריה',
   shouldColorLogo = false,
-  siteLanguage?: string | null
+  siteLanguage?: string | null,
+  headingFont?: string | null,
+  aboutTitleFont?: string | null
 ) {
-  return themeHead(theme, studioName, primaryColor, shouldColorLogo, pageTitleSuffix, siteLanguage)
+  return themeHead(theme, studioName, primaryColor, shouldColorLogo, pageTitleSuffix, siteLanguage, headingFont, aboutTitleFont)
 }
 
 export function getMasonryCellStyle(theme: SiteChromeTheme) {

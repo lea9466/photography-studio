@@ -20,6 +20,7 @@ import {
   normalizePostsDisplayStyle,
   type PostsDisplayStyle,
 } from '@/lib/types/posts-display-style'
+import { buildBrandFontHeadHtml } from '@/lib/fonts'
 
 export type PublicBlogPost = {
   id: string
@@ -856,7 +857,9 @@ function blogHead(
   pageTitle: string,
   shouldColorLogo: boolean,
   siteLanguage?: string | null,
-  options?: { isPostPage?: boolean }
+  options?: { isPostPage?: boolean },
+  headingFont?: string | null,
+  aboutTitleFont?: string | null
 ) {
   const t = TOKENS[theme]
   const title = escapeHtml(`${pageTitle} | ${studioName}`)
@@ -901,6 +904,7 @@ tailwind.config = {
 };
 </script>
 <style>
+:root { --headline-font: 'Space Grotesk', 'Heebo', sans-serif; --about-title-font: 'Frank Ruhl Libre', serif; }
 body { font-family: 'Heebo', sans-serif; background: ${t.bg}; color: ${t.text}; }
 .font-serif-hebrew { font-family: 'Frank Ruhl Libre', serif; }
 .font-display { font-family: 'Playfair Display', serif; }
@@ -918,6 +922,7 @@ ${options?.isPostPage ? blogPostHeroThemeCss(theme, t.bg) : ''}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>
+${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 </head>
 <body class="bg-background text-on-surface overflow-x-hidden${options?.isPostPage ? ' blog-post-page' : ''}${options?.isPostPage && theme === 'dark' ? ' blog-post-page--dark' : ''}">`
 }
@@ -1305,6 +1310,8 @@ export function generatePublicBlogPageHTML(options: {
   shouldColorLogo?: boolean
   siteLanguage?: string | null
   displayStyle?: PostsDisplayStyle | string | null
+  headingFont?: string | null
+  aboutTitleFont?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.blog.accentColor
@@ -1343,7 +1350,7 @@ export function generatePublicBlogPageHTML(options: {
 
   return `<!DOCTYPE html>
 <html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
-${blogHead(chromeTheme, options.studioName, primaryColor, options.blog.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage)}
+${blogHead(chromeTheme, options.studioName, primaryColor, options.blog.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage, undefined, options.headingFont, options.aboutTitleFont)}
 ${generateSiteNav(chrome)}
 ${blogBody(options.blog, chromeTheme, options.studioPath, options.siteLanguage, displayStyle)}
 ${templates}
@@ -1455,6 +1462,8 @@ export function generatePublicBlogPostPageHTML(options: {
   beforeAfterPath?: string
   shouldColorLogo?: boolean
   siteLanguage?: string | null
+  headingFont?: string | null
+  aboutTitleFont?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.accentColor
@@ -1480,7 +1489,7 @@ export function generatePublicBlogPostPageHTML(options: {
 
   return `<!DOCTYPE html>
 <html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
-${blogHead(chromeTheme, options.studioName, primaryColor, options.post.title, options.shouldColorLogo ?? false, options.siteLanguage, { isPostPage: true })}
+${blogHead(chromeTheme, options.studioName, primaryColor, options.post.title, options.shouldColorLogo ?? false, options.siteLanguage, { isPostPage: true }, options.headingFont, options.aboutTitleFont)}
 ${generateSiteNav(chrome)}
 ${blogPostPageBody(
   options.post,

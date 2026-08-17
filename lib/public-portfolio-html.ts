@@ -373,6 +373,8 @@ export function generatePublicPortfolioPageHTML(options: {
   beforeAfterPath?: string
   shouldColorLogo?: boolean
   siteLanguage?: string | null
+  headingFont?: string | null
+  aboutTitleFont?: string | null
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.portfolio.accentColor
@@ -436,7 +438,7 @@ ${generatePortfolioPhotosDataScript(options.portfolio.photos)}`
 
   return `<!DOCTYPE html>
 <html ${publicSitePageHtmlAttrs(options.siteLanguage)} style="scroll-behavior: smooth;">
-${generatePublicGalleryThemeHead(chromeTheme, options.studioName, primaryColor, options.portfolio.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage)}
+${generatePublicGalleryThemeHead(chromeTheme, options.studioName, primaryColor, options.portfolio.pageTitle, options.shouldColorLogo ?? false, options.siteLanguage, options.headingFont, options.aboutTitleFont)}
 ${PUBLIC_GALLERY_MASONRY_STYLES}
 ${generatePortfolioTabStyles(primaryColor)}
 ${generateSiteNav(chrome)}

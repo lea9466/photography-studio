@@ -208,6 +208,8 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
       contactCardDescription: typed.contact_card_description ?? null,
     },
     siteLanguage: typed.site_language,
+    headingFont: typed.heading_font,
+    aboutTitleFont: typed.about_title_font,
   })
 
   return <HtmlFramePage html={html} title={`תיק עבודות | ${studioName}`} />

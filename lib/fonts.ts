@@ -116,6 +116,9 @@ const SECTION_HEADING_FONT_CSS = `
 .font-display-lg {
   font-family: var(--headline-font) !important;
 }
+.font-serif-hebrew {
+  font-family: var(--about-title-font, var(--headline-font)) !important;
+}
 ${SITE_SECTION_TITLE_SELECTOR} {
   font-family: var(--headline-font) !important;
   font-size: clamp(1.875rem, 3.5vw, 2.25rem) !important;
