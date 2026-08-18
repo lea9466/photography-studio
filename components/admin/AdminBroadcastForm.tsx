@@ -23,7 +23,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { Filter, ImageIcon, Mail, Send, Upload, Users, X } from 'lucide-react'
+import { Filter, ImageIcon, Layers, Mail, Send, Upload, Users, X } from 'lucide-react'
 
 const FILTER_OPTIONS: {
   key: keyof AdminBroadcastRecipientFilters
@@ -34,6 +34,11 @@ const FILTER_OPTIONS: {
     key: 'requireGallery',
     label: 'יש לפחות גלריה אחת',
     description: 'רק סטודיואים שכבר יצרו גלריה',
+  },
+  {
+    key: 'excludeGallery',
+    label: 'אין אף גלריה',
+    description: 'רק סטודיואים שעדיין לא יצרו גלריה',
   },
   {
     key: 'requirePost',
@@ -49,8 +54,22 @@ const FILTER_OPTIONS: {
 
 const EMPTY_FILTERS: Required<AdminBroadcastRecipientFilters> = {
   requireGallery: false,
+  excludeGallery: false,
   requirePost: false,
   requireHeroImage: false,
+  group: null,
+}
+
+const GROUP_OPTIONS: { key: 'A' | 'B'; label: string }[] = [
+  { key: 'A', label: 'קבוצה A' },
+  { key: 'B', label: 'קבוצה B' },
+]
+
+const MUTUALLY_EXCLUSIVE_FILTERS: Partial<
+  Record<keyof AdminBroadcastRecipientFilters, keyof AdminBroadcastRecipientFilters>
+> = {
+  requireGallery: 'excludeGallery',
+  excludeGallery: 'requireGallery',
 }
 
 export function AdminBroadcastForm() {
@@ -64,7 +83,8 @@ export function AdminBroadcastForm() {
   const [filters, setFilters] = useState(EMPTY_FILTERS)
 
   const imagePreviewSrc = imageUrl ? getTestimonialImagePreviewUrl(imageUrl) : null
-  const activeFilterCount = FILTER_OPTIONS.filter((option) => filters[option.key]).length
+  const activeFilterCount =
+    FILTER_OPTIONS.filter((option) => filters[option.key]).length + (filters.group ? 1 : 0)
 
   function refreshRecipientCount(nextFilters: AdminBroadcastRecipientFilters) {
     startCountTransition(async () => {
@@ -83,9 +103,22 @@ export function AdminBroadcastForm() {
   }, [])
 
   function toggleFilter(key: keyof AdminBroadcastRecipientFilters) {
+    const turningOn = !filters[key]
+    const opposite = MUTUALLY_EXCLUSIVE_FILTERS[key]
     const nextFilters = {
       ...filters,
-      [key]: !filters[key],
+      [key]: turningOn,
+      ...(turningOn && opposite ? { [opposite]: false } : {}),
+    }
+    setFilters(nextFilters)
+    setRecipientCount(null)
+    refreshRecipientCount(nextFilters)
+  }
+
+  function setGroup(group: 'A' | 'B' | null) {
+    const nextFilters = {
+      ...filters,
+      group: filters.group === group ? null : group,
     }
     setFilters(nextFilters)
     setRecipientCount(null)
@@ -130,15 +163,25 @@ export function AdminBroadcastForm() {
       return
     }
 
+    const activeLabels = [
+      ...FILTER_OPTIONS.filter((option) => filters[option.key]).map((option) => option.label),
+      ...(filters.group
+        ? [GROUP_OPTIONS.find((option) => option.key === filters.group)?.label ?? '']
+        : []),
+    ].filter(Boolean)
+
     const filterSummary =
-      activeFilterCount > 0
-        ? `\nסינון: ${FILTER_OPTIONS.filter((option) => filters[option.key])
-            .map((option) => option.label)
-            .join(', ')}`
+      activeLabels.length > 0
+        ? `\nסינון: ${activeLabels.join(', ')}`
         : '\nסינון: כל הסטודיואים עם מייל'
 
+    const limitWarning =
+      count > 100
+        ? '\n\n⚠️ שימי לב: ריסנד מגביל ל-100 מיילים ביום — כדאי לפצל לקבוצות A ו-B ולשלוח ביומיים נפרדים.'
+        : ''
+
     const confirmed = window.confirm(
-      `לשלוח את המייל ל-${count} לקוחות?${filterSummary}\n\nנושא: ${subject.trim()}`
+      `לשלוח את המייל ל-${count} לקוחות?${filterSummary}\n\nנושא: ${subject.trim()}${limitWarning}`
     )
     if (!confirmed) return
 
@@ -237,6 +280,54 @@ export function AdminBroadcastForm() {
                   </label>
                 )
               })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-emerald-400 bg-white p-4 shadow-sm">
+            <div className="flex items-start gap-2">
+              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <Layers className="h-4 w-4" />
+              </span>
+              <div>
+                <Label className="text-slate-700">פיצול לקבוצות שליחה</Label>
+                <p className="mt-1 text-xs text-slate-500">
+                  ריסנד מגביל ל-100 מיילים ביום. אפשר לפצל את כל הנמענים לשתי קבוצות קבועות
+                  (לפי מזהה המשתמש, לא משתנה) ולשלוח לכל קבוצה ביום נפרד בלי לחפוף או לדלג על
+                  אף אחד.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setGroup(null)}
+                disabled={isPending || uploadingImage || isCounting}
+                className={cn(
+                  'rounded-xl border px-4 py-2 text-sm font-medium transition-colors',
+                  !filters.group
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                    : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:border-emerald-200'
+                )}
+              >
+                כולם
+              </button>
+              {GROUP_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setGroup(option.key)}
+                  disabled={isPending || uploadingImage || isCounting}
+                  className={cn(
+                    'rounded-xl border px-4 py-2 text-sm font-medium transition-colors',
+                    filters.group === option.key
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800'
+                      : 'border-slate-200 bg-slate-50/70 text-slate-600 hover:border-emerald-200'
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 

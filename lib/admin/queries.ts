@@ -48,9 +48,24 @@ function normalizeBroadcastFilters(
 ): Required<AdminBroadcastRecipientFilters> {
   return {
     requireGallery: Boolean(filters?.requireGallery),
+    excludeGallery: Boolean(filters?.excludeGallery),
     requirePost: Boolean(filters?.requirePost),
     requireHeroImage: Boolean(filters?.requireHeroImage),
+    group: filters?.group === 'A' || filters?.group === 'B' ? filters.group : null,
   }
+}
+
+/**
+ * Deterministically assigns a user to broadcast group A or B based on their id,
+ * so the split stays identical across sends (needed to mail a large list across
+ * multiple days without skipping or double-mailing anyone).
+ */
+function assignBroadcastGroup(userId: string): 'A' | 'B' {
+  let hash = 0
+  for (let i = 0; i < userId.length; i++) {
+    hash = (hash * 31 + userId.charCodeAt(i)) >>> 0
+  }
+  return hash % 2 === 0 ? 'A' : 'B'
 }
 
 function userHasHeroImage(user: {
@@ -146,7 +161,9 @@ export async function getAdminBroadcastRecipients(
   if (error) throw new Error(error.message)
 
   const [galleryUserIds, postUserIds] = await Promise.all([
-    activeFilters.requireGallery ? fetchDistinctUserIds('galleries') : Promise.resolve(null),
+    activeFilters.requireGallery || activeFilters.excludeGallery
+      ? fetchDistinctUserIds('galleries')
+      : Promise.resolve(null),
     activeFilters.requirePost ? fetchDistinctUserIds('posts') : Promise.resolve(null),
   ])
 
@@ -154,9 +171,11 @@ export async function getAdminBroadcastRecipients(
   const recipients: AdminBroadcastRecipient[] = []
 
   for (const user of data ?? []) {
-    if (galleryUserIds && !galleryUserIds.has(user.id)) continue
+    if (activeFilters.requireGallery && !galleryUserIds?.has(user.id)) continue
+    if (activeFilters.excludeGallery && galleryUserIds?.has(user.id)) continue
     if (postUserIds && !postUserIds.has(user.id)) continue
     if (activeFilters.requireHeroImage && !userHasHeroImage(user)) continue
+    if (activeFilters.group && assignBroadcastGroup(user.id) !== activeFilters.group) continue
 
     const email = user.email?.trim().toLowerCase()
     if (!email || seen.has(email)) continue
