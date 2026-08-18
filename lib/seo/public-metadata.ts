@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveBrandingPath } from '@/lib/branding-urls'
@@ -40,7 +41,11 @@ type PhotographerShareImageSource = {
   logo_url?: string | null
 }
 
-export async function resolvePhotographerShareImage(
+// Wrapped in React's request-scoped cache() — app/[slug]/page.tsx's default
+// export and its generateMetadata() both call this with the same
+// (now-also-cached) photographer object for the same request, so without
+// this it repeated the same branding-path resolution work twice per view.
+export const resolvePhotographerShareImage = cache(async function resolvePhotographerShareImage(
   photographer: PhotographerShareImageSource
 ): Promise<string | null> {
   const aboutImage = await resolveBrandingPath(photographer.about_image_url ?? null)
@@ -63,7 +68,7 @@ export async function resolvePhotographerShareImage(
   }
 
   return resolveBrandingPath(photographer.logo_url ?? null)
-}
+})
 
 export async function resolveGalleryCoverImagePath(
   coverImage: string | null | undefined,

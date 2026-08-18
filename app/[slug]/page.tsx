@@ -338,44 +338,73 @@ export default async function PhotographerPage({ params }: PageProps) {
       testimonials = []
     }
 
-    // Resolve R2 paths to signed URLs (only if not already a full URL)
-    // For FREE users: force hero_type to 'images' and hide hero video
+    // Resolve R2 paths to signed URLs (only if not already a full URL).
+    // Every resolveBrandingPath/resolveBrandingPaths call here is independent
+    // (no shared state, no ordering dependency), so they all run concurrently
+    // instead of one-after-another — same results, far less wall-clock time.
     const isVideoHero = typedPhotographer.hero_type === 'video' && canUseFeature(entitlements, 'hero_video')
-    const heroVideoUrl = isVideoHero ? await resolveBrandingPath(typedPhotographer.hero_video_url) : null
+    const hasFaq = canUseFeature(entitlements, 'faq')
 
-    // For FREE users: hide FAQ items and FAQ section image
-    const faqItems = canUseFeature(entitlements, 'faq') ? typedPhotographer.faq_items : []
-    const faqSectionImageUrl = canUseFeature(entitlements, 'faq')
-      ? await resolveBrandingPath(typedPhotographer.faq_section_image_url)
-      : null
-
-    const photographerWithUrls = {
-      ...typedPhotographer,
-      hero_desktop_url: await resolveBrandingPath(typedPhotographer.hero_desktop_url),
-      hero_mobile_url: await resolveBrandingPath(typedPhotographer.hero_mobile_url),
-      hero_desktop_urls: await resolveBrandingPaths(
+    const [
+      heroDesktopUrl,
+      heroMobileUrl,
+      heroDesktopUrls,
+      heroMobileUrls,
+      heroVideoUrl,
+      aboutImageUrl,
+      contactDesktopUrl,
+      contactMobileUrl,
+      packagesDesktopUrl,
+      packagesMobileUrl,
+      faqSectionImageUrl,
+      logoUrl,
+    ] = await Promise.all([
+      resolveBrandingPath(typedPhotographer.hero_desktop_url),
+      resolveBrandingPath(typedPhotographer.hero_mobile_url),
+      resolveBrandingPaths(
         typedPhotographer.hero_desktop_urls?.length
           ? typedPhotographer.hero_desktop_urls
           : typedPhotographer.hero_desktop_url
             ? [typedPhotographer.hero_desktop_url]
             : []
       ),
-      hero_mobile_urls: await resolveBrandingPaths(
+      resolveBrandingPaths(
         typedPhotographer.hero_mobile_urls?.length
           ? typedPhotographer.hero_mobile_urls
           : typedPhotographer.hero_mobile_url
             ? [typedPhotographer.hero_mobile_url]
             : []
       ),
+      // For FREE users: force hero_type to 'images' and hide hero video
+      isVideoHero ? resolveBrandingPath(typedPhotographer.hero_video_url) : Promise.resolve(null),
+      resolveBrandingPath(typedPhotographer.about_image_url),
+      resolveBrandingPath(typedPhotographer.contact_desktop_url),
+      resolveBrandingPath(typedPhotographer.contact_mobile_url),
+      resolveBrandingPath(typedPhotographer.packages_desktop_url),
+      resolveBrandingPath(typedPhotographer.packages_mobile_url),
+      // For FREE users: hide FAQ section image
+      hasFaq ? resolveBrandingPath(typedPhotographer.faq_section_image_url) : Promise.resolve(null),
+      resolveBrandingPath(typedPhotographer.logo_url),
+    ])
+
+    // For FREE users: hide FAQ items
+    const faqItems = hasFaq ? typedPhotographer.faq_items : []
+
+    const photographerWithUrls = {
+      ...typedPhotographer,
+      hero_desktop_url: heroDesktopUrl,
+      hero_mobile_url: heroMobileUrl,
+      hero_desktop_urls: heroDesktopUrls,
+      hero_mobile_urls: heroMobileUrls,
       hero_video_url: heroVideoUrl,
-      about_image_url: await resolveBrandingPath(typedPhotographer.about_image_url),
-      contact_desktop_url: await resolveBrandingPath(typedPhotographer.contact_desktop_url),
-      contact_mobile_url: await resolveBrandingPath(typedPhotographer.contact_mobile_url),
-      packages_desktop_url: await resolveBrandingPath(typedPhotographer.packages_desktop_url),
-      packages_mobile_url: await resolveBrandingPath(typedPhotographer.packages_mobile_url),
+      about_image_url: aboutImageUrl,
+      contact_desktop_url: contactDesktopUrl,
+      contact_mobile_url: contactMobileUrl,
+      packages_desktop_url: packagesDesktopUrl,
+      packages_mobile_url: packagesMobileUrl,
       faq_section_image_url: faqSectionImageUrl,
       faq_items: faqItems,
-      logo_url: await resolveBrandingPath(typedPhotographer.logo_url),
+      logo_url: logoUrl,
     }
 
     // Resolve gallery preview URLs (only if not already a full URL)

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
 import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
@@ -255,7 +256,13 @@ function getMissingColumnMigrationHint(error: { message?: string }) {
   return 'Apply pending Supabase migrations (supabase db push).'
 }
 
-export async function findPhotographerBySlug(decodedSlug: string): Promise<PublicPhotographer | null> {
+// Wrapped in React's request-scoped cache() — app/[slug]/page.tsx's default
+// export and its generateMetadata() both call this with the same slug for
+// the same request (Next.js doesn't share data between them automatically),
+// so without this it ran the same DB lookup twice on every single page view.
+export const findPhotographerBySlug = cache(async function findPhotographerBySlug(
+  decodedSlug: string
+): Promise<PublicPhotographer | null> {
   const normalizedSlug = decodedSlug.trim()
   if (!normalizedSlug || RESERVED_SLUGS.has(normalizedSlug)) {
     return null
@@ -333,7 +340,7 @@ export async function findPhotographerBySlug(decodedSlug: string): Promise<Publi
 
   const match = byStudioName?.[0]
   return match ? withDefaultGalleryLayoutMode(match) : null
-}
+})
 
 export function getPublicSitePath(slug: string | null | undefined, studioName: string | null | undefined) {
   if (slug?.trim()) return `/${slug.trim()}`
