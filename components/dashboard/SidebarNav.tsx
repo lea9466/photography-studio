@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { Menu, X, LogOut, ExternalLink, Eye, EyeOff } from 'lucide-react'
+import { Menu, X, LogOut, ExternalLink, Eye, EyeOff, Sparkles } from 'lucide-react'
 import { Logo } from './Logo'
 import { DashboardNavMenu } from './DashboardNavMenu'
 import { updateSiteUnderConstruction } from '@/lib/actions/site-settings.actions'
@@ -23,6 +23,8 @@ type SidebarNavProps = {
   siteUnavailableLocked?: boolean
   isUnderConstruction?: boolean
   isPro?: boolean
+  onOpenAssistant?: () => void
+  assistantHasMissingContent?: boolean
 }
 
 export function SidebarNav({
@@ -40,6 +42,8 @@ export function SidebarNav({
   siteUnavailableLocked = false,
   isUnderConstruction = false,
   isPro = true,
+  onOpenAssistant,
+  assistantHasMissingContent = false,
 }: SidebarNavProps) {
   const showExpanded = isMobileOpen || !isCollapsed
   const [underConstruction, setUnderConstruction] = useState(isUnderConstruction)
@@ -148,6 +152,22 @@ export function SidebarNav({
                 <ExternalLink className="h-5 w-5" />
                 <span className="text-sm">צפי באתר שלי</span>
               </a>
+            ) : null}
+            {onOpenAssistant ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onMobileClose?.()
+                  onOpenAssistant()
+                }}
+                className="relative flex w-full items-center gap-3 rounded-xl border border-[--dashboard-border] bg-[--dashboard-surface] px-4 py-3 text-right text-[--dashboard-muted] transition-all duration-200 hover:bg-[--dashboard-surface] hover:text-[--dashboard-foreground]"
+              >
+                <Sparkles className="h-5 w-5 shrink-0 text-amber-500" />
+                <span className="text-sm font-medium">עוזר האתר</span>
+                {assistantHasMissingContent ? (
+                  <span className="absolute left-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-amber-500" />
+                ) : null}
+              </button>
             ) : null}
             {!siteUnavailableLocked ? (
               <div className="space-y-1.5">

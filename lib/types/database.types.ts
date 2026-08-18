@@ -972,6 +972,44 @@ export type Database = {
           },
         ]
       }
+      assistant_action_log: {
+        Row: {
+          id: string
+          user_id: string
+          action_type: string
+          payload: Record<string, unknown>
+          previous_state: Record<string, unknown>
+          created_at: string
+          undone_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          action_type: string
+          payload: Record<string, unknown>
+          previous_state?: Record<string, unknown>
+          created_at?: string
+          undone_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          action_type?: string
+          payload?: Record<string, unknown>
+          previous_state?: Record<string, unknown>
+          created_at?: string
+          undone_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'assistant_action_log_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       photo_edit_comparisons: {
         Row: {
           id: string

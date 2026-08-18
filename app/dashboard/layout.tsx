@@ -4,6 +4,7 @@ import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWr
 import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
 import { getActiveAnnouncement } from '@/lib/queries/announcement'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { getAssistantMissingFlags, hasAnyMissingContent } from '@/lib/assistant/studio-context'
 
 export default async function DashboardLayout({
   children,
@@ -21,6 +22,9 @@ export default async function DashboardLayout({
   const isImpersonating = context?.isImpersonating ?? false
   const siteUnavailableLocked =
     !isImpersonating && Boolean(profile?.is_site_unavailable)
+  const assistantMissing = context
+    ? await getAssistantMissingFlags(context.userId, context.supabase)
+    : null
 
   return (
     <DashboardLayoutWrapper
@@ -46,6 +50,8 @@ export default async function DashboardLayout({
       isPro={entitlements?.isPro ?? true}
       isUnderConstruction={Boolean(profile?.is_under_construction)}
       announcement={isImpersonating || siteUnavailableLocked ? null : announcement}
+      assistantHasMissingContent={assistantMissing ? hasAnyMissingContent(assistantMissing) : false}
+      assistantMissingSlug={!portfolioSlug}
       onSignOut={async () => {
         'use server'
         await signOut()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SidebarNav } from './SidebarNav'
 import { MobileHeader } from './MobileHeader'
@@ -8,6 +8,7 @@ import { ImpersonationBanner } from './ImpersonationBanner'
 import { AnnouncementBanner } from './AnnouncementBanner'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
 import { WelcomeModal } from './WelcomeModal'
+import { AssistantWidget } from './assistant/AssistantWidget'
 import type { Announcement } from '@/lib/announcements/types'
 
 type DashboardLayoutWrapperProps = {
@@ -27,6 +28,8 @@ type DashboardLayoutWrapperProps = {
   isUnderConstruction?: boolean
   announcement?: Announcement | null
   isPro?: boolean
+  assistantHasMissingContent?: boolean
+  assistantMissingSlug?: boolean
 }
 
 export function DashboardLayoutWrapper({
@@ -46,12 +49,32 @@ export function DashboardLayoutWrapper({
   isUnderConstruction = false,
   announcement = null,
   isPro = true,
+  assistantHasMissingContent = false,
+  assistantMissingSlug = false,
 }: DashboardLayoutWrapperProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const [assistantHidden, setAssistantHidden] = useState(false)
+
+  useEffect(() => {
+    setAssistantHidden(localStorage.getItem('assistant-widget-hidden') === '1')
+  }, [])
 
   function closeMobileMenu() {
     setIsMobileMenuOpen(false)
+  }
+
+  function dismissAssistant() {
+    setAssistantOpen(false)
+    setAssistantHidden(true)
+    localStorage.setItem('assistant-widget-hidden', '1')
+  }
+
+  function openAssistant() {
+    setAssistantHidden(false)
+    localStorage.removeItem('assistant-widget-hidden')
+    setAssistantOpen(true)
   }
 
   return (
@@ -74,6 +97,8 @@ export function DashboardLayoutWrapper({
         siteUnavailableLocked={siteUnavailableLocked}
         isUnderConstruction={isUnderConstruction}
         isPro={isPro}
+        onOpenAssistant={siteUnavailableLocked ? undefined : openAssistant}
+        assistantHasMissingContent={assistantHasMissingContent}
       />
 
       <MobileHeader
@@ -97,6 +122,16 @@ export function DashboardLayoutWrapper({
         />
         {children}
       </main>
+
+      {!siteUnavailableLocked && !assistantHidden ? (
+        <AssistantWidget
+          hasMissingContent={assistantHasMissingContent}
+          missingSlug={assistantMissingSlug}
+          open={assistantOpen}
+          onOpenChange={setAssistantOpen}
+          onDismiss={dismissAssistant}
+        />
+      ) : null}
     </div>
   )
 }
