@@ -5,6 +5,9 @@ import {
   createBlogPostSchema,
   addFaqItemSchema,
   updateThemeSchema,
+  updateBlogPostSchema,
+  updateFaqItemSchema,
+  updateTestimonialSchema,
 } from '@/lib/validations/dashboard-assistant'
 import { ASSISTANT_FIELD_LABELS } from '@/lib/assistant/field-labels'
 import { THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
@@ -98,6 +101,50 @@ export const ASSISTANT_STRUCTURE_TOOLS = [
       required: ['selected_theme'],
     },
   },
+  {
+    name: 'update_blog_post',
+    description:
+      'הצעת עדכון לפוסט בלוג קיים. יש להשתמש ב-post_id המדויק מרשימת הפוסטים הקיימים בהקשר השיחה. אפשר למלא רק חלק מהשדות.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        post_id: { type: 'string', description: 'המזהה המדויק של הפוסט לעדכון' },
+        title: { type: 'string', description: 'כותרת חדשה' },
+        subtitle: { type: 'string', description: 'כותרת משנה חדשה' },
+        content: { type: 'string', description: 'תוכן חדש' },
+      },
+      required: ['post_id'],
+    },
+  },
+  {
+    name: 'update_faq_item',
+    description:
+      'הצעת עדכון לפריט שאלות ותשובות קיים. יש להעביר את השאלה המקורית בדיוק כפי שמופיעה ברשימה הקיימת (question), ולפחות אחד מ-new_question/new_answer.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        question: { type: 'string', description: 'השאלה המדויקת של הפריט הקיים לעדכון' },
+        new_question: { type: 'string', description: 'נוסח חדש לשאלה (אופציונלי)' },
+        new_answer: { type: 'string', description: 'נוסח חדש לתשובה (אופציונלי)' },
+      },
+      required: ['question'],
+    },
+  },
+  {
+    name: 'update_testimonial',
+    description:
+      'הצעת עדכון להמלצת לקוח קיימת. יש להשתמש ב-testimonial_id המדויק מרשימת ההמלצות הקיימות בהקשר השיחה. אפשר למלא רק חלק מהשדות.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        testimonial_id: { type: 'string', description: 'המזהה המדויק של ההמלצה לעדכון' },
+        title: { type: 'string', description: 'כותרת חדשה' },
+        content: { type: 'string', description: 'תוכן חדש להמלצה' },
+        shoot_type: { type: 'string', description: 'סוג צילום חדש (אופציונלי)' },
+      },
+      required: ['testimonial_id'],
+    },
+  },
 ]
 
 const ACTION_TITLES: Record<string, string> = {
@@ -107,6 +154,9 @@ const ACTION_TITLES: Record<string, string> = {
   create_blog_post: 'פוסט בלוג חדש',
   add_faq_item: 'פריט שאלות ותשובות חדש',
   update_theme: 'שינוי ערכת עיצוב',
+  update_blog_post: 'עדכון פוסט בלוג',
+  update_faq_item: 'עדכון שאלה ותשובה',
+  update_testimonial: 'עדכון המלצה',
 }
 
 function field(key: string, before: string, after: string): AssistantPreviewField {
@@ -207,6 +257,49 @@ export function buildStructurePreview(
           ),
         ],
       },
+    }
+  }
+
+  if (toolName === 'update_blog_post') {
+    const parsed = updateBlogPostSchema.parse(rawInput)
+    const existing = context.posts.find((post) => post.id === parsed.post_id)
+    if (!existing) throw new Error('לא נמצא פוסט עם המזהה הזה')
+    const fields: AssistantPreviewField[] = []
+    if (parsed.title !== undefined) fields.push(field('title', existing.title, parsed.title))
+    if (parsed.subtitle !== undefined) fields.push(field('subtitle', existing.subtitle ?? '', parsed.subtitle))
+    if (parsed.content !== undefined) fields.push(field('content', existing.content, parsed.content))
+    return {
+      payload: parsed,
+      preview: { actionType: 'update_blog_post', title: ACTION_TITLES.update_blog_post, fields },
+    }
+  }
+
+  if (toolName === 'update_faq_item') {
+    const parsed = updateFaqItemSchema.parse(rawInput)
+    const existing = context.faqItems.find((item) => item.question === parsed.question)
+    if (!existing) throw new Error('לא נמצא פריט שאלות ותשובות עם השאלה הזו')
+    const fields: AssistantPreviewField[] = []
+    if (parsed.new_question !== undefined) fields.push(field('question', existing.question, parsed.new_question))
+    if (parsed.new_answer !== undefined) fields.push(field('answer', existing.answer, parsed.new_answer))
+    return {
+      payload: parsed,
+      preview: { actionType: 'update_faq_item', title: ACTION_TITLES.update_faq_item, fields },
+    }
+  }
+
+  if (toolName === 'update_testimonial') {
+    const parsed = updateTestimonialSchema.parse(rawInput)
+    const existing = context.testimonials.find((t) => t.id === parsed.testimonial_id)
+    if (!existing) throw new Error('לא נמצאה המלצה עם המזהה הזה')
+    const fields: AssistantPreviewField[] = []
+    if (parsed.title !== undefined) fields.push(field('title', existing.title, parsed.title))
+    if (parsed.content !== undefined) fields.push(field('content', existing.content, parsed.content))
+    if (parsed.shoot_type !== undefined) {
+      fields.push(field('shoot_type', existing.shoot_type ?? '', parsed.shoot_type))
+    }
+    return {
+      payload: parsed,
+      preview: { actionType: 'update_testimonial', title: ACTION_TITLES.update_testimonial, fields },
     }
   }
 

@@ -58,11 +58,15 @@ export type AssistantPackageSummary = {
 export type AssistantPostSummary = {
   id: string
   title: string
+  subtitle: string | null
+  content: string
 }
 
 export type AssistantTestimonialSummary = {
   id: string
   title: string
+  content: string
+  shoot_type: string | null
 }
 
 export type AssistantMissingFlags = {
@@ -128,11 +132,11 @@ export async function getAssistantStudioContext(
         .limit(20),
       supabase
         .from('posts')
-        .select('id, title, content')
+        .select('id, title, subtitle, content')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20),
-      supabase.from('testimonials').select('id, title, content').eq('user_id', userId).limit(20),
+      supabase.from('testimonials').select('id, title, content, shoot_type').eq('user_id', userId).limit(20),
       getStudioEntitlements(userId),
     ])
 
@@ -158,8 +162,13 @@ export async function getAssistantStudioContext(
   const faqItems = parseFaqItems(rawFaqItems)
   const heroDesktopSlots = normalizeHeroSlots(rawHeroDesktopUrls)
   const packageRows = (packages ?? []) as AssistantPackageSummary[]
-  const postRows = (posts ?? []) as { id: string; title: string; content: string }[]
-  const testimonialRows = (testimonials ?? []) as { id: string; title: string; content: string }[]
+  const postRows = (posts ?? []) as { id: string; title: string; subtitle: string | null; content: string }[]
+  const testimonialRows = (testimonials ?? []) as {
+    id: string
+    title: string
+    content: string
+    shoot_type: string | null
+  }[]
 
   const missing: AssistantMissingFlags = {
     slug: !profile.slug?.trim(),
@@ -185,8 +194,8 @@ export async function getAssistantStudioContext(
     profile,
     heroDesktopSlots,
     packages: packageRows,
-    posts: postRows.map((post) => ({ id: post.id, title: post.title })),
-    testimonials: testimonialRows.map((t) => ({ id: t.id, title: t.title })),
+    posts: postRows,
+    testimonials: testimonialRows,
     faqItems,
     missing,
     toneSamples,

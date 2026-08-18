@@ -3,10 +3,10 @@ import type { ProFeature } from '@/lib/subscriptions/types'
 import type { AssistantActionType } from '@/lib/validations/dashboard-assistant'
 import { updateProfile } from '@/lib/actions/feedback.actions'
 import { createPackage, updatePackage, deletePackage } from '@/lib/actions/package.actions'
-import { createPost, deletePost } from '@/lib/actions/post.actions'
+import { createPost, updatePost, deletePost } from '@/lib/actions/post.actions'
 import { updateFaqItems } from '@/lib/actions/faq.actions'
 import { updateBrandingSettings, finalizeBrandingUpload, removeHeroImageSlot } from '@/lib/actions/branding.actions'
-import { deleteTestimonial } from '@/lib/actions/testimonials.actions'
+import { deleteTestimonial, updateTestimonial } from '@/lib/actions/testimonials.actions'
 import { parseFaqItems, type FaqItem } from '@/lib/faq'
 import { ASSISTANT_ABOUT_FIELDS, ASSISTANT_CONTACT_FIELDS } from '@/lib/validations/dashboard-assistant'
 
@@ -277,6 +277,88 @@ export const ASSISTANT_ACTION_HANDLERS: Record<AssistantActionType, AssistantAct
       const row = previousState.row as Record<string, unknown>
       const { error } = await ctx.supabase.from('testimonials').insert(row as never)
       if (error) throw new Error(error.message)
+    },
+  },
+
+  update_blog_post: {
+    proFeature: 'posts',
+    async execute(ctx, payload) {
+      const input = payload as { post_id: string; title?: string; subtitle?: string; content?: string }
+      const { data: before } = await ctx.supabase
+        .from('posts')
+        .select('title, subtitle, content')
+        .eq('id', input.post_id)
+        .eq('user_id', ctx.userId)
+        .maybeSingle()
+      if (!before) throw new Error('הפוסט לא נמצא')
+      const beforeRow = before as { title: string; subtitle: string | null; content: string }
+      await updatePost(input.post_id, { title: input.title, subtitle: input.subtitle, content: input.content })
+      return { previousState: { post_id: input.post_id, ...beforeRow } }
+    },
+    async undo(_ctx, previousState) {
+      const prev = previousState as { post_id: string; title: string; subtitle: string | null; content: string }
+      await updatePost(prev.post_id, { title: prev.title, subtitle: prev.subtitle, content: prev.content })
+    },
+  },
+
+  update_faq_item: {
+    proFeature: 'faq',
+    async execute(ctx, payload) {
+      const input = payload as { question: string; new_question?: string; new_answer?: string }
+      const { data: profile } = await ctx.supabase
+        .from('users')
+        .select('faq_items')
+        .eq('id', ctx.userId)
+        .maybeSingle()
+      const current = parseFaqItems((profile as { faq_items: unknown } | null)?.faq_items)
+      const index = current.findIndex((item) => item.question === input.question)
+      if (index === -1) throw new Error('לא נמצא פריט שאלות ותשובות עם השאלה הזו')
+      const next: FaqItem[] = current.map((item, i) =>
+        i === index
+          ? { question: input.new_question ?? item.question, answer: input.new_answer ?? item.answer }
+          : item
+      )
+      await updateFaqItems(next)
+      return { previousState: { faq_items: current } }
+    },
+    async undo(_ctx, previousState) {
+      await updateFaqItems(previousState.faq_items as FaqItem[])
+    },
+  },
+
+  update_testimonial: {
+    proFeature: 'testimonials',
+    async execute(ctx, payload) {
+      const input = payload as { testimonial_id: string; title?: string; content?: string; shoot_type?: string }
+      const { data: before } = await ctx.supabase
+        .from('testimonials')
+        .select('title, content, shoot_type')
+        .eq('id', input.testimonial_id)
+        .eq('user_id', ctx.userId)
+        .maybeSingle()
+      if (!before) throw new Error('ההמלצה לא נמצאה')
+      const beforeRow = before as { title: string; content: string; shoot_type: string | null }
+      await updateTestimonial(input.testimonial_id, {
+        title: input.title,
+        content: input.content,
+        shootType: input.shoot_type,
+      })
+      return { previousState: { testimonial_id: input.testimonial_id, ...beforeRow } }
+    },
+    async undo(_ctx, previousState) {
+      const prev = previousState as {
+        testimonial_id: string
+        title: string
+        content: string
+        shoot_type: string | null
+      }
+      await updateTestimonial(prev.testimonial_id, {
+        title: prev.title,
+        content: prev.content,
+        // updateTestimonial's shootType is string|undefined (not nullable) —
+        // '' is its own signal to clear back to null (shoot_type || null).
+        shootType: prev.shoot_type ?? '',
+      })
     },
   },
 

@@ -131,6 +131,44 @@ export const deleteTestimonialSchema = z.object({
 
 export type DeleteTestimonialInput = z.infer<typeof deleteTestimonialSchema>
 
+export const updateBlogPostSchema = z
+  .object({
+    post_id: z.string().uuid('מזהה פוסט לא תקין'),
+    title: z.string().trim().min(1, 'כותרת נדרשת').max(150, 'הכותרת ארוכה מדי').optional(),
+    subtitle: optionalTrimmedText(200, 'כותרת המשנה ארוכה מדי'),
+    content: z.string().trim().min(20, 'תוכן הפוסט קצר מדי').max(20000, 'תוכן הפוסט ארוך מדי').optional(),
+  })
+  .refine((data) => data.title !== undefined || data.subtitle !== undefined || data.content !== undefined, {
+    message: 'יש למלא לפחות שדה אחד לעדכון',
+  })
+
+export type UpdateBlogPostInput = z.infer<typeof updateBlogPostSchema>
+
+export const updateFaqItemSchema = z
+  .object({
+    question: z.string().trim().min(1, 'יש לציין את השאלה המקורית לעדכון'),
+    new_question: optionalTrimmedText(200, 'השאלה ארוכה מדי'),
+    new_answer: optionalTrimmedText(2000, 'התשובה ארוכה מדי'),
+  })
+  .refine((data) => data.new_question !== undefined || data.new_answer !== undefined, {
+    message: 'יש למלא לפחות שדה אחד לעדכון',
+  })
+
+export type UpdateFaqItemInput = z.infer<typeof updateFaqItemSchema>
+
+export const updateTestimonialSchema = z
+  .object({
+    testimonial_id: z.string().uuid('מזהה המלצה לא תקין'),
+    title: z.string().trim().min(1, 'כותרת נדרשת').max(120, 'הכותרת ארוכה מדי').optional(),
+    content: z.string().trim().min(1, 'תוכן ההמלצה נדרש').max(2000, 'תוכן ההמלצה ארוך מדי').optional(),
+    shoot_type: optionalTrimmedText(80, 'סוג הצילום ארוך מדי'),
+  })
+  .refine((data) => data.title !== undefined || data.content !== undefined || data.shoot_type !== undefined, {
+    message: 'יש למלא לפחות שדה אחד לעדכון',
+  })
+
+export type UpdateTestimonialInput = z.infer<typeof updateTestimonialSchema>
+
 export const setHeroImageSchema = z.object({
   path: z.string().trim().min(1, 'נתיב הקובץ חסר'),
   // 1-based in the wire format (matches how slots are shown to the model
@@ -165,6 +203,9 @@ export type AssistantActionType =
   | 'delete_blog_post'
   | 'delete_faq_item'
   | 'delete_testimonial'
+  | 'update_blog_post'
+  | 'update_faq_item'
+  | 'update_testimonial'
   | 'set_hero_image'
   | 'set_slug'
 
@@ -181,6 +222,9 @@ export const ASSISTANT_ACTION_TYPES: AssistantActionType[] = [
   'delete_blog_post',
   'delete_faq_item',
   'delete_testimonial',
+  'update_blog_post',
+  'update_faq_item',
+  'update_testimonial',
   'set_hero_image',
   'set_slug',
 ]
