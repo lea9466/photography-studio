@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Sparkles, X, Send, Paperclip, ImageOff, ImagePlus, Loader2 } from 'lucide-react'
+import { Sparkles, X, Send, Paperclip, ImageOff, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ActionPreviewCard, type ActionPreviewStatus } from './ActionPreviewCard'
 import { confirmAssistantAction, undoLastAssistantAction } from '@/lib/actions/assistant.actions'
@@ -10,6 +10,7 @@ import { prepareBrandingUpload } from '@/lib/actions/branding.actions'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 import type { AssistantActionType } from '@/lib/validations/dashboard-assistant'
 import type { AssistantPreview } from '@/lib/assistant/tools/preview-types'
+import { ASSISTANT_GRADIENT_STOPS } from '@/lib/assistant/brand'
 
 type TextBlock = { type: 'text'; text: string }
 type ImageBlock = { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
@@ -38,19 +39,102 @@ const DEFAULT_IMAGE_CAPTION =
   'זו תמונת מסך של תגובת לקוח (מייל/וואטסאפ). אנא חלצי מתוכה את הטקסט המדויק והציעי יצירת המלצה — בלי להוסיף ניסוח משלך.'
 const IMAGE_PLACEHOLDER_TEXT = '[תמונה שצורפה — הטקסט כבר חולץ ולא נשמרה]'
 const DASHBOARD_LINK_PATTERN = /(\/dashboard[\w-]*(?:\/[\w-]+)*)/g
+const BOLD_PATTERN = /\*\*(.+?)\*\*/g
+const BULLET_LINE_PATTERN = /^\s*[-*]\s+(.*)$/
+const ORDERED_LINE_PATTERN = /^\s*\d+[.)]\s+(.*)$/
 
 // Turns any /dashboard/... path the assistant mentions into a real,
 // same-tab clickable link — the chat widget lives in the dashboard layout
 // so it survives client-side navigation instead of reloading.
-function renderMessageText(text: string) {
+function renderLinks(text: string, keyPrefix: string) {
   return text.split(DASHBOARD_LINK_PATTERN).map((part, index) =>
     part.startsWith('/dashboard') ? (
-      <Link key={index} href={part} className="font-medium underline underline-offset-2">
+      <Link key={`${keyPrefix}-l${index}`} href={part} className="font-medium underline underline-offset-2">
         {part}
       </Link>
     ) : (
-      <span key={index}>{part}</span>
+      <span key={`${keyPrefix}-s${index}`}>{part}</span>
     )
+  )
+}
+
+// The model still writes light Markdown (**bold**, "- "/"1. " lists) even
+// though the wire format is plain text — without this it shows up as literal
+// asterisks in the bubble. Only bold + lists + dashboard links are handled;
+// anything fancier (headers, code, [links](url)) just renders as plain text.
+function renderInline(text: string, keyPrefix: string) {
+  const nodes: React.ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let i = 0
+  BOLD_PATTERN.lastIndex = 0
+  while ((match = BOLD_PATTERN.exec(text))) {
+    if (match.index > lastIndex) {
+      nodes.push(...renderLinks(text.slice(lastIndex, match.index), `${keyPrefix}-t${i++}`))
+    }
+    nodes.push(<strong key={`${keyPrefix}-b${i++}`}>{renderLinks(match[1], `${keyPrefix}-bi${i}`)}</strong>)
+    lastIndex = BOLD_PATTERN.lastIndex
+  }
+  if (lastIndex < text.length) {
+    nodes.push(...renderLinks(text.slice(lastIndex), `${keyPrefix}-t${i++}`))
+  }
+  return nodes
+}
+
+type MessageBlock = { type: 'p'; lines: string[] } | { type: 'ul' | 'ol'; items: string[] }
+
+function parseMessageBlocks(text: string): MessageBlock[] {
+  const blocks: MessageBlock[] = []
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue
+    const bullet = BULLET_LINE_PATTERN.exec(line)
+    const ordered = !bullet ? ORDERED_LINE_PATTERN.exec(line) : null
+    const last = blocks[blocks.length - 1]
+    if (bullet) {
+      if (last?.type === 'ul') last.items.push(bullet[1])
+      else blocks.push({ type: 'ul', items: [bullet[1]] })
+    } else if (ordered) {
+      if (last?.type === 'ol') last.items.push(ordered[1])
+      else blocks.push({ type: 'ol', items: [ordered[1]] })
+    } else if (last?.type === 'p') {
+      last.lines.push(line)
+    } else {
+      blocks.push({ type: 'p', lines: [line] })
+    }
+  }
+  return blocks
+}
+
+function renderMessageText(text: string) {
+  const blocks = parseMessageBlocks(text)
+  return (
+    <div className="space-y-1.5">
+      {blocks.map((block, bi) => {
+        if (block.type === 'p') {
+          return (
+            <p key={bi}>
+              {block.lines.map((line, li) => (
+                <span key={li}>
+                  {renderInline(line, `${bi}-${li}`)}
+                  {li < block.lines.length - 1 ? <br /> : null}
+                </span>
+              ))}
+            </p>
+          )
+        }
+        const listClassName = `space-y-0.5 ps-4 ${block.type === 'ul' ? 'list-disc' : 'list-decimal'}`
+        const items = block.items.map((item, ii) => <li key={ii}>{renderInline(item, `${bi}-${ii}`)}</li>)
+        return block.type === 'ul' ? (
+          <ul key={bi} className={listClassName}>
+            {items}
+          </ul>
+        ) : (
+          <ol key={bi} className={listClassName}>
+            {items}
+          </ol>
+        )
+      })}
+    </div>
   )
 }
 
@@ -68,12 +152,43 @@ const DASHBOARD_THEME_OVERRIDE = {
   '--muted': 'var(--dashboard-muted)',
 } as React.CSSProperties
 
+// Mini version of the gradient-ring avatar used for Noa's launcher in the
+// sidebar (SidebarNav.tsx) — repeated here so every one of her messages
+// carries the same "AI" identity instead of a flat icon.
 function AssistantLabel() {
   return (
-    <p className="mb-1 flex items-center gap-1 text-[11px] font-medium text-[--dashboard-muted]">
-      <Sparkles className="h-3 w-3 text-amber-500" />
-      עוזר האתר
+    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-[var(--dashboard-muted)]">
+      <span className={`flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-br ${ASSISTANT_GRADIENT_STOPS}`}>
+        <Sparkles className="h-2.5 w-2.5 text-white" />
+      </span>
+      נועה
     </p>
+  )
+}
+
+// Both bubbles are shades of the *exact* dashboard accent purple
+// (var(--dashboard-accent)) — not a separate Tailwind color scale (e.g.
+// "violet"), whose closest steps don't actually match this project's accent
+// hue. The tint is mixed from that one variable so it's always identical to
+// the purple used everywhere else in the dashboard.
+const ASSISTANT_TINT_BG = 'bg-[color-mix(in_oklab,var(--dashboard-accent)_12%,white)]'
+const ASSISTANT_TEXT = 'text-[var(--dashboard-accent)]'
+const USER_BUBBLE_CLASSES = 'bg-[var(--dashboard-accent)] text-white'
+const ASSISTANT_BUBBLE_CLASSES = `${ASSISTANT_TINT_BG} ${ASSISTANT_TEXT}`
+
+// Real speech-bubble tail (a rotated triangle), not just a tight corner
+// radius. `side` controls which bottom corner it hangs off of — matches the
+// bubble's own alignment (user bubbles sit on the right, assistant on the
+// left).
+function BubbleTail({ side, colorClassName }: { side: 'left' | 'right'; colorClassName: string }) {
+  return (
+    <span
+      aria-hidden
+      className={`absolute bottom-0 h-3 w-3 ${side === 'right' ? '-right-1' : '-left-1'} ${colorClassName}`}
+      style={{
+        clipPath: side === 'right' ? 'polygon(0% 0%, 100% 100%, 0% 100%)' : 'polygon(100% 0%, 100% 100%, 0% 100%)',
+      }}
+    />
   )
 }
 
@@ -96,10 +211,13 @@ export function AssistantWidget({
   const [imageError, setImageError] = useState<string | null>(null)
   const [uploadingHero, setUploadingHero] = useState(false)
   const [heroUploadError, setHeroUploadError] = useState<string | null>(null)
+  const [heroSlotPickerOpen, setHeroSlotPickerOpen] = useState(false)
+  const [pendingHeroSlot, setPendingHeroSlot] = useState<number | null>(null)
   const [streamingText, setStreamingText] = useState('')
   const [sending, setSending] = useState(false)
   const [pendingToolUseIds, setPendingToolUseIds] = useState<string[]>([])
   const [previews, setPreviews] = useState<Record<string, AssistantPreview>>({})
+  const [previewPayloads, setPreviewPayloads] = useState<Record<string, Record<string, unknown>>>({})
   const [previewStatus, setPreviewStatus] = useState<Record<string, ActionPreviewStatus>>({})
   const [previewBusy, setPreviewBusy] = useState<Record<string, boolean>>({})
   const [previewError, setPreviewError] = useState<Record<string, string>>({})
@@ -144,10 +262,18 @@ export function AssistantWidget({
     reader.readAsDataURL(file)
   }
 
+  function chooseHeroSlot(slot: number) {
+    setPendingHeroSlot(slot)
+    setHeroSlotPickerOpen(false)
+    heroFileInputRef.current?.click()
+  }
+
   async function handleHeroFileSelect(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     event.target.value = ''
-    if (!file) return
+    const slot = pendingHeroSlot
+    setPendingHeroSlot(null)
+    if (!file || !slot) return
 
     setHeroUploadError(null)
 
@@ -167,11 +293,11 @@ export function AssistantWidget({
         fileName: file.name,
         contentType: file.type,
         fileSize: file.size,
-        slot: 0,
+        slot: slot - 1,
       })
       await putToPresignedUrl(uploadUrl, file)
       await sendContent(
-        `תמונה חדשה הועלתה בהצלחה לאזור ההירו. path: ${path}. אנא הציעי להגדיר אותה כתמונת ההירו הראשית.`
+        `תמונה חדשה הועלתה בהצלחה לסלוט ${slot} של אזור ההירו. path: ${path}, slot: ${slot}. אנא הציעי להגדיר אותה כתמונת ההירו בסלוט הזה.`
       )
     } catch (error) {
       setHeroUploadError(error instanceof Error ? error.message : 'ההעלאה נכשלה')
@@ -243,6 +369,10 @@ export function AssistantWidget({
           } else if (event.type === 'tool_preview') {
             const toolUseId = event.toolUseId as string
             setPreviews((prev) => ({ ...prev, [toolUseId]: event.preview as AssistantPreview }))
+            setPreviewPayloads((prev) => ({
+              ...prev,
+              [toolUseId]: event.payload as Record<string, unknown>,
+            }))
             setPreviewStatus((prev) => ({ ...prev, [toolUseId]: 'pending' }))
             scrollToBottom()
           } else if (event.type === 'tool_error') {
@@ -319,10 +449,14 @@ export function AssistantWidget({
 
   async function handleApprove(toolUseId: string) {
     const preview = previews[toolUseId]
-    if (!preview) return
+    const payload = previewPayloads[toolUseId]
+    if (!preview || !payload) return
     setPreviewBusy((prev) => ({ ...prev, [toolUseId]: true }))
     try {
-      const payload = Object.fromEntries(preview.fields.map((field) => [field.key, field.after]))
+      // Submit the original, correctly-typed payload from the tool call —
+      // never rebuild one from preview.fields' display strings (e.g.
+      // "₪500", a comma-joined "includes" list): those are formatted for
+      // showing the before/after diff and are the wrong shape to resubmit.
       const result = await confirmAssistantAction(preview.actionType as AssistantActionType, payload)
       setPreviewStatus((prev) => ({ ...prev, [toolUseId]: 'approved' }))
       setPreviewLogId((prev) => ({ ...prev, [toolUseId]: result.logId }))
@@ -362,55 +496,70 @@ export function AssistantWidget({
 
   const inputDisabled = sending || pendingToolUseIds.length > 0 || uploadingHero
 
+  // dir="ltr" here so flex's cross-axis "start" means physical left — in the
+  // page's normal dir="rtl", items-start on a flex-col would align children
+  // to the *right* of this box instead, which visibly jerks the round
+  // launcher from left-6 over to the right edge of the (much wider) open
+  // chat panel's footprint. The Hebrew content inside gets dir="rtl" back.
   return (
-    <div className="fixed bottom-6 left-6 z-40 flex flex-col items-start gap-3" style={DASHBOARD_THEME_OVERRIDE}>
+    <div dir="ltr" className="fixed bottom-6 left-6 z-40 flex flex-col items-start gap-3" style={DASHBOARD_THEME_OVERRIDE}>
       {open ? (
-        <div className="flex h-[32rem] w-96 max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-xl border border-[--dashboard-border] bg-[--dashboard-background] shadow-2xl">
-          <div className="flex items-center justify-between border-b border-[--dashboard-border] px-4 py-3">
-            <p className="flex items-center gap-1.5 font-medium text-[--dashboard-foreground]">
-              <Sparkles className="h-4 w-4 text-amber-500" />
-              עוזר האתר
+        <div
+          dir="rtl"
+          className="flex h-[32rem] w-96 max-w-[calc(100vw-3rem)] flex-col overflow-hidden rounded-xl border border-[var(--dashboard-border)] bg-[var(--dashboard-background)] shadow-2xl"
+        >
+          <div className={`flex items-center justify-between bg-gradient-to-r ${ASSISTANT_GRADIENT_STOPS} px-4 py-3`}>
+            <p className="flex items-center gap-1.5 font-medium text-white">
+              <Sparkles className="h-4 w-4" />
+              נועה
             </p>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => (onDismiss ? onDismiss() : setOpen(false))}
-              title="סגירת העוזר — ניתן לפתוח שוב מסרגל הצד"
-              aria-label="סגירת העוזר"
+              title="סגירת נועה — ניתן לפתוח שוב מסרגל הצד"
+              aria-label="סגירת נועה"
+              className="text-white hover:bg-white/20 hover:text-white"
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-            {history.length === 0 && missingSlug && !slugNudgeDismissed ? (
-              <div className="space-y-3 rounded-lg border border-amber-300/60 bg-amber-50 p-3 text-sm text-amber-950">
-                <p>
-                  היי! שמתי לב שאין לך עדיין כתובת לאתר (slug). בלי זה האתר שלך לא יכול להיכנס לחיפוש של גוגל ואף
-                  אחד לא יכול להגיע אליו. רוצה שאעזור לך להגדיר אחת עכשיו?
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSlugNudgeDismissed(true)
-                      sendContent('אין לי כתובת (slug) מוגדרת לאתר. עזרי לי לבחור ולהגדיר אחת.')
-                    }}
-                  >
-                    כן, בואי נגדיר
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setSlugNudgeDismissed(true)}>
-                    אולי אחר כך
-                  </Button>
+            {history.length === 0 ? (
+              <div className="mr-auto max-w-[85%]">
+                <AssistantLabel />
+                <div className={`relative rounded-2xl px-3 py-2 text-sm ${ASSISTANT_BUBBLE_CLASSES}`}>
+                  {missingSlug && !slugNudgeDismissed ? (
+                    <>
+                      <p>
+                        היי, אני נועה! שמתי לב שאין לך עדיין כתובת לאתר (slug). בלי זה האתר שלך לא יכול להיכנס לחיפוש
+                        של גוגל ואף אחד לא יכול להגיע אליו. רוצה שאעזור לך להגדיר אחת עכשיו?
+                      </p>
+                      <div className="mt-3 flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setSlugNudgeDismissed(true)
+                            sendContent('אין לי כתובת (slug) מוגדרת לאתר. עזרי לי לבחור ולהגדיר אחת.')
+                          }}
+                        >
+                          כן, בואי נגדיר
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setSlugNudgeDismissed(true)}>
+                          אולי אחר כך
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <p>
+                      היי, אני נועה. אני כאן כדי לעזור לך למלא ולערוך את תוכן האתר — אודות, חבילות, בלוג, שאלות
+                      ותשובות, המלצות ועוד. אפשר גם לצרף תמונה של תגובת לקוח כדי להפוך אותה להמלצה. איך אפשר לעזור?
+                    </p>
+                  )}
+                  <BubbleTail side="left" colorClassName={ASSISTANT_TINT_BG} />
                 </div>
               </div>
-            ) : null}
-
-            {history.length === 0 && (!missingSlug || slugNudgeDismissed) ? (
-              <p className="text-sm text-[--dashboard-muted]">
-                שלום! אני כאן כדי לעזור לך למלא ולערוך את תוכן האתר — אודות, חבילות, בלוג, שאלות ותשובות, המלצות
-                ועוד. אפשר גם לצרף תמונה של תגובת לקוח כדי להפוך אותה להמלצה. איך אפשר לעזור?
-              </p>
             ) : null}
 
             {history.map((message, index) => (
@@ -432,8 +581,9 @@ export function AssistantWidget({
             {streamingText ? (
               <div className="mr-auto max-w-[85%]">
                 <AssistantLabel />
-                <div className="rounded-lg rounded-bl-sm bg-[--dashboard-border] px-3 py-2 text-sm text-[--dashboard-foreground]">
+                <div className={`relative rounded-2xl px-3 py-2 text-sm ${ASSISTANT_BUBBLE_CLASSES}`}>
                   {renderMessageText(streamingText)}
+                  <BubbleTail side="left" colorClassName={ASSISTANT_TINT_BG} />
                 </div>
               </div>
             ) : null}
@@ -441,9 +591,13 @@ export function AssistantWidget({
             {sending && !streamingText && pendingToolUseIds.length === 0 ? (
               <div className="mr-auto max-w-[85%]">
                 <AssistantLabel />
-                <div className="flex items-center gap-2 rounded-lg rounded-bl-sm bg-[--dashboard-border] px-3 py-2.5 text-sm text-[--dashboard-muted]">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  חושבת...
+                <div
+                  className={`relative flex items-center gap-1 rounded-2xl px-4 py-3 text-sm ${ASSISTANT_BUBBLE_CLASSES}`}
+                >
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60 [animation-delay:-0.3s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60 [animation-delay:-0.15s]" />
+                  <span className="h-2 w-2 animate-bounce rounded-full bg-current opacity-60" />
+                  <BubbleTail side="left" colorClassName={ASSISTANT_TINT_BG} />
                 </div>
               </div>
             ) : null}
@@ -451,12 +605,12 @@ export function AssistantWidget({
             {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
           </div>
 
-          <div className="border-t border-[--dashboard-border] p-3">
+          <div className="border-t border-[var(--dashboard-border)] p-3">
             {attachedImage ? (
-              <div className="mb-2 flex items-center gap-2 rounded-md border border-[--dashboard-border] p-1.5">
+              <div className="mb-2 flex items-center gap-2 rounded-md border border-[var(--dashboard-border)] p-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={attachedImage.previewUrl} alt="" className="h-10 w-10 rounded object-cover" />
-                <p className="flex-1 text-xs text-[--dashboard-muted]">תמונה מצורפת — תישלח רק לחילוץ הטקסט, לא תישמר</p>
+                <p className="flex-1 text-xs text-[var(--dashboard-muted)]">תמונה מצורפת — תישלח רק לחילוץ הטקסט, לא תישמר</p>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -472,7 +626,26 @@ export function AssistantWidget({
             {heroUploadError ? (
               <p className="mb-2 text-xs text-red-600">{heroUploadError}</p>
             ) : null}
-            {uploadingHero ? <p className="mb-2 text-xs text-[--dashboard-muted]">מעלה תמונה לאזור ההירו...</p> : null}
+            {uploadingHero ? <p className="mb-2 text-xs text-[var(--dashboard-muted)]">מעלה תמונה לאזור ההירו...</p> : null}
+            {heroSlotPickerOpen ? (
+              <div className="mb-2 flex items-center gap-2 rounded-md border border-[var(--dashboard-border)] p-2">
+                <p className="text-xs text-[var(--dashboard-muted)]">לאיזה סלוט?</p>
+                {[1, 2, 3].map((slot) => (
+                  <Button key={slot} size="sm" variant="outline" onClick={() => chooseHeroSlot(slot)}>
+                    תמונה {slot}
+                  </Button>
+                ))}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={() => setHeroSlotPickerOpen(false)}
+                  aria-label="ביטול"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : null}
 
             <div className="flex items-end gap-2">
               <input
@@ -505,7 +678,7 @@ export function AssistantWidget({
                 variant="outline"
                 size="icon"
                 disabled={inputDisabled}
-                onClick={() => heroFileInputRef.current?.click()}
+                onClick={() => setHeroSlotPickerOpen((prev) => !prev)}
                 title="העלאת תמונת הירו חדשה"
                 aria-label="העלאת תמונת הירו"
               >
@@ -529,7 +702,7 @@ export function AssistantWidget({
                       : 'כתבי הודעה...'
                 }
                 rows={2}
-                className="flex-1 resize-none rounded-md border border-[--dashboard-border] bg-transparent px-3 py-2 text-sm text-[--dashboard-foreground] outline-none focus-visible:ring-2 focus-visible:ring-[--dashboard-accent] disabled:opacity-50"
+                className="flex-1 resize-none rounded-md border border-[var(--dashboard-border)] bg-transparent px-3 py-2 text-sm text-[var(--dashboard-foreground)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--dashboard-accent)] disabled:opacity-50"
               />
               <Button
                 size="icon"
@@ -548,11 +721,11 @@ export function AssistantWidget({
         size="icon"
         onClick={() => setOpen(!open)}
         className="relative h-12 w-12 rounded-full shadow-lg"
-        aria-label="עוזר האתר"
+        aria-label="נועה, עוזרת האתר"
       >
         <Sparkles className="h-5 w-5" />
         {hasMissingContent && !open ? (
-          <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[--dashboard-background]" />
+          <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[var(--dashboard-background)]" />
         ) : null}
       </Button>
     </div>
@@ -585,8 +758,9 @@ function ChatBubble({
   if (message.role === 'user') {
     if (typeof message.content === 'string') {
       return (
-        <div className="ml-auto max-w-[85%] rounded-lg rounded-br-sm bg-[--dashboard-accent] px-3 py-2 text-sm text-[--dashboard-background]">
+        <div className={`relative ml-auto max-w-[85%] rounded-2xl px-3 py-2 text-sm ${USER_BUBBLE_CLASSES}`}>
           {message.content}
+          <BubbleTail side="right" colorClassName="bg-[var(--dashboard-accent)]" />
         </div>
       )
     }
@@ -596,7 +770,9 @@ function ChatBubble({
     if (!imageBlock && !textBlock) return null
 
     return (
-      <div className="ml-auto max-w-[85%] space-y-1.5 rounded-lg rounded-br-sm bg-[--dashboard-accent] px-3 py-2 text-sm text-[--dashboard-background]">
+      <div
+        className={`relative ml-auto max-w-[85%] space-y-1.5 rounded-2xl px-3 py-2 text-sm ${USER_BUBBLE_CLASSES}`}
+      >
         {imageBlock ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -606,6 +782,7 @@ function ChatBubble({
           />
         ) : null}
         {textBlock ? <p>{textBlock.text}</p> : null}
+        <BubbleTail side="right" colorClassName="bg-[var(--dashboard-accent)]" />
       </div>
     )
   }
@@ -620,8 +797,9 @@ function ChatBubble({
           return (
             <div key={index}>
               {index === firstTextIndex ? <AssistantLabel /> : null}
-              <div className="rounded-lg rounded-bl-sm bg-[--dashboard-border] px-3 py-2 text-sm text-[--dashboard-foreground]">
+              <div className={`relative rounded-2xl px-3 py-2 text-sm ${ASSISTANT_BUBBLE_CLASSES}`}>
                 {renderMessageText(block.text)}
+                <BubbleTail side="left" colorClassName={ASSISTANT_TINT_BG} />
               </div>
             </div>
           )

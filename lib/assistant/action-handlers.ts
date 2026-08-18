@@ -285,28 +285,30 @@ export const ASSISTANT_ACTION_HANDLERS: Record<AssistantActionType, AssistantAct
     // only *video* hero mode is gated (see PRO_FEATURES / assistant spec §2.7).
     proFeature: null,
     async execute(ctx, payload) {
-      const input = payload as { path: string }
+      // slot is 1-based on the wire (matches how it's shown to the model
+      // and photographer: "סלוט 1/2/3") — the DB array and
+      // finalizeBrandingUpload/removeHeroImageSlot are 0-based.
+      const input = payload as { path: string; slot: number }
+      const slotIndex = input.slot - 1
       const { data: before } = await ctx.supabase
         .from('users')
-        .select('hero_desktop_urls, hero_desktop_url')
+        .select('hero_desktop_urls')
         .eq('id', ctx.userId)
         .maybeSingle()
-      await finalizeBrandingUpload('hero_desktop', input.path, 0)
-      const beforeRow = (before ?? {}) as { hero_desktop_urls?: string[] | null; hero_desktop_url?: string | null }
-      return {
-        previousState: {
-          hero_desktop_urls: beforeRow.hero_desktop_urls ?? null,
-          hero_desktop_url: beforeRow.hero_desktop_url ?? null,
-        },
-      }
+      const beforeRow = (before ?? {}) as { hero_desktop_urls?: string[] | null }
+      const previousSlotValue = beforeRow.hero_desktop_urls?.[slotIndex] || null
+
+      await finalizeBrandingUpload('hero_desktop', input.path, slotIndex)
+
+      return { previousState: { slot_index: slotIndex, previous_value: previousSlotValue } }
     },
     async undo(_ctx, previousState) {
-      const prevUrls = (previousState.hero_desktop_urls as string[] | null) ?? []
-      const prevSlot0 = prevUrls[0] || (previousState.hero_desktop_url as string | null)
-      if (prevSlot0) {
-        await finalizeBrandingUpload('hero_desktop', prevSlot0, 0)
+      const slotIndex = previousState.slot_index as number
+      const previousValue = previousState.previous_value as string | null
+      if (previousValue) {
+        await finalizeBrandingUpload('hero_desktop', previousValue, slotIndex)
       } else {
-        await removeHeroImageSlot({ variant: 'desktop', slot: 0 })
+        await removeHeroImageSlot({ variant: 'desktop', slot: slotIndex })
       }
     },
   },

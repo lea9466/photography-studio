@@ -58,3 +58,16 @@ export interface AssistantModelProvider {
   /** Streams one assistant turn. Yields text deltas, then exactly one message_end. */
   streamChat(request: AssistantChatRequest): AsyncGenerator<AssistantStreamEvent>
 }
+
+// Thrown by a provider when it fails in a way the chat route should translate
+// into a friendly, Hebrew, non-technical message for the widget — instead of
+// forwarding the vendor SDK's raw error text (which can be a wall of JSON).
+export class AssistantProviderError extends Error {
+  readonly kind: 'quota' | 'other'
+
+  constructor(message: string, kind: 'quota' | 'other' = 'other', options?: { cause?: unknown }) {
+    super(message, options)
+    this.name = 'AssistantProviderError'
+    this.kind = kind
+  }
+}

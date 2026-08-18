@@ -1,11 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages'
-import type {
-  AssistantModelProvider,
-  AssistantChatRequest,
-  AssistantStreamEvent,
-  AssistantContentBlock,
-  AssistantStopReason,
+import {
+  AssistantProviderError,
+  type AssistantModelProvider,
+  type AssistantChatRequest,
+  type AssistantStreamEvent,
+  type AssistantContentBlock,
+  type AssistantStopReason,
 } from './types'
 
 const MODEL_ID = process.env.ASSISTANT_MODEL_ID?.trim() || 'claude-opus-5'
@@ -60,18 +61,29 @@ export const anthropicProvider: AssistantModelProvider = {
       messages: toAnthropicMessages(request.messages),
     })
 
-    for await (const event of anthropicStream) {
-      if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-        yield { type: 'text_delta', text: event.delta.text }
+    try {
+      for await (const event of anthropicStream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          yield { type: 'text_delta', text: event.delta.text }
+        }
       }
-    }
 
-    const finalMessage = await anthropicStream.finalMessage()
+      const finalMessage = await anthropicStream.finalMessage()
 
-    yield {
-      type: 'message_end',
-      stopReason: mapStopReason(finalMessage.stop_reason),
-      content: finalMessage.content as unknown as AssistantContentBlock[],
+      yield {
+        type: 'message_end',
+        stopReason: mapStopReason(finalMessage.stop_reason),
+        content: finalMessage.content as unknown as AssistantContentBlock[],
+      }
+    } catch (error) {
+      if (error instanceof Anthropic.APIError && error.status === 429) {
+        throw new AssistantProviderError(
+          'חריגה ממכסת השימוש הזמנית אצל ספק ה-AI.',
+          'quota',
+          { cause: error }
+        )
+      }
+      throw error
     }
   },
 }

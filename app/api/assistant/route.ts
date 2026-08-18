@@ -7,6 +7,7 @@ import { ALL_ASSISTANT_TOOLS, buildPreviewForTool } from '@/lib/assistant/tools'
 import { checkAssistantChatRateLimit } from '@/lib/assistant/rate-limiter'
 import { isAssistantConfigured } from '@/lib/assistant/config'
 import { getAssistantProvider } from '@/lib/assistant/provider'
+import { AssistantProviderError } from '@/lib/assistant/provider/types'
 import type { AssistantContentBlock, AssistantMessage } from '@/lib/assistant/provider/types'
 
 export const runtime = 'nodejs'
@@ -29,7 +30,7 @@ function encodeEvent(event: Record<string, unknown>): Uint8Array {
 
 export async function POST(request: Request) {
   if (!isAssistantConfigured()) {
-    return jsonError('עוזר ה-AI אינו מוגדר כרגע', 503)
+    return jsonError('נועה אינה זמינה כרגע', 503)
   }
 
   const { userId, supabase } = await requireDashboardContext()
@@ -95,12 +96,19 @@ export async function POST(request: Request) {
         for (const block of finalContent) {
           if (block.type !== 'tool_use') continue
           try {
-            const { preview } = buildPreviewForTool(block.name, block.input, context)
+            const { preview, payload } = buildPreviewForTool(block.name, block.input, context)
             controller.enqueue(
               encodeEvent({
                 type: 'tool_preview',
                 toolUseId: block.id,
                 preview,
+                // The already-validated, correctly-typed payload (numbers as
+                // numbers, arrays as arrays) — the client submits this as-is
+                // on approval. It must NOT rebuild a payload from the
+                // preview's display strings (e.g. "₪500", a comma-joined
+                // "includes" string): those are for showing the diff, not
+                // for resubmission, and lose type information.
+                payload,
               })
             )
           } catch (error) {
@@ -117,12 +125,14 @@ export async function POST(request: Request) {
         controller.enqueue(encodeEvent({ type: 'message_end', stopReason, content: finalContent }))
         controller.close()
       } catch (error) {
-        controller.enqueue(
-          encodeEvent({
-            type: 'error',
-            message: error instanceof Error ? error.message : 'שגיאה לא צפויה',
-          })
-        )
+        // Never forward a vendor SDK's raw error text to the widget (it can
+        // be a wall of nested JSON) — log it for us, show something human.
+        console.error('[assistant] streamChat failed', error)
+        const message =
+          error instanceof AssistantProviderError && error.kind === 'quota'
+            ? 'נועה עמוסה כרגע (חריגה זמנית ממכסת השימוש) — נסי שוב בעוד כמה דקות.'
+            : 'אירעה שגיאה אצל נועה. נסי שוב, ואם זה חוזר שוב אפשר לפנות לתמיכה.'
+        controller.enqueue(encodeEvent({ type: 'error', message }))
         controller.close()
       }
     },

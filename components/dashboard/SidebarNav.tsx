@@ -7,6 +7,32 @@ import { Menu, X, LogOut, ExternalLink, Eye, EyeOff, Sparkles } from 'lucide-rea
 import { Logo } from './Logo'
 import { DashboardNavMenu } from './DashboardNavMenu'
 import { updateSiteUnderConstruction } from '@/lib/actions/site-settings.actions'
+import { ASSISTANT_GRADIENT_STOPS } from '@/lib/assistant/brand'
+
+function AssistantCircleButton({
+  onClick,
+  hasMissingContent,
+}: {
+  onClick: () => void
+  hasMissingContent: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="נועה — עוזרת האתר"
+      aria-label="נועה, עוזרת האתר"
+      className={`relative h-10 w-10 shrink-0 rounded-full bg-gradient-to-br ${ASSISTANT_GRADIENT_STOPS} p-[2px] transition-transform duration-200 hover:scale-105`}
+    >
+      <span className="flex h-full w-full items-center justify-center rounded-full bg-[--dashboard-background]">
+        <Sparkles className="h-4 w-4 text-amber-500" />
+      </span>
+      {hasMissingContent ? (
+        <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[--dashboard-background]" />
+      ) : null}
+    </button>
+  )
+}
 
 type SidebarNavProps = {
   userName?: string
@@ -153,22 +179,6 @@ export function SidebarNav({
                 <span className="text-sm">צפי באתר שלי</span>
               </a>
             ) : null}
-            {onOpenAssistant ? (
-              <button
-                type="button"
-                onClick={() => {
-                  onMobileClose?.()
-                  onOpenAssistant()
-                }}
-                className="relative flex w-full items-center gap-3 rounded-xl border border-[--dashboard-border] bg-[--dashboard-surface] px-4 py-3 text-right text-[--dashboard-muted] transition-all duration-200 hover:bg-[--dashboard-surface] hover:text-[--dashboard-foreground]"
-              >
-                <Sparkles className="h-5 w-5 shrink-0 text-amber-500" />
-                <span className="text-sm font-medium">עוזר האתר</span>
-                {assistantHasMissingContent ? (
-                  <span className="absolute left-3 top-1/2 h-2 w-2 -translate-y-1/2 rounded-full bg-amber-500" />
-                ) : null}
-              </button>
-            ) : null}
             {!siteUnavailableLocked ? (
               <div className="space-y-1.5">
                 <button
@@ -206,13 +216,35 @@ export function SidebarNav({
         ) : null}
 
         {!showExpanded ? (
-          <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
-            {userName?.charAt(0) || 'U'}
-          </div>
-        ) : (
-          <div className="flex items-center gap-3">
+          <>
             <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
               {userName?.charAt(0) || 'U'}
+            </div>
+            {onOpenAssistant ? (
+              <AssistantCircleButton
+                onClick={() => {
+                  onMobileClose?.()
+                  onOpenAssistant()
+                }}
+                hasMissingContent={assistantHasMissingContent}
+              />
+            ) : null}
+          </>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
+                {userName?.charAt(0) || 'U'}
+              </div>
+              {onOpenAssistant ? (
+                <AssistantCircleButton
+                  onClick={() => {
+                    onMobileClose?.()
+                    onOpenAssistant()
+                  }}
+                  hasMissingContent={assistantHasMissingContent}
+                />
+              ) : null}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-[--dashboard-foreground] truncate">

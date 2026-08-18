@@ -133,6 +133,10 @@ export type DeleteTestimonialInput = z.infer<typeof deleteTestimonialSchema>
 
 export const setHeroImageSchema = z.object({
   path: z.string().trim().min(1, 'נתיב הקובץ חסר'),
+  // 1-based in the wire format (matches how slots are shown to the model
+  // and the photographer: "סלוט 1/2/3") — converted to a 0-based array
+  // index only at the point it's used against hero_desktop_urls.
+  slot: z.coerce.number().int().min(1, 'סלוט לא תקין').max(3, 'סלוט לא תקין'),
 })
 
 export type SetHeroImageInput = z.infer<typeof setHeroImageSchema>

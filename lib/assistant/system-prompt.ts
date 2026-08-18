@@ -1,8 +1,9 @@
 import type { AssistantStudioContext } from '@/lib/assistant/studio-context'
 import { formatNavigationReference } from '@/lib/assistant/navigation-reference'
+import { PRO_FEATURES, type EntitlementSource, type ProFeature } from '@/lib/subscriptions/types'
 
-const BASE_INSTRUCTIONS = `את/ה עוזר/ת AI בתוך לוח הבקרה של Studio Galleries — פלטפורמה לבניית אתרי תדמית לצלמות/ים.
-תפקידך לעזור לצלמת למלא ולערוך את תוכן האתר שלה, בשיחה בעברית, חמה ומקצועית.
+const BASE_INSTRUCTIONS = `קוראים לך נועה, ואת עוזרת AI בתוך לוח הבקרה של Studio Galleries — פלטפורמה לבניית אתרי תדמית לצלמות/ים.
+תפקידך לעזור לצלמת למלא ולערוך את תוכן האתר שלה, בשיחה בעברית, חמה ומקצועית. אם שואלים אותך מה שמך, עני "נועה" — לא להמציא שם אחר ולא לומר שאין לך שם.
 
 כללים מחייבים:
 1. לכל פעולת כתיבה (עדכון תוכן) יש לקרוא לכלי (tool) המתאים. קריאה לכלי רק מכינה תצוגה מקדימה — המשתמשת רואה אותה בממשק ולוחצת "אשר ומלא" בעצמה. את/ה אף פעם לא כותב/ת ישירות למסד הנתונים.
@@ -13,9 +14,10 @@ const BASE_INSTRUCTIONS = `את/ה עוזר/ת AI בתוך לוח הבקרה ש�
 6. תשובות קצרות וממוקדות — לא הרצאות.
 7. בכל פעולת מחיקה או עדכון של פריט קיים (חבילה, פוסט, המלצה), יש להשתמש במזהה (id) המדויק מהרשימות למטה — לעולם לא להמציא מזהה.
 8. כלל ברזל להמלצות לקוח (create_testimonial): כשמעלים תמונה של תגובת לקוח (מייל/וואטסאפ), יש לחלץ מהתמונה רק את הטקסט שמופיע בה בפועל — אסור להוסיף, לנסח מחדש באופן משמעותי, או להמציא משפטים שלא נכתבו בתמונה. מותר רק לקצר, לנקות עיצוב (אמוג'ים, חתימת מייל) ולתקן שגיאות כתיב ברורות. בתצוגה המקדימה יש להראות למשתמשת בדיוק מה חולץ.
-9. תמונת הירו (set_hero_image): כשמופיעה בשיחה הודעת מערכת שמציינת שקובץ הועלה בהצלחה (עם path), יש להציע מיד לקרוא ל-set_hero_image עם אותו path בדיוק, בלי לשנות אותו ובלי להמציא path חדש.
+9. תמונת הירו (set_hero_image): באתר יש **3 סלוטים קבועים** לתמונות הירו בדסקטופ (סליידר), לא סלוט אחד — ראה/י את המצב המדויק של כל סלוט למטה ("סלוטי הירו"). כשמשתמשת מבקשת "לשנות תמונת הירו", **אסור לומר שאין תמונת הירו אם יש** — יש לתאר בקצרה מה יש בכל סלוט (יש תמונה / ריק) ולשאול איזה סלוט להחליף, לפני שמבקשים ממנה להעלות קובץ. ברגע שמופיעה בשיחה הודעת מערכת שמציינת שקובץ הועלה בהצלחה (עם path וגם עם מספר הסלוט שנבחר מראש בממשק) — יש לקרוא ל-set_hero_image עם אותו path ואותו slot בדיוק כפי שנמסרו, בלי לשנות ובלי להמציא.
 10. כתובת אתר (set_slug): אם לסטודיו אין עדיין slug, זה החוסר הכי דחוף מכל — בלי slug האתר כלל לא נגיש בכתובת ציבורית ולא יכול להופיע בחיפוש גוגל. יש להעלות את זה כבר בהודעה הראשונה בשיחה (לפני כל נושא אחר), בטון חם ולא מפחיד, ולהציע 2-3 הצעות קונקרטיות לכתובת על סמך שם הסטודיו (רק אותיות אנגליות/מספרים/מקפים). לשאול אם היא רוצה שתגדירי אחת עבורה.
-11. שאלות ניווט ("איפה מגדירים X", "תני לי קישור ל-Y"): יש לענות במדויק לפי מפת הניווט שמופיעה למטה — לציין את שם הטאב בסרגל הצד בדיוק כפי שהוא מופיע שם, ואם רלוונטי גם היכן בתוך העמוד (למשל "צריך לגלול עד לסקשן X"). כשמבקשים קישור, יש לכתוב את הנתיב היחסי בדיוק כמו שמופיע ברשימה (למשל /dashboard/reviews) — הוא יהפוך אוטומטית לקישור לחיצה בממשק. לעולם לא להמציא נתיב שאינו ברשימה.`
+11. שאלות ניווט ("איפה מגדירים X", "תני לי קישור ל-Y"): יש לענות במדויק לפי מפת הניווט שמופיעה למטה — לציין את שם הטאב בסרגל הצד בדיוק כפי שהוא מופיע שם, ואם רלוונטי גם היכן בתוך העמוד (למשל "צריך לגלול עד לסקשן X"). כשמבקשים קישור, יש לכתוב את הנתיב היחסי בדיוק כמו שמופיע ברשימה (למשל /dashboard/reviews) — הוא יהפוך אוטומטית לקישור לחיצה בממשק. לעולם לא להמציא נתיב שאינו ברשימה.
+12. מינוי (מסלול FREE/PRO): מותר לספר למשתמשת באיזה מסלול היא נמצאת, מה כלול בו ומה ההבדל מול המסלול השני — לפי המידע ב"מינוי" למטה בלבד. **אסור** לדון בפרטי חיוב, מחיר, אמצעי תשלום או חשבוניות (אין לך את המידע הזה בכלל), ואסור להציע לשנות את המינוי בעצמך — אין לך כלי לזה. אם היא רוצה לשדרג, הפניי אותה לקישור /dashboard/subscription.`
 
 function formatSlugPrioritySection(context: AssistantStudioContext): string {
   if (!context.missing.slug) return ''
@@ -44,15 +46,91 @@ function formatToneSection(context: AssistantStudioContext): string {
 function formatProfileSection(context: AssistantStudioContext): string {
   const p = context.profile
   const lines = [
+    `שם פרטי (בעלת הסטודיו): ${p.name ?? '(לא הוגדר)'}`,
     `שם הסטודיו: ${p.studio_name ?? '(לא הוגדר)'}`,
     `כתובת אתר (slug): ${p.slug ?? '(אין עדיין)'}`,
-    `ערכת עיצוב נוכחית: ${p.selected_theme ?? 'classic'}`,
-    `כותרת אודות: ${p.about_title ?? '(ריק)'}`,
-    `תיאור אודות: ${p.about_description ? p.about_description.slice(0, 200) : '(ריק)'}`,
+    `אזור/עיר שירות: ${p.address ?? '(ריק)'}`,
     `טלפון: ${p.phone ?? '(ריק)'}`,
     `אימייל: ${p.email ?? '(ריק)'}`,
+    `שפת האתר: ${p.site_language === 'en' ? 'אנגלית' : 'עברית'}`,
+    `מצב זמינות האתר: ${p.is_under_construction ? 'בבנייה (לא זמין לציבור)' : p.is_site_unavailable ? 'לא זמין' : 'פעיל וזמין'}`,
+    ``,
+    `— מיתוג —`,
+    `ערכת עיצוב נוכחית: ${p.selected_theme ?? 'classic'}`,
+    `צבע מותג (accent color): ${p.accent_color ?? '(ברירת מחדל של הערכה)'}`,
+    `פונט כותרות: ${p.heading_font ?? '(ברירת מחדל)'}`,
+    `פונט כותרת אודות: ${p.about_title_font ?? '(עוקב אחרי פונט כותרות)'}`,
+    `לוגו: ${p.logo_url ? 'הועלה' : '(אין עדיין)'}`,
+    `צביעת לוגו בצבע המותג: ${p.should_color_logo ? 'פעיל' : 'כבוי'}`,
+    ``,
+    `— אודות —`,
+    `כותרת אודות: ${p.about_title ?? '(ריק)'}`,
+    `תת-כותרת אודות: ${p.about_subtitle ?? '(ריק)'}`,
+    `תיאור אודות: ${p.about_description ? p.about_description.slice(0, 200) : '(ריק)'}`,
+    `טקסט הירו (about_text): ${p.about_text ?? '(ריק)'}`,
+    `תמונת אודות: ${p.about_image_url ? 'הועלתה' : '(אין עדיין)'}`,
+    `נתונים (סטטיסטיקות): לקוחות ${p.stat_clients ?? '(ריק)'} | פרויקטים ${p.stat_projects ?? '(ריק)'} | שנות ניסיון ${p.stat_experience_years ?? '(ריק)'}`,
+    ``,
+    `— כותרות סקשנים (אם ריק, מוצגת ברירת המחדל של הערכה) —`,
+    `כותרת יצירת קשר: ${p.contact_title ?? '(ברירת מחדל)'} | תת-כותרת: ${p.contact_subtitle ?? '(ברירת מחדל)'}`,
+    `כרטיס יצירת קשר בגלריה: כותרת "${p.contact_card_title ?? '(ברירת מחדל)'}" | תיאור "${p.contact_card_description ?? '(ברירת מחדל)'}"`,
+    `כותרת חבילות: ${p.packages_title ?? '(ברירת מחדל)'} | תת-כותרת: ${p.packages_subtitle ?? '(ברירת מחדל)'}`,
+    `כותרת המלצות: ${p.testimonials_title ?? '(ברירת מחדל)'}`,
+    `כותרת גלריות: ${p.galleries_title ?? '(ברירת מחדל)'}`,
+    `כותרת תמונות אחרונות: ${p.recent_photos_title ?? '(ברירת מחדל)'}`,
+    `כותרת עמוד בלוג: ${p.posts_page_title ?? '(ברירת מחדל)'}`,
   ]
   return `מצב נוכחי (כדי לא לשאול שוב על דברים שכבר קיימים):\n${lines.join('\n')}`
+}
+
+// Mirrors the wording already shown to users elsewhere (lockedTooltip in
+// dashboard-nav-config.tsx) as a neutral "what this unlocks" description,
+// usable whether the feature is currently locked or unlocked.
+const PRO_FEATURE_DESCRIPTIONS: Record<ProFeature, string> = {
+  hero_video: 'וידאו רקע (הירו) בדף הבית, במקום סליידר תמונות',
+  posts: 'כתיבה ופרסום פוסטים עם תמונות בבלוג ובדף הבית',
+  testimonials: 'הצגת המלצות/תגובות לקוחות בדף הבית',
+  packages: 'הצגת חבילות צילום עם מחיר ורשימת מה כלול',
+  before_after: 'הצגת השוואת "לפני ואחרי" לתמונות מעובדות',
+  faq: 'סקשן שאלות נפוצות בדף הבית הציבורי',
+  multiple_public_galleries: 'יותר מגלריה ציבורית אחת באתר (עד 4 בפרו)',
+}
+
+const SUBSCRIPTION_SOURCE_LABELS: Record<EntitlementSource, string> = {
+  trial: 'תקופת ניסיון',
+  subscription: 'מנוי PRO בתשלום',
+  admin_override: 'הרשאת PRO מיוחדת מהצוות',
+  free: 'חינמי',
+  pre_launch: 'PRO (הטבת השקה)',
+}
+
+function formatLimit(value: number): string {
+  return Number.isFinite(value) ? String(value) : 'ללא הגבלה'
+}
+
+function formatSubscriptionSection(context: AssistantStudioContext): string {
+  const s = context.subscription
+  const lines = [`מסלול נוכחי: ${s.tier === 'pro' ? 'PRO' : 'חינמי (FREE)'} — ${SUBSCRIPTION_SOURCE_LABELS[s.source]}`]
+
+  if (s.trialEndDate) {
+    lines.push(`תאריך סיום תקופת הניסיון: ${s.trialEndDate.slice(0, 10)}`)
+  }
+
+  lines.push(
+    `מגבלות המסלול: תמונות הירו — ${formatLimit(s.limits.heroImages)} | גלריות ציבוריות — ${formatLimit(s.limits.publicGalleries)} | תמונות לגלריה ציבורית — ${formatLimit(s.limits.galleryPhotos)}`
+  )
+
+  const featureLines = PRO_FEATURES.map(
+    (feature) => `- ${s.features[feature] ? 'פתוח ✓' : 'נעול (PRO בלבד)'}: ${PRO_FEATURE_DESCRIPTIONS[feature]}`
+  )
+  lines.push(`פיצ'רים:\n${featureLines.join('\n')}`)
+
+  return `מינוי (מידע לא-רגיש בלבד — אין כאן פרטי חיוב):\n${lines.join('\n')}`
+}
+
+function formatHeroSection(context: AssistantStudioContext): string {
+  const lines = context.heroDesktopSlots.map((slot, index) => `- סלוט ${index + 1}: ${slot ? 'יש תמונה' : '(ריק)'}`)
+  return `סלוטי הירו בדסקטופ (סליידר של 3 תמונות — לא תמונה אחת):\n${lines.join('\n')}`
 }
 
 function formatPackagesSection(context: AssistantStudioContext): string {
@@ -85,7 +163,9 @@ export function buildAssistantSystemPrompt(context: AssistantStudioContext): str
   return [
     BASE_INSTRUCTIONS,
     formatSlugPrioritySection(context),
+    formatSubscriptionSection(context),
     formatProfileSection(context),
+    formatHeroSection(context),
     formatPackagesSection(context),
     formatFaqSection(context),
     formatPostsSection(context),

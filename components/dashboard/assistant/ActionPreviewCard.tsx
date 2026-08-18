@@ -35,25 +35,25 @@ export function ActionPreviewCard({
   undoBusy,
 }: ActionPreviewCardProps) {
   return (
-    <div className="max-w-md rounded-xl border border-[--dashboard-border] bg-[--dashboard-background] p-4 shadow-sm">
-      <p className="text-base font-semibold text-[--dashboard-foreground]">{preview.title}</p>
+    <div className="max-w-md rounded-xl border border-[var(--dashboard-border)] bg-[var(--dashboard-background)] p-4 shadow-sm">
+      <p className="text-base font-semibold text-[var(--dashboard-foreground)]">{preview.title}</p>
 
       <div className="mt-3 space-y-3">
         {preview.fields.map((field) => (
           <div key={field.key} className="space-y-1 text-sm">
-            <p className="font-medium text-[--dashboard-foreground]">{field.label}</p>
+            <p className="font-medium text-[var(--dashboard-foreground)]">{field.label}</p>
             {field.before ? (
-              <p className="text-[--dashboard-muted] line-through decoration-[--dashboard-muted]/60">
+              <p className="text-[var(--dashboard-muted)] line-through decoration-[var(--dashboard-muted)]/60">
                 {field.before}
               </p>
             ) : null}
-            <p className="whitespace-pre-wrap text-[--dashboard-foreground]">{field.after || '(ריק)'}</p>
+            <p className="whitespace-pre-wrap text-[var(--dashboard-foreground)]">{field.after || '(ריק)'}</p>
             {field.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={field.imageUrl}
                 alt=""
-                className="mt-1 h-32 w-full rounded-md border border-[--dashboard-border] object-cover"
+                className="mt-1 h-32 w-full rounded-md border border-[var(--dashboard-border)] object-cover"
               />
             ) : null}
           </div>
@@ -88,7 +88,7 @@ export function ActionPreviewCard({
         ) : null}
 
         {status === 'cancelled' ? (
-          <p className="pt-2 text-sm text-[--dashboard-muted]">בוטל — לא נשמר שינוי</p>
+          <p className="pt-2 text-sm text-[var(--dashboard-muted)]">בוטל — לא נשמר שינוי</p>
         ) : null}
 
         {status === 'error' ? (
