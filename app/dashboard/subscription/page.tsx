@@ -6,6 +6,7 @@ import { SubscriptionBillingPanel } from '@/components/dashboard/SubscriptionBil
 import { SubscriptionPlanBadge } from '@/components/dashboard/SubscriptionPlanBadge'
 import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
 import { createPaymentService } from '@/lib/payments/server'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 
 export default async function SubscriptionPage({
   searchParams,
@@ -40,6 +41,7 @@ export default async function SubscriptionPage({
   const referralCode = row?.referral_code || row?.slug || null
   const siteUnavailableLocked =
     !isImpersonating && Boolean(row?.is_site_unavailable)
+  const entitlements = await getStudioEntitlements(userId)
 
   if (!row?.trial_end_date) {
     if (siteUnavailableLocked) {
@@ -94,7 +96,7 @@ export default async function SubscriptionPage({
                 <h1 className="text-2xl font-bold tracking-tight text-[--foreground] md:text-[1.65rem]">
                   מינוי
                 </h1>
-                <SubscriptionPlanBadge plan="free" />
+                <SubscriptionPlanBadge plan={entitlements.isPro ? 'pro' : 'free'} />
               </div>
               <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
                 מעקב אחר תקופת הניסיון ושיתוף עם חברות צלמות

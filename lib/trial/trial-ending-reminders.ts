@@ -5,6 +5,28 @@ import {
 import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const FALLBACK_MONTHLY_PRICE = '5'
+
+function formatShekels(agorot: number) {
+  const amount = agorot / 100
+  return Number.isInteger(amount) ? String(amount) : amount.toFixed(2)
+}
+
+/** Live monthly price from `subscription_plans`, so reminder emails never
+ *  quote a stale number after a price change in the admin panel. */
+async function getMonthlyPrice(
+  admin: ReturnType<typeof createAdminClient>
+): Promise<string> {
+  const { data } = await admin
+    .from('subscription_plans')
+    .select('amount_agorot')
+    .eq('code', 'studio_monthly')
+    .eq('is_active', true)
+    .maybeSingle()
+
+  return data ? formatShekels(data.amount_agorot) : FALLBACK_MONTHLY_PRICE
+}
+
 /**
  * `update` — soft status email while checkout is closed (≤3 days remaining).
  * `payment` — payment CTA email once checkout is open (exact UTC day+3 window).
@@ -16,6 +38,7 @@ export type TrialEndingReminderCandidate = {
   email: string
   name: string | null
   trial_end_date: string
+  slug: string | null
 }
 
 export type TrialEndingReminderSummary = {
@@ -120,6 +143,7 @@ export type TrialEndingReminderDeps = {
   sendReminder: (input: {
     name: string
     email: string
+    slug: string | null
     mode: TrialReminderMode
   }) => Promise<void>
   now?: () => Date
@@ -178,6 +202,7 @@ export async function processTrialEndingReminders(
       await deps.sendReminder({
         name: candidate.name?.trim() || 'שם',
         email: candidate.email.trim(),
+        slug: candidate.slug?.trim() || null,
         mode: deps.mode,
       })
       summary.sent += 1
@@ -223,6 +248,7 @@ export async function runTrialEndingReminders(): Promise<TrialEndingReminderSumm
   console.info('[trial-ending-reminders] mode selected', { mode })
 
   const admin = createAdminClient()
+  const monthlyPrice = await getMonthlyPrice(admin)
 
   const summary = await processTrialEndingReminders({
     mode,
@@ -230,7 +256,7 @@ export async function runTrialEndingReminders(): Promise<TrialEndingReminderSumm
     async listCandidates(window) {
       const { data, error } = await admin
         .from('users')
-        .select('id, email, name, trial_end_date')
+        .select('id, email, name, trial_end_date, slug')
         .is('trial_ending_email_sent_at', null)
         .not('email', 'is', null)
         .neq('email', '')
@@ -284,10 +310,13 @@ export async function runTrialEndingReminders(): Promise<TrialEndingReminderSumm
           ? await sendTrialEndingReminderEmail({
               name: input.name,
               email: input.email,
+              monthlyPrice,
+              slug: input.slug,
             })
           : await sendTrialUpdateEmail({
               name: input.name,
               email: input.email,
+              monthlyPrice,
             })
       // Dev stub must not leave a permanent claim without a real send.
       if (!result.sent) {

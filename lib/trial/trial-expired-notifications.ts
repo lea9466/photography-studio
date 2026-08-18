@@ -7,6 +7,7 @@ export type TrialExpiredCandidate = {
   email: string
   name: string | null
   trial_end_date: string
+  slug: string | null
 }
 
 export type TrialExpiredNotificationSummary = {
@@ -33,7 +34,11 @@ export type TrialExpiredNotificationDeps = {
   getActiveSubscriptionUserIds: (userIds: string[]) => Promise<Set<string>>
   claimNotification: (userId: string) => Promise<string | null>
   releaseClaim: (userId: string, claimedAt: string) => Promise<void>
-  sendNotification: (input: { name: string; email: string }) => Promise<void>
+  sendNotification: (input: {
+    name: string
+    email: string
+    slug: string | null
+  }) => Promise<void>
   now?: () => Date
 }
 
@@ -91,6 +96,7 @@ export async function processTrialExpiredNotifications(
       await deps.sendNotification({
         name: candidate.name?.trim() || 'שם',
         email: candidate.email.trim(),
+        slug: candidate.slug?.trim() || null,
       })
       summary.sent += 1
     } catch (error) {
@@ -127,7 +133,7 @@ export async function runTrialExpiredNotifications(): Promise<TrialExpiredNotifi
     async listCandidates(now) {
       const { data, error } = await admin
         .from('users')
-        .select('id, email, name, trial_end_date')
+        .select('id, email, name, trial_end_date, slug')
         .is('trial_expired_email_sent_at', null)
         .not('email', 'is', null)
         .neq('email', '')
@@ -178,6 +184,7 @@ export async function runTrialExpiredNotifications(): Promise<TrialExpiredNotifi
         name: input.name,
         email: input.email,
         checkoutEnabled,
+        slug: input.slug,
       })
       if (!result.sent) {
         throw new Error('EmailProviderUnavailable')

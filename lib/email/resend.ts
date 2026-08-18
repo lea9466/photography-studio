@@ -408,6 +408,7 @@ export async function sendWelcomeEmail(input: {
 export async function sendTrialUpdateEmail(input: {
   name: string
   email: string
+  monthlyPrice: string
 }): Promise<{ sent: boolean }> {
   const resend = requireResendOrSafeStub({
     template: 'trial-update',
@@ -424,7 +425,7 @@ export async function sendTrialUpdateEmail(input: {
       '',
       'רצינו לעדכן שאנחנו נמצאים בשלבים האחרונים של פתיחת מערכת המנויים.',
       '',
-      'בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של 40 ₪ לחודש.',
+      `בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של ${input.monthlyPrice} ₪ לחודש.`,
       '',
       'בינתיים אין צורך לעשות שום דבר.',
       '',
@@ -440,7 +441,7 @@ export async function sendTrialUpdateEmail(input: {
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
         <p>היי,</p>
         <p>רצינו לעדכן שאנחנו נמצאים בשלבים האחרונים של פתיחת מערכת המנויים.</p>
-        <p>בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של 40 ₪ לחודש.</p>
+        <p>בימים הקרובים תיפתח האפשרות להמשיך לשימוש בתוכנית המלאה בעלות של ${input.monthlyPrice} ₪ לחודש.</p>
         <p>בינתיים אין צורך לעשות שום דבר.</p>
         <p>
           תקופת הניסיון שלך ממשיכה לפעול כרגיל,<br />
@@ -462,6 +463,8 @@ export async function sendTrialUpdateEmail(input: {
 export async function sendTrialEndingReminderEmail(input: {
   name: string
   email: string
+  monthlyPrice: string
+  slug: string | null
 }): Promise<{ sent: boolean }> {
   const resend = requireResendOrSafeStub({
     template: 'trial-ending-reminder',
@@ -470,6 +473,7 @@ export async function sendTrialEndingReminderEmail(input: {
   if (!resend) return { sent: false }
 
   const subscriptionUrl = appUrl('/dashboard/subscription')
+  const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
   const displayName = input.name.trim() || 'שם'
 
   await resend.emails.send({
@@ -480,9 +484,12 @@ export async function sendTrialEndingReminderEmail(input: {
       `היי ${displayName},`,
       '',
       'רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.',
-      'כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של 40 ₪.',
+      `כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של ${input.monthlyPrice} ₪.`,
       '',
       `המשך למנוי: ${subscriptionUrl}`,
+      ...(siteUrl ? ['', `לצפייה באתר שלך כרגע: ${siteUrl}`] : []),
+      '',
+      'האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.',
       '',
       'אם לא תבחרי להמשיך, החשבון לא יחויב אוטומטית.',
     ].join('\n'),
@@ -490,7 +497,7 @@ export async function sendTrialEndingReminderEmail(input: {
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
         <p>היי ${displayName},</p>
         <p>רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.</p>
-        <p>כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של 40 ₪.</p>
+        <p>כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של ${input.monthlyPrice} ₪.</p>
         <p style="margin: 24px 0;">
           <a
             href="${subscriptionUrl}"
@@ -498,7 +505,16 @@ export async function sendTrialEndingReminderEmail(input: {
           >
             המשך למנוי
           </a>
+          ${siteUrl
+            ? `<a
+            href="${siteUrl}"
+            style="display: inline-block; margin-inline-start: 10px; color: #7D3A52; text-decoration: underline; padding: 12px 4px; font-weight: 600;"
+          >
+            צפייה באתר שלך
+          </a>`
+            : ''}
         </p>
+        <p>האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.</p>
         <p>אם לא תבחרי להמשיך, החשבון לא יחויב אוטומטית.</p>
       </div>
     `,
@@ -516,6 +532,7 @@ export async function sendTrialExpiredEmail(input: {
   name: string
   email: string
   checkoutEnabled: boolean
+  slug: string | null
 }): Promise<{ sent: boolean }> {
   const resend = requireResendOrSafeStub({
     template: 'trial-expired',
@@ -525,6 +542,7 @@ export async function sendTrialExpiredEmail(input: {
 
   const displayName = input.name.trim() || 'שם'
   const subscriptionUrl = appUrl('/dashboard/subscription')
+  const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
 
   if (!input.checkoutEnabled) {
     // Payments aren't live yet, so there's no way to pay to keep PRO — the
@@ -565,7 +583,10 @@ export async function sendTrialExpiredEmail(input: {
     '• עד 30 תמונות בגלריה ציבורית',
     '• כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם',
     '',
+    'האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.',
+    '',
     `אפשר לחזור למסלול המלא בכל רגע: ${subscriptionUrl}`,
+    ...(siteUrl ? [`לצפייה באתר שלך כרגע: ${siteUrl}`] : []),
   ]
 
   const text = [`היי ${displayName},`, '', ...limitsLines].join('\n')
@@ -587,6 +608,7 @@ export async function sendTrialExpiredEmail(input: {
           <li>עד 30 תמונות בגלריה ציבורית</li>
           <li>כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם</li>
         </ul>
+        <p>האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.</p>
         <p style="margin: 24px 0;">
           <a
             href="${subscriptionUrl}"
@@ -594,6 +616,14 @@ export async function sendTrialExpiredEmail(input: {
           >
             חזרה למסלול המלא
           </a>
+          ${siteUrl
+            ? `<a
+            href="${siteUrl}"
+            style="display: inline-block; margin-inline-start: 10px; color: #7D3A52; text-decoration: underline; padding: 12px 4px; font-weight: 600;"
+          >
+            צפייה באתר שלך
+          </a>`
+            : ''}
         </p>
       </div>
     `,

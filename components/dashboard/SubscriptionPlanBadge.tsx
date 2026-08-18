@@ -7,6 +7,10 @@ const PLAN_BADGE_CONFIG = {
     label: 'FREE',
     className: 'bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/15',
   },
+  pro: {
+    label: 'PRO',
+    className: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
+  },
   new: {
     label: 'NEW!',
     className: 'bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-200',
