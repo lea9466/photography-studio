@@ -9,10 +9,19 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { getR2Client } from '@/lib/r2/client'
 import { galleryMediaProxyUrl, getR2Config } from '@/lib/r2/config'
+import { signEdgeUrl } from '@/lib/r2/edge-signing'
 import { r2ObjectKey } from '@/lib/r2/keys'
 import type { MediaBucket } from '@/lib/r2/types'
 
 const PRIVATE_BUCKETS = new Set<MediaBucket>(['originals', 'edited', 'zips'])
+
+/**
+ * These bucket types are the ones the gallery-media-guard Worker (workers/gallery-media-guard)
+ * requires a signed ?exp&sig for on every request — see signEdgeUrl. branding/cover-images
+ * stay bare/unsigned (never gallery-privacy-sensitive; e.g. OG image crawlers need them
+ * fetchable unauthenticated).
+ */
+const SIGNED_EDGE_BUCKETS = new Set<MediaBucket>(['previews', 'watermarked'])
 
 function canUsePublicUrl(bucket: MediaBucket) {
   if (PRIVATE_BUCKETS.has(bucket)) return false
@@ -98,10 +107,14 @@ export async function resolveMediaUrl(
 
   const { publicUrl } = getR2Config()
   const key = r2ObjectKey(bucket, path)
-  if (canUsePublicUrl(bucket) && publicUrl && !forceProxy) {
+
+  if (canUsePublicUrl(bucket) && publicUrl) {
+    if (SIGNED_EDGE_BUCKETS.has(bucket)) {
+      return signEdgeUrl(publicUrl, bucket, path, forceProxy ? 'private' : 'public')
+    }
     return `${publicUrl}/${key}`
   }
-  if (canUsePublicUrl(bucket) && (!publicUrl || forceProxy)) {
+  if (canUsePublicUrl(bucket) && !publicUrl) {
     return galleryMediaProxyUrl(key, galleryId)
   }
 

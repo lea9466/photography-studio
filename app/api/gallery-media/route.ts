@@ -4,7 +4,7 @@ import { isR2Configured, getR2Config, r2PublicObjectUrl } from '@/lib/r2/config'
 import { getR2Client } from '@/lib/r2/client'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { hasGallerySession } from '@/lib/gallery-session'
+import { touchGallerySession } from '@/lib/gallery-session'
 import type { MediaBucket } from '@/lib/r2/types'
 
 const ALLOWED_PREFIXES = [
@@ -17,13 +17,16 @@ const ALLOWED_PREFIXES = [
   'cover-images/',
 ] as const
 
-/** Keys safe to serve via public CDN — redirect instead of proxying bytes. */
-const PUBLIC_REDIRECT_PREFIXES = [
-  'previews/',
-  'watermarked/',
-  'branding/',
-  'cover-images/',
-] as const
+/** Keys always safe to serve via public CDN, regardless of gallery privacy. */
+const ALWAYS_PUBLIC_REDIRECT_PREFIXES = ['branding/', 'cover-images/'] as const
+
+/**
+ * Keys safe to redirect to the public CDN only when the gallery itself is
+ * publicly accessible — for a private gallery these are the actual client
+ * photos, so they must stream through this session-gated proxy instead of a
+ * bare, tokenless public URL that would work for anyone who obtains it.
+ */
+const CONDITIONAL_PUBLIC_REDIRECT_PREFIXES = ['previews/', 'watermarked/'] as const
 
 const GALLERY_SCOPED_BUCKETS = new Set<MediaBucket>([
   'originals',
@@ -48,8 +51,12 @@ function isAllowedGalleryMediaKey(key: string) {
   return ALLOWED_PREFIXES.some((prefix) => normalized.startsWith(prefix))
 }
 
-function isPublicRedirectKey(key: string) {
-  return PUBLIC_REDIRECT_PREFIXES.some((prefix) => key.startsWith(prefix))
+function isAlwaysPublicRedirectKey(key: string) {
+  return ALWAYS_PUBLIC_REDIRECT_PREFIXES.some((prefix) => key.startsWith(prefix))
+}
+
+function isConditionalPublicRedirectKey(key: string) {
+  return CONDITIONAL_PUBLIC_REDIRECT_PREFIXES.some((prefix) => key.startsWith(prefix))
 }
 
 function redirectToPublicR2(normalizedKey: string): Response | null {
@@ -117,7 +124,9 @@ async function authorizeStudioDisplayMedia(
   return user?.id === ownerId
 }
 
-async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
+async function verifyGalleryAccess(
+  galleryId: string
+): Promise<{ allowed: boolean; publiclyAccessible: boolean }> {
   const admin = createAdminClient()
 
   const { data } = await admin
@@ -126,15 +135,16 @@ async function verifyGalleryAccess(galleryId: string): Promise<boolean> {
     .eq('id', galleryId)
     .single()
 
-  if (!data) return false
+  if (!data) return { allowed: false, publiclyAccessible: false }
 
   const gallery = data as { id: string; is_public: boolean; gallery_type: string }
 
-  if (gallery.is_public && gallery.gallery_type === 'portfolio') {
-    return true
+  const publiclyAccessible = gallery.is_public && gallery.gallery_type === 'portfolio'
+  if (publiclyAccessible) {
+    return { allowed: true, publiclyAccessible: true }
   }
 
-  return await hasGallerySession(galleryId)
+  return { allowed: await touchGallerySession(galleryId), publiclyAccessible: false }
 }
 
 async function verifyPhotographerOwnsGallery(galleryId: string): Promise<boolean> {
@@ -158,22 +168,22 @@ async function authorizeGalleryScopedMedia(
   bucket: MediaBucket,
   pathAfterBucket: string,
   galleryIdParam: string
-) {
+): Promise<{ allowed: boolean; publiclyAccessible: boolean }> {
   const scoped = parseGalleryScopedPath(pathAfterBucket)
   const resolvedGalleryId = galleryIdParam || scoped?.galleryId
 
   if (!resolvedGalleryId) {
-    return false
+    return { allowed: false, publiclyAccessible: false }
   }
 
   if (galleryIdParam && scoped?.galleryId && galleryIdParam !== scoped.galleryId) {
-    return false
+    return { allowed: false, publiclyAccessible: false }
   }
 
   if (SENSITIVE_BUCKETS.has(bucket)) {
     const isOwner = await verifyPhotographerOwnsGallery(resolvedGalleryId)
-    if (isOwner) return true
-    return hasGallerySession(resolvedGalleryId)
+    if (isOwner) return { allowed: true, publiclyAccessible: false }
+    return { allowed: await touchGallerySession(resolvedGalleryId), publiclyAccessible: false }
   }
 
   return verifyGalleryAccess(resolvedGalleryId)
@@ -252,16 +262,23 @@ export async function GET(request: Request) {
 
     const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
 
+    let publiclyAccessible = false
     if (GALLERY_SCOPED_BUCKETS.has(bucket)) {
-      const allowed = isStudioDisplayMediaPath(path)
-        ? await authorizeStudioDisplayMedia(bucket, path)
-        : await authorizeGalleryScopedMedia(bucket, path, galleryId)
-      if (!allowed) {
-        return textResponse('גישה נדחתה', 403)
+      if (isStudioDisplayMediaPath(path)) {
+        const allowed = await authorizeStudioDisplayMedia(bucket, path)
+        if (!allowed) return textResponse('גישה נדחתה', 403)
+        publiclyAccessible = true
+      } else {
+        const result = await authorizeGalleryScopedMedia(bucket, path, galleryId)
+        if (!result.allowed) return textResponse('גישה נדחתה', 403)
+        publiclyAccessible = result.publiclyAccessible
       }
     }
 
-    if (isPublicRedirectKey(normalizedKey)) {
+    if (
+      isAlwaysPublicRedirectKey(normalizedKey) ||
+      (publiclyAccessible && isConditionalPublicRedirectKey(normalizedKey))
+    ) {
       const redirect = redirectToPublicR2(normalizedKey)
       if (redirect) return redirect
     }

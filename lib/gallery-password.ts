@@ -1,4 +1,4 @@
-import { timingSafeEqual } from 'node:crypto'
+import { randomInt, timingSafeEqual } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 
 const BCRYPT_ROUNDS = 12
@@ -41,5 +41,5 @@ export async function verifyGalleryPassword(
 }
 
 export function generateGalleryPassword() {
-  return Math.random().toString(36).slice(2, 10)
+  return String(randomInt(0, 1_000_000)).padStart(6, '0')
 }

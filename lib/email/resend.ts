@@ -105,7 +105,7 @@ export async function sendGalleryPasswordEmail(input: {
   clientEmail: string
   clientName: string
   studioName: string
-  password: string
+  code: string
 }) {
   const resend = requireResendOrSafeStub({
     template: 'gallery-password',
@@ -117,12 +117,13 @@ export async function sendGalleryPasswordEmail(input: {
   await resend.emails.send({
     from: emailFrom(),
     to: input.clientEmail,
-    subject: `סיסמת הגלריה: ${input.galleryTitle}`,
+    subject: `קוד הכניסה לגלריה: ${input.galleryTitle}`,
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${input.clientName},</h2>
-        <p>הסיסמה לגלריה <strong>${input.galleryTitle}</strong> היא:</p>
-        <p style="font-size: 1.25rem;"><strong>${input.password}</strong></p>
+        <p>קוד הכניסה החד-פעמי לגלריה <strong>${input.galleryTitle}</strong> הוא:</p>
+        <p style="font-size: 1.5rem; letter-spacing: 0.25rem;"><strong>${input.code}</strong></p>
+        <p>הקוד תקף לכניסה אחת בלבד. אם תצטרכו קוד נוסף, ניתן לבקש קוד חדש מהעמוד עצמו.</p>
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,

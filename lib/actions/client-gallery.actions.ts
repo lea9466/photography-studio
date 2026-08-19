@@ -8,6 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   hasGallerySession,
   setGallerySession,
+  touchGallerySession,
 } from '@/lib/gallery-session'
 import { prepareGalleryForDelivery } from '@/lib/actions/photo.actions'
 import {
@@ -126,6 +127,19 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
 }
 
 export async function requestGalleryPassword(galleryId: string) {
+  const headerStore = await headers()
+  const ip =
+    headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    headerStore.get('x-real-ip')?.trim() ??
+    'unknown'
+  const requestRateKey = `gallery-pw-request:${galleryId}:${ip}`
+
+  const requestRate = checkRateLimit(requestRateKey, 3, 15 * 60 * 1000)
+  if (!requestRate.allowed) {
+    const minutes = Math.max(1, Math.ceil((requestRate.retryAfterMs ?? 60_000) / 60_000))
+    throw new Error(`יותר מדי בקשות. נסו שוב בעוד ${minutes} דקות.`)
+  }
+
   const admin = createAdminClient()
 
   const { data } = await admin
@@ -169,7 +183,7 @@ export async function requestGalleryPassword(galleryId: string) {
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
   const emailHint = getEmailHint(client.email)
 
-  const plainPassword = await rotateGalleryPassword(gallery.id)
+  const code = await rotateGalleryPassword(gallery.id)
 
   await sendGalleryPasswordEmail({
     galleryId: gallery.id,
@@ -177,7 +191,7 @@ export async function requestGalleryPassword(galleryId: string) {
     clientEmail: client.email,
     clientName: client.name,
     studioName: profile?.studio_name ?? 'Studio Gallery',
-    password: plainPassword,
+    code,
   })
 
   return {
@@ -234,6 +248,10 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
     await migrateLegacyGalleryPassword(galleryId, password.trim(), gallery.password)
   }
 
+  // One-time use: burn the code that was just entered so it can't be reused
+  // or shared — the client must request a fresh one next time.
+  await rotateGalleryPassword(galleryId)
+
   resetRateLimit(rateKey)
   await setGallerySession(galleryId)
   return { success: true }
@@ -250,6 +268,9 @@ async function requireValidGalleryAccess(galleryId: string) {
   const gallery = data as { id: string; is_public: boolean } | null
   if (!gallery) return null
 
+  // Called from app/g/[id]/page.tsx during Server Component render (both
+  // directly and via getClientGallery), where cookies() cannot be written —
+  // must stay read-only here, unlike the action call sites below.
   const hasSessionForGallery = await hasGallerySession(galleryId)
   return resolveGalleryAccessMode({
     isPublic: gallery.is_public,
@@ -525,7 +546,7 @@ export async function completeClientSelection(
   galleryId: string,
   selections: ClientSelectionPayload[]
 ) {
-  const allowed = await hasGallerySession(galleryId)
+  const allowed = await touchGallerySession(galleryId)
   if (!allowed) throw new Error('גישה נדחתה')
 
   const admin = createAdminClient()

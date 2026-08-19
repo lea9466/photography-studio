@@ -1,0 +1,16 @@
+name = "gallery-media-guard"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+account_id = "280af5a1ec6294e6b4f265d84717a98f"
+
+[[r2_buckets]]
+binding = "GALLERY_BUCKET"
+bucket_name = "albums"
+
+routes = [
+  { pattern = "albums.studio-galleries.com/*", zone_name = "studio-galleries.com" }
+]
+
+# R2_EDGE_SIGNING_SECRET is set separately as a Worker secret (never committed):
+#   wrangler secret put R2_EDGE_SIGNING_SECRET

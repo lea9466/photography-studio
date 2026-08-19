@@ -4,37 +4,77 @@ import { cookies } from 'next/headers'
 import { requireSessionSecret } from '@/lib/session-secret'
 
 const COOKIE_PREFIX = 'sg_gallery_'
+const IDLE_TIMEOUT_SEC = 30 * 60
 
 function getSecret() {
   return requireSessionSecret('GALLERY_SESSION_SECRET', 'dev-gallery-secret')
 }
 
-function signGalleryId(galleryId: string) {
-  return createHmac('sha256', getSecret()).update(galleryId).digest('hex')
+function sign(value: string) {
+  return createHmac('sha256', getSecret()).update(value).digest('hex')
+}
+
+function safeEqual(a: string, b: string) {
+  try {
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  } catch {
+    return false
+  }
+}
+
+function buildToken(galleryId: string, exp: number) {
+  const payload = `${galleryId}:${exp}`
+  return `${payload}:${sign(payload)}`
+}
+
+function verifyToken(raw: string | undefined | null, galleryId: string): boolean {
+  if (!raw) return false
+
+  const lastColon = raw.lastIndexOf(':')
+  if (lastColon <= 0) return false
+
+  const sig = raw.slice(lastColon + 1)
+  const payload = raw.slice(0, lastColon)
+  if (!safeEqual(sign(payload), sig)) return false
+
+  const sep = payload.indexOf(':')
+  if (sep <= 0) return false
+  if (payload.slice(0, sep) !== galleryId) return false
+
+  const exp = Number(payload.slice(sep + 1))
+  return Number.isFinite(exp) && Date.now() <= exp
 }
 
 export async function setGallerySession(galleryId: string) {
+  const exp = Date.now() + IDLE_TIMEOUT_SEC * 1000
   const cookieStore = await cookies()
-  cookieStore.set(`${COOKIE_PREFIX}${galleryId}`, signGalleryId(galleryId), {
+  cookieStore.set(`${COOKIE_PREFIX}${galleryId}`, buildToken(galleryId, exp), {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: IDLE_TIMEOUT_SEC,
     path: '/',
   })
 }
 
+/** Read-only check — safe to call from Server Components, which cannot write cookies. */
 export async function hasGallerySession(galleryId: string) {
   const cookieStore = await cookies()
-  const token = cookieStore.get(`${COOKIE_PREFIX}${galleryId}`)?.value
-  if (!token) return false
+  return verifyToken(cookieStore.get(`${COOKIE_PREFIX}${galleryId}`)?.value, galleryId)
+}
 
-  const expected = signGalleryId(galleryId)
-  try {
-    return timingSafeEqual(Buffer.from(token), Buffer.from(expected))
-  } catch {
-    return false
-  }
+/**
+ * Verifies the session AND slides its expiry another IDLE_TIMEOUT_SEC forward.
+ * Only call from Route Handlers / Server Actions (contexts that can write cookies) —
+ * viewing a gallery counts as activity, so every authorized media/download/selection
+ * request should keep the session alive rather than letting it expire on a fixed TTL.
+ */
+export async function touchGallerySession(galleryId: string) {
+  const cookieStore = await cookies()
+  const raw = cookieStore.get(`${COOKIE_PREFIX}${galleryId}`)?.value
+  if (!verifyToken(raw, galleryId)) return false
+  await setGallerySession(galleryId)
+  return true
 }
 
 export async function clearGallerySession(galleryId: string) {

@@ -694,7 +694,7 @@ async function main() {
         clientEmail: 'client@example.com',
         clientName: 'C',
         studioName: 'S',
-        password: 'SHOULD_NOT_LOG',
+        code: 'SHOULD_NOT_LOG',
       })
     } finally {
       console.info = origInfo

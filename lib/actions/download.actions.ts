@@ -2,7 +2,7 @@
 
 import { assertGalleryOwner } from '@/lib/auth/gallery-owner'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { hasGallerySession } from '@/lib/gallery-session'
+import { touchGallerySession } from '@/lib/gallery-session'
 import { createPresignedDownloadUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 
@@ -159,7 +159,7 @@ export async function getClientGalleryDownloadFiles(
     throw new Error('סוג הורדה לא תקין')
   }
 
-  const allowed = await hasGallerySession(galleryId)
+  const allowed = await touchGallerySession(galleryId)
   if (!allowed) throw new Error('גישה נדחתה')
 
   const admin = createAdminClient()
@@ -199,7 +199,7 @@ export async function getClientGalleryDownloadFiles(
 export async function getClientEditedDownloadFiles(
   galleryId: string
 ): Promise<DownloadFileEntry[]> {
-  const allowed = await hasGallerySession(galleryId)
+  const allowed = await touchGallerySession(galleryId)
   if (!allowed) throw new Error('גישה נדחתה')
 
   const admin = createAdminClient()
