@@ -17,6 +17,8 @@ import {
   generateSiteNav,
   generateSiteNavMobileStyles,
   generateSiteNavScrollScript,
+  generateSiteNavStyles,
+  classicSectionScriptCss,
   type SiteChromeTheme,
 } from '@/lib/photographer-site-chrome'
 import { parseFaqItems, sanitizeFaqItems, type FaqItem } from '@/lib/faq'
@@ -641,6 +643,8 @@ export function generateHomepageHTML(
           : undefined,
 
       siteLanguage: photographer.site_language,
+
+      transparentNav: true,
 
     })
 
@@ -1674,7 +1678,7 @@ ${accordion}
     RECENT_PHOTOS_GRID_CSS, CLASSIC_RECENT_PHOTOS_HEADER_CSS, HOMEPAGE_STAGGER_REVEAL_CSS,
     TESTIMONIAL_THUMB_CARD_CSS, CLASSIC_CONTACT_FORM_CSS, FAQ_ACCORDION_CSS, classicFaqSectionCss,
     HERO_SLIDESHOW_CSS, heroVideoCss, sectionBgCss, HOMEPAGE_LTR_CSS, generateSiteNavMobileStyles,
-    brandFontVarsStyle, generateSiteNav, siteChrome, heroSlideshowHtml, studioName, photographerName,
+    brandFontVarsStyle, generateSiteNav, generateSiteNavStyles, classicSectionScriptCss, siteChrome, heroSlideshowHtml, studioName, photographerName,
     homepageCopy, aboutTextHtml, heroGalleryAnchor, aboutTitle, aboutSubtitle, aboutDescription,
     classicSectionScript, underlineLastWord, hasStats, formatStat, statsClients, statsProjects,
     statsYears, about_image_url, isPortfolioMode, escapeHtml, galleriesSectionTitle,

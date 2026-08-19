@@ -5,6 +5,7 @@ import {
   generateSiteNavMobileStyles,
   generateSiteNavScrollScript,
   generateSiteNavStyles,
+  classicSectionScriptCss,
   publicSiteLtrCss,
   publicSitePageHtmlAttrs,
   type SiteChromeTheme,
@@ -678,7 +679,7 @@ ${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>${title}</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&family=Great+Vibes&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
 tailwind.config = {
@@ -710,6 +711,7 @@ tailwind.config = {
 <style>
 :root { --headline-font: 'Heebo', sans-serif; --about-title-font: 'Heebo', sans-serif; }
 body { font-family: 'Heebo', sans-serif; background: #FAFAF8; }
+${classicSectionScriptCss()}
 ${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
 ${ltrCss}
 </style>

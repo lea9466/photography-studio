@@ -4,6 +4,7 @@ import {
   generateSiteNav,
   generateSiteNavScrollScript,
   generateSiteNavStyles,
+  classicSectionScriptCss,
   publicSiteLtrCss,
   publicSitePageHtmlAttrs,
   type SiteChromeTheme,
@@ -870,7 +871,7 @@ function blogHead(
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>${title}</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&family=Space+Grotesk:wght@300..700&family=Great+Vibes&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
 tailwind.config = {
@@ -912,6 +913,7 @@ body { font-family: 'Heebo', sans-serif; background: ${t.bg}; color: ${t.text}; 
 .font-headline { font-family: 'Space Grotesk', 'Heebo', sans-serif; }
 .elegant-accent { color: ${primaryColor}; }
 .elegant-bg-accent { background-color: ${primaryColor}; }
+${classicSectionScriptCss()}
 ${BLOG_CSS}
 ${options?.isPostPage ? BLOG_POST_PAGE_NAV_CSS : ''}
 ${options?.isPostPage ? `
@@ -919,7 +921,7 @@ ${options?.isPostPage ? `
   filter: brightness(0) invert(1) !important;
 }` : ''}
 ${options?.isPostPage ? blogPostHeroThemeCss(theme, t.bg) : ''}
-${generateSiteNavStyles(theme, primaryColor, shouldColorLogo)}
+${generateSiteNavStyles(theme, primaryColor, shouldColorLogo, options?.isPostPage ?? false)}
 ${ltrCss}
 </style>
 ${buildBrandFontHeadHtml(headingFont, aboutTitleFont)}
@@ -1129,7 +1131,9 @@ ${data.posts
 <main class="pt-24">
 <section class="max-w-[1280px] mx-auto px-[24px] pt-10 pb-24">
 <header class="text-center mb-[56px]">
-<span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block elegant-accent">${eyebrow}</span>
+${theme === 'classic'
+    ? `<span class="classic-section-script" style="color:${primaryColor}; text-align:center;" aria-hidden="true">${eyebrow}</span>`
+    : `<span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block elegant-accent">${eyebrow}</span>`}
 <h1 class="${titleFont} text-[40px] md:text-[60px] mb-[16px] font-medium">${escapeHtml(data.pageTitle)}</h1>
 <div class="w-16 h-px mx-auto elegant-bg-accent"></div>
 </header>
@@ -1312,6 +1316,8 @@ export function generatePublicBlogPageHTML(options: {
   displayStyle?: PostsDisplayStyle | string | null
   headingFont?: string | null
   aboutTitleFont?: string | null
+  galleryLayoutMode?: 'separated' | 'portfolio'
+  portfolioPath?: string
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.blog.accentColor
@@ -1333,6 +1339,8 @@ export function generatePublicBlogPageHTML(options: {
     beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     siteLanguage: options.siteLanguage,
+    galleryLayoutMode: options.galleryLayoutMode,
+    portfolioPath: options.portfolioPath,
   })
 
   const templates = generateBlogPostDetailTemplates(
@@ -1464,6 +1472,8 @@ export function generatePublicBlogPostPageHTML(options: {
   siteLanguage?: string | null
   headingFont?: string | null
   aboutTitleFont?: string | null
+  galleryLayoutMode?: 'separated' | 'portfolio'
+  portfolioPath?: string
 }) {
   const chromeTheme = toChromeTheme(options.theme)
   const primaryColor = options.accentColor
@@ -1484,6 +1494,8 @@ export function generatePublicBlogPostPageHTML(options: {
     beforeAfterPath: options.beforeAfterPath,
     shouldColorLogo: options.shouldColorLogo ?? false,
     siteLanguage: options.siteLanguage,
+    galleryLayoutMode: options.galleryLayoutMode,
+    portfolioPath: options.portfolioPath,
     transparentNav: true,
   })
 

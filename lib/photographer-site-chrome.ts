@@ -627,8 +627,56 @@ export function generateSiteNavMobileStyles(): string {
         }`
 }
 
-export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: string, shouldColorLogo: boolean = false): string {
+export function generateSiteNavStyles(
+  theme: SiteChromeTheme,
+  primaryColor: string,
+  shouldColorLogo: boolean = false,
+  transparentNav: boolean = false
+): string {
   if (theme === 'classic') {
+    // transparentNav pages (homepage, blog post) sit over a hero image at
+    // the top — nav text starts white for contrast, then turns dark once
+    // .nav-scrolled is toggled on. Pages with no hero (portfolio, blog
+    // list, before/after, gallery) start on a plain background, so their
+    // nav text is dark from the start — never white-on-white.
+    if (transparentNav) {
+      return `
+        .classic-nav .classic-nav-brand,
+        .classic-nav .classic-nav-link,
+        .classic-nav .classic-nav-menu-btn {
+            color: #ffffff;
+            transition: color 0.7s ease;
+        }
+        .classic-nav .classic-nav-link:hover,
+        .classic-nav .classic-nav-menu-btn:hover {
+            color: rgba(255, 255, 255, 0.75);
+        }
+        .classic-nav .classic-nav-logo {
+            transition: filter 0.7s ease;
+        }
+        .classic-nav:not(.nav-scrolled) .classic-nav-logo {
+            filter: brightness(0) invert(1);
+        }
+        .classic-nav.nav-scrolled .classic-nav-brand {
+            color: #2d2825;
+        }
+        .classic-nav.nav-scrolled .classic-nav-link {
+            color: ${primaryColor};
+        }
+        .classic-nav.nav-scrolled .classic-nav-link:hover {
+            color: ${primaryColor};
+            opacity: 0.8;
+        }
+        .classic-nav.nav-scrolled .classic-nav-menu-btn {
+            color: #2d2825;
+        }
+        .classic-nav.nav-scrolled .classic-nav-menu-btn:hover {
+            color: ${primaryColor};
+        }
+        .classic-nav.nav-scrolled .classic-nav-logo {
+            filter: ${shouldColorLogo ? 'none' : 'brightness(0) invert(1)'};
+        }${generateSiteNavMobileStyles()}`
+    }
     return `
         .classic-nav:not(.nav-scrolled) {
             background: transparent !important;
@@ -769,6 +817,32 @@ export function generateSiteNavStyles(theme: SiteChromeTheme, primaryColor: stri
             box-shadow: none !important;
             border-bottom: none !important;
         }${generateSiteNavMobileStyles()}`
+}
+
+// The classic theme's script-font section eyebrow ("About", "Portfolio",
+// "Stories" — same word set as the other themes' watermark labels). Needs
+// the 'Great Vibes' Google Font loaded on the page wherever this is used —
+// see CLASSIC_SCRIPT_FONT_QUERY_PARAM for the font link fragment. Single
+// source of truth so every classic-theme page (home, portfolio, blog,
+// gallery) renders this label identically instead of each hand-typing its
+// own copy — that drift is exactly what caused it to go missing from some
+// pages before.
+export const CLASSIC_SCRIPT_FONT_QUERY_PARAM = 'family=Great+Vibes'
+
+export function classicSectionScriptCss(): string {
+  return `
+        .classic-section-script {
+            display: block;
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(2.25rem, 4.5vw, 3rem);
+            font-weight: 400;
+            line-height: 1.15;
+            letter-spacing: 0.02em;
+            text-transform: none;
+            margin: 0 0 0.2rem;
+            direction: ltr;
+            text-align: inherit;
+        }`
 }
 
 export function createSiteChromeConfig(options: {

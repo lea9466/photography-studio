@@ -21,6 +21,8 @@ export type ClassicThemeContext = {
   generateSiteNavMobileStyles: any
   brandFontVarsStyle: any
   generateSiteNav: any
+  generateSiteNavStyles: any
+  classicSectionScriptCss: any
   siteChrome: any
   heroSlideshowHtml: any
   studioName: any
@@ -93,7 +95,7 @@ export function generateClassicHomepageHTML(ctx: ClassicThemeContext): string {
     RECENT_PHOTOS_GRID_CSS, CLASSIC_RECENT_PHOTOS_HEADER_CSS, HOMEPAGE_STAGGER_REVEAL_CSS,
     TESTIMONIAL_THUMB_CARD_CSS, CLASSIC_CONTACT_FORM_CSS, FAQ_ACCORDION_CSS, classicFaqSectionCss,
     HERO_SLIDESHOW_CSS, heroVideoCss, sectionBgCss, HOMEPAGE_LTR_CSS, generateSiteNavMobileStyles,
-    brandFontVarsStyle, generateSiteNav, siteChrome, heroSlideshowHtml, studioName, photographerName,
+    brandFontVarsStyle, generateSiteNav, generateSiteNavStyles, classicSectionScriptCss, siteChrome, heroSlideshowHtml, studioName, photographerName,
     homepageCopy, aboutTextHtml, heroGalleryAnchor, aboutTitle, aboutSubtitle, aboutDescription,
     classicSectionScript, underlineLastWord, hasStats, formatStat, statsClients, statsProjects,
     statsYears, about_image_url, isPortfolioMode, escapeHtml, galleriesSectionTitle,
@@ -147,18 +149,7 @@ ${documentHead}
 
         }
 
-        .classic-section-script {
-            display: block;
-            font-family: 'Great Vibes', cursive;
-            font-size: clamp(2.25rem, 4.5vw, 3rem);
-            font-weight: 400;
-            line-height: 1.15;
-            letter-spacing: 0.02em;
-            text-transform: none;
-            margin: 0 0 0.2rem;
-            direction: ltr;
-            text-align: inherit;
-        }
+        ${classicSectionScriptCss()}
 
         #about .classic-section-script {
             width: 100%;
@@ -622,75 +613,7 @@ ${documentHead}
 
         }
 
-        .classic-nav .classic-nav-brand,
-
-        .classic-nav .classic-nav-link,
-
-        .classic-nav .classic-nav-menu-btn {
-
-            color: #ffffff;
-
-            transition: color 0.7s ease;
-
-        }
-
-        .classic-nav .classic-nav-link:hover,
-
-        .classic-nav .classic-nav-menu-btn:hover {
-
-            color: rgba(255, 255, 255, 0.75);
-
-        }
-
-        .classic-nav .classic-nav-logo {
-
-            transition: filter 0.7s ease;
-
-        }
-
-        .classic-nav:not(.nav-scrolled) .classic-nav-logo {
-
-            filter: brightness(0) invert(1);
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-brand {
-
-            color: #2d2825;
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-link {
-
-            color: ${primaryColor};
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-link:hover {
-
-            color: ${primaryColor};
-
-            opacity: 0.8;
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-menu-btn {
-
-            color: #2d2825;
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-menu-btn:hover {
-
-            color: ${primaryColor};
-
-        }
-
-        .classic-nav.nav-scrolled .classic-nav-logo {
-
-            filter: ${photographer.should_color_logo ? 'none' : 'brightness(0) invert(1)'};
-
-        }
+        ${generateSiteNavStyles('classic', primaryColor, photographer.should_color_logo ?? false, true)}
 
         .about-section-label {
 
@@ -911,8 +834,6 @@ ${documentHead}
         ${sectionBgCss}
 
         ${HOMEPAGE_LTR_CSS}
-
-        ${generateSiteNavMobileStyles()}
 
     </style>
 

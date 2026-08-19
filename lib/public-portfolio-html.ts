@@ -311,6 +311,7 @@ function portfolioHeader(
   pageTitle: string,
   photoCount: number,
   sectionTitle?: string | null,
+  primaryColor?: string,
 ) {
   const title = escapeHtml(pageTitle)
   const meta = `${photoCount} תמונות`
@@ -332,7 +333,7 @@ ${sectionTitleHtml}
   if (theme === 'classic') {
     return `
 <header class="text-center mb-[48px]">
-<span class="text-[13px] uppercase tracking-[0.2em] mb-[16px] block text-primary">Portfolio</span>
+<span class="classic-section-script" style="color:${primaryColor}; text-align:center;" aria-hidden="true">Portfolio</span>
 <h1 class="font-headline-md text-headline-md text-on-surface mb-[16px]">${title}</h1>
 ${sectionTitleHtml}
 <div class="w-12 h-px mx-auto mb-[24px] bg-primary"></div>
@@ -412,6 +413,7 @@ ${portfolioHeader(
   options.portfolio.pageTitle,
   options.portfolio.photos.length,
   options.portfolio.sectionTitle,
+  primaryColor,
 )}
 <nav class="portfolio-tabs" aria-label="גלריות">
 ${generateTabButtons(options.portfolio.galleryNames, chromeTheme)}
