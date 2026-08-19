@@ -39,16 +39,6 @@ export type TrialExpiredNotificationDeps = {
     email: string
     slug: string | null
   }) => Promise<void>
-  /**
-   * Locks dashboard + public-site access for a studio (sets
-   * is_site_unavailable — see lib/site-access/dashboard-lock.ts). Only ever
-   * called right after sendNotification succeeds for that same candidate, so
-   * a studio is never locked without having already received the day-zero
-   * email first. Left undefined by the caller when real checkout isn't live
-   * yet (see runTrialExpiredNotifications) — locking someone out with no way
-   * to actually pay their way back in would be a dead end.
-   */
-  lockSiteAccess?: (userId: string) => Promise<void>
   now?: () => Date
 }
 
@@ -109,22 +99,6 @@ export async function processTrialExpiredNotifications(
         slug: candidate.slug?.trim() || null,
       })
       summary.sent += 1
-
-      if (deps.lockSiteAccess) {
-        try {
-          await deps.lockSiteAccess(candidate.id)
-        } catch (lockError) {
-          // The email already sent (and is claimed/deduped), so this must
-          // not throw into the outer catch — that would treat a successful
-          // send as a failure and retry-release the email claim. A studio
-          // that fails to lock here just stays reachable until fixed
-          // manually from /manage; it's logged so that's visible.
-          console.error('[trial-expired-notifications] site lock failed', {
-            userId: candidate.id,
-            reason: lockError instanceof Error ? lockError.name : 'unknown',
-          })
-        }
-      }
     } catch (error) {
       await deps.releaseClaim(candidate.id, claimedAt)
       summary.failed += 1
@@ -216,19 +190,6 @@ export async function runTrialExpiredNotifications(): Promise<TrialExpiredNotifi
         throw new Error('EmailProviderUnavailable')
       }
     },
-
-    // Real checkout must be live before locking anyone out — otherwise
-    // /dashboard/subscription (the one page a locked studio can still reach)
-    // has no actual way for her to pay and get access back.
-    lockSiteAccess: checkoutEnabled
-      ? async (userId: string) => {
-          const { error } = await admin
-            .from('users')
-            .update({ is_site_unavailable: true })
-            .eq('id', userId)
-          if (error) throw error
-        }
-      : undefined,
   })
 
   console.info('[trial-expired-notifications] invocation summary', summary)
