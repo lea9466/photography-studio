@@ -53,7 +53,8 @@ export async function getStudioEntitlements(
         .from('subscriptions')
         .select('status, current_period_end, updated_at')
         .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .in('status', ['active', 'past_due', 'payment_failed'])
+        .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
     ])
