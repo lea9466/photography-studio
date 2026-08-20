@@ -319,8 +319,7 @@ export function SubscriptionBillingPanel({
                         disabled={
                           Boolean(busy) ||
                           isImpersonating ||
-                          blockCheckout ||
-                          !selected
+                          blockCheckout
                         }
                         onClick={() =>
                           callAction('/api/payments/checkout', {
