@@ -165,7 +165,7 @@ export function SubscriptionBillingPanel({
       : status.availablePlan
         ? [status.availablePlan]
         : []
-  const smokeTestPlans = status.isSmokeTestUser
+  const smokeTestPlans = status.isSmokeTestUser && !status.checkoutEnabled
     ? availablePlans.filter((plan) => plan.code === 'studio_monthly')
     : availablePlans
   const selectedPlan =

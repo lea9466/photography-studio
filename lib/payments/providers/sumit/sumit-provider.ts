@@ -142,7 +142,7 @@ export class SumitProvider implements PaymentProvider {
     const item: SumitLineItem = {
       Item: { Name: input.plan.name, SearchMode: 'Automatic' },
       Quantity: 1,
-      UnitPrice: 1,
+      UnitPrice: agorotToSumitAmount(input.plan.amountAgorot),
       Currency: input.plan.currency.toUpperCase(),
     }
 
@@ -171,9 +171,9 @@ export class SumitProvider implements PaymentProvider {
   /**
    * Second half of checkout — called by the callback route after SUMIT
    * redirects the browser back with `OG-PaymentID`. Verifies the capture S2S,
-   * confirms the amount matches what checkout was supposed to charge (the
-   * beginredirect item price is a fixed ₪1 placeholder — see
-   * `createCheckoutSession` — so this is the actual charge, not a duplicate),
+    * confirms the amount matches what checkout was supposed to charge (the
+  * beginredirect step is AuthoriseOnly, so the real charge below is not a
+  * duplicate),
    * then performs the real charge + establishes the recurring authorization.
    *
    * SECURITY: `expectedCustomerId` is required and checked. Without it, an
@@ -198,9 +198,8 @@ export class SumitProvider implements PaymentProvider {
   }): Promise<PaymentSubscription> {
     const verified = await verifySumitPayment(this.client(), input.paymentId)
     assertSumitCustomerMatches(verified, input.expectedCustomerId)
-    // The beginredirect capture itself was AuthoriseOnly (₪1, unrelated to the
-    // real price) — nothing to compare it against yet. Amount verification
-    // happens against the REAL charge response below instead.
+    // The beginredirect capture itself was AuthoriseOnly — no money moved.
+    // Amount verification happens against the real charge response below.
 
     const item: SumitLineItem = {
       Item: { Name: input.itemName, SearchMode: 'Automatic' },
