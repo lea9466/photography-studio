@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle2, CreditCard, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
@@ -81,6 +82,7 @@ export function SubscriptionBillingPanel({
   isImpersonating,
   checkoutSuccess,
 }: Props) {
+  const router = useRouter()
   const [status, setStatus] = useState(initialStatus)
   const [selectedPlanCode, setSelectedPlanCode] = useState<string>(
     initialStatus.availablePlans?.find((plan) => plan.code === 'studio_yearly')
@@ -91,6 +93,10 @@ export function SubscriptionBillingPanel({
   )
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (checkoutSuccess) router.refresh()
+  }, [checkoutSuccess, router])
 
   async function callAction(path: string, body?: Record<string, unknown>) {
     setBusy(path)
