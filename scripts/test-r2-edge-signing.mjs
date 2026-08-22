@@ -1,33 +1,19 @@
 #!/usr/bin/env node
 /**
- * Unit checks for the gallery-media-guard edge-signing scheme: the HMAC that
- * lib/r2/edge-signing.ts produces and workers/gallery-media-guard/worker.js
- * verifies. Mirrors both sides in plain Node crypto (no TS loader, no fetch
- * to a live Worker) so this can run standalone.
+ * Unit checks for the gallery-media-guard edge-auth scheme: the two
+ * HMAC-based checks workers/gallery-media-guard/worker.js performs —
+ * (1) the ~24h rolling ?exp&sig for public galleries, mirroring
+ * lib/r2/edge-signing.ts, and (2) the gallery session cookie for private
+ * galleries, mirroring lib/gallery-session.ts's buildToken/verifyToken.
+ * Mirrors both in plain Node crypto (no TS loader, no live Worker) so this
+ * can run standalone.
  * Run: node scripts/test-r2-edge-signing.mjs
  */
 
 import { createHmac, timingSafeEqual as nodeTimingSafeEqual } from 'node:crypto'
 
-const SECRET = 'test-secret-do-not-use-in-prod'
-
-// Mirrors lib/r2/edge-signing.ts's sign()
-function sign(value) {
-  return createHmac('sha256', SECRET).update(value).digest('hex')
-}
-
-// Mirrors lib/r2/edge-signing.ts's signEdgeUrl() for a given key/exp pair
-function signEdge(key, exp) {
-  return sign(`${key}:${exp}`)
-}
-
-// Mirrors workers/gallery-media-guard/worker.js's verification (hmacHex + timingSafeEqual + exp check)
-function verifyEdge(key, exp, sig, nowSec) {
-  const expected = signEdge(key, exp)
-  if (sig.length !== expected.length) return false
-  if (!nodeTimingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false
-  return nowSec <= Number(exp)
-}
+const EDGE_SECRET = 'test-edge-secret-do-not-use-in-prod'
+const SESSION_SECRET = 'test-session-secret-do-not-use-in-prod'
 
 let passed = 0
 let failed = 0
@@ -42,38 +28,103 @@ function check(name, condition) {
   }
 }
 
-const key = 'watermarked/user-1/gallery-1/wm-photo-1.jpg'
-const now = Math.floor(Date.now() / 1000)
-const exp = now + 1800
-const validSig = signEdge(key, exp)
+function hmacHex(secret, message) {
+  return createHmac('sha256', secret).update(message).digest('hex')
+}
 
-check('valid signature, not yet expired → accepted', verifyEdge(key, exp, validSig, now))
+function timingSafeEqualStr(a, b) {
+  if (a.length !== b.length) return false
+  return nodeTimingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
 
+// ===== Part 1: public-gallery ?exp&sig scheme (mirrors lib/r2/edge-signing.ts + the Worker's public path) =====
+
+function signEdge(key, exp) {
+  return hmacHex(EDGE_SECRET, `${key}:${exp}`)
+}
+
+function verifyEdge(key, exp, sig, nowSec) {
+  const expected = signEdge(key, exp)
+  if (!timingSafeEqualStr(sig, expected)) return false
+  return nowSec <= Number(exp)
+}
+
+const edgeKey = 'watermarked/user-1/gallery-1/wm-photo-1.jpg'
+const nowSec = Math.floor(Date.now() / 1000)
+const edgeExp = nowSec + 1800
+const validEdgeSig = signEdge(edgeKey, edgeExp)
+
+check('edge: valid signature, not yet expired → accepted', verifyEdge(edgeKey, edgeExp, validEdgeSig, nowSec))
 check(
-  'tampered signature → rejected',
-  !verifyEdge(key, exp, validSig.slice(0, -1) + (validSig.endsWith('a') ? 'b' : 'a'), now)
+  'edge: tampered signature → rejected',
+  !verifyEdge(edgeKey, edgeExp, validEdgeSig.slice(0, -1) + (validEdgeSig.endsWith('a') ? 'b' : 'a'), nowSec)
+)
+check(
+  'edge: tampered key (same signature) → rejected',
+  !verifyEdge('watermarked/user-1/gallery-1/wm-OTHER-photo.jpg', edgeExp, validEdgeSig, nowSec)
+)
+check('edge: tampered exp (same signature) → rejected', !verifyEdge(edgeKey, edgeExp + 1, validEdgeSig, nowSec))
+check(
+  'edge: expired (exp in the past) → rejected',
+  !verifyEdge(edgeKey, nowSec - 1, signEdge(edgeKey, nowSec - 1), nowSec)
+)
+check(
+  'edge: two requests landing on the same hour-rounded exp → identical signature (cache-friendly)',
+  signEdge(edgeKey, edgeExp) === signEdge(edgeKey, edgeExp)
 )
 
+// ===== Part 2: private-gallery session cookie (mirrors lib/gallery-session.ts + the Worker's cookie path) =====
+
+function buildSessionToken(galleryId, expMs) {
+  const payload = `${galleryId}:${expMs}`
+  return `${payload}:${hmacHex(SESSION_SECRET, payload)}`
+}
+
+function verifySessionToken(raw, galleryId, nowMs) {
+  if (!raw) return false
+  const lastColon = raw.lastIndexOf(':')
+  if (lastColon <= 0) return false
+  const sig = raw.slice(lastColon + 1)
+  const payload = raw.slice(0, lastColon)
+  const expected = hmacHex(SESSION_SECRET, payload)
+  if (!timingSafeEqualStr(sig, expected)) return false
+  const sep = payload.indexOf(':')
+  if (sep <= 0) return false
+  if (payload.slice(0, sep) !== galleryId) return false
+  const exp = Number(payload.slice(sep + 1))
+  return Number.isFinite(exp) && nowMs <= exp
+}
+
+const galleryId = 'gallery-1'
+const nowMs = Date.now()
+const sessionExp = nowMs + 30 * 60 * 1000
+const validSessionToken = buildSessionToken(galleryId, sessionExp)
+
+check('cookie: valid token, not yet expired → accepted', verifySessionToken(validSessionToken, galleryId, nowMs))
+check('cookie: missing cookie → rejected', !verifySessionToken(null, galleryId, nowMs))
 check(
-  'tampered key (same signature) → rejected',
-  !verifyEdge('watermarked/user-1/gallery-1/wm-OTHER-photo.jpg', exp, validSig, now)
+  'cookie: token issued for a different gallery → rejected',
+  !verifySessionToken(validSessionToken, 'gallery-2', nowMs)
 )
-
 check(
-  'tampered exp (same signature) → rejected',
-  !verifyEdge(key, exp + 1, validSig, now)
+  'cookie: tampered signature → rejected',
+  !verifySessionToken(
+    validSessionToken.slice(0, -1) + (validSessionToken.endsWith('a') ? 'b' : 'a'),
+    galleryId,
+    nowMs
+  )
 )
-
-check('expired (exp in the past) → rejected', !verifyEdge(key, now - 1, sign(`${key}:${now - 1}`), now))
-
 check(
-  'exp exactly now → still accepted (inclusive boundary)',
-  verifyEdge(key, now, sign(`${key}:${now}`), now)
+  'cookie: expired session (30 min elapsed) → rejected',
+  !verifySessionToken(validSessionToken, galleryId, sessionExp + 1)
 )
-
 check(
-  'day-bucketed public expiry shared across two "requests" at the same exp → identical signature (cache-friendly)',
-  signEdge(key, exp) === signEdge(key, exp)
+  'cookie: exp exactly now → still accepted (inclusive boundary)',
+  verifySessionToken(buildSessionToken(galleryId, nowMs), galleryId, nowMs)
+)
+check(
+  'cookie: old 7-day HMAC-only format (no exp in payload) never verifies → forces a clean re-login, no crash',
+  !verifySessionToken(hmacHex(SESSION_SECRET, galleryId), galleryId, nowMs)
 )
 
 console.log(`\n${passed} passed, ${failed} failed`)

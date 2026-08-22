@@ -10,6 +10,25 @@ function getSecret() {
   return requireSessionSecret('GALLERY_SESSION_SECRET', 'dev-gallery-secret')
 }
 
+/**
+ * The gallery page (private.studio-galleries.com) and the image CDN domain
+ * (albums.studio-galleries.com) are different hostnames — a cookie scoped to
+ * the exact host that set it would never reach the Worker guarding the CDN
+ * domain. Scoping it to the shared parent domain instead makes the browser
+ * send it to both, which is what lets the Worker require "this exact
+ * browser's session", not just "anyone who has the URL". Only applied in
+ * production — there's no shared parent domain to speak of in local dev.
+ */
+function cookieDomain() {
+  if (process.env.NODE_ENV !== 'production') return undefined
+  try {
+    const host = new URL(process.env.NEXT_PUBLIC_APP_URL ?? '').hostname
+    return host ? `.${host}` : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function sign(value: string) {
   return createHmac('sha256', getSecret()).update(value).digest('hex')
 }
@@ -54,6 +73,7 @@ export async function setGallerySession(galleryId: string) {
     secure: process.env.NODE_ENV === 'production',
     maxAge: IDLE_TIMEOUT_SEC,
     path: '/',
+    domain: cookieDomain(),
   })
 }
 

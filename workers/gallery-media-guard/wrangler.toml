@@ -3,14 +3,22 @@ main = "worker.js"
 compatibility_date = "2024-01-01"
 
 account_id = "280af5a1ec6294e6b4f265d84717a98f"
+workers_dev = true
+
+# Left disabled on purpose while the new cookie-check logic is untested —
+# re-enable (uncomment) only after verifying via the workers.dev URL, then
+# `wrangler deploy` again to attach it to the real domain.
+# routes = [
+#   { pattern = "albums.studio-galleries.com/*", zone_name = "studio-galleries.com" }
+# ]
 
 [[r2_buckets]]
 binding = "GALLERY_BUCKET"
 bucket_name = "albums"
 
-routes = [
-  { pattern = "albums.studio-galleries.com/*", zone_name = "studio-galleries.com" }
-]
-
-# R2_EDGE_SIGNING_SECRET is set separately as a Worker secret (never committed):
+# Set separately as Worker secrets (never committed):
 #   wrangler secret put R2_EDGE_SIGNING_SECRET
+#   wrangler secret put GALLERY_SESSION_SECRET
+# GALLERY_SESSION_SECRET must be the EXACT same value as the Next.js app's
+# GALLERY_SESSION_SECRET env var (production) — the Worker verifies the same
+# session-cookie token the app signs.

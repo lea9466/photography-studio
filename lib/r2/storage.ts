@@ -90,12 +90,21 @@ export async function mediaObjectExists(bucket: MediaBucket, path: string): Prom
  * `forceProxy` must be true whenever the caller cannot guarantee the media
  * belongs to a genuinely public gallery. `previews`/`watermarked` are
  * bucket-type "public-eligible", but that says nothing about whether THIS
- * gallery is private — the direct public-CDN URL, once handed out, stays
- * fetchable forever with no auth check, even after the gallery is later
- * locked or its password rotated. The gallery-media proxy re-checks access
- * per request (session cookie or public-portfolio status) and only then
- * redirects to the CDN for genuinely public content — see
- * app/api/gallery-media/route.ts's verifyGalleryAccess.
+ * gallery is private — a direct public-CDN URL, on its own, stays fetchable
+ * by anyone who obtains it, with no auth check.
+ *
+ * For a public gallery, resolveMediaUrl signs the URL (~24h rolling expiry —
+ * see lib/r2/edge-signing.ts) so the gallery-media-guard Worker can verify it
+ * without a session, keeping the CDN's full caching benefit.
+ *
+ * For a private gallery, the URL is left bare on purpose — authorization
+ * comes from the gallery session cookie instead (scoped to the shared parent
+ * domain in production, see cookieDomain() in lib/gallery-session.ts), which
+ * the Worker checks directly. This is deliberately *browser-bound* rather
+ * than *link-bound*: a signed-but-shareable URL would still let anyone who
+ * gets the link open it from any browser for as long as it's valid, which a
+ * private gallery must not allow — only the browser that actually passed the
+ * password gate may see the photos.
  */
 export async function resolveMediaUrl(
   bucket: MediaBucket,
@@ -109,8 +118,8 @@ export async function resolveMediaUrl(
   const key = r2ObjectKey(bucket, path)
 
   if (canUsePublicUrl(bucket) && publicUrl) {
-    if (SIGNED_EDGE_BUCKETS.has(bucket)) {
-      return signEdgeUrl(publicUrl, bucket, path, forceProxy ? 'private' : 'public')
+    if (SIGNED_EDGE_BUCKETS.has(bucket) && !forceProxy) {
+      return signEdgeUrl(publicUrl, bucket, path)
     }
     return `${publicUrl}/${key}`
   }
