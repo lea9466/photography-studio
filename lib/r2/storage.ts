@@ -9,7 +9,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { getR2Client } from '@/lib/r2/client'
 import { galleryMediaProxyUrl, getR2Config } from '@/lib/r2/config'
-import { signEdgeUrl } from '@/lib/r2/edge-signing'
+import { signDownloadUrl, signEdgeUrl } from '@/lib/r2/edge-signing'
 import { r2ObjectKey } from '@/lib/r2/keys'
 import type { MediaBucket } from '@/lib/r2/types'
 
@@ -44,12 +44,25 @@ export async function createPresignedUploadUrl(
   return getSignedUrl(getR2Client(), command, { expiresIn })
 }
 
+/**
+ * When a public CDN domain is configured and no custom Content-Disposition
+ * filename is needed, routes through albums.studio-galleries.com + the
+ * gallery-media-guard Worker instead of R2's raw S3-API endpoint — see
+ * signDownloadUrl for why. Falls back to a genuine S3 presigned URL when
+ * there's no public domain configured (local dev) or a filename override is
+ * required (the Worker doesn't set a custom Content-Disposition).
+ */
 export async function createPresignedDownloadUrl(
   bucket: MediaBucket,
   path: string,
   expiresIn = 3600,
   options?: { filename?: string }
 ) {
+  const { publicUrl } = getR2Config()
+  if (publicUrl && !options?.filename) {
+    return signDownloadUrl(publicUrl, bucket, path, expiresIn)
+  }
+
   const { bucketName } = getR2Config()
   const command = new GetObjectCommand({
     Bucket: bucketName,

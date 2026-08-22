@@ -46,3 +46,26 @@ export function signEdgeUrl(publicUrl: string, bucket: MediaBucket, path: string
   const sig = sign(`${key}:${exp}`)
   return `${publicUrl}/${key}?exp=${exp}&sig=${sig}`
 }
+
+/**
+ * Signs a short-lived download link for ANY bucket, including the sensitive
+ * ones (originals/edited/zips) — routed through albums.studio-galleries.com
+ * and the gallery-media-guard Worker instead of R2's raw S3-API endpoint
+ * (*.r2.cloudflarestorage.com), which some client-side content filters block
+ * outright as an unrecognized domain. This carries the same security
+ * property as the S3 presigned URL it replaces (unguessable, time-limited)
+ * — the actual authorization decision (who's allowed to download what) has
+ * already happened server-side in the caller before this is ever minted;
+ * this just proves the link came from our server and bounds it in time.
+ */
+export function signDownloadUrl(
+  publicUrl: string,
+  bucket: MediaBucket,
+  path: string,
+  expiresInSec: number
+) {
+  const key = r2ObjectKey(bucket, path)
+  const exp = Math.floor(Date.now() / 1000) + expiresInSec
+  const sig = sign(`${key}:${exp}`)
+  return `${publicUrl}/${key}?exp=${exp}&sig=${sig}`
+}

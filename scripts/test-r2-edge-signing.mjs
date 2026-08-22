@@ -3,10 +3,11 @@
  * Unit checks for the gallery-media-guard edge-auth scheme: the two
  * HMAC-based checks workers/gallery-media-guard/worker.js performs —
  * (1) the ~24h rolling ?exp&sig for public galleries, mirroring
- * lib/r2/edge-signing.ts, and (2) the gallery session cookie for private
- * galleries, mirroring lib/gallery-session.ts's buildToken/verifyToken.
- * Mirrors both in plain Node crypto (no TS loader, no live Worker) so this
- * can run standalone.
+ * lib/r2/edge-signing.ts's signEdgeUrl, (2) the gallery session cookie for
+ * private galleries, mirroring lib/gallery-session.ts's
+ * buildToken/verifyToken, and (3) the exact-TTL ?exp&sig for sensitive-bucket
+ * downloads, mirroring signDownloadUrl. Mirrors all three in plain Node
+ * crypto (no TS loader, no live Worker) so this can run standalone.
  * Run: node scripts/test-r2-edge-signing.mjs
  */
 
@@ -125,6 +126,33 @@ check(
 check(
   'cookie: old 7-day HMAC-only format (no exp in payload) never verifies → forces a clean re-login, no crash',
   !verifySessionToken(hmacHex(SESSION_SECRET, galleryId), galleryId, nowMs)
+)
+
+// ===== Part 3: sensitive-bucket download links (mirrors signDownloadUrl + the Worker's originals/edited/zips path) =====
+// Same HMAC mechanism as Part 1 (verifyEdge), just an exact TTL from now
+// instead of hour-rounded — confirms it isn't accidentally reusing the
+// rounded/public exp for a supposedly-private download link.
+
+function signDownload(key, expiresInSec, atSec) {
+  const exp = atSec + expiresInSec
+  return { exp, sig: signEdge(key, exp) }
+}
+
+const downloadKey = 'originals/user-1/gallery-1/DSC_0001.jpg'
+const { exp: downloadExp, sig: downloadSig } = signDownload(downloadKey, 3600, nowSec)
+
+check('download: valid signature, within 1h TTL → accepted', verifyEdge(downloadKey, downloadExp, downloadSig, nowSec))
+check(
+  'download: expired past the 1h TTL → rejected',
+  !verifyEdge(downloadKey, downloadExp, downloadSig, downloadExp + 1)
+)
+check(
+  'download: exact TTL (not hour-rounded like the public gallery scheme) → differs from a rounded exp',
+  downloadExp !== Math.ceil(nowSec / 3600) * 3600 + 24 * 3600
+)
+check(
+  'download: previews/watermarked signature cannot be replayed against an originals/ key (key is part of the signed message)',
+  !verifyEdge(downloadKey, edgeExp, validEdgeSig, nowSec)
 )
 
 console.log(`\n${passed} passed, ${failed} failed`)

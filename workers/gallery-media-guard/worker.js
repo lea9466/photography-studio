@@ -22,6 +22,13 @@
  *
  * Either way there is no bypass by omission — a request with no signature
  * AND no valid cookie is rejected, full stop.
+ *
+ * originals/edited/zips (the sensitive buckets) are a third, simpler case:
+ * always require a valid, unexpired signature, no cookie fallback. These
+ * links are minted only after the app has already done a full authorization
+ * check server-side (lib/actions/download.actions.ts) — this just delivers
+ * the bytes through a domain content filters recognize, instead of R2's raw
+ * S3-API endpoint which some of them block outright.
  */
 
 async function hmacHex(secret, message) {
@@ -83,6 +90,18 @@ async function verifyGallerySessionToken(raw, galleryId, secret) {
   return Number.isFinite(exp) && Date.now() <= exp
 }
 
+async function verifySignedUrl(env, key, url) {
+  const exp = url.searchParams.get('exp')
+  const sig = url.searchParams.get('sig')
+  if (!exp || !sig) return false
+
+  const expected = await hmacHex(env.R2_EDGE_SIGNING_SECRET, `${key}:${exp}`)
+  if (!timingSafeEqual(sig, expected)) return false
+  return Math.floor(Date.now() / 1000) <= Number(exp)
+}
+
+const SENSITIVE_PREFIXES = ['originals/', 'edited/', 'zips/']
+
 async function serve(env, key) {
   const object = await env.GALLERY_BUCKET.get(key)
   if (!object) return new Response('Not Found', { status: 404 })
@@ -90,7 +109,14 @@ async function serve(env, key) {
   const headers = new Headers()
   object.writeHttpMetadata(headers)
   headers.set('etag', object.httpEtag)
-  headers.set('Cache-Control', 'public, max-age=86400')
+  // Sensitive downloads are per-request signed URLs for one authorized
+  // download — never shared-cacheable, unlike previews/watermarked/branding.
+  headers.set(
+    'Cache-Control',
+    SENSITIVE_PREFIXES.some((p) => key.startsWith(p))
+      ? 'private, max-age=3600'
+      : 'public, max-age=86400'
+  )
   return new Response(object.body, { headers })
 }
 
@@ -104,17 +130,10 @@ export default {
     }
 
     if (key.startsWith('previews/') || key.startsWith('watermarked/')) {
-      const exp = url.searchParams.get('exp')
-      const sig = url.searchParams.get('sig')
-
-      if (exp && sig) {
+      if (url.searchParams.get('exp') && url.searchParams.get('sig')) {
         // Public-gallery path: must be a valid, unexpired signature. No
         // cookie fallback here — a bad/expired signature is just rejected.
-        const expected = await hmacHex(env.R2_EDGE_SIGNING_SECRET, `${key}:${exp}`)
-        const notExpired = Math.floor(Date.now() / 1000) <= Number(exp)
-        if (timingSafeEqual(sig, expected) && notExpired) {
-          return serve(env, key)
-        }
+        if (await verifySignedUrl(env, key, url)) return serve(env, key)
         return new Response('Forbidden', { status: 403 })
       }
 
@@ -131,9 +150,23 @@ export default {
       return new Response('Forbidden', { status: 403 })
     }
 
-    // originals/edited/zips and anything unrecognized: never served via this
-    // public domain, signed or not — those go through the app's authenticated
-    // proxy / S3 presigned URLs instead (see lib/r2/storage.ts).
+    if (
+      key.startsWith('originals/') ||
+      key.startsWith('edited/') ||
+      key.startsWith('zips/')
+    ) {
+      // Sensitive buckets: server-side authorization already happened
+      // before this link was minted (see lib/actions/download.actions.ts) —
+      // this is just a short-lived, unguessable delivery URL, routed
+      // through our own domain instead of R2's raw S3-API endpoint (which
+      // some client-side content filters block outright as an unrecognized
+      // domain). Always requires a valid, unexpired signature — no
+      // exceptions, no cookie fallback.
+      if (await verifySignedUrl(env, key, url)) return serve(env, key)
+      return new Response('Forbidden', { status: 403 })
+    }
+
+    // Anything unrecognized: never served via this public domain.
     return new Response('Forbidden', { status: 403 })
   },
 }
