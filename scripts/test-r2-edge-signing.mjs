@@ -155,5 +155,31 @@ check(
   !verifyEdge(downloadKey, edgeExp, validEdgeSig, nowSec)
 )
 
+// ===== Part 4: two-route key normalization (mirrors the Worker's "media/" prefix strip) =====
+// Same Worker serves albums.studio-galleries.com/<key> and
+// private.studio-galleries.com/media/<key> — confirms both paths resolve to
+// the identical internal key, so a signature computed by the app (which
+// never includes "media/" — see lib/r2/edge-signing.ts's r2ObjectKey) still
+// verifies correctly no matter which route the request came in on.
+
+function stripMediaPrefix(pathname) {
+  let key = pathname.replace(/^\/+/, '')
+  if (key.startsWith('media/')) key = key.slice('media/'.length)
+  return key
+}
+
+check(
+  'routing: albums-style bare key is unchanged by normalization',
+  stripMediaPrefix('/originals/user-1/gallery-1/DSC_0001.jpg') === downloadKey
+)
+check(
+  'routing: private-domain "media/" prefixed key normalizes to the same key',
+  stripMediaPrefix('/media/originals/user-1/gallery-1/DSC_0001.jpg') === downloadKey
+)
+check(
+  'routing: a signature computed on the bare key still verifies after normalizing the prefixed path',
+  verifyEdge(stripMediaPrefix('/media/originals/user-1/gallery-1/DSC_0001.jpg'), downloadExp, downloadSig, nowSec)
+)
+
 console.log(`\n${passed} passed, ${failed} failed`)
 if (failed > 0) process.exit(1)

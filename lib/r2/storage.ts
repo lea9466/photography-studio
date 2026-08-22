@@ -8,7 +8,7 @@ import {
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { getR2Client } from '@/lib/r2/client'
-import { galleryMediaProxyUrl, getR2Config } from '@/lib/r2/config'
+import { galleryMediaProxyUrl, getR2Config, privateMediaBaseUrl } from '@/lib/r2/config'
 import { signDownloadUrl, signEdgeUrl } from '@/lib/r2/edge-signing'
 import { r2ObjectKey } from '@/lib/r2/keys'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -51,16 +51,25 @@ export async function createPresignedUploadUrl(
  * signDownloadUrl for why. Falls back to a genuine S3 presigned URL when
  * there's no public domain configured (local dev) or a filename override is
  * required (the Worker doesn't set a custom Content-Disposition).
+ *
+ * `forcePrivateDomain` routes through private.studio-galleries.com/media
+ * instead — content filters some clients sit behind (e.g. NetFree) intercept
+ * every HTTP request including images, and the private subdomain is the one
+ * explicitly exempted from that filtering. Caller decides based on whether
+ * the download is tied to a private gallery (see lib/actions/download.actions.ts).
+ * Falls back to the regular public CDN domain if the private one isn't
+ * configured (local dev).
  */
 export async function createPresignedDownloadUrl(
   bucket: MediaBucket,
   path: string,
   expiresIn = 3600,
-  options?: { filename?: string }
+  options?: { filename?: string; forcePrivateDomain?: boolean }
 ) {
   const { publicUrl } = getR2Config()
   if (publicUrl && !options?.filename) {
-    return signDownloadUrl(publicUrl, bucket, path, expiresIn)
+    const baseUrl = options?.forcePrivateDomain ? privateMediaBaseUrl() ?? publicUrl : publicUrl
+    return signDownloadUrl(baseUrl, bucket, path, expiresIn)
   }
 
   const { bucketName } = getR2Config()
@@ -118,6 +127,13 @@ export async function mediaObjectExists(bucket: MediaBucket, path: string): Prom
  * gets the link open it from any browser for as long as it's valid, which a
  * private gallery must not allow — only the browser that actually passed the
  * password gate may see the photos.
+ *
+ * It's also routed through private.studio-galleries.com instead of
+ * albums.studio-galleries.com when that domain is configured — content
+ * filters some clients sit behind (e.g. NetFree) intercept every HTTP
+ * request including images, and the private subdomain is the one explicitly
+ * exempted from that filtering (a public gallery's photos don't need this;
+ * they're already known to pass filtering fine on the regular CDN domain).
  */
 export async function resolveMediaUrl(
   bucket: MediaBucket,
@@ -131,8 +147,10 @@ export async function resolveMediaUrl(
   const key = r2ObjectKey(bucket, path)
 
   if (canUsePublicUrl(bucket) && publicUrl) {
-    if (SIGNED_EDGE_BUCKETS.has(bucket) && !forceProxy) {
-      return signEdgeUrl(publicUrl, bucket, path)
+    if (SIGNED_EDGE_BUCKETS.has(bucket)) {
+      if (!forceProxy) return signEdgeUrl(publicUrl, bucket, path)
+      const baseUrl = privateMediaBaseUrl() ?? publicUrl
+      return `${baseUrl}/${key}`
     }
     return `${publicUrl}/${key}`
   }

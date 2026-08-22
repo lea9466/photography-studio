@@ -33,6 +33,21 @@ export function r2PublicObjectUrl(key: string): string | null {
   return `${publicUrl}/${normalizedKey}`
 }
 
+/**
+ * Base URL for private-gallery media (viewing + downloads) —
+ * https://private.studio-galleries.com/media, served by the same
+ * gallery-media-guard Worker as the public CDN domain, via a second route.
+ * Deliberately reads NEXT_PUBLIC_PRIVATE_GALLERY_URL directly here instead
+ * of importing lib/private-gallery-url.ts, which pulls in lib/seo/public-
+ * metadata.ts — that module imports back from lib/r2/storage.ts, and this
+ * file is imported by storage.ts, so going through it would create a
+ * circular import.
+ */
+export function privateMediaBaseUrl(): string | null {
+  const configured = process.env.NEXT_PUBLIC_PRIVATE_GALLERY_URL?.trim().replace(/\/+$/, '')
+  return configured ? `${configured}/media` : null
+}
+
 export function galleryMediaProxyUrl(key: string, galleryId?: string) {
   const normalizedKey = key.replace(/^\/+/, '')
   const url = `/api/gallery-media?key=${encodeURIComponent(normalizedKey)}`

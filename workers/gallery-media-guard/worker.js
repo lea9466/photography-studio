@@ -1,8 +1,10 @@
 /**
- * Sits in front of the public R2 custom domain (albums.studio-galleries.com).
- * That domain used to be bound straight to the R2 bucket, which served every
- * object unconditionally to anyone with the URL, forever — bypassing the
- * Next.js app's session checks entirely.
+ * Deployed to two routes on the same Worker:
+ *   - albums.studio-galleries.com/*          (public CDN domain)
+ *   - private.studio-galleries.com/media/*   (content-filter-exempt domain)
+ * albums.studio-galleries.com used to be bound straight to the R2 bucket,
+ * which served every object unconditionally to anyone with the URL, forever
+ * — bypassing the Next.js app's session checks entirely.
  *
  * Two separate authorization paths for previews/watermarked, chosen by
  * whether the request carries a signed ?exp&sig query string:
@@ -23,12 +25,14 @@
  * Either way there is no bypass by omission — a request with no signature
  * AND no valid cookie is rejected, full stop.
  *
- * originals/edited/zips (the sensitive buckets) are a third, simpler case:
- * always require a valid, unexpired signature, no cookie fallback. These
- * links are minted only after the app has already done a full authorization
- * check server-side (lib/actions/download.actions.ts) — this just delivers
- * the bytes through a domain content filters recognize, instead of R2's raw
- * S3-API endpoint which some of them block outright.
+ * originals/edited/zips (the sensitive buckets — all downloads) are a third,
+ * simpler case: always require a valid, unexpired signature, no cookie
+ * fallback. These links are minted only after the app has already done a
+ * full authorization check server-side (lib/actions/download.actions.ts) —
+ * this just delivers the bytes through a domain that's either the public CDN
+ * or (for a private gallery, or the photographer's own selection download)
+ * the content-filter-exempt private domain, instead of R2's raw S3-API
+ * endpoint which some content filters block outright.
  */
 
 async function hmacHex(secret, message) {
@@ -123,7 +127,13 @@ async function serve(env, key) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    const key = url.pathname.replace(/^\/+/, '')
+    let key = url.pathname.replace(/^\/+/, '')
+    // Same Worker, two routes: albums.studio-galleries.com/<key> (public CDN)
+    // and private.studio-galleries.com/media/<key> (content-filter-exempt
+    // domain, for private-gallery media and all sensitive downloads — see
+    // lib/r2/config.ts's privateMediaBaseUrl). Normalize both to the same
+    // internal key so the rest of this logic doesn't need to care which one.
+    if (key.startsWith('media/')) key = key.slice('media/'.length)
 
     if (key.startsWith('branding/') || key.startsWith('cover-images/')) {
       return serve(env, key)

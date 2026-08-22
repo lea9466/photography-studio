@@ -6,7 +6,8 @@ account_id = "280af5a1ec6294e6b4f265d84717a98f"
 workers_dev = true
 
 routes = [
-  { pattern = "albums.studio-galleries.com/*", zone_name = "studio-galleries.com" }
+  { pattern = "albums.studio-galleries.com/*", zone_name = "studio-galleries.com" },
+  { pattern = "private.studio-galleries.com/media/*", zone_name = "studio-galleries.com" }
 ]
 
 [[r2_buckets]]

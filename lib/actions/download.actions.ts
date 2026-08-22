@@ -24,7 +24,8 @@ type ResolvableDownloadType = 'original' | 'watermarked' | 'edited'
  */
 async function resolveDownloadFiles(
   galleryId: string,
-  type: ResolvableDownloadType
+  type: ResolvableDownloadType,
+  forcePrivateDomain: boolean
 ): Promise<DownloadFileEntry[]> {
   const admin = createAdminClient()
   const candidates: { bucket: MediaBucket; path: string }[] = []
@@ -94,11 +95,12 @@ async function resolveDownloadFiles(
     }
   }
 
-  return presignCandidates(candidates)
+  return presignCandidates(candidates, forcePrivateDomain)
 }
 
 async function presignCandidates(
-  candidates: { bucket: MediaBucket; path: string }[]
+  candidates: { bucket: MediaBucket; path: string }[],
+  forcePrivateDomain: boolean
 ): Promise<DownloadFileEntry[]> {
   if (candidates.length === 0) {
     throw new Error('אין קבצים להורדה')
@@ -107,7 +109,7 @@ async function presignCandidates(
   return Promise.all(
     candidates.map(async ({ bucket, path }) => ({
       filename: path.split('/').pop()!,
-      url: await createPresignedDownloadUrl(bucket, path, 3600),
+      url: await createPresignedDownloadUrl(bucket, path, 3600, { forcePrivateDomain }),
     }))
   )
 }
@@ -144,7 +146,10 @@ export async function getSelectedPhotosOriginalFiles(
     if (path) candidates.push({ bucket: photo.original_url ? 'originals' : 'previews', path })
   }
 
-  return presignCandidates(candidates)
+  // Always through the private domain, regardless of the gallery's own
+  // public/private status — this is the photographer's own workflow, and it
+  // must never come back filtered/blocked by a client-side content filter.
+  return presignCandidates(candidates, true)
 }
 
 /** Client-facing download of regular/watermarked photos, gated by the photographer's allow_download_* settings. */
@@ -165,12 +170,13 @@ export async function getClientGalleryDownloadFiles(
   const admin = createAdminClient()
   const { data: galleryData } = await admin
     .from('galleries')
-    .select('id, gallery_settings(allow_download_preview, allow_download_original)')
+    .select('id, is_public, gallery_settings(allow_download_preview, allow_download_original)')
     .eq('id', galleryId)
     .single()
 
   type GalleryRow = {
     id: string
+    is_public: boolean
     gallery_settings:
       | { allow_download_preview: boolean; allow_download_original: boolean }
       | { allow_download_preview: boolean; allow_download_original: boolean }[]
@@ -192,7 +198,7 @@ export async function getClientGalleryDownloadFiles(
     throw new Error('הורדת תמונות מקור לא מורשית')
   }
 
-  return resolveDownloadFiles(galleryId, type)
+  return resolveDownloadFiles(galleryId, type, !gallery.is_public)
 }
 
 /** Client-facing download of the photographer's edited/delivered photos. */
@@ -205,15 +211,15 @@ export async function getClientEditedDownloadFiles(
   const admin = createAdminClient()
   const { data: galleryData } = await admin
     .from('galleries')
-    .select('id, status')
+    .select('id, status, is_public')
     .eq('id', galleryId)
     .single()
 
-  const gallery = galleryData as { id: string; status: string } | null
+  const gallery = galleryData as { id: string; status: string; is_public: boolean } | null
   if (!gallery) throw new Error('גלריה לא נמצאה')
   if (!['delivery_ready', 'locked'].includes(gallery.status)) {
     throw new Error('ההורדה תיפתח כשהגלריה מוכנה למסירה')
   }
 
-  return resolveDownloadFiles(galleryId, 'edited')
+  return resolveDownloadFiles(galleryId, 'edited', !gallery.is_public)
 }
