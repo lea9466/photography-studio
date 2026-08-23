@@ -14,6 +14,7 @@ import {
   parseStudioSlugPath,
   resolveSlugRedirect,
 } from '@/lib/referral/slug-redirect'
+import { withTimeout } from '@/lib/utils/with-timeout'
 import { resolveCustomDomainSlug, isKnownAppHost } from '@/lib/domains/custom-domain-lookup'
 import {
   isBrowserOnlyReservedPath,
@@ -29,6 +30,14 @@ import {
   DASHBOARD_SUBSCRIPTION_PATH,
   isDashboardSubscriptionPath,
 } from '@/lib/site-access/dashboard-lock'
+
+// A slow/degraded Supabase response must never hang this middleware until
+// Vercel's own 25s function timeout kills it (see the incident this was
+// added for — every call below used to have zero timeout protection, only a
+// try/catch that does nothing for a slow-but-eventually-successful
+// response). Each call site below falls back to the same safe default it
+// already used on a thrown error, just triggered by slowness too now.
+const SUPABASE_MIDDLEWARE_TIMEOUT_MS = 4000
 
 export async function updateSession(request: NextRequest, event?: NextFetchEvent) {
   const pathname = request.nextUrl.pathname
@@ -69,7 +78,11 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
 
   if (studioSlug) {
     try {
-      const newSlug = await resolveSlugRedirect(studioSlug)
+      const newSlug = await withTimeout(
+        resolveSlugRedirect(studioSlug),
+        SUPABASE_MIDDLEWARE_TIMEOUT_MS,
+        null
+      )
       if (newSlug) {
         const url = request.nextUrl.clone()
         url.pathname = `/${encodeURIComponent(newSlug)}`
@@ -109,8 +122,12 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
   let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] = null
 
   try {
-    const authResult = await supabase.auth.getUser()
-    user = authResult.data.user
+    const authResult = await withTimeout(
+      supabase.auth.getUser(),
+      SUPABASE_MIDDLEWARE_TIMEOUT_MS,
+      null
+    )
+    user = authResult?.data.user ?? null
   } catch {
     return supabaseResponse
   }
@@ -124,11 +141,10 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
     if (!user) return false
     if (impersonatedUserId && manageAdminSession) return false
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('show_welcome_popup')
-      .eq('id', user.id)
-      .maybeSingle()
+    const query = supabase.from('users').select('show_welcome_popup').eq('id', user.id).maybeSingle()
+    const { data: profile } = await withTimeout(query, SUPABASE_MIDDLEWARE_TIMEOUT_MS, {
+      data: null,
+    } as Awaited<typeof query>)
 
     return Boolean(
       (profile as { show_welcome_popup?: boolean } | null)?.show_welcome_popup
@@ -139,11 +155,11 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
     if (!user) return false
     if (impersonatedUserId && manageAdminSession) return false
 
-    const { data: profile, error } = await supabase
-      .from('users')
-      .select('is_site_unavailable')
-      .eq('id', user.id)
-      .maybeSingle()
+    const query = supabase.from('users').select('is_site_unavailable').eq('id', user.id).maybeSingle()
+    const { data: profile, error } = await withTimeout(query, SUPABASE_MIDDLEWARE_TIMEOUT_MS, {
+      data: null,
+      error: null,
+    } as Awaited<typeof query>)
 
     if (error) {
       const message = error.message?.toLowerCase() ?? ''
