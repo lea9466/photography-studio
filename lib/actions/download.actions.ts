@@ -99,7 +99,7 @@ async function resolveDownloadFiles(
 }
 
 async function presignCandidates(
-  candidates: { bucket: MediaBucket; path: string }[],
+  candidates: { bucket: MediaBucket; path: string; folder?: string }[],
   forcePrivateDomain: boolean
 ): Promise<DownloadFileEntry[]> {
   if (candidates.length === 0) {
@@ -107,8 +107,8 @@ async function presignCandidates(
   }
 
   return Promise.all(
-    candidates.map(async ({ bucket, path }) => ({
-      filename: path.split('/').pop()!,
+    candidates.map(async ({ bucket, path, folder }) => ({
+      filename: folder ? `${folder}/${path.split('/').pop()!}` : path.split('/').pop()!,
       url: await createPresignedDownloadUrl(bucket, path, 3600, { forcePrivateDomain }),
     }))
   )
@@ -120,14 +120,21 @@ async function presignCandidates(
  * selection gallery can hold hundreds of photos the client never chose;
  * downloading all of them at original quality just to find the handful
  * that need editing defeats the point of the selection step.
+ *
+ * Album and edit picks are kept as two separate lists (not merged/deduped)
+ * so the zip can sort each into its own "אלבום"/"עיבוד" folder — a photo
+ * selected for both shows up in both folders, once each, matching what the
+ * photographer sees as two distinct selection columns in the dashboard.
  */
 export async function getSelectedPhotosOriginalFiles(
   galleryId: string,
-  photoIds: string[]
+  albumPhotoIds: string[],
+  editPhotoIds: string[]
 ): Promise<DownloadFileEntry[]> {
   await assertGalleryOwner(galleryId)
 
-  if (photoIds.length === 0) {
+  const allPhotoIds = [...new Set([...albumPhotoIds, ...editPhotoIds])]
+  if (allPhotoIds.length === 0) {
     throw new Error('אין תמונות נבחרות להורדה')
   }
 
@@ -136,14 +143,20 @@ export async function getSelectedPhotosOriginalFiles(
     .from('photos')
     .select('id, original_url, preview_url')
     .eq('gallery_id', galleryId)
-    .in('id', photoIds)
+    .in('id', allPhotoIds)
 
   type PhotoRow = { id: string; original_url: string | null; preview_url: string | null }
 
-  const candidates: { bucket: MediaBucket; path: string }[] = []
+  const albumIdSet = new Set(albumPhotoIds)
+  const editIdSet = new Set(editPhotoIds)
+
+  const candidates: { bucket: MediaBucket; path: string; folder: string }[] = []
   for (const photo of (photos ?? []) as PhotoRow[]) {
     const path = photo.original_url ?? photo.preview_url
-    if (path) candidates.push({ bucket: photo.original_url ? 'originals' : 'previews', path })
+    if (!path) continue
+    const bucket: MediaBucket = photo.original_url ? 'originals' : 'previews'
+    if (albumIdSet.has(photo.id)) candidates.push({ bucket, path, folder: 'אלבום' })
+    if (editIdSet.has(photo.id)) candidates.push({ bucket, path, folder: 'עיבוד' })
   }
 
   // Always through the private domain, regardless of the gallery's own

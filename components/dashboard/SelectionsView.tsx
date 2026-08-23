@@ -39,17 +39,22 @@ export function SelectionsView({
   const [albumExpanded, setAlbumExpanded] = useState(false)
   const [editExpanded, setEditExpanded] = useState(false)
 
+  const albumPhotoIds = useMemo(() => albumPhotos.map((photo) => photo.id), [albumPhotos])
+  const editPhotoIds = useMemo(() => editPhotos.map((photo) => photo.id), [editPhotos])
   const selectedPhotoIds = useMemo(
-    () => [...new Set([...albumPhotos, ...editPhotos].map((photo) => photo.id))],
-    [albumPhotos, editPhotos]
+    () => [...new Set([...albumPhotoIds, ...editPhotoIds])],
+    [albumPhotoIds, editPhotoIds]
   )
+  // Matches what actually lands in the zip: a photo picked for both shows up
+  // in both folders, so the download count counts it twice too.
+  const downloadFileCount = albumPhotoIds.length + editPhotoIds.length
 
   function handleDownload() {
     const toastId = toast.loading('מכינה רשימת קבצים...')
 
     startTransition(async () => {
       try {
-        const files = await getSelectedPhotosOriginalFiles(galleryId, selectedPhotoIds)
+        const files = await getSelectedPhotosOriginalFiles(galleryId, albumPhotoIds, editPhotoIds)
         const { failed } = await downloadFilesAsZip(
           files,
           `selected-${galleryId.slice(0, 8)}.zip`,
@@ -78,7 +83,7 @@ export function SelectionsView({
           onClick={handleDownload}
         >
           <Download className="h-4 w-4" />
-          הורד תמונות נבחרות ({selectedPhotoIds.length}, ZIP)
+          הורד תמונות נבחרות ({downloadFileCount}, ZIP)
         </Button>
       </div>
 
