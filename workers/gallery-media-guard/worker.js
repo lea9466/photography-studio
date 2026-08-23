@@ -124,59 +124,85 @@ async function serve(env, key) {
   return new Response(object.body, { headers })
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url)
-    let key = url.pathname.replace(/^\/+/, '')
-    // Same Worker, two routes: albums.studio-galleries.com/<key> (public CDN)
-    // and private.studio-galleries.com/media/<key> (content-filter-exempt
-    // domain, for private-gallery media and all sensitive downloads — see
-    // lib/r2/config.ts's privateMediaBaseUrl). Normalize both to the same
-    // internal key so the rest of this logic doesn't need to care which one.
-    if (key.startsWith('media/')) key = key.slice('media/'.length)
+/**
+ * Client-side code that builds a ZIP from several download URLs (see
+ * lib/actions/download.actions.ts's comment about zipping client-side) uses
+ * fetch() to read each file's bytes, and fetch() is cross-origin here (the
+ * dashboard/app runs on a different host than this Worker's domains). A
+ * cross-origin fetch() succeeds at the network level even without CORS
+ * headers — visible as 200 OK in the Network tab — but the browser blocks
+ * the JS from reading the response body without an explicit
+ * Access-Control-Allow-Origin, so the ZIP silently never completes. These
+ * URLs are already the auth boundary (signature or cookie, checked below),
+ * so allowing any origin to read a response that already passed that check
+ * doesn't weaken anything.
+ */
+function withCors(response) {
+  const headers = new Headers(response.headers)
+  headers.set('Access-Control-Allow-Origin', '*')
+  return new Response(response.body, { status: response.status, headers })
+}
 
-    if (key.startsWith('branding/') || key.startsWith('cover-images/')) {
-      return serve(env, key)
-    }
+async function handleRequest(request, env) {
+  const url = new URL(request.url)
+  let key = url.pathname.replace(/^\/+/, '')
+  // Same Worker, two routes: albums.studio-galleries.com/<key> (public CDN)
+  // and private.studio-galleries.com/media/<key> (content-filter-exempt
+  // domain, for private-gallery media and all sensitive downloads — see
+  // lib/r2/config.ts's privateMediaBaseUrl). Normalize both to the same
+  // internal key so the rest of this logic doesn't need to care which one.
+  if (key.startsWith('media/')) key = key.slice('media/'.length)
 
-    if (key.startsWith('previews/') || key.startsWith('watermarked/')) {
-      if (url.searchParams.get('exp') && url.searchParams.get('sig')) {
-        // Public-gallery path: must be a valid, unexpired signature. No
-        // cookie fallback here — a bad/expired signature is just rejected.
-        if (await verifySignedUrl(env, key, url)) return serve(env, key)
-        return new Response('Forbidden', { status: 403 })
-      }
+  if (key.startsWith('branding/') || key.startsWith('cover-images/')) {
+    return serve(env, key)
+  }
 
-      // No signature at all: private-gallery path — must have a valid,
-      // browser-bound session cookie for this specific gallery.
-      const galleryId = galleryIdFromKey(key)
-      if (galleryId) {
-        const raw = getCookie(request, `sg_gallery_${galleryId}`)
-        if (await verifyGallerySessionToken(raw, galleryId, env.GALLERY_SESSION_SECRET)) {
-          return serve(env, key)
-        }
-      }
-
-      return new Response('Forbidden', { status: 403 })
-    }
-
-    if (
-      key.startsWith('originals/') ||
-      key.startsWith('edited/') ||
-      key.startsWith('zips/')
-    ) {
-      // Sensitive buckets: server-side authorization already happened
-      // before this link was minted (see lib/actions/download.actions.ts) —
-      // this is just a short-lived, unguessable delivery URL, routed
-      // through our own domain instead of R2's raw S3-API endpoint (which
-      // some client-side content filters block outright as an unrecognized
-      // domain). Always requires a valid, unexpired signature — no
-      // exceptions, no cookie fallback.
+  if (key.startsWith('previews/') || key.startsWith('watermarked/')) {
+    if (url.searchParams.get('exp') && url.searchParams.get('sig')) {
+      // Public-gallery path: must be a valid, unexpired signature. No
+      // cookie fallback here — a bad/expired signature is just rejected.
       if (await verifySignedUrl(env, key, url)) return serve(env, key)
       return new Response('Forbidden', { status: 403 })
     }
 
-    // Anything unrecognized: never served via this public domain.
+    // No signature at all: private-gallery path — must have a valid,
+    // browser-bound session cookie for this specific gallery.
+    const galleryId = galleryIdFromKey(key)
+    if (galleryId) {
+      const raw = getCookie(request, `sg_gallery_${galleryId}`)
+      if (await verifyGallerySessionToken(raw, galleryId, env.GALLERY_SESSION_SECRET)) {
+        return serve(env, key)
+      }
+    }
+
     return new Response('Forbidden', { status: 403 })
+  }
+
+  if (
+    key.startsWith('originals/') ||
+    key.startsWith('edited/') ||
+    key.startsWith('zips/')
+  ) {
+    // Sensitive buckets: server-side authorization already happened
+    // before this link was minted (see lib/actions/download.actions.ts) —
+    // this is just a short-lived, unguessable delivery URL, routed
+    // through our own domain instead of R2's raw S3-API endpoint (which
+    // some client-side content filters block outright as an unrecognized
+    // domain). Always requires a valid, unexpired signature — no
+    // exceptions, no cookie fallback.
+    if (await verifySignedUrl(env, key, url)) return serve(env, key)
+    return new Response('Forbidden', { status: 403 })
+  }
+
+  // Anything unrecognized: never served via this public domain.
+  return new Response('Forbidden', { status: 403 })
+}
+
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') {
+      return withCors(new Response(null, { status: 204 }))
+    }
+    return withCors(await handleRequest(request, env))
   },
 }
