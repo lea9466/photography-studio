@@ -1,8 +1,10 @@
 import { notFound, permanentRedirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import {
   applyOwnerPreviewBypass,
   resolvePublicSiteGateBySlug,
@@ -39,6 +41,15 @@ import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
+import { getDashboardContext } from '@/lib/auth/dashboard-context'
+import { isReactHomepagePreviewSlug } from '@/lib/public-site/react-rollout'
+import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
+import {
+  toClassicHomePageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicHomepageShell } from '@/components/photographer/react-site/ClassicHomepageShell'
 
 interface PageProps {
   params: Promise<{
@@ -475,8 +486,18 @@ export default async function PhotographerPage({ params }: PageProps) {
       }))
     )
 
-    const canonicalPath =
-      getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
+    // On a photographer's connected custom domain, the middleware already
+    // rewrote this request from `/` (or `/blog`, etc.) to `/{slug}/...`
+    // internally — but internal nav links built from the real slug path
+    // (`/{slug}/blog`) would 404 for a visitor on the custom domain, since
+    // only a small fixed set of tenant-relative paths is recognized there
+    // (see lib/domains/rewrite.ts). Use an empty base for concatenation on a
+    // tenant domain instead, so these links stay relative to whatever host
+    // the visitor is actually on.
+    const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+    const canonicalPath = isTenantDomain
+      ? ''
+      : (getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`)
     const studioName =
       typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
     const [discoveryGalleries, discoveryPosts] = await Promise.all([
@@ -494,6 +515,55 @@ export default async function PhotographerPage({ params }: PageProps) {
       imageUrl: shareImage,
     })
 
+    // Phase 0 of the React public-site rollout (see the approved integration
+    // plan): a hand-picked slug, previewable only by the studio's own owner,
+    // renders through the new React theme components instead of the old
+    // iframe/string-HTML system. Every other slug (and every other visitor,
+    // even on the allowlisted slug) keeps hitting the unchanged code below.
+    console.log('[react-rollout-debug] allowlist check', {
+      decodedSlug,
+      allowlisted: isReactHomepagePreviewSlug(decodedSlug),
+      envValue: process.env.REACT_HOMEPAGE_PREVIEW_SLUGS ?? null,
+    })
+    if (isReactHomepagePreviewSlug(decodedSlug)) {
+      const dashboardContext = await getDashboardContext()
+      console.log('[react-rollout-debug] owner check', {
+        decodedSlug,
+        photographerId: typedPhotographer.id,
+        dashboardUserId: dashboardContext?.userId ?? null,
+        isOwnerMatch: dashboardContext?.userId === typedPhotographer.id,
+      })
+      if (dashboardContext?.userId === typedPhotographer.id) {
+        const blogPath = `${canonicalPath}/blog`
+        const portfolioPath = `${canonicalPath}/portfolio`
+        const beforeAfterPath = `${canonicalPath}/before-after`
+
+        const viewModel = buildHomepageViewModel({
+          photographer: photographerWithUrls,
+          galleries: galleriesWithPools,
+          packages: packages || [],
+          testimonials: testimonialsWithUrls,
+          posts: homepagePosts,
+          homepagePath: canonicalPath || '/',
+          blogPath,
+          portfolioPath,
+          beforeAfterPath,
+          hasFaq,
+          postCount: postCount ?? 0,
+          photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
+        })
+
+        return (
+          <ClassicHomepageShell
+            photographerId={typedPhotographer.id}
+            headerProps={toClassicSiteHeaderProps(viewModel)}
+            footerProps={toClassicSiteFooterProps(viewModel)}
+            homePageProps={toClassicHomePageProps(viewModel)}
+          />
+        )
+      }
+    }
+
     return (
       <>
         <Script
@@ -504,7 +574,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           }}
         />
         <PhotographerSemanticAnchors
-          studioPath={canonicalPath}
+          studioPath={canonicalPath || '/'}
           studioName={studioName}
           galleries={discoveryGalleries}
           posts={discoveryPosts}
@@ -518,7 +588,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           photoEditComparisonsCount={photoEditComparisonsCount ?? 0}
           blogPath={`${canonicalPath}/blog`}
           portfolioPath={`${canonicalPath}/portfolio`}
-          studioPath={canonicalPath}
+          studioPath={canonicalPath || '/'}
           posts={homepagePosts}
         />
       </>
