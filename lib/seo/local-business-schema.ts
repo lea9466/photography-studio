@@ -8,6 +8,8 @@ type LocalBusinessInput = {
   address?: string | null
   canonicalPath: string
   imageUrl?: string | null
+  /** A photographer's own connected custom domain, if any — see buildCanonicalUrl. */
+  baseUrl?: string
 }
 
 export function buildPhotographerDescription(input: {
@@ -55,7 +57,7 @@ export function buildPhotographerLocalBusinessJsonLd(input: LocalBusinessInput) 
     '@context': 'https://schema.org',
     '@type': 'ProfessionalService',
     name,
-    url: buildCanonicalUrl(input.canonicalPath),
+    url: buildCanonicalUrl(input.canonicalPath, input.baseUrl),
     ...(input.aboutText?.trim() ? { description: input.aboutText.trim() } : {}),
     ...(input.email?.trim() ? { email: input.email.trim() } : {}),
     ...(image ? { image } : {}),

@@ -8,6 +8,9 @@ import {
 } from '../lib/domains/rewrite'
 import { VercelClient } from '../lib/vercel/client'
 import { VercelError } from '../lib/vercel/errors'
+import { buildCanonicalUrl, buildPublicOpenGraph } from '../lib/seo/public-metadata'
+import { buildPhotographerLocalBusinessJsonLd } from '../lib/seo/local-business-schema'
+import { sanitizeCustomDomainHostname } from '../lib/domains/custom-domain-lookup'
 
 test('connectCustomDomainSchema accepts a valid subdomain', () => {
   const result = connectCustomDomainSchema.parse({ hostname: 'www.johnphoto.com' })
@@ -128,4 +131,70 @@ test('VercelClient appends teamId as a query param when configured', async () =>
     globalThis.fetch = originalFetch
     delete process.env.VERCEL_TEAM_ID
   }
+})
+
+test('buildCanonicalUrl defaults to the app base URL when no baseUrl is given', () => {
+  process.env.NEXT_PUBLIC_APP_URL = 'https://studio-galleries.com'
+  assert.equal(buildCanonicalUrl('/lea-studio/blog'), 'https://studio-galleries.com/lea-studio/blog')
+})
+
+test('buildCanonicalUrl uses baseUrl to point at a photographer\'s own domain instead', () => {
+  process.env.NEXT_PUBLIC_APP_URL = 'https://studio-galleries.com'
+  assert.equal(buildCanonicalUrl('/blog', 'https://johnphoto.com'), 'https://johnphoto.com/blog')
+})
+
+test('buildCanonicalUrl normalizes an empty path to the domain root, not a blank or double-slash URL', () => {
+  assert.equal(buildCanonicalUrl('', 'https://johnphoto.com'), 'https://johnphoto.com/')
+})
+
+test('buildCanonicalUrl never produces a double slash when concatenating base + path', () => {
+  const url = buildCanonicalUrl('/blog', 'https://johnphoto.com')
+  assert.doesNotMatch(url.replace('https://', ''), /\/\//)
+})
+
+test('buildPublicOpenGraph threads baseUrl through to the og:url it builds', () => {
+  const og = buildPublicOpenGraph({
+    title: 'title',
+    description: 'description',
+    canonicalPath: '/blog',
+    baseUrl: 'https://johnphoto.com',
+  })
+  assert.equal(og?.url, 'https://johnphoto.com/blog')
+})
+
+test('buildPhotographerLocalBusinessJsonLd threads baseUrl through to its url field', () => {
+  const jsonLd = buildPhotographerLocalBusinessJsonLd({
+    name: 'John',
+    studioName: 'John Photo',
+    canonicalPath: '/',
+    baseUrl: 'https://johnphoto.com',
+  })
+  assert.equal(jsonLd.url, 'https://johnphoto.com/')
+})
+
+test('buildPhotographerLocalBusinessJsonLd falls back to the app domain when baseUrl is omitted', () => {
+  process.env.NEXT_PUBLIC_APP_URL = 'https://studio-galleries.com'
+  const jsonLd = buildPhotographerLocalBusinessJsonLd({
+    name: 'John',
+    studioName: 'John Photo',
+    canonicalPath: '/lea-studio',
+  })
+  assert.equal(jsonLd.url, 'https://studio-galleries.com/lea-studio')
+})
+
+test('sanitizeCustomDomainHostname passes through an already-clean hostname', () => {
+  assert.equal(sanitizeCustomDomainHostname('www.johnphoto.com'), 'www.johnphoto.com')
+})
+
+test('sanitizeCustomDomainHostname strips a stray https:// prefix', () => {
+  assert.equal(sanitizeCustomDomainHostname('https://www.johnphoto.com'), 'www.johnphoto.com')
+})
+
+test('sanitizeCustomDomainHostname strips trailing slashes', () => {
+  assert.equal(sanitizeCustomDomainHostname('www.johnphoto.com/'), 'www.johnphoto.com')
+  assert.equal(sanitizeCustomDomainHostname('www.johnphoto.com//'), 'www.johnphoto.com')
+})
+
+test('sanitizeCustomDomainHostname strips both a protocol and trailing slash together', () => {
+  assert.equal(sanitizeCustomDomainHostname('HTTP://www.johnphoto.com/'), 'www.johnphoto.com')
 })

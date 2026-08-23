@@ -12,9 +12,16 @@ export function getAppBaseUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL ?? 'https://studio-galleries.com').replace(/\/$/, '')
 }
 
-export function buildCanonicalUrl(path: string) {
+/**
+ * `baseUrl` lets a photographer's own connected custom domain become the
+ * canonical host instead of the app's own domain — omit it (the default) for
+ * every existing caller's unchanged behavior. Media/asset URLs
+ * (toAbsoluteMediaUrl below) deliberately do NOT take this param — images
+ * always stay served from the app's own domain regardless of canonical host.
+ */
+export function buildCanonicalUrl(path: string, baseUrl?: string) {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
-  return `${getAppBaseUrl()}${normalizedPath}`
+  return `${baseUrl ?? getAppBaseUrl()}${normalizedPath}`
 }
 
 export function toAbsoluteMediaUrl(url: string | null | undefined): string | undefined {
@@ -180,13 +187,15 @@ export function buildPublicOpenGraph({
   description,
   canonicalPath,
   imageUrl,
+  baseUrl,
 }: {
   title: string
   description: string
   canonicalPath: string
   imageUrl?: string | null
+  baseUrl?: string
 }): Metadata['openGraph'] {
-  const url = buildCanonicalUrl(canonicalPath)
+  const url = buildCanonicalUrl(canonicalPath, baseUrl)
   const images = buildOpenGraphImages(imageUrl)
 
   return {

@@ -1,4 +1,8 @@
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withTimeout } from '@/lib/utils/with-timeout'
+
+const METADATA_LOOKUP_TIMEOUT_MS = 4000
 
 /**
  * Hard ceiling on the DB round-trip inside middleware. There is otherwise no
@@ -56,6 +60,58 @@ export async function resolveCustomDomainSlug(hostname: string): Promise<string 
     clearTimeout(timer)
   }
 }
+
+/**
+ * Defense in depth beyond the Zod validation already applied before a
+ * hostname is stored (lib/validations/domain.ts) — protects against any
+ * future write path (an admin tool, a manual DB fix) that skips it. Exported
+ * standalone so it's unit-testable without a DB.
+ */
+export function sanitizeCustomDomainHostname(hostname: string): string | null {
+  return hostname.trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '') || null
+}
+
+/**
+ * Resolves a photographer's own active custom domain (if any) — used for SEO
+ * canonical/OG/JSON-LD URLs, independent of which host the current visitor is
+ * on (unlike resolveCustomDomainSlug above, which is about the CURRENT
+ * request's Host header). Wrapped in React's cache() since generateMetadata
+ * and the page component both need this value independently within the same
+ * request (same pattern as findPhotographerBySlug).
+ *
+ * Runs in a normal Node/Server Component context (not Edge middleware), so
+ * withTimeout (a race, not a true abort) is the right level of caution here —
+ * no need for the AbortController ceremony resolveCustomDomainSlug uses for
+ * the Edge Middleware's much tighter execution ceiling. Fails safe to null on
+ * any error or timeout, which callers treat as "no custom domain" — a stale
+ * canonical during a DB hiccup is far better than a broken page.
+ */
+export const getActiveCustomDomainHost = cache(async (userId: string): Promise<string | null> => {
+  try {
+    const admin = createAdminClient()
+    const query = admin
+      .from('custom_domains')
+      .select('hostname')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    const { data } = await withTimeout(query, METADATA_LOOKUP_TIMEOUT_MS, { data: null, error: null } as Awaited<
+      typeof query
+    >)
+
+    const hostname = (data as { hostname: string } | null)?.hostname
+    if (!hostname) return null
+
+    return sanitizeCustomDomainHostname(hostname)
+  } catch (error) {
+    console.error('[custom-domain-lookup] getActiveCustomDomainHost failed, treating as none', {
+      userId,
+      error: error instanceof Error ? error.message : error,
+    })
+    return null
+  }
+})
 
 function safeHost(url: string): string | null {
   try {
