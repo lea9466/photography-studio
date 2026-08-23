@@ -41,15 +41,6 @@ import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
-import { getDashboardContext } from '@/lib/auth/dashboard-context'
-import { isReactHomepagePreviewSlug } from '@/lib/public-site/react-rollout'
-import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
-import {
-  toClassicHomePageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
-import { ClassicHomepageShell } from '@/components/photographer/react-site/ClassicHomepageShell'
 
 interface PageProps {
   params: Promise<{
@@ -514,55 +505,6 @@ export default async function PhotographerPage({ params }: PageProps) {
       canonicalPath,
       imageUrl: shareImage,
     })
-
-    // Phase 0 of the React public-site rollout (see the approved integration
-    // plan): a hand-picked slug, previewable only by the studio's own owner,
-    // renders through the new React theme components instead of the old
-    // iframe/string-HTML system. Every other slug (and every other visitor,
-    // even on the allowlisted slug) keeps hitting the unchanged code below.
-    console.log('[react-rollout-debug] allowlist check', {
-      decodedSlug,
-      allowlisted: isReactHomepagePreviewSlug(decodedSlug),
-      envValue: process.env.REACT_HOMEPAGE_PREVIEW_SLUGS ?? null,
-    })
-    if (isReactHomepagePreviewSlug(decodedSlug)) {
-      const dashboardContext = await getDashboardContext()
-      console.log('[react-rollout-debug] owner check', {
-        decodedSlug,
-        photographerId: typedPhotographer.id,
-        dashboardUserId: dashboardContext?.userId ?? null,
-        isOwnerMatch: dashboardContext?.userId === typedPhotographer.id,
-      })
-      if (dashboardContext?.userId === typedPhotographer.id) {
-        const blogPath = `${canonicalPath}/blog`
-        const portfolioPath = `${canonicalPath}/portfolio`
-        const beforeAfterPath = `${canonicalPath}/before-after`
-
-        const viewModel = buildHomepageViewModel({
-          photographer: photographerWithUrls,
-          galleries: galleriesWithPools,
-          packages: packages || [],
-          testimonials: testimonialsWithUrls,
-          posts: homepagePosts,
-          homepagePath: canonicalPath || '/',
-          blogPath,
-          portfolioPath,
-          beforeAfterPath,
-          hasFaq,
-          postCount: postCount ?? 0,
-          photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
-        })
-
-        return (
-          <ClassicHomepageShell
-            photographerId={typedPhotographer.id}
-            headerProps={toClassicSiteHeaderProps(viewModel)}
-            footerProps={toClassicSiteFooterProps(viewModel)}
-            homePageProps={toClassicHomePageProps(viewModel)}
-          />
-        )
-      }
-    }
 
     return (
       <>
