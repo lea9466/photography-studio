@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicBlogPostPageHTML } from '@/lib/public-blog-html'
@@ -40,6 +42,11 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
     faq_items: unknown
   }
 
+  // studioPath stays the REAL slug path regardless of domain — it gates
+  // notFound() above and feeds postPath's canonical identity below, neither
+  // of which should change based on which domain a visitor is on. Only the
+  // nav links a visitor can actually click (home/blog list/prev/next) need
+  // to be tenant-relative; see app/[slug]/page.tsx for the full rationale.
   const studioPath = resolveActiveStudioPath(photographer)
   if (!studioPath) notFound()
 
@@ -52,18 +59,23 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
   const post = await fetchPublicBlogPostById(typed.id, postId, photographer.site_language)
   if (!post) notFound()
 
+  const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+  const navBasePath = isTenantDomain ? '' : studioPath
+
   const { prev, next } = await fetchBlogPostNavigation(
     typed.id,
     postId,
-    studioPath,
+    navBasePath,
     photographer.site_language
   )
 
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
   const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
-  const homepagePath = resolveHomepagePath(photographer.slug, photographer.studio_name)
-  const canonicalPath = getPublicSitePath(photographer.slug, photographer.studio_name) ?? studioPath
+  const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(photographer.slug, photographer.studio_name)
+  const canonicalPath = isTenantDomain
+    ? ''
+    : (getPublicSitePath(photographer.slug, photographer.studio_name) ?? studioPath)
   const blogPath = `${canonicalPath}/blog`
   const postPath = buildPostCanonicalPath(studioPath, post.id)
   const logoUrl = await resolveBrandingPath(photographer.logo_url)
