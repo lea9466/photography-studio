@@ -41,7 +41,6 @@ export default async function SubscriptionPage({
   const referralCode = row?.referral_code || row?.slug || null
   const siteUnavailableLocked =
     !isImpersonating && Boolean(row?.is_site_unavailable)
-  const entitlements = await getStudioEntitlements(userId)
 
   if (!row?.trial_end_date) {
     if (siteUnavailableLocked) {
@@ -76,6 +75,10 @@ export default async function SubscriptionPage({
       reason: error instanceof Error ? error.name : 'unknown',
     })
   }
+
+  // Resolve entitlements after return verification so the same render reflects
+  // a subscription that was just activated by the payment provider.
+  const entitlements = await getStudioEntitlements(userId)
 
   return (
     <div className="animate-fade-in">

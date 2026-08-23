@@ -6,6 +6,8 @@ import { getActiveAnnouncement } from '@/lib/queries/announcement'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { getAssistantMissingFlags, hasAnyMissingContent } from '@/lib/assistant/studio-context'
 
+export const dynamic = 'force-dynamic'
+
 export default async function DashboardLayout({
   children,
 }: {
