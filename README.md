@@ -201,6 +201,13 @@ docs/                     # תיעוד ארכיטקטורה (payments-architectu
 | `RESEND_API_KEY` | מפתח API של Resend |
 | `EMAIL_FROM` | כתובת השולח |
 
+### Vercel API (דומיינים אישיים לצלמות)
+| משתנה | תיאור |
+|---|---|
+| `VERCEL_API_TOKEN` | טוקן API של Vercel |
+| `VERCEL_PROJECT_ID` | מזהה הפרויקט (`prj_...`) |
+| `VERCEL_TEAM_ID` | נדרש רק אם הפרויקט תחת Team |
+
 ### תשלומים — כללי
 | משתנה | תיאור |
 |---|---|

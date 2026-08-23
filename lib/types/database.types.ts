@@ -1010,6 +1010,62 @@ export type Database = {
           },
         ]
       }
+      custom_domains: {
+        Row: {
+          id: string
+          user_id: string
+          hostname: string
+          status: string
+          cloudflare_hostname_id: string | null
+          cloudflare_ownership_verification: Record<string, unknown> | null
+          cloudflare_ssl_status: string | null
+          vercel_attached: boolean
+          vercel_verification: Record<string, unknown> | null
+          last_checked_at: string | null
+          last_error: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          hostname: string
+          status?: string
+          cloudflare_hostname_id?: string | null
+          cloudflare_ownership_verification?: Record<string, unknown> | null
+          cloudflare_ssl_status?: string | null
+          vercel_attached?: boolean
+          vercel_verification?: Record<string, unknown> | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          hostname?: string
+          status?: string
+          cloudflare_hostname_id?: string | null
+          cloudflare_ownership_verification?: Record<string, unknown> | null
+          cloudflare_ssl_status?: string | null
+          vercel_attached?: boolean
+          vercel_verification?: Record<string, unknown> | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'custom_domains_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       photo_edit_comparisons: {
         Row: {
           id: string
@@ -1226,6 +1282,7 @@ export type DownloadJob = Database['public']['Tables']['download_jobs']['Row']
 export type GallerySettings = Database['public']['Tables']['gallery_settings']['Row']
 export type Feedback = Database['public']['Tables']['feedback']['Row']
 export type SlugRedirect = Database['public']['Tables']['slug_redirects']['Row']
+export type CustomDomain = Database['public']['Tables']['custom_domains']['Row']
 export type PhotographyPackage =
   Database['public']['Tables']['photography_packages']['Row']
 export type Testimonial = Database['public']['Tables']['testimonials']['Row']

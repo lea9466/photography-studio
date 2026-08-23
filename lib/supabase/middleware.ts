@@ -14,6 +14,13 @@ import {
   parseStudioSlugPath,
   resolveSlugRedirect,
 } from '@/lib/referral/slug-redirect'
+import { resolveCustomDomainSlug, isKnownAppHost } from '@/lib/domains/custom-domain-lookup'
+import {
+  isBrowserOnlyReservedPath,
+  isPassthroughCustomDomainPath,
+  resolveCustomDomainRewrite,
+  TENANT_HOST_HEADER,
+} from '@/lib/domains/rewrite'
 import {
   canUseImpersonationFromRequest,
   getImpersonatedUserIdFromRequest,
@@ -25,6 +32,34 @@ import {
 
 export async function updateSession(request: NextRequest, event?: NextFetchEvent) {
   const pathname = request.nextUrl.pathname
+  const host = request.headers.get('host')?.split(':')[0]?.toLowerCase() ?? null
+  const isTenantHost = Boolean(host) && !isKnownAppHost(host!)
+
+  // A request arriving on a photographer's own connected domain (DNS pointed
+  // directly at Vercel — see lib/vercel/domains.ts) is rewritten to their
+  // public site paths here rather than blended into the rest of this
+  // function's dashboard/auth logic — the same short-circuit shape as the
+  // private-gallery host isolation in the root middleware.ts, just DB-backed
+  // since the set of valid tenant hosts is dynamic instead of one configured
+  // value.
+  if (isTenantHost && !isPassthroughCustomDomainPath(pathname)) {
+    if (isBrowserOnlyReservedPath(pathname)) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+      if (!appUrl) return new NextResponse('Not Found', { status: 404 })
+      const target = new URL(pathname + request.nextUrl.search, appUrl)
+      return NextResponse.redirect(target, 308)
+    }
+
+    const slug = await resolveCustomDomainSlug(host!)
+    const rewrittenPath = slug ? resolveCustomDomainRewrite(pathname, slug) : null
+    if (!rewrittenPath) return new NextResponse('Not Found', { status: 404 })
+
+    const url = request.nextUrl.clone()
+    url.pathname = rewrittenPath
+    const headers = new Headers(request.headers)
+    headers.set(TENANT_HOST_HEADER, '1')
+    return NextResponse.rewrite(url, { request: { headers } })
+  }
 
   if (pathname === '/manage' || pathname.startsWith('/manage/')) {
     return NextResponse.next({ request })

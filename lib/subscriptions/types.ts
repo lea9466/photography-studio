@@ -13,6 +13,7 @@ export const PRO_FEATURES = [
   'before_after',
   'faq',
   'multiple_public_galleries',
+  'custom_domain',
 ] as const
 
 export type ProFeature = (typeof PRO_FEATURES)[number]

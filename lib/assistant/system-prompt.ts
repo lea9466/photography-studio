@@ -94,6 +94,7 @@ const PRO_FEATURE_DESCRIPTIONS: Record<ProFeature, string> = {
   before_after: 'הצגת השוואת "לפני ואחרי" לתמונות מעובדות',
   faq: 'סקשן שאלות נפוצות בדף הבית הציבורי',
   multiple_public_galleries: 'יותר מגלריה ציבורית אחת באתר (עד 4 בפרו)',
+  custom_domain: 'חיבור דומיין אישי (למשל www.השם-שלך.com) לאתר במקום כתובת ה-slug',
 }
 
 // admin_override is ambiguous on its own — it fires both when the team force

@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs && node scripts/test-r2-edge-signing.mjs && node --experimental-strip-types scripts/test-hero-video-security.mjs && tsx --test scripts/test-payments.ts && tsx --test scripts/test-trial-ending-reminders.ts",
+    "test": "node scripts/test-ilike-escape.mjs && node scripts/test-rate-limit-concurrency.mjs && node scripts/test-security-critical.mjs && node scripts/test-r2-edge-signing.mjs && node --experimental-strip-types scripts/test-hero-video-security.mjs && tsx --test scripts/test-payments.ts && tsx --test scripts/test-trial-ending-reminders.ts && tsx --test scripts/test-custom-domains.ts",
     "test:payments-rls:local": "node scripts/test-payments-rls-local.mjs",
     "test:exploit-critical": "node scripts/exploit-critical-runtime.mjs",
     "test:regression-critical": "node scripts/regression-critical-runtime.mjs",

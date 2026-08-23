@@ -1,6 +1,8 @@
 import { notFound, redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
@@ -64,11 +66,18 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
 
   if (layoutMode !== 'portfolio') {
     const galleryHash = gallerySectionHash(typed.selected_theme)
+    // On a photographer's connected custom domain, `canonicalPath`
+    // (`/{slug}`) doesn't exist — the middleware only recognizes a small
+    // fixed set of tenant-relative paths (see lib/domains/rewrite.ts) and
+    // would 404 it. Redirect root-relative instead so it resolves against
+    // whatever host the visitor is actually on.
+    const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+    const redirectTarget = isTenantDomain ? `/#${galleryHash}` : `${canonicalPath}#${galleryHash}`
     console.log('[photographer-portfolio] separated mode redirect', {
       slug: decodedSlug,
-      redirectTo: `${canonicalPath}#${galleryHash}`,
+      redirectTo: redirectTarget,
     })
-    redirect(`${canonicalPath}#${galleryHash}`)
+    redirect(redirectTarget)
   }
 
   // Fetch entitlements for public gating
