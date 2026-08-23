@@ -34,6 +34,12 @@ export function DashboardNavMenu({
         const lockedByUnavailable =
           siteUnavailableLocked && item.href !== '/dashboard/subscription'
         const lockedByPlan = !isPro && item.proFeature != null
+        const badgePlan =
+          item.href === '/dashboard/subscription'
+            ? isPro
+              ? 'pro'
+              : 'free'
+            : item.badge
 
         if (item.frozen || lockedByUnavailable) {
           return (
@@ -88,8 +94,8 @@ export function DashboardNavMenu({
                   {item.lockedTooltip ?? 'התכונה הזו חסומה בגרסה החינמית — שדרגי לפרו'}
                 </span>
               </>
-            ) : item.badge ? (
-              <SubscriptionPlanBadge plan={item.badge} />
+            ) : badgePlan ? (
+              <SubscriptionPlanBadge plan={badgePlan} />
             ) : null}
           </Link>
         )
