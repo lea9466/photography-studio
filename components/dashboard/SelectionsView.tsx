@@ -26,12 +26,19 @@ export type SelectionPhoto = {
 
 type SelectionsViewProps = {
   galleryId: string
+  clientName: string
   albumPhotos: SelectionPhoto[]
   editPhotos: SelectionPhoto[]
 }
 
+/** Strips characters invalid in Windows/Mac filenames from a display name. */
+function sanitizeForFilename(name: string): string {
+  return name.trim().replace(/[\\/:*?"<>|]/g, '').trim() || 'לקוח'
+}
+
 export function SelectionsView({
   galleryId,
+  clientName,
   albumPhotos,
   editPhotos,
 }: SelectionsViewProps) {
@@ -51,13 +58,22 @@ export function SelectionsView({
 
   function handleDownload() {
     const toastId = toast.loading('מכינה רשימת קבצים...')
+    const safeClientName = sanitizeForFilename(clientName)
 
     startTransition(async () => {
       try {
         const files = await getSelectedPhotosOriginalFiles(galleryId, albumPhotoIds, editPhotoIds)
+        // Server sorts each file into "אלבום"/"עיבוד" — wrap both under a
+        // client-name folder here so the zip reads as "<client>/אלבום/..."
+        // and "<client>/עיבוד/...". An empty category never produces files
+        // for that folder, so it just doesn't appear — nothing extra needed.
+        const namedFiles = files.map((file) => ({
+          ...file,
+          filename: `${safeClientName}/${file.filename}`,
+        }))
         const { failed } = await downloadFilesAsZip(
-          files,
-          `selected-${galleryId.slice(0, 8)}.zip`,
+          namedFiles,
+          `${safeClientName}.zip`,
           (completed, total) => {
             toast.loading(`מורידה תמונות... ${completed}/${total}`, { id: toastId })
           }

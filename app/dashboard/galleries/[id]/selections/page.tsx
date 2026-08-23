@@ -24,8 +24,13 @@ export default async function GallerySelectionsPage({
 
   const { userId } = context
 
-  const gallery = (await fetchGalleryDetail(id)) as Gallery | null
+  const gallery = (await fetchGalleryDetail(id)) as
+    | (Gallery & { clients: { name: string } | { name: string }[] | null })
+    | null
   if (!gallery) notFound()
+
+  const clientRow = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
+  const clientName = clientRow?.name?.trim() || 'לקוח'
 
   const { albumPhotos, editPhotos } = await fetchGallerySelections(id)
 
@@ -40,6 +45,7 @@ export default async function GallerySelectionsPage({
         </div>
         <SelectionsView
           galleryId={id}
+          clientName={clientName}
           albumPhotos={albumPhotos}
           editPhotos={editPhotos}
         />

@@ -268,6 +268,7 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
         </div>
         <SelectionsView
           galleryId={gallery.id}
+          clientName={client?.name?.trim() || 'לקוח'}
           albumPhotos={albumPhotos}
           editPhotos={editPhotos}
         />
