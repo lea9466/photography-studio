@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (!Number.isFinite(paymentId)) {
     console.error('[payments][sumit-return] missing/invalid OG-PaymentID', { mode })
-    return NextResponse.redirect(next)
+    return NextResponse.redirect(withCheckoutError(next))
   }
 
   const provider = new SumitProvider()
@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
       await handleUpdatePaymentMethod(provider, params, paymentId)
     } else {
       console.error('[payments][sumit-return] unknown sumit_mode', { mode })
+      return NextResponse.redirect(withCheckoutError(next))
     }
   } catch (error) {
     console.error('[payments][sumit-return] failed', {
@@ -48,11 +49,18 @@ export async function GET(request: NextRequest) {
       name: error instanceof Error ? error.name : 'Error',
       message: error instanceof Error ? error.message : String(error),
     })
-    // Fall through to redirect regardless — the local subscription simply
-    // stays in its previous state (pending / unchanged payment method).
+    // Return a safe, user-facing failure state. The local subscription stays
+    // pending until a verified provider result is available.
+    return NextResponse.redirect(withCheckoutError(next))
   }
 
   return NextResponse.redirect(next)
+}
+
+function withCheckoutError(next: string): string {
+  const url = new URL(next)
+  url.searchParams.set('checkout', 'error')
+  return url.toString()
 }
 
 /**

@@ -15,6 +15,7 @@ export default async function SubscriptionPage({
 }) {
   const sp = await searchParams
   const checkoutSuccess = sp?.checkout === 'success'
+  const checkoutError = sp?.checkout === 'error'
 
   let context
   try {
@@ -111,6 +112,7 @@ export default async function SubscriptionPage({
           initialStatus={billingStatus}
           isImpersonating={isImpersonating}
           checkoutSuccess={checkoutSuccess}
+          checkoutError={checkoutError}
         />
         {row?.trial_end_date ? (
           <SubscriptionPanel

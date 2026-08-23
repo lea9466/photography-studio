@@ -10,6 +10,7 @@ type Props = {
   initialStatus: CurrentSubscriptionView
   isImpersonating: boolean
   checkoutSuccess?: boolean
+  checkoutError?: boolean
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -81,6 +82,7 @@ export function SubscriptionBillingPanel({
   initialStatus,
   isImpersonating,
   checkoutSuccess,
+  checkoutError,
 }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState(initialStatus)
@@ -196,6 +198,15 @@ export function SubscriptionBillingPanel({
         <div className="flex gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
           <p>התשלום הצליח! המינוי שלך פעיל.</p>
+        </div>
+      ) : null}
+      {checkoutError ? (
+        <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <p>
+            התשלום לא אושר או שלא ניתן היה להשלים את המינוי. נסי כרטיס אחר או
+            פני לחברת האשראי.
+          </p>
         </div>
       ) : null}
       <div className="flex items-start gap-4">
