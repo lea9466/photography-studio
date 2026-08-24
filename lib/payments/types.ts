@@ -25,6 +25,15 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number]
 
 export type BillingInterval = 'month' | 'year'
 
+/**
+ * recurring = standing provider authorization, bills automatically.
+ * one_time = single charge, no standing authorization — for cards that
+ * cannot hold one (e.g. immediate-debit "דיירקט" cards). The subscription
+ * simply lapses at `current_period_end` with no further billing.
+ */
+export const PAYMENT_TYPES = ['recurring', 'one_time'] as const
+export type PaymentType = (typeof PAYMENT_TYPES)[number]
+
 export type PaymentCustomer = {
   id: string
   provider: PaymentProviderName

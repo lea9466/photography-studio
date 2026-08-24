@@ -92,6 +92,13 @@ export class PayMeProvider implements PaymentProvider {
     return mapPayMeCheckoutFromGenerate(response)
   }
 
+  async createOneTimeCheckoutSession(
+    input: CreateCheckoutSessionInput
+  ): Promise<CheckoutSession> {
+    void input
+    throw new PaymentError('provider_not_configured')
+  }
+
   async createSubscription(
     input: CreateSubscriptionInput
   ): Promise<PaymentSubscription> {

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertCircle, CheckCircle2, CreditCard, Loader2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, CreditCard, Loader2, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
 
@@ -95,6 +95,7 @@ export function SubscriptionBillingPanel({
   )
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+  const [oneTimeMonths, setOneTimeMonths] = useState(1)
 
   useEffect(() => {
     if (checkoutSuccess) router.refresh()
@@ -180,6 +181,16 @@ export function SubscriptionBillingPanel({
     smokeTestPlans.find((plan) => plan.code === selectedPlanCode) ??
     smokeTestPlans[0] ??
     null
+  const monthlyPlan =
+    availablePlans.find((plan) => plan.billingInterval === 'month') ?? null
+  const yearlyPlan =
+    availablePlans.find((plan) => plan.billingInterval === 'year') ?? null
+  // 12 months prices like the yearly plan's discounted rate, not monthly × 12
+  // — mirrors lib/payments/payment-service.ts `createOneTimeCheckout`.
+  const oneTimeAmountAgorot =
+    oneTimeMonths === 12 && yearlyPlan
+      ? yearlyPlan.amountAgorot
+      : (monthlyPlan?.amountAgorot ?? 0) * oneTimeMonths
   const activePlan = subscription?.plan ?? null
   const isActive = subscription?.status === 'active'
   const checkoutEnabled =
@@ -245,11 +256,20 @@ export function SubscriptionBillingPanel({
           {subscription ? (
             <div className="sm:col-span-3">
               <p className="text-xs text-[--muted]">
-                {subscription.cancelAtPeriodEnd ? 'הגישה פעילה עד' : 'החיוב הבא'}
+                {subscription.paymentType === 'one_time'
+                  ? 'המנוי פעיל עד'
+                  : subscription.cancelAtPeriodEnd
+                    ? 'הגישה פעילה עד'
+                    : 'החיוב הבא'}
               </p>
               <p className="mt-1 text-sm text-[--foreground]">
                 {computeActiveUntil(subscription)}
               </p>
+              {subscription.paymentType === 'one_time' ? (
+                <p className="mt-1 text-xs text-[--muted]">
+                  תשלום חד-פעמי — לא יתבצע חיוב אוטומטי בתום התקופה
+                </p>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -356,6 +376,120 @@ export function SubscriptionBillingPanel({
               )
             })}
           </div>
+          {checkoutEnabled && status.oneTimePaymentEnabled && monthlyPlan ? (
+            <div className="space-y-4 rounded-2xl border border-[--border]/60 bg-gradient-to-br from-[#7D3A52]/[0.06] to-transparent p-5 md:p-6">
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D3A52]/10 text-[#7D3A52]">
+                  <Wallet className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[--foreground]">
+                    משלמת בדיירקט?
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-[--muted]">
+                    כרטיסי דיירקט לא תומכים בהרשאה לחיוב חוזר, אז התשלום הרגיל
+                    למעלה עלול להיכשל. כדאי לנסות אותו קודם — ואם זה לא
+                    מסתדר, אפשר לשלם כאן מראש לכמה חודשים.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-end gap-2 pt-3">
+                {[1, 3, 6, 12].map((count) => {
+                  const isSelected = oneTimeMonths === count
+                  const isRecommended = count === 12
+                  const price =
+                    count === 12 && yearlyPlan
+                      ? yearlyPlan.amountAgorot
+                      : monthlyPlan.amountAgorot * count
+                  return (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setOneTimeMonths(count)}
+                      className={`relative flex cursor-pointer flex-col items-center gap-0.5 rounded-xl border px-4 py-2 transition-all ${isSelected
+                          ? 'border-[#7D3A52] bg-[#7D3A52] text-white shadow-sm'
+                          : 'border-[--border]/60 bg-white/70 text-[--foreground] hover:border-[#7D3A52]/40 hover:bg-[#7D3A52]/5'
+                        }`}
+                    >
+                      {isRecommended ? (
+                        <span
+                          className={`absolute -top-2.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isSelected ? 'bg-white text-[#7D3A52]' : 'bg-[#7D3A52] text-white'
+                            }`}
+                        >
+                          מומלץ
+                        </span>
+                      ) : null}
+                      <span className="text-sm font-medium">
+                        {count === 1 ? 'חודש' : count === 12 ? 'שנה' : `${count} חודשים`}
+                      </span>
+                      <span
+                        className={`text-xs ${isSelected ? 'text-white/80' : 'text-[--muted]'}`}
+                      >
+                        {formatPrice(price, monthlyPlan.currency)}
+                      </span>
+                    </button>
+                  )
+                })}
+                <label className="flex items-center gap-2 rounded-full border border-dashed border-[--border]/60 bg-white/50 py-1 pe-3.5 ps-1 text-sm text-[--muted]">
+                  <input
+                    type="number"
+                    min={1}
+                    max={24}
+                    value={oneTimeMonths}
+                    onChange={(event) => {
+                      const value = Math.trunc(Number(event.target.value))
+                      if (Number.isFinite(value)) {
+                        setOneTimeMonths(Math.min(24, Math.max(1, value)))
+                      }
+                    }}
+                    className="w-12 rounded-full bg-transparent text-center font-medium text-[--foreground] outline-none"
+                  />
+                  מספר חודשים מותאם
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[--border]/50 bg-white/80 px-4 py-3.5 md:px-5">
+                <div>
+                  <p className="text-xs text-[--muted]">סה&quot;כ לתשלום</p>
+                  <p className="mt-0.5 text-2xl font-bold text-[--foreground]">
+                    {formatPrice(oneTimeAmountAgorot, monthlyPlan.currency)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[--muted]">
+                    עבור{' '}
+                    {oneTimeMonths === 1
+                      ? 'חודש אחד'
+                      : oneTimeMonths === 12
+                        ? 'שנה שלמה'
+                        : `${oneTimeMonths} חודשים`}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  disabled={Boolean(busy) || isImpersonating || blockCheckout}
+                  onClick={() =>
+                    callAction('/api/payments/checkout', {
+                      paymentType: 'one_time',
+                      months: oneTimeMonths,
+                    })
+                  }
+                >
+                  {busy === '/api/payments/checkout' ? (
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  המשך בתשלום חד-פעמי
+                </Button>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs leading-relaxed text-amber-800">
+                <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <p>
+                  בתשלום חד-פעמי המנוי לא מתחדש אוטומטית — יהיה צריך לחדש
+                  ידנית בתום התקופה שנבחרה.
+                </p>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : (
         <p className="text-sm text-[--muted]">אין כרגע מסלול פעיל להצטרפות.</p>

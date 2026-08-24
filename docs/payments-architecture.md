@@ -158,6 +158,9 @@ NEXT_PUBLIC_APP_URL=https://your-app.example
 TRIAL_ENDING_REMINDERS_ENABLED=false
 PAYMENTS_CHECKOUT_ENABLED=false
 ENFORCE_SUBSCRIPTION_ACCESS=false
+ONE_TIME_PAYMENT_ENABLED=false
+ONE_TIME_PAYMENT_REMINDERS_ENABLED=false
+ONE_TIME_PAYMENT_EXPIRED_EMAIL_ENABLED=false
 ```
 
 Only the exact string `true` enables each feature flag. Unset / `false` / any
@@ -174,6 +177,36 @@ When `PAYMENTS_CHECKOUT_ENABLED=false`, all other users keep the disabled
 This exception is intended for controlled production smoke testing only, and
 it requires `PAYME_ENV=production` with `PAYME_API_BASE_URL=https://live.payme.io/api`.
 The real `studio_monthly` catalog price remains 4,000 agorot in the database.
+
+## One-time payment (דיירקט cards)
+
+Some customers pay with an immediate-debit card ("דיירקט") that a bank/issuer
+will not let hold a standing recurring authorization — the regular SUMIT
+checkout flow (`createCheckoutSession` → `completeHostedCheckout`, which
+always calls `/billing/recurring/charge/`) fails for them for that reason,
+not because of anything this codebase controls.
+
+`createOneTimeCheckoutSession` / `completeOneTimeCheckout` in
+`lib/payments/providers/sumit/sumit-provider.ts` are a separate flow for
+these customers: `beginredirect` is called with `AuthoriseOnly: 'false'`
+instead of `'true'`, which — per SUMIT's own documented behavior on that
+endpoint — performs a real, final, single charge with no "make this
+recurring" request at all. `/billing/recurring/charge/` is never called, so
+no standing authorization is ever asked of the card issuer. The resulting
+subscription row has `payment_type = 'one_time'`; `current_period_end` is
+set locally (now + the plan's billing interval) since SUMIT tracks no period
+for a bare payment, and nothing renews it automatically.
+
+**Not yet independently live-tested with `AuthoriseOnly: 'false'`** in this
+codebase — only the `'true'` capture path has a confirmed live test (see the
+class doc in `sumit-provider.ts`). Run a real smoke-test charge with a real
+דיירקט card before enabling `ONE_TIME_PAYMENT_ENABLED=true` for customers,
+same posture as `PAYMENTS_SMOKE_TEST_USER_ID` for the recurring flow. Two
+independent cron jobs (`lib/subscriptions/one-time-payment-reminders.ts`,
+`lib/subscriptions/one-time-payment-expired-notifications.ts`, wired into
+`app/api/cron/trial-ending-reminders/route.ts`) send a 3-days-left reminder
+and a day-zero "moved to free plan" email, both with an upgrade CTA —
+mirroring the trial reminder/expired pair.
 
 ## PayMe TODO before enabling external calls
 

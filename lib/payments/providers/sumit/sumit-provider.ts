@@ -19,6 +19,7 @@ import {
   mapSumitCheckoutFromRedirect,
   mapSumitCustomer,
   mapSumitFirstRecurringCharge,
+  mapSumitOneTimeCharge,
   mapSumitRecurringItem,
   parseSumitSubscriptionId,
 } from './sumit-mapper'
@@ -238,6 +239,92 @@ export class SumitProvider implements PaymentProvider {
   }
 
   /**
+   * One-time payment variant of `createCheckoutSession`, for cards that
+   * cannot hold a standing authorization (e.g. immediate-debit "דיירקט"
+   * cards) — see the module doc in sumit-types.ts on `SumitBeginRedirectRequest`:
+   * beginredirect "only ever performs a single charge ... it does not accept
+   * a 'make this recurring' flag." Sending `AuthoriseOnly: 'false'` here
+   * therefore performs a REAL, final charge directly on SUMIT's hosted page —
+   * unlike `createCheckoutSession`, nothing further happens after the browser
+   * returns (see `completeOneTimeCheckout`); `/billing/recurring/charge/` is
+   * never called, so no recurring authorization is ever requested from the
+   * card issuer.
+   *
+   * NOT independently live-tested with `AuthoriseOnly: 'false'` in this
+   * codebase (only the `'true'` capture-then-recurring-charge path has been —
+   * see class doc (2)). Run a real smoke-test charge before enabling this for
+   * customers, same posture as `PAYMENTS_SMOKE_TEST_USER_ID` for the
+   * recurring flow.
+   */
+  async createOneTimeCheckoutSession(
+    input: CreateCheckoutSessionInput
+  ): Promise<CheckoutSession> {
+    if (!input.customer?.id) {
+      throw new PaymentError('invalid_request')
+    }
+    if (!input.localSubscriptionId) {
+      throw new PaymentError('invalid_request')
+    }
+
+    const item: SumitLineItem = {
+      Item: { Name: input.plan.name, SearchMode: 'Automatic' },
+      Quantity: 1,
+      UnitPrice: agorotToSumitAmount(input.plan.amountAgorot),
+      Currency: input.plan.currency.toUpperCase(),
+    }
+
+    const redirectUrl = buildSumitReturnUrl({
+      mode: 'one_time_checkout',
+      params: { local_subscription_id: input.localSubscriptionId },
+      next: input.successUrl,
+    })
+
+    const response = await this.client().postJson<SumitBeginRedirectResponse>(
+      '/billing/payments/beginredirect/',
+      {
+        Items: [item],
+        Customer: { ID: Number(input.customer.id) },
+        VATIncluded: 'true',
+        DocumentLanguage: 'Hebrew',
+        RedirectURL: redirectUrl,
+        CancelRedirectURL: input.cancelUrl,
+        AuthoriseOnly: 'false',
+      }
+    )
+
+    return mapSumitCheckoutFromRedirect(response)
+  }
+
+  /**
+   * Second half of a one-time checkout — called by the callback route after
+   * SUMIT redirects back. The real charge already happened inside
+   * `beginredirect` above; this only verifies it S2S (customer + amount) and
+   * reports it. No second charge, no recurring item, nothing to cancel later.
+   */
+  async completeOneTimeCheckout(input: {
+    paymentId: number
+    expectedAmountAgorot: number
+    expectedCustomerId: number
+  }): Promise<PaymentSubscription> {
+    const verified = await verifySumitPayment(this.client(), input.paymentId)
+    assertSumitCustomerMatches(verified, input.expectedCustomerId)
+
+    if (
+      Math.abs(verified.amount - agorotToSumitAmount(input.expectedAmountAgorot)) > 0.001
+    ) {
+      throw new PaymentError('verification_failed', {
+        detail: `SUMIT one-time charge amount mismatch: got ${verified.amount}, expected ${agorotToSumitAmount(input.expectedAmountAgorot)}`,
+      })
+    }
+
+    return mapSumitOneTimeCharge({
+      paymentId: verified.paymentId,
+      customerId: verified.customerId,
+      amount: verified.amount,
+    })
+  }
+
+  /**
    * Charges once and establishes the recurring authorization in the same
    * call, given a SUMIT card token (`paymentToken`) obtained out-of-band via
    * PaymentsJS. Not currently wired to any caller — mirrors PayMe's own
@@ -445,7 +532,7 @@ export class SumitProvider implements PaymentProvider {
  * and only used as the final destination once verification succeeds.
  */
 function buildSumitReturnUrl(input: {
-  mode: 'checkout' | 'update_payment_method'
+  mode: 'checkout' | 'one_time_checkout' | 'update_payment_method'
   params: Record<string, string>
   next: string
 }): string {

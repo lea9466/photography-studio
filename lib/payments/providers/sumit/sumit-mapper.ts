@@ -123,6 +123,39 @@ export function mapSumitFirstRecurringCharge(
 }
 
 /**
+ * Maps a verified one-time (non-recurring) payment into a `PaymentSubscription`.
+ * Unlike `mapSumitFirstRecurringCharge`, no `RecurringCustomerItemIDs` exists —
+ * this charge never asked SUMIT/the card issuer for a standing authorization
+ * (see `createOneTimeCheckoutSession` in sumit-provider.ts), which is exactly
+ * why it works for cards (e.g. immediate-debit "דיירקט") that reject that
+ * request. `id` encodes the bare payment id — there is no recurring item to
+ * look up or cancel later, so `parseSumitSubscriptionId` is never applied to it.
+ */
+export function mapSumitOneTimeCharge(input: {
+  paymentId: number
+  customerId: number
+  amount: number
+}): PaymentSubscription {
+  return {
+    id: `onetime_${input.paymentId}`,
+    provider: 'sumit',
+    customerId: String(input.customerId),
+    planId: null,
+    status: 'active',
+    currentPeriodStart: null,
+    currentPeriodEnd: null,
+    cancelAtPeriodEnd: false,
+    cancelledAt: null,
+    nextPaymentAt: null,
+    metadata: {
+      payment_id: input.paymentId,
+      amount: input.amount,
+      payment_type: 'one_time',
+    },
+  }
+}
+
+/**
  * 0=Active is confirmed (default state of a freshly-created recurring item).
  * 1/2/3 come from the third-party SDK's docs (Paused/Cancelled/Expired) and
  * are NOT independently confirmed — a live test call to /billing/recurring/cancel/

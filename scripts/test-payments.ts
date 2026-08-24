@@ -321,6 +321,9 @@ class FakeProvider {
       expiresAt: null,
     }
   }
+  async createOneTimeCheckoutSession(): Promise<CheckoutSession> {
+    throw new Error('not used')
+  }
   async createSubscription() {
     throw new Error('not used')
   }

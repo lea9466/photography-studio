@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { PaymentError } from './errors'
 import {
+  isOneTimePaymentEnabled,
   isPaymentsCheckoutAllowed,
   isPaymentsCheckoutEnabled,
   isPaymentsSmokeTestUser,
@@ -48,6 +49,9 @@ export type CurrentSubscriptionView = {
   configured: boolean
   /** False until PAYMENTS_CHECKOUT_ENABLED=true after PayMe approval. */
   checkoutEnabled: boolean
+  /** True when the one-time-payment fallback (for cards like "דיירקט" that
+   *  reject a recurring authorization) is available. */
+  oneTimePaymentEnabled: boolean
   isSmokeTestUser: boolean
   /**
    * False only for a genuinely active subscription. A `pending` row never
@@ -67,6 +71,7 @@ export type CurrentSubscriptionView = {
     nextPaymentAt: string | null
     lastPaymentAt: string | null
     cancelAtPeriodEnd: boolean
+    paymentType: 'recurring' | 'one_time'
     plan: PlanView
   } | null
   /** @deprecated prefer availablePlans — kept for compatibility */
@@ -179,6 +184,116 @@ export class PaymentService {
     })
   }
 
+  /**
+   * Single charge, no standing authorization — for customers whose card
+   * cannot hold one (e.g. immediate-debit "דיירקט" cards, which reject the
+   * regular flow's recurring-authorization request). Priced off the monthly
+   * plan's per-month rate times `months` (1 = "monthly", 12 = "yearly", or any
+   * custom count the customer wants to prepay) rather than a fixed catalog
+   * plan — there is no separate "one-time yearly" row, `months` covers both
+   * and everything in between. Mirrors `createCheckout` except it calls
+   * `createOneTimeCheckoutSession` and tags the pending row
+   * `payment_type: 'one_time'` so the reminder/expiry cron and access checks
+   * treat it as a lapsing grant instead of an auto-renewing subscription.
+   */
+  async createOneTimeCheckout(input: {
+    userId: string
+    months: number
+    successUrl: string
+    cancelUrl: string
+  }): Promise<CheckoutSession> {
+    const months = Math.trunc(input.months)
+    if (!Number.isFinite(months) || months < 1 || months > 24) {
+      throw new PaymentError('invalid_request')
+    }
+
+    const provider = this.resolveProvider()
+    const monthlyPlanRow = await this.repository.getActivePlanByCode('studio_monthly')
+    if (!monthlyPlanRow) throw new PaymentError('plan_not_found')
+
+    // 12 months prices exactly like the yearly plan (the catalog's discounted
+    // rate), not monthlyPlan × 12 — a one-time year shouldn't cost more than
+    // committing to the recurring yearly plan would. Every other count is
+    // priced off the monthly rate, months === 1 included.
+    const yearlyPlanRow =
+      months === 12 ? await this.repository.getActivePlanByCode('studio_yearly') : null
+    const priceRow = yearlyPlanRow ?? monthlyPlanRow
+
+    const email = await this.repository.getUserEmail(input.userId)
+    if (!email) throw new PaymentError('invalid_request')
+
+    let customerRow = await this.repository.getBillingCustomer(input.userId, provider.name)
+    let customer = customerRow?.provider_customer_id
+      ? {
+        id: customerRow.provider_customer_id,
+        provider: provider.name,
+        email: customerRow.email,
+      }
+      : null
+
+    if (!customer) {
+      customer = await provider.createCustomer({ userId: input.userId, email })
+      customerRow = await this.repository.saveBillingCustomer({
+        userId: input.userId,
+        provider: provider.name,
+        externalCustomerId: customer.id,
+        email,
+      })
+    }
+
+    const amountAgorot =
+      yearlyPlanRow ? yearlyPlanRow.amount_agorot : monthlyPlanRow.amount_agorot * months
+    const plan: PaymentPlan = {
+      id: priceRow.id,
+      code: priceRow.code,
+      name:
+        yearlyPlanRow
+          ? yearlyPlanRow.name
+          : months === 1
+            ? monthlyPlanRow.name
+            : `${monthlyPlanRow.name} — תשלום חד-פעמי ל-${months} חודשים`,
+      description: priceRow.description,
+      amountAgorot,
+      currency: priceRow.currency,
+      billingInterval: priceRow.billing_interval,
+      providerPlanId: priceRow.provider_plan_id,
+    }
+
+    const localSubscriptionId = `sub_${randomBytes(16).toString('hex')}`
+
+    await this.repository.upsertSubscription({
+      userId: input.userId,
+      planId: priceRow.id,
+      billingCustomerId: customerRow?.id ?? null,
+      provider: provider.name,
+      externalSubscriptionId: localSubscriptionId,
+      status: 'pending',
+      paymentType: 'one_time',
+      metadata: {
+        local_subscription_id: localSubscriptionId,
+        plan_code: plan.code,
+        amount_agorot: amountAgorot,
+        currency: plan.currency,
+        one_time_months: months,
+      },
+    })
+
+    this.logger.info('creating one-time checkout', {
+      provider: provider.name,
+      userId: input.userId,
+      planCode: plan.code,
+    })
+
+    return provider.createOneTimeCheckoutSession({
+      userId: input.userId,
+      customer,
+      plan,
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
+      localSubscriptionId,
+    })
+  }
+
   async createSubscription(input: {
     userId: string
     planCode: string
@@ -274,6 +389,7 @@ export class PaymentService {
     return {
       configured: true,
       checkoutEnabled: isPaymentsCheckoutAllowed(userId),
+      oneTimePaymentEnabled: isOneTimePaymentEnabled(),
       isSmokeTestUser: isPaymentsSmokeTestUser(userId),
       canStartNewCheckout,
       subscription:
@@ -286,6 +402,7 @@ export class PaymentService {
             nextPaymentAt: subscription.next_payment_at,
             lastPaymentAt: subscription.last_payment_at,
             cancelAtPeriodEnd: subscription.cancel_at_period_end,
+            paymentType: subscription.payment_type,
             plan: toPlanView(plan),
           }
           : null,

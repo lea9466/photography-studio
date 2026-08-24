@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authorizeCronRequest } from '@/lib/cron/authorize'
 import { runTrialEndingReminders } from '@/lib/trial/trial-ending-reminders'
 import { runTrialExpiredNotifications } from '@/lib/trial/trial-expired-notifications'
+import { runOneTimePaymentReminders } from '@/lib/subscriptions/one-time-payment-reminders'
+import { runOneTimePaymentExpiredNotifications } from '@/lib/subscriptions/one-time-payment-expired-notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -63,7 +65,48 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const body = { ok: !hadFailure, reminders, expired }
+  // Same independent-jobs pattern as the two trial jobs above — one-time
+  // payment (דיירקט) reminder/expiry emails, each behind its own flag.
+  let oneTimeReminders: Record<string, unknown> = { error: 'did not run' }
+  let oneTimeExpired: Record<string, unknown> = { error: 'did not run' }
+
+  try {
+    const result = await runOneTimePaymentReminders()
+    oneTimeReminders = {
+      enabled: result.enabled,
+      status: result.status,
+      candidates: result.candidates,
+      claimed: result.claimed,
+      sent: result.sent,
+      skipped: result.skipped,
+      failed: result.failed,
+    }
+  } catch (error) {
+    hadFailure = true
+    console.error('[one-time-payment-reminders] cron failed', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+  }
+
+  try {
+    const result = await runOneTimePaymentExpiredNotifications()
+    oneTimeExpired = {
+      enabled: result.enabled,
+      status: result.status,
+      candidates: result.candidates,
+      claimed: result.claimed,
+      sent: result.sent,
+      skipped: result.skipped,
+      failed: result.failed,
+    }
+  } catch (error) {
+    hadFailure = true
+    console.error('[one-time-payment-expired-notifications] cron failed', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+  }
+
+  const body = { ok: !hadFailure, reminders, expired, oneTimeReminders, oneTimeExpired }
   console.info('[trial-ending-reminders] cron response', body)
   return cronJson(body, hadFailure ? 500 : 200)
 }

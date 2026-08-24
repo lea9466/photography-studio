@@ -25,6 +25,7 @@ export async function GET() {
       return NextResponse.json({
         configured: false,
         checkoutEnabled: false,
+        oneTimePaymentEnabled: false,
         subscription: null,
         availablePlan: null,
       })

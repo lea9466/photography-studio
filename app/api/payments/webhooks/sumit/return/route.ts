@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
   try {
     if (mode === 'checkout') {
       await handleCheckout(provider, params, paymentId)
+    } else if (mode === 'one_time_checkout') {
+      await handleOneTimeCheckout(provider, params, paymentId)
     } else if (mode === 'update_payment_method') {
       await handleUpdatePaymentMethod(provider, params, paymentId)
     } else {
@@ -143,6 +145,76 @@ async function handleCheckout(
     periodEnd: subscription.currentPeriodEnd,
     nextPaymentAt: subscription.nextPaymentAt,
     lastPaymentAt: now,
+    providerSubscriptionId: subscription.id,
+  })
+}
+
+/**
+ * One-time payment completion — mirrors `handleCheckout` but calls
+ * `completeOneTimeCheckout` (verify-only, the real charge already happened
+ * inside `beginredirect`) instead of `completeHostedCheckout`, and computes
+ * `current_period_end` locally from the `one_time_months` stashed in
+ * provider_metadata at checkout creation (lib/payments/payment-service.ts
+ * `createOneTimeCheckout`) since SUMIT never tracks a period for a bare
+ * one-time payment (no recurring item).
+ */
+async function handleOneTimeCheckout(
+  provider: SumitProvider,
+  params: URLSearchParams,
+  paymentId: number
+) {
+  const localSubscriptionId = params.get('local_subscription_id')
+  if (!localSubscriptionId) throw new Error('missing local_subscription_id')
+
+  const repository = new SupabaseBillingRepository(createAdminClient())
+  const row = await repository.getSubscriptionByExternalId('sumit', localSubscriptionId)
+  if (!row) {
+    console.info('[payments][sumit-return] no pending row for correlation id — ignoring', {
+      localSubscriptionId,
+    })
+    return
+  }
+  if (row.status !== 'pending') {
+    console.info('[payments][sumit-return] row already resolved — skipping', {
+      subscriptionId: row.id,
+      status: row.status,
+    })
+    return
+  }
+
+  const plan = row.plan_id ? await repository.getPlanById(row.plan_id) : null
+  if (!plan) throw new Error(`plan not found for subscription ${row.id}`)
+
+  const billingCustomer = await repository.getBillingCustomer(row.user_id, 'sumit')
+  const expectedCustomerId = Number(billingCustomer?.provider_customer_id)
+  if (!Number.isFinite(expectedCustomerId)) {
+    throw new Error(`no sumit billing customer found for user ${row.user_id}`)
+  }
+
+  const metadata = (row.provider_metadata ?? {}) as Record<string, unknown>
+  const expectedAmountAgorot =
+    typeof metadata.amount_agorot === 'number' ? metadata.amount_agorot : plan.amount_agorot
+  const months =
+    typeof metadata.one_time_months === 'number' && metadata.one_time_months >= 1
+      ? metadata.one_time_months
+      : 1
+
+  const subscription = await provider.completeOneTimeCheckout({
+    paymentId,
+    expectedAmountAgorot,
+    expectedCustomerId,
+  })
+
+  const now = new Date()
+  const periodEnd = new Date(now)
+  periodEnd.setUTCMonth(periodEnd.getUTCMonth() + months)
+
+  await repository.updateSubscription(row.id, {
+    status: subscription.status,
+    periodStart: now.toISOString(),
+    periodEnd: periodEnd.toISOString(),
+    nextPaymentAt: null,
+    lastPaymentAt: now.toISOString(),
     providerSubscriptionId: subscription.id,
   })
 }

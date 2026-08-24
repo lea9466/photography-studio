@@ -633,6 +633,150 @@ export async function sendTrialExpiredEmail(input: {
   return { sent: true }
 }
 
+/**
+ * 3-days-left reminder for a one-time-payment subscription (no standing
+ * authorization, so nothing renews automatically — see
+ * lib/subscriptions/one-time-payment-reminders.ts).
+ */
+export async function sendOneTimePlanEndingReminderEmail(input: {
+  name: string
+  email: string
+  slug: string | null
+}): Promise<{ sent: boolean }> {
+  const resend = requireResendOrSafeStub({
+    template: 'one-time-plan-ending-reminder',
+    email: input.email,
+  })
+  if (!resend) return { sent: false }
+
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+  const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
+  const displayName = input.name.trim() || 'שם'
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'עוד 3 ימים והחשבון שלך חוזר למסלול החינמי',
+    text: [
+      `היי ${displayName},`,
+      '',
+      'התשלום החד-פעמי שביצעת ב־Studio Gallery עומד לפוג בעוד 3 ימים.',
+      'מכיוון שזה היה תשלום חד-פעמי, לא יתבצע חיוב אוטומטי — כדי להמשיך במסלול המלא צריך לחדש ידנית.',
+      '',
+      `המשך שדרוג: ${subscriptionUrl}`,
+      ...(siteUrl ? ['', `לצפייה באתר שלך כרגע: ${siteUrl}`] : []),
+      '',
+      'אם לא תחדשי, החשבון יעבור למסלול החינמי — שום דבר לא יימחק.',
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>התשלום החד-פעמי שביצעת ב־Studio Gallery עומד לפוג בעוד 3 ימים.</p>
+        <p>מכיוון שזה היה תשלום חד-פעמי, לא יתבצע חיוב אוטומטי — כדי להמשיך במסלול המלא צריך לחדש ידנית.</p>
+        <p style="margin: 24px 0;">
+          <a
+            href="${subscriptionUrl}"
+            style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
+          >
+            המשך שדרוג
+          </a>
+          ${siteUrl
+            ? `<a
+            href="${siteUrl}"
+            style="display: inline-block; margin-inline-start: 10px; color: #7D3A52; text-decoration: underline; padding: 12px 4px; font-weight: 600;"
+          >
+            צפייה באתר שלך
+          </a>`
+            : ''}
+        </p>
+        <p>אם לא תחדשי, החשבון יעבור למסלול החינמי — שום דבר לא יימחק.</p>
+      </div>
+    `,
+  })
+
+  return { sent: true }
+}
+
+/**
+ * Day-zero notification: a one-time-payment subscription just lapsed and the
+ * account moved to the FREE plan. Mirrors sendTrialExpiredEmail's copy about
+ * what changes on the free plan, with a CTA to pay again.
+ */
+export async function sendOneTimePlanExpiredEmail(input: {
+  name: string
+  email: string
+  slug: string | null
+}): Promise<{ sent: boolean }> {
+  const resend = requireResendOrSafeStub({
+    template: 'one-time-plan-expired',
+    email: input.email,
+  })
+  if (!resend) return { sent: false }
+
+  const displayName = input.name.trim() || 'שם'
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+  const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
+
+  const limitsLines = [
+    'התשלום החד-פעמי שלך פג, והחשבון עבר למסלול החינמי.',
+    '',
+    'שום דבר לא נמחק — כל הגלריות והתמונות שלך נשארות בדיוק כמו שהיו.',
+    '',
+    'במסלול החינמי יש כמה הבדלים:',
+    '• עד 3 תמונות hero בעמוד הבית',
+    '• גלריה ציבורית אחת מוצגת בכל רגע נתון',
+    '• עד 30 תמונות בגלריה ציבורית',
+    '• כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם',
+    '',
+    'האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.',
+    '',
+    `אפשר לחזור למסלול המלא בכל רגע: ${subscriptionUrl}`,
+    ...(siteUrl ? [`לצפייה באתר שלך כרגע: ${siteUrl}`] : []),
+  ]
+
+  const text = [`היי ${displayName},`, '', ...limitsLines].join('\n')
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    subject: 'התשלום החד-פעמי שלך פג',
+    text,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>התשלום החד-פעמי שלך פג, והחשבון עבר למסלול החינמי.</p>
+        <p>שום דבר לא נמחק — כל הגלריות והתמונות שלך נשארות בדיוק כמו שהיו.</p>
+        <p>במסלול החינמי יש כמה הבדלים:</p>
+        <ul>
+          <li>עד 3 תמונות hero בעמוד הבית</li>
+          <li>גלריה ציבורית אחת מוצגת בכל רגע נתון</li>
+          <li>עד 30 תמונות בגלריה ציבורית</li>
+          <li>כמה פיצ׳רים (וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי, שאלות נפוצות) זמינים רק במסלול המשלם</li>
+        </ul>
+        <p>האתר הציבורי שלך ממשיך לפעול ולהופיע בחיפוש גוגל כרגיל — שום דבר לא נעלם.</p>
+        <p style="margin: 24px 0;">
+          <a
+            href="${subscriptionUrl}"
+            style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;"
+          >
+            חזרה למסלול המלא
+          </a>
+          ${siteUrl
+            ? `<a
+            href="${siteUrl}"
+            style="display: inline-block; margin-inline-start: 10px; color: #7D3A52; text-decoration: underline; padding: 12px 4px; font-weight: 600;"
+          >
+            צפייה באתר שלך
+          </a>`
+            : ''}
+        </p>
+      </div>
+    `,
+  })
+
+  return { sent: true }
+}
+
 export async function sendFeedbackEmail(input: {
   type: string
   name: string

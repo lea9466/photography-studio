@@ -382,6 +382,9 @@ export type Database = {
           last_payment_at: string | null
           next_payment_at: string | null
           provider_metadata: Json
+          payment_type: 'recurring' | 'one_time'
+          one_time_reminder_sent_at: string | null
+          one_time_expired_email_sent_at: string | null
           created_at: string
           updated_at: string
         }
@@ -400,6 +403,9 @@ export type Database = {
           last_payment_at?: string | null
           next_payment_at?: string | null
           provider_metadata?: Json
+          payment_type?: 'recurring' | 'one_time'
+          one_time_reminder_sent_at?: string | null
+          one_time_expired_email_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -418,6 +424,9 @@ export type Database = {
           last_payment_at?: string | null
           next_payment_at?: string | null
           provider_metadata?: Json
+          payment_type?: 'recurring' | 'one_time'
+          one_time_reminder_sent_at?: string | null
+          one_time_expired_email_sent_at?: string | null
           created_at?: string
           updated_at?: string
         }

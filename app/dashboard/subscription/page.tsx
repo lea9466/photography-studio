@@ -54,6 +54,7 @@ export default async function SubscriptionPage({
   let billingStatus: CurrentSubscriptionView = {
     configured: false,
     checkoutEnabled: false,
+    oneTimePaymentEnabled: false,
     isSmokeTestUser: false,
     canStartNewCheckout: true,
     subscription: null,

@@ -10,6 +10,7 @@ import type {
 import type {
   PaymentProviderName,
   PaymentStatus,
+  PaymentType,
   SubscriptionStatus,
   WebhookEvent,
 } from './types'
@@ -61,6 +62,7 @@ export interface BillingRepository {
     cancelAtPeriodEnd?: boolean
     cancelledAt?: string | null
     metadata?: Record<string, unknown>
+    paymentType?: PaymentType
   }): Promise<Subscription>
   updateSubscription(
     id: string,
@@ -335,6 +337,7 @@ export class SupabaseBillingRepository implements BillingRepository {
     cancelAtPeriodEnd?: boolean
     cancelledAt?: string | null
     metadata?: Record<string, unknown>
+    paymentType?: PaymentType
   }) {
     const { data, error } = await this.db
       .from('subscriptions')
@@ -352,6 +355,7 @@ export class SupabaseBillingRepository implements BillingRepository {
           cancel_at_period_end: input.cancelAtPeriodEnd ?? false,
           cancelled_at: input.cancelledAt ?? null,
           provider_metadata: asJson(input.metadata ?? {}),
+          payment_type: input.paymentType ?? 'recurring',
         },
         { onConflict: 'provider,provider_subscription_id' }
       )

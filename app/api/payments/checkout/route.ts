@@ -7,6 +7,7 @@ import {
   readSmallJson,
 } from '@/lib/payments/http'
 import {
+  isOneTimePaymentEnabled,
   isPaymentsCheckoutAllowed,
   isPaymentsCheckoutEnabled,
   isPaymentsSmokeTestUser,
@@ -36,21 +37,41 @@ export async function POST(request: NextRequest) {
     if (context.isImpersonating) throw new PaymentError('forbidden')
 
     const body = await readSmallJson(request)
-    const planCode = typeof body.planCode === 'string' ? body.planCode.trim() : ''
-    if (!/^[a-z0-9_]{1,64}$/.test(planCode)) {
-      throw new PaymentError('invalid_request')
-    }
+    const paymentService = createPaymentService()
+    const successUrl = getPaymentReturnUrl('/dashboard/subscription?checkout=success')
+    const cancelUrl = getPaymentReturnUrl('/dashboard/subscription?checkout=cancelled')
 
-    if (!isPaymentsCheckoutEnabled() && planCode !== 'studio_monthly') {
-      throw new PaymentError('invalid_request')
-    }
+    let session
+    if (body.paymentType === 'one_time') {
+      if (!isOneTimePaymentEnabled()) throw new PaymentError('invalid_request')
 
-    const session = await createPaymentService().createCheckout({
-      userId: context.userId,
-      planCode,
-      successUrl: getPaymentReturnUrl('/dashboard/subscription?checkout=success'),
-      cancelUrl: getPaymentReturnUrl('/dashboard/subscription?checkout=cancelled'),
-    })
+      const months = typeof body.months === 'number' ? Math.trunc(body.months) : NaN
+      if (!Number.isInteger(months) || months < 1 || months > 24) {
+        throw new PaymentError('invalid_request')
+      }
+
+      session = await paymentService.createOneTimeCheckout({
+        userId: context.userId,
+        months,
+        successUrl,
+        cancelUrl,
+      })
+    } else {
+      const planCode = typeof body.planCode === 'string' ? body.planCode.trim() : ''
+      if (!/^[a-z0-9_]{1,64}$/.test(planCode)) {
+        throw new PaymentError('invalid_request')
+      }
+      if (!isPaymentsCheckoutEnabled() && planCode !== 'studio_monthly') {
+        throw new PaymentError('invalid_request')
+      }
+
+      session = await paymentService.createCheckout({
+        userId: context.userId,
+        planCode,
+        successUrl,
+        cancelUrl,
+      })
+    }
 
     return NextResponse.json({
       checkout: {
