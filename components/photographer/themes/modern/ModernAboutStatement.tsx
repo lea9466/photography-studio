@@ -24,8 +24,9 @@ export type ModernAboutStatementProps = {
  * standalone About section or an about photo at all; ModernHero.tsx carries
  * the shorter about_text blurb instead, and that stays as-is). Sits between
  * the hero and ModernAbout's stat cards. Purely additive: renders nothing
- * when the studio hasn't set about_description (the photo alone, without a
- * statement, has nothing to anchor it to in this layout).
+ * when the studio hasn't set about_description. The frame always renders —
+ * a metallic, accent-tinted placeholder fills it when there's no photo, so
+ * the section never degrades to plain unframed text.
  */
 export function ModernAboutStatement({ text, imageUrl, accentColor, language }: ModernAboutStatementProps) {
   const trimmed = text?.trim()
@@ -37,22 +38,26 @@ export function ModernAboutStatement({ text, imageUrl, accentColor, language }: 
 
   return (
     <section className={styles.section} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
-      <div className={`${styles.inner} ${imageUrl ? styles.innerWithImage : ''}`}>
-        {imageUrl ? (
-          <div className={`${styles.frameWrap} ${reveal()}`}>
-            <div className={styles.frame}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+      <div className={`${styles.inner} ${styles.innerWithImage}`}>
+        <div className={`${styles.frameWrap} ${reveal()}`}>
+          <div className={styles.frame}>
+            {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt={copy.misc.photographerPortraitAlt} className={styles.image} />
-              <span className={`${styles.corner} ${styles.cornerTl}`} aria-hidden="true" />
-              <span className={`${styles.corner} ${styles.cornerTr}`} aria-hidden="true" />
-              <span className={`${styles.corner} ${styles.cornerBl}`} aria-hidden="true" />
-              <span className={`${styles.corner} ${styles.cornerBr}`} aria-hidden="true" />
-              <span className={styles.shutter} aria-hidden="true">
+            ) : (
+              <div className={styles.placeholder} aria-hidden="true">
                 <span className="material-symbols-outlined">photo_camera</span>
-              </span>
-            </div>
+              </div>
+            )}
+            <span className={`${styles.corner} ${styles.cornerTl}`} aria-hidden="true" />
+            <span className={`${styles.corner} ${styles.cornerTr}`} aria-hidden="true" />
+            <span className={`${styles.corner} ${styles.cornerBl}`} aria-hidden="true" />
+            <span className={`${styles.corner} ${styles.cornerBr}`} aria-hidden="true" />
+            <span className={styles.shutter} aria-hidden="true">
+              <span className="material-symbols-outlined">photo_camera</span>
+            </span>
           </div>
-        ) : null}
+        </div>
 
         <div className={`${styles.copy} ${reveal('delay-100')}`}>
           <ModernSectionEyebrow align="right">OUR STORY</ModernSectionEyebrow>
