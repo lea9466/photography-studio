@@ -5,11 +5,14 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import { DarkPostCard, type DarkHomepagePost } from './DarkPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './DarkPostsSection.module.css'
 
 export type DarkPostsSectionProps = {
   title: string
   posts: DarkHomepagePost[]
+  displayStyle: PostsDisplayStyle
   accentColor: string
   blogHref: string
   language: SiteLanguage
@@ -26,7 +29,15 @@ const MAX_HOMEPAGE_POSTS = 3
  * matches the same reasoning as DarkGalleriesSection/DarkRecentPhotosSection
  * — no divider element in the source markup.
  */
-export function DarkPostsSection({ title, posts, accentColor, blogHref, language, hrefForPost }: DarkPostsSectionProps) {
+export function DarkPostsSection({
+  title,
+  posts,
+  displayStyle,
+  accentColor,
+  blogHref,
+  language,
+  hrefForPost,
+}: DarkPostsSectionProps) {
   const { ref, revealed } = useRevealOnScroll<HTMLElement>()
 
   // Matches the old renderer: generateHomepagePostsSectionHTML returns ''
@@ -54,11 +65,20 @@ export function DarkPostsSection({ title, posts, accentColor, blogHref, language
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {display.map((post) => (
-          <DarkPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
-        ))}
-      </div>
+      {displayStyle === 'circles' ? (
+        <BlogCirclesGrid
+          posts={display.map((post) => ({ ...post, excerpt: post.content }))}
+          accentColor={accentColor}
+          language={language}
+          hrefForPost={hrefForPost}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {display.map((post) => (
+            <DarkPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

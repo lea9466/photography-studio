@@ -78,6 +78,7 @@ export function toDarkHomePageProps(
     recentPhotosGalleries: vm.recentPhotosGalleries,
 
     postsTitle: resolvePostsPageTitle(THEME, vm.postsTitle, vm.language),
+    postsDisplayStyle: vm.postsDisplayStyle,
     posts: vm.posts,
 
     packagesTitle: packagesCopy.title,

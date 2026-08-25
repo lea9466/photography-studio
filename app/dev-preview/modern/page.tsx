@@ -149,6 +149,7 @@ export default function ModernThemePreviewPage() {
       recentPhotosTitle="תמונות אחרונות"
       recentPhotosGalleries={MOCK_RECENT_PHOTOS}
       postsTitle="הבלוג שלנו"
+      postsDisplayStyle="cards"
       posts={MOCK_POSTS}
       hrefForPost={() => '/dev-preview/modern/blog/post'}
       packagesTitle="חבילות"

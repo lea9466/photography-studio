@@ -1,4 +1,5 @@
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ClassicHero } from './ClassicHero'
 import { ClassicAbout } from './ClassicAbout'
 import { ClassicGalleriesSection } from './ClassicGalleriesSection'
@@ -46,6 +47,7 @@ export type ClassicHomePageProps = {
   recentPhotosGalleries: RecentPhotosGridItem[]
 
   postsTitle: string
+  postsDisplayStyle: PostsDisplayStyle
   posts: ClassicHomepagePost[]
 
   packagesTitle: string
@@ -115,6 +117,7 @@ export function ClassicHomePage(props: ClassicHomePageProps) {
     recentPhotosTitle,
     recentPhotosGalleries,
     postsTitle,
+    postsDisplayStyle,
     posts,
     packagesTitle,
     packagesSubtitle,
@@ -191,6 +194,7 @@ export function ClassicHomePage(props: ClassicHomePageProps) {
 
         <ClassicPostsSection
           title={postsTitle}
+          displayStyle={postsDisplayStyle}
           posts={posts}
           accentColor={accentColor}
           blogHref={blogPath ?? '#'}

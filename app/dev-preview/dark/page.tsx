@@ -149,6 +149,7 @@ export default function DarkThemePreviewPage() {
         recentPhotosTitle="תמונות אחרונות"
         recentPhotosGalleries={MOCK_RECENT_PHOTOS}
         postsTitle="הבלוג שלנו"
+        postsDisplayStyle="cards"
         posts={MOCK_POSTS}
         hrefForPost={() => '/dev-preview/dark/blog/post'}
         packagesTitle="חבילות"

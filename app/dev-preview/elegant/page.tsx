@@ -105,6 +105,7 @@ export default function ElegantThemePreviewPage() {
         recentPhotosTitle="תמונות אחרונות"
         recentPhotosGalleries={MOCK_RECENT_PHOTOS}
         postsTitle="הבלוג שלנו"
+        postsDisplayStyle="cards"
         posts={MOCK_POSTS}
         hrefForPost={() => '/dev-preview/elegant/blog/post'}
         packagesTitle="חבילות"

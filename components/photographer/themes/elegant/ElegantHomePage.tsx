@@ -1,4 +1,5 @@
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ElegantHero } from './ElegantHero'
 import { ElegantAbout } from './ElegantAbout'
 import { ElegantGalleriesSection } from './ElegantGalleriesSection'
@@ -52,6 +53,7 @@ export type ElegantHomePageProps = {
   recentPhotosGalleries: RecentPhotosGridItem[]
 
   postsTitle: string
+  postsDisplayStyle: PostsDisplayStyle
   posts: ElegantHomepagePost[]
 
   packagesTitle: string
@@ -125,6 +127,7 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
     recentPhotosTitle,
     recentPhotosGalleries,
     postsTitle,
+    postsDisplayStyle,
     posts,
     packagesTitle,
     packagesSubtitle,
@@ -198,6 +201,7 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
 
         <ElegantPostsSection
           title={postsTitle}
+          displayStyle={postsDisplayStyle}
           posts={posts}
           accentColor={accentColor}
           blogHref={blogPath ?? '#'}

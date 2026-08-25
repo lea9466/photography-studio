@@ -6,11 +6,14 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernPostCard, type ModernHomepagePost } from './ModernPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ModernPostsSection.module.css'
 
 export type ModernPostsSectionProps = {
   title: string
   posts: ModernHomepagePost[]
+  displayStyle: PostsDisplayStyle
   accentColor: string
   blogHref: string
   language: SiteLanguage
@@ -29,6 +32,7 @@ const MAX_HOMEPAGE_POSTS = 3
 export function ModernPostsSection({
   title,
   posts,
+  displayStyle,
   accentColor,
   blogHref,
   language,
@@ -63,11 +67,20 @@ export function ModernPostsSection({
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {display.map((post) => (
-          <ModernPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
-        ))}
-      </div>
+      {displayStyle === 'circles' ? (
+        <BlogCirclesGrid
+          posts={display.map((post) => ({ ...post, excerpt: post.content }))}
+          accentColor={accentColor}
+          language={language}
+          hrefForPost={hrefForPost}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {display.map((post) => (
+            <ModernPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

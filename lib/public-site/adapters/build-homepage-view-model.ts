@@ -1,4 +1,5 @@
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import { normalizePostsDisplayStyle, type PostsDisplayStyle } from '@/lib/types/posts-display-style'
 
 /**
  * Everything `app/[slug]/page.tsx` already computes today (real Supabase
@@ -38,6 +39,7 @@ export type HomepageViewModelInput = {
     galleries_title: string | null
     recent_photos_title: string | null
     posts_page_title: string | null
+    posts_display_style: string | null
     packages_title: string | null
     packages_subtitle: string | null
     testimonials_title: string | null
@@ -139,6 +141,7 @@ export type HomepageViewModel = {
   recentPhotosGalleries: Array<{ id: string; title: string; photoPool: string[] | null }>
 
   postsTitle: string | null
+  postsDisplayStyle: PostsDisplayStyle
   posts: Array<{ id: string; title: string; content: string; date: string; coverUrl: string | null }>
 
   packagesTitle: string | null
@@ -228,6 +231,7 @@ export function buildHomepageViewModel(input: HomepageViewModelInput): HomepageV
     })),
 
     postsTitle: p.posts_page_title,
+    postsDisplayStyle: normalizePostsDisplayStyle(p.posts_display_style),
     posts: input.posts,
 
     packagesTitle: p.packages_title,

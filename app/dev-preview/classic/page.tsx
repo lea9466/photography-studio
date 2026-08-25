@@ -225,6 +225,7 @@ export default function ClassicThemePreviewPage() {
         recentPhotosTitle="תמונות אחרונות"
         recentPhotosGalleries={MOCK_RECENT_PHOTOS}
         postsTitle="הבלוג שלנו"
+        postsDisplayStyle="cards"
         posts={MOCK_POSTS}
         hrefForPost={() => '/dev-preview/classic/blog/post'}
         packagesTitle="חבילות"

@@ -1,4 +1,5 @@
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ModernHero } from './ModernHero'
 import { ModernAboutStatement } from './ModernAboutStatement'
 import { ModernAbout } from './ModernAbout'
@@ -62,6 +63,7 @@ export type ModernHomePageProps = {
   recentPhotosGalleries: RecentPhotosGridItem[]
 
   postsTitle: string
+  postsDisplayStyle: PostsDisplayStyle
   posts: ModernHomepagePost[]
 
   packagesTitle: string
@@ -134,6 +136,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
     recentPhotosTitle,
     recentPhotosGalleries,
     postsTitle,
+    postsDisplayStyle,
     posts,
     packagesTitle,
     packagesSubtitle,
@@ -217,6 +220,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
 
         <ModernPostsSection
           title={postsTitle}
+          displayStyle={postsDisplayStyle}
           posts={posts}
           accentColor={accentColor}
           blogHref={blogPath ?? '#'}

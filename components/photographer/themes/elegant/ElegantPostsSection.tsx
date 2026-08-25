@@ -5,11 +5,14 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantPostCard, type ElegantHomepagePost } from './ElegantPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ElegantPostsSection.module.css'
 
 export type ElegantPostsSectionProps = {
   title: string
   posts: ElegantHomepagePost[]
+  displayStyle: PostsDisplayStyle
   accentColor: string
   blogHref: string
   language: SiteLanguage
@@ -32,7 +35,15 @@ const MAX_HOMEPAGE_POSTS = 3
  * markup, just the watermark+title stack and (when present) the "view all
  * posts" link on the trailing side of the same row.
  */
-export function ElegantPostsSection({ title, posts, accentColor, blogHref, language, hrefForPost }: ElegantPostsSectionProps) {
+export function ElegantPostsSection({
+  title,
+  posts,
+  displayStyle,
+  accentColor,
+  blogHref,
+  language,
+  hrefForPost,
+}: ElegantPostsSectionProps) {
   const { ref, revealed } = useRevealOnScroll<HTMLDivElement>()
 
   // Matches the old renderer: generateHomepagePostsSectionHTML returns ''
@@ -59,11 +70,20 @@ export function ElegantPostsSection({ title, posts, accentColor, blogHref, langu
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {display.map((post, index) => (
-          <ElegantPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} index={index} />
-        ))}
-      </div>
+      {displayStyle === 'circles' ? (
+        <BlogCirclesGrid
+          posts={display.map((post) => ({ ...post, excerpt: post.content }))}
+          accentColor={accentColor}
+          language={language}
+          hrefForPost={hrefForPost}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {display.map((post, index) => (
+            <ElegantPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} index={index} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

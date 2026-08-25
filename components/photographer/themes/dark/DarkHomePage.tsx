@@ -1,4 +1,5 @@
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { DarkHero } from './DarkHero'
 import { DarkAbout } from './DarkAbout'
 import { DarkGalleriesSection } from './DarkGalleriesSection'
@@ -47,6 +48,7 @@ export type DarkHomePageProps = {
   recentPhotosGalleries: RecentPhotosGridItem[]
 
   postsTitle: string
+  postsDisplayStyle: PostsDisplayStyle
   posts: DarkHomepagePost[]
 
   packagesTitle: string
@@ -126,6 +128,7 @@ export function DarkHomePage(props: DarkHomePageProps) {
     recentPhotosTitle,
     recentPhotosGalleries,
     postsTitle,
+    postsDisplayStyle,
     posts,
     packagesTitle,
     packagesSubtitle,
@@ -200,6 +203,7 @@ export function DarkHomePage(props: DarkHomePageProps) {
 
       <DarkPostsSection
         title={postsTitle}
+        displayStyle={postsDisplayStyle}
         posts={posts}
         accentColor={accentColor}
         blogHref={blogPath ?? '#'}

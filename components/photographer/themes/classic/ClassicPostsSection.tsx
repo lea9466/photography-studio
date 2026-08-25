@@ -6,11 +6,14 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { SectionTitle } from '../shared/SectionTitle'
 import { ClassicPostCard, type ClassicHomepagePost } from './ClassicPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ClassicPostsSection.module.css'
 
 export type ClassicPostsSectionProps = {
   title: string
   posts: ClassicHomepagePost[]
+  displayStyle: PostsDisplayStyle
   accentColor: string
   blogHref: string
   language: SiteLanguage
@@ -28,6 +31,7 @@ const MAX_HOMEPAGE_POSTS = 3
 export function ClassicPostsSection({
   title,
   posts,
+  displayStyle,
   accentColor,
   blogHref,
   language,
@@ -64,11 +68,20 @@ export function ClassicPostsSection({
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {display.map((post) => (
-          <ClassicPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
-        ))}
-      </div>
+      {displayStyle === 'circles' ? (
+        <BlogCirclesGrid
+          posts={display.map((post) => ({ ...post, excerpt: post.content }))}
+          accentColor={accentColor}
+          language={language}
+          hrefForPost={hrefForPost}
+        />
+      ) : (
+        <div className={styles.grid}>
+          {display.map((post) => (
+            <ClassicPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }
