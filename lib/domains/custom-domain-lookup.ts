@@ -113,6 +113,18 @@ export const getActiveCustomDomainHost = cache(async (userId: string): Promise<s
   }
 })
 
+/**
+ * Convenience wrapper around getActiveCustomDomainHost for the common
+ * call site — every generateMetadata() that wants its canonical/OG/JSON-LD
+ * URLs to prefer the photographer's connected domain needs exactly this:
+ * `https://{host}` or undefined (buildCanonicalUrl's default already falls
+ * back to the app's own domain when baseUrl is undefined).
+ */
+export async function getCanonicalBaseUrl(userId: string): Promise<string | undefined> {
+  const host = await getActiveCustomDomainHost(userId)
+  return host ? `https://${host}` : undefined
+}
+
 function safeHost(url: string): string | null {
   try {
     return new URL(url).host
