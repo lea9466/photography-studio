@@ -63,10 +63,15 @@ export function resolveActiveStudioPath(photographer: {
 
 /**
  * Returns a gallery URL only when it matches a real app route:
- * - `/portfolio/{slug}` → portfolio gallery, public, with slug
- * - `/public-gallery/{id}` → any other public gallery
+ * - `/portfolio/{slug}` → portfolio gallery, public, with slug (a separate,
+ *   still fully old-system route — unrelated to studioPath, unaffected by
+ *   the /[slug]/gallery/[id] migration)
+ * - `{studioPath}/gallery/{id}` → any other public gallery
  */
-export function resolveValidatedGalleryPath(gallery: ValidatableGallery): string | null {
+export function resolveValidatedGalleryPath(
+  gallery: ValidatableGallery,
+  studioPath: string
+): string | null {
   if (!gallery.is_public) return null
 
   if (gallery.gallery_type === 'portfolio') {
@@ -74,7 +79,7 @@ export function resolveValidatedGalleryPath(gallery: ValidatableGallery): string
     if (slug) return `/portfolio/${slug}`
   }
 
-  return `/public-gallery/${gallery.id}`
+  return `${studioPath}/gallery/${gallery.id}`
 }
 
 export function resolveValidatedPostPath(studioPath: string | null, postId: string): string | null {

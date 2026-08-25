@@ -2,21 +2,21 @@
 
 import { toast } from 'sonner'
 import { submitContactInquiry } from '@/lib/actions/contact.actions'
-import { ElegantPageChrome } from './ElegantPageChrome'
-import type { ElegantSiteHeaderProps } from '@/components/photographer/site-chrome/ElegantSiteHeader'
-import type { ElegantSiteFooterProps } from '@/components/photographer/site-chrome/ElegantSiteFooter'
 import { ElegantHomePage, type ElegantHomePageProps } from '@/components/photographer/themes/elegant/ElegantHomePage'
 import type { ElegantContactFormValues } from '@/components/photographer/themes/elegant/ElegantContactForm'
 
 export type ElegantHomepageShellProps = {
   photographerId: string
-  headerProps: ElegantSiteHeaderProps
-  footerProps: ElegantSiteFooterProps
   homePageProps: Omit<ElegantHomePageProps, 'onContactSubmit'>
+  /** Overrides the component's own default (which still points at the
+   * pre-migration /public-gallery/[id] path) — see
+   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
+  hrefForGallery: (id: string) => string
 }
 
-/** Elegant-theme counterpart of ClassicHomepageShell.tsx / DarkHomepageShell.tsx — same Phase-0 role. */
-export function ElegantHomepageShell({ photographerId, headerProps, footerProps, homePageProps }: ElegantHomepageShellProps) {
+/** Elegant-theme counterpart of ClassicHomepageShell.tsx — see that file's
+ * doc comment for why header/footer moved out of here into the shared layout. */
+export function ElegantHomepageShell({ photographerId, homePageProps, hrefForGallery }: ElegantHomepageShellProps) {
   const handleContactSubmit = async (values: ElegantContactFormValues) => {
     try {
       await submitContactInquiry({
@@ -34,8 +34,6 @@ export function ElegantHomepageShell({ photographerId, headerProps, footerProps,
   }
 
   return (
-    <ElegantPageChrome language={homePageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ElegantHomePage {...homePageProps} onContactSubmit={handleContactSubmit} />
-    </ElegantPageChrome>
+    <ElegantHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
   )
 }

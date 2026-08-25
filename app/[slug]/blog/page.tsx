@@ -18,29 +18,13 @@ import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBlogListViewModel } from '@/lib/public-site/adapters/build-blog-list-view-model'
-import {
-  toClassicBlogListPageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicBlogListPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBlogListShell } from '@/components/photographer/react-site/ClassicBlogListShell'
-import {
-  toDarkBlogListPageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkBlogListPageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkBlogListShell } from '@/components/photographer/react-site/DarkBlogListShell'
-import {
-  toElegantBlogListPageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantBlogListPageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantBlogListShell } from '@/components/photographer/react-site/ElegantBlogListShell'
-import {
-  toModernBlogListPageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernBlogListPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernBlogListShell } from '@/components/photographer/react-site/ModernBlogListShell'
 
 interface BlogPageProps {
@@ -84,7 +68,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
     : (getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`)
   const blogPath = `${canonicalPath}/blog`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
-  const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
+  const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const admin = createAdminClient()
   const [{ count: packageCount }, { count: photoEditCount }] = await Promise.all([
@@ -101,7 +85,8 @@ export default async function BlogPage({ params }: BlogPageProps) {
   ])
 
   const pageTitle = resolvePostsPageTitle(siteTheme, typed.posts_page_title)
-  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
+  const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
+  const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
   const isPortfolioLayout = (typed.gallery_layout_mode ?? 'separated') === 'portfolio'
 
   if (await isReactPublicSiteEnabled()) {
@@ -124,51 +109,23 @@ export default async function BlogPage({ params }: BlogPageProps) {
       portfolioPath: `${canonicalPath}/portfolio`,
       beforeAfterPath: `${canonicalPath}/before-after`,
       hasFaq,
-      hasPackages: (packageCount ?? 0) > 0,
+      hasPackages,
       hasPhotoEditComparisons,
     })
 
     if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return (
-        <DarkBlogListShell
-          headerProps={toDarkSiteHeaderProps(viewModel)}
-          footerProps={toDarkSiteFooterProps(viewModel)}
-          pageProps={toDarkBlogListPageProps(viewModel)}
-          blogPath={blogPath}
-        />
-      )
+      return <DarkBlogListShell pageProps={toDarkBlogListPageProps(viewModel)} blogPath={blogPath} />
     }
 
     if (typed.selected_theme === 'elegant') {
-      return (
-        <ElegantBlogListShell
-          headerProps={toElegantSiteHeaderProps(viewModel)}
-          footerProps={toElegantSiteFooterProps(viewModel)}
-          pageProps={toElegantBlogListPageProps(viewModel)}
-          blogPath={blogPath}
-        />
-      )
+      return <ElegantBlogListShell pageProps={toElegantBlogListPageProps(viewModel)} blogPath={blogPath} />
     }
 
     if (typed.selected_theme === 'modern') {
-      return (
-        <ModernBlogListShell
-          headerProps={toModernSiteHeaderProps(viewModel)}
-          footerProps={toModernSiteFooterProps(viewModel)}
-          pageProps={toModernBlogListPageProps(viewModel)}
-          blogPath={blogPath}
-        />
-      )
+      return <ModernBlogListShell pageProps={toModernBlogListPageProps(viewModel)} blogPath={blogPath} />
     }
 
-    return (
-      <ClassicBlogListShell
-        headerProps={toClassicSiteHeaderProps(viewModel)}
-        footerProps={toClassicSiteFooterProps(viewModel)}
-        pageProps={toClassicBlogListPageProps(viewModel)}
-        blogPath={blogPath}
-      />
-    )
+    return <ClassicBlogListShell pageProps={toClassicBlogListPageProps(viewModel)} blogPath={blogPath} />
   }
 
   const html = generatePublicBlogPageHTML({
@@ -179,7 +136,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
     blogPath,
     studioPath: canonicalPath || '/',
     hasFaq,
-    hasPackages: (packageCount ?? 0) > 0,
+    hasPackages,
     hasPhotoEditComparisons,
     beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,

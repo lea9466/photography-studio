@@ -62,6 +62,7 @@ async function revalidatePublicPortfolioPaths(
   if (studioPath) {
     revalidatePath(studioPath)
     revalidatePath(`${studioPath}/portfolio`)
+    revalidatePath(`${studioPath}/gallery/${galleryId}`)
   }
 }
 

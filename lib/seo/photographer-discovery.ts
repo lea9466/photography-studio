@@ -29,9 +29,10 @@ export type PhotographerDiscoveryRecord = ValidatablePhotographer & {
 
 /** Returns a validated gallery URL, or null when the gallery is not publicly accessible. */
 export function buildPublicGalleryCanonicalPath(
-  gallery: Pick<DiscoveryGallery, 'id' | 'slug' | 'gallery_type' | 'is_public'>
+  gallery: Pick<DiscoveryGallery, 'id' | 'slug' | 'gallery_type' | 'is_public'>,
+  studioPath: string
 ): string | null {
-  return resolveValidatedGalleryPath(gallery)
+  return resolveValidatedGalleryPath(gallery, studioPath)
 }
 
 export function buildPostCanonicalPath(studioPath: string, postId: string): string {
@@ -148,7 +149,7 @@ export function buildPhotographerDiscoverySitemapEntries(input: {
   ]
 
   for (const gallery of input.galleries) {
-    const galleryPath = resolveValidatedGalleryPath(gallery)
+    const galleryPath = resolveValidatedGalleryPath(gallery, studioPath)
     if (!galleryPath) continue
 
     entries.push({

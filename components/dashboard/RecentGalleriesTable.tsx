@@ -48,6 +48,10 @@ type GalleryRowProps = {
   gallery: GalleryWithDetails
   selected: boolean
   onSelect: (id: string) => void
+  /** This studio's public site path (e.g. "/studio-name"), or null if it
+   * can't be resolved — falls back to the /public-gallery/[id] redirect
+   * shim in that case. See app/[slug]/gallery/[id]/page.tsx's doc comment. */
+  studioPath: string | null
 }
 
 function getStatusBadge(status: string) {
@@ -70,7 +74,7 @@ function getStatusBadge(status: string) {
   )
 }
 
-function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
+function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps) {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -87,7 +91,9 @@ function GalleryRow({ gallery, selected, onSelect }: GalleryRowProps) {
             gallery_type: gallery.gallery_type,
           })
         : gallery.is_public || PUBLIC_ONLY_MVP
-          ? `/public-gallery/${gallery.id}`
+          ? studioPath
+            ? `${studioPath}/gallery/${gallery.id}`
+            : `/public-gallery/${gallery.id}`
           : `/g/${gallery.id}`
     // Private galleries are meant to live on their own isolated subdomain
     // (see middleware.ts) — falls back to the main app domain until it's
@@ -293,6 +299,7 @@ type RecentGalleriesTableProps = {
   filter?: string
   title?: string
   variant?: 'default' | 'section'
+  studioPath: string | null
 }
 
 function GalleriesSection({
@@ -349,6 +356,7 @@ export function RecentGalleriesTable({
   filter,
   title = 'גלריות אחרונות',
   variant = 'default',
+  studioPath,
 }: RecentGalleriesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
@@ -453,7 +461,13 @@ export function RecentGalleriesTable({
           <tbody className="divide-y divide-[#7D3A52]/10">
             {filteredGalleries.length > 0 ? (
               filteredGalleries.map((gallery) => (
-                <GalleryRow key={gallery.id} gallery={gallery} selected={selectedIds.has(gallery.id)} onSelect={toggleSelect} />
+                <GalleryRow
+                  key={gallery.id}
+                  gallery={gallery}
+                  selected={selectedIds.has(gallery.id)}
+                  onSelect={toggleSelect}
+                  studioPath={studioPath}
+                />
               ))
             ) : (
               <tr>

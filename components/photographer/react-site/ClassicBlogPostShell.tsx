@@ -1,18 +1,11 @@
-import { ClassicPageChrome } from './ClassicPageChrome'
-import type { ClassicSiteHeaderProps } from '@/components/photographer/site-chrome/ClassicSiteHeader'
-import type { ClassicSiteFooterProps } from '@/components/photographer/site-chrome/ClassicSiteFooter'
 import { ClassicBlogPostPage, type ClassicBlogPostPageProps } from '@/components/photographer/themes/classic/ClassicBlogPostPage'
 
 export type ClassicBlogPostShellProps = {
-  headerProps: ClassicSiteHeaderProps
-  footerProps: ClassicSiteFooterProps
   pageProps: ClassicBlogPostPageProps
 }
 
-export function ClassicBlogPostShell({ headerProps, footerProps, pageProps }: ClassicBlogPostShellProps) {
-  return (
-    <ClassicPageChrome language={pageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ClassicBlogPostPage {...pageProps} />
-    </ClassicPageChrome>
-  )
+/** Header/footer now come from app/[slug]/layout.tsx's shared chrome — see
+ * ClassicHomepageShell.tsx's doc comment for why. */
+export function ClassicBlogPostShell({ pageProps }: ClassicBlogPostShellProps) {
+  return <ClassicBlogPostPage {...pageProps} />
 }

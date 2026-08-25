@@ -1,18 +1,11 @@
-import { ClassicPageChrome } from './ClassicPageChrome'
-import type { ClassicSiteHeaderProps } from '@/components/photographer/site-chrome/ClassicSiteHeader'
-import type { ClassicSiteFooterProps } from '@/components/photographer/site-chrome/ClassicSiteFooter'
 import { ClassicBeforeAfterPage, type ClassicBeforeAfterPageProps } from '@/components/photographer/themes/classic/ClassicBeforeAfterPage'
 
 export type ClassicBeforeAfterShellProps = {
-  headerProps: ClassicSiteHeaderProps
-  footerProps: ClassicSiteFooterProps
   pageProps: ClassicBeforeAfterPageProps
 }
 
-export function ClassicBeforeAfterShell({ headerProps, footerProps, pageProps }: ClassicBeforeAfterShellProps) {
-  return (
-    <ClassicPageChrome language={pageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ClassicBeforeAfterPage {...pageProps} />
-    </ClassicPageChrome>
-  )
+/** Header/footer now come from app/[slug]/layout.tsx's shared chrome — see
+ * ClassicHomepageShell.tsx's doc comment for why. */
+export function ClassicBeforeAfterShell({ pageProps }: ClassicBeforeAfterShellProps) {
+  return <ClassicBeforeAfterPage {...pageProps} />
 }

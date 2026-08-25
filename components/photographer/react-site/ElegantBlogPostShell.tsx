@@ -1,18 +1,11 @@
-import { ElegantPageChrome } from './ElegantPageChrome'
-import type { ElegantSiteHeaderProps } from '@/components/photographer/site-chrome/ElegantSiteHeader'
-import type { ElegantSiteFooterProps } from '@/components/photographer/site-chrome/ElegantSiteFooter'
 import { ElegantBlogPostPage, type ElegantBlogPostPageProps } from '@/components/photographer/themes/elegant/ElegantBlogPostPage'
 
 export type ElegantBlogPostShellProps = {
-  headerProps: ElegantSiteHeaderProps
-  footerProps: ElegantSiteFooterProps
   pageProps: ElegantBlogPostPageProps
 }
 
-export function ElegantBlogPostShell({ headerProps, footerProps, pageProps }: ElegantBlogPostShellProps) {
-  return (
-    <ElegantPageChrome language={pageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ElegantBlogPostPage {...pageProps} />
-    </ElegantPageChrome>
-  )
+/** Header/footer now come from app/[slug]/layout.tsx's shared chrome — see
+ * ClassicHomepageShell.tsx's doc comment for why. */
+export function ElegantBlogPostShell({ pageProps }: ElegantBlogPostShellProps) {
+  return <ElegantBlogPostPage {...pageProps} />
 }

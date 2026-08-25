@@ -22,29 +22,13 @@ import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitle
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildPortfolioViewModel } from '@/lib/public-site/adapters/build-portfolio-view-model'
-import {
-  toClassicPortfolioPageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicPortfolioShell } from '@/components/photographer/react-site/ClassicPortfolioShell'
-import {
-  toDarkPortfolioPageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkPortfolioShell } from '@/components/photographer/react-site/DarkPortfolioShell'
-import {
-  toElegantPortfolioPageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantPortfolioShell } from '@/components/photographer/react-site/ElegantPortfolioShell'
-import {
-  toModernPortfolioPageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernPortfolioShell } from '@/components/photographer/react-site/ModernPortfolioShell'
 
 interface PortfolioPageProps {
@@ -208,7 +192,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
   const portfolioPath = `${navBasePath}/portfolio`
   const blogPath = `${navBasePath}/blog`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
-  const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
+  const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
     await Promise.all([
@@ -228,7 +212,9 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
         .eq('is_active', true),
     ])
 
-  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
+  const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
+  const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
+  const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
 
   if (await isReactPublicSiteEnabled()) {
     const viewModel = buildPortfolioViewModel({
@@ -253,48 +239,24 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
       blogPath,
       beforeAfterPath: `${navBasePath}/before-after`,
       hasFaq,
-      hasPackages: (packageCount ?? 0) > 0,
-      hasBlog: (postCount ?? 0) > 0,
+      hasPackages,
+      hasBlog,
       hasPhotoEditComparisons,
     })
 
     if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return (
-        <DarkPortfolioShell
-          headerProps={toDarkSiteHeaderProps(viewModel)}
-          footerProps={toDarkSiteFooterProps(viewModel)}
-          pageProps={toDarkPortfolioPageProps(viewModel)}
-        />
-      )
+      return <DarkPortfolioShell pageProps={toDarkPortfolioPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'elegant') {
-      return (
-        <ElegantPortfolioShell
-          headerProps={toElegantSiteHeaderProps(viewModel)}
-          footerProps={toElegantSiteFooterProps(viewModel)}
-          pageProps={toElegantPortfolioPageProps(viewModel)}
-        />
-      )
+      return <ElegantPortfolioShell pageProps={toElegantPortfolioPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'modern') {
-      return (
-        <ModernPortfolioShell
-          headerProps={toModernSiteHeaderProps(viewModel)}
-          footerProps={toModernSiteFooterProps(viewModel)}
-          pageProps={toModernPortfolioPageProps(viewModel)}
-        />
-      )
+      return <ModernPortfolioShell pageProps={toModernPortfolioPageProps(viewModel)} />
     }
 
-    return (
-      <ClassicPortfolioShell
-        headerProps={toClassicSiteHeaderProps(viewModel)}
-        footerProps={toClassicSiteFooterProps(viewModel)}
-        pageProps={toClassicPortfolioPageProps(viewModel)}
-      />
-    )
+    return <ClassicPortfolioShell pageProps={toClassicPortfolioPageProps(viewModel)} />
   }
 
   const html = generatePublicPortfolioPageHTML({
@@ -304,8 +266,8 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     homepagePath,
     portfolioPath,
     hasFaq,
-    hasPackages: (packageCount ?? 0) > 0,
-    hasBlog: (postCount ?? 0) > 0,
+    hasPackages,
+    hasBlog,
     blogPath,
     hasPhotoEditComparisons,
     beforeAfterPath: hasPhotoEditComparisons ? `${navBasePath}/before-after` : undefined,

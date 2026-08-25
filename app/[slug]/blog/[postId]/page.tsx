@@ -26,29 +26,13 @@ import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBlogPostViewModel } from '@/lib/public-site/adapters/build-blog-post-view-model'
-import {
-  toClassicBlogPostPageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicBlogPostPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBlogPostShell } from '@/components/photographer/react-site/ClassicBlogPostShell'
-import {
-  toDarkBlogPostPageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkBlogPostPageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkBlogPostShell } from '@/components/photographer/react-site/DarkBlogPostShell'
-import {
-  toElegantBlogPostPageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantBlogPostPageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantBlogPostShell } from '@/components/photographer/react-site/ElegantBlogPostShell'
-import {
-  toModernBlogPostPageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernBlogPostPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernBlogPostShell } from '@/components/photographer/react-site/ModernBlogPostShell'
 
 interface PostPageProps {
@@ -107,7 +91,7 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
   const blogPath = `${canonicalPath}/blog`
   const postPath = buildPostCanonicalPath(studioPath, post.id)
   const logoUrl = await resolveBrandingPath(photographer.logo_url)
-  const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
+  const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const admin = createAdminClient()
   const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
@@ -125,7 +109,9 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
         .eq('is_active', true),
     ])
 
-  const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
+  const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
+  const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
+  const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
   const isPortfolioLayout = (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
 
   if (await isReactPublicSiteEnabled()) {
@@ -150,47 +136,23 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
       portfolioPath: `${canonicalPath}/portfolio`,
       beforeAfterPath: `${canonicalPath}/before-after`,
       hasFaq,
-      hasPackages: (packageCount ?? 0) > 0,
+      hasPackages,
       hasPhotoEditComparisons,
     })
 
     if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return (
-        <DarkBlogPostShell
-          headerProps={toDarkSiteHeaderProps(viewModel)}
-          footerProps={toDarkSiteFooterProps(viewModel)}
-          pageProps={toDarkBlogPostPageProps(viewModel)}
-        />
-      )
+      return <DarkBlogPostShell pageProps={toDarkBlogPostPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'elegant') {
-      return (
-        <ElegantBlogPostShell
-          headerProps={toElegantSiteHeaderProps(viewModel)}
-          footerProps={toElegantSiteFooterProps(viewModel)}
-          pageProps={toElegantBlogPostPageProps(viewModel)}
-        />
-      )
+      return <ElegantBlogPostShell pageProps={toElegantBlogPostPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'modern') {
-      return (
-        <ModernBlogPostShell
-          headerProps={toModernSiteHeaderProps(viewModel)}
-          footerProps={toModernSiteFooterProps(viewModel)}
-          pageProps={toModernBlogPostPageProps(viewModel)}
-        />
-      )
+      return <ModernBlogPostShell pageProps={toModernBlogPostPageProps(viewModel)} />
     }
 
-    return (
-      <ClassicBlogPostShell
-        headerProps={toClassicSiteHeaderProps(viewModel)}
-        footerProps={toClassicSiteFooterProps(viewModel)}
-        pageProps={toClassicBlogPostPageProps(viewModel)}
-      />
-    )
+    return <ClassicBlogPostShell pageProps={toClassicBlogPostPageProps(viewModel)} />
   }
 
   const html = generatePublicBlogPostPageHTML({
@@ -205,8 +167,8 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
     nextPost: next,
     accentColor,
     hasFaq,
-    hasPackages: (packageCount ?? 0) > 0,
-    hasBlog: (postCount ?? 0) > 0,
+    hasPackages,
+    hasBlog,
     hasPhotoEditComparisons,
     beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,

@@ -41,7 +41,7 @@ export function PhotographerSemanticAnchors({
           <h3 id="semantic-galleries-heading">גלריות</h3>
           <ul>
             {galleries.map((gallery) => {
-              const href = resolveValidatedGalleryPath(gallery)
+              const href = resolveValidatedGalleryPath(gallery, studioPath)
               if (!href) return null
               return (
                 <li key={gallery.id}>

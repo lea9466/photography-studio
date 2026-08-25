@@ -14,6 +14,7 @@ import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesT
 export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState('משתמש')
+  const [studioPath, setStudioPath] = useState<string | null>(null)
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
   const [activeFilter, setActiveFilter] = useState('all')
   const [loading, setLoading] = useState(true)
@@ -31,6 +32,7 @@ export default function DashboardPage() {
       try {
         const overview = await fetchDashboardOverview()
         setUserName(overview.userName)
+        setStudioPath(overview.studioPath)
         setRecentGalleries(overview.galleries)
       } catch (error) {
         console.error('Failed to load dashboard overview:', error)
@@ -94,7 +96,7 @@ export default function DashboardPage() {
         onFilterChange={setActiveFilter}
       />
 
-      <RecentGalleriesTable galleries={recentGalleries} filter={activeFilter} />
+      <RecentGalleriesTable galleries={recentGalleries} filter={activeFilter} studioPath={studioPath} />
     </div>
   )
 }

@@ -44,29 +44,13 @@ import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
-import {
-  toClassicHomePageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicHomePageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicHomepageShell } from '@/components/photographer/react-site/ClassicHomepageShell'
-import {
-  toDarkHomePageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkHomePageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkHomepageShell } from '@/components/photographer/react-site/DarkHomepageShell'
-import {
-  toElegantHomePageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantHomePageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantHomepageShell } from '@/components/photographer/react-site/ElegantHomepageShell'
-import {
-  toModernHomePageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernHomePageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernHomepageShell } from '@/components/photographer/react-site/ModernHomepageShell'
 
 interface PageProps {
@@ -563,13 +547,14 @@ export default async function PhotographerPage({ params }: PageProps) {
         photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
       })
 
+      const hrefForGallery = (id: string) => `${canonicalPath}/gallery/${id}`
+
       if (typedPhotographer.selected_theme === 'dark' || typedPhotographer.selected_theme === 'bold') {
         return (
           <DarkHomepageShell
             photographerId={typedPhotographer.id}
-            headerProps={toDarkSiteHeaderProps(viewModel)}
-            footerProps={toDarkSiteFooterProps(viewModel)}
             homePageProps={toDarkHomePageProps(viewModel)}
+            hrefForGallery={hrefForGallery}
           />
         )
       }
@@ -578,9 +563,8 @@ export default async function PhotographerPage({ params }: PageProps) {
         return (
           <ElegantHomepageShell
             photographerId={typedPhotographer.id}
-            headerProps={toElegantSiteHeaderProps(viewModel)}
-            footerProps={toElegantSiteFooterProps(viewModel)}
             homePageProps={toElegantHomePageProps(viewModel)}
+            hrefForGallery={hrefForGallery}
           />
         )
       }
@@ -589,9 +573,8 @@ export default async function PhotographerPage({ params }: PageProps) {
         return (
           <ModernHomepageShell
             photographerId={typedPhotographer.id}
-            headerProps={toModernSiteHeaderProps(viewModel)}
-            footerProps={toModernSiteFooterProps(viewModel)}
             homePageProps={toModernHomePageProps(viewModel)}
+            hrefForGallery={hrefForGallery}
           />
         )
       }
@@ -599,9 +582,8 @@ export default async function PhotographerPage({ params }: PageProps) {
       return (
         <ClassicHomepageShell
           photographerId={typedPhotographer.id}
-          headerProps={toClassicSiteHeaderProps(viewModel)}
-          footerProps={toClassicSiteFooterProps(viewModel)}
           homePageProps={toClassicHomePageProps(viewModel)}
+          hrefForGallery={hrefForGallery}
         />
       )
     }

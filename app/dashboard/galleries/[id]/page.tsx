@@ -29,6 +29,7 @@ import { Upload, Image as ImageIcon, Settings, Lock, Link as LinkIcon, Zap, Drop
 import { GALLERY_TYPE_LABELS } from '@/lib/types/app.types'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
 type GalleryPageProps = {
   params: Promise<{ id: string }>
@@ -52,12 +53,13 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
 
   const { data: profileData } = await supabase
     .from('users')
-    .select('studio_name')
+    .select('studio_name, slug')
     .eq('id', userId)
     .single()
 
-  const studioName =
-    (profileData as { studio_name: string | null } | null)?.studio_name ?? null
+  const typedProfile = profileData as { studio_name: string | null; slug: string | null } | null
+  const studioName = typedProfile?.studio_name ?? null
+  const studioPath = getPublicSitePath(typedProfile?.slug, typedProfile?.studio_name)
 
   const data = await fetchGalleryDetail(id)
   if (!data) notFound()
@@ -88,7 +90,9 @@ export default async function GalleryOverviewPage({ params }: GalleryPageProps) 
           gallery_type: gallery.gallery_type,
         })
       : gallery.is_public || effectiveMvp
-        ? `/public-gallery/${gallery.id}`
+        ? studioPath
+          ? `${studioPath}/gallery/${gallery.id}`
+          : `/public-gallery/${gallery.id}`
         : `/g/${gallery.id}`
 
   console.log('[dashboard/gallery-detail] public link resolved', {

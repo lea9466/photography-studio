@@ -2,32 +2,31 @@
 
 import { toast } from 'sonner'
 import { submitContactInquiry } from '@/lib/actions/contact.actions'
-import { ClassicPageChrome } from './ClassicPageChrome'
-import type { ClassicSiteHeaderProps } from '@/components/photographer/site-chrome/ClassicSiteHeader'
-import type { ClassicSiteFooterProps } from '@/components/photographer/site-chrome/ClassicSiteFooter'
 import { ClassicHomePage, type ClassicHomePageProps } from '@/components/photographer/themes/classic/ClassicHomePage'
 
 export type ClassicHomepageShellProps = {
   photographerId: string
-  headerProps: ClassicSiteHeaderProps
-  footerProps: ClassicSiteFooterProps
   homePageProps: Omit<ClassicHomePageProps, 'onContactSubmit'>
+  /** Overrides the component's own default (which still points at the
+   * pre-migration /public-gallery/[id] path) — see
+   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
+  hrefForGallery: (id: string) => string
 }
 
 /**
- * Phase 0 of the React public-site rollout — same role as
- * DarkHomepageShell.tsx/ElegantHomepageShell.tsx/ModernHomepageShell.tsx,
- * delegating fonts/header/footer/dir-fix to ClassicPageChrome instead of
- * duplicating them inline (this used to duplicate ClassicPageChrome's JSX
- * verbatim, which is how it silently fell out of sync and kept loading only
- * the theme's default fonts instead of the studio's brand-selected one after
- * that logic moved into ClassicPageChrome).
+ * Wires the contact-form submit handler for classic's homepage — that's the
+ * one piece of real logic left here. Header/footer/fonts now come from
+ * app/[slug]/layout.tsx's shared chrome instead of being rendered per-page
+ * (see that file's doc comment); this used to also render ClassicPageChrome
+ * itself, which meant every page under the slug re-rendered its own
+ * header/footer instance with its own independently-computed nav data —
+ * exactly how the entitlement-gating bug (hasFaq/hasPackages/etc. drifting
+ * out of sync between pages) was possible in the first place.
  */
 export function ClassicHomepageShell({
   photographerId,
-  headerProps,
-  footerProps,
   homePageProps,
+  hrefForGallery,
 }: ClassicHomepageShellProps) {
   const handleContactSubmit = async (values: {
     name: string
@@ -50,8 +49,6 @@ export function ClassicHomepageShell({
   }
 
   return (
-    <ClassicPageChrome language={homePageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ClassicHomePage {...homePageProps} onContactSubmit={handleContactSubmit} />
-    </ClassicPageChrome>
+    <ClassicHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
   )
 }

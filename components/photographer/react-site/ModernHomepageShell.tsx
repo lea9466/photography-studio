@@ -2,21 +2,21 @@
 
 import { toast } from 'sonner'
 import { submitContactInquiry } from '@/lib/actions/contact.actions'
-import { ModernPageChrome } from './ModernPageChrome'
-import type { ModernSiteHeaderProps } from '@/components/photographer/site-chrome/ModernSiteHeader'
-import type { ModernSiteFooterProps } from '@/components/photographer/site-chrome/ModernSiteFooter'
 import { ModernHomePage, type ModernHomePageProps } from '@/components/photographer/themes/modern/ModernHomePage'
 import type { ModernContactFormValues } from '@/components/photographer/themes/modern/ModernContactForm'
 
 export type ModernHomepageShellProps = {
   photographerId: string
-  headerProps: ModernSiteHeaderProps
-  footerProps: ModernSiteFooterProps
   homePageProps: Omit<ModernHomePageProps, 'onContactSubmit'>
+  /** Overrides the component's own default (which still points at the
+   * pre-migration /public-gallery/[id] path) — see
+   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
+  hrefForGallery: (id: string) => string
 }
 
-/** Modern-theme counterpart of ClassicHomepageShell.tsx / DarkHomepageShell.tsx — same Phase-0 role. */
-export function ModernHomepageShell({ photographerId, headerProps, footerProps, homePageProps }: ModernHomepageShellProps) {
+/** Modern-theme counterpart of ClassicHomepageShell.tsx — see that file's
+ * doc comment for why header/footer moved out of here into the shared layout. */
+export function ModernHomepageShell({ photographerId, homePageProps, hrefForGallery }: ModernHomepageShellProps) {
   const handleContactSubmit = async (values: ModernContactFormValues) => {
     try {
       await submitContactInquiry({
@@ -33,8 +33,6 @@ export function ModernHomepageShell({ photographerId, headerProps, footerProps, 
   }
 
   return (
-    <ModernPageChrome language={homePageProps.language} headerProps={headerProps} footerProps={footerProps}>
-      <ModernHomePage {...homePageProps} onContactSubmit={handleContactSubmit} />
-    </ModernPageChrome>
+    <ModernHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
   )
 }

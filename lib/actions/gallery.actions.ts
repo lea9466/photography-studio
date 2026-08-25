@@ -10,6 +10,7 @@ import {
   rotateGalleryPassword,
 } from '@/lib/gallery-password-store'
 import { revalidatePath } from 'next/cache'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireDashboardContext, getDashboardContext } from '@/lib/auth/dashboard-context'
 import { assertFreeGalleryCanBecomePublic } from '@/lib/subscriptions/gallery-gate'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
@@ -37,6 +38,30 @@ import {
 import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
+
+/**
+ * Revalidates both the new public gallery path (/{slug}/gallery/{id}) and
+ * the old /public-gallery/{id} redirect shim, so a content change shows up
+ * immediately regardless of which URL a visitor already has cached. Looks
+ * the studio's slug up fresh each time (not cached) — see
+ * app/[slug]/gallery/[id]/page.tsx's doc comment for why this can't go
+ * stale even across a slug rename.
+ */
+export async function revalidateGalleryPublicPaths(userId: string, galleryId: string) {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('users')
+    .select('slug, studio_name')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const typedUser = data as { slug: string | null; studio_name: string | null } | null
+  const studioPath = getPublicSitePath(typedUser?.slug, typedUser?.studio_name)
+  if (studioPath) {
+    revalidatePath(`${studioPath}/gallery/${galleryId}`)
+  }
+  revalidatePath(`/public-gallery/${galleryId}`)
+}
 
 async function resolvePhotographerGalleryLimit(context: DashboardAuthContext): Promise<number> {
   const { userId, supabase } = context
@@ -425,7 +450,7 @@ export async function createGallery(input: CreateGalleryInput) {
   if (input.galleryType === 'portfolio') {
     const slug = portfolioSlug(title)
     revalidatePath(`/portfolio/${slug}`)
-    revalidatePath(`/public-gallery/${gallery.id}`)
+    await revalidateGalleryPublicPaths(userId, gallery.id)
   }
 
   try {
@@ -579,13 +604,13 @@ export async function updateGallerySettings(
       slug = await ensurePortfolioSlug(galleryId, meta.title, meta.slug)
     }
     if (meta.is_public) {
-      revalidatePath(`/public-gallery/${galleryId}`)
+      await revalidateGalleryPublicPaths(userId, galleryId)
       if (slug) {
         revalidatePath(`/portfolio/${slug}`)
       }
     }
   } else if (meta?.is_public) {
-    revalidatePath(`/public-gallery/${galleryId}`)
+    await revalidateGalleryPublicPaths(userId, galleryId)
   }
 }
 
@@ -659,7 +684,7 @@ export async function ensurePortfolioSlug(
   revalidatePath(`/dashboard/galleries/${galleryId}`)
   revalidatePath('/dashboard')
   revalidatePath(`/portfolio/${slug}`)
-  revalidatePath(`/public-gallery/${galleryId}`)
+  await revalidateGalleryPublicPaths(userId, galleryId)
   return slug
 }
 

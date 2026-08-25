@@ -4,6 +4,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 type GalleryRow = GalleryWithDetails & {
   photos?: Array<{ count: number }>
 }
@@ -52,7 +53,7 @@ export async function fetchDashboardOverview() {
   const { userId, supabase } = await requireDashboardContext()
 
   const [{ data: userData }, { data: galleries, error }] = await Promise.all([
-    supabase.from('users').select('name').eq('id', userId).single(),
+    supabase.from('users').select('name, slug, studio_name').eq('id', userId).single(),
     supabase
       .from('galleries')
       .select(`
@@ -69,6 +70,9 @@ export async function fetchDashboardOverview() {
     throw new Error(error.message)
   }
 
+  const typedUser = userData as { name: string | null; slug: string | null; studio_name: string | null } | null
+  const studioPath = getPublicSitePath(typedUser?.slug, typedUser?.studio_name)
+
   const transformedGalleries = (galleries || []).map((gallery: GalleryRow) => ({
     ...gallery,
     client: gallery.client,
@@ -84,7 +88,8 @@ export async function fetchDashboardOverview() {
     )
 
     return {
-      userName: (userData as { name: string | null } | null)?.name || 'משתמש',
+      userName: typedUser?.name || 'משתמש',
+      studioPath,
       galleries: transformedGalleries.map((gallery) => ({
         ...gallery,
         thumbnail_url: thumbnails[gallery.id] ?? null,
@@ -93,10 +98,27 @@ export async function fetchDashboardOverview() {
   } catch (error) {
     console.warn('Failed to resolve gallery thumbnails:', error)
     return {
-      userName: (userData as { name: string | null } | null)?.name || 'משתמש',
+      userName: typedUser?.name || 'משתמש',
+      studioPath,
       galleries: transformedGalleries,
     }
   }
+}
+
+/** This studio's public site path (e.g. "/studio-name"), for building
+ * public gallery share links from dashboard pages that don't otherwise
+ * fetch the studio's own row — see RecentGalleriesTable.tsx's studioPath
+ * prop. */
+export async function fetchStudioPublicPath() {
+  const { userId, supabase } = await requireDashboardContext()
+  const { data } = await supabase
+    .from('users')
+    .select('slug, studio_name')
+    .eq('id', userId)
+    .single()
+
+  const typedUser = data as { slug: string | null; studio_name: string | null } | null
+  return getPublicSitePath(typedUser?.slug, typedUser?.studio_name)
 }
 
 export async function fetchUserEntitlements() {

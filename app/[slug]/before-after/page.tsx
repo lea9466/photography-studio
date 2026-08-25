@@ -20,29 +20,13 @@ import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBeforeAfterViewModel } from '@/lib/public-site/adapters/build-before-after-view-model'
-import {
-  toClassicBeforeAfterPageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicBeforeAfterPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBeforeAfterShell } from '@/components/photographer/react-site/ClassicBeforeAfterShell'
-import {
-  toDarkBeforeAfterPageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkBeforeAfterPageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkBeforeAfterShell } from '@/components/photographer/react-site/DarkBeforeAfterShell'
-import {
-  toElegantBeforeAfterPageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantBeforeAfterPageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantBeforeAfterShell } from '@/components/photographer/react-site/ElegantBeforeAfterShell'
-import {
-  toModernBeforeAfterPageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernBeforeAfterPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernBeforeAfterShell } from '@/components/photographer/react-site/ModernBeforeAfterShell'
 
 interface BeforeAfterPageProps {
@@ -128,7 +112,7 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const blogPath = `${navBasePath}/blog`
   const portfolioPath = `${navBasePath}/portfolio`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
-  const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
+  const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
   const language = resolveSiteLanguage(typed.site_language)
   const displayStyle = normalizeBeforeAfterDisplayStyle(typed.before_after_display_style)
   const pageTitle = language === 'en' ? 'Before & After Editing' : 'לפני ואחרי עיבוד'
@@ -150,6 +134,8 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
     admin.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', typed.id),
   ])
 
+  const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
+  const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
   const galleryLayoutMode =
     typed.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
 
@@ -173,47 +159,23 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
       portfolioPath,
       beforeAfterPath,
       hasFaq,
-      hasPackages: (packageCount ?? 0) > 0,
-      hasBlog: (postCount ?? 0) > 0,
+      hasPackages,
+      hasBlog,
     })
 
     if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return (
-        <DarkBeforeAfterShell
-          headerProps={toDarkSiteHeaderProps(viewModel)}
-          footerProps={toDarkSiteFooterProps(viewModel)}
-          pageProps={toDarkBeforeAfterPageProps(viewModel)}
-        />
-      )
+      return <DarkBeforeAfterShell pageProps={toDarkBeforeAfterPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'elegant') {
-      return (
-        <ElegantBeforeAfterShell
-          headerProps={toElegantSiteHeaderProps(viewModel)}
-          footerProps={toElegantSiteFooterProps(viewModel)}
-          pageProps={toElegantBeforeAfterPageProps(viewModel)}
-        />
-      )
+      return <ElegantBeforeAfterShell pageProps={toElegantBeforeAfterPageProps(viewModel)} />
     }
 
     if (typed.selected_theme === 'modern') {
-      return (
-        <ModernBeforeAfterShell
-          headerProps={toModernSiteHeaderProps(viewModel)}
-          footerProps={toModernSiteFooterProps(viewModel)}
-          pageProps={toModernBeforeAfterPageProps(viewModel)}
-        />
-      )
+      return <ModernBeforeAfterShell pageProps={toModernBeforeAfterPageProps(viewModel)} />
     }
 
-    return (
-      <ClassicBeforeAfterShell
-        headerProps={toClassicSiteHeaderProps(viewModel)}
-        footerProps={toClassicSiteFooterProps(viewModel)}
-        pageProps={toClassicBeforeAfterPageProps(viewModel)}
-      />
-    )
+    return <ClassicBeforeAfterShell pageProps={toClassicBeforeAfterPageProps(viewModel)} />
   }
 
   const html = generatePublicBeforeAfterPageHTML({
@@ -224,8 +186,8 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
     beforeAfterPath,
     blogPath,
     hasFaq,
-    hasPackages: (packageCount ?? 0) > 0,
-    hasBlog: (postCount ?? 0) > 0,
+    hasPackages,
+    hasBlog,
     shouldColorLogo: typed.should_color_logo ?? false,
     galleryLayoutMode,
     portfolioPath: galleryLayoutMode === 'portfolio' ? portfolioPath : undefined,

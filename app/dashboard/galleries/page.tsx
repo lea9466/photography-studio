@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Images, Plus, Eye, EyeOff } from 'lucide-react'
-import { fetchDashboardGalleries, fetchUserEntitlements } from '@/lib/actions/dashboard.actions'
+import { fetchDashboardGalleries, fetchStudioPublicPath, fetchUserEntitlements } from '@/lib/actions/dashboard.actions'
 import {
   fetchGalleryLayoutMode,
   fetchGalleriesSectionSettings,
@@ -40,18 +40,21 @@ export default function GalleriesPage() {
   const [isPro, setIsPro] = useState(true)
   const [displayedGalleryId, setDisplayedGalleryId] = useState<string | null>(null)
   const [updatingDisplayed, setUpdatingDisplayed] = useState(false)
+  const [studioPath, setStudioPath] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [galleries, mode, quota, sectionSettings, entitlements] = await Promise.all([
+        const [galleries, mode, quota, sectionSettings, entitlements, path] = await Promise.all([
           fetchDashboardGalleries(),
           fetchGalleryLayoutMode(),
           getPublicGalleryQuota(),
           fetchGalleriesSectionSettings(),
           fetchUserEntitlements(),
+          fetchStudioPublicPath(),
         ])
         setRecentGalleries(galleries)
+        setStudioPath(path)
         setLayoutMode(mode)
         setGalleriesTitle(sectionSettings.galleries_title)
         setRecentPhotosTitle(sectionSettings.recent_photos_title)
@@ -134,6 +137,7 @@ export default function GalleriesPage() {
           galleries={recentGalleries}
           title="כל הגלריות"
           variant="section"
+          studioPath={studioPath}
         />
 
         {!isPro && recentGalleries.length > 1 && (

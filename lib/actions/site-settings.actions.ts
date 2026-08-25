@@ -40,7 +40,11 @@ async function revalidatePublicSitePaths(
     .eq('is_public', true)
 
   for (const gallery of publicGalleries ?? []) {
-    revalidatePath(`/public-gallery/${(gallery as { id: string }).id}`)
+    const galleryId = (gallery as { id: string }).id
+    revalidatePath(`/public-gallery/${galleryId}`)
+    if (slug?.trim()) {
+      revalidatePath(`/${slug.trim()}/gallery/${galleryId}`)
+    }
   }
 }
 
