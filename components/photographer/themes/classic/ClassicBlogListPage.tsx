@@ -53,7 +53,11 @@ export function ClassicBlogListPage(props: ClassicBlogListPageProps) {
           {posts.length === 0 ? (
             <p className={styles.empty}>{copy.empty}</p>
           ) : displayStyle === 'circles' ? (
-            <BlogCirclesGrid posts={posts} accentColor={accentColor} language={language} hrefForPost={hrefForPost} />
+            <BlogCirclesGrid
+              posts={posts.map((post) => ({ ...post, href: hrefForPost(post.id) }))}
+              accentColor={accentColor}
+              language={language}
+            />
           ) : (
             <div className={styles.grid}>
               {posts.map((post) => (

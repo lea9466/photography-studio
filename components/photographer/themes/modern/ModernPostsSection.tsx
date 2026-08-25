@@ -69,10 +69,9 @@ export function ModernPostsSection({
 
       {displayStyle === 'circles' ? (
         <BlogCirclesGrid
-          posts={display.map((post) => ({ ...post, excerpt: post.content }))}
+          posts={display.map((post) => ({ ...post, excerpt: post.content, href: hrefForPost(post.id) }))}
           accentColor={accentColor}
           language={language}
-          hrefForPost={hrefForPost}
         />
       ) : (
         <div className={styles.grid}>

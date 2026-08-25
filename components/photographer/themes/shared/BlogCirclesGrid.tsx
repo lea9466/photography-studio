@@ -11,13 +11,18 @@ export type BlogCircleCardItem = {
   date: string
   excerpt: string
   coverUrl: string | null
+  /** Pre-computed, not a callback — some callers (the standalone blog list
+   * pages) are Server Components, which can't pass a function prop across
+   * into this Client Component (React can't serialize a function value at
+   * that boundary). Resolve each post's href with your own hrefForPost
+   * before building this array. */
+  href: string
 }
 
 export type BlogCirclesGridProps = {
   posts: BlogCircleCardItem[]
   accentColor: string
   language: SiteLanguage
-  hrefForPost: (postId: string) => string
 }
 
 /**
@@ -37,7 +42,7 @@ export type BlogCirclesGridProps = {
  * grid already made (see e.g. ClassicBlogListPage.tsx's doc comment); cards
  * here always link straight to the real post page instead.
  */
-export function BlogCirclesGrid({ posts, accentColor, language, hrefForPost }: BlogCirclesGridProps) {
+export function BlogCirclesGrid({ posts, accentColor, language }: BlogCirclesGridProps) {
   if (posts.length === 0) return null
 
   const arrow = galleryCardArrow(language)
@@ -49,7 +54,6 @@ export function BlogCirclesGrid({ posts, accentColor, language, hrefForPost }: B
         <BlogCircleCard
           key={post.id}
           post={post}
-          href={hrefForPost(post.id)}
           accentColor={accentColor}
           readCtaLabel={readCtaLabel}
           arrow={arrow}
@@ -62,14 +66,12 @@ export function BlogCirclesGrid({ posts, accentColor, language, hrefForPost }: B
 
 function BlogCircleCard({
   post,
-  href,
   accentColor,
   readCtaLabel,
   arrow,
   delayMs,
 }: {
   post: BlogCircleCardItem
-  href: string
   accentColor: string
   readCtaLabel: string
   arrow: string
@@ -80,7 +82,7 @@ function BlogCircleCard({
   return (
     <a
       ref={ref}
-      href={href}
+      href={post.href}
       className={`${styles.card} ${revealed ? styles.visible : ''}`}
       style={{ '--blog-circle-accent': accentColor } as React.CSSProperties}
     >
