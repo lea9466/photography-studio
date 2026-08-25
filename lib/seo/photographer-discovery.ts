@@ -30,7 +30,7 @@ export type PhotographerDiscoveryRecord = ValidatablePhotographer & {
 /** Returns a validated gallery URL, or null when the gallery is not publicly accessible. */
 export function buildPublicGalleryCanonicalPath(
   gallery: Pick<DiscoveryGallery, 'id' | 'slug' | 'gallery_type' | 'is_public'>,
-  studioPath: string
+  studioPath?: string
 ): string | null {
   return resolveValidatedGalleryPath(gallery, studioPath)
 }

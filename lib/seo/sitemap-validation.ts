@@ -66,11 +66,15 @@ export function resolveActiveStudioPath(photographer: {
  * - `/portfolio/{slug}` → portfolio gallery, public, with slug (a separate,
  *   still fully old-system route — unrelated to studioPath, unaffected by
  *   the /[slug]/gallery/[id] migration)
- * - `{studioPath}/gallery/{id}` → any other public gallery
+ * - `{studioPath}/gallery/{id}` → any other public gallery, when the caller
+ *   has a studioPath to give
+ * - `/public-gallery/{id}` → same case, when studioPath isn't available —
+ *   still correct, since that's now a redirect shim straight to the path
+ *   above (see app/public-gallery/[id]/page.tsx's doc comment)
  */
 export function resolveValidatedGalleryPath(
   gallery: ValidatableGallery,
-  studioPath: string
+  studioPath?: string
 ): string | null {
   if (!gallery.is_public) return null
 
@@ -79,7 +83,7 @@ export function resolveValidatedGalleryPath(
     if (slug) return `/portfolio/${slug}`
   }
 
-  return `${studioPath}/gallery/${gallery.id}`
+  return studioPath ? `${studioPath}/gallery/${gallery.id}` : `/public-gallery/${gallery.id}`
 }
 
 export function resolveValidatedPostPath(studioPath: string | null, postId: string): string | null {
