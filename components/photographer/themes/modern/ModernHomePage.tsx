@@ -182,18 +182,18 @@ export function ModernHomePage(props: ModernHomePageProps) {
           language={language}
         />
 
-        <ModernAboutStatement
-          text={aboutDescription}
-          imageUrl={aboutImageUrl}
-          accentColor={accentColor}
-          language={language}
-        />
-
         <ModernAbout
           accentColor={accentColor}
           statsClients={statsClients}
           statsProjects={statsProjects}
           statsYears={statsYears}
+          language={language}
+        />
+
+        <ModernAboutStatement
+          text={aboutDescription}
+          imageUrl={aboutImageUrl}
+          accentColor={accentColor}
           language={language}
         />
 
