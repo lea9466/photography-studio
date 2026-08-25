@@ -22,29 +22,13 @@ import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildGalleryDetailViewModel } from '@/lib/public-site/adapters/build-gallery-detail-view-model'
-import {
-  toClassicGalleryDetailPageProps,
-  toClassicSiteFooterProps,
-  toClassicSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/classic'
+import { toClassicGalleryDetailPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicGalleryDetailShell } from '@/components/photographer/react-site/ClassicGalleryDetailShell'
-import {
-  toDarkGalleryDetailPageProps,
-  toDarkSiteFooterProps,
-  toDarkSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/dark'
+import { toDarkGalleryDetailPageProps } from '@/lib/public-site/adapters/theme-props/dark'
 import { DarkGalleryDetailShell } from '@/components/photographer/react-site/DarkGalleryDetailShell'
-import {
-  toElegantGalleryDetailPageProps,
-  toElegantSiteFooterProps,
-  toElegantSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/elegant'
+import { toElegantGalleryDetailPageProps } from '@/lib/public-site/adapters/theme-props/elegant'
 import { ElegantGalleryDetailShell } from '@/components/photographer/react-site/ElegantGalleryDetailShell'
-import {
-  toModernGalleryDetailPageProps,
-  toModernSiteFooterProps,
-  toModernSiteHeaderProps,
-} from '@/lib/public-site/adapters/theme-props/modern'
+import { toModernGalleryDetailPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernGalleryDetailShell } from '@/components/photographer/react-site/ModernGalleryDetailShell'
 
 type GalleryDetailPageProps = {
@@ -194,42 +178,18 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
     })
 
     if (userData?.selected_theme === 'dark' || userData?.selected_theme === 'bold') {
-      return (
-        <DarkGalleryDetailShell
-          headerProps={toDarkSiteHeaderProps(viewModel)}
-          footerProps={toDarkSiteFooterProps(viewModel)}
-          pageProps={toDarkGalleryDetailPageProps(viewModel)}
-        />
-      )
+      return <DarkGalleryDetailShell pageProps={toDarkGalleryDetailPageProps(viewModel)} />
     }
 
     if (userData?.selected_theme === 'elegant') {
-      return (
-        <ElegantGalleryDetailShell
-          headerProps={toElegantSiteHeaderProps(viewModel)}
-          footerProps={toElegantSiteFooterProps(viewModel)}
-          pageProps={toElegantGalleryDetailPageProps(viewModel)}
-        />
-      )
+      return <ElegantGalleryDetailShell pageProps={toElegantGalleryDetailPageProps(viewModel)} />
     }
 
     if (userData?.selected_theme === 'modern') {
-      return (
-        <ModernGalleryDetailShell
-          headerProps={toModernSiteHeaderProps(viewModel)}
-          footerProps={toModernSiteFooterProps(viewModel)}
-          pageProps={toModernGalleryDetailPageProps(viewModel)}
-        />
-      )
+      return <ModernGalleryDetailShell pageProps={toModernGalleryDetailPageProps(viewModel)} />
     }
 
-    return (
-      <ClassicGalleryDetailShell
-        headerProps={toClassicSiteHeaderProps(viewModel)}
-        footerProps={toClassicSiteFooterProps(viewModel)}
-        pageProps={toClassicGalleryDetailPageProps(viewModel)}
-      />
-    )
+    return <ClassicGalleryDetailShell pageProps={toClassicGalleryDetailPageProps(viewModel)} />
   }
 
   const html = generatePublicGalleryPageHTML({
