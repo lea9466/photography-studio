@@ -547,14 +547,12 @@ export default async function PhotographerPage({ params }: PageProps) {
         photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
       })
 
-      const hrefForGallery = (id: string) => `${canonicalPath}/gallery/${id}`
-
       if (typedPhotographer.selected_theme === 'dark' || typedPhotographer.selected_theme === 'bold') {
         return (
           <DarkHomepageShell
             photographerId={typedPhotographer.id}
             homePageProps={toDarkHomePageProps(viewModel)}
-            hrefForGallery={hrefForGallery}
+            hrefForGalleryBase={canonicalPath}
           />
         )
       }
@@ -564,7 +562,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           <ElegantHomepageShell
             photographerId={typedPhotographer.id}
             homePageProps={toElegantHomePageProps(viewModel)}
-            hrefForGallery={hrefForGallery}
+            hrefForGalleryBase={canonicalPath}
           />
         )
       }
@@ -574,7 +572,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           <ModernHomepageShell
             photographerId={typedPhotographer.id}
             homePageProps={toModernHomePageProps(viewModel)}
-            hrefForGallery={hrefForGallery}
+            hrefForGalleryBase={canonicalPath}
           />
         )
       }
@@ -583,7 +581,7 @@ export default async function PhotographerPage({ params }: PageProps) {
         <ClassicHomepageShell
           photographerId={typedPhotographer.id}
           homePageProps={toClassicHomePageProps(viewModel)}
-          hrefForGallery={hrefForGallery}
+          hrefForGalleryBase={canonicalPath}
         />
       )
     }

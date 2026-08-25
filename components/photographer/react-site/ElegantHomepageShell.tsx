@@ -8,15 +8,14 @@ import type { ElegantContactFormValues } from '@/components/photographer/themes/
 export type ElegantHomepageShellProps = {
   photographerId: string
   homePageProps: Omit<ElegantHomePageProps, 'onContactSubmit'>
-  /** Overrides the component's own default (which still points at the
-   * pre-migration /public-gallery/[id] path) — see
-   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
-  hrefForGallery: (id: string) => string
+  /** Plain string, not a function — see ClassicHomepageShell.tsx's doc
+   * comment (RSC serialization boundary). */
+  hrefForGalleryBase: string
 }
 
 /** Elegant-theme counterpart of ClassicHomepageShell.tsx — see that file's
  * doc comment for why header/footer moved out of here into the shared layout. */
-export function ElegantHomepageShell({ photographerId, homePageProps, hrefForGallery }: ElegantHomepageShellProps) {
+export function ElegantHomepageShell({ photographerId, homePageProps, hrefForGalleryBase }: ElegantHomepageShellProps) {
   const handleContactSubmit = async (values: ElegantContactFormValues) => {
     try {
       await submitContactInquiry({
@@ -34,6 +33,10 @@ export function ElegantHomepageShell({ photographerId, homePageProps, hrefForGal
   }
 
   return (
-    <ElegantHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
+    <ElegantHomePage
+      {...homePageProps}
+      onContactSubmit={handleContactSubmit}
+      hrefForGallery={(id) => `${hrefForGalleryBase}/gallery/${id}`}
+    />
   )
 }

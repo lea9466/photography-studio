@@ -8,15 +8,14 @@ import type { ModernContactFormValues } from '@/components/photographer/themes/m
 export type ModernHomepageShellProps = {
   photographerId: string
   homePageProps: Omit<ModernHomePageProps, 'onContactSubmit'>
-  /** Overrides the component's own default (which still points at the
-   * pre-migration /public-gallery/[id] path) — see
-   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
-  hrefForGallery: (id: string) => string
+  /** Plain string, not a function — see ClassicHomepageShell.tsx's doc
+   * comment (RSC serialization boundary). */
+  hrefForGalleryBase: string
 }
 
 /** Modern-theme counterpart of ClassicHomepageShell.tsx — see that file's
  * doc comment for why header/footer moved out of here into the shared layout. */
-export function ModernHomepageShell({ photographerId, homePageProps, hrefForGallery }: ModernHomepageShellProps) {
+export function ModernHomepageShell({ photographerId, homePageProps, hrefForGalleryBase }: ModernHomepageShellProps) {
   const handleContactSubmit = async (values: ModernContactFormValues) => {
     try {
       await submitContactInquiry({
@@ -33,6 +32,10 @@ export function ModernHomepageShell({ photographerId, homePageProps, hrefForGall
   }
 
   return (
-    <ModernHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
+    <ModernHomePage
+      {...homePageProps}
+      onContactSubmit={handleContactSubmit}
+      hrefForGallery={(id) => `${hrefForGalleryBase}/gallery/${id}`}
+    />
   )
 }

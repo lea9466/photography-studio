@@ -7,10 +7,13 @@ import { ClassicHomePage, type ClassicHomePageProps } from '@/components/photogr
 export type ClassicHomepageShellProps = {
   photographerId: string
   homePageProps: Omit<ClassicHomePageProps, 'onContactSubmit'>
-  /** Overrides the component's own default (which still points at the
-   * pre-migration /public-gallery/[id] path) — see
+  /** Plain string, not a function — a Server Component can't pass a function
+   * prop across to this Client Component (RSC serialization boundary; only
+   * 'use server' actions can cross it). The gallery href is built locally
+   * below instead. Overrides the component's own default, which still
+   * points at the pre-migration /public-gallery/[id] path — see
    * app/[slug]/gallery/[id]/page.tsx's doc comment. */
-  hrefForGallery: (id: string) => string
+  hrefForGalleryBase: string
 }
 
 /**
@@ -26,7 +29,7 @@ export type ClassicHomepageShellProps = {
 export function ClassicHomepageShell({
   photographerId,
   homePageProps,
-  hrefForGallery,
+  hrefForGalleryBase,
 }: ClassicHomepageShellProps) {
   const handleContactSubmit = async (values: {
     name: string
@@ -49,6 +52,10 @@ export function ClassicHomepageShell({
   }
 
   return (
-    <ClassicHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
+    <ClassicHomePage
+      {...homePageProps}
+      onContactSubmit={handleContactSubmit}
+      hrefForGallery={(id) => `${hrefForGalleryBase}/gallery/${id}`}
+    />
   )
 }

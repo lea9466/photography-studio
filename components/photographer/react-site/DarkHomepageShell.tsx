@@ -7,15 +7,14 @@ import { DarkHomePage, type DarkHomePageProps } from '@/components/photographer/
 export type DarkHomepageShellProps = {
   photographerId: string
   homePageProps: Omit<DarkHomePageProps, 'onContactSubmit'>
-  /** Overrides the component's own default (which still points at the
-   * pre-migration /public-gallery/[id] path) — see
-   * app/[slug]/gallery/[id]/page.tsx's doc comment. */
-  hrefForGallery: (id: string) => string
+  /** Plain string, not a function — see ClassicHomepageShell.tsx's doc
+   * comment (RSC serialization boundary). */
+  hrefForGalleryBase: string
 }
 
 /** Dark-theme counterpart of ClassicHomepageShell.tsx — see that file's doc
  * comment for why header/footer moved out of here into the shared layout. */
-export function DarkHomepageShell({ photographerId, homePageProps, hrefForGallery }: DarkHomepageShellProps) {
+export function DarkHomepageShell({ photographerId, homePageProps, hrefForGalleryBase }: DarkHomepageShellProps) {
   const handleContactSubmit = async (values: {
     name: string
     phone: string
@@ -38,5 +37,11 @@ export function DarkHomepageShell({ photographerId, homePageProps, hrefForGaller
     }
   }
 
-  return <DarkHomePage {...homePageProps} onContactSubmit={handleContactSubmit} hrefForGallery={hrefForGallery} />
+  return (
+    <DarkHomePage
+      {...homePageProps}
+      onContactSubmit={handleContactSubmit}
+      hrefForGallery={(id) => `${hrefForGalleryBase}/gallery/${id}`}
+    />
+  )
 }
