@@ -63,6 +63,7 @@ export default function ClassicBlogListPreviewPage() {
     <ClassicBlogListPage
       accentColor={MOCK_ACCENT}
       language="he"
+      displayStyle="cards"
       pageTitle="הבלוג שלנו"
       posts={MOCK_POSTS}
       hrefForPost={() => '/dev-preview/classic/blog/post'}

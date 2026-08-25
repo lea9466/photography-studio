@@ -1,6 +1,8 @@
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { ClassicBlogPostCard, type ClassicBlogPostCardItem } from './ClassicBlogPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ClassicBlogListPage.module.css'
 import './classic-theme.css'
 
@@ -15,6 +17,7 @@ export type ClassicBlogListPageProps = {
   language: SiteLanguage
 
   pageTitle: string
+  displayStyle: PostsDisplayStyle
   posts: ClassicBlogPostCardItem[]
   hrefForPost: (postId: string) => string
 }
@@ -22,20 +25,18 @@ export type ClassicBlogListPageProps = {
 /**
  * Classic-theme blog list page — 1:1 port of blogBody()'s classic branch
  * (lib/public-blog-html.ts line ~1099): centered eyebrow + title + underline
- * header, then a responsive 1/2/3-column card grid (or the empty-state
- * message when there are no posts yet).
+ * header, then either the regular card grid or (displayStyle === 'circles')
+ * the shared BlogCirclesGrid — see that component's doc comment for why
+ * "circles" is one component shared by all 4 themes instead of ported once
+ * per theme like the card grid is.
  *
- * Deferred (not built here):
- *  - `posts_display_style === 'circles'` — the alternate editorial "circles"
- *    grid (blog-grid--circles / .blog-card--circle). Classic's real default
- *    is 'cards' (normalizePostsDisplayStyle), which is what this ports.
- *  - The hover/focus "quick preview" peek button + in-page modal
- *    (BLOG_MODAL_INIT_SCRIPT) that let the old renderer preview a post
- *    without navigating — cards here always link straight to the real post
- *    page instead.
+ * Not ported (same simplification the card grid already made): the
+ * hover/focus "quick preview" peek button + in-page modal
+ * (BLOG_MODAL_INIT_SCRIPT) — cards/circles here always link straight to the
+ * real post page instead.
  */
 export function ClassicBlogListPage(props: ClassicBlogListPageProps) {
-  const { accentColor, language, pageTitle, posts, hrefForPost } = props
+  const { accentColor, language, pageTitle, displayStyle, posts, hrefForPost } = props
 
   const copy = blogListCopy(language)
 
@@ -49,7 +50,11 @@ export function ClassicBlogListPage(props: ClassicBlogListPageProps) {
             <div className={styles.divider} style={{ backgroundColor: accentColor }} />
           </header>
 
-          {posts.length > 0 ? (
+          {posts.length === 0 ? (
+            <p className={styles.empty}>{copy.empty}</p>
+          ) : displayStyle === 'circles' ? (
+            <BlogCirclesGrid posts={posts} accentColor={accentColor} language={language} hrefForPost={hrefForPost} />
+          ) : (
             <div className={styles.grid}>
               {posts.map((post) => (
                 <ClassicBlogPostCard
@@ -60,8 +65,6 @@ export function ClassicBlogListPage(props: ClassicBlogListPageProps) {
                 />
               ))}
             </div>
-          ) : (
-            <p className={styles.empty}>{copy.empty}</p>
           )}
         </section>
       </main>

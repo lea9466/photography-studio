@@ -60,6 +60,7 @@ export default function ModernBlogListPreviewPage() {
     <ModernBlogListPage
       accentColor={MOCK_ACCENT}
       language="he"
+      displayStyle="cards"
       pageTitle="הבלוג שלנו"
       posts={MOCK_POSTS}
       hrefForPost={() => '/dev-preview/modern/blog/post'}

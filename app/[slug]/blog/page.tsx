@@ -101,6 +101,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
         about_title_font: typed.about_title_font,
         site_language: typed.site_language,
         posts_page_title: typed.posts_page_title,
+        posts_display_style: typed.posts_display_style,
         gallery_layout_mode: typed.gallery_layout_mode,
       },
       posts: blogPosts,

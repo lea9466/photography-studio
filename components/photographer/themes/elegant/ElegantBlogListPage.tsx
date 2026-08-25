@@ -1,5 +1,7 @@
 import { ElegantBlogPostCard, type ElegantBlogPostCardItem } from './ElegantBlogPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ElegantBlogListPage.module.css'
 import './elegant-theme.css'
 
@@ -20,6 +22,7 @@ export type ElegantBlogListPageProps = {
   language: SiteLanguage
 
   pageTitle: string
+  displayStyle: PostsDisplayStyle
   posts: ElegantBlogPostCardItem[]
   hrefForPost: (postId: string) => string
 }
@@ -27,13 +30,13 @@ export type ElegantBlogListPageProps = {
 /**
  * Elegant-theme blog list page — 1:1 port of blogBody() (lib/public-blog-html.ts
  * ~line 1099): a "Journal" eyebrow, a Frank Ruhl Libre bold-ish (font-medium)
- * title, a divider bar, then a responsive 1/2/3-column card grid (or the
- * empty-state message when there are no posts yet). Same deferrals as
- * Classic/Dark/ModernBlogListPage.tsx — no `circles` display style, no
- * quick-preview modal.
+ * title, a divider bar, then either the regular card grid or
+ * (displayStyle === 'circles') the shared BlogCirclesGrid — see that
+ * component's doc comment for why "circles" is one component shared by all
+ * 4 themes. No quick-preview modal, same as the card grid.
  */
 export function ElegantBlogListPage(props: ElegantBlogListPageProps) {
-  const { accentColor, language, pageTitle, posts, hrefForPost } = props
+  const { accentColor, language, pageTitle, displayStyle, posts, hrefForPost } = props
 
   const copy = blogListCopy(language)
 
@@ -49,7 +52,11 @@ export function ElegantBlogListPage(props: ElegantBlogListPageProps) {
             <div className={styles.divider} style={{ backgroundColor: accentColor }} />
           </header>
 
-          {posts.length > 0 ? (
+          {posts.length === 0 ? (
+            <p className={styles.empty}>{copy.empty}</p>
+          ) : displayStyle === 'circles' ? (
+            <BlogCirclesGrid posts={posts} accentColor={accentColor} language={language} hrefForPost={hrefForPost} />
+          ) : (
             <div className={styles.grid}>
               {posts.map((post) => (
                 <ElegantBlogPostCard
@@ -60,8 +67,6 @@ export function ElegantBlogListPage(props: ElegantBlogListPageProps) {
                 />
               ))}
             </div>
-          ) : (
-            <p className={styles.empty}>{copy.empty}</p>
           )}
         </section>
       </main>

@@ -1,7 +1,9 @@
 import { SectionTitle } from '../shared/SectionTitle'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernBlogPostCard, type ModernBlogPostCardItem } from './ModernBlogPostCard'
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ModernBlogListPage.module.css'
 import './modern-theme.css'
 
@@ -20,23 +22,25 @@ export type ModernBlogListPageProps = {
   language: SiteLanguage
 
   pageTitle: string
+  displayStyle: PostsDisplayStyle
   posts: ModernBlogPostCardItem[]
   hrefForPost: (postId: string) => string
 }
 
 /**
  * Modern-theme blog list page — same shape as ClassicBlogListPage.tsx
- * (centered header, responsive 1/2/3-column card grid or empty-state
- * message), with modern's own eyebrow+title header instead of classic's
- * cursive ClassicSectionScript. Same deferrals as ClassicBlogListPage.tsx —
- * see that component's doc comment (no `circles` display style, no
- * quick-preview modal).
+ * (centered header, either the regular card grid or, when
+ * displayStyle === 'circles', the shared BlogCirclesGrid — see that
+ * component's doc comment for why "circles" is one component shared by all
+ * 4 themes), with modern's own eyebrow+title header instead of classic's
+ * cursive ClassicSectionScript. No quick-preview modal, same as the card grid.
  */
 export function ModernBlogListPage(props: ModernBlogListPageProps) {
   const {
     accentColor,
     language,
     pageTitle,
+    displayStyle,
     posts,
     hrefForPost,
   } = props
@@ -54,7 +58,11 @@ export function ModernBlogListPage(props: ModernBlogListPageProps) {
           <div className={styles.divider} style={{ backgroundColor: accentColor }} />
         </header>
 
-        {posts.length > 0 ? (
+        {posts.length === 0 ? (
+          <p className={styles.empty}>{copy.empty}</p>
+        ) : displayStyle === 'circles' ? (
+          <BlogCirclesGrid posts={posts} accentColor={accentColor} language={language} hrefForPost={hrefForPost} />
+        ) : (
           <div className={styles.grid}>
             {posts.map((post) => (
               <ModernBlogPostCard
@@ -65,8 +73,6 @@ export function ModernBlogListPage(props: ModernBlogListPageProps) {
               />
             ))}
           </div>
-        ) : (
-          <p className={styles.empty}>{copy.empty}</p>
         )}
       </section>
     </main>

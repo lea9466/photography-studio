@@ -152,6 +152,7 @@ export function toElegantBlogListPageProps(
     accentColor: vm.accentColor,
     language: vm.language,
     pageTitle: resolvePostsPageTitle(THEME, vm.postsPageTitle, vm.language),
+    displayStyle: vm.postsDisplayStyle,
     posts: vm.posts,
   }
 }

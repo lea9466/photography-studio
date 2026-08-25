@@ -1,5 +1,7 @@
 import { DarkBlogPostCard, type DarkBlogPostCardItem } from './DarkBlogPostCard'
+import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 import type { SiteLanguage } from '@/lib/site-language'
+import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './DarkBlogListPage.module.css'
 import './dark-theme.css'
 
@@ -17,6 +19,7 @@ export type DarkBlogListPageProps = {
   language: SiteLanguage
 
   pageTitle: string
+  displayStyle: PostsDisplayStyle
   posts: DarkBlogPostCardItem[]
   hrefForPost: (postId: string) => string
 }
@@ -26,10 +29,10 @@ export type DarkBlogListPageProps = {
  * ~line 1099): a plain uppercase "JOURNAL" eyebrow (eyebrowLabel('dark') —
  * NOT DarkSectionEyebrow's hollow-stroke homepage treatment, same "plainer
  * label on subsidiary pages" convention as DarkPortfolioHeader.tsx), a Space
- * Grotesk bold title, then a responsive 1/2/3-column card grid (or the
- * empty-state message when there are no posts yet). Same deferrals as
- * Classic/ModernBlogListPage.tsx — no `circles` display style, no
- * quick-preview modal.
+ * Grotesk bold title, then either the regular card grid or
+ * (displayStyle === 'circles') the shared BlogCirclesGrid — see that
+ * component's doc comment for why "circles" is one component shared by all
+ * 4 themes. No quick-preview modal, same as the card grid.
  *
  * Header/Footer are no longer rendered here — see
  * `app/dev-preview/dark/layout.tsx`'s doc comment for why (single persistent
@@ -37,7 +40,7 @@ export type DarkBlogListPageProps = {
  * page).
  */
 export function DarkBlogListPage(props: DarkBlogListPageProps) {
-  const { accentColor, language, pageTitle, posts, hrefForPost } = props
+  const { accentColor, language, pageTitle, displayStyle, posts, hrefForPost } = props
 
   const copy = blogListCopy(language)
 
@@ -52,7 +55,11 @@ export function DarkBlogListPage(props: DarkBlogListPageProps) {
             <div className={styles.divider} style={{ backgroundColor: accentColor }} />
           </header>
 
-          {posts.length > 0 ? (
+          {posts.length === 0 ? (
+            <p className={styles.empty}>{copy.empty}</p>
+          ) : displayStyle === 'circles' ? (
+            <BlogCirclesGrid posts={posts} accentColor={accentColor} language={language} hrefForPost={hrefForPost} />
+          ) : (
             <div className={styles.grid}>
               {posts.map((post) => (
                 <DarkBlogPostCard
@@ -63,8 +70,6 @@ export function DarkBlogListPage(props: DarkBlogListPageProps) {
                 />
               ))}
             </div>
-          ) : (
-            <p className={styles.empty}>{copy.empty}</p>
           )}
         </section>
     </main>

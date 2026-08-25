@@ -1,4 +1,5 @@
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import { normalizePostsDisplayStyle, type PostsDisplayStyle } from '@/lib/types/posts-display-style'
 
 /** See build-homepage-view-model.ts for the hard rule this file follows too
  * (also applies to the theme-agnostic note below: `postsPageTitle` is kept
@@ -15,6 +16,7 @@ export type BlogListViewModelInput = {
     about_title_font: string | null
     site_language: string | null
     posts_page_title: string | null
+    posts_display_style: string | null
     gallery_layout_mode: string | null
   }
   posts: Array<{ id: string; title: string; content: string; date: string; coverUrl: string | null }>
@@ -48,6 +50,7 @@ export type BlogListViewModel = {
   /** Raw DB value — theme-aware default fallback happens in the per-theme
    * shaper (resolvePostsPageTitle), not here. */
   postsPageTitle: string | null
+  postsDisplayStyle: PostsDisplayStyle
   posts: Array<{ id: string; title: string; date: string; excerpt: string; coverUrl: string | null }>
 }
 
@@ -74,6 +77,7 @@ export function buildBlogListViewModel(input: BlogListViewModelInput): BlogListV
     hasPhotoEditComparisons: input.hasPhotoEditComparisons,
 
     postsPageTitle: p.posts_page_title,
+    postsDisplayStyle: normalizePostsDisplayStyle(p.posts_display_style),
     posts: input.posts.map((post) => ({
       id: post.id,
       title: post.title,
