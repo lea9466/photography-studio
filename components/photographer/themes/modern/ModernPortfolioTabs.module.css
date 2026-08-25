@@ -1,0 +1,40 @@
+/*
+ * ModernPortfolioTabs.module.css — modern-theme counterpart of
+ * ClassicPortfolioTabs.module.css. Same accent-via-CSS-var mechanism, but
+ * pill-shaped (rounded-full) buttons matching modern's rounder aesthetic
+ * elsewhere (ModernPackageCard's badge/button radii, ModernContactForm's
+ * inputs) instead of classic's 4px corners.
+ */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.tab {
+  border: 1px solid var(--tab-border-accent);
+  background: transparent;
+  color: var(--tab-accent);
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+  opacity: 0.85;
+  border-radius: 9999px;
+}
+
+.tab:hover {
+  border-color: var(--tab-accent);
+  opacity: 1;
+}
+
+.isActive {
+  background: var(--tab-accent);
+  border-color: var(--tab-accent);
+  color: #fff;
+  opacity: 1;
+}

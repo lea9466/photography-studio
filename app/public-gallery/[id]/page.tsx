@@ -17,6 +17,7 @@ import {
   buildPublicOpenGraph,
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
+import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
 import {
   applyOwnerPreviewBypass,
@@ -24,6 +25,32 @@ import {
 } from '@/lib/site-access/public-gate'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { buildGalleryDetailViewModel } from '@/lib/public-site/adapters/build-gallery-detail-view-model'
+import {
+  toClassicGalleryDetailPageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicGalleryDetailShell } from '@/components/photographer/react-site/ClassicGalleryDetailShell'
+import {
+  toDarkGalleryDetailPageProps,
+  toDarkSiteFooterProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
+import { DarkGalleryDetailShell } from '@/components/photographer/react-site/DarkGalleryDetailShell'
+import {
+  toElegantGalleryDetailPageProps,
+  toElegantSiteFooterProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import { ElegantGalleryDetailShell } from '@/components/photographer/react-site/ElegantGalleryDetailShell'
+import {
+  toModernGalleryDetailPageProps,
+  toModernSiteFooterProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import { ModernGalleryDetailShell } from '@/components/photographer/react-site/ModernGalleryDetailShell'
 
 type PublicGalleryPageProps = {
   params: Promise<{ id: string }>
@@ -34,6 +61,8 @@ type UserData = {
   slug: string | null
   logo_url: string | null
   accent_color: string | null
+  heading_font: string | null
+  about_title_font: string | null
   selected_theme: string | null
   should_color_logo: boolean | null
   gallery_layout_mode: string | null
@@ -91,7 +120,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const { data: user, error: userError } = await admin
     .from('users')
     .select(
-      'studio_name, slug, logo_url, accent_color, selected_theme, should_color_logo, gallery_layout_mode, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language, displayed_gallery_id'
+      'studio_name, slug, logo_url, accent_color, heading_font, about_title_font, selected_theme, should_color_logo, gallery_layout_mode, contact_card_title, contact_card_description, phone, email, address, faq_items, site_language, displayed_gallery_id'
     )
     .eq('id', galleryData.user_id)
     .maybeSingle()
@@ -173,6 +202,75 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const siteLanguage = resolveSiteLanguage(userData?.site_language)
   const galleryDate = formatSiteDate(galleryData.created_at, siteLanguage)
 
+  if (userData?.slug && (await isReactPublicSiteEnabled())) {
+    const viewModel = buildGalleryDetailViewModel({
+      photographer: {
+        studio_name: userData.studio_name,
+        logo_url: logoUrl,
+        should_color_logo: userData.should_color_logo,
+        accent_color: userData.accent_color,
+        heading_font: userData.heading_font,
+        about_title_font: userData.about_title_font,
+        site_language: userData.site_language,
+        gallery_layout_mode: userData.gallery_layout_mode,
+        contact_card_title: userData.contact_card_title,
+        contact_card_description: userData.contact_card_description,
+      },
+      gallery: {
+        title: galleryData.title,
+        photoCount: photos.length,
+        galleryDate,
+        photos,
+      },
+      homepagePath,
+      blogPath,
+      portfolioPath,
+      beforeAfterPath: `${canonicalPath}/before-after`,
+      hasFaq,
+      hasPackages,
+      hasBlog,
+      hasPhotoEditComparisons,
+    })
+
+    if (userData.selected_theme === 'dark' || userData.selected_theme === 'bold') {
+      return (
+        <DarkGalleryDetailShell
+          headerProps={toDarkSiteHeaderProps(viewModel)}
+          footerProps={toDarkSiteFooterProps(viewModel)}
+          pageProps={toDarkGalleryDetailPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (userData.selected_theme === 'elegant') {
+      return (
+        <ElegantGalleryDetailShell
+          headerProps={toElegantSiteHeaderProps(viewModel)}
+          footerProps={toElegantSiteFooterProps(viewModel)}
+          pageProps={toElegantGalleryDetailPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (userData.selected_theme === 'modern') {
+      return (
+        <ModernGalleryDetailShell
+          headerProps={toModernSiteHeaderProps(viewModel)}
+          footerProps={toModernSiteFooterProps(viewModel)}
+          pageProps={toModernGalleryDetailPageProps(viewModel)}
+        />
+      )
+    }
+
+    return (
+      <ClassicGalleryDetailShell
+        headerProps={toClassicSiteHeaderProps(viewModel)}
+        footerProps={toClassicSiteFooterProps(viewModel)}
+        pageProps={toClassicGalleryDetailPageProps(viewModel)}
+      />
+    )
+  }
+
   const html = generatePublicGalleryPageHTML({
     theme: siteTheme,
     studioName,
@@ -219,11 +317,12 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 
   const { data: user } = await admin
     .from('users')
-    .select('studio_name')
+    .select('studio_name, logo_url')
     .eq('id', gallery.user_id)
     .maybeSingle()
 
-  const studioName = (user as { studio_name: string | null } | null)?.studio_name || 'Studio Gallery'
+  const typedUser = user as { studio_name: string | null; logo_url: string | null } | null
+  const studioName = typedUser?.studio_name || 'Studio Gallery'
   const title = `${gallery.title} | ${studioName}`
   const description = `גלריה ציבורית מאת ${studioName}`
   const canonicalPath = `/public-gallery/${gallery.id}`
@@ -231,10 +330,22 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
     gallery.id,
     (coverRow as { cover_image: string | null } | null)?.cover_image ?? null
   )
+  const logoIconUrl =
+    getBrandingFaviconPublicUrl(gallery.user_id, typedUser?.logo_url ?? null) ??
+    getBrandingPublicMediaUrl(typedUser?.logo_url ?? null)
 
   return {
     title,
     description,
+    ...(logoIconUrl
+      ? {
+          icons: {
+            icon: logoIconUrl,
+            shortcut: logoIconUrl,
+            apple: logoIconUrl,
+          },
+        }
+      : {}),
     alternates: {
       canonical: buildCanonicalUrl(canonicalPath),
     },

@@ -1,0 +1,7 @@
+/*
+ * 1:1 port of `.bold-hero-image` (lib/homepage-themes/dark.ts).
+ */
+.image {
+  opacity: 0.8;
+  filter: grayscale(12%) brightness(1.02) contrast(1.02) saturate(0.92);
+}

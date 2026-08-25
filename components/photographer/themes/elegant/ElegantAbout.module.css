@@ -1,0 +1,162 @@
+/*
+ * ElegantAbout.module.css — 1:1 port of the stats banner + "About" section
+ * CSS from lib/homepage-themes/elegant.ts. Custom runtime-tailwind.config
+ * spacing keys (margin-mobile: 16px, margin-desktop: 64px) are ported to
+ * plain CSS below since they don't exist in the app's real build-time
+ * Tailwind — see MANDATORY CONVENTIONS #2. Plain numeric Tailwind utility
+ * classes (py-20, py-32, gap-24, grid-cols-1, lg:grid-cols-2, items-center,
+ * order-1/2, aspect-[4/5], shadow-2xl) stay as real Tailwind classes inline
+ * in ElegantAbout.tsx.
+ */
+
+.stats {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 16px;
+  padding-block: 5rem;
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .stats {
+    padding-inline: 64px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  text-align: center;
+}
+
+.statNumber {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--headline-font, 'Playfair Display', serif);
+  font-size: 3rem;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .statNumber {
+    font-size: 3.75rem;
+  }
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  opacity: 0.6;
+}
+
+.section {
+  position: relative;
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 16px;
+  padding-block: 8rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-inline: 64px;
+  }
+}
+
+.glow {
+  position: absolute;
+  left: -2.5rem;
+  top: 0;
+  bottom: 0;
+  width: 20rem;
+  filter: blur(64px);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  align-items: center;
+  gap: 6rem;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.copy {
+  max-width: 42rem;
+}
+
+.label {
+  display: block;
+  margin-bottom: 1rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+}
+
+.subtitle {
+  margin: 0 0 1.5rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 400;
+  opacity: 0.8;
+  white-space: pre-line;
+}
+
+.description {
+  margin: 0 0 2.5rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  font-weight: 400;
+  opacity: 0.6;
+  white-space: pre-line;
+}
+
+.cta {
+  display: inline-block;
+  border: 1px solid #0f0f0d;
+  color: #0f0f0d;
+  padding: 0.75rem 2.5rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.cta:hover {
+  background: #0f0f0d;
+  color: #ffffff;
+}
+
+.imageWrap {
+  aspect-ratio: 4 / 5;
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

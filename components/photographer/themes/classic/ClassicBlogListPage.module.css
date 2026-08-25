@@ -1,0 +1,74 @@
+/*
+ * ClassicBlogListPage.module.css — 1:1 port of blogBody()'s wrapper markup
+ * (lib/public-blog-html.ts line ~1130: `<main class="pt-24">` /
+ * `<section class="max-w-[1280px] mx-auto px-[24px] pt-10 pb-24">` /
+ * `<header class="text-center mb-[56px]">`) and the `.blog-grid` /
+ * `.blog-empty` rules from BLOG_CSS. `pt-24`/`pt-10`/`pb-24`/`px-[24px]` were
+ * already real Tailwind-scale values (6rem/2.5rem/6rem/24px) so those stay
+ * as literal CSS here rather than Tailwind classes, matching the rest of
+ * this module.
+ */
+
+.main {
+  width: 100%;
+  padding-top: 6rem;
+}
+
+.section {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  padding-top: 2.5rem;
+  padding-bottom: 6rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.title {
+  font-family: var(--headline-font, 'Frank Ruhl Libre', serif);
+  font-size: 40px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 60px;
+  }
+}
+
+.divider {
+  width: 64px;
+  height: 1px;
+  margin-inline: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+  opacity: 0.7;
+  font-size: 18px;
+}

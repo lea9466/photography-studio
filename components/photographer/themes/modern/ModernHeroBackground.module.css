@@ -1,0 +1,117 @@
+/*
+ * ModernHeroBackground.module.css — 1:1-in-spirit port of
+ * MODERN_HERO_FILM_BELT_CSS (lib/hero-slideshow.ts). The old CSS drove each
+ * slide's width from a `--film-slide-width` custom property written in
+ * pixels by JS; this port keeps the same visual result (a horizontally
+ * scrolling belt of full-bleed frames) but sizes everything in percentages
+ * of the belt's own box instead — see ModernHeroBackground.tsx's docblock
+ * for why that removes the need for any JS measurement at all.
+ */
+
+.belt {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  direction: ltr;
+}
+
+.track {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  direction: ltr;
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  /* Width is set inline per-instance (slideCount * 100%, in
+     ModernHeroBackground.tsx) since it must scale with the number of
+     images — two full copies of the image set, each slide 100% of the
+     LAYER's own width. A fixed 200% here only happens to be correct when
+     there's exactly 1 image (2 slides total); with more images it was
+     squeezing all of them into view at once instead of showing one at a
+     time full-bleed. */
+  animation-name: modernFilmScroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+@keyframes modernFilmScroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    /* -50% of the *track's own* width == exactly one full image set,
+       regardless of how many images are in it. */
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.slide {
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.frame,
+.staticFrame {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+}
+
+.staticFrame {
+  position: absolute;
+  inset: 0;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background: #1e293b;
+}
+
+.emptyText {
+  max-width: 28rem;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  transition: opacity 420ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}

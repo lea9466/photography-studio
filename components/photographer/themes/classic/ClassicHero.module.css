@@ -1,0 +1,361 @@
+/*
+ * ClassicHero.module.css — 1:1 port of the hero-only CSS from
+ * lib/homepage-themes/classic.ts (the <style> block feeding the
+ * `#hero` section: .vertical-text-label, .glass-card*, .hero-glass-*,
+ * and the copy typography that came from the old runtime tailwind.config
+ * extend — font-display-lg/font-label-sm/font-body-lg + the custom
+ * fontSize scale — which doesn't exist in the app's real build-time
+ * Tailwind, so it's written out here as plain CSS instead.
+ *
+ * The one intentional deviation: `${primaryColor}` interpolations become
+ * `var(--hero-accent)` — same dynamic-per-studio value, just delivered as
+ * a CSS custom property instead of a server-templated string, matching
+ * ClassicSiteHeader.tsx's existing --nav-accent pattern.
+ *
+ * Note: the desktop actions direction below is not a typo — the source
+ * file defines `.hero-glass-actions { flex-direction: row }` at
+ * min-width:1024px and then a *second*, later `flex-direction: column`
+ * rule at the same breakpoint (lib/homepage-themes/classic.ts:509 vs
+ * :599). Same specificity, so the later rule wins in the original
+ * cascade — ported here exactly so behavior matches the live site.
+ */
+
+.glassCardFloat {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.verticalTextLabel {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.38em;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow:
+    0 2px 18px rgba(0, 0, 0, 0.42),
+    0 0 28px rgba(255, 255, 255, 0.14),
+    0 1px 2px rgba(0, 0, 0, 0.25);
+  animation: verticalLabelFloat 5.5s ease-in-out infinite;
+}
+
+@keyframes verticalLabelFloat {
+  0%,
+  100% {
+    transform: rotate(180deg) translateY(0);
+    opacity: 0.78;
+  }
+  50% {
+    transform: rotate(180deg) translateY(-16px);
+    opacity: 0.95;
+  }
+}
+
+.glassCardFrame {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 450px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.glassCardAccentLine {
+  position: absolute;
+  bottom: -18px;
+  right: 40px;
+  width: 56px;
+  height: 2px;
+  background: var(--hero-accent);
+  pointer-events: none;
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.heroGlassContainer {
+  position: absolute;
+  z-index: 10;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: 100%;
+  padding: 0 1rem 1rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .heroGlassCard {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .heroGlassInner {
+    gap: 0.625rem;
+  }
+  .eyebrow {
+    margin-bottom: 0.5rem !important;
+  }
+  .title {
+    margin-bottom: 0.5rem !important;
+    line-height: 1.2;
+  }
+  .heroGlassActions {
+    gap: 0.5rem;
+  }
+  .ctaPrimary,
+  .ctaSecondary {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .heroGlassContainer {
+    padding: 0 1.25rem 1.25rem;
+  }
+  .heroGlassInner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+  }
+  .heroGlassCopy {
+    text-align: center;
+    flex: none;
+    width: 100%;
+  }
+  .title {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+    margin-bottom: 0.75rem;
+  }
+  .body {
+    font-size: 1rem;
+    margin-bottom: 0;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+    white-space: pre-line;
+  }
+  .heroGlassActions {
+    flex-direction: row;
+    flex-shrink: 0;
+    align-self: center;
+    justify-content: center;
+    width: auto;
+    max-width: 100%;
+  }
+  .heroGlassCard {
+    width: 100%;
+    padding: 1.75rem 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .heroGlassContainer {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    width: auto;
+    padding: 0 0 4rem 8rem;
+  }
+  .heroGlassInner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .heroGlassCopy {
+    text-align: right;
+  }
+  .heroGlassActions {
+    flex-direction: row;
+  }
+  .body {
+    margin-bottom: 2rem;
+    white-space: pre-line;
+  }
+}
+
+.heroGlassCard {
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  .heroGlassCard {
+    width: 450px;
+    flex: 0 0 450px;
+  }
+}
+
+.heroGlassInner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.heroGlassCopy {
+  text-align: center;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.heroGlassCopy h1,
+.heroGlassCopy p {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.heroGlassActions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .heroGlassActions {
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 767px) {
+  .heroGlassActions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+
+/* Copy typography — was font-label-sm/text-label-sm, font-display-lg,
+   font-body-lg/text-body-lg from the old runtime-injected tailwind.config
+   (fontFamily + fontSize extend blocks in classic.ts). */
+
+.eyebrow {
+  display: block;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .eyebrow {
+    margin-bottom: 0.75rem;
+  }
+}
+@media (min-width: 1024px) {
+  .eyebrow {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.title {
+  font-family: var(--headline-font, 'Frank Ruhl Libre', serif);
+  font-size: 1.875rem;
+  line-height: 1.1;
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 2.25rem;
+    margin-bottom: 0.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .title {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+.body {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0;
+}
+
+.ctaPrimary,
+.ctaSecondary {
+  flex: 1 1 0%;
+  box-sizing: border-box;
+  display: inline-block;
+  padding: 0.625rem 1.5rem;
+  border-radius: 0;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (min-width: 768px) {
+  .ctaPrimary,
+  .ctaSecondary {
+    padding: 0.75rem 2rem;
+  }
+}
+
+.ctaPrimary {
+  background: var(--hero-accent);
+  color: #ffffff;
+  border: none;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  transition:
+    filter 0.2s,
+    transform 0.2s;
+}
+.ctaPrimary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-0.25rem);
+}
+.ctaPrimary:active {
+  transform: scale(0.95);
+}
+
+.ctaSecondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  transition: background-color 0.2s;
+}
+.ctaSecondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}

@@ -1,0 +1,142 @@
+/*
+ * ModernTestimonialCard.module.css — 1:1 port of .testimonial-thumb-card /
+ * .testimonial-thumb-card--modern / .testimonial-thumb-card__* (shared
+ * across all 4 themes in TESTIMONIAL_THUMB_CARD_CSS, lib/homepage-themes/
+ * shared-styles.ts) with modern's own rounder/softer card treatment —
+ * see ClassicTestimonialCard.module.css for the identical base layout this
+ * was ported alongside.
+ */
+
+.card {
+  position: relative;
+  background: #ffffff;
+  width: 100%;
+  max-width: min(100%, 24rem);
+  min-width: 14rem;
+  min-height: 8.5rem;
+  align-self: stretch;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 2.15rem 1.5rem 2.15rem 5.25rem;
+  margin-top: 0.85rem;
+  box-sizing: border-box;
+  border-radius: 1rem;
+  border: 1px solid rgba(121, 116, 126, 0.25);
+  box-shadow: 0 10px 30px rgba(45, 40, 37, 0.08);
+}
+
+@media (max-width: 767px) {
+  .card {
+    flex: 0 1 100%;
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card {
+    flex: 0 1 calc(50% - 0.75rem);
+    max-width: calc(50% - 0.75rem);
+    width: calc(50% - 0.75rem);
+    min-width: 0;
+    padding: 1.85rem 1.25rem 1.85rem 4.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card {
+    flex: 0 1 calc((100% - 5.5rem) / 3);
+    max-width: min(24rem, calc((100% - 5.5rem) / 3));
+    width: auto;
+    min-width: 0;
+  }
+}
+
+.quote {
+  position: absolute;
+  top: 0;
+  right: 1.35rem;
+  left: auto;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 0 0.75rem;
+  line-height: 1;
+  z-index: 3;
+  opacity: 0.42;
+  font-size: 2.35rem;
+  font-style: normal;
+  font-family: 'Material Symbols Outlined';
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 300,
+    'GRAD' 0,
+    'opsz' 24;
+  pointer-events: none;
+}
+
+.thumb {
+  position: absolute;
+  left: -1.15rem;
+  bottom: -0.85rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+  z-index: 2;
+  background: #f1f5f9;
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  margin-top: 0.35rem;
+  min-height: 0;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1rem;
+}
+
+.text {
+  flex: 1 1 auto;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: #475569;
+  margin: 0 0 1.5rem;
+}
+
+.footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  color: var(--modern-accent, #b8953f);
+}

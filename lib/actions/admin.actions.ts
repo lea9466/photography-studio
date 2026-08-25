@@ -1,6 +1,6 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import { headers } from 'next/headers'
 import { getFeedbackEmail } from '@/lib/feedback-email'
 import type { AdminBroadcastRecipientFilters } from '@/lib/admin/broadcast-filters'
@@ -33,6 +33,7 @@ import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/re
 import { createAdminClient } from '@/lib/supabase/admin'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
+import { REACT_PUBLIC_SITE_CACHE_TAG } from '@/lib/public-site/react-rollout'
 import {
   hasActiveSubscriptionLike,
   resolveStudioEntitlements,
@@ -397,6 +398,39 @@ export async function updateAdminStudioSiteAccess(
     is_under_construction: Boolean(row.is_under_construction),
     is_site_unavailable: Boolean(row.is_site_unavailable),
   }
+}
+
+/**
+ * Global kill switch for the React public-site rollout (see
+ * lib/public-site/react-rollout.ts's doc comment) — flips the singleton
+ * app_settings row every public page reads on each request. revalidateTag
+ * makes the flip take effect on the very next request instead of waiting
+ * out the cache's own revalidate window.
+ */
+export async function updateReactPublicSiteEnabled(enabled: boolean) {
+  await requireAdmin()
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('app_settings')
+    .update({ react_public_site_enabled: enabled })
+    .eq('id', 1)
+    .select('react_public_site_enabled')
+    .maybeSingle()
+
+  if (error) {
+    const message = error.message?.toLowerCase() ?? ''
+    if (error.code === '42P01' || message.includes('app_settings')) {
+      throw new Error('יש להריץ את המיגרציה add_react_public_site_flag ב-Supabase')
+    }
+    throw new Error(error.message)
+  }
+  if (!data) throw new Error('שורת ההגדרות הגלובלית לא נמצאה')
+
+  revalidateTag(REACT_PUBLIC_SITE_CACHE_TAG)
+  revalidatePath('/manage')
+
+  return { react_public_site_enabled: Boolean(data.react_public_site_enabled) }
 }
 
 export async function getAdminAuthState() {

@@ -1,0 +1,74 @@
+/*
+ * ElegantPortfolioContactCard.module.css — 1:1 port of
+ * generatePublicContactCardSection() (lib/public-gallery-html.ts). There is
+ * no dedicated `theme === 'elegant'` branch in that function — only
+ * dark/classic/modern get their own branch, and elegant falls through to the
+ * shared default bucket at the bottom of the function.
+ *
+ * IMPORTANT divergence found by reading the source directly: that default
+ * bucket's colors (`bg-[#f6f3f0]`, `border-[#d6c3bb]/20`, text `#5A504A`) are
+ * literally classic's warm palette values — NOT elegant's own homepage
+ * tokens (bg #FAFAF8, surface #fdf8f7, variant #464742, from
+ * TOKENS.elegant in lib/public-blog-html.ts / lib/public-before-after-html.ts).
+ * So this one section renders with a visibly different (classic-colored)
+ * background than the rest of the elegant portfolio page — a genuine quirk
+ * of the old renderer's shared "no elegant branch" bucket, preserved as-is
+ * per the "don't fix quirks, verify then port them" convention. The h1 font
+ * (`font-serif-hebrew` → Frank Ruhl Libre) and the bordered/uppercase button
+ * (`border-[#0F0F0D]`, hover-invert) DO match elegant's own design language
+ * elsewhere (e.g. ElegantAbout.module.css's `.cta`).
+ */
+
+.section {
+  padding: 80px 0;
+  background: #f6f3f0;
+  border-top: 1px solid rgba(214, 195, 187, 0.2);
+  border-bottom: 1px solid rgba(214, 195, 187, 0.2);
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.title {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 36px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #1c1b1b;
+  margin-bottom: 24px;
+}
+
+.description {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #5a504a;
+  max-width: 36rem;
+  margin: 0 auto 48px;
+  white-space: pre-line;
+}
+
+.button {
+  display: inline-block;
+  border: 1px solid #0f0f0d;
+  color: #0f0f0d;
+  padding: 16px 32px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  text-decoration: none;
+}
+
+.button:hover {
+  background-color: #0f0f0d;
+  color: #ffffff;
+}

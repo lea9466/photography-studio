@@ -1,0 +1,56 @@
+/*
+ * ModernBlogShareLinks.module.css — same share-row recipe as
+ * ClassicBlogShareLinks.module.css (the `.blog-detail__share*` rules in
+ * BLOG_MODAL_CSS render identically regardless of theme; only the icon
+ * stroke color, passed in as a prop, ever varies).
+ */
+
+.share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.icon:hover {
+  transform: scale(1.08);
+  opacity: 0.78;
+}
+
+.icon svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+}
+
+.iconCopied {
+  transform: scale(1);
+  opacity: 1;
+}

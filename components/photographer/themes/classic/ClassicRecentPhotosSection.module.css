@@ -1,0 +1,131 @@
+/*
+ * ClassicRecentPhotosSection.module.css — merges the shared base rules from
+ * RECENT_PHOTOS_GRID_CSS (`.recent-photos-section`, `.recent-photos-header`,
+ * `.portfolio-cta-wrap`) with the classic-only override,
+ * CLASSIC_RECENT_PHOTOS_HEADER_CSS (both in lib/homepage-themes/shared-styles.ts).
+ *
+ * Old markup always rendered classic's header div with the
+ * `hp-posts-header--classic` class, so RECENT_PHOTOS_GRID_CSS's *other*
+ * generic rule — `.recent-photos-header > div:not(.hp-posts-header--classic)`
+ * (right-aligned column layout, for the other 3 themes) — never actually
+ * applied to classic and is skipped here entirely.
+ *
+ * CLASSIC_RECENT_PHOTOS_HEADER_CSS always loads *after* RECENT_PHOTOS_GRID_CSS
+ * (see generate-homepage-html.ts) and wins on every property it touches, so
+ * instead of keeping two cascading rules per selector, each one below is
+ * folded into its final computed value directly.
+ */
+
+.section {
+  width: 100%;
+  overflow: hidden;
+  padding-top: calc(2rem + 50px) !important;
+  padding-bottom: 1.5rem !important;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: calc(3rem + 50px) !important;
+    padding-bottom: 2rem !important;
+  }
+}
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  /* base: 1rem, classic override: 2.5rem — override wins */
+  margin-bottom: 2.5rem;
+  padding-inline: 2%;
+  /* base: right, classic override: left — override wins */
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+.headerInner {
+  display: flex;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center !important;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+  margin-bottom: 0;
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .headerInner {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+    direction: ltr;
+  }
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  text-align: left !important;
+  order: 1;
+  min-width: 0;
+}
+
+/* .hp-posts-title { margin: 0 } — applied as extra className on SectionTitle. */
+.title {
+  margin: 0;
+}
+
+.divider {
+  width: 56px;
+  height: 1px;
+  margin: 8px auto 0 0;
+}
+
+.more {
+  display: flex;
+  justify-content: flex-end;
+  order: 2;
+  margin-inline-start: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .more {
+    align-self: flex-end;
+    margin-inline-start: 0;
+  }
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.moreLink:hover {
+  opacity: 0.75;
+}
+
+.moreLink:active {
+  transform: scale(0.96);
+}
+
+.moreArrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.moreLink:hover .moreArrow {
+  transform: translateX(-5px);
+}

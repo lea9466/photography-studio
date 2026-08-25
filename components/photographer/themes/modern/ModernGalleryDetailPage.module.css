@@ -1,0 +1,82 @@
+/*
+ * ModernGalleryDetailPage.module.css — 1:1 port of the modern (default)
+ * branch of galleryBody() (lib/public-gallery-html.ts ~line 588). Genuinely
+ * different header from ModernPortfolioHeader's own (confirmed by reading
+ * the source directly, not assumed): a plain eyebrow with *translated*
+ * "Gallery"/"גלריה" text (not ModernSectionEyebrow's hollow-stroke fixed
+ * "PORTFOLIO" literal), a bold 48px/64px h1, and a 3-dot ornament row instead
+ * of a single divider bar.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+  padding-block: 24px;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding-block: 32px;
+  }
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 48px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 64px;
+  }
+}
+
+.ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 24px;
+}
+
+.ornamentLine {
+  height: 1px;
+  width: 48px;
+  background: color-mix(in srgb, var(--modern-accent, #b8953f) 25%, transparent);
+}
+
+.ornamentDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--modern-accent, #b8953f);
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #475569;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .meta {
+    font-size: 17px;
+  }
+}

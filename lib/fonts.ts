@@ -153,6 +153,39 @@ ${SITE_SECTION_TITLE_SELECTOR} {
 `
 
 /**
+ * Override CSS for the brand-selected heading/about fonts — just the
+ * custom-property declarations, no wrapping <style> tag and none of
+ * SECTION_HEADING_FONT_CSS's class selectors (those exist only for the old
+ * string-HTML renderer's own class names). The React theme components
+ * already read `var(--headline-font)` / `var(--about-title-font)` directly
+ * in their CSS Modules, so setting these two variables is enough to make a
+ * photographer's chosen font take effect there. Returns '' when neither
+ * font is selected (theme CSS's own default stays in effect).
+ *
+ * `selector` defaults to ':root' for the old string-HTML renderer (the site
+ * IS the document there). The React port's own theme CSS (classic-theme.css
+ * etc.) deliberately does NOT declare --headline-font on :root — it scopes
+ * it to the theme's own wrapper class (`.theme-classic` etc.) instead, so
+ * one tenant's theme can't leak into another's. A :root override sits on an
+ * *ancestor* of that wrapper, and CSS custom properties resolve from the
+ * nearest declaring ancestor down the DOM tree — so :root never wins there
+ * no matter the source order. Callers in the React pipeline must pass that
+ * same wrapper selector (e.g. '.theme-classic') instead of relying on the
+ * default.
+ */
+export function buildBrandFontVarsCss(
+  headingFont: string | null | undefined,
+  aboutFont: string | null | undefined,
+  selector: string = ':root'
+): string {
+  const { heading, about } = resolveBrandFonts(headingFont, aboutFont)
+  const vars: string[] = []
+  if (heading) vars.push(`--headline-font: ${toCssFontStack(heading)};`)
+  if (about) vars.push(`--about-title-font: ${toCssFontStack(about)};`)
+  return vars.length > 0 ? `${selector} { ${vars.join(' ')} }` : ''
+}
+
+/**
  * Late :root override for brand fonts + section-heading binding.
  * Always injects the heading selectors; :root vars only when a font is selected.
  */
@@ -160,11 +193,7 @@ export function buildBrandFontVarsStyle(
   headingFont: string | null | undefined,
   aboutFont: string | null | undefined
 ): string {
-  const { heading, about } = resolveBrandFonts(headingFont, aboutFont)
-  const vars: string[] = []
-  if (heading) vars.push(`--headline-font: ${toCssFontStack(heading)};`)
-  if (about) vars.push(`--about-title-font: ${toCssFontStack(about)};`)
-  const root = vars.length > 0 ? `:root { ${vars.join(' ')} }` : ''
+  const root = buildBrandFontVarsCss(headingFont, aboutFont)
   return `<style id="brand-font-vars">${root}${SECTION_HEADING_FONT_CSS}</style>`
 }
 

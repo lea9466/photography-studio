@@ -3,8 +3,10 @@ import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
+import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveBrandingPath } from '@/lib/branding-urls'
+import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import {
@@ -18,6 +20,32 @@ import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metada
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { buildPortfolioViewModel } from '@/lib/public-site/adapters/build-portfolio-view-model'
+import {
+  toClassicPortfolioPageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicPortfolioShell } from '@/components/photographer/react-site/ClassicPortfolioShell'
+import {
+  toDarkPortfolioPageProps,
+  toDarkSiteFooterProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
+import { DarkPortfolioShell } from '@/components/photographer/react-site/DarkPortfolioShell'
+import {
+  toElegantPortfolioPageProps,
+  toElegantSiteFooterProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import { ElegantPortfolioShell } from '@/components/photographer/react-site/ElegantPortfolioShell'
+import {
+  toModernPortfolioPageProps,
+  toModernSiteFooterProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import { ModernPortfolioShell } from '@/components/photographer/react-site/ModernPortfolioShell'
 
 interface PortfolioPageProps {
   params: Promise<{ slug: string }>
@@ -168,9 +196,17 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
   const studioName = typed.studio_name ?? 'Studio Gallery'
-  const homepagePath = resolveHomepagePath(typed.slug, typed.studio_name)
-  const portfolioPath = `${canonicalPath}/portfolio`
-  const blogPath = `${canonicalPath}/blog`
+  // See app/[slug]/page.tsx for why: on a photographer's connected custom
+  // domain, nav links built from the real slug path would 404 there (only a
+  // small fixed set of tenant-relative paths is recognized — see
+  // lib/domains/rewrite.ts), so an empty base is used for concatenation
+  // instead. canonicalPath itself (used above for the separated-mode
+  // redirect) is unaffected.
+  const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+  const navBasePath = isTenantDomain ? '' : canonicalPath
+  const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(typed.slug, typed.studio_name)
+  const portfolioPath = `${navBasePath}/portfolio`
+  const blogPath = `${navBasePath}/blog`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
@@ -194,6 +230,73 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
 
   const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
 
+  if (await isReactPublicSiteEnabled()) {
+    const viewModel = buildPortfolioViewModel({
+      photographer: {
+        studio_name: typed.studio_name,
+        name: typed.name,
+        logo_url: logoUrl,
+        should_color_logo: typed.should_color_logo,
+        accent_color: typed.accent_color,
+        heading_font: typed.heading_font,
+        about_title_font: typed.about_title_font,
+        site_language: typed.site_language,
+        galleries_title: typed.galleries_title,
+        contact_card_title: typed.contact_card_title,
+        contact_card_description: typed.contact_card_description,
+        gallery_layout_mode: typed.gallery_layout_mode,
+      },
+      photos: allPhotos,
+      galleryNames,
+      homepagePath,
+      portfolioPath,
+      blogPath,
+      beforeAfterPath: `${navBasePath}/before-after`,
+      hasFaq,
+      hasPackages: (packageCount ?? 0) > 0,
+      hasBlog: (postCount ?? 0) > 0,
+      hasPhotoEditComparisons,
+    })
+
+    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+      return (
+        <DarkPortfolioShell
+          headerProps={toDarkSiteHeaderProps(viewModel)}
+          footerProps={toDarkSiteFooterProps(viewModel)}
+          pageProps={toDarkPortfolioPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'elegant') {
+      return (
+        <ElegantPortfolioShell
+          headerProps={toElegantSiteHeaderProps(viewModel)}
+          footerProps={toElegantSiteFooterProps(viewModel)}
+          pageProps={toElegantPortfolioPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'modern') {
+      return (
+        <ModernPortfolioShell
+          headerProps={toModernSiteHeaderProps(viewModel)}
+          footerProps={toModernSiteFooterProps(viewModel)}
+          pageProps={toModernPortfolioPageProps(viewModel)}
+        />
+      )
+    }
+
+    return (
+      <ClassicPortfolioShell
+        headerProps={toClassicSiteHeaderProps(viewModel)}
+        footerProps={toClassicSiteFooterProps(viewModel)}
+        pageProps={toClassicPortfolioPageProps(viewModel)}
+      />
+    )
+  }
+
   const html = generatePublicPortfolioPageHTML({
     theme: siteTheme,
     studioName,
@@ -205,7 +308,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     hasBlog: (postCount ?? 0) > 0,
     blogPath,
     hasPhotoEditComparisons,
-    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
+    beforeAfterPath: hasPhotoEditComparisons ? `${navBasePath}/before-after` : undefined,
     shouldColorLogo: typed.should_color_logo ?? false,
     portfolio: {
       pageTitle: 'תיק עבודות',
@@ -241,22 +344,37 @@ export async function generateMetadata({ params }: PortfolioPageProps): Promise<
     }
 
     const studioName = typed.studio_name ?? 'Studio Gallery'
-    const canonicalPath =
-      getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`
+    const baseUrl = await getCanonicalBaseUrl(typed.id)
+    const canonicalPath = baseUrl
+      ? ''
+      : (getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`)
     const portfolioPath = `${canonicalPath}/portfolio`
     const title = `תיק עבודות | ${studioName}`
     const description = `תיק העבודות של ${studioName}`
+    const logoIconUrl =
+      getBrandingFaviconPublicUrl(typed.id, typed.logo_url) ??
+      getBrandingPublicMediaUrl(typed.logo_url)
 
     return {
       title,
       description,
+      ...(logoIconUrl
+        ? {
+            icons: {
+              icon: logoIconUrl,
+              shortcut: logoIconUrl,
+              apple: logoIconUrl,
+            },
+          }
+        : {}),
       alternates: {
-        canonical: buildCanonicalUrl(portfolioPath),
+        canonical: buildCanonicalUrl(portfolioPath, baseUrl),
       },
       openGraph: buildPublicOpenGraph({
         title,
         description,
         canonicalPath: portfolioPath,
+        baseUrl,
       }),
     }
   } catch {

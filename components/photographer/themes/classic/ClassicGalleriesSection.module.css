@@ -1,0 +1,14 @@
+/*
+ * ClassicGalleriesSection.module.css — the one theme-specific bit of the
+ * galleries section wrapper: its background color. Old markup had
+ * `bg-surface-container-low` (a custom Tailwind key from classic's
+ * runtime-only tailwind.config, not the real build) — its resolved value is
+ * ported here directly. Everything else (grid, cards, header positioning,
+ * title typography) is shared — see components/photographer/themes/shared/.
+ */
+
+.section {
+  width: 100%;
+  overflow-x: clip;
+  background: #f4ede6;
+}

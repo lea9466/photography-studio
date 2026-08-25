@@ -1,0 +1,182 @@
+/*
+ * ClassicBeforeAfterComparisonSection.module.css — 1:1 port of the
+ * `.comparison-section` / `.comparison-content` / `.comparison-tag` /
+ * `.comparison-number*` / `.comparison-title` / `.comparison-desc` /
+ * `.comparison-howto` / `.comparison-toggle` / `.comparison-media`
+ * (grid-column placement only — the media column's own internals live in
+ * ClassicBeforeAfterSlider.module.css / ClassicBeforeAfterLens.module.css)
+ * rules from REVEAL_LENS_CSS in lib/public-before-after-html.ts.
+ *
+ * `grid-template-columns: subgrid` mirrors the old renderer exactly — each
+ * section is its own grid item spanning both of `.ba-list`'s columns
+ * (defined in ClassicBeforeAfterPage.module.css) so every pair's content/
+ * media split lines up across the whole page, not just within one section.
+ *
+ * `.reveal`/`.active` fade-in-on-scroll from classic-theme.css was per-page
+ * `IntersectionObserver` in the old renderer — here it's this component's
+ * own `useRevealOnScroll()` call, toggling `.visible` instead of relying on
+ * a shared `.reveal`/`.active` pair (keeps this component's fade fully
+ * self-contained rather than depending on classic-theme.css being loaded).
+ */
+
+.section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  column-gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+  min-height: auto;
+  padding-block: calc(clamp(48px, 7vh, 96px) + 25px);
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease;
+}
+
+.section.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.content {
+  grid-column: 1;
+  text-align: start;
+  min-width: 0;
+  align-self: center;
+}
+
+.tag {
+  display: inline-block;
+  margin: 0 0 0.85rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.numberRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.number {
+  position: relative;
+  font-size: clamp(42px, 4vw, 68px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  opacity: 0.9;
+}
+
+.number::before {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--number-glow);
+  opacity: 0.07;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+.numberLine {
+  width: 54px;
+  height: 1px;
+  opacity: 0.35;
+  flex-shrink: 0;
+}
+
+.title {
+  margin: 0 0 0.75rem;
+  font-family: var(--headline-font, 'Frank Ruhl Libre', serif);
+  font-size: clamp(26px, 3vw, 42px);
+  line-height: 1.15;
+  font-weight: 500;
+  color: #2d2825;
+}
+
+.desc {
+  margin: 0 0 1rem;
+  max-width: 420px;
+  font-size: clamp(15px, 1.35vw, 18px);
+  line-height: 1.7;
+  color: rgba(45, 40, 37, 0.75);
+}
+
+.howto {
+  margin: 0 0 1.25rem;
+  max-width: 420px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: rgba(45, 40, 37, 0.58);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid rgba(45, 40, 37, 0.22);
+  border-radius: 9999px;
+  background: transparent;
+  color: #2d2825;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.toggle:hover:not(:disabled) {
+  background: rgba(45, 40, 37, 0.06);
+}
+
+.toggle:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.media {
+  grid-column: 2;
+  align-self: start;
+  justify-self: stretch;
+  min-width: 0;
+}
+
+@media (max-width: 850px) {
+  .section {
+    grid-template-columns: 1fr;
+    row-gap: 24px;
+  }
+  .content {
+    grid-column: 1;
+    order: 1;
+  }
+  .media {
+    grid-column: 1;
+    order: 2;
+  }
+  .number {
+    font-size: clamp(36px, 10vw, 56px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

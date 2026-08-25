@@ -1,0 +1,113 @@
+/*
+ * ClassicPostsSection.module.css — 1:1 port of the homepage "recent posts"
+ * teaser section (lib/homepage-posts-section.ts's HOMEPAGE_POSTS_CSS +
+ * CLASSIC_HOMEPAGE_POSTS_CSS overrides). This sits between the
+ * RecentPhotos and Packages sections on the real homepage — it was missed
+ * in the first build pass and added once Lea caught it in review.
+ *
+ * Note the header is genuinely LTR even on this Hebrew/RTL theme — that's
+ * not a bug I'm introducing, it's in the source
+ * (`.theme-classic .hp-posts-header.hp-posts-header--classic { direction:
+ * ltr; text-align: left !important }`), ported here exactly.
+ */
+
+.section {
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+  padding-top: calc(2.5rem + 20px);
+  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: calc(3.5rem + 20px);
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 2%;
+  margin-bottom: 2.5rem;
+  text-align: left;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  order: 1;
+}
+
+.divider {
+  width: 56px;
+  height: 1px;
+  margin: 8px 0 0;
+}
+
+.more {
+  order: 2;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.moreLink:hover {
+  opacity: 0.75;
+}
+.moreLink:hover .moreArrow {
+  transform: translateX(-5px);
+}
+.moreLink:active {
+  transform: scale(0.96);
+}
+
+.moreArrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

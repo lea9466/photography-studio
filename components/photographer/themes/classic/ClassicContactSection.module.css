@@ -1,0 +1,137 @@
+/*
+ * ClassicContactSection.module.css — 1:1 port of:
+ *  - the contact-section-bg-* rules (lib/homepage-themes/generate-homepage-html.ts,
+ *    the `sectionBgCss`/`sectionBgLayers` block used when a studio has set a
+ *    contact background image), and
+ *  - the info-column bits of CLASSIC_CONTACT_FORM_CSS that aren't plain
+ *    Tailwind utilities (classic-contact-info / classic-contact-details).
+ *
+ * Note: the source also has a hard `.classic-contact-info { text-align:
+ * right; }` override. It's deliberately NOT ported here — contactAlign
+ * ('text-start rtl:text-right', from lib/homepage-copy.ts, applied inline in
+ * the component) is the language-aware alignment used everywhere else in
+ * this same form, and a hardcoded always-right override would silently break
+ * the English site variant. Treating that literal rule as vestigial (likely
+ * a pre-Tailwind-load FOUC fallback in the old runtime-CDN-Tailwind setup)
+ * rather than porting it 1:1 is a deliberate call — flagged for review.
+ */
+
+.hasBg {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: none !important;
+}
+
+.bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.bgDesktop {
+  display: none;
+  opacity: 0.4;
+  filter: brightness(1.45) saturate(0.68) contrast(0.9);
+}
+
+.bgMobile {
+  display: block;
+  opacity: 0.22;
+  filter: brightness(1.65) saturate(0.62) contrast(0.88);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.06) 52%, transparent 84%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.06) 52%, transparent 84%);
+}
+
+@media (min-width: 768px) {
+  .bgDesktop {
+    display: block;
+  }
+  .bgMobile {
+    display: none;
+  }
+}
+
+.bgOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .bgOverlay {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, var(--contact-fade, #fafaf8) 55%, transparent) 62%,
+      var(--contact-fade, #fafaf8) 94%
+    );
+  }
+}
+
+@media (min-width: 768px) {
+  .bgOverlay {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 58%, transparent),
+      color-mix(in srgb, var(--contact-fade-desktop, var(--contact-fade, #fff)) 96%, transparent)
+    );
+  }
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #5a504a;
+}
+
+.detailValue {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #2d2825;
+}
+
+.detailIcon {
+  color: var(--contact-accent);
+  transition: transform 0.2s ease;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.detailLink {
+  color: #2d2825;
+  transition: color 0.2s ease;
+}
+
+.detailLink:hover {
+  color: var(--contact-accent);
+}
+
+.detailLink:hover .detailIcon {
+  transform: scale(1.1);
+}

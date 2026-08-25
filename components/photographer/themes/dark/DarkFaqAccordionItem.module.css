@@ -1,0 +1,113 @@
+/*
+ * DarkFaqAccordionItem.module.css — 1:1 port of the resolved (post-cascade)
+ * `.theme-bold .faq-item--modern` rules in MODERN_FAQ_ACCORDION_CSS
+ * (lib/homepage-themes/shared-styles.ts, ~line 2160): borderless disclosure
+ * row, bottom border only, CSS-only +/- toggle via the `[open]` attribute
+ * selector, and the native `::details-content` block-size transition (with
+ * a `faqAnswerReveal` keyframe fallback for browsers that don't support it
+ * yet — same animation FAQ_ACCORDION_CSS defines for classic's `.faq-item`).
+ */
+
+.item {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  interpolate-size: allow-keywords;
+}
+
+.summary {
+  cursor: pointer;
+  padding: 1.5rem 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  direction: rtl;
+  width: 100%;
+  font-weight: 500;
+  text-align: right;
+  color: #f5f5f0;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.question {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  direction: rtl;
+}
+
+.toggle {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.toggle::before {
+  content: '+';
+}
+
+.item[open] .toggle::before {
+  content: '\2212';
+}
+
+.item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.35s ease,
+    content-visibility 0.35s ease allow-discrete;
+}
+
+.item[open]::details-content {
+  block-size: auto;
+}
+
+@keyframes darkFaqAnswerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+}
+
+.item[open] .answer {
+  animation: darkFaqAnswerReveal 0.35s ease both;
+}
+
+.answer {
+  width: 100%;
+  padding: 0 0 1.5rem;
+  line-height: 1.7;
+  white-space: pre-line;
+  opacity: 0.85;
+  text-align: right;
+  direction: rtl;
+  color: rgba(245, 245, 240, 0.85);
+  border-top: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item::details-content,
+  .toggle {
+    transition: none;
+  }
+
+  .item[open] .answer {
+    animation: none;
+  }
+}

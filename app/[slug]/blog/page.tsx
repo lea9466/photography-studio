@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { resolveBrandingPath } from '@/lib/branding-urls'
+import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicBlogPageHTML } from '@/lib/public-blog-html'
 import { fetchPublicBlogPosts } from '@/lib/public-blog-posts'
@@ -12,8 +13,35 @@ import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
+import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { buildBlogListViewModel } from '@/lib/public-site/adapters/build-blog-list-view-model'
+import {
+  toClassicBlogListPageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicBlogListShell } from '@/components/photographer/react-site/ClassicBlogListShell'
+import {
+  toDarkBlogListPageProps,
+  toDarkSiteFooterProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
+import { DarkBlogListShell } from '@/components/photographer/react-site/DarkBlogListShell'
+import {
+  toElegantBlogListPageProps,
+  toElegantSiteFooterProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import { ElegantBlogListShell } from '@/components/photographer/react-site/ElegantBlogListShell'
+import {
+  toModernBlogListPageProps,
+  toModernSiteFooterProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import { ModernBlogListShell } from '@/components/photographer/react-site/ModernBlogListShell'
 
 interface BlogPageProps {
   params: Promise<{ slug: string }>
@@ -76,6 +104,73 @@ export default async function BlogPage({ params }: BlogPageProps) {
   const hasPhotoEditComparisons = (photoEditCount ?? 0) > 0
   const isPortfolioLayout = (typed.gallery_layout_mode ?? 'separated') === 'portfolio'
 
+  if (await isReactPublicSiteEnabled()) {
+    const viewModel = buildBlogListViewModel({
+      photographer: {
+        studio_name: typed.studio_name,
+        name: typed.name,
+        logo_url: logoUrl,
+        should_color_logo: typed.should_color_logo,
+        accent_color: typed.accent_color,
+        heading_font: typed.heading_font,
+        about_title_font: typed.about_title_font,
+        site_language: typed.site_language,
+        posts_page_title: typed.posts_page_title,
+        gallery_layout_mode: typed.gallery_layout_mode,
+      },
+      posts: blogPosts,
+      homepagePath,
+      blogPath,
+      portfolioPath: `${canonicalPath}/portfolio`,
+      beforeAfterPath: `${canonicalPath}/before-after`,
+      hasFaq,
+      hasPackages: (packageCount ?? 0) > 0,
+      hasPhotoEditComparisons,
+    })
+
+    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+      return (
+        <DarkBlogListShell
+          headerProps={toDarkSiteHeaderProps(viewModel)}
+          footerProps={toDarkSiteFooterProps(viewModel)}
+          pageProps={toDarkBlogListPageProps(viewModel)}
+          blogPath={blogPath}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'elegant') {
+      return (
+        <ElegantBlogListShell
+          headerProps={toElegantSiteHeaderProps(viewModel)}
+          footerProps={toElegantSiteFooterProps(viewModel)}
+          pageProps={toElegantBlogListPageProps(viewModel)}
+          blogPath={blogPath}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'modern') {
+      return (
+        <ModernBlogListShell
+          headerProps={toModernSiteHeaderProps(viewModel)}
+          footerProps={toModernSiteFooterProps(viewModel)}
+          pageProps={toModernBlogListPageProps(viewModel)}
+          blogPath={blogPath}
+        />
+      )
+    }
+
+    return (
+      <ClassicBlogListShell
+        headerProps={toClassicSiteHeaderProps(viewModel)}
+        footerProps={toClassicSiteFooterProps(viewModel)}
+        pageProps={toClassicBlogListPageProps(viewModel)}
+        blogPath={blogPath}
+      />
+    )
+  }
+
   const html = generatePublicBlogPageHTML({
     theme: siteTheme,
     studioName,
@@ -116,21 +211,36 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     const siteTheme = normalizeSiteTheme(typed.selected_theme)
     const studioName = typed.studio_name ?? 'Studio Gallery'
     const pageTitle = resolvePostsPageTitle(siteTheme, typed.posts_page_title)
-    const canonicalPath =
-      getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`
+    const baseUrl = await getCanonicalBaseUrl(typed.id)
+    const canonicalPath = baseUrl
+      ? ''
+      : (getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`)
     const blogPath = `${canonicalPath}/blog`
     const title = `${pageTitle} | ${studioName}`
     const description = `הבלוג של ${studioName}`
+    const logoIconUrl =
+      getBrandingFaviconPublicUrl(typed.id, typed.logo_url) ??
+      getBrandingPublicMediaUrl(typed.logo_url)
 
     return {
       title,
       description,
-      alternates: { canonical: buildCanonicalUrl(blogPath) },
+      ...(logoIconUrl
+        ? {
+            icons: {
+              icon: logoIconUrl,
+              shortcut: logoIconUrl,
+              apple: logoIconUrl,
+            },
+          }
+        : {}),
+      alternates: { canonical: buildCanonicalUrl(blogPath, baseUrl) },
       openGraph: buildPublicOpenGraph({
         title,
         description,
         canonicalPath: blogPath,
         imageUrl: null,
+        baseUrl,
       }),
     }
   } catch {

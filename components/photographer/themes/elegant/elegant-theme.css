@@ -1,0 +1,81 @@
+/*
+ * elegant-theme.css — shared tokens for the elegant theme, ported 1:1 from
+ * the `:root`/`body` block + reveal-on-scroll/image-reveal rules in
+ * lib/homepage-themes/elegant.ts. Scoped under .theme-elegant (applied to the
+ * theme's outer wrapper) instead of real :root, so it can't leak into pages
+ * rendered with a different theme — same pattern as classic-theme.css.
+ *
+ * Font loading (Playfair Display / Heebo / Frank Ruhl Libre, currently a
+ * <link> tag in the old <head>) still needs to move to next/font at the
+ * layout level once this theme is actually wired up — not done here since a
+ * single component isn't the right place to load page-level fonts.
+ *
+ * Same for `scroll-behavior: smooth` (was on the old <body>) — same-page
+ * anchor links (hero CTA, nav items) rely on it for the smooth scroll, but it
+ * has to be set on the actual scrolling element (html), which only the
+ * theme's root layout owns — not a leaf component.
+ */
+
+.theme-elegant {
+  --headline-font: 'Playfair Display', serif;
+  --about-title-font: 'Frank Ruhl Libre', serif;
+  font-family: 'Heebo', sans-serif;
+  background-color: #fafaf8;
+  color: #0f0f0d;
+  /* Elegant's own source body has this (`overflow-x: hidden`, elegant.ts
+   * ~line 224) but it was never carried over to this wrapper — see
+   * classic-theme.css's identical note for why it matters: without it,
+   * shared/TestimonialsMarquee's and TestimonialsCarousel's `.bleed`
+   * full-viewport-width trick overflows the page by the scrollbar's width. */
+  overflow-x: clip;
+}
+
+/* .reveal-on-scroll / .active — elegant's per-section fade-in-on-scroll,
+   equivalent to classic's .reveal/.active but under elegant's own class
+   names (the old renderer's global IntersectionObserver toggled `active` on
+   `.reveal-on-scroll` elements). */
+.theme-elegant .reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 1s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-elegant .reveal-on-scroll.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* .stagger-reveal / .is-visible — the faster per-card fade used by packages,
+   testimonials header, FAQ header, posts header (HOMEPAGE_STAGGER_REVEAL_CSS
+   in lib/homepage-stagger-reveal.ts, shared across every theme). */
+.theme-elegant .stagger-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.theme-elegant .stagger-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* .image-reveal / .active — the hero/about zoomed-image reveal
+   (lib/homepage-themes/elegant.ts's `.image-reveal` rule). */
+.theme-elegant .image-reveal {
+  overflow: hidden;
+  position: relative;
+}
+
+.theme-elegant .image-reveal img {
+  transition: transform 1.8s cubic-bezier(0.2, 0, 0.2, 1);
+  transform: scale(1.15);
+}
+
+.theme-elegant .image-reveal.active img {
+  transform: scale(1);
+}

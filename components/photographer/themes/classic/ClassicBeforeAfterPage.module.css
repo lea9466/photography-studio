@@ -1,0 +1,85 @@
+/*
+ * ClassicBeforeAfterPage.module.css — 1:1 port of the `.ba-page` /
+ * `.ba-header*` / `.ba-list` rules from REVEAL_LENS_CSS in
+ * lib/public-before-after-html.ts. Per-pair rules live in
+ * ClassicBeforeAfterComparisonSection.module.css instead — this file only
+ * owns the page shell and the grid `.ba-list` establishes for every pair's
+ * `subgrid` to line up against.
+ *
+ * `--ba-accent` is the per-studio accent color (h1 + flourish stroke),
+ * applied as a CSS custom property on `.header` — same pattern as
+ * `--hero-accent`/`--about-accent` elsewhere in this theme.
+ */
+
+.page {
+  padding-top: calc(7.25rem + 50px);
+  padding-bottom: 3.5rem;
+}
+
+.header {
+  max-width: 40rem;
+  margin: 0 auto clamp(1.75rem, 4vh, 2.75rem);
+  padding-inline: 1.25rem;
+  text-align: center;
+}
+
+.eyebrow {
+  display: block;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.45;
+}
+
+.title {
+  font-family: var(--headline-font, 'Frank Ruhl Libre', serif);
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  line-height: 1.15;
+  margin: 0;
+  font-weight: 500;
+  color: var(--ba-accent);
+}
+
+.flourish {
+  display: block;
+  width: min(13.5rem, 68%);
+  height: auto;
+  margin: 0.7rem auto 0;
+  overflow: visible;
+}
+
+.flourish path {
+  fill: none;
+  stroke: var(--ba-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.intro {
+  margin: 1rem auto 0;
+  max-width: 32rem;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  opacity: 0.72;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.45fr);
+  column-gap: clamp(32px, 5vw, 72px);
+  row-gap: 0;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 850px) {
+  .list {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+}

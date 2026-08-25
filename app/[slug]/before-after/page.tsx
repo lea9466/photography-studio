@@ -1,8 +1,12 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
+import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
 import { resolveBrandingPath } from '@/lib/branding-urls'
+import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
 import { generatePublicBeforeAfterPageHTML } from '@/lib/public-before-after-html'
 import { resolvePhotoEditDisplayUrl } from '@/lib/photo-edit-image-url'
@@ -14,6 +18,32 @@ import type { PhotoEditComparisonRow as DbRow } from '@/lib/types/database.types
 import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { buildBeforeAfterViewModel } from '@/lib/public-site/adapters/build-before-after-view-model'
+import {
+  toClassicBeforeAfterPageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicBeforeAfterShell } from '@/components/photographer/react-site/ClassicBeforeAfterShell'
+import {
+  toDarkBeforeAfterPageProps,
+  toDarkSiteFooterProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
+import { DarkBeforeAfterShell } from '@/components/photographer/react-site/DarkBeforeAfterShell'
+import {
+  toElegantBeforeAfterPageProps,
+  toElegantSiteFooterProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import { ElegantBeforeAfterShell } from '@/components/photographer/react-site/ElegantBeforeAfterShell'
+import {
+  toModernBeforeAfterPageProps,
+  toModernSiteFooterProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import { ModernBeforeAfterShell } from '@/components/photographer/react-site/ModernBeforeAfterShell'
 
 interface BeforeAfterPageProps {
   params: Promise<{ slug: string }>
@@ -83,11 +113,20 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
   const studioName = typed.studio_name ?? 'Studio Gallery'
-  const homepagePath = resolveHomepagePath(typed.slug, typed.studio_name)
-  const canonicalPath = getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`
-  const beforeAfterPath = `${canonicalPath}/before-after`
-  const blogPath = `${canonicalPath}/blog`
-  const portfolioPath = `${canonicalPath}/portfolio`
+  // See app/[slug]/page.tsx for why: on a photographer's connected custom
+  // domain, nav links built from the real slug path would 404 there (only a
+  // small fixed set of tenant-relative paths is recognized — see
+  // lib/domains/rewrite.ts), so an empty base is used for concatenation
+  // instead. canonicalPath itself (used below for the canonical/OG tags via
+  // generateMetadata, computed separately) is unaffected.
+  const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+  const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(typed.slug, typed.studio_name)
+  const navBasePath = isTenantDomain
+    ? ''
+    : (getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`)
+  const beforeAfterPath = `${navBasePath}/before-after`
+  const blogPath = `${navBasePath}/blog`
+  const portfolioPath = `${navBasePath}/portfolio`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
   const hasFaq = sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
   const language = resolveSiteLanguage(typed.site_language)
@@ -113,6 +152,69 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
 
   const galleryLayoutMode =
     typed.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
+
+  if (await isReactPublicSiteEnabled()) {
+    const viewModel = buildBeforeAfterViewModel({
+      photographer: {
+        studio_name: typed.studio_name,
+        name: typed.name,
+        logo_url: logoUrl,
+        should_color_logo: typed.should_color_logo,
+        accent_color: typed.accent_color,
+        heading_font: typed.heading_font,
+        about_title_font: typed.about_title_font,
+        site_language: typed.site_language,
+        gallery_layout_mode: typed.gallery_layout_mode,
+        before_after_display_style: typed.before_after_display_style,
+      },
+      items: visibleItems,
+      homepagePath,
+      blogPath,
+      portfolioPath,
+      beforeAfterPath,
+      hasFaq,
+      hasPackages: (packageCount ?? 0) > 0,
+      hasBlog: (postCount ?? 0) > 0,
+    })
+
+    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+      return (
+        <DarkBeforeAfterShell
+          headerProps={toDarkSiteHeaderProps(viewModel)}
+          footerProps={toDarkSiteFooterProps(viewModel)}
+          pageProps={toDarkBeforeAfterPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'elegant') {
+      return (
+        <ElegantBeforeAfterShell
+          headerProps={toElegantSiteHeaderProps(viewModel)}
+          footerProps={toElegantSiteFooterProps(viewModel)}
+          pageProps={toElegantBeforeAfterPageProps(viewModel)}
+        />
+      )
+    }
+
+    if (typed.selected_theme === 'modern') {
+      return (
+        <ModernBeforeAfterShell
+          headerProps={toModernSiteHeaderProps(viewModel)}
+          footerProps={toModernSiteFooterProps(viewModel)}
+          pageProps={toModernBeforeAfterPageProps(viewModel)}
+        />
+      )
+    }
+
+    return (
+      <ClassicBeforeAfterShell
+        headerProps={toClassicSiteHeaderProps(viewModel)}
+        footerProps={toClassicSiteFooterProps(viewModel)}
+        pageProps={toClassicBeforeAfterPageProps(viewModel)}
+      />
+    )
+  }
 
   const html = generatePublicBeforeAfterPageHTML({
     theme: siteTheme,
@@ -155,20 +257,35 @@ export async function generateMetadata({ params }: BeforeAfterPageProps): Promis
       language === 'en'
         ? `See before and after professional edits by ${studioName}.`
         : `צפו בתמונות לפני ואחרי עיבוד מקצועי של ${studioName}.`
-    const canonicalPath =
-      getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`
+    const baseUrl = await getCanonicalBaseUrl(photographer.id)
+    const canonicalPath = baseUrl
+      ? ''
+      : (getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`)
     const beforeAfterPath = `${canonicalPath}/before-after`
     const title = `${pageTitle} | ${studioName}`
+    const logoIconUrl =
+      getBrandingFaviconPublicUrl(photographer.id, photographer.logo_url) ??
+      getBrandingPublicMediaUrl(photographer.logo_url)
 
     return {
       title,
       description,
-      alternates: { canonical: buildCanonicalUrl(beforeAfterPath) },
+      ...(logoIconUrl
+        ? {
+            icons: {
+              icon: logoIconUrl,
+              shortcut: logoIconUrl,
+              apple: logoIconUrl,
+            },
+          }
+        : {}),
+      alternates: { canonical: buildCanonicalUrl(beforeAfterPath, baseUrl) },
       openGraph: buildPublicOpenGraph({
         title,
         description,
         canonicalPath: beforeAfterPath,
         imageUrl: null,
+        baseUrl,
       }),
     }
   } catch {

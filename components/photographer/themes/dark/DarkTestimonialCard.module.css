@@ -1,0 +1,164 @@
+/*
+ * DarkTestimonialCard.module.css — 1:1 port of the shared `.testimonial-thumb-card`
+ * base rules plus the `.testimonial-thumb-card--dark` modifier (both in
+ * TESTIMONIAL_THUMB_CARD_CSS, lib/homepage-themes/shared-styles.ts, ~line 3437
+ * and ~3603) — same base structure as ClassicTestimonialCard, dark-recolored.
+ *
+ * The dark modifier drops the classic modifier's `border-radius: 2px` (dark's
+ * tailwind config sets every radius token to 0px — `borderRadius: { DEFAULT:
+ * "0px", lg: "0px", xl: "0px", full: "0px" }` in lib/homepage-themes/dark.ts)
+ * — so this card stays sharp-cornered, unlike classic's.
+ *
+ * Title/body/footer text classes in the source
+ * (generateTestimonialThumbCard's classic/modern/dark branch) are
+ * `font-headline-sm text-headline-sm text-on-surface` /
+ * `font-body-lg text-body-lg text-on-surface-variant` /
+ * `font-label-sm text-label-sm text-primary font-bold`. Dark's own
+ * tailwind.config `fontSize` extend (dark.ts ~line 1209) defines
+ * `headline-sm` and `label-sm` but has no `body-lg` entry at all — an
+ * unresolved utility class in the live Tailwind-CDN renderer, which silently
+ * emits no rule for it rather than erroring. Treated the same way the
+ * ClassicContactSection.module.css doc comment treats another vestigial
+ * source quirk: not silently "fixed" with an invented size, but not left
+ * totally unstyled either — this uses the same Heebo body font already
+ * governing every other in-theme paragraph, at a plain default size, and is
+ * flagged here for review rather than asserted as intentional.
+ */
+
+.card {
+  position: relative;
+  background: #1c1c26;
+  width: 100%;
+  max-width: min(100%, 24rem);
+  min-width: 14rem;
+  min-height: 8.5rem;
+  align-self: stretch;
+  flex: 0 1 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 2.15rem 1.5rem 2.15rem 5.25rem;
+  margin-top: 0.85rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  color: rgba(255, 255, 255, 0.92);
+  font-style: italic;
+}
+
+@media (max-width: 767px) {
+  .card {
+    flex: 0 1 100%;
+    max-width: 100%;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card {
+    flex: 0 1 calc(50% - 0.75rem);
+    max-width: calc(50% - 0.75rem);
+    width: calc(50% - 0.75rem);
+    min-width: 0;
+    padding: 1.85rem 1.25rem 1.85rem 4.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card {
+    flex: 0 1 calc((100% - 5.5rem) / 3);
+    max-width: min(24rem, calc((100% - 5.5rem) / 3));
+    width: auto;
+    min-width: 0;
+  }
+}
+
+.quote {
+  position: absolute;
+  top: 0;
+  right: 1.35rem;
+  left: auto;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1c1c26;
+  padding: 0 0.75rem;
+  line-height: 1;
+  z-index: 3;
+  opacity: 0.88;
+  /* `!important` needed here specifically: Google's Material Symbols
+     stylesheet (loaded via <link> for the `material-symbols-outlined` class)
+     also sets `font-size: 24px` on that same class, and depending on dev/prod
+     stylesheet injection order that rule can land after this module's own
+     rule in the cascade, silently shrinking the glyph back to 24px despite
+     this rule being present. */
+  font-size: 2.85rem !important;
+  font-style: normal;
+  pointer-events: none;
+}
+
+.thumb {
+  position: absolute;
+  left: -1.15rem;
+  bottom: -0.85rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  overflow: hidden;
+  border: 3px solid #1c1c26;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+  background: #12121b;
+}
+
+.thumbImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+  margin-top: 0.35rem;
+  min-height: 0;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 1rem;
+  font-style: normal;
+}
+
+.text {
+  flex: 1 1 auto;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.62;
+  margin: 0 0 1.5rem;
+}
+
+.footer {
+  margin-top: auto;
+  flex-shrink: 0;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-style: normal;
+}

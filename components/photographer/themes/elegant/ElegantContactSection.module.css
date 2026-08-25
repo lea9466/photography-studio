@@ -1,0 +1,225 @@
+/*
+ * ElegantContactSection.module.css — 1:1 port of the `id="contact"` block's
+ * wrapper CSS in lib/homepage-themes/elegant.ts:
+ *  - base section: `pt-32 pb-12 bg-[#1c1b1b] px-margin-mobile md:px-margin-desktop`
+ *  - `.elegant-contact-section--has-bg` + its responsive overrides (line ~761)
+ *  - `sectionBgCss`'s `.contact-section-bg*` layers (generate-homepage-html.ts),
+ *    simplified here to a single #1c1b1b fade (elegant always calls
+ *    `contactBgLayers('#1c1b1b', '#1c1b1b')` — both fade colors are the same,
+ *    unlike classic's two-tone fade)
+ *  - `.elegant-contact-details*` (elegant.ts's own <style> block, ~line 244)
+ *
+ * The exact mobile/desktop padding choreography of the has-bg variant is
+ * simplified to the common cases (padding resets, static positioning on
+ * desktop) rather than reproducing every breakpoint rule 1:1 — flagged here
+ * since the no-background-image path (the common case) is the one built to
+ * full fidelity.
+ */
+
+.section {
+  width: 100%;
+  padding-top: 8rem;
+  padding-bottom: 3rem;
+  background-color: #1c1b1b;
+  color: #ffffff;
+  padding-inline: 16px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-inline: 64px;
+  }
+}
+
+.hasBg {
+  padding-top: 0;
+  padding-inline: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.formArea {
+  padding-inline: 16px;
+}
+
+@media (min-width: 768px) {
+  .formArea {
+    padding-inline: 64px;
+  }
+}
+
+.formAreaWithBg {
+  position: relative;
+  overflow: hidden;
+  padding-top: 8rem;
+  padding-bottom: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .formAreaWithBg {
+    position: static;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+}
+
+.bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.bgDesktop {
+  display: none;
+  opacity: 0.4;
+  filter: brightness(1.45) saturate(0.68) contrast(0.9);
+}
+
+.bgMobile {
+  display: block;
+  opacity: 0.22;
+  filter: brightness(1.65) saturate(0.62) contrast(0.88);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.06) 52%, transparent 84%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.06) 52%, transparent 84%);
+}
+
+@media (min-width: 768px) {
+  .bgDesktop {
+    display: block;
+  }
+  .bgMobile {
+    display: none;
+  }
+}
+
+.bgOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to bottom, color-mix(in srgb, #1c1b1b 58%, transparent) 0%, #1c1b1b 100%);
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 300;
+  opacity: 0.6;
+  margin: 0.5rem 0 0;
+}
+
+.noEmail {
+  text-align: center;
+  padding-block: 5rem;
+  opacity: 0.4;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1.125rem;
+}
+
+.detailsArea {
+  max-width: 56rem;
+  margin-inline: auto;
+  padding-inline: 16px;
+  margin-top: 4rem;
+  padding-block: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .detailsArea {
+    padding-inline: 64px;
+  }
+}
+
+/* Source (elegant.ts) only fills this solid below 1024px, so the background
+   image shows through behind the details row at desktop — a single
+   unconditional background-color here (as a previous version of this file
+   had) made the details area opaque at every width, hiding the desktop
+   background image entirely. */
+.detailsAreaWithBg {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1023px) {
+  .detailsAreaWithBg {
+    background-color: #1c1b1b;
+    margin-top: 0;
+    padding-top: 0;
+  }
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+  backdrop-filter: blur(2px);
+}
+
+@media (min-width: 768px) {
+  .details {
+    gap: 4rem;
+  }
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 8.75rem;
+  text-align: center;
+}
+
+.detailIcon {
+  font-size: 1.75rem;
+}
+
+.detailLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.4;
+}
+
+.detailValue {
+  font-weight: 300;
+  opacity: 0.75;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 14rem;
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a.detailValue:hover {
+  opacity: 1;
+}

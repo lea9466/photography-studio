@@ -1,0 +1,75 @@
+/*
+ * dark-theme.css — shared tokens for the dark theme, ported 1:1 from the
+ * :root/body block in lib/homepage-themes/dark.ts (internally the source
+ * still calls this theme "bold" in some shared CSS/class names —
+ * `.theme-bold`, `bold-section-eyebrow`, `BOLD_PACKAGES_ROWS_CSS` — this
+ * file is scoped under `.theme-dark` instead to match this rebuild's own
+ * `theme === 'dark'` naming convention used everywhere else).
+ *
+ * Unlike classic (light background, dark text), dark is inverted: a fixed
+ * near-black background/light foreground pair that is NOT per-studio (only
+ * the accent color is dynamic) — so those base colors live here as plain
+ * hex, matching the "fixed per-theme colors become plain CSS" convention.
+ *
+ * Font loading (Bebas Neue / Frank Ruhl Libre / Rubik / Space Grotesk /
+ * Heebo) and `scroll-behavior: smooth` still need to move to next/font at
+ * the real theme-layout level once one exists — see classic-theme.css's
+ * identical note.
+ */
+
+.theme-dark {
+  --headline-font: 'Space Grotesk', sans-serif;
+  --about-title-font: 'Rubik', 'Heebo', sans-serif;
+  --dark-bg: #121217;
+  --dark-surface: #1a1a22;
+  --dark-surface-container-low: #1e1e26;
+  --dark-surface-dim: #0d0d12;
+  --dark-on-surface: #f5f5f0;
+  --dark-on-surface-variant: #b8b8c0;
+  --dark-outline-variant: #3d3d4d;
+  background-color: var(--dark-bg);
+  color: var(--dark-on-surface);
+  font-family: 'Heebo', sans-serif;
+  /* Dark's own source body has this (`overflow-x: hidden`, dark.ts ~line 222)
+   * but it was never carried over to this wrapper — see classic-theme.css's
+   * identical note for why it matters: without it, shared/TestimonialsMarquee's
+   * and TestimonialsCarousel's `.bleed` full-viewport-width trick overflows
+   * the page by the scrollbar's width. */
+  overflow-x: clip;
+}
+
+.theme-dark .reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-dark .reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-dark .stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
+}
+
+.theme-dark .reveal.active .stagger-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-dark .stagger-item:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.theme-dark .stagger-item:nth-child(2) {
+  transition-delay: 0.2s;
+}
+.theme-dark .stagger-item:nth-child(3) {
+  transition-delay: 0.3s;
+}

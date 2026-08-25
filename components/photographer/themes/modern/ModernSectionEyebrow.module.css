@@ -1,0 +1,27 @@
+/*
+ * ModernSectionEyebrow.module.css — 1:1 port of .modern-section-eyebrow from
+ * the <style> block in lib/homepage-themes/modern.ts (plus the resolved
+ * override from MODERN_SECTION_ALIGN_CSS, which wins in the original
+ * cascade). Always LTR/left-aligned/uppercase regardless of site language —
+ * that's the source's actual behavior, not a bug introduced here.
+ */
+
+.eyebrow {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  direction: ltr;
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--modern-accent, #b8953f);
+  line-height: 1.2;
+}
+
+.eyebrowOnDark {
+  color: rgba(255, 255, 255, 0.72);
+}

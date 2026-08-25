@@ -1,0 +1,192 @@
+/*
+ * ClassicFaqSection.module.css — 1:1 port of the classic FAQ section CSS:
+ *  - `.faq-section__header` / `__divider` (theme-classic block in
+ *    lib/homepage-themes/shared-styles.ts, ~line 575)
+ *  - `.faq-magazine-*` grid/layout rules for theme-classic
+ *    (magazineFaqGridCss() in shared-styles.ts)
+ *  - the `.stagger-reveal`/`.is-visible` fade-in (lib/homepage-stagger-reveal.ts)
+ *    used by the old renderer's header wrapper, ported here as
+ *    .header/.headerVisible and driven by ClassicFaqSection.tsx's own
+ *    useRevealOnScroll instance instead of a global querySelectorAll scan.
+ *
+ * Grid-column placement for the featured item (and the nth-child masonry
+ * offset) is expressed via a `data-featured` attribute on the <article>
+ * (see ClassicFaqMagazineItem.tsx) rather than a cross-module class
+ * reference, since CSS Modules scope class names per-file.
+ */
+
+.section {
+  width: 100%;
+}
+
+.header {
+  width: 100%;
+  text-align: left !important;
+  margin-bottom: 2.5rem;
+  padding-inline: 2%;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.header span,
+.header h2,
+.header p {
+  text-align: left !important;
+}
+
+.headerVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: #5a504a;
+  margin-top: 1rem;
+}
+
+.magazineWrap {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+.grid {
+  display: grid;
+  direction: rtl;
+  grid-template-columns: 1fr;
+  gap: 50px 60px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid > article[data-featured='true'] {
+    grid-column: 1 / -1;
+  }
+
+  .grid > article:not([data-featured='true']):nth-child(2n + 3) {
+    margin-top: 2.5rem;
+  }
+}
+
+.layoutWithImage {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
+  direction: rtl;
+  align-items: start;
+  width: 100%;
+}
+
+.content {
+  min-width: 0;
+  width: 100%;
+}
+
+.feature {
+  min-width: 0;
+  width: 100%;
+  align-self: stretch;
+  min-height: 100%;
+}
+
+.featureImage {
+  width: 100%;
+  height: 100%;
+  min-height: clamp(20rem, 52vh, 36rem);
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.gridStacked {
+  grid-template-columns: 1fr;
+  gap: 50px 0;
+}
+
+.gridStacked > article[data-featured='true'] {
+  grid-column: auto;
+}
+
+.gridStacked > article:not([data-featured='true']):nth-child(2n + 3) {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .withImage {
+    position: relative;
+    width: 100%;
+    background-image: var(--faq-section-bg-image);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    padding: 40px 20px !important;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .withImage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(251, 249, 244, 0.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .withImage > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .withImage .layoutWithImage {
+    display: block;
+    width: 100%;
+    gap: 0;
+  }
+
+  .withImage .feature {
+    display: none;
+  }
+
+  .withImage .magazineWrap {
+    padding-inline: 0;
+    width: 100%;
+  }
+
+  .withImage .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    width: 100%;
+  }
+
+  .withImage .grid article,
+  .withImage .grid h3,
+  .withImage .grid p {
+    text-align: right;
+  }
+}

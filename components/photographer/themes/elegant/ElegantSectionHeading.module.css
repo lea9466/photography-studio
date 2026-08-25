@@ -1,0 +1,105 @@
+/*
+ * ElegantSectionHeading.module.css — 1:1 port of the base `.elegant-section-heading*`
+ * rules from lib/homepage-themes/elegant.ts (the <style> block's own CSS, not
+ * a runtime-tailwind-config value), plus the three alignment variants each
+ * homepage section actually uses (see ElegantSectionHeadingAlign in the
+ * .tsx file for which section calls which):
+ *   - natural (default): the About section's plain `elegantSectionHeading()`
+ *     call with no options — a shrink-to-fit inline-grid block.
+ *   - start: the "flush left with gallery grid" override applied to the
+ *     galleries/recent-photos/posts/FAQ/testimonials headers
+ *     (`.theme-elegant .homepage-gallery-header .elegant-section-heading`,
+ *     `.hp-posts-header--elegant .elegant-section-heading`,
+ *     `elegantFaqSectionCss()`'s `.faq-section__header .elegant-section-heading` /
+ *     `.testimonials-section__header .elegant-section-heading` — all four
+ *     resolve to the same left-docked, RTL-title layout).
+ *   - center: the packages/contact section headers' `{ center: true }` call.
+ */
+
+.heading {
+  display: inline-grid;
+  justify-items: center;
+  align-items: last baseline;
+  max-width: 100%;
+}
+
+.center {
+  display: grid;
+  width: 100%;
+  text-align: center;
+}
+
+.start {
+  display: inline-grid;
+  width: auto;
+  max-width: 100%;
+  margin-inline-end: auto;
+  justify-items: start;
+  justify-content: start;
+  text-align: left;
+}
+
+.watermark,
+.title {
+  grid-area: 1 / 1;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.watermark {
+  font-family: 'Heebo', sans-serif;
+  font-size: clamp(1.5rem, 5.4vw, 4rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eh-accent);
+  opacity: 0.14;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+.onDark .watermark {
+  opacity: 0.2;
+}
+
+.title {
+  position: relative;
+  z-index: 1;
+}
+
+.start .watermark,
+.start .title {
+  text-align: left;
+  justify-self: start;
+}
+
+.start .title {
+  direction: rtl;
+}
+
+@media (max-width: 767px) {
+  .heading {
+    display: grid;
+    width: 100%;
+    text-align: center;
+  }
+
+  .watermark {
+    font-size: clamp(2.35rem, 9vw, 4rem);
+    letter-spacing: 0.03em;
+  }
+
+  .start {
+    text-align: left;
+    justify-items: start;
+  }
+
+  .start .watermark,
+  .start .title {
+    text-align: left;
+    justify-self: start;
+  }
+}

@@ -1,0 +1,225 @@
+/*
+ * DarkContactSection.module.css — 1:1 port of:
+ *  - the `id="contact"` wrapper (`w-full pb-xl` -> padding-bottom:64px) and
+ *    `.bold-contact-form-block`/`.contact-section-has-bg` bg-image layers
+ *    (sectionBgCss/sectionBgLayers in generate-homepage-html.ts, same
+ *    pattern ClassicContactSection.module.css already ports, recolored for
+ *    dark's #120f0d/#1a1614 fade colors — see `contactBgLayers('#120f0d',
+ *    '#1a1614')` at dark.ts line ~1515), and
+ *  - `.bold-contact-details`/`.bold-contact-details__*`
+ *    (lib/homepage-themes/dark.ts's inline <style>, ~line 791) for the
+ *    icon/label/value row.
+ */
+
+.section {
+  width: 100%;
+  padding-bottom: 64px;
+}
+
+.formBlock {
+  padding-top: 32px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .formBlock {
+    padding-top: 64px;
+  }
+}
+
+.formBlock:not(.hasBg) {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 32px;
+}
+
+.hasBg {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-bottom: 40px;
+}
+
+@media (min-width: 768px) {
+  .hasBg {
+    padding-bottom: 56px;
+  }
+}
+
+.bg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.bgDesktop {
+  display: none;
+  opacity: 0.48;
+  filter: grayscale(6%) brightness(1.42) contrast(0.9) saturate(0.66);
+}
+
+.bgMobile {
+  display: block;
+  opacity: 0.48;
+  filter: grayscale(6%) brightness(1.42) contrast(0.9) saturate(0.66);
+}
+
+@media (min-width: 768px) {
+  .bgDesktop {
+    display: block;
+  }
+  .bgMobile {
+    display: none;
+  }
+}
+
+.bgOverlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: -50vw;
+  z-index: 0;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    #121217 0%,
+    rgba(18, 18, 23, 0.55) 14%,
+    rgba(18, 18, 23, 0.02) 42%,
+    rgba(18, 18, 23, 0.18) 100%
+  );
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding-inline: 32px;
+  box-sizing: border-box;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0 0 20px;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  color: rgba(245, 245, 240, 0.7);
+  max-width: 36rem;
+  margin: 0 auto 64px;
+}
+
+.formWrap {
+  width: 100%;
+}
+
+.details {
+  margin-top: 64px;
+  margin-inline: auto;
+  max-width: 48rem;
+  padding: 40px 32px;
+  background-color: #121217;
+  position: relative;
+  z-index: 2;
+}
+
+@media (min-width: 768px) {
+  .details {
+    padding-inline: 48px;
+  }
+}
+
+.detailsBlockWrap {
+  position: relative;
+  z-index: 2;
+  background-color: #121217;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 32px;
+  box-sizing: border-box;
+}
+
+.detailsRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .detailsRow {
+    gap: 4rem;
+  }
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 8.75rem;
+  text-align: center;
+}
+
+.detailIcon {
+  font-size: 1.75rem;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.detailLabel {
+  font-family: 'Heebo', sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: #f5f5f0;
+  opacity: 0.45;
+}
+
+.detailValue {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 400;
+  opacity: 0.75;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  max-width: 14rem;
+  color: #f5f5f0;
+  transition: color 0.2s ease;
+}
+
+a.detailValue:hover {
+  color: var(--dark-contact-details-accent, #f5f5f0);
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .content {
+    padding-inline: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .details {
+    padding-inline: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .detailsBlockWrap {
+    padding-inline: clamp(1rem, 4vw, 1.5rem);
+  }
+}

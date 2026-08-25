@@ -1,0 +1,110 @@
+/*
+ * DarkContactForm.module.css — 1:1 port of the inline utility classes on
+ * dark's `<form>` in lib/homepage-themes/dark.ts (~line 1525): underline-only
+ * fields (`border-b border-outline-variant`, no box/background), `py-md
+ * px-sm` -> padding:20px 12px (dark's tailwind spacing extend), placeholder
+ * at `white/20`, and the uppercase/tracking-widest submit button
+ * (`px-xxl py-md` -> padding:20px 120px).
+ */
+
+.form {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+
+.field {
+  border-bottom: 1px solid #3d3d4d;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #f5f5f0;
+  font-family: 'Heebo', sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  padding: 20px 12px;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: none;
+}
+
+.privacyConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: start;
+}
+
+.privacyCheckbox {
+  margin-top: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.privacyText {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(245, 245, 240, 0.75);
+  line-height: 1.6;
+}
+
+.privacyLink {
+  color: var(--dark-contact-accent, inherit);
+  text-decoration: underline;
+}
+
+.privacyLink:hover {
+  opacity: 0.8;
+}
+
+.submitRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.submit {
+  color: #f5f5f0;
+  padding: 20px 120px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.submit:hover {
+  filter: brightness(0.9);
+}
+
+.submit:active {
+  transform: scale(0.95);
+}
+
+@media (max-width: 767px) {
+  .submit {
+    padding-inline: 3rem;
+  }
+}

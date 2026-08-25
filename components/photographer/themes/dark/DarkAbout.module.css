@@ -1,0 +1,106 @@
+/*
+ * DarkAbout.module.css — 1:1 port of the "About" section CSS from
+ * lib/homepage-themes/dark.ts (about-* rules, `.theme-bold .about-title`
+ * specifically — dark's title is a hollow stroke-only look, not a solid
+ * fill with an underline like classic's).
+ */
+
+.inner {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+  width: 100%;
+}
+
+.glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 9999px;
+  filter: blur(58px);
+  top: 0;
+  left: 0;
+  width: 440px;
+  height: 440px;
+  transform: translate(-58%, -28%);
+}
+
+.title {
+  font-family: var(--about-title-font, 'Rubik', 'Heebo', sans-serif);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.5px var(--about-accent);
+  paint-order: stroke fill;
+  text-shadow: 0 4px 12px rgba(var(--about-accent-rgb), 0.25);
+}
+
+.bodyPrimary {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.9;
+  color: rgba(245, 245, 240, 0.82);
+  white-space: pre-line;
+}
+
+.bodySecondary {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  color: rgba(245, 245, 240, 0.65);
+  white-space: pre-line;
+}
+
+.statNumber {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  line-height: 1;
+  font-weight: 400;
+  color: #f5f5f0;
+}
+
+.statLabel {
+  font-family: 'Heebo', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(245, 245, 240, 0.42);
+  margin-top: 10px;
+}
+
+.imageQuote {
+  background: rgba(255, 255, 255, 0.97);
+  padding: 22px 26px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+}
+
+.imageQuoteLine {
+  width: 36px;
+  height: 1px;
+  background: var(--about-accent);
+  margin: 14px 0 10px auto;
+}
+
+.imageQuoteName {
+  font-family: 'Heebo', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--about-accent);
+}
+
+@media (max-width: 1023px) {
+  .grid {
+    justify-items: center;
+    text-align: center;
+  }
+  .gridCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+  }
+}

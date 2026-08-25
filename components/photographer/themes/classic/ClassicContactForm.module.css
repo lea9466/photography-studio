@@ -1,0 +1,135 @@
+/*
+ * ClassicContactForm.module.css — 1:1 port of the form-related rules in
+ * CLASSIC_CONTACT_FORM_CSS (lib/homepage-themes/shared-styles.ts). Layout
+ * utility classes (spacing, borders, colors) that map cleanly onto real
+ * Tailwind classes are applied inline in the component instead — this file
+ * only holds what Tailwind can't express directly: descendant/child
+ * selectors, the privacy-consent grid, and the material-symbols icon
+ * variation settings.
+ */
+
+.form {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+.form > *:not(.privacyConsent) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* --contact-accent is set on ClassicContactSection's root (the studio's
+   accent color) and inherited down into the form. */
+.form input:focus,
+.form textarea:focus {
+  border-color: var(--contact-accent);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.field label {
+  width: 100%;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #5a504a;
+}
+
+.messageBlock {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0;
+  margin-bottom: 1.5rem;
+  overflow: visible !important;
+}
+
+.messageBlock > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.privacyConsent {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  column-gap: 0.5rem;
+  align-items: start !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.privacyCheckbox {
+  width: 1rem !important;
+  height: 1rem !important;
+  min-width: 1rem !important;
+  min-height: 1rem !important;
+  max-width: 1rem !important;
+  max-height: 1rem !important;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  border-radius: 2px;
+  padding: 0;
+  box-sizing: border-box;
+  appearance: auto;
+}
+
+.privacyConsent > p {
+  flex: none !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0;
+  margin: 0;
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word;
+}
+
+.privacyConsent label,
+.privacyConsent a {
+  display: inline !important;
+  white-space: normal !important;
+}
+
+/* Material Symbols base rule ships with the Google Fonts stylesheet that
+   still needs to be loaded at the layout level (same gap noted in
+   classic-theme.css for Heebo/Frank Ruhl Libre/Great Vibes) — this only
+   ports the extra variation-settings override the old <head> added on top
+   of it. */
+.icon {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}

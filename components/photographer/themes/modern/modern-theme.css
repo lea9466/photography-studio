@@ -1,0 +1,87 @@
+/*
+ * Shared tokens for the modern theme — ported 1:1 from the :root/body block
+ * in lib/homepage-themes/modern.ts. Scoped under .theme-modern (applied to
+ * the theme's outer wrapper) instead of real :root, so it can't leak into
+ * pages rendered with a different theme — same pattern as
+ * classic/classic-theme.css.
+ *
+ * Font loading (Space Grotesk / Rubik / Heebo, currently a <link> tag in the
+ * old <head>) still needs to move to next/font at the layout level once this
+ * theme is actually wired up — not done here, see classic-theme.css's
+ * identical note. Same for `scroll-behavior: smooth`.
+ */
+
+.theme-modern {
+  --headline-font: 'Space Grotesk', 'Heebo', sans-serif;
+  --about-title-font: 'Rubik', 'Heebo', sans-serif;
+  font-family: 'Heebo', sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  /* See classic-theme.css's identical note — modern's own source body also
+   * never had this (unlike elegant/dark's), which lets the testimonials
+   * `.bleed` full-viewport-width trick overflow the page horizontally by
+   * the scrollbar's width. Added for the same reason. */
+  overflow-x: clip;
+}
+
+/* React port of HOMEPAGE_STAGGER_REVEAL_CSS (lib/homepage-stagger-reveal.ts)
+   — used by packages/testimonials/faq entrance animation via
+   useRevealOnScroll(threshold:0.12, rootMargin:'0px 0px -8% 0px', delayMs).
+   Kept as a theme-scoped utility class (not a CSS module) since it's reused
+   by several modern-only components the same way `.reveal`/`.stagger-item`
+   are reused across classic's sections. */
+.theme-modern .stagger-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.theme-modern .stagger-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* React port of the `.animate-reveal`/`.delay-*` classes (modern.ts) used by
+   the hero/about content and stats cards — these are above the fold, so they
+   animate in on mount rather than on scroll-into-view. */
+@keyframes modernRevealUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.theme-modern .animate-reveal {
+  opacity: 0;
+}
+
+.theme-modern .animate-reveal.is-mounted {
+  animation: modernRevealUp 0.6s cubic-bezier(0.2, 0, 0.2, 1) forwards;
+}
+
+.theme-modern .animate-reveal.delay-100.is-mounted {
+  animation-delay: 100ms;
+}
+.theme-modern .animate-reveal.delay-200.is-mounted {
+  animation-delay: 200ms;
+}
+.theme-modern .animate-reveal.delay-300.is-mounted {
+  animation-delay: 300ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-modern .stagger-reveal,
+  .theme-modern .animate-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -1,0 +1,76 @@
+/*
+ * ClassicFaqMagazineItem.module.css — 1:1 port of the `.faq-magazine-item*`
+ * rules for the classic theme from magazineFaqGridCss() in
+ * lib/homepage-themes/shared-styles.ts. The dynamic per-studio accent color
+ * (${primaryColor} string-interpolated in the source) is passed in as the
+ * --faq-accent custom property by ClassicFaqMagazineItem.tsx.
+ */
+
+.item {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0 0 clamp(2rem, 4vw, 2.75rem);
+  text-align: right;
+  direction: rtl;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+  min-height: 0;
+}
+
+.itemHeading {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  direction: rtl;
+  text-align: right;
+}
+
+.itemNumber {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--faq-accent);
+  paint-order: stroke fill;
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  line-height: 1;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.itemFeatured .itemNumber {
+  font-size: clamp(2.75rem, 6vw, 3.5rem);
+}
+
+.itemQuestion {
+  font-family: var(--headline-font, 'Heebo'), 'Heebo', sans-serif;
+  font-size: clamp(1rem, 2.3vw, 1.2rem);
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--faq-accent);
+  margin: 0;
+  text-align: right;
+  flex: 1;
+}
+
+.itemFeatured .itemQuestion {
+  font-size: clamp(1.2rem, 2.8vw, 1.45rem);
+}
+
+.itemAnswer {
+  font-family: 'Heebo', sans-serif;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 400;
+  line-height: 1.7;
+  color: #5a504a;
+  margin: 0;
+  text-align: right;
+  white-space: pre-line;
+}

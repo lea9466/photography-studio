@@ -1,0 +1,33 @@
+/*
+ * GallerySectionHeader.module.css — the wrapper positioning that's shared
+ * across themes for the galleries/recent-photos header (part of
+ * UNIFIED_GALLERY_GRID_CSS in lib/homepage-themes/shared-styles.ts:
+ * .homepage-gallery-header / .homepage-gallery-header > div). What actually
+ * goes *inside* the header (eyebrow style, title font) is theme-specific and
+ * passed in as children by the caller.
+ */
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  margin-bottom: 1rem;
+  padding-top: calc(1.5rem + 150px);
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding-top: calc(2rem + 150px);
+  }
+}
+
+.headerInner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  text-align: right;
+  width: 100%;
+}

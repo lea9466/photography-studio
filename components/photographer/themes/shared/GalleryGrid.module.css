@@ -1,0 +1,176 @@
+/*
+ * GalleryGrid.module.css — 1:1 port of UNIFIED_GALLERY_GRID_CSS
+ * (lib/homepage-themes/shared-styles.ts). Genuinely shared across all 4
+ * themes in the old code — generateUnifiedGalleryGridHTML already took a
+ * `themeVariant` param and only ever changed the card corner radius per
+ * theme, everything else was identical — so this ports as one real shared
+ * component instead of being duplicated per theme.
+ */
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  background: var(--gallery-grid-bg, transparent);
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 1s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+  transition-delay: 0.12s;
+  will-change: opacity, transform;
+}
+
+.grid.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    flex-wrap: nowrap;
+    gap: 4px;
+    height: clamp(360px, calc(100svh - 14rem + 30px), 760px);
+  }
+}
+
+.card {
+  position: relative;
+  display: block;
+  flex: 1 1 calc(50% - 1.5px);
+  min-width: 0;
+  height: calc((100vw * 0.96 - 3px) / 2 * 3 / 2);
+  max-height: calc(100svh - 14rem + 30px);
+  transition: flex 0.5s ease;
+  overflow: hidden;
+  background: #eae8e5;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.card:hover,
+.card:focus-visible {
+  flex: 2.5 1 0;
+}
+
+@media (min-width: 768px) {
+  .card {
+    flex: 1 1 0;
+    height: 100%;
+    max-height: none;
+  }
+}
+
+.cardMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.cardImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.15) 45%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.cardContent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.25rem 1rem;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+  pointer-events: none;
+  text-align: right;
+}
+
+.cardLabel {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.cardTitle {
+  font-size: 1.35rem;
+  margin-top: 0.4rem;
+  line-height: 1.1;
+}
+
+@media (min-width: 768px) {
+  .cardTitle {
+    font-size: 1.5rem;
+  }
+}
+
+.cardSubtitle {
+  font-size: 0.8125rem;
+  margin-top: 0.35rem;
+  opacity: 0.9;
+}
+
+.cardCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.cardArrow {
+  transition: transform 0.4s ease;
+}
+
+.card:hover .cardOverlay,
+.card:focus-visible .cardOverlay {
+  opacity: 1;
+}
+
+.card:hover .cardContent,
+.card:focus-visible .cardContent {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card:hover .cardArrow {
+  transform: translateX(-4px);
+}
+
+@media (hover: none) {
+  .cardOverlay {
+    opacity: 0.55;
+  }
+  .cardContent {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

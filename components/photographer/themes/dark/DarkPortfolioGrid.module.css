@@ -1,0 +1,61 @@
+/*
+ * DarkPortfolioGrid.module.css — same CSS-columns masonry as
+ * Classic/ModernPortfolioGrid.module.css (PUBLIC_GALLERY_MASONRY_STYLES in
+ * lib/public-gallery-html.ts is genuinely shared across themes; only the
+ * per-cell bg/radius vary via MASONRY_CELL_STYLE — dark's is #1A1A22, see
+ * this component's doc comment). Kept as dark's own file (not literally
+ * shared) so a future dark-specific tweak doesn't have to fight another
+ * theme's file.
+ */
+
+.grid {
+  column-count: 1;
+  column-gap: 4px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    column-count: 2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    column-count: 3;
+  }
+}
+
+.cell {
+  break-inside: avoid;
+  margin-bottom: 4px;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.82);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.cell.isVisible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.cell img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.7s ease-out;
+  cursor: zoom-in;
+}
+
+.cell:hover img {
+  transform: scale(1.03);
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem 0;
+  color: var(--dark-on-surface-variant, #b8b8c0);
+}

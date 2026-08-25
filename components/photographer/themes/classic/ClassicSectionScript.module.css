@@ -1,0 +1,22 @@
+/*
+ * ClassicSectionScript.module.css — 1:1 port of classicSectionScriptCss()
+ * (lib/photographer-site-chrome.ts): the Great Vibes cursive label used
+ * above every homepage section title in the classic theme ("About",
+ * "Collections", "Latest", "Packages", "Recommend", "Contact", ...). Was
+ * previously duplicated per section in the old renderer's template strings
+ * (and was in fact missing on some pages until Phase 1 unified it into one
+ * function) — here it's one small shared component instead.
+ */
+
+.script {
+  display: block;
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2.25rem, 4.5vw, 3rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  margin: 0 0 0.2rem;
+  direction: ltr;
+  text-align: inherit;
+}

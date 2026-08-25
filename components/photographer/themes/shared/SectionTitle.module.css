@@ -1,0 +1,14 @@
+/*
+ * SectionTitle.module.css — 1:1 port of SITE_SECTION_TITLE_SELECTOR's rule
+ * in lib/fonts.ts (the `.site-section-title` block): the same font, size,
+ * and weight is enforced for every homepage section heading across all 4
+ * themes. Color is intentionally NOT set here — it varies per theme/section
+ * (e.g. white on a dark packages background) and is left to the caller.
+ */
+
+.title {
+  font-family: var(--headline-font, 'Heebo', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+}

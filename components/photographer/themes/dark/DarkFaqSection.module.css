@@ -1,0 +1,166 @@
+/*
+ * DarkFaqSection.module.css — 1:1 port of:
+ *  - the `id="faq"` section's own utility classes in dark.ts
+ *    (`pt-lg pb-xxl` -> padding-top:32px/padding-bottom:120px per dark's
+ *    tailwind spacing extend, `px-lg` -> padding-inline:32px, `mb-xl` ->
+ *    margin-bottom:64px, `mb-sm` -> margin-bottom:12px — see the spacing
+ *    tokens in lib/homepage-themes/dark.ts's tailwind.config, ~line 1179),
+ *  - the `.theme-bold #faq` top/bottom fade overlays and `.faq-section-glow`
+ *    ambient blobs (FAQ_SECTION_GLOW_CSS, lib/homepage-themes/shared-styles.ts),
+ *    ported here as local pseudo-elements/classes instead of ambient
+ *    `.theme-bold`-scoped global selectors (matching the convention already
+ *    used by DarkPackagesSection.module.css's own `.glow`/`.glowLeft`), and
+ *  - `MODERN_FAQ_ACCORDION_CSS`'s `.theme-bold .faq-accordion--modern` /
+ *    `.faq-accordion__column` grid (2 columns desktop, RTL, collapses to 1
+ *    column under 768px).
+ */
+
+.section {
+  position: relative;
+  width: 100%;
+  padding-top: 32px;
+  padding-bottom: 120px;
+  overflow: hidden;
+}
+
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to bottom, #121217 0%, rgba(18, 18, 23, 0.82) 28%, rgba(18, 18, 23, 0.34) 58%, transparent 100%);
+}
+
+.section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 120px;
+  pointer-events: none;
+  z-index: 1;
+  background: linear-gradient(to top, #121217 0%, rgba(18, 18, 23, 0.82) 28%, rgba(18, 18, 23, 0.34) 58%, transparent 100%);
+}
+
+.glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: min(26rem, 48vw);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(72px);
+  opacity: 0.66;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.08) 14%,
+    rgba(0, 0, 0, 0.34) 32%,
+    rgba(0, 0, 0, 0.56) 50%,
+    rgba(0, 0, 0, 0.56) 68%,
+    rgba(0, 0, 0, 0.26) 86%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.08) 14%,
+    rgba(0, 0, 0, 0.34) 32%,
+    rgba(0, 0, 0, 0.56) 50%,
+    rgba(0, 0, 0, 0.56) 68%,
+    rgba(0, 0, 0, 0.26) 86%,
+    transparent 100%
+  );
+}
+
+.glowLeft {
+  left: 0;
+  transform: translateX(-44%);
+}
+
+.glowRight {
+  right: 0;
+  transform: translateX(44%);
+}
+
+/* padding-inline matches Testimonials'/Packages' container padding
+   (clamp(1.5rem, 5vw, 4rem), not FAQ's own source px-lg=32px) so this
+   section's now-left-docked title lines up horizontally with the title of
+   the section directly above it — a further deliberate deviation from
+   source alongside the header-alignment change above, per Lea's request
+   (2026-08-24).
+   width/max-width/margin-inline also added here (matching
+   DarkTestimonialsSection.module.css's `.inner` exactly): the real source
+   caps this container at `max-w-7xl` (1280px) and centers it with `mx-auto`
+   (removed from the .tsx), while Testimonials' own container has no such
+   cap — on any viewport wider than 1280px the two containers' left edges
+   diverged, which is exactly what a wide/desktop screen would show even
+   though both titles were correctly left-aligned *within their own boxes*.
+   Matching Testimonials' uncapped width keeps the two aligned at every
+   screen width, not just up to 1280px. */
+.inner {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+/* Left-aligned header is a deliberate deviation from source (which centers
+   this section specifically) — see DarkFaqSection.tsx's docblock. Mirrors
+   DarkPackagesSection.module.css's own left-docked header treatment. */
+.header {
+  width: 100%;
+  text-align: left !important;
+  margin-bottom: 64px;
+}
+
+.header span,
+.header h2 {
+  text-align: left !important;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0 0 12px;
+  text-align: left;
+  direction: rtl;
+}
+
+.accordion {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 60px;
+  direction: rtl;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  interpolate-size: allow-keywords;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  direction: rtl;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .accordion {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .inner {
+    padding-inline: clamp(1rem, 4vw, 1.5rem);
+  }
+}

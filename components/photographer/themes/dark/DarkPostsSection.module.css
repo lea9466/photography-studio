@@ -1,0 +1,122 @@
+/*
+ * DarkPostsSection.module.css — 1:1 port of `.hp-posts-section` (shared
+ * HOMEPAGE_POSTS_CSS) plus `.hp-posts-header--bold` overrides
+ * (BOLD_HOMEPAGE_POSTS_CSS, lib/homepage-posts-section.ts) — LTR header, row
+ * layout (not row-reversed, container already LTR), no divider.
+ */
+
+.section {
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 0;
+  padding-top: calc(2.5rem + 20px);
+  padding-bottom: clamp(2.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: calc(3.5rem + 20px);
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 2%;
+  margin-bottom: 2.5rem;
+  text-align: left;
+  direction: ltr;
+  box-sizing: border-box;
+  gap: 1rem;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0;
+  text-align: left;
+  direction: rtl;
+}
+
+.more {
+  flex-shrink: 0;
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.moreLink:hover {
+  opacity: 0.75;
+}
+.moreLink:hover .moreArrow {
+  transform: translateX(-5px);
+}
+.moreLink:active {
+  transform: scale(0.96);
+}
+
+.moreArrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .more {
+    align-self: flex-end;
+  }
+}

@@ -5,6 +5,7 @@ import { PhotographerHomepage } from '@/components/photographer/PhotographerHome
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
+import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
 import {
   applyOwnerPreviewBypass,
   resolvePublicSiteGateBySlug,
@@ -41,6 +42,32 @@ import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
+import {
+  toClassicHomePageProps,
+  toClassicSiteFooterProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
+import { ClassicHomepageShell } from '@/components/photographer/react-site/ClassicHomepageShell'
+import {
+  toDarkHomePageProps,
+  toDarkSiteFooterProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
+import { DarkHomepageShell } from '@/components/photographer/react-site/DarkHomepageShell'
+import {
+  toElegantHomePageProps,
+  toElegantSiteFooterProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import { ElegantHomepageShell } from '@/components/photographer/react-site/ElegantHomepageShell'
+import {
+  toModernHomePageProps,
+  toModernSiteFooterProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import { ModernHomepageShell } from '@/components/photographer/react-site/ModernHomepageShell'
 
 interface PageProps {
   params: Promise<{
@@ -496,15 +523,88 @@ export default async function PhotographerPage({ params }: PageProps) {
       fetchPhotographerDiscoveryPosts(typedPhotographer.id),
     ])
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
+    // Unlike canonicalPath above (which reflects the CURRENT request's host,
+    // for nav links that must not 404), the JSON-LD business URL should
+    // always prefer the custom domain when one exists — regardless of which
+    // host actually served this particular request.
+    const jsonLdBaseUrl = await getCanonicalBaseUrl(typedPhotographer.id)
     const localBusinessJsonLd = buildPhotographerLocalBusinessJsonLd({
       name: typedPhotographer.name,
       studioName: typedPhotographer.studio_name,
       aboutText: typedPhotographer.about_text,
       email: typedPhotographer.email,
       address: typedPhotographer.address,
-      canonicalPath,
+      canonicalPath: jsonLdBaseUrl ? '/' : canonicalPath,
+      baseUrl: jsonLdBaseUrl,
       imageUrl: shareImage,
     })
+
+    // Full rollout of the React public-site pipeline (see the approved
+    // integration plan): gated by a single global DB flag (toggled from
+    // /manage), not per-slug/owner-only anymore — see
+    // lib/public-site/react-rollout.ts's doc comment.
+    if (await isReactPublicSiteEnabled()) {
+      const blogPath = `${canonicalPath}/blog`
+      const portfolioPath = `${canonicalPath}/portfolio`
+      const beforeAfterPath = `${canonicalPath}/before-after`
+
+      const viewModel = buildHomepageViewModel({
+        photographer: photographerWithUrls,
+        galleries: galleriesWithPools,
+        packages: packages || [],
+        testimonials: testimonialsWithUrls,
+        posts: homepagePosts,
+        homepagePath: canonicalPath || '/',
+        blogPath,
+        portfolioPath,
+        beforeAfterPath,
+        hasFaq,
+        postCount: postCount ?? 0,
+        photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
+      })
+
+      if (typedPhotographer.selected_theme === 'dark' || typedPhotographer.selected_theme === 'bold') {
+        return (
+          <DarkHomepageShell
+            photographerId={typedPhotographer.id}
+            headerProps={toDarkSiteHeaderProps(viewModel)}
+            footerProps={toDarkSiteFooterProps(viewModel)}
+            homePageProps={toDarkHomePageProps(viewModel)}
+          />
+        )
+      }
+
+      if (typedPhotographer.selected_theme === 'elegant') {
+        return (
+          <ElegantHomepageShell
+            photographerId={typedPhotographer.id}
+            headerProps={toElegantSiteHeaderProps(viewModel)}
+            footerProps={toElegantSiteFooterProps(viewModel)}
+            homePageProps={toElegantHomePageProps(viewModel)}
+          />
+        )
+      }
+
+      if (typedPhotographer.selected_theme === 'modern') {
+        return (
+          <ModernHomepageShell
+            photographerId={typedPhotographer.id}
+            headerProps={toModernSiteHeaderProps(viewModel)}
+            footerProps={toModernSiteFooterProps(viewModel)}
+            homePageProps={toModernHomePageProps(viewModel)}
+          />
+        )
+      }
+
+      return (
+        <ClassicHomepageShell
+          photographerId={typedPhotographer.id}
+          headerProps={toClassicSiteHeaderProps(viewModel)}
+          footerProps={toClassicSiteFooterProps(viewModel)}
+          homePageProps={toClassicHomePageProps(viewModel)}
+        />
+      )
+    }
 
     return (
       <>
@@ -566,8 +666,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const typedPhotographer = photographer as any
     const studioName = typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
-    const canonicalPath =
-      getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`
+    // When the photographer has an active custom domain, its canonical path
+    // is root-relative (the domain itself IS the identity — johnphoto.com/,
+    // not johnphoto.com/lea-studio) regardless of which host actually served
+    // THIS request; without one, canonical stays the slug path as always.
+    const baseUrl = await getCanonicalBaseUrl(typedPhotographer.id)
+    const canonicalPath = baseUrl
+      ? '/'
+      : (getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`)
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(typedPhotographer.id, typedPhotographer.logo_url) ??
@@ -600,13 +706,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           }
         : {}),
       alternates: {
-        canonical: buildCanonicalUrl(canonicalPath),
+        canonical: buildCanonicalUrl(canonicalPath, baseUrl),
       },
       openGraph: buildPublicOpenGraph({
         title: seoTitle,
         description,
         canonicalPath,
         imageUrl: shareImage,
+        baseUrl,
       }),
     }
   } catch (error) {

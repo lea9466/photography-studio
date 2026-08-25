@@ -1,0 +1,257 @@
+/*
+ * ModernBlogPostPage.module.css — modern-theme counterpart of
+ * ClassicBlogPostPage.module.css, same hero/content/nav shape restyled with
+ * modern's own tokens (Space Grotesk headline, #f8fafc page bg, rounded-2xl
+ * post-nav cards) instead of classic's serif/#FAFAF8 palette.
+ */
+
+.mainWithHero {
+  padding-top: 0;
+}
+
+.mainWithHero .content {
+  margin-top: -32px;
+  position: relative;
+  z-index: 4;
+}
+
+.mainNoHero {
+  padding-top: 6rem;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: clamp(360px, 58vh, 640px);
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: rgba(248, 250, 252, 0.52);
+  pointer-events: none;
+}
+
+.heroFade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 48%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, transparent 30%, #f8fafccc 72%, #f8fafc 100%);
+}
+
+.heroCaption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 48px 24px 36px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.heroTitle {
+  margin: 0;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.2;
+  max-width: min(65%, 760px);
+  color: #0f172a;
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 48px;
+  }
+}
+
+.heroSubtitle {
+  margin: 12px 0 0;
+  font-size: 18px;
+  color: #0f172a;
+  opacity: 0.82;
+  max-width: min(65%, 680px);
+}
+
+.content {
+  width: 65%;
+  margin-inline: auto;
+  padding: 40px 32px 96px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.content[dir='rtl'] {
+  direction: rtl;
+}
+
+.content[dir='ltr'] {
+  direction: ltr;
+}
+
+@media (max-width: 1024px) {
+  .content {
+    width: 78%;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    width: 100%;
+    padding-inline: 20px;
+    padding-top: 40px;
+    padding-bottom: 72px;
+  }
+}
+
+.title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.2;
+  margin: 0;
+  color: #0f172a;
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 50px;
+  }
+}
+
+.subtitle {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 19px;
+  color: #0f172a;
+  opacity: 0.75;
+}
+
+.date {
+  text-align: center;
+  margin-top: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 56px;
+  height: 2px;
+  margin: 36px auto 0;
+  border-radius: 9999px;
+  opacity: 0.5;
+}
+
+.body {
+  margin: 44px auto 0;
+  max-width: none;
+  width: 100%;
+  font-size: 18px;
+  line-height: 1.85;
+  color: #0f172a;
+  white-space: pre-line;
+  text-align: center;
+}
+
+.images {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  margin-top: 52px;
+}
+
+.image {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 12px;
+}
+
+.postNav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 640px) {
+  .postNav {
+    grid-template-columns: 1fr;
+  }
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: #0f172a;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.navItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.navItemNext {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.navThumb {
+  width: 72px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.navThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.navLabel {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.navTitle {
+  font-size: 15px;
+  line-height: 1.35;
+}

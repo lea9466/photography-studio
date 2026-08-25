@@ -1,0 +1,46 @@
+/*
+ * ClassicPortfolioTabs.module.css — 1:1 port of the shared `.portfolio-tab*`
+ * rules in generatePortfolioTabStyles() (lib/public-portfolio-html.ts),
+ * classic variant only (`.portfolio-tab--classic { border-radius: 4px; }` —
+ * the elegant/dark variants also add uppercase+letterSpacing, classic does
+ * not).
+ *
+ * The accent color is per-studio/dynamic, so instead of the old renderer's
+ * approach (a `<style>` block templated with the literal color string per
+ * page load) it's threaded through as CSS custom properties set inline by
+ * the component — same pattern as ClassicHero's `--hero-accent`.
+ * `--tab-border-accent` mirrors the original's `${primaryColor}66` (40%
+ * alpha hex suffix) for the resting border.
+ */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.tab {
+  border: 1px solid var(--tab-border-accent);
+  background: transparent;
+  color: var(--tab-accent);
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  opacity: 0.85;
+  border-radius: 4px;
+}
+
+.tab:hover {
+  border-color: var(--tab-accent);
+  opacity: 1;
+}
+
+.isActive {
+  background: var(--tab-accent);
+  border-color: var(--tab-accent);
+  color: #fff;
+  opacity: 1;
+}

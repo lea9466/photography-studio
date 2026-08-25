@@ -1,0 +1,64 @@
+/*
+ * DarkPortfolioContactCard.module.css — 1:1 port of the dark branch of
+ * generatePublicContactCardSection() (lib/public-gallery-html.ts): section
+ * bg #121217 with a faint top border (`border-t border-white/5`), h1 using
+ * dark's headline-md tuple (36px/1.1/600, Heebo — see
+ * DarkPortfolioHeader.module.css's doc comment for why `font-headline-md` is
+ * a dead class here), body-md text (16px/1.6), and the filled `bg-primary`
+ * button (`px-xl py-md` = 48px/16px on dark's runtime spacing scale,
+ * `font-label-sm` = 13px, `tracking-widest` = 0.1em, `hover:opacity-90`) —
+ * distinct from classic's outlined button and modern's rounded-full one.
+ */
+
+.section {
+  padding: 80px 0;
+  background: #121217;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.title {
+  font-family: 'Heebo', sans-serif;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--dark-on-surface, #f5f5f0);
+  margin-bottom: 24px;
+}
+
+.description {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--dark-on-surface-variant, #b8b8c0);
+  max-width: 36rem;
+  margin: 0 auto 48px;
+  white-space: pre-line;
+}
+
+.button {
+  display: inline-block;
+  border: none;
+  background: var(--cta-accent);
+  color: #ffffff;
+  padding: 16px 48px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    color 0.3s ease,
+    opacity 0.2s ease;
+  text-decoration: none;
+}
+
+.button:hover {
+  opacity: 0.9;
+}

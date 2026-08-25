@@ -1,0 +1,72 @@
+/*
+ * ElegantPortfolioHeader.module.css — 1:1 port of the `elegant` branch of
+ * portfolioHeader() (lib/public-portfolio-html.ts, ~line 322):
+ * `text-center mb-[80px]` header (elegant's own larger bottom margin — 80px,
+ * not classic/dark's 48px), a `Portfolio` eyebrow, an h1 using
+ * `.font-serif-hebrew` (Frank Ruhl Libre — the `--about-title-font` token),
+ * a divider bar, and a photo-count meta line.
+ *
+ * IMPORTANT divergence found by reading the source directly (same kind of
+ * discovery as dark's dead-class find, but the opposite: this class is very
+ * much alive, just surprising): the h1 here uses `.font-serif-hebrew` →
+ * `'Frank Ruhl Libre', serif` — NOT `var(--headline-font)` (Playfair
+ * Display), which is what every homepage section title
+ * (ElegantSectionHeading/SectionTitle) uses throughout the rest of this
+ * theme. The Portfolio/Blog/Before-After subsidiary pages' h1s are
+ * deliberately set in elegant's *secondary* serif (the same one
+ * ElegantAbout.module.css's `--about-title-font` token names), not its
+ * primary display serif — confirmed identically for all three subsidiary
+ * pages by reading their shared `titleFontClass()` helpers in
+ * lib/public-blog-html.ts and lib/public-before-after-html.ts.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 48px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #1c1b1b;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 68px;
+  }
+}
+
+.sectionTitle {
+  font-family: inherit;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: inherit;
+  opacity: 0.75;
+  max-width: 42rem;
+  margin: 0 auto 1rem;
+}
+
+.divider {
+  width: 64px;
+  height: 1px;
+  margin: 0 auto 24px;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+}

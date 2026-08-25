@@ -2,8 +2,10 @@ import type { Metadata } from 'next'
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
 import { AdminStudioList } from '@/components/admin/AdminStudioList'
 import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
+import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { fetchAdminStudios } from '@/lib/actions/admin.actions'
 import { isAdminAuthenticated } from '@/lib/admin/session'
+import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 
 export const metadata: Metadata = {
   title: 'ניהול מערכת',
@@ -27,6 +29,8 @@ export default async function ManagePage() {
       </main>
     )
   }
+
+  const reactPublicSiteEnabled = await isReactPublicSiteEnabled()
 
   let studios
   let loadError: string | null = null
@@ -62,6 +66,7 @@ export default async function ManagePage() {
   return (
     <main className={`${pageShellClass} px-3 py-8 sm:px-4 lg:px-5`}>
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
+        <ReactPublicSiteToggle initialEnabled={reactPublicSiteEnabled} />
         <PlanPricingManager />
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>

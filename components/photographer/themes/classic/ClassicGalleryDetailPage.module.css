@@ -1,0 +1,47 @@
+/*
+ * ClassicGalleryDetailPage.module.css — 1:1 port of the classic branch of
+ * galleryBody() (lib/public-gallery-html.ts ~line 547): a plain uppercase
+ * "Editorial Series" eyebrow (NOT ClassicSectionScript's cursive script —
+ * confirmed by reading the source, which never calls classicSectionScript()
+ * on this page, unlike the portfolio page's header). H1/divider values match
+ * ClassicPortfolioHeader.module.css exactly (same headline-md/on-surface
+ * tokens), but the meta line here is italic text-on-surface-variant (photo
+ * count + date), not portfolio header's plain photo-count-only meta.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--headline-font, 'Frank Ruhl Libre', serif);
+  font-size: 36px;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #2d2825;
+  margin-bottom: 16px;
+}
+
+.divider {
+  width: 48px;
+  height: 1px;
+  margin: 0 auto 24px;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-style: italic;
+  color: #5a504a;
+}

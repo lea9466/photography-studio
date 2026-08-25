@@ -1,0 +1,74 @@
+/*
+ * ClassicTestimonialsSection.module.css — 1:1 port of the classic-specific
+ * rules around id="testimonials" in lib/homepage-themes/classic.ts plus the
+ * relevant selectors from shared-styles.ts:
+ *   - `.testimonials-section` (background/overflow reset)
+ *   - `.theme-classic .testimonials-section__inner`
+ *   - `.theme-classic .testimonials-section__header` (+ its span/h2 children)
+ *   - `.theme-classic .testimonials-section__divider`
+ *   - `.testimonials-section-grid` (the responsive card grid — see
+ *     ClassicTestimonialsSection.tsx's doc comment for why this one class
+ *     covers every testimonial count here instead of also porting the
+ *     carousel/bleed markup)
+ * The outer section-level fade-in (`reveal`/`active`) reuses classic-theme.css
+ * like every other classic section; the header's own fade
+ * (`.stagger-reveal`/`.is-visible`, lib/homepage-stagger-reveal.ts) is ported
+ * here as `.header`/`.isVisible` since it's a distinct, faster transition.
+ */
+
+.section {
+  background: transparent;
+  overflow: visible;
+  width: 100%;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+.header {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.75s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.header.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.header :global(span),
+.header :global(h2) {
+  text-align: left;
+}
+
+.divider {
+  width: 3rem;
+  height: 1px;
+  background: #d1c6b4;
+  margin-top: 1rem;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem 2.75rem;
+  justify-content: center;
+  align-items: stretch;
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+  padding-inline: 1.25rem;
+  overflow: visible;
+}

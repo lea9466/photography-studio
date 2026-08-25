@@ -1,0 +1,54 @@
+/*
+ * DarkGalleriesSection.module.css — 1:1 port of `.homepage-gallery-section`
+ * (UNIFIED_GALLERY_GRID_CSS, shared background/padding reset — dark has no
+ * background override of its own, the surrounding `.theme-dark` body
+ * background already shows through) plus the dark-only LTR header override
+ * (`.theme-bold .homepage-gallery-header*`, lib/homepage-themes/dark.ts) —
+ * see DarkGalleriesSection.tsx's docblock for why this diverges from
+ * classic's shared/GallerySectionHeader.
+ */
+
+.section {
+  width: 100%;
+  overflow-x: clip;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  margin-bottom: 1rem !important;
+  padding-top: calc(1.5rem + 150px);
+  padding-inline: 2%;
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding-top: calc(2rem + 150px);
+  }
+}
+
+.headerInner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100%;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0;
+  text-align: left;
+  direction: rtl;
+}

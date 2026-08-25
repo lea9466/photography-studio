@@ -1,0 +1,110 @@
+/*
+ * ElegantBlogPostCard.module.css — 1:1 port of the `.blog-card` rules in
+ * BLOG_CSS (lib/public-blog-html.ts, non-circle 'cards' display style only —
+ * same deferral as the Classic/Dark/Modern builds: no `circles` variant, no
+ * quick-preview modal). Card chrome uses TOKENS.elegant's resolved values
+ * (cardBg #fdf8f7, cardRadius 0px, cardBorder 1px solid rgba(0,0,0,0.06)) —
+ * identical to ElegantPostCard.module.css's homepage card, since both read
+ * the same theme token map. Title font is `titleFontClass('elegant')` =
+ * `font-serif-hebrew` → Frank Ruhl Libre (see ElegantPortfolioHeader.module.css's
+ * doc comment for why that's a different font than the homepage's section
+ * titles). Excerpt line-clamp is 2 here (this is the dedicated blog LIST
+ * page's card, not the homepage's — ElegantPostCard.module.css's own excerpt
+ * clamps at 4 lines instead, per its own BLOG_CSS-adjacent but distinct rule).
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  background: #fdf8f7;
+  border-radius: 0px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.4s ease,
+    box-shadow 0.4s ease,
+    opacity 0.4s ease;
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.card.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+}
+
+.card:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.mediaEmpty {
+  aspect-ratio: 4 / 3;
+}
+
+.mediaEmpty::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.12));
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  transition: transform 0.7s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+.body {
+  padding: 20px 18px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.title {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 22px;
+  line-height: 1.25;
+  color: #1c1b1b;
+}
+
+.date {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.excerpt {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #464742;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;
+}

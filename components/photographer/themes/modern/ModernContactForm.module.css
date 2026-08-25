@@ -1,0 +1,94 @@
+/*
+ * ModernContactForm.module.css — 1:1 port of the inline utility classes on
+ * modern's `<form class="modern-contact-form">` in lib/homepage-themes/modern.ts
+ * (~line 1177-1215): white, bordered, rounded-lg fields (`bg-white border
+ * border-outline-variant rounded-lg px-lg py-md`) sitting on the accent-color
+ * card, unlike dark's underline-only fields.
+ */
+
+.form {
+  max-width: 32rem;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 0.5rem;
+  color: #0f172a;
+  font-family: 'Heebo', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 14px 20px;
+}
+
+.input::placeholder {
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.textarea {
+  min-height: 96px;
+  resize: none;
+}
+
+.privacyConsent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: start;
+}
+
+.privacyCheckbox {
+  margin-top: 0.3rem;
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 2px;
+  accent-color: #ffffff;
+}
+
+.privacyText {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+}
+
+.privacyLink {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.privacyLink:hover {
+  opacity: 0.85;
+}
+
+.submit {
+  width: 100%;
+  background: #ffffff;
+  color: var(--modern-contact-accent, #4f46e5);
+  padding: 14px 32px;
+  border-radius: 0.5rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.submit:hover {
+  box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.35);
+}
+
+.submit:active {
+  transform: scale(0.97);
+}

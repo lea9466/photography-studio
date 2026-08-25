@@ -1,0 +1,287 @@
+/*
+ * ElegantHero.module.css — 1:1 port of the hero-only CSS from
+ * lib/homepage-themes/elegant.ts (`.glass-hero-wrapper`, `.glass-hero`,
+ * `.glass-hero__glow-bar`, `.glass-hero-title`, `.glass-hero__text`, the
+ * `gentleFloat`/`glassShine`/`glowPulse` keyframes, and their responsive
+ * breakpoints).
+ *
+ * The one intentional deviation: `${primaryColor}` interpolations become
+ * `var(--hero-accent)` — same dynamic-per-studio value, just delivered as a
+ * CSS custom property instead of a server-templated string, matching
+ * ClassicHero.module.css's `--hero-accent` pattern.
+ */
+
+.hero {
+  position: relative;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* .glass-hero-wrapper */
+.wrapper {
+  position: absolute;
+  z-index: 100;
+  top: auto;
+  bottom: 4.5rem;
+  left: 2rem;
+  transform: none;
+  width: 100%;
+  max-width: 28rem;
+}
+
+.wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -25% -20%;
+  background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, var(--hero-accent) 28%, transparent) 0%, transparent 72%);
+  filter: blur(28px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+@media (max-width: 1023px) {
+  .wrapper {
+    top: auto;
+    bottom: 1.25rem;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 2.5rem);
+    max-width: 26rem;
+  }
+
+  .wrapper::before {
+    inset: -18% -12%;
+    filter: blur(20px);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .wrapper {
+    bottom: 1.75rem;
+    max-width: 34rem;
+  }
+}
+
+/* .glass-hero */
+.card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 52%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.14),
+    0 10px 28px rgba(0, 0, 0, 0.06),
+    inset 0 1px 1px rgba(255, 255, 255, 0.22);
+  animation: gentleFloat 6s ease-in-out infinite;
+  width: 100%;
+  max-width: 28rem;
+  padding: 3.5rem 3.25rem;
+  text-align: center;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: -60%;
+  left: -30%;
+  width: 70%;
+  height: 220%;
+  background: linear-gradient(108deg, transparent 42%, rgba(255, 255, 255, 0.1) 50%, transparent 58%);
+  transform: rotate(-10deg);
+  pointer-events: none;
+  animation: glassShine 9s ease-in-out infinite;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--hero-accent) 75%, white), transparent);
+  box-shadow: 0 0 22px 5px color-mix(in srgb, var(--hero-accent) 22%, transparent);
+  pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  .card {
+    width: 100%;
+    max-width: none;
+    padding: 1.75rem 1.5rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card {
+    padding: 2rem 2.25rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .card {
+    padding: 1.125rem 1rem;
+  }
+}
+
+@keyframes glassShine {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: rotate(-10deg) translateX(0);
+  }
+  50% {
+    opacity: 0.85;
+    transform: rotate(-10deg) translateX(18%);
+  }
+}
+
+@keyframes glowPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.18);
+  }
+}
+
+@keyframes gentleFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(0.5deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(3px) rotate(-0.5deg);
+  }
+}
+
+/* .glass-hero__glow-bar */
+.glowBar {
+  display: block;
+  width: 3.5rem;
+  height: 3px;
+  margin: 0 auto 1.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--hero-accent), transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--hero-accent) 55%, transparent);
+  animation: glowPulse 3.5s ease-in-out infinite;
+}
+
+@media (max-width: 767px) {
+  .glowBar {
+    width: 2.5rem;
+    margin-bottom: 0.625rem;
+  }
+}
+
+/* .glass-hero-title */
+.title {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  max-width: 100%;
+  font-size: 1.875rem;
+  margin-bottom: 0;
+  color: #1c1b1b;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .title {
+    margin-bottom: 0 !important;
+    font-size: 1.625rem;
+    line-height: 1.08;
+  }
+}
+
+.titleLine {
+  display: block;
+}
+
+@media (max-width: 767px) {
+  .titleLine {
+    line-height: 1.08;
+  }
+}
+
+.accentWord {
+  color: var(--hero-accent);
+}
+
+/* .glass-hero__text */
+.text {
+  max-width: 100%;
+  white-space: pre-line;
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.625;
+  font-weight: 300;
+  color: rgba(28, 27, 27, 0.7);
+  margin: 0 auto 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .text {
+    font-size: 20px;
+    margin-bottom: 2.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .text {
+    margin-top: 0 !important;
+    margin-bottom: 0.875rem !important;
+    font-size: 0.9375rem;
+    line-height: 1.45;
+  }
+}
+
+/* .glass-hero .flex button */
+.cta {
+  display: inline-block;
+  background: #0f0f0d;
+  color: #ffffff;
+  padding: 1rem 3rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.cta:hover {
+  background: var(--hero-accent);
+}
+
+@media (max-width: 767px) {
+  .cta {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}

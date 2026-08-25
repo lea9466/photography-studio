@@ -1,0 +1,130 @@
+/*
+ * ModernPackagesSection.module.css — 1:1 port of the "modern" branch of the
+ * `id="pricing"` section in lib/homepage-themes/modern.ts (line ~1084-1104)
+ * plus HOMEPAGE_PACKAGES_GRID_CSS's `.homepage-packages-grid*` rules
+ * (lib/homepage-themes/shared-styles.ts) — the grid used by both elegant and
+ * modern, unlike classic/dark's row list (see ClassicPackagesSection.module.css's
+ * note on why there's no shared PackagesGrid component).
+ */
+
+.section {
+  width: 100%;
+  padding-block: 5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fades the section's ambient #F8FAFC page background in/out at the top and
+ * bottom edges (POSTS_PACKAGES_TRANSITION_CSS's `#pricing::before`/`::after`
+ * in lib/homepage-themes/shared-styles.ts) so the glow blur below doesn't
+ * cut off abruptly against the plain posts/testimonials sections above/below. */
+.section::before,
+.section::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 96px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.section::before {
+  top: 0;
+  background: linear-gradient(to bottom, #f8fafc 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+}
+
+.section::after {
+  bottom: 0;
+  background: linear-gradient(to top, #f8fafc 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+}
+
+.glow {
+  position: absolute;
+  pointer-events: none;
+  left: -2.5rem;
+  top: 0;
+  bottom: 0;
+  width: 20rem;
+  filter: blur(64px);
+  opacity: 0.7;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 24%,
+    rgba(0, 0, 0, 0.64) 54%,
+    #000 72%,
+    #000 82%,
+    rgba(0, 0, 0, 0.42) 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 24%,
+    rgba(0, 0, 0, 0.64) 54%,
+    #000 72%,
+    #000 82%,
+    rgba(0, 0, 0, 0.42) 92%,
+    transparent 100%
+  );
+}
+
+.inner {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  position: relative;
+  z-index: 10;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.subtitle {
+  color: var(--modern-accent, #b8953f);
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  justify-content: center;
+  justify-items: stretch;
+  align-items: stretch;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.grid > * {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gridCount1 {
+    grid-template-columns: minmax(0, 22rem);
+    justify-content: center;
+  }
+
+  .gridCount2 {
+    grid-template-columns: repeat(2, minmax(0, 22rem));
+    justify-content: center;
+  }
+}

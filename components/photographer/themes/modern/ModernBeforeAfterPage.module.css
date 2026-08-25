@@ -1,0 +1,84 @@
+/*
+ * ModernBeforeAfterPage.module.css — 1:1 port of the shared `.ba-page`/
+ * `.ba-header*`/`.ba-list` rules in REVEAL_LENS_CSS (lib/public-before-after-html.ts)
+ * — this block is genuinely theme-agnostic in the old renderer (same markup,
+ * including the flourish SVG, for every theme; only `--brand-primary` and the
+ * page's own text color ever vary), so it ports identically to
+ * ClassicBeforeAfterPage.module.css except for the title font (Space Grotesk
+ * here vs. classic's Frank Ruhl Libre) and the muted eyebrow/intro color
+ * (TOKENS.modern.variant #475569 baked in directly, in place of the
+ * opacity-on-inherited-text-color the shared original uses).
+ */
+
+.page {
+  padding-top: calc(7.25rem + 50px);
+  padding-bottom: 3.5rem;
+}
+
+.header {
+  max-width: 40rem;
+  margin: 0 auto clamp(1.75rem, 4vh, 2.75rem);
+  padding-inline: 1.25rem;
+  text-align: center;
+}
+
+.eyebrow {
+  display: block;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  line-height: 1.15;
+  margin: 0;
+  font-weight: 500;
+  color: var(--ba-accent);
+}
+
+.flourish {
+  display: block;
+  width: min(13.5rem, 68%);
+  height: auto;
+  margin: 0.7rem auto 0;
+  overflow: visible;
+}
+
+.flourish path {
+  fill: none;
+  stroke: var(--ba-accent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.intro {
+  margin: 1rem auto 0;
+  max-width: 32rem;
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #475569;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.75fr) minmax(0, 1.45fr);
+  column-gap: clamp(32px, 5vw, 72px);
+  row-gap: 0;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 850px) {
+  .list {
+    grid-template-columns: 1fr;
+    row-gap: 0;
+  }
+}

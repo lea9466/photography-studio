@@ -1,0 +1,159 @@
+/*
+ * DarkPackagesSection.module.css — 1:1 port of the packages section wrapper
+ * CSS: CLASSIC_PACKAGES_ROWS_CSS's shared `.theme-bold .homepage-packages-section*`
+ * rules (inner/header/divider/rows layout — identical to classic's, only the
+ * background differs) plus BOLD_PACKAGES_ROWS_CSS's dark-only background
+ * gradient override, and the packages-specific glow opacity overrides from
+ * POSTS_PACKAGES_TRANSITION_CSS's `.homepage-packages-section .about-glow*`
+ * block (all in lib/homepage-themes/shared-styles.ts).
+ *
+ * Divider color: dark's `bg-outline-variant` utility resolves to
+ * `--outline-variant: #3D3D4D` (lib/homepage-themes/dark.ts line ~1159),
+ * matching `--dark-outline-variant` already defined in dark-theme.css.
+ *
+ * NOTE: same as classic — no shared PackagesGrid component; generatePackagesHTML's
+ * classic/dark branch renders `.homepage-packages-rows`/`.homepage-packages-row`
+ * (a row list), not the grid used by elegant/modern.
+ */
+
+.section {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  padding-top: 120px !important;
+  background: linear-gradient(
+    to bottom,
+    #121217 0%,
+    #121217 56px,
+    #14141b 140px,
+    #171720 240px,
+    #1a1a22 320px,
+    #1a1a22 calc(100% - 128px),
+    #121217 100%
+  );
+}
+
+.inner {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+.header {
+  width: 100%;
+  text-align: left !important;
+  margin-bottom: 2.5rem;
+}
+
+.header span,
+.header h2 {
+  text-align: left !important;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0;
+  text-align: left;
+  direction: rtl;
+}
+
+.divider {
+  width: 3rem;
+  height: 1px;
+  background: #3d3d4d;
+  margin-top: 1rem;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: rgba(245, 245, 240, 0.65);
+  margin-top: 1rem;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 9999px;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.18) 22%,
+    rgba(0, 0, 0, 0.62) 50%,
+    #000 76%,
+    #000 84%,
+    rgba(0, 0, 0, 0.45) 93%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.18) 22%,
+    rgba(0, 0, 0, 0.62) 50%,
+    #000 76%,
+    #000 84%,
+    rgba(0, 0, 0, 0.45) 93%,
+    transparent 100%
+  );
+}
+
+.glowLeft {
+  top: 0;
+  left: 0;
+  width: 440px;
+  height: 440px;
+  transform: translate(-58%, -28%);
+  filter: blur(58px);
+  opacity: 0.56;
+  /* background (radial-gradient using the studio's accent color) is set
+     inline by the component — see DarkPackagesSection.tsx. */
+}
+
+.glowRight {
+  top: 0;
+  right: 0;
+  width: 480px;
+  height: 480px;
+  transform: translate(58%, -28%);
+  filter: blur(64px);
+  opacity: 0.6;
+}
+
+@media (max-width: 767px) {
+  .section {
+    padding-top: 100px !important;
+    background: linear-gradient(
+      to bottom,
+      #121217 0%,
+      #121217 40px,
+      #14141b 110px,
+      #171720 200px,
+      #1a1a22 280px,
+      #1a1a22 calc(100% - 96px),
+      #121217 100%
+    );
+  }
+
+  .inner {
+    padding-inline: clamp(1rem, 4vw, 1.5rem);
+  }
+}

@@ -1,0 +1,52 @@
+/*
+ * DarkPortfolioHeader.module.css — 1:1 port of the `dark` branch of
+ * portfolioHeader() (lib/public-portfolio-html.ts): the "Portfolio" label is
+ * `font-label-sm tracking-[0.2em] uppercase` (label-sm's runtime-Tailwind
+ * fontSize tuple is 13px/line-height 1, no fontFamily override so it falls
+ * back to body Heebo). The h1 is `font-headline-md text-headline-md` — dark's
+ * `fontSize.headline-md` tuple is `["36px", { lineHeight: "1.1", fontWeight:
+ * "600" }]`; there is no matching `fontFamily["headline-md"]` key in dark's
+ * runtime tailwind.config (only fontSize), so `font-headline-md` is a dead
+ * class and the h1 stays in the inherited body font (Heebo) — unlike blog/
+ * before-after's h1s, which use the real `fontFamily.headline` (Space
+ * Grotesk) key instead. No divider bar under the title (dark's branch never
+ * renders one, unlike classic/elegant).
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: 'Heebo', sans-serif;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--dark-on-surface, #f5f5f0);
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-family: inherit;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--dark-on-surface-variant, #b8b8c0);
+  max-width: 42rem;
+  margin: 0 auto 1rem;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}

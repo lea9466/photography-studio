@@ -1,0 +1,42 @@
+/*
+ * ModernPortfolioHeader.module.css — modern-theme counterpart of
+ * ClassicPortfolioHeader.module.css, using modern's own tokens (Space
+ * Grotesk headline font, #0f172a text, #f8fafc page bg) instead of classic's
+ * serif/tan palette — same eyebrow+title+meta shape, no cursive script
+ * label (modern uses ModernSectionEyebrow, ported in the component itself).
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+  color: #0f172a;
+}
+
+.title {
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #0f172a;
+  opacity: 0.7;
+  max-width: 42rem;
+  margin: 0 auto 1rem;
+}
+
+.divider {
+  width: 48px;
+  height: 2px;
+  margin: 0 auto 24px;
+  border-radius: 9999px;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #0f172a;
+  opacity: 0.6;
+}

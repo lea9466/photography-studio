@@ -1,0 +1,88 @@
+/*
+ * ElegantPackagesSection.module.css — 1:1 port of the packages section
+ * wrapper CSS: `py-16 md:py-32 px-margin-mobile md:px-margin-desktop`
+ * (plain numeric Tailwind utilities become real spacing values here, per
+ * MANDATORY CONVENTIONS #2 — the runtime-tailwind `margin-mobile`/
+ * `margin-desktop` keys don't exist in the app's real build-time Tailwind),
+ * `elegantPackagesGlowHtml`'s left-edge glow (generate-homepage-html.ts), and
+ * HOMEPAGE_PACKAGES_GRID_CSS's `.homepage-packages-grid*` rules
+ * (lib/homepage-themes/shared-styles.ts).
+ */
+
+.section {
+  padding-inline: 16px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-inline: 64px;
+  }
+}
+
+.glow {
+  position: absolute;
+  left: -2.5rem;
+  top: 0;
+  bottom: 0;
+  width: 20rem;
+  filter: blur(64px);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inner {
+  max-width: 80rem;
+  margin-inline: auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-style: italic;
+  opacity: 0.6;
+  margin: 0.5rem 0 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  justify-content: center;
+  justify-items: stretch;
+  align-items: stretch;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.grid > * {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+    max-width: 36rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .gridCount1 {
+    grid-template-columns: minmax(0, 22rem);
+    justify-content: center;
+  }
+
+  .gridCount2 {
+    grid-template-columns: repeat(2, minmax(0, 22rem));
+    justify-content: center;
+  }
+}

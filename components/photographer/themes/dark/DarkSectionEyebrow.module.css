@@ -1,0 +1,76 @@
+/*
+ * DarkSectionEyebrow.module.css — 1:1 port of `.bold-section-eyebrow-wrap`
+ * / `.bold-section-eyebrow` (inline <style> block in
+ * lib/homepage-themes/dark.ts). The dynamic per-studio accent color (the
+ * stroke color, string-interpolated in the source) is passed in as the
+ * `--eyebrow-accent` custom property by DarkSectionEyebrow.tsx.
+ */
+
+.wrap {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  direction: ltr;
+  text-align: left;
+  margin: 0 0 0.25rem;
+}
+
+.wrapCenter {
+  justify-content: center !important;
+  text-align: center;
+}
+
+.wrapRight {
+  justify-content: flex-end !important;
+  text-align: right;
+}
+
+.eyebrow {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Bebas Neue', 'Space Grotesk', sans-serif;
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  font-weight: 400;
+  line-height: 0.9;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  direction: ltr;
+  text-align: left !important;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1.2px var(--eyebrow-accent);
+  paint-order: stroke fill;
+  transform: skewX(-8deg);
+  transform-origin: left center;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  opacity: 0.95;
+  pointer-events: none;
+  user-select: none;
+}
+
+.wrapCenter .eyebrow {
+  transform-origin: center;
+}
+
+.wrapRight .eyebrow {
+  transform-origin: right center;
+}
+
+/* Source keeps the "ABOUT" eyebrow (the only current align="right" user)
+   right-aligned at every width, including mobile — this centers it on
+   mobile instead, a deliberate deviation from source per Lea's request
+   (2026-08-24). */
+@media (max-width: 767px) {
+  .wrapRight {
+    justify-content: center !important;
+    text-align: center;
+  }
+
+  .wrapRight .eyebrow {
+    transform-origin: center;
+  }
+}

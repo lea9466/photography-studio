@@ -1,0 +1,98 @@
+/*
+ * TestimonialsCarousel.module.css — 1:1 port of `.testimonials-bleed` (line
+ * ~3215), `.testimonials-row` (~3327), and the `.classic-testimonials-*`
+ * rules (~3649-3721) in lib/homepage-themes/shared-styles.ts. Values (gaps,
+ * breakpoints, dot sizing) copied literally.
+ */
+
+.bleed {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  box-sizing: border-box;
+}
+
+/* Below-desktop fallback (see TestimonialsCarousel.tsx's doc comment) —
+ * plain side padding instead of `.bleed`'s full-viewport-width breakout, so
+ * cards don't touch the screen edges on mobile/tablet. */
+.stack {
+  width: 100%;
+  padding-inline: 1.25rem;
+  box-sizing: border-box;
+}
+
+.carousel {
+  overflow: hidden;
+  width: 100%;
+  padding-bottom: 1rem;
+}
+
+.track {
+  display: flex;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  direction: ltr;
+}
+
+.slide {
+  flex: 0 0 100%;
+  width: 100%;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem 2.75rem;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .row {
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1024px) {
+  .row {
+    flex-wrap: nowrap;
+    gap: 2.5rem;
+  }
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(45, 40, 37, 0.22);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.35s ease;
+}
+
+.dotActive {
+  width: 28px;
+  background: rgba(45, 40, 37, 0.55);
+}

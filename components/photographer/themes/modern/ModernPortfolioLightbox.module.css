@@ -1,0 +1,94 @@
+/*
+ * ModernPortfolioLightbox.module.css — same `.pg-lightbox*` recipe as
+ * ClassicPortfolioLightbox.module.css (MASONRY_STYLES in
+ * lib/public-gallery-html.ts renders one identical dark-overlay lightbox
+ * regardless of theme — nothing here actually varies by theme).
+ */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.95);
+  padding: 1rem;
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(1920px, calc(100vw - 2rem));
+  height: min(88vh, calc(100vw - 2rem));
+  max-width: 100%;
+}
+
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: min(88vh, calc(100vw - 2rem));
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.close,
+.nav {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.close:hover,
+.nav:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.close {
+  top: 1rem;
+  inset-inline-end: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.nav {
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 9999px;
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.navPrev {
+  inset-inline-start: 1rem;
+}
+
+.navNext {
+  inset-inline-end: 1rem;
+}
+
+.nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.counter {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.875rem;
+}

@@ -1,0 +1,102 @@
+/*
+ * ClassicAbout.module.css — 1:1 port of the "About" section CSS from
+ * lib/homepage-themes/classic.ts (about-* rules). The Great Vibes cursive
+ * eyebrow label lives in ./ClassicSectionScript.tsx instead — it's reused
+ * as-is across every classic section, not specific to About.
+ */
+
+.title {
+  font-family: var(--about-title-font, var(--headline-font, 'Frank Ruhl Libre', serif));
+  font-size: clamp(2rem, 3.8vw, 3.1rem);
+  line-height: 1.28;
+  font-weight: 700;
+  color: #2d2825;
+}
+
+.titleUnderline {
+  border-bottom: 2px solid var(--about-accent);
+  padding-bottom: 6px;
+}
+
+.bodyPrimary {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.9;
+  color: rgba(45, 40, 37, 0.82);
+  white-space: pre-line;
+}
+
+.bodySecondary {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.85;
+  color: rgba(45, 40, 37, 0.65);
+  white-space: pre-line;
+}
+
+.statNumber {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  line-height: 1;
+  font-weight: 400;
+  color: #2d2825;
+}
+
+.statLabel {
+  font-family: 'Heebo', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(45, 40, 37, 0.42);
+  margin-top: 10px;
+}
+
+.imageQuote {
+  background: rgba(255, 255, 255, 0.96);
+  padding: 22px 26px;
+  box-shadow: 0 16px 40px rgba(45, 40, 37, 0.08);
+}
+
+.imageQuoteLine {
+  width: 36px;
+  height: 1px;
+  background: var(--about-accent);
+  margin: 14px 0 10px auto;
+}
+
+.imageQuoteName {
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: rgba(45, 40, 37, 0.5);
+  text-align: left;
+}
+
+.glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 9999px;
+}
+
+.glowLeft {
+  top: 0;
+  left: 0;
+  width: 440px;
+  height: 440px;
+  transform: translate(-58%, -28%);
+  filter: blur(58px);
+  opacity: 0.72;
+  /* background (radial-gradient using the studio's accent color) is set
+     inline by the component — see ClassicAbout.tsx for why. */
+}
+
+.glowRight {
+  top: 0;
+  right: 0;
+  width: 480px;
+  height: 480px;
+  transform: translate(58%, -28%);
+  filter: blur(64px);
+  opacity: 0.78;
+}

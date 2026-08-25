@@ -1,0 +1,64 @@
+/*
+ * ModernBlogListPage.module.css — modern-theme counterpart of
+ * ClassicBlogListPage.module.css, same wrapper/grid shape (blogBody() /
+ * BLOG_CSS's `.blog-grid` is only ever varied by card styling, not the
+ * list-page chrome itself) restyled with modern's own header (eyebrow via
+ * ModernSectionEyebrow in the component, Space Grotesk title).
+ */
+
+.main {
+  width: 100%;
+  padding-top: 6rem;
+}
+
+.section {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  padding-top: 2.5rem;
+  padding-bottom: 6rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.title {
+  margin-bottom: 16px;
+}
+
+.divider {
+  width: 64px;
+  height: 2px;
+  margin-inline: auto;
+  border-radius: 9999px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+  color: #0f172a;
+  opacity: 0.6;
+  font-size: 18px;
+}

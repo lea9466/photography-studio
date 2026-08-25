@@ -1,0 +1,77 @@
+/*
+ * DarkTestimonialsSection.module.css — 1:1 port of the `.theme-bold`
+ * selectors in the shared testimonials-section block
+ * (lib/homepage-themes/shared-styles.ts, ~line 511) plus the shared
+ * `.testimonials-section-grid` (TESTIMONIAL_THUMB_CARD_CSS) — the same rules
+ * ClassicTestimonialsSection.module.css ports for `.theme-classic`, since
+ * dark shares every one of these selectors 1:1 with classic (`.theme-classic
+ * .testimonials-section__inner, ... .theme-bold .testimonials-section__inner
+ * { ... }` — always the same declaration block for both themes).
+ *
+ * Title color/font follow the same convention as every other dark section
+ * title (DarkGalleriesSection.module.css / DarkPostsSection.module.css /
+ * DarkPackagesSection.module.css's `.title`) rather than a separate
+ * `.stagger-reveal` header fade — dark.ts's markup does mark this header
+ * `stagger-reveal`, but DarkPackagesSection (built earlier this session)
+ * already established the convention of relying on the outer `.reveal`
+ * section fade instead of adding a second IntersectionObserver per header;
+ * kept consistent with that here.
+ */
+
+.section {
+  background: transparent;
+  overflow: visible;
+  width: 100%;
+}
+
+.inner {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: clamp(1.5rem, 5vw, 4rem);
+  box-sizing: border-box;
+}
+
+.header {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 2.5rem;
+}
+
+.header span,
+.header h2 {
+  text-align: left;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.875rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #f5f5f0;
+  margin: 0;
+  text-align: left;
+  direction: rtl;
+}
+
+.divider {
+  width: 3rem;
+  height: 1px;
+  background: #3d3d4d;
+  margin-top: 1rem;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.25rem 2.75rem;
+  justify-content: center;
+  align-items: stretch;
+  padding-top: 1rem;
+  padding-bottom: 50px;
+  padding-inline: 1.25rem;
+  overflow: visible;
+}

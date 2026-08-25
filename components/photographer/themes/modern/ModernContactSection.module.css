@@ -1,0 +1,202 @@
+/*
+ * ModernContactSection.module.css — 1:1-in-spirit port of the
+ * `id="contact"` section in lib/homepage-themes/modern.ts (~line 1128-1223):
+ * a single solid accent-color card (`.modern-contact-card`, `bg-primary
+ * rounded-2xl p-xl md:p-xxl`) holding a 2-column grid (info + form), no
+ * rtl:md:flex-row-reverse on the grid itself — matches the source exactly.
+ *
+ * The section's own outer width is CONDITIONAL in source (line ~1128):
+ * `<section class="w-full ${hasContactBg ? 'contact-section-has-bg py-xxl'
+ * : 'max-w-7xl mx-auto px-lg'}">` — capped at 1280px and centered when there's
+ * no background image, but genuinely full-bleed (no cap, no centering, no
+ * inline padding) when a background image IS configured. `.section` below is
+ * the no-bg default; `.sectionHasBg` overrides it for the has-bg case.
+ */
+
+.section {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 24px;
+  box-sizing: border-box;
+  padding-block: 48px;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-block: 80px;
+  }
+}
+
+.sectionHasBg {
+  /* Flush against the footer with no gap below it, per Lea's request
+     (2026-08-24) — a deliberate deviation from source's own symmetric
+     py-xxl (80px top and bottom). Top padding bumped twice more per
+     follow-up feedback, giving a bit more image above the card each time:
+     80px -> 100px -> 130px. */
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-top: 130px;
+  padding-bottom: 0;
+}
+
+.card {
+  /* Source: `p-xl md:p-xxl` on .modern-contact-card — modern's own spacing
+     tokens are xl=48px, xxl=80px (lib/homepage-themes/modern.ts's tailwind
+     config), not the 32px/24px -> 56px this previously had. */
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 48px;
+  color: #ffffff;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 80px;
+  }
+}
+
+.cardHasBg {
+  isolation: isolate;
+  /* A contained minimum height (comfortably under one screen) so the photo
+     shows nicely, not driven by the photo's own (often much taller) natural
+     aspect ratio — an earlier attempt sized this off the raw image and it
+     came out far taller than a screen, which Lea said looked wrong. No
+     max-height here: the real form content must never get clipped, so the
+     card can still grow taller than this minimum if the content needs it —
+     it just won't grow because of the photo anymore. */
+  min-height: 480px;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  /* Real source (#contact.contact-section-has-bg .contact-section-bg-desktop/-mobile):
+     opacity: 0.74; filter: none — a plain faded photo, no color filter. */
+  opacity: 0.74;
+}
+
+.bgDesktop {
+  display: none;
+}
+
+.bgMobile {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .bgDesktop {
+    display: block;
+  }
+  .bgMobile {
+    display: none;
+  }
+}
+
+.bgOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Source forces this fully transparent for #contact specifically (no color
+     tint over the photo, unlike #pricing's own has-bg overlay) — readability
+     comes from the text-shadow rules below instead. */
+  background: transparent;
+}
+
+/* text-shadow on the card's text when a background image is present —
+   compensates for dropping the (incorrect) accent-color tint overlay this
+   file used to apply; matches source's own
+   `#contact.contact-section-has-bg .modern-contact-card h2/p/.text-white,
+   .modern-contact-info-row { text-shadow: 0 1px 10px rgba(15,23,42,.55) }`. */
+.cardHasBg .title,
+.cardHasBg .subtitle,
+.cardHasBg .detailRow {
+  text-shadow: 0 1px 10px rgba(15, 23, 42, 0.55);
+}
+
+.grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info {
+  max-width: 28rem;
+  text-align: right;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 8px 0 12px;
+}
+
+.subtitle {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0 0 24px;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+a.detailRow:hover {
+  opacity: 0.85;
+}
+
+.detailIcon {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.formWrap {
+  width: 100%;
+}
+
+@media (max-width: 767px) {
+  .info {
+    text-align: center;
+    max-width: none;
+  }
+
+  .details {
+    align-items: center;
+  }
+
+  .detailRow {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,36 @@
+/*
+ * ElegantGalleriesSection.module.css — 1:1 port of `.homepage-gallery-section`
+ * (UNIFIED_GALLERY_GRID_CSS, shared background/padding reset) plus elegant's
+ * own flush-left header override ("Elegant galleries title: flush left with
+ * gallery grid", `.theme-elegant .homepage-gallery-header*` in
+ * lib/homepage-themes/elegant.ts) — see ElegantGalleriesSection.tsx's
+ * docblock for why this diverges from classic's shared/GallerySectionHeader.
+ *
+ * `py-24 bg-white` stay as real Tailwind utility classes inline in the .tsx
+ * (per MANDATORY CONVENTIONS #2 — plain numeric utilities aren't ported).
+ */
+
+.section {
+  width: 100%;
+  overflow-x: clip;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  margin-bottom: 1rem !important;
+  padding-top: calc(1.5rem + 150px);
+  padding-inline: 2%;
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding-top: calc(2rem + 150px);
+  }
+}

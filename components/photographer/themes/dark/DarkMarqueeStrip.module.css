@@ -1,0 +1,85 @@
+/*
+ * DarkMarqueeStrip.module.css — port of the scrolling text strip between the
+ * FAQ and Contact sections in lib/homepage-themes/dark.ts (~line 1483, the
+ * `<section class="py-md md:py-lg bg-background text-on-surface
+ * overflow-hidden whitespace-nowrap border-y border-white/10">` block).
+ *
+ * Token values pulled from dark.ts's own Tailwind config (~line 1141-1213):
+ * spacing.md/lg = 20px/32px, colors.background = #121217,
+ * colors["on-surface"] = #F5F5F0, fontSize["headline-sm"] = 24px/1.3/700,
+ * --headline-font = 'Space Grotesk'.
+ *
+ * The source's `.animate-marquee` content is a single div whose text is the
+ * studio name + filler phrases typed out TWICE (partially) with
+ * `translateX(0% -> 50%)` — a seamless loop only works if the two halves are
+ * pixel-identical, which a hand-typed partial second copy doesn't guarantee
+ * once the studio name's length varies. Ported here instead with the
+ * standard robust technique for this effect: the phrase list rendered into
+ * two truly-identical `.track` copies side by side, sliding together by
+ * exactly one copy's width so the loop point is invisible regardless of
+ * studio name length.
+ *
+ * `.track` forces `direction: ltr` (see the .tsx doc comment) so the slide
+ * is always a plain, fixed `-50%` regardless of the page's own language/dir.
+ */
+
+.strip {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background: #121217;
+  color: #f5f5f0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-block: 20px;
+  direction: ltr;
+}
+
+@media (min-width: 768px) {
+  .strip {
+    padding-block: 32px;
+  }
+}
+
+.track {
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  direction: ltr;
+  animation: dark-marquee-scroll 30s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.3;
+  padding-inline-end: 0.6em;
+}
+
+@media (min-width: 768px) {
+  .copy {
+    font-size: 24px;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+}
+
+@keyframes dark-marquee-scroll {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}

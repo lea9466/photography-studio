@@ -1,0 +1,99 @@
+/*
+ * ElegantRecentPhotosSection.module.css — base layout ported from
+ * `.recent-photos-section` (RECENT_PHOTOS_GRID_CSS, shared) —
+ * lib/homepage-themes/shared-styles.ts.
+ *
+ * The header alignment below is a DELIBERATE deviation from that shared
+ * source rule (which docks it right/RTL-natural) — Lea asked for "LATEST" to
+ * be flush-left like the Galleries/Collections section, not for source
+ * fidelity here. Mirrors ElegantGalleriesSection.module.css's own flush-left
+ * treatment (text-align: left, direction: ltr) rather than the shared
+ * right-docked default. See ElegantRecentPhotosSection.tsx's docblock.
+ */
+
+.section {
+  width: 100%;
+  overflow: hidden;
+  padding-top: calc(2rem + 50px) !important;
+  padding-bottom: 1.5rem !important;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: calc(3rem + 50px) !important;
+    padding-bottom: 2rem !important;
+  }
+}
+
+.header {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  margin-bottom: 1rem;
+  padding-inline: 2%;
+  text-align: left !important;
+  direction: ltr;
+  box-sizing: border-box;
+}
+
+.headerInner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100%;
+}
+
+.headerInnerWithCta {
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+}
+
+.more {
+  flex-shrink: 0;
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  margin-top: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.moreLink:hover {
+  opacity: 0.75;
+}
+
+.moreLink:active {
+  transform: scale(0.96);
+}
+
+.moreArrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.moreLink:hover .moreArrow {
+  transform: translateX(-5px);
+}
+
+@media (max-width: 767px) {
+  .headerInnerWithCta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .more {
+    align-self: flex-start;
+  }
+}

@@ -1,0 +1,40 @@
+/*
+ * DarkGalleryDetailPage.module.css — 1:1 port of the dark branch of
+ * galleryBody() (lib/public-gallery-html.ts ~line 567). Same resolved h1/
+ * eyebrow tokens as DarkPortfolioHeader.module.css (dark's headline-md is
+ * 36px/1.1/600, no fontFamily override so it stays in body Heebo — see that
+ * file's doc comment). No divider bar under the title, matching the source
+ * (dark's branch never renders one here, same as its portfolio header).
+ * Meta line is plain text-on-surface-variant (not accent-colored, and not
+ * italic) — genuinely different from classic's, not copied blindly.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: 'Heebo', sans-serif;
+  font-size: 36px;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--dark-on-surface, #f5f5f0);
+  margin-bottom: 16px;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--dark-on-surface-variant, #b8b8c0);
+}

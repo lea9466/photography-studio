@@ -1,0 +1,35 @@
+/*
+ * ModernGalleriesSection.module.css — 1:1 port of .homepage-gallery-section /
+ * .modern-homepage-gallery-section / .homepage-gallery-header padding from
+ * lib/homepage-themes/modern.ts + shared-styles.ts, with the LTR
+ * left-aligned header override from MODERN_SECTION_ALIGN_CSS (the resolved
+ * cascade winner — ported directly instead of the shared right-aligned
+ * default GallerySectionHeader.tsx uses for classic).
+ */
+
+.section {
+  width: 100%;
+  overflow-x: clip;
+  padding-top: clamp(3.5rem, 9vw, 6rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4rem);
+}
+
+.header {
+  width: 100%;
+  padding-inline: 2%;
+  margin-bottom: 1.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  direction: ltr;
+}
+
+.title {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  text-align: left;
+  direction: rtl;
+}

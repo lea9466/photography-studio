@@ -1,0 +1,115 @@
+/*
+ * ElegantContactForm.module.css — 1:1 port of the contact `<form>` field
+ * markup in lib/homepage-themes/elegant.ts (line ~1255): transparent
+ * bg-white/20-underline inputs, uppercase 10px labels at 40% opacity, the
+ * shared privacy-consent checkbox (generateContactPrivacyConsentHTML), and a
+ * centered pill submit button that inverts to white/black on hover.
+ */
+
+.form {
+  width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  opacity: 0.4;
+  font-family: 'Heebo', sans-serif;
+}
+
+.input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  outline: none;
+  padding: 0.75rem 0.25rem;
+  font-family: 'Heebo', sans-serif;
+  color: #ffffff;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.input:focus {
+  border-color: var(--elegant-contact-accent, currentColor);
+}
+
+.textarea {
+  min-height: 120px;
+  resize: none;
+}
+
+.privacyConsent {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.privacyCheckbox {
+  width: 1rem;
+  height: 1rem;
+  min-width: 1rem;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.privacyText {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+  opacity: 0.8;
+  color: #ffffff;
+}
+
+.privacyLabel {
+  cursor: pointer;
+}
+
+.privacyLink {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.privacyLink:hover {
+  opacity: 0.8;
+}
+
+.submitWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.submit {
+  color: #ffffff;
+  padding: 1rem 4rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit:hover {
+  background: #ffffff !important;
+  color: #000000;
+}

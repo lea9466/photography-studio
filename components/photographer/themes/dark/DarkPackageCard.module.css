@@ -1,0 +1,260 @@
+/*
+ * DarkPackageCard.module.css — the shared `.homepage-packages-row*` rules
+ * (CLASSIC_PACKAGES_ROWS_CSS, which explicitly also targets `.theme-bold`)
+ * folded with dark's own override block (BOLD_PACKAGES_ROWS_CSS): row border
+ * color, featured-row background, features-grid li text color, and the
+ * default button's border color all get dark-specific values —
+ * lib/homepage-themes/shared-styles.ts.
+ */
+
+.row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  column-gap: 0;
+  padding: 2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  direction: rtl;
+  text-align: right;
+  width: 100%;
+  overflow: visible;
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.rowFeatured {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+}
+
+.title {
+  grid-column: 1;
+  justify-self: end;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 9rem;
+  max-width: 14rem;
+  text-align: right;
+  padding: 0;
+  position: relative;
+}
+
+.title h3,
+.title p {
+  text-align: right;
+  direction: rtl;
+}
+
+.name {
+  font-weight: 600;
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--primary-color, #b8953f);
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  color: rgba(245, 245, 240, 0.55);
+}
+
+.badge {
+  position: absolute;
+  top: -1.35rem;
+  right: 0;
+  left: auto;
+  display: inline-block;
+  background: var(--primary-color, #b8953f);
+  color: #ffffff;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.features {
+  grid-column: 2;
+  justify-self: start;
+  margin-inline-start: 5rem;
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
+  max-width: 36rem;
+  text-align: right;
+  direction: rtl;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 12px 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  direction: rtl;
+  text-align: right;
+  width: 100%;
+  max-width: 100%;
+}
+
+.featuresGrid li {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  direction: rtl;
+  text-align: right;
+  font-size: 0.9rem;
+  color: rgba(245, 245, 240, 0.75);
+  white-space: nowrap;
+  width: 100%;
+  min-width: 0;
+}
+
+.itemText {
+  min-width: 0;
+  direction: rtl;
+  text-align: right;
+}
+
+.icon {
+  font-size: 1.1rem;
+  color: var(--primary-color, #b8953f);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.action {
+  grid-column: 3;
+  justify-self: end;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 9rem;
+  margin: 0;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-color, #b8953f);
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  direction: ltr;
+}
+
+.priceCurrency {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.btn {
+  display: inline-block;
+  white-space: nowrap;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btnFeatured {
+  background: var(--primary-color, #b8953f);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.btnFeatured:hover {
+  filter: brightness(1.08);
+}
+
+.btnDefault {
+  background: transparent;
+  color: var(--primary-color, #b8953f);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.btnDefault:hover {
+  background: var(--primary-color, #b8953f);
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem 0;
+    direction: rtl;
+  }
+
+  .title {
+    grid-column: auto;
+    justify-self: stretch;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    text-align: right;
+  }
+
+  .features {
+    grid-column: auto;
+    justify-self: start;
+    margin-inline-start: 0;
+    width: 100%;
+  }
+
+  .featuresGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .featuresGrid li {
+    white-space: normal;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .badge {
+    position: static;
+    margin-bottom: 0.5rem;
+  }
+
+  .action {
+    grid-column: auto;
+    justify-self: stretch;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
+}

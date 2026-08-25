@@ -1,0 +1,110 @@
+/*
+ * ModernFaqItem.module.css — 1:1 port of MODERN_FAQ_ACCORDION_CSS's
+ * `.faq-item--modern`/`.faq-item__*` rules (lib/homepage-themes/
+ * shared-styles.ts, ~line 2160-2258): a native <details>/<summary>
+ * accordion row, no border/background — just a bottom divider and a
+ * +/− toggle glyph that flips on [open].
+ *
+ * `::details-content` (the block-size transition on the collapsed/expanded
+ * body) is a very new CSS feature with limited browser support — same as
+ * the production renderer already ships. Unsupported browsers just get the
+ * native instant open/close instead of an animated one; that's an accepted
+ * progressive-enhancement gap here, not something patched over.
+ */
+
+.item {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.summary {
+  cursor: pointer;
+  padding: 1.5rem 0;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.question {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.toggle::before {
+  content: '+';
+}
+
+.item[open] .toggle::before {
+  content: '\2212';
+}
+
+.item[open]::details-content {
+  block-size: auto;
+}
+
+.item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.35s ease,
+    content-visibility 0.35s ease allow-discrete;
+}
+
+.item[open] .answer {
+  animation: faqAnswerReveal 0.35s ease both;
+}
+
+.answer {
+  width: 100%;
+  padding: 0 0 1.5rem;
+  line-height: 1.7;
+  white-space: pre-line;
+  opacity: 0.85;
+  color: #334155;
+  border-top: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+@keyframes faqAnswerReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item::details-content,
+  .toggle {
+    transition: none;
+  }
+
+  .item[open] .answer {
+    animation: none;
+  }
+}

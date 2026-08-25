@@ -1,0 +1,115 @@
+/*
+ * ElegantPostsSection.module.css — 1:1 port of `.hp-posts-section` (shared
+ * HOMEPAGE_POSTS_CSS) plus `.hp-posts-header--elegant` overrides
+ * (ELEGANT_HOMEPAGE_POSTS_CSS, lib/homepage-posts-section.ts) — LTR header,
+ * row layout, no divider, watermark+title docked left via
+ * ElegantSectionHeading's own `align="start"` styling.
+ */
+
+.section {
+  width: 100%;
+  overflow: visible;
+  padding-top: calc(2.5rem + 20px);
+  padding-bottom: 3rem;
+  padding-inline: 0;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: calc(3.5rem + 20px);
+    padding-bottom: 4rem;
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 100%;
+  padding-inline: 2%;
+  margin-bottom: 1.25rem;
+  text-align: left;
+  direction: ltr;
+  box-sizing: border-box;
+  gap: 1rem;
+}
+
+.headerTitles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+}
+
+.more {
+  flex-shrink: 0;
+}
+
+.moreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.15s ease;
+}
+
+.moreLink:hover {
+  opacity: 0.75;
+}
+.moreLink:hover .moreArrow {
+  transform: translateX(-5px);
+}
+.moreLink:active {
+  transform: scale(0.96);
+}
+
+.moreArrow {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 3px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .more {
+    align-self: flex-end;
+  }
+}

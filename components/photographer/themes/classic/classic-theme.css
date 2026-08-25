@@ -1,0 +1,69 @@
+/*
+ * Shared tokens for the classic theme — ported 1:1 from the :root/body block
+ * in lib/homepage-themes/classic.ts. Scoped under .theme-classic (applied to
+ * the theme's outer wrapper) instead of real :root, so it can't leak into
+ * pages rendered with a different theme.
+ *
+ * Font loading (Heebo / Frank Ruhl Libre / Great Vibes, currently a <link>
+ * tag in the old <head>) still needs to move to next/font at the layout
+ * level once this theme is actually wired up — not done here since a single
+ * component isn't the right place to load page-level fonts.
+ *
+ * Same for `scroll-behavior: smooth` (was on the old <body>) — same-page
+ * anchor links (hero CTAs, nav items) rely on it for the smooth scroll, but
+ * it has to be set on the actual scrolling element (html), which only the
+ * theme's root layout owns — not a leaf component.
+ */
+
+.theme-classic {
+  --headline-font: 'Frank Ruhl Libre', serif;
+  --about-title-font: 'Frank Ruhl Libre', serif;
+  font-family: 'Heebo', sans-serif;
+  /* Classic's own source body never had this (unlike elegant/dark's, which
+   * do) — a real source inconsistency, not a deliberate design difference.
+   * Without it, shared/TestimonialsMarquee's and TestimonialsCarousel's
+   * `.bleed` full-viewport-width trick (`width: 100vw`) overflows the page
+   * by the scrollbar's width (vw includes the scrollbar gutter, `100%` of
+   * the body doesn't), producing a real horizontal scroll that visibly
+   * clips content on the right — confirmed via a live measurement
+   * (bodyScrollWidth 407 vs bodyClientWidth 390 at a 390px viewport).
+   * Added here so classic gets the same protection elegant/dark's source
+   * already has, rather than leaving a visible bug uncorrected. */
+  overflow-x: clip;
+}
+
+.theme-classic .reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-classic .reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-classic .stagger-item {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.8s ease-out,
+    transform 0.8s ease-out;
+}
+
+.theme-classic .reveal.active .stagger-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.theme-classic .stagger-item:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.theme-classic .stagger-item:nth-child(2) {
+  transition-delay: 0.2s;
+}
+.theme-classic .stagger-item:nth-child(3) {
+  transition-delay: 0.3s;
+}

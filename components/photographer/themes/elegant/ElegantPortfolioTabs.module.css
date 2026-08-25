@@ -1,0 +1,42 @@
+/*
+ * ElegantPortfolioTabs.module.css — 1:1 port of `.portfolio-tab` +
+ * `.portfolio-tab--elegant` (lib/public-portfolio-html.ts
+ * generatePortfolioTabStyles()): square corners (radius 0, distinct from
+ * classic's 4px / modern's fully-rounded pill / dark's 2px), uppercase,
+ * tracking-[0.08em] (elegant's OWN letter-spacing value — wider than dark's
+ * 0.06em), font-size 0.75rem.
+ */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.tab {
+  border: 1px solid var(--tab-border-accent);
+  background: transparent;
+  color: var(--tab-accent);
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.85;
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+.tab:hover {
+  border-color: var(--tab-accent);
+  opacity: 1;
+}
+
+.isActive {
+  background: var(--tab-accent);
+  border-color: var(--tab-accent);
+  color: #fff;
+  opacity: 1;
+}

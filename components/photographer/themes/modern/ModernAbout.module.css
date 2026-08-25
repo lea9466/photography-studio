@@ -1,0 +1,67 @@
+/*
+ * ModernAbout.module.css — 1:1 port of .modern-stats-section/.modern-stats-grid/
+ * .modern-stats-card from lib/homepage-themes/modern.ts, plus the card's own
+ * Tailwind utility classes in the markup (bg-white p-xl rounded-2xl
+ * modern-shadow ...).
+ */
+
+.section {
+  width: 100%;
+  max-width: 100%;
+  padding-top: 30px;
+  padding-bottom: 80px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: 100%;
+  gap: 4px;
+  padding-inline: 4px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  min-width: 0;
+  width: 100%;
+  background: #ffffff;
+  padding: 3rem;
+  border-radius: 24px;
+  box-shadow: 0px 4px 20px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card:hover {
+  transform: scale(1.02);
+}
+
+.icon {
+  /* Bumped from source's real 3rem (48px, text-5xl) per Lea's request
+     (2026-08-24) — a deliberate deviation from source, confirmed against
+     modern.ts's real markup earlier this thread. */
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.value {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.label {
+  color: #475569;
+  font-weight: 500;
+}

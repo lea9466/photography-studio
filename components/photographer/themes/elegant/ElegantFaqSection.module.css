@@ -1,0 +1,181 @@
+/*
+ * ElegantFaqSection.module.css — 1:1 port of:
+ *  - `.faq-section` (`pt-8 pb-16 md:pt-12 md:pb-32`, generateFaqSectionHTML's
+ *    elegant branch, lib/homepage-themes/generate-homepage-html.ts)
+ *  - `.faq-section__header`/`__subtitle` (elegantFaqSectionCss(), shared with
+ *    the testimonials header — lib/homepage-themes/shared-styles.ts)
+ *  - `.faq-magazine-wrap`/`.faq-magazine-grid`/`.faq-magazine-layout--with-image`
+ *    (magazineFaqGridCss() — byte-for-byte identical layout to classic's,
+ *    grouped under the same selectors in the source; only the mobile overlay
+ *    tint differs: elegant uses rgba(255,255,255,0.88) vs classic's
+ *    rgba(251,249,244,0.85)).
+ */
+
+.section {
+  width: 100%;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding-top: 3rem;
+    padding-bottom: 8rem;
+  }
+}
+
+.header {
+  width: 100%;
+  direction: ltr;
+  text-align: left !important;
+  margin-bottom: 1.25rem;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+.subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-style: italic;
+  opacity: 0.6;
+  text-align: left !important;
+  margin-top: 0.35rem;
+  max-width: none;
+}
+
+.magazineWrap {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding-inline: 2%;
+  box-sizing: border-box;
+}
+
+.grid {
+  display: grid;
+  direction: rtl;
+  grid-template-columns: 1fr;
+  gap: 50px 60px;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid > article[data-featured='true'] {
+    grid-column: 1 / -1;
+  }
+
+  .grid > article:not([data-featured='true']):nth-child(2n + 3) {
+    margin-top: 2.5rem;
+  }
+}
+
+.layoutWithImage {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
+  direction: rtl;
+  align-items: start;
+  width: 100%;
+}
+
+.content {
+  min-width: 0;
+  width: 100%;
+}
+
+.feature {
+  min-width: 0;
+  width: 100%;
+  align-self: stretch;
+  min-height: 100%;
+}
+
+.featureImage {
+  width: 100%;
+  height: 100%;
+  min-height: clamp(20rem, 52vh, 36rem);
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.gridStacked {
+  grid-template-columns: 1fr;
+  gap: 50px 0;
+}
+
+.gridStacked > article[data-featured='true'] {
+  grid-column: auto;
+}
+
+.gridStacked > article:not([data-featured='true']):nth-child(2n + 3) {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .withImage {
+    position: relative;
+    width: 100%;
+    background-image: var(--faq-section-bg-image);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    padding: 40px 20px !important;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .withImage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .withImage > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .withImage .layoutWithImage {
+    display: block;
+    width: 100%;
+    gap: 0;
+  }
+
+  .withImage .feature {
+    display: none;
+  }
+
+  .withImage .magazineWrap {
+    padding-inline: 0;
+    width: 100%;
+  }
+
+  .withImage .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    width: 100%;
+  }
+
+  .withImage .grid article,
+  .withImage .grid h3,
+  .withImage .grid p {
+    text-align: right;
+  }
+}

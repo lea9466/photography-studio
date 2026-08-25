@@ -1,0 +1,127 @@
+/*
+ * ElegantPackageCard.module.css — 1:1 port of generatePackagesHTML's
+ * `currentTheme === 'elegant'` card markup (p-10 flex flex-col h-full
+ * relative, bg-white border[-2], badge, border-t divider, mt-auto button) —
+ * lib/homepage-themes/generate-homepage-html.ts. Plain numeric Tailwind
+ * utilities (p-10, mb-8, mt-2, pt-8, mb-10, gap-4, etc.) are ported to plain
+ * CSS here since MANDATORY CONVENTIONS #2 doesn't let them stay inline (the
+ * runtime-tailwind spacing scale differs from the app's real Tailwind build).
+ */
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2.5rem;
+  background: #ffffff;
+  border: 1px solid var(--outline-variant, #c7c7c0);
+}
+
+.cardFeatured {
+  border-width: 2px;
+}
+
+.badge {
+  position: absolute;
+  top: -0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  padding: 0.25rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 9999px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.heading {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.headingFeatured {
+  margin-top: 0.5rem;
+}
+
+.name {
+  font-family: var(--headline-font, 'Playfair Display', serif);
+  font-size: 1.875rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+
+.price {
+  font-size: 1.125rem;
+  letter-spacing: 0.05em;
+}
+
+.divider {
+  border-top: 1px solid rgba(15, 15, 13, 0.1);
+  padding-top: 2rem;
+  margin-bottom: 2.5rem;
+  flex-grow: 1;
+}
+
+.listWrap {
+  margin-inline: auto;
+  width: fit-content;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1rem;
+  opacity: 0.8;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.featuresFeatured {
+  opacity: 1;
+  color: #464742;
+}
+
+.features li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.action {
+  margin-top: auto;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  border: 1px solid #0f0f0d;
+  color: #0f0f0d;
+  padding: 1rem 2rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background: #0f0f0d;
+  color: #ffffff;
+}

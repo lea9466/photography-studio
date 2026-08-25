@@ -1,0 +1,50 @@
+/*
+ * ElegantGalleryDetailPage.module.css — 1:1 port of the elegant branch of
+ * galleryBody() (lib/public-gallery-html.ts ~line 527): a plain uppercase
+ * "Aesthetic Collection" eyebrow, an h1 in elegant's *secondary* serif
+ * (Frank Ruhl Libre, not the primary Playfair Display headline font — same
+ * divergence ElegantPortfolioHeader.module.css documents for the portfolio
+ * page's own h1), a divider, and a (non-italic, larger 18px) meta line.
+ */
+
+.header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: 'Frank Ruhl Libre', serif;
+  font-size: 48px;
+  line-height: 1.2;
+  font-weight: 500;
+  color: #1c1b1b;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 68px;
+  }
+}
+
+.divider {
+  width: 64px;
+  height: 1px;
+  margin: 0 auto 24px;
+}
+
+.meta {
+  font-family: 'Heebo', sans-serif;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #464742; /* text-on-surface-variant, elegant's runtime tailwind.config */
+}

@@ -30,6 +30,21 @@ export type FeedbackType = 'משוב' | 'תקלה' | 'פיצ׳ר' | 'אחר'
 export type Database = {
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          id: number
+          react_public_site_enabled: boolean
+        }
+        Insert: {
+          id?: number
+          react_public_site_enabled?: boolean
+        }
+        Update: {
+          id?: number
+          react_public_site_enabled?: boolean
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           id: string

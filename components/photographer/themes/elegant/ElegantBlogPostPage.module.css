@@ -1,0 +1,270 @@
+/*
+ * ElegantBlogPostPage.module.css — 1:1 port of the blog-post-specific rules
+ * in BLOG_MODAL_CSS (lib/public-blog-html.ts): `.blog-post-hero*`,
+ * `.blog-post-page__content`, `.blog-post-nav*`, `.blog-post-main--with-hero`,
+ * plus the `.blog-detail--page` overrides of the shared `.blog-detail__*`
+ * rules — applied directly at their final resolved values here (this
+ * component only ever renders the full page, never the modal).
+ *
+ * Elegant gets the GENERIC (non-dark) branch of blogPostHeroThemeCss(): no
+ * image desaturation filter, overlay stays the shared white wash
+ * (rgba(255,255,255,0.52)), and the fade blends through elegant's own bg
+ * (#FAFAF8) via the plain 3-stop gradient — same shape as
+ * ClassicBlogPostPage.module.css's hero (classic gets the same generic
+ * branch), NOT dark's longer multi-stop gradient/desaturated image/-40px
+ * pull-up. Elegant's pull-up is -32px, matching the generic branch's default.
+ * Title/hero-title font-weight is always 700 (baked into
+ * `.blog-detail__title`/`.blog-post-hero__title` themselves in the shared
+ * source, not derived from titleFontClass) — font-family comes from
+ * titleFontClass('elegant') = 'font-serif-hebrew' -> Frank Ruhl Libre.
+ */
+
+.mainWithHero {
+  padding-top: 0;
+}
+
+.mainWithHero .content {
+  margin-top: -32px;
+  position: relative;
+  z-index: 4;
+}
+
+.mainNoHero {
+  padding-top: 6rem;
+}
+
+.hero {
+  position: relative;
+  width: 100%;
+  height: clamp(360px, 58vh, 640px);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.52);
+  pointer-events: none;
+}
+
+.heroFade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 48%;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, transparent 30%, #fafaf8cc 72%, #fafaf8 100%);
+}
+
+.heroCaption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 48px 24px 36px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.heroTitle {
+  margin: 0;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.2;
+  max-width: min(65%, 760px);
+  color: #1c1b1b;
+  font-family: 'Frank Ruhl Libre', serif;
+}
+
+@media (min-width: 768px) {
+  .heroTitle {
+    font-size: 48px;
+  }
+}
+
+.heroSubtitle {
+  margin: 12px 0 0;
+  font-size: 18px;
+  opacity: 0.82;
+  max-width: min(65%, 680px);
+  color: #1c1b1b;
+}
+
+.content {
+  width: 65%;
+  margin-inline: auto;
+  padding: 40px 32px 96px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.content[dir='rtl'] {
+  direction: rtl;
+}
+
+.content[dir='ltr'] {
+  direction: ltr;
+}
+
+@media (max-width: 1024px) {
+  .content {
+    width: 78%;
+  }
+}
+
+@media (max-width: 768px) {
+  .content {
+    width: 100%;
+    padding-inline: 20px;
+    padding-top: 40px;
+    padding-bottom: 72px;
+  }
+}
+
+.title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 34px;
+  line-height: 1.2;
+  margin: 0;
+  color: #1c1b1b;
+  font-family: 'Frank Ruhl Libre', serif;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 50px;
+  }
+}
+
+.subtitle {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 19px;
+  color: #1c1b1b;
+}
+
+.date {
+  text-align: center;
+  margin-top: 0;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.divider {
+  width: 56px;
+  height: 1px;
+  margin: 36px auto 0;
+  opacity: 0.5;
+}
+
+.body {
+  margin: 44px auto 0;
+  max-width: none;
+  width: 100%;
+  font-size: 18px;
+  line-height: 1.85;
+  color: #1c1b1b;
+  white-space: pre-line;
+  text-align: center;
+}
+
+.images {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  margin-top: 52px;
+}
+
+.image {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0px;
+}
+
+.postNav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 64px;
+  padding-top: 40px;
+  border-top: 1px solid rgba(127, 127, 127, 0.2);
+}
+
+@media (max-width: 640px) {
+  .postNav {
+    grid-template-columns: 1fr;
+  }
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: #1c1b1b;
+  padding: 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.18);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.navItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.navItemNext {
+  flex-direction: row-reverse;
+  text-align: end;
+}
+
+.navThumb {
+  width: 72px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.navThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.navLabel {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+  margin-bottom: 4px;
+}
+
+.navTitle {
+  font-size: 15px;
+  line-height: 1.35;
+  color: #1c1b1b;
+}

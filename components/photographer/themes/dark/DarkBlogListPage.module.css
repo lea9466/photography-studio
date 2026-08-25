@@ -1,0 +1,85 @@
+/*
+ * DarkBlogListPage.module.css — 1:1 port of blogBody()'s wrapper markup
+ * (lib/public-blog-html.ts line ~1130) restyled with dark's own tokens.
+ * Title: titleFontClass('dark') = 'font-headline font-bold' -> Space
+ * Grotesk, font-weight 700 (font-bold wins over the static `font-medium`
+ * class also present in the source, per Tailwind's fixed font-weight utility
+ * generation order — see ClassicBlogListPage.module.css's 500-weight
+ * counterpart, where classic's titleFontClass carries no weight utility at
+ * all so `font-medium` applies unopposed).
+ */
+
+.main {
+  width: 100%;
+  padding-top: 6rem;
+}
+
+.section {
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: 24px;
+  padding-top: 2.5rem;
+  padding-bottom: 6rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-family: var(--headline-font, 'Space Grotesk', sans-serif);
+  font-size: 40px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--dark-on-surface, #f5f5f0);
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 60px;
+  }
+}
+
+.divider {
+  width: 64px;
+  height: 1px;
+  margin-inline: auto;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 80px 0;
+  color: var(--dark-on-surface-variant, #b8b8c0);
+  font-size: 18px;
+}
