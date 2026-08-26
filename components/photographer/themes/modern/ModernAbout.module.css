@@ -47,10 +47,11 @@
 }
 
 .icon {
-  /* Bumped from source's real 3rem (48px, text-5xl) per Lea's request
-     (2026-08-24) — a deliberate deviation from source, confirmed against
-     modern.ts's real markup earlier this thread. */
-  font-size: 4rem;
+  /* Bumped from source's real 3rem (48px, text-5xl), then bumped again
+     (2026-08-26) to at least 2.5x that first bump per Lea's request —
+     deliberate deviations from source, confirmed against modern.ts's real
+     markup earlier this thread. */
+  font-size: 10rem;
   line-height: 1;
 }
 
