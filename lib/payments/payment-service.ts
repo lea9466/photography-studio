@@ -4,6 +4,7 @@ import {
   isOneTimePaymentEnabled,
   isPaymentsCheckoutAllowed,
   isPaymentsCheckoutEnabled,
+  isPaymentsMaintenance,
   isPaymentsSmokeTestUser,
   isSumitPaymentsJsEnabled,
 } from './flags'
@@ -56,6 +57,8 @@ export type CurrentSubscriptionView = {
   /** True when the in-site SUMIT PaymentsJS card form is live (real recurring
    *  subscriptions). While false the plan card falls back to the one-time flow. */
   paymentsFormEnabled: boolean
+  /** True while the whole self-serve payment area is down for maintenance. */
+  maintenance: boolean
   isSmokeTestUser: boolean
   /**
    * False only for a genuinely active subscription. A `pending` row never
@@ -528,6 +531,7 @@ export class PaymentService {
       checkoutEnabled: isPaymentsCheckoutAllowed(userId),
       oneTimePaymentEnabled: isOneTimePaymentEnabled(),
       paymentsFormEnabled: isSumitPaymentsJsEnabled(),
+      maintenance: isPaymentsMaintenance(),
       isSmokeTestUser: isPaymentsSmokeTestUser(userId),
       canStartNewCheckout,
       subscription:

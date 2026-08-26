@@ -56,6 +56,7 @@ export default async function SubscriptionPage({
     checkoutEnabled: false,
     oneTimePaymentEnabled: false,
     paymentsFormEnabled: false,
+    maintenance: false,
     isSmokeTestUser: false,
     canStartNewCheckout: true,
     subscription: null,

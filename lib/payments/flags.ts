@@ -47,6 +47,20 @@ export function isSumitPaymentsJsEnabled() {
   )
 }
 
+/**
+ * Maintenance switch (2026-08-27). The whole self-serve payment area shows
+ * "אי אפשר לשלם עקב תקלה טכנית" and both charge endpoints refuse, until the
+ * SUMIT PaymentsJS recurring flow is verified in a sandbox and turned on.
+ * Independent of `isPaymentsCheckoutEnabled()` on purpose — entitlements / the
+ * paywall are untouched.
+ *
+ * Defaults to ON. Set `PAYMENTS_MAINTENANCE=off` in the environment to lift it
+ * (no code deploy needed) once a working flow is live.
+ */
+export function isPaymentsMaintenance() {
+  return process.env.PAYMENTS_MAINTENANCE?.trim().toLowerCase() !== 'off'
+}
+
 /** Both keys are public by design — SUMIT prints them on every hosted page. */
 export function isSumitPaymentsConfigured() {
   return (

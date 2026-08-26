@@ -11,6 +11,7 @@ import { PaymentError } from '../lib/payments/errors'
 import {
   isPaymentsCheckoutEnabled,
   isPaymentsCheckoutAllowed,
+  isPaymentsMaintenance,
   isPaymentsSmokeTestUser,
 } from '../lib/payments/flags'
 import { PaymentService } from '../lib/payments/payment-service'
@@ -588,6 +589,37 @@ test('checkout endpoint accepts plan code but never client price', async () => {
   assert.match(source, /body\.planCode/)
   assert.doesNotMatch(source, /body\.(amount|price|amountAgorot)/)
   assert.doesNotMatch(source, /body\.userId/)
+})
+
+test('payments maintenance defaults ON and gates both charge endpoints', async () => {
+  const previous = process.env.PAYMENTS_MAINTENANCE
+  try {
+    delete process.env.PAYMENTS_MAINTENANCE
+    assert.equal(isPaymentsMaintenance(), true)
+    process.env.PAYMENTS_MAINTENANCE = 'anything'
+    assert.equal(isPaymentsMaintenance(), true)
+    process.env.PAYMENTS_MAINTENANCE = 'off'
+    assert.equal(isPaymentsMaintenance(), false)
+    process.env.PAYMENTS_MAINTENANCE = 'OFF'
+    assert.equal(isPaymentsMaintenance(), false)
+  } finally {
+    if (previous === undefined) delete process.env.PAYMENTS_MAINTENANCE
+    else process.env.PAYMENTS_MAINTENANCE = previous
+  }
+
+  for (const route of [
+    'app/api/payments/checkout/route.ts',
+    'app/api/payments/subscription/charge/route.ts',
+  ]) {
+    const src = await readFile(path.join(root, route), 'utf8')
+    assert.match(src, /isPaymentsMaintenance\(\)/)
+  }
+  const panel = await readFile(
+    path.join(root, 'components/dashboard/SubscriptionBillingPanel.tsx'),
+    'utf8'
+  )
+  assert.match(panel, /status\.maintenance/)
+  assert.match(panel, /תקלה טכנית/)
 })
 
 test('checkout flag defaults off and gates before provider work', async () => {

@@ -197,6 +197,24 @@ export function SubscriptionBillingPanel({
     )
   }
 
+  if (status.maintenance) {
+    return (
+      <section className="rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+        <div className="flex items-start gap-4">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#7D3A52]" />
+          <div>
+            <h2 className="font-semibold text-[--foreground]">המנוי שלי</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[--muted]">
+              אי אפשר לשלם כרגע עקב תקלה טכנית. אנא בדקו שוב בשעות הקרובות.
+              <br />
+              תקופת הניסיון שלך ממשיכה לפעול כרגיל ואינה נפגעת.
+            </p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   const subscription = status.subscription
   const availablePlans =
     status.availablePlans?.length > 0

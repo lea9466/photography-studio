@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { PaymentError } from '@/lib/payments/errors'
 import { paymentErrorResponse, readSmallJson } from '@/lib/payments/http'
-import { isSumitPaymentsJsEnabled } from '@/lib/payments/flags'
+import { isPaymentsMaintenance, isSumitPaymentsJsEnabled } from '@/lib/payments/flags'
 import { createPaymentService } from '@/lib/payments/server'
 
 /**
@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
       throw new PaymentError('authentication_required')
     })
 
-    if (!isSumitPaymentsJsEnabled()) throw new PaymentError('billing_not_initialized')
+    if (isPaymentsMaintenance() || !isSumitPaymentsJsEnabled()) {
+      throw new PaymentError('billing_not_initialized')
+    }
     if (context.isImpersonating) throw new PaymentError('forbidden')
 
     const body = await readSmallJson(request)
