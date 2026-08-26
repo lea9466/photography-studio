@@ -403,9 +403,17 @@ export function SubscriptionBillingPanel({
                           selectedPlanCode === plan.code ? (
                           <Loader2 className="ml-2 h-4 w-4 animate-spin" />
                         ) : null}
-                        המשך לתשלום
+                        {status.paymentsFormEnabled ? 'המשך לתשלום' : 'לתשלום'}
                       </Button>
                     )}
+                    {!status.paymentsFormEnabled &&
+                    status.oneTimePaymentEnabled &&
+                    cardFormPlanCode !== plan.code ? (
+                      <p className="mt-2 text-xs text-[--muted]">
+                        תשלום חד-פעמי לתקופה — לא מתחדש אוטומטית, תישלח תזכורת
+                        לחידוש.
+                      </p>
+                    ) : null}
                   </div>
                 </div>
               )
