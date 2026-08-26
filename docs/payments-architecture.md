@@ -178,6 +178,40 @@ This exception is intended for controlled production smoke testing only, and
 it requires `PAYME_ENV=production` with `PAYME_API_BASE_URL=https://live.payme.io/api`.
 The real `studio_monthly` catalog price remains 4,000 agorot in the database.
 
+## SUMIT recurring subscriptions — PaymentsJS (current)
+
+The `beginredirect` two-step (`createCheckoutSession` → `completeHostedCheckout`)
+is **abandoned for recurring**. It captured the card with `AuthoriseOnly: 'true'`
+for the plan's full price; SUMIT support confirmed an authorise-only transaction
+for a subscription's amount makes SUMIT auto-cancel the standing order (commit
+`476ff86`, 20/08/2026, changed the capture from a ₪1 placeholder to the real
+price and broke every recurring signup after 23/08 — customers charged, no
+subscription). SUMIT's own plugin labels redirect "בלי תמיכה בהוראות קבע".
+
+The live flow is **in-site PaymentsJS**:
+
+1. `components/dashboard/subscription/SumitCardForm.tsx` loads
+   `https://app.sumit.co.il/scripts/payments.js`, renders card fields with
+   `data-og` attributes (uncontrolled, no `name` — the PAN/CVV never touch React
+   state or our server), and calls `OfficeGuy.Payments.CreateToken({ CompanyID,
+   APIPublicKey, FormSelector, ResponseCallback })`.
+2. On `Status === 0` it POSTs only `{ planCode, token }` (the single-use
+   `Data.SingleUseToken`) to `POST /api/payments/subscription/charge`.
+3. `PaymentService.subscribeWithToken` upserts a `pending` row, then
+   `SumitProvider.createSubscription` makes ONE `/billing/recurring/charge/`
+   call with `SingleUseToken` + `Duration_Months` (1 / 12) + `Recurrence: ''` +
+   `Payments_Count: '1'` — charges the card AND opens the standing order.
+4. On success the row goes straight to `active` with `provider_subscription_id
+   = <customerId>:<recurringItemId>` and a `succeeded` `payment_transactions`
+   row; on failure the row stays `pending`, a `failed` transaction is recorded,
+   and the SUMIT message is surfaced. No redirect, no callback route.
+
+Gated by `SUMIT_PAYMENTSJS_ENABLED` (+ `NEXT_PUBLIC_SUMIT_COMPANY_ID` /
+`NEXT_PUBLIC_SUMIT_API_PUBLIC_KEY`). While off, the plan card falls back to the
+one-time flow below. Renewals: SUMIT auto-charges on `Date_NextBilling` and
+emails the customer; there is no SUMIT webhook, so period-end reconciliation is
+a follow-up cron using `getSubscription` / `listforcustomer`.
+
 ## One-time payment (דיירקט cards)
 
 Some customers pay with an immediate-debit card ("דיירקט") that a bank/issuer

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle2, CreditCard, Loader2, Wallet } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { SumitCardForm } from '@/components/dashboard/subscription/SumitCardForm'
 import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
 
 type Props = {
@@ -96,6 +97,8 @@ export function SubscriptionBillingPanel({
   const [busy, setBusy] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [oneTimeMonths, setOneTimeMonths] = useState(1)
+  // Which plan's in-site SUMIT card form is open (PaymentsJS recurring flow).
+  const [cardFormPlanCode, setCardFormPlanCode] = useState<string | null>(null)
 
   useEffect(() => {
     if (checkoutSuccess) router.refresh()
@@ -143,6 +146,33 @@ export function SubscriptionBillingPanel({
     } finally {
       setBusy(null)
     }
+  }
+
+  function onPlanCta(plan: PlanView) {
+    setMessage(null)
+    if (status.paymentsFormEnabled) {
+      setSelectedPlanCode(plan.code)
+      setCardFormPlanCode(plan.code)
+      return
+    }
+    // PaymentsJS not live yet — fall back to a single real one-time charge for
+    // the matching period (1 / 12 months); if even that is off, the legacy
+    // recurring redirect.
+    if (status.oneTimePaymentEnabled) {
+      void callAction('/api/payments/checkout', {
+        paymentType: 'one_time',
+        months: plan.billingInterval === 'year' ? 12 : 1,
+      })
+      return
+    }
+    void callAction('/api/payments/checkout', { planCode: plan.code })
+  }
+
+  function onSubscribeSuccess(view: CurrentSubscriptionView) {
+    setStatus(view)
+    setCardFormPlanCode(null)
+    setMessage('התשלום הצליח! המנוי פעיל.')
+    router.refresh()
   }
 
   if (!status.configured) {
@@ -349,6 +379,14 @@ export function SubscriptionBillingPanel({
                       <Button type="button" disabled className="w-full">
                         זמין בקרוב
                       </Button>
+                    ) : cardFormPlanCode === plan.code ? (
+                      <SumitCardForm
+                        planCode={plan.code}
+                        planName={plan.name}
+                        priceLabel={`${formatPrice(plan.amountAgorot, plan.currency)} ${formatInterval(plan)}`}
+                        onSuccess={onSubscribeSuccess}
+                        onCancel={() => setCardFormPlanCode(null)}
+                      />
                     ) : (
                       <Button
                         type="button"
@@ -356,13 +394,10 @@ export function SubscriptionBillingPanel({
                         disabled={
                           Boolean(busy) ||
                           isImpersonating ||
-                          blockCheckout
+                          blockCheckout ||
+                          cardFormPlanCode !== null
                         }
-                        onClick={() =>
-                          callAction('/api/payments/checkout', {
-                            planCode: plan.code,
-                          })
-                        }
+                        onClick={() => onPlanCta(plan)}
                       >
                         {busy === '/api/payments/checkout' &&
                           selectedPlanCode === plan.code ? (
@@ -384,12 +419,12 @@ export function SubscriptionBillingPanel({
                 </div>
                 <div>
                   <p className="font-semibold text-[--foreground]">
-                    משלמת בדיירקט?
+                    הכרטיס לא עבר? אפשר לשלם מראש
                   </p>
                   <p className="mt-1 text-sm leading-relaxed text-[--muted]">
-                    כרטיסי דיירקט לא תומכים בהרשאה לחיוב חוזר, אז התשלום הרגיל
-                    למעלה עלול להיכשל. כדאי לנסות אותו קודם — ואם זה לא
-                    מסתדר, אפשר לשלם כאן מראש לכמה חודשים.
+                    אם החיוב למעלה נכשל (למשל כרטיס דיירקט שלא תומך בחיוב
+                    חוזר), אפשר לשלם כאן מראש לכמה חודשים — תשלום חד-פעמי,
+                    בלי חידוש אוטומטי.
                   </p>
                 </div>
               </div>

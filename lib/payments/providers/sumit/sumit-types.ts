@@ -118,6 +118,19 @@ export type SumitChargeRecurringRequest = {
     CreditCard_ExpirationYear: number
     Type: 1
   }
+  /**
+   * Single-use token from PaymentsJS (`og-token`) — the in-site card-entry
+   * flow. SUMIT resolves the full card + expiration from it server-side, so
+   * unlike `PaymentMethod.CreditCard_Token` it needs no separate expiry fields.
+   * Mutually exclusive with `PaymentMethod`.
+   */
+  SingleUseToken?: string
+  /** Gap between recurring charges in months: 1 = monthly, 12 = yearly. */
+  Duration_Months?: number
+  /** Number of charges; '' / omitted = open-ended until cancelled. */
+  Recurrence?: string | number
+  /** Installments per charge; '1' = full amount each cycle. */
+  Payments_Count?: string
   VATIncluded: 'true' | 'false'
   SendDocumentByEmail: 'true' | 'false'
   DocumentDescription?: string

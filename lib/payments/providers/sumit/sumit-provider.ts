@@ -325,18 +325,24 @@ export class SumitProvider implements PaymentProvider {
   }
 
   /**
-   * Charges once and establishes the recurring authorization in the same
-   * call, given a SUMIT card token (`paymentToken`) obtained out-of-band via
-   * PaymentsJS. Not currently wired to any caller — mirrors PayMe's own
-   * `createSubscription`, which also throws `provider_not_configured` today.
+   * The real recurring-subscription flow (replaces the broken `beginredirect`
+   * two-step — see docs/payments-architecture.md). One `/billing/recurring/charge/`
+   * call that BOTH charges the card AND opens the standing order, given a
+   * single-use token from SUMIT PaymentsJS (`OfficeGuy.Payments`, the in-site
+   * card-entry widget — the method SUMIT's own plugin calls "recommended").
    *
-   * CONFIRMED BY LIVE TESTING (2026-08-13): SUMIT rejects a token-only
-   * PaymentMethod with "Missing CreditCard_ExpirationMonth/CreditCard_ExpirationYear"
-   * — the token alone is not enough. `CreateSubscriptionInput.paymentToken` is
-   * a bare string with nowhere to carry expiration, so this will fail against
-   * a real token until a caller is wired up with a way to supply it (e.g. a
-   * `token|MM|YYYY` convention decided at that point, entirely within this
-   * file, same pattern as `buildSumitSubscriptionId`).
+   * `input.paymentToken` is the PaymentsJS `og-token` value — it is passed as
+   * `SingleUseToken` (SUMIT resolves the card + expiration server-side from it;
+   * unlike a bare `CreditCard_Token`, no separate expiry fields are needed —
+   * that was the blocker noted in the 2026-08-13 test).
+   *
+   * `Duration_Months` = the gap between charges (1 = monthly, 12 = yearly),
+   * `Recurrence: ''` = open-ended until cancelled, `Payments_Count: '1'` = full
+   * amount each cycle, no installments. Field names/semantics are taken from
+   * SUMIT's WooCommerce plugin (`_duration_in_months` / `_recurrences`) —
+   * CONFIRM against a live ₪29 charge (SUMIT log must show "הוקמה הוראת קבע …
+   * הצלחה", and `Data.RecurringCustomerItemIDs` must be present) before flipping
+   * SUMIT_PAYMENTSJS_ENABLED on.
    */
   async createSubscription(
     input: CreateSubscriptionInput
@@ -356,16 +362,37 @@ export class SumitProvider implements PaymentProvider {
       '/billing/recurring/charge/',
       {
         Customer: { ID: Number(input.customerId) },
-        PaymentMethod: { CreditCard_Token: input.paymentToken, Type: 1 },
+        SingleUseToken: input.paymentToken,
         Items: [item],
+        Duration_Months: input.plan.billingInterval === 'year' ? 12 : 1,
+        Recurrence: '',
+        Payments_Count: '1',
         VATIncluded: 'true',
         SendDocumentByEmail: 'true',
         DocumentDescription: input.plan.name,
         DocumentLanguage: 'Hebrew',
+        AuthoriseOnly: this.client().env.testMode ? 'true' : 'false',
       }
     )
 
-    return mapSumitFirstRecurringCharge(response)
+    const subscription = mapSumitFirstRecurringCharge(response)
+
+    // Belt-and-suspenders: `mapSumitFirstRecurringCharge` already threw unless
+    // ValidPayment + a real RecurringCustomerItemID came back, so the standing
+    // order exists on SUMIT's side. A wrong amount here is a bug to fix forward
+    // (e.g. VAT gross/net) — never a reason to desync from SUMIT and lose the
+    // charge, which is exactly the failure mode this rebuild removes. Log only.
+    const chargedAmount = response.Data?.Payment?.Amount ?? 0
+    const expectedAmount = agorotToSumitAmount(input.plan.amountAgorot)
+    if (Math.abs(chargedAmount - expectedAmount) > 0.011) {
+      console.warn('[payments][sumit] recurring charge amount differs from plan', {
+        chargedAmount,
+        expectedAmount,
+        plan: input.plan.code,
+      })
+    }
+
+    return subscription
   }
 
   /**

@@ -1620,9 +1620,13 @@ test('generate-subscription correlation field is wired in source', async () => {
   assert.doesNotMatch(provider, /getSubscriptions\([\s\S]*generate/)
 })
 
-test('UI sends only planCode and never client amount', async () => {
+test('UI sends only planCode/token/months and never a client amount', async () => {
   const ui = await readFile(
     path.join(root, 'components/dashboard/SubscriptionBillingPanel.tsx'),
+    'utf8'
+  )
+  const cardForm = await readFile(
+    path.join(root, 'components/dashboard/subscription/SumitCardForm.tsx'),
     'utf8'
   )
   assert.match(ui, /planCode:\s*plan\.code/)
@@ -1630,12 +1634,16 @@ test('UI sends only planCode and never client amount', async () => {
   assert.match(ui, /plan\.badge/)
   assert.match(ui, /חיסכון של/)
   assert.match(ui, /לעומת המסלול החודשי/)
-  const checkoutCall = ui.match(
-    /callAction\(\s*'\/api\/payments\/checkout',\s*\{[\s\S]*?\}\s*\)/
-  )?.[0]
-  assert.ok(checkoutCall)
-  assert.match(checkoutCall, /planCode/)
-  assert.doesNotMatch(checkoutCall, /amount|price|agorot/i)
+  // The recurring flow tokenizes in-site and posts only { planCode, token }.
+  assert.match(cardForm, /JSON\.stringify\(\{ planCode, token \}\)/)
+  // No payment call anywhere may carry a client-chosen price.
+  for (const src of [ui, cardForm]) {
+    for (const call of src.matchAll(
+      /(?:callAction\(\s*'\/api\/payments\/[^']+'|fetch\('\/api\/payments\/[^']+')[\s\S]*?\)/g
+    )) {
+      assert.doesNotMatch(call[0], /\b(amount|unitPrice|price|agorot)\b/i)
+    }
+  }
 })
 
 test('no production PayMe URL possible in sandbox mode', async () => {

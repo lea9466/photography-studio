@@ -4,9 +4,12 @@ import { SumitClient } from '../lib/payments/providers/sumit/sumit-client'
 async function run() {
   const provider = new SumitProvider()
   const customerId = process.argv[2]
+  // The PaymentsJS single-use token (`og-token` / Data.SingleUseToken) captured
+  // in-browser by OfficeGuy.Payments.CreateToken — grab it from the network tab
+  // or a throwaway page that loads app.sumit.co.il/scripts/payments.js.
   const token = process.argv[3]
   if (!customerId || !token) {
-    throw new Error('Usage: tsx scripts/test-sumit-recurring.ts <CustomerID> <CreditCard_Token>')
+    throw new Error('Usage: tsx scripts/test-sumit-recurring.ts <CustomerID> <SingleUseToken>')
   }
 
   console.log('[sumit-recurring] establishing recurring authorization via createSubscription...')
