@@ -11,6 +11,7 @@ import { PaymentError } from '../lib/payments/errors'
 import {
   isPaymentsCheckoutEnabled,
   isPaymentsCheckoutAllowed,
+  isPaymentsMaintenance,
   isPaymentsSmokeTestUser,
 } from '../lib/payments/flags'
 import { PaymentService } from '../lib/payments/payment-service'
@@ -588,6 +589,37 @@ test('checkout endpoint accepts plan code but never client price', async () => {
   assert.match(source, /body\.planCode/)
   assert.doesNotMatch(source, /body\.(amount|price|amountAgorot)/)
   assert.doesNotMatch(source, /body\.userId/)
+})
+
+test('payments maintenance defaults ON and gates both charge endpoints', async () => {
+  const previous = process.env.PAYMENTS_MAINTENANCE
+  try {
+    delete process.env.PAYMENTS_MAINTENANCE
+    assert.equal(isPaymentsMaintenance(), true)
+    process.env.PAYMENTS_MAINTENANCE = 'anything'
+    assert.equal(isPaymentsMaintenance(), true)
+    process.env.PAYMENTS_MAINTENANCE = 'off'
+    assert.equal(isPaymentsMaintenance(), false)
+    process.env.PAYMENTS_MAINTENANCE = 'OFF'
+    assert.equal(isPaymentsMaintenance(), false)
+  } finally {
+    if (previous === undefined) delete process.env.PAYMENTS_MAINTENANCE
+    else process.env.PAYMENTS_MAINTENANCE = previous
+  }
+
+  for (const route of [
+    'app/api/payments/checkout/route.ts',
+    'app/api/payments/subscription/charge/route.ts',
+  ]) {
+    const src = await readFile(path.join(root, route), 'utf8')
+    assert.match(src, /isPaymentsMaintenance\(\)/)
+  }
+  const panel = await readFile(
+    path.join(root, 'components/dashboard/SubscriptionBillingPanel.tsx'),
+    'utf8'
+  )
+  assert.match(panel, /status\.maintenance/)
+  assert.match(panel, /תקלה טכנית/)
 })
 
 test('checkout flag defaults off and gates before provider work', async () => {
@@ -1620,9 +1652,13 @@ test('generate-subscription correlation field is wired in source', async () => {
   assert.doesNotMatch(provider, /getSubscriptions\([\s\S]*generate/)
 })
 
-test('UI sends only planCode and never client amount', async () => {
+test('UI sends only planCode/token/months and never a client amount', async () => {
   const ui = await readFile(
     path.join(root, 'components/dashboard/SubscriptionBillingPanel.tsx'),
+    'utf8'
+  )
+  const cardForm = await readFile(
+    path.join(root, 'components/dashboard/subscription/SumitCardForm.tsx'),
     'utf8'
   )
   assert.match(ui, /planCode:\s*plan\.code/)
@@ -1630,12 +1666,16 @@ test('UI sends only planCode and never client amount', async () => {
   assert.match(ui, /plan\.badge/)
   assert.match(ui, /חיסכון של/)
   assert.match(ui, /לעומת המסלול החודשי/)
-  const checkoutCall = ui.match(
-    /callAction\(\s*'\/api\/payments\/checkout',\s*\{[\s\S]*?\}\s*\)/
-  )?.[0]
-  assert.ok(checkoutCall)
-  assert.match(checkoutCall, /planCode/)
-  assert.doesNotMatch(checkoutCall, /amount|price|agorot/i)
+  // The recurring flow tokenizes in-site and posts only { planCode, token }.
+  assert.match(cardForm, /JSON\.stringify\(\{ planCode, token \}\)/)
+  // No payment call anywhere may carry a client-chosen price.
+  for (const src of [ui, cardForm]) {
+    for (const call of src.matchAll(
+      /(?:callAction\(\s*'\/api\/payments\/[^']+'|fetch\('\/api\/payments\/[^']+')[\s\S]*?\)/g
+    )) {
+      assert.doesNotMatch(call[0], /\b(amount|unitPrice|price|agorot)\b/i)
+    }
+  }
 })
 
 test('no production PayMe URL possible in sandbox mode', async () => {

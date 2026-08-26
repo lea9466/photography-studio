@@ -10,6 +10,7 @@ import {
   isOneTimePaymentEnabled,
   isPaymentsCheckoutAllowed,
   isPaymentsCheckoutEnabled,
+  isPaymentsMaintenance,
   isPaymentsSmokeTestUser,
 } from '@/lib/payments/flags'
 import { createPaymentService } from '@/lib/payments/server'
@@ -21,6 +22,8 @@ export async function POST(request: NextRequest) {
     }).catch(() => {
       throw new PaymentError('authentication_required')
     })
+
+    if (isPaymentsMaintenance()) throw new PaymentError('billing_not_initialized')
 
     const checkoutAllowed = isPaymentsCheckoutAllowed(context.userId)
     const isSmokeTestUser = isPaymentsSmokeTestUser(context.userId)

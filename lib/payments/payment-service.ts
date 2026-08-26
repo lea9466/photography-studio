@@ -4,7 +4,9 @@ import {
   isOneTimePaymentEnabled,
   isPaymentsCheckoutAllowed,
   isPaymentsCheckoutEnabled,
+  isPaymentsMaintenance,
   isPaymentsSmokeTestUser,
+  isSumitPaymentsJsEnabled,
 } from './flags'
 import { payMeIterationTypeForPlan } from './providers/payme/payme-iteration'
 import type { PaymentProvider } from './provider'
@@ -52,6 +54,11 @@ export type CurrentSubscriptionView = {
   /** True when the one-time-payment fallback (for cards like "דיירקט" that
    *  reject a recurring authorization) is available. */
   oneTimePaymentEnabled: boolean
+  /** True when the in-site SUMIT PaymentsJS card form is live (real recurring
+   *  subscriptions). While false the plan card falls back to the one-time flow. */
+  paymentsFormEnabled: boolean
+  /** True while the whole self-serve payment area is down for maintenance. */
+  maintenance: boolean
   isSmokeTestUser: boolean
   /**
    * False only for a genuinely active subscription. A `pending` row never
@@ -182,6 +189,139 @@ export class PaymentService {
         }
         : undefined,
     })
+  }
+
+  /**
+   * SUMIT PaymentsJS recurring flow: the client tokenizes the card in-site and
+   * sends us a single-use `token`; one `provider.createSubscription` call both
+   * charges it and opens the standing order. Replaces the broken redirect
+   * two-step. On success the local row goes straight to `active` (no callback
+   * round-trip) and a `succeeded` transaction is recorded; on failure the row
+   * stays `pending`, a `failed` transaction is recorded, and the SUMIT error
+   * message is surfaced to the client.
+   */
+  async subscribeWithToken(input: {
+    userId: string
+    planCode: string
+    token: string
+  }): Promise<CurrentSubscriptionView> {
+    const provider = this.resolveProvider()
+    const planRow = await this.repository.getActivePlanByCode(input.planCode)
+    if (!planRow) throw new PaymentError('plan_not_found')
+    const plan = toPaymentPlan(planRow)
+
+    const email = await this.repository.getUserEmail(input.userId)
+    if (!email) throw new PaymentError('invalid_request')
+
+    // Resolve-or-create the provider customer (same block as createCheckout).
+    let customerRow = await this.repository.getBillingCustomer(input.userId, provider.name)
+    let customer = customerRow?.provider_customer_id
+      ? { id: customerRow.provider_customer_id, provider: provider.name, email: customerRow.email }
+      : null
+    if (!customer) {
+      customer = await provider.createCustomer({ userId: input.userId, email })
+      customerRow = await this.repository.saveBillingCustomer({
+        userId: input.userId,
+        provider: provider.name,
+        externalCustomerId: customer.id,
+        email,
+      })
+    }
+
+    const localSubscriptionId = `sub_${randomBytes(16).toString('hex')}`
+    const now = new Date()
+    const periodEnd = new Date(now)
+    if (plan.billingInterval === 'year') {
+      periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1)
+    } else {
+      periodEnd.setUTCMonth(periodEnd.getUTCMonth() + 1)
+    }
+
+    await this.repository.upsertSubscription({
+      userId: input.userId,
+      planId: plan.id,
+      billingCustomerId: customerRow?.id ?? null,
+      provider: provider.name,
+      externalSubscriptionId: localSubscriptionId,
+      status: 'pending',
+      metadata: {
+        local_subscription_id: localSubscriptionId,
+        plan_code: plan.code,
+        amount_agorot: plan.amountAgorot,
+        currency: plan.currency,
+        billing_interval: plan.billingInterval,
+        flow: 'paymentsjs',
+      },
+    })
+
+    const row = await this.repository.getSubscriptionByExternalId(
+      provider.name,
+      localSubscriptionId
+    )
+    if (!row) throw new PaymentError('internal_error')
+
+    this.logger.info('creating paymentsjs subscription', {
+      provider: provider.name,
+      userId: input.userId,
+      planCode: plan.code,
+    })
+
+    let subscription
+    try {
+      subscription = await provider.createSubscription({
+        customerId: customer.id,
+        plan,
+        paymentToken: input.token,
+      })
+    } catch (error) {
+      await this.repository
+        .upsertTransaction({
+          userId: input.userId,
+          subscriptionId: row.id,
+          provider: provider.name,
+          externalTransactionId: `${localSubscriptionId}:failed`,
+          status: 'failed',
+          amountAgorot: plan.amountAgorot,
+          currency: plan.currency,
+          failureCode: error instanceof PaymentError ? error.code : 'charge_failed',
+          failureMessage:
+            error instanceof Error ? error.message.slice(0, 500) : String(error),
+        })
+        .catch(() => {})
+      throw error
+    }
+
+    await this.repository.updateSubscription(row.id, {
+      status: subscription.status,
+      periodStart: now.toISOString(),
+      periodEnd: subscription.currentPeriodEnd ?? periodEnd.toISOString(),
+      nextPaymentAt: subscription.nextPaymentAt ?? periodEnd.toISOString(),
+      lastPaymentAt: now.toISOString(),
+      providerSubscriptionId: subscription.id,
+    })
+
+    const paymentId = subscription.metadata?.payment_id
+    await this.repository
+      .upsertTransaction({
+        userId: input.userId,
+        subscriptionId: row.id,
+        provider: provider.name,
+        externalTransactionId:
+          paymentId != null ? String(paymentId) : `${localSubscriptionId}:charge`,
+        status: 'succeeded',
+        amountAgorot: plan.amountAgorot,
+        currency: plan.currency,
+        paidAt: now.toISOString(),
+        metadata: { recurring_item_id: subscription.metadata?.recurring_item_id ?? null },
+      })
+      .catch((error) => {
+        this.logger.error('paymentsjs transaction record failed', {
+          userId: input.userId,
+          message: error instanceof Error ? error.message : String(error),
+        })
+      })
+
+    return this.getCurrentSubscription(input.userId)
   }
 
   /**
@@ -390,6 +530,8 @@ export class PaymentService {
       configured: true,
       checkoutEnabled: isPaymentsCheckoutAllowed(userId),
       oneTimePaymentEnabled: isOneTimePaymentEnabled(),
+      paymentsFormEnabled: isSumitPaymentsJsEnabled(),
+      maintenance: isPaymentsMaintenance(),
       isSmokeTestUser: isPaymentsSmokeTestUser(userId),
       canStartNewCheckout,
       subscription:

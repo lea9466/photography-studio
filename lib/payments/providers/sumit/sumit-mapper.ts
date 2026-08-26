@@ -158,11 +158,17 @@ export function mapSumitOneTimeCharge(input: {
 /**
  * 0=Active is confirmed (default state of a freshly-created recurring item).
  * 1/2/3 come from the third-party SDK's docs (Paused/Cancelled/Expired) and
- * are NOT independently confirmed — a live test call to /billing/recurring/cancel/
- * left the item at Status=1, which only proves 1 means "excluded from the
- * IncludeInactive:false listing", not that it specifically means "paused" as
- * opposed to "cancelled". Treat both 1 and 2 as terminal/inactive until SUMIT
- * support confirms the exact split.
+ * are NOT independently confirmed.
+ *
+ * 2026-08-27 production `listforcustomer` sweep: EVERY recurring item ever
+ * created on the real org is `Status: 1` — including the 13-14/08 items that
+ * genuinely billed (`Date_PreviousBilling` set, `Date_NextBilling` advanced a
+ * month). So `1` is NOT "paused/cancelled" in practice; it is the normal
+ * post-creation state, and health has to be read from the dates
+ * (`Date_PreviousBilling` / `Date_NextBilling` advancing), not `Status`.
+ * `mapSumitRecurringItem` still maps `1 -> 'paused'` below pending a sandbox
+ * check of what a fresh healthy item reports; `getSubscription` is currently
+ * unused at runtime so this is not on any live path.
  */
 const RECURRING_STATUS_MAP: Record<SumitRecurringStatus, PaymentSubscription['status']> = {
   0: 'active',

@@ -235,6 +235,9 @@ docs/                     # תיעוד ארכיטקטורה (payments-architectu
 | `SUMIT_API_KEY` | מפתח API |
 | `SUMIT_PUBLIC_KEY` | מפתח ציבורי (אופציונלי) |
 | `SUMIT_TEST_MODE` | `"true"` למצב בדיקה |
+| `SUMIT_PAYMENTSJS_ENABLED` | `"true"` מפעיל את טופס הכרטיס בתוך האתר (מנוי מתחדש אמיתי). דורש את שני המפתחות הציבוריים למטה + בדיקת ₪29 חיה. כבוי → כפתור המסלול נופל לתשלום חד-פעמי |
+| `NEXT_PUBLIC_SUMIT_COMPANY_ID` | זהה ל-`SUMIT_COMPANY_ID`. ציבורי — SUMIT מדפיסים אותו בכל דף תשלום |
+| `NEXT_PUBLIC_SUMIT_API_PUBLIC_KEY` | מפתח הטוקניזציה הציבורי של PaymentsJS (= `SUMIT_PUBLIC_KEY`). ציבורי בכוונה |
 
 ### בדיקות RLS מקומיות בלבד (`test:payments-rls:local`)
 | משתנה | תיאור |
