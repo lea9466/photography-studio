@@ -48,7 +48,10 @@ export async function verifySumitPayment(
     !tokenOk
   ) {
     throw new PaymentError('verification_failed', {
-      detail: `SUMIT payment verification failed: status=${response.Status} description=${payment?.StatusDescription ?? response.UserErrorMessage ?? ''}`,
+      detail:
+        payment?.StatusDescription?.trim() ||
+        response.UserErrorMessage?.trim() ||
+        'התשלום לא אושר. בדקי את פרטי הכרטיס או נסי כרטיס אחר.',
     })
   }
 

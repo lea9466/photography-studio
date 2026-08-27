@@ -107,10 +107,12 @@ export function SumitCardForm({
           | (CurrentSubscriptionView & { error?: string; detail?: string })
           | null
         if (!response.ok || !payload) {
+          // `detail` carries SUMIT's own Hebrew decline reason when present;
+          // prefer it over the generic `error` message.
           throw new Error(
-            payload?.detail
-              ? `${payload.error ?? 'התשלום נכשל'} (${payload.detail})`
-              : payload?.error || 'התשלום נכשל. נסי שוב או פני לחברת האשראי.'
+            payload?.detail ||
+              payload?.error ||
+              'התשלום נכשל. נסי שוב או פני לחברת האשראי.'
           )
         }
         onSuccess(payload)

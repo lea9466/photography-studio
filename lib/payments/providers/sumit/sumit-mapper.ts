@@ -98,8 +98,13 @@ export function mapSumitFirstRecurringCharge(
     response.Data?.RecurringCustomerItemIDs?.[0] ?? payment?.RecurringCustomerItemIDs?.[0]
   const customerId = response.Data?.CustomerID
   if ((response.Status ?? 1) !== 0 || !payment?.ValidPayment || !recurringItemId || !customerId) {
+    // `payment.StatusDescription` is SUMIT's own customer-facing Hebrew reason,
+    // e.g. "החברה שהנפיקה … לא אישרה את החיוב … (קוד 004)" — surface it as-is.
     throw new PaymentError('verification_failed', {
-      detail: `SUMIT recurring charge not valid: status=${response.Status} description=${payment?.StatusDescription ?? response.UserErrorMessage ?? ''}`,
+      detail:
+        payment?.StatusDescription?.trim() ||
+        response.UserErrorMessage?.trim() ||
+        'החיוב לא אושר. בדקי את פרטי הכרטיס או נסי כרטיס אחר.',
     })
   }
 
