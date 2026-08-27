@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-import { getAdminName, getFeedbackEmail } from '@/lib/feedback-email'
+import { getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
 import {
   buildEmailStubLog,
@@ -487,7 +487,6 @@ export function buildWelcomeEmail(input: { name: string }): {
   html: string
 } {
   const supportEmail = getFeedbackEmail()
-  const adminName = getAdminName()
   const name = escapeHtml(input.name.trim() || 'שלום')
   const dashboardUrl = appUrl('/dashboard')
   const subscriptionUrl = appUrl('/dashboard/subscription')
@@ -515,7 +514,7 @@ export function buildWelcomeEmail(input: { name: string }): {
     <div style="border-top: 1px solid ${LUXE.accent}; width: 44px; margin: 28px 0;"></div>
     <p style="${p}">רוצה חודש שימוש במתנה? באזור האישי מחכה לך <a href="${subscriptionUrl}" style="${link}">קישור שיתוף ייחודי</a>. כל צלמת שתפתח סטודיו דרך הקישור שלך מזכה אותך בחודש פרימיום מלא — והיא מקבלת אתר משלה.</p>
     <p style="${pMuted}">צריכה עזרה בהקמה או רוצה להתייעץ? אני זמינה במייל <a href="mailto:${supportEmail}" style="${link}">${supportEmail}</a>, או דרך טאב יצירת הקשר במערכת.</p>
-    <p style="${p} margin-bottom: 0;">בהצלחה,<br />${escapeHtml(adminName)}</p>`
+    <p style="${p} margin-bottom: 0;">בהצלחה!</p>`
 
   return {
     subject: 'ברוכה הבאה ל‑Studio Gallery — הסטודיו שלך מוכן',
@@ -538,8 +537,7 @@ export function buildWelcomeEmail(input: { name: string }): {
       '',
       `צריכה עזרה? אני זמינה במייל ${supportEmail} או דרך טאב יצירת הקשר במערכת.`,
       '',
-      `בהצלחה,`,
-      adminName,
+      'בהצלחה!',
     ].join('\n'),
     html: renderLuxeEmail({
       preheader:
