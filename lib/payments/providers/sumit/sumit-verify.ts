@@ -21,7 +21,15 @@ export type VerifiedSumitPayment = {
  */
 export async function verifySumitPayment(
   client: SumitClient,
-  paymentId: number
+  paymentId: number,
+  /**
+   * The reusable card token + expiry are only needed by callers that go on to
+   * charge again (recurring). A one-time `beginredirect` charge is already
+   * final, so it verifies with `requireToken: false` — otherwise a completed
+   * charge whose `/billing/payments/get/` happens not to echo the token would
+   * throw here and leave the customer charged-but-not-activated.
+   */
+  requireToken = true
 ): Promise<VerifiedSumitPayment> {
   const response = await client.postJson<SumitGetPaymentResponse>('/billing/payments/get/', {
     PaymentID: paymentId,
@@ -32,13 +40,12 @@ export async function verifySumitPayment(
   const expirationMonth = payment?.PaymentMethod?.CreditCard_ExpirationMonth
   const expirationYear = payment?.PaymentMethod?.CreditCard_ExpirationYear
 
+  const tokenOk = !requireToken || (Boolean(token) && Boolean(expirationMonth) && Boolean(expirationYear))
   if (
     (response.Status ?? 1) !== 0 ||
     !payment?.ValidPayment ||
     !payment.CustomerID ||
-    !token ||
-    !expirationMonth ||
-    !expirationYear
+    !tokenOk
   ) {
     throw new PaymentError('verification_failed', {
       detail: `SUMIT payment verification failed: status=${response.Status} description=${payment?.StatusDescription ?? response.UserErrorMessage ?? ''}`,
@@ -49,9 +56,9 @@ export async function verifySumitPayment(
     paymentId,
     customerId: payment.CustomerID,
     amount: payment.Amount ?? 0,
-    token,
-    expirationMonth,
-    expirationYear,
+    token: token ?? '',
+    expirationMonth: expirationMonth ?? 0,
+    expirationYear: expirationYear ?? 0,
   }
 }
 

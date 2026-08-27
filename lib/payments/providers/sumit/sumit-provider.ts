@@ -306,7 +306,8 @@ export class SumitProvider implements PaymentProvider {
     expectedAmountAgorot: number
     expectedCustomerId: number
   }): Promise<PaymentSubscription> {
-    const verified = await verifySumitPayment(this.client(), input.paymentId)
+    // A one-time charge is already final — no reusable token needed.
+    const verified = await verifySumitPayment(this.client(), input.paymentId, false)
     assertSumitCustomerMatches(verified, input.expectedCustomerId)
 
     if (
