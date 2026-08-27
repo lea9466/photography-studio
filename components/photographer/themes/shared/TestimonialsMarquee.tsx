@@ -133,21 +133,10 @@ export function TestimonialsMarquee({ items }: TestimonialsMarqueeProps) {
       img.addEventListener('error', schedule, { once: true })
     })
 
-    function pause() {
-      animRef.current?.pause()
-    }
-    function resume() {
-      animRef.current?.play()
-    }
-    container.addEventListener('mouseenter', pause)
-    container.addEventListener('mouseleave', resume)
-
     return () => {
       if (debounceId) clearTimeout(debounceId)
       window.removeEventListener('resize', schedule)
       resizeObserver.disconnect()
-      container.removeEventListener('mouseenter', pause)
-      container.removeEventListener('mouseleave', resume)
       if (animRef.current) {
         try {
           animRef.current.cancel()

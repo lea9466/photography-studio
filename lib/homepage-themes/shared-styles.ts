@@ -3814,16 +3814,6 @@ export const TESTIMONIALS_MARQUEE_INIT_SCRIPT = `
       ],
       { duration: duration, iterations: Infinity, easing: 'linear' }
     );
-
-    if (!container.__mqHoverBound) {
-      container.__mqHoverBound = true;
-      container.addEventListener('mouseenter', function () {
-        if (track.__mqAnim) { try { track.__mqAnim.pause(); } catch (e) {} }
-      });
-      container.addEventListener('mouseleave', function () {
-        if (track.__mqAnim) { try { track.__mqAnim.play(); } catch (e) {} }
-      });
-    }
   }
 
   function setupAll() {
