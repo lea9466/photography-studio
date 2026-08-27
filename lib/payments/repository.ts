@@ -437,26 +437,34 @@ export class SupabaseBillingRepository implements BillingRepository {
     paidAt?: string | null
     metadata?: Record<string, unknown>
   }) {
-    const { data, error } = await this.db
-      .from('payment_transactions')
-      .upsert(
-        {
-          user_id: input.userId,
-          subscription_id: input.subscriptionId,
-          provider: input.provider,
-          provider_transaction_id: input.externalTransactionId,
-          status: input.status,
-          amount_agorot: input.amountAgorot,
-          currency: input.currency,
-          failure_code: input.failureCode ?? null,
-          failure_message: input.failureMessage ?? null,
-          paid_at: input.paidAt ?? null,
-          raw_metadata: asJson(input.metadata ?? {}),
-        },
-        { onConflict: 'provider,provider_transaction_id' }
-      )
-      .select('*')
-      .single()
+    const record = {
+      user_id: input.userId,
+      subscription_id: input.subscriptionId,
+      provider: input.provider,
+      provider_transaction_id: input.externalTransactionId,
+      status: input.status,
+      amount_agorot: input.amountAgorot,
+      currency: input.currency,
+      failure_code: input.failureCode ?? null,
+      failure_message: input.failureMessage ?? null,
+      paid_at: input.paidAt ?? null,
+      raw_metadata: asJson(input.metadata ?? {}),
+    }
+
+    // `payment_transactions_provider_transaction_unique` is a PARTIAL unique
+    // index (`where provider_transaction_id is not null`), which PostgREST
+    // cannot use as an ON CONFLICT target (error 42P10). Emulate the upsert:
+    // update the existing row by its natural key, otherwise insert.
+    const existing = await this.getTransactionByExternalId(
+      input.provider,
+      input.externalTransactionId
+    )
+
+    const query = existing
+      ? this.db.from('payment_transactions').update(record).eq('id', existing.id)
+      : this.db.from('payment_transactions').insert(record)
+
+    const { data, error } = await query.select('*').single()
     try {
       throwIfError(error)
       if (!data) throw new Error('Payment transaction was not saved')
@@ -465,7 +473,7 @@ export class SupabaseBillingRepository implements BillingRepository {
       console.error('[payments-trace][db] upsertTransaction failed', {
         step: 'upsertTransaction',
         table: 'payment_transactions',
-        action: 'upsert',
+        action: existing ? 'update' : 'insert',
         correlationId: input?.externalTransactionId ?? null,
         ...describeDbError(err),
       })
