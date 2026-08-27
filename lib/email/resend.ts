@@ -50,6 +50,122 @@ function emailFrom() {
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/*  Branded email shell — "STG" luxe layout                                   */
+/* -------------------------------------------------------------------------- */
+
+/** Minimal HTML-entity escaping for user-supplied values interpolated into markup. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/**
+ * Palette + type mirror the photographer dashboard (see app/globals.css
+ * `--dashboard-*`): white surfaces, violet accent, near-black ink, Heebo.
+ * Kept in one place so every branded email stays consistent with the app.
+ */
+const LUXE = {
+  ink: '#09090b', //   --dashboard-foreground
+  brand: '#7c3aed', //  --dashboard-accent (violet-600)
+  brandDeep: '#6d28d9', // violet-700 — gradient depth + links
+  accent: '#7c3aed', // hairline rules / eyebrow — same violet
+  paper: '#fafafa', //  --dashboard-surface
+  card: '#ffffff', //   --dashboard-background
+  border: '#e5e5e5', // --dashboard-border
+  text: '#27272a',
+  muted: '#71717a', //  ~ --dashboard-muted
+  serif: "Georgia, 'Times New Roman', serif",
+  sans: "'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+} as const
+
+/** Solid violet CTA, matching the dashboard's primary button. */
+function luxeButton(href: string, label: string) {
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0;">
+      <tr>
+        <td align="center" bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; border-radius: 10px;">
+          <a href="${href}" style="display: inline-block; padding: 15px 36px; border: 1px solid ${LUXE.brandDeep}; border-radius: 10px; font-family: ${LUXE.sans}; font-size: 15px; font-weight: 600; letter-spacing: 0.3px; color: #ffffff; text-decoration: none;">${label}</a>
+        </td>
+      </tr>
+    </table>`
+}
+
+/** A refined, iconless step list. `items` = [label, description] pairs. */
+function luxeList(items: ReadonlyArray<readonly [string, string]>) {
+  const rows = items
+    .map(
+      ([label, desc], i) => `
+        <tr>
+          <td style="padding: 14px 0; ${i === 0 ? '' : `border-top: 1px solid ${LUXE.border};`} font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.65; color: ${LUXE.text};">
+            <span style="color: ${LUXE.accent};">—&nbsp;</span><strong style="color: ${LUXE.ink};">${label}</strong>
+            <span style="color: ${LUXE.muted};"> ${desc}</span>
+          </td>
+        </tr>`
+    )
+    .join('')
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 4px;">${rows}</table>`
+}
+
+/**
+ * Wraps body content in the branded STG shell: violet header with the
+ * monogram + wordmark, a white content card, and a quiet footer. Built with
+ * tables + inline styles for broad email-client support.
+ */
+function renderLuxeEmail(input: { preheader: string; contentHtml: string }) {
+  const year = new Date().getFullYear()
+  return `<!DOCTYPE html>
+<html dir="rtl" lang="he" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="color-scheme" content="light only" />
+<meta name="supported-color-schemes" content="light" />
+</head>
+<body style="margin: 0; padding: 0; background: ${LUXE.paper};">
+  <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">${input.preheader}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: ${LUXE.paper};">
+    <tr>
+      <td align="center" style="padding: 36px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 100%;">
+
+          <tr>
+            <td align="center" bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px 16px 0 0; padding: 44px 24px 34px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" valign="middle" width="66" height="66" style="width: 66px; height: 66px; background: #ffffff; border-radius: 16px; font-family: ${LUXE.serif}; font-size: 21px; font-weight: 700; letter-spacing: 3px; color: ${LUXE.brand};">STG</td>
+                </tr>
+              </table>
+              <div style="margin-top: 20px; font-family: ${LUXE.serif}; font-size: 13px; letter-spacing: 6px; color: #ffffff;">STUDIO&nbsp;GALLERY</div>
+              <div style="width: 44px; margin: 16px auto 0; border-top: 1px solid rgba(255, 255, 255, 0.5);"></div>
+            </td>
+          </tr>
+
+          <tr>
+            <td dir="rtl" bgcolor="${LUXE.card}" style="background: ${LUXE.card}; padding: 42px 42px 32px; font-family: ${LUXE.sans};">
+              ${input.contentHtml}
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" bgcolor="${LUXE.card}" style="background: ${LUXE.card}; border-top: 1px solid ${LUXE.border}; border-radius: 0 0 16px 16px; padding: 26px 40px 34px; font-family: ${LUXE.sans};">
+              <div style="font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 4px; color: ${LUXE.muted};">STUDIO GALLERY</div>
+              <p style="margin: 10px 0 0; font-size: 12px; line-height: 1.65; color: ${LUXE.muted};">המרחב הדיגיטלי לצלמות — אתר, גלריות ולקוחות במקום אחד.<br />© ${year} Studio Gallery · כל הזכויות שמורות.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
 /**
  * Resolve Resend client or handle missing key safely.
  * Production: throws (no secret logging fallback).
@@ -361,44 +477,94 @@ export async function sendAdminBroadcastEmail(input: {
   })
 }
 
-export async function sendWelcomeEmail(input: {
-  name: string
-  email: string
-}) {
+/**
+ * Pure builder for the welcome email (subject / text / html) so the branded
+ * layout can be previewed and snapshot-tested without a Resend client.
+ */
+export function buildWelcomeEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const supportEmail = getFeedbackEmail()
+  const adminName = getAdminName()
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const dashboardUrl = appUrl('/dashboard')
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+
+  const eyebrow = `margin: 0 0 10px; font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 3px; color: ${LUXE.brand}; text-transform: uppercase;`
+  const h1 = `margin: 0 0 20px; font-family: ${LUXE.serif}; font-size: 25px; line-height: 1.4; font-weight: 400; color: ${LUXE.ink};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <p style="${eyebrow}">ברוכה הבאה</p>
+    <h1 style="${h1}">הסטודיו הדיגיטלי שלך מוכן</h1>
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">איזה כיף שהצטרפת. החשבון שלך רשום ומוכן, ומכאן אפשר להתחיל לבנות נוכחות מקצועית ומוקפדת — כזו שמכבדת את העבודה שלך.</p>
+    <p style="${p}">המערכת נבנתה כדי לאפשר לכל צלמת להקים אתר עסקי מהיר ומדויק, בלי לגעת בקוד. הכול מנוהל מהאזור האישי, וכל שינוי נשמר מיד.</p>
+    ${luxeButton(dashboardUrl, 'כניסה לאזור האישי')}
+    <p style="${eyebrow} margin-top: 4px;">צעדים ראשונים</p>
+    ${luxeList([
+      ['העלאת העבודות', 'גלריות מסודרות שמציגות את הצילומים באיכות מלאה ובטעינה מהירה.'],
+      ['חבילות ומחירים', 'הצגה ברורה ומזמינה של שירותי הצילום שלך.'],
+      ['בלוג אישי', 'הצצות מאחורי הקלעים וטיפים ללקוחות, וגם קידום אורגני בגוגל.'],
+      ['עיצוב האתר', 'לוגו, תמונות רקע והתאמה מלאה לקו העסקי שלך.'],
+    ])}
+    <div style="border-top: 1px solid ${LUXE.accent}; width: 44px; margin: 28px 0;"></div>
+    <p style="${p}">רוצה חודש שימוש במתנה? באזור האישי מחכה לך <a href="${subscriptionUrl}" style="${link}">קישור שיתוף ייחודי</a>. כל צלמת שתפתח סטודיו דרך הקישור שלך מזכה אותך בחודש פרימיום מלא — והיא מקבלת אתר משלה.</p>
+    <p style="${pMuted}">צריכה עזרה בהקמה או רוצה להתייעץ? אני זמינה במייל <a href="mailto:${supportEmail}" style="${link}">${supportEmail}</a>, או דרך טאב יצירת הקשר במערכת.</p>
+    <p style="${p} margin-bottom: 0;">בהצלחה,<br />${escapeHtml(adminName)}</p>`
+
+  return {
+    subject: 'ברוכה הבאה ל‑Studio Gallery — הסטודיו שלך מוכן',
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'איזה כיף שהצטרפת. החשבון שלך רשום ומוכן, ומכאן אפשר להתחיל לבנות נוכחות מקצועית ומוקפדת שמכבדת את העבודה שלך.',
+      '',
+      'המערכת נבנתה כדי לאפשר לכל צלמת להקים אתר עסקי מהיר ומדויק, בלי לגעת בקוד. הכול מנוהל מהאזור האישי, וכל שינוי נשמר מיד.',
+      '',
+      `כניסה לאזור האישי: ${dashboardUrl}`,
+      '',
+      'צעדים ראשונים:',
+      '- העלאת העבודות — גלריות מסודרות שמציגות את הצילומים באיכות מלאה ובטעינה מהירה.',
+      '- חבילות ומחירים — הצגה ברורה ומזמינה של שירותי הצילום שלך.',
+      '- בלוג אישי — הצצות מאחורי הקלעים וטיפים ללקוחות, וגם קידום אורגני בגוגל.',
+      '- עיצוב האתר — לוגו, תמונות רקע והתאמה מלאה לקו העסקי שלך.',
+      '',
+      `רוצה חודש שימוש במתנה? באזור האישי מחכה לך קישור שיתוף ייחודי (${subscriptionUrl}). כל צלמת שתפתח סטודיו דרך הקישור שלך מזכה אותך בחודש פרימיום מלא.`,
+      '',
+      `צריכה עזרה? אני זמינה במייל ${supportEmail} או דרך טאב יצירת הקשר במערכת.`,
+      '',
+      `בהצלחה,`,
+      adminName,
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader:
+        'החשבון שלך מוכן — אתר, גלריות ולקוחות במקום אחד. הנה כמה צעדים ראשונים.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendWelcomeEmail(input: { name: string; email: string }) {
   const resend = requireResendOrSafeStub({
     template: 'welcome',
     email: input.email,
   })
   if (!resend) return
 
-  const supportEmail = getFeedbackEmail()
-  const adminName = getAdminName()
+  const { subject, text, html } = buildWelcomeEmail({ name: input.name })
 
   await resend.emails.send({
     from: emailFrom(),
     to: input.email,
-    replyTo: supportEmail,
-    subject: 'איזה כיף שהצטרפת! הסטודיו שלך מוכן 📸',
-    html: `
-      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
-        <p style="font-size: 1.1rem;">👋 היי ${input.name},</p>
-        <p>🎉 איזה כיף שהצטרפת אלינו! הסטודיו הדיגיטלי החדש שלך רשום ומוכן לעבודה.</p>
-        <p>✨ בניתי את המערכת הזו מתוך מטרה לאפשר לכל צלמת להקים אתר עסקי מהיר ומקצועי בקלות ובמהירות, ואני מתרגשת לראות את האתר שלך קורם עור וגידים.</p>
-        <p><strong>🚀 כמה דברים קצרים שתוכלי לעשות כבר עכשיו באתר שלך:</strong></p>
-        <ul style="padding-right: 1.25rem;">
-          <li style="margin-bottom: 0.5rem;">📸 <strong>להעלות את העבודות שלך:</strong> הקימי גלריות מרהיבות שיציגו את הצילומים שלך בצורה הכי איכותית ומהירה שיש.</li>
-          <li style="margin-bottom: 0.5rem;">💎 <strong>להגדיר חבילות ומחירים:</strong> הציגי ללקוחות את חבילות הצילום השונות שלך בצורה ברורה ומסודרת.</li>
-          <li style="margin-bottom: 0.5rem;">✍️ <strong>לפתוח בלוג אישי:</strong> תוכלי לכתוב פוסטים, לשתף הצצות מאחורי הקלעים ולתת טיפים ללקוחות שלך (זה גם מעולה לקידום האתר בגוגל!).</li>
-          <li style="margin-bottom: 0.5rem;">🎨 <strong>לעצב בקלות:</strong> להוסיף לוגו, לשנות תמונות רקע ולהתאים את האתר לקו העסקי שלך (בלי לגעת בקוד בכלל).</li>
-        </ul>
-        <p><strong>💬 צריכה עזרה? אני כאן!</strong></p>
-        <p>אם את מסתבכת, צריכה תמיכה בהקמה הבסיסית או סתם רוצה להתייעץ – אל תהססי לפנות אלי. אני זמינה בשבילך לכל שאלה בכתובת המייל של מנהלת המערכת: <a href="mailto:${supportEmail}">${supportEmail}</a> 📧, או באמצעות טאב יצירת הקשר שבמערכת.</p>
-        <p><strong>🎁 רוצה לקבל חודשי שימוש במתנה?</strong></p>
-        <p>כרגע המערכת פתוחה לשימוש בחינם, אבל יש לך הזדמנות לצבור חודשי פרימיום לעתיד! <a href="${appUrl('/dashboard/subscription')}">באזור האישי</a> שלך מחכה לך קישור שיתוף ייחודי 🔗. אם תשתפי אותו עם חברה צלמת והיא תפתח סטודיו דרך הקישור שלך – את תקבלי אוטומטית חודש נוסף מלא בחינם, והיא תקבל אתר מדהים. שווה, לא? 😉</p>
-        <p>🌟 שיהיה המון בהצלחה, ואני מחכה כבר לראות את האתר המוכן שלך!</p>
-        <p>💜 ${adminName}</p>
-      </div>
-    `,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
   })
 }
 
