@@ -605,7 +605,7 @@ export function SubscriptionBillingPanel({
       {message ? <p className="text-sm text-[--muted]">{message}</p> : null}
 
       <div className="flex flex-wrap gap-3">
-        {checkoutEnabled && isActive ? (
+        {checkoutEnabled && isActive && subscription.paymentType !== 'one_time' ? (
           <>
             <Button
               type="button"
