@@ -217,6 +217,27 @@ async function handleOneTimeCheckout(
     lastPaymentAt: now.toISOString(),
     providerSubscriptionId: subscription.id,
   })
+
+  const oneTimePaymentId = subscription.metadata?.payment_id
+  await repository
+    .upsertTransaction({
+      userId: row.user_id,
+      subscriptionId: row.id,
+      provider: 'sumit',
+      externalTransactionId:
+        oneTimePaymentId != null ? String(oneTimePaymentId) : `${localSubscriptionId}:onetime`,
+      status: 'succeeded',
+      amountAgorot: expectedAmountAgorot,
+      currency: plan.currency,
+      paidAt: now.toISOString(),
+      metadata: { flow: 'one_time', one_time_months: months },
+    })
+    .catch((error) => {
+      console.error('[payments][sumit-return] one-time transaction record failed', {
+        subscriptionId: row.id,
+        message: error instanceof Error ? error.message : String(error),
+      })
+    })
 }
 
 async function handleUpdatePaymentMethod(

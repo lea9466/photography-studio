@@ -284,13 +284,19 @@ export function SubscriptionBillingPanel({
         <div className="grid gap-4 rounded-xl border border-[--border]/60 bg-white/80 p-5 sm:grid-cols-3">
           <div>
             <p className="text-xs text-[--muted]">מסלול</p>
-            <p className="mt-1 font-semibold text-[--foreground]">{activePlan.name}</p>
+            <p className="mt-1 font-semibold text-[--foreground]">
+              {subscription.paymentType === 'one_time'
+                ? 'תשלום חד-פעמי'
+                : activePlan.name}
+            </p>
           </div>
           <div>
             <p className="text-xs text-[--muted]">מחיר</p>
             <p className="mt-1 font-semibold text-[--foreground]">
-              {formatPrice(activePlan.amountAgorot, activePlan.currency)}{' '}
-              {formatInterval(activePlan)}
+              {formatPrice(activePlan.amountAgorot, activePlan.currency)}
+              {subscription.paymentType === 'one_time'
+                ? ''
+                : ` ${formatInterval(activePlan)}`}
             </p>
           </div>
           <div>
