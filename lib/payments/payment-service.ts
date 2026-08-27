@@ -531,7 +531,7 @@ export class PaymentService {
       checkoutEnabled: isPaymentsCheckoutAllowed(userId),
       oneTimePaymentEnabled: isOneTimePaymentEnabled(),
       paymentsFormEnabled: isSumitPaymentsJsEnabled(),
-      maintenance: isPaymentsMaintenance(),
+      maintenance: isPaymentsMaintenance(userId),
       isSmokeTestUser: isPaymentsSmokeTestUser(userId),
       canStartNewCheckout,
       subscription:

@@ -591,20 +591,27 @@ test('checkout endpoint accepts plan code but never client price', async () => {
   assert.doesNotMatch(source, /body\.userId/)
 })
 
-test('payments maintenance defaults ON and gates both charge endpoints', async () => {
+test('payments maintenance defaults ON, lets the smoke user through, gates endpoints', async () => {
   const previous = process.env.PAYMENTS_MAINTENANCE
+  const previousSmoke = process.env.PAYMENTS_SMOKE_TEST_USER_ID
   try {
     delete process.env.PAYMENTS_MAINTENANCE
+    delete process.env.PAYMENTS_SMOKE_TEST_USER_ID
     assert.equal(isPaymentsMaintenance(), true)
     process.env.PAYMENTS_MAINTENANCE = 'anything'
     assert.equal(isPaymentsMaintenance(), true)
+    process.env.PAYMENTS_SMOKE_TEST_USER_ID = 'smoke-1'
+    assert.equal(isPaymentsMaintenance('smoke-1'), false)
+    assert.equal(isPaymentsMaintenance('someone-else'), true)
     process.env.PAYMENTS_MAINTENANCE = 'off'
-    assert.equal(isPaymentsMaintenance(), false)
+    assert.equal(isPaymentsMaintenance('someone-else'), false)
     process.env.PAYMENTS_MAINTENANCE = 'OFF'
     assert.equal(isPaymentsMaintenance(), false)
   } finally {
     if (previous === undefined) delete process.env.PAYMENTS_MAINTENANCE
     else process.env.PAYMENTS_MAINTENANCE = previous
+    if (previousSmoke === undefined) delete process.env.PAYMENTS_SMOKE_TEST_USER_ID
+    else process.env.PAYMENTS_SMOKE_TEST_USER_ID = previousSmoke
   }
 
   for (const route of [
@@ -612,7 +619,7 @@ test('payments maintenance defaults ON and gates both charge endpoints', async (
     'app/api/payments/subscription/charge/route.ts',
   ]) {
     const src = await readFile(path.join(root, route), 'utf8')
-    assert.match(src, /isPaymentsMaintenance\(\)/)
+    assert.match(src, /isPaymentsMaintenance\(context\.userId\)/)
   }
   const panel = await readFile(
     path.join(root, 'components/dashboard/SubscriptionBillingPanel.tsx'),

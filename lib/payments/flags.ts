@@ -56,9 +56,15 @@ export function isSumitPaymentsJsEnabled() {
  *
  * Defaults to ON. Set `PAYMENTS_MAINTENANCE=off` in the environment to lift it
  * (no code deploy needed) once a working flow is live.
+ *
+ * The `PAYMENTS_SMOKE_TEST_USER_ID` account is let through even while it's ON,
+ * so the real ₪29 production test can run before customers get access.
  */
-export function isPaymentsMaintenance() {
-  return process.env.PAYMENTS_MAINTENANCE?.trim().toLowerCase() !== 'off'
+export function isPaymentsMaintenance(userId?: string) {
+  const on = process.env.PAYMENTS_MAINTENANCE?.trim().toLowerCase() !== 'off'
+  if (!on) return false
+  if (userId && isPaymentsSmokeTestUser(userId)) return false
+  return true
 }
 
 /** Both keys are public by design — SUMIT prints them on every hosted page. */

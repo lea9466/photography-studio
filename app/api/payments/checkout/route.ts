@@ -23,7 +23,9 @@ export async function POST(request: NextRequest) {
       throw new PaymentError('authentication_required')
     })
 
-    if (isPaymentsMaintenance()) throw new PaymentError('billing_not_initialized')
+    if (isPaymentsMaintenance(context.userId)) {
+      throw new PaymentError('billing_not_initialized')
+    }
 
     const checkoutAllowed = isPaymentsCheckoutAllowed(context.userId)
     const isSmokeTestUser = isPaymentsSmokeTestUser(context.userId)

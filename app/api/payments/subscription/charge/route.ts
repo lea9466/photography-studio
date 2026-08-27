@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       throw new PaymentError('authentication_required')
     })
 
-    if (isPaymentsMaintenance() || !isSumitPaymentsJsEnabled()) {
+    if (isPaymentsMaintenance(context.userId) || !isSumitPaymentsJsEnabled()) {
       throw new PaymentError('billing_not_initialized')
     }
     if (context.isImpersonating) throw new PaymentError('forbidden')
