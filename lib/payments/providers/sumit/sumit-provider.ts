@@ -338,10 +338,16 @@ export class SumitProvider implements PaymentProvider {
    *
    * `Duration_Months` = the gap between charges (1 = monthly, 12 = yearly),
    * `Recurrence: ''` = open-ended until cancelled, `Payments_Count: '1'` = full
-   * amount each cycle, no installments. Field names/semantics are taken from
-   * SUMIT's WooCommerce plugin (`_duration_in_months` / `_recurrences`) —
-   * CONFIRM against a live ₪29 charge (SUMIT log must show "הוקמה הוראת קבע …
-   * הצלחה", and `Data.RecurringCustomerItemIDs` must be present) before flipping
+   * amount each cycle, no installments.
+   *
+   * Sandbox-verified 2026-08-27 (org 2297007063): `SingleUseToken` is the
+   * correct field name (SUMIT validates it), the three recurrence fields are
+   * accepted, and the response shape matches `mapSumitFirstRecurringCharge`
+   * (`Data.RecurringCustomerItemIDs`, `Data.Payment.{ValidPayment,Status,Amount}`;
+   * `Amount` is VAT-gross). The sandbox terminal cannot CAPTURE
+   * (`AuthoriseOnly:'false'` → code 003), so a real ₪29 production charge is
+   * still needed to confirm the capture succeeds and the recurring item stays
+   * healthy (`Date_NextBilling` advancing) — do that before flipping
    * SUMIT_PAYMENTSJS_ENABLED on.
    */
   async createSubscription(
