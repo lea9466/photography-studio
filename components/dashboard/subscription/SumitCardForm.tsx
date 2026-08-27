@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useState } from 'react'
 import Script from 'next/script'
 import { Loader2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,10 @@ import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
  * are uncontrolled and carry no `name`, so the PAN/CVV never enter React state
  * and are never posted to our server. We only ever forward the resulting
  * single-use token to `/api/payments/subscription/charge`.
+ *
+ * `payments.js` uses jQuery as an external global and does NOT bundle it, so we
+ * vendor jQuery (npm) onto `window` before the SUMIT script loads — without it
+ * `CreateToken` throws `jQuery is not defined` and no callback ever fires.
  */
 
 const SCRIPT_URL = 'https://app.sumit.co.il/scripts/payments.js'
@@ -31,11 +35,14 @@ type CreateTokenConfig = {
   FormSelector: string
   ResponseLanguage?: string
   ErrorsClass?: string
-  ResponseCallback: (response: CreateTokenResponse) => void
+  ResponseCallback?: (response: CreateTokenResponse) => void
+  Callback?: (token: string | null) => void
 }
 
 declare global {
   interface Window {
+    jQuery?: unknown
+    $?: unknown
     OfficeGuy?: {
       Payments?: { CreateToken?: (config: CreateTokenConfig) => void }
     }
@@ -58,11 +65,35 @@ export function SumitCardForm({
   onCancel,
 }: Props) {
   const formId = `sumit-card-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const [jqReady, setJqReady] = useState(
+    typeof window !== 'undefined' && Boolean(window.jQuery)
+  )
   const [scriptReady, setScriptReady] = useState(
     typeof window !== 'undefined' && Boolean(window.OfficeGuy?.Payments?.CreateToken)
   )
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Vendor jQuery onto window before payments.js loads (see file header).
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.jQuery) {
+      setJqReady(true)
+      return
+    }
+    let cancelled = false
+    import('jquery')
+      .then((mod) => {
+        if (cancelled) return
+        window.jQuery = window.$ = mod.default
+        setJqReady(true)
+      })
+      .catch(() => {
+        if (!cancelled) setError('לא ניתן לטעון את שירות התשלום כרגע. נסי שוב מאוחר יותר.')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const chargeWithToken = useCallback(
     async (token: string) => {
@@ -103,6 +134,23 @@ export function SumitCardForm({
       }
 
       setBusy(true)
+      let settled = false
+      const finish = (fn: () => void) => {
+        if (settled) return
+        settled = true
+        window.clearTimeout(watchdog)
+        fn()
+      }
+      // payments.js calls Callback(null) on a tokenization error and only
+      // ResponseCallback on success — without a watchdog a failure hangs the
+      // spinner forever.
+      const watchdog = window.setTimeout(() => {
+        finish(() => {
+          setError('שירות התשלום לא הגיב. נסי שוב בעוד רגע.')
+          setBusy(false)
+        })
+      }, 25000)
+
       createToken({
         CompanyID: COMPANY_ID,
         APIPublicKey: API_PUBLIC_KEY,
@@ -110,16 +158,31 @@ export function SumitCardForm({
         ResponseLanguage: 'he',
         ErrorsClass: `#${formId} .og-errors`,
         ResponseCallback: (response) => {
+          console.info('[sumit] CreateToken response', response)
           const token = response?.Data?.SingleUseToken
           if (response?.Status === 0 && token) {
-            void chargeWithToken(token)
+            finish(() => void chargeWithToken(token))
             return
           }
-          setError(
-            response?.UserErrorMessage ||
-              'פרטי הכרטיס לא אושרו. בדקי את הפרטים ונסי שוב.'
-          )
-          setBusy(false)
+          finish(() => {
+            setError(
+              response?.UserErrorMessage ||
+                response?.TechnicalErrorDetails ||
+                'פרטי הכרטיס לא אושרו. בדקי את הפרטים ונסי שוב.'
+            )
+            setBusy(false)
+          })
+        },
+        Callback: (token) => {
+          console.info('[sumit] CreateToken Callback token=', token)
+          if (token) {
+            finish(() => void chargeWithToken(token))
+            return
+          }
+          finish(() => {
+            setError('לא ניתן היה לאמת את פרטי הכרטיס. בדקי את המספר, התוקף ות"ז ונסי שוב.')
+            setBusy(false)
+          })
         },
       })
     },
@@ -130,14 +193,16 @@ export function SumitCardForm({
 
   return (
     <div className="space-y-4 rounded-xl border border-[#7D3A52]/30 bg-white/80 p-5">
-      <Script
-        src={SCRIPT_URL}
-        strategy="afterInteractive"
-        onReady={() => setScriptReady(true)}
-        onError={() =>
-          setError('לא ניתן לטעון את שירות התשלום כרגע. נסי שוב מאוחר יותר.')
-        }
-      />
+      {jqReady ? (
+        <Script
+          src={SCRIPT_URL}
+          strategy="afterInteractive"
+          onReady={() => setScriptReady(true)}
+          onError={() =>
+            setError('לא ניתן לטעון את שירות התשלום כרגע. נסי שוב מאוחר יותר.')
+          }
+        />
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <div>
