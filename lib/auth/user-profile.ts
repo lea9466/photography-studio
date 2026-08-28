@@ -125,6 +125,16 @@ export async function ensureUserProfile(meta?: {
 }
 
 /**
+ * Accounts older than this that still lack `welcome_email_sent` are treated as
+ * already-onboarded — never send them a "welcome" email. The auth callback runs
+ * on every code exchange (OAuth login, magic link, password reset), so without
+ * this a returning user who predates the flag (added 2026-07-10) would get a
+ * welcome email years after signing up. A genuine signup reaches here within
+ * seconds; even a delayed email confirmation stays well inside this window.
+ */
+const WELCOME_EMAIL_MAX_ACCOUNT_AGE_MS = 7 * 24 * 60 * 60 * 1000
+
+/**
  * Sends welcome email for the current authenticated user only.
  * Auth metadata updates always target getUser().id.
  */
@@ -133,6 +143,14 @@ export async function maybeSendWelcomeEmailForCurrentUser(displayName?: string) 
 
   const metadata = user.user_metadata ?? {}
   if (metadata.welcome_email_sent === true) return
+
+  const createdAtMs = Date.parse(user.created_at)
+  if (
+    Number.isFinite(createdAtMs) &&
+    Date.now() - createdAtMs > WELCOME_EMAIL_MAX_ACCOUNT_AGE_MS
+  ) {
+    return
+  }
 
   const email = user.email?.trim()
   if (!email) return
