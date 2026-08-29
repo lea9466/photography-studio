@@ -2,6 +2,7 @@ import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { downloadMediaObject } from '@/lib/r2/storage'
 import { isR2Configured, getR2Config, r2PublicObjectUrl } from '@/lib/r2/config'
 import { getR2Client } from '@/lib/r2/client'
+import { signEdgeUrl } from '@/lib/r2/edge-signing'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { touchGallerySession } from '@/lib/gallery-session'
@@ -27,6 +28,15 @@ const ALWAYS_PUBLIC_REDIRECT_PREFIXES = ['branding/', 'cover-images/'] as const
  * bare, tokenless public URL that would work for anyone who obtains it.
  */
 const CONDITIONAL_PUBLIC_REDIRECT_PREFIXES = ['previews/', 'watermarked/'] as const
+
+/**
+ * Buckets the gallery-media-guard Worker requires a rolling `?exp&sig` on when
+ * served from the public CDN domain (see lib/r2/edge-signing.ts). A bare,
+ * unsigned CDN URL for these is rejected with 403 — so when this route
+ * redirects such a key to the CDN it must hand back a signed URL, not a bare
+ * one. branding/cover-images are served unsigned and are not in this set.
+ */
+const SIGNED_EDGE_REDIRECT_BUCKETS = new Set<MediaBucket>(['previews', 'watermarked'])
 
 const GALLERY_SCOPED_BUCKETS = new Set<MediaBucket>([
   'originals',
@@ -60,6 +70,14 @@ function isConditionalPublicRedirectKey(key: string) {
 }
 
 function redirectToPublicR2(normalizedKey: string): Response | null {
+  const bucket = bucketFromKey(normalizedKey)
+  if (bucket && SIGNED_EDGE_REDIRECT_BUCKETS.has(bucket)) {
+    const { publicUrl } = getR2Config()
+    if (!publicUrl) return null
+    const path = normalizedKey.slice(normalizedKey.indexOf('/') + 1)
+    return Response.redirect(signEdgeUrl(publicUrl, bucket, path), 302)
+  }
+
   const publicUrl = r2PublicObjectUrl(normalizedKey)
   if (!publicUrl) return null
   return Response.redirect(publicUrl, 302)
