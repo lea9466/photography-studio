@@ -186,7 +186,21 @@ async function authorizeGalleryScopedMedia(
     return { allowed: await touchGallerySession(resolvedGalleryId), publiclyAccessible: false }
   }
 
-  return verifyGalleryAccess(resolvedGalleryId)
+  const access = await verifyGalleryAccess(resolvedGalleryId)
+  if (access.allowed) return access
+
+  // A non-public gallery with no visitor session — but the owning photographer
+  // may still be pulling their own gallery's derivatives into the dashboard.
+  // The testimonials image picker reads preview_url straight from the photos
+  // table, so those <img> requests carry no galleryId param and no gallery-
+  // session cookie, yet the logged-in photographer is plainly allowed to see
+  // them. Stream the bytes (publiclyAccessible stays false) so a private
+  // gallery's preview is never handed out as a bare, permanent public-CDN URL.
+  if (await verifyPhotographerOwnsGallery(resolvedGalleryId)) {
+    return { allowed: true, publiclyAccessible: false }
+  }
+
+  return access
 }
 
 async function streamCoverImage(normalizedKey: string) {
