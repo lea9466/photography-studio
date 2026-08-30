@@ -301,6 +301,9 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
         activeSubscriptions.get(studio.id) ?? null
       ),
       paymentsCheckoutEnabled,
+      // Admin studio-list preview doesn't select the addon column — the tier
+      // badge shown here doesn't need domain-addon precision.
+      hasCustomDomainAddon: false,
     })
     return {
       id: studio.id,

@@ -9,6 +9,7 @@ import type { StudioEntitlements, SubscriptionTierOverride } from './types'
 export type StudioEntitlementUserRow = {
   trial_end_date: string | null
   subscription_tier_override: SubscriptionTierOverride | null
+  custom_domain_addon_purchased_at: string | null
 }
 
 export type StudioEntitlementSubscriptionRow = {
@@ -17,10 +18,18 @@ export type StudioEntitlementSubscriptionRow = {
   updated_at: string | null
 }
 
-function isMissingOverrideColumnError(message: string) {
+/** Matches a PostgREST "unknown column" error for either optional column this
+ *  loader selects speculatively — `subscription_tier_override` and the newer
+ *  `custom_domain_addon_purchased_at` — so a not-yet-applied migration in some
+ *  environment degrades to safe defaults instead of failing entitlements
+ *  resolution outright (same defensive posture for both, since they ship
+ *  together and either being absent means the same "older schema" case). */
+function isMissingOptionalColumnError(message: string) {
   const lowered = message.toLowerCase()
+  const mentionsKnownOptionalColumn =
+    message.includes('subscription_tier_override') || message.includes('custom_domain_addon_purchased_at')
   return (
-    message.includes('subscription_tier_override') &&
+    mentionsKnownOptionalColumn &&
     (lowered.includes('column') ||
       lowered.includes('does not exist') ||
       lowered.includes('pgrest204') ||
@@ -46,7 +55,7 @@ export async function getStudioEntitlements(
     await Promise.all([
       admin
         .from('users')
-        .select('trial_end_date, subscription_tier_override')
+        .select('trial_end_date, subscription_tier_override, custom_domain_addon_purchased_at')
         .eq('id', userId)
         .maybeSingle(),
       admin
@@ -65,7 +74,7 @@ export async function getStudioEntitlements(
   )
   const paymentsCheckoutEnabled = isPaymentsCheckoutEnabled()
 
-  if (userError && isMissingOverrideColumnError(userError.message)) {
+  if (userError && isMissingOptionalColumnError(userError.message)) {
     const { data: fallback } = await admin
       .from('users')
       .select('trial_end_date')
@@ -77,6 +86,7 @@ export async function getStudioEntitlements(
       subscriptionTierOverride: null,
       hasActiveSubscription,
       paymentsCheckoutEnabled,
+      hasCustomDomainAddon: false,
       now,
     })
   }
@@ -89,6 +99,7 @@ export async function getStudioEntitlements(
       subscriptionTierOverride: 'free',
       hasActiveSubscription,
       paymentsCheckoutEnabled,
+      hasCustomDomainAddon: false,
       now,
     })
   }
@@ -99,6 +110,7 @@ export async function getStudioEntitlements(
     subscriptionTierOverride: row.subscription_tier_override,
     hasActiveSubscription,
     paymentsCheckoutEnabled,
+    hasCustomDomainAddon: row.custom_domain_addon_purchased_at != null,
     now,
   })
 }

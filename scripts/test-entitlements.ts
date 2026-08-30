@@ -70,72 +70,72 @@ describe('isTrialActive', () => {
 
 describe('resolveStudioEntitlements - tier resolution', () => {
   it('forced FREE override = FREE', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: true, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: true, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'free')
     assert.equal(e.isPro, false)
     assert.equal(e.source, 'admin_override')
   })
   it('forced PRO override = PRO', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'pro', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'pro', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.isPro, true)
     assert.equal(e.source, 'admin_override')
   })
   it('auto with active trial = PRO (trial)', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.isPro, true)
     assert.equal(e.source, 'trial')
   })
   it('auto with active subscription = PRO (subscription)', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'auto', hasActiveSubscription: true, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'auto', hasActiveSubscription: true, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.isPro, true)
     assert.equal(e.source, 'subscription')
   })
   it('auto with expired trial + no subscription + checkout enabled = FREE', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'free')
     assert.equal(e.isPro, false)
     assert.equal(e.source, 'free')
   })
   it('auto with active trial takes precedence over subscription', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: true, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: true, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.source, 'trial')
   })
 
   it('auto with expired trial + checkout disabled = PRO (pre_launch), not FREE', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.isPro, true)
     assert.equal(e.source, 'pre_launch')
     assert.equal(getPublicGalleryLimit(e), PRO_LIMITS.publicGalleries)
   })
   it('auto with no trial at all + checkout disabled = PRO (pre_launch)', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, now })
+    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.source, 'pre_launch')
   })
   it('forced FREE override still wins even when checkout disabled', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: false, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-01-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: false, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'free')
     assert.equal(e.source, 'admin_override')
   })
   it('active trial still reports source "trial" (not pre_launch) even when checkout disabled', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: false, hasCustomDomainAddon: false, now })
     assert.equal(e.source, 'trial')
   })
 })
 
 describe('resolveStudioEntitlements - limits', () => {
   it('FREE limits: heroImages=3, publicGalleries=1, galleryPhotos=30', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(getHeroImageLimit(e), FREE_HERO_IMAGE_LIMIT)
     assert.equal(getPublicGalleryLimit(e), FREE_PUBLIC_GALLERY_LIMIT)
     assert.equal(getGalleryPhotoLimit(e), FREE_GALLERY_PHOTO_LIMIT)
   })
   it('PRO limits: all Infinity', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(getHeroImageLimit(e), PRO_LIMITS.heroImages)
     assert.equal(getPublicGalleryLimit(e), PRO_LIMITS.publicGalleries)
     assert.equal(getGalleryPhotoLimit(e), PRO_LIMITS.galleryPhotos)
@@ -143,8 +143,8 @@ describe('resolveStudioEntitlements - limits', () => {
 })
 
 describe('canUseFeature', () => {
-  const free = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
-  const pro = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, now })
+  const free = resolveStudioEntitlements({ trialEndDate: null, subscriptionTierOverride: 'free', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
+  const pro = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'auto', hasActiveSubscription: false, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
 
   const features: Array<[string, boolean, boolean]> = [
     ['hero_video', false, true],
@@ -170,7 +170,7 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: '2026-02-01T00:00:00Z',
       subscriptionTierOverride: 'auto',
       hasActiveSubscription: false,
-      paymentsCheckoutEnabled: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.source, 'trial')
@@ -182,7 +182,7 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: null,
       subscriptionTierOverride: 'auto',
       hasActiveSubscription: false,
-      paymentsCheckoutEnabled: false,
+      paymentsCheckoutEnabled: false, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.source, 'pre_launch')
@@ -193,7 +193,7 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: null,
       subscriptionTierOverride: 'auto',
       hasActiveSubscription: true,
-      paymentsCheckoutEnabled: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.source, 'subscription')
@@ -204,7 +204,7 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: null,
       subscriptionTierOverride: 'pro',
       hasActiveSubscription: false,
-      paymentsCheckoutEnabled: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.source, 'admin_override')
@@ -215,7 +215,7 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: null,
       subscriptionTierOverride: 'free',
       hasActiveSubscription: false,
-      paymentsCheckoutEnabled: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.features.custom_domain, false)
@@ -225,11 +225,74 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
       trialEndDate: '2026-02-01T00:00:00Z',
       subscriptionTierOverride: 'auto',
       hasActiveSubscription: true,
-      paymentsCheckoutEnabled: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })
     assert.equal(e.source, 'trial')
     assert.equal(e.features.custom_domain, false)
+  })
+})
+
+describe('custom_domain addon — standalone ₪99 purchase, independent of subscription tier', () => {
+  it('FREE tier + addon purchased: custom_domain is true, every other PRO feature stays false', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'free',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      hasCustomDomainAddon: true,
+      now,
+    })
+    assert.equal(e.tier, 'free')
+    assert.equal(e.features.custom_domain, true)
+    assert.equal(e.features.posts, false)
+  })
+  it('trial + addon purchased: custom_domain is true even though trial alone excludes it', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: '2026-02-01T00:00:00Z',
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      hasCustomDomainAddon: true,
+      now,
+    })
+    assert.equal(e.source, 'trial')
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('admin force-FREE + addon purchased: custom_domain survives the forced downgrade', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'free',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      hasCustomDomainAddon: true,
+      now,
+    })
+    assert.equal(e.source, 'admin_override')
+    assert.equal(e.isPro, false)
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('real subscription without the addon: still true via the subscription path (no double-gating)', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: true,
+      paymentsCheckoutEnabled: true,
+      hasCustomDomainAddon: false,
+      now,
+    })
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('no subscription, no trial, no addon: false, and never undefined', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'free',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      hasCustomDomainAddon: false,
+      now,
+    })
+    assert.strictEqual(e.features.custom_domain, false)
   })
 })
 
@@ -281,11 +344,11 @@ describe('Data preserved on downgrade', () => {
     assert.equal(FREE_LIMITS.galleryPhotos, 30)
   })
   it('resolveStudioEntitlements on forced FREE keeps existing data - features false, limits free', () => {
-    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'pro', hasActiveSubscription: true, paymentsCheckoutEnabled: true, now })
+    const e = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'pro', hasActiveSubscription: true, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e.tier, 'pro')
     assert.equal(e.isPro, true)
     // After override to free (simulated by calling with free override)
-    const e2 = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: true, paymentsCheckoutEnabled: true, now })
+    const e2 = resolveStudioEntitlements({ trialEndDate: '2026-02-01T00:00:00Z', subscriptionTierOverride: 'free', hasActiveSubscription: true, paymentsCheckoutEnabled: true, hasCustomDomainAddon: false, now })
     assert.equal(e2.tier, 'free')
     assert.equal(e2.isPro, false)
     assert.equal(e2.limits.heroImages, 3)

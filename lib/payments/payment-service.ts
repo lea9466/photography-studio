@@ -9,15 +9,22 @@ import {
   isSumitPaymentsJsEnabled,
 } from './flags'
 import { payMeIterationTypeForPlan } from './providers/payme/payme-iteration'
+import { SumitProvider } from './providers/sumit/sumit-provider'
 import type { PaymentProvider } from './provider'
 import type { BillingRepository } from './repository'
 import { SubscriptionService } from './subscription-service'
 import type {
   CheckoutSession,
+  PaymentCustomer,
   PaymentPlan,
   PaymentProviderName,
   WebhookEvent,
 } from './types'
+import {
+  CUSTOM_DOMAIN_ADDON_ITEM_NAME,
+  CUSTOM_DOMAIN_ADDON_PRICE_AGOROT,
+} from '@/lib/domains/custom-domain-addon'
+import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
 
 export type PaymentLogger = {
   info(message: string, context?: Record<string, string | boolean | null>): void
@@ -192,6 +199,58 @@ export class PaymentService {
   }
 
   /**
+   * Standalone one-time ₪99 checkout that unlocks custom_domain independent
+   * of subscription tier (lib/subscriptions/entitlements.ts's buildFeatures)
+   * — SUMIT-only by design (the feature was requested and verified live on
+   * SUMIT specifically; no PayMe equivalent exists or is planned). Not part
+   * of the generic `PaymentProvider` interface for the same reason
+   * `createAddonCheckout` lives directly on `SumitProvider` rather than it —
+   * see that method's doc comment.
+   */
+  async createCustomDomainAddonCheckout(input: {
+    userId: string
+    successUrl: string
+    cancelUrl: string
+  }): Promise<CheckoutSession> {
+    const provider = this.resolveProvider()
+    if (!(provider instanceof SumitProvider)) {
+      throw new PaymentError('provider_not_configured')
+    }
+
+    const email = await this.repository.getUserEmail(input.userId)
+    if (!email) throw new PaymentError('invalid_request')
+
+    let customerRow = await this.repository.getBillingCustomer(input.userId, provider.name)
+    let customer: PaymentCustomer | null = customerRow?.provider_customer_id
+      ? { id: customerRow.provider_customer_id, provider: provider.name, email: customerRow.email }
+      : null
+
+    if (!customer) {
+      customer = await provider.createCustomer({ userId: input.userId, email })
+      customerRow = await this.repository.saveBillingCustomer({
+        userId: input.userId,
+        provider: provider.name,
+        externalCustomerId: customer.id,
+        email,
+      })
+    }
+
+    this.logger.info('creating custom-domain addon checkout', {
+      provider: provider.name,
+      userId: input.userId,
+    })
+
+    return provider.createAddonCheckout({
+      customerId: customer.id,
+      itemName: CUSTOM_DOMAIN_ADDON_ITEM_NAME,
+      amountAgorot: CUSTOM_DOMAIN_ADDON_PRICE_AGOROT,
+      currency: 'ILS',
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
+    })
+  }
+
+  /**
    * SUMIT PaymentsJS recurring flow: the client tokenizes the card in-site and
    * sends us a single-use `token`; one `provider.createSubscription` call both
    * charges it and opens the standing order. Replaces the broken redirect
@@ -320,6 +379,11 @@ export class PaymentService {
           message: error instanceof Error ? error.message : String(error),
         })
       })
+
+    // See the matching comment on handleCheckout in the SUMIT return route.
+    if (subscription.status === 'active') {
+      await reactivateSuspendedCustomDomains(input.userId)
+    }
 
     return this.getCurrentSubscription(input.userId)
   }

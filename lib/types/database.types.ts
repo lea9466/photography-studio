@@ -112,6 +112,7 @@ export type Database = {
           dashboard_visit_count: number
           is_under_construction: boolean
           is_site_unavailable: boolean
+          custom_domain_addon_purchased_at: string | null
         }
         Insert: {
           id: string
@@ -179,6 +180,7 @@ export type Database = {
           dashboard_visit_count?: number
           is_under_construction?: boolean
           is_site_unavailable?: boolean
+          custom_domain_addon_purchased_at?: string | null
         }
         Update: {
           id?: string
@@ -246,6 +248,7 @@ export type Database = {
           dashboard_visit_count?: number
           is_under_construction?: boolean
           is_site_unavailable?: boolean
+          custom_domain_addon_purchased_at?: string | null
         }
         Relationships: []
       }

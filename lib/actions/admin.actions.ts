@@ -280,6 +280,9 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
       activeSubscriptions.get(row.id) ?? null
     ),
     paymentsCheckoutEnabled: isPaymentsCheckoutEnabled(),
+    // Admin studio-lookup preview doesn't select the addon column — the tier
+    // badge shown here doesn't need domain-addon precision.
+    hasCustomDomainAddon: false,
   })
 
   return {
@@ -543,6 +546,9 @@ export async function updateAdminStudioSubscriptionOverride(
       activeSubscriptions.get(row.id) ?? null
     ),
     paymentsCheckoutEnabled: isPaymentsCheckoutEnabled(),
+    // Admin studio-lookup preview doesn't select the addon column — the tier
+    // badge shown here doesn't need domain-addon precision.
+    hasCustomDomainAddon: false,
   })
 
   return {

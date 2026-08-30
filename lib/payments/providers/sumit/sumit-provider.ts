@@ -32,7 +32,7 @@ import type {
   SumitListSubscriptionsResponse,
   SumitSetPaymentMethodResponse,
 } from './sumit-types'
-import { assertSumitCustomerMatches, verifySumitPayment } from './sumit-verify'
+import { assertSumitCustomerMatches, verifySumitPayment, type VerifiedSumitPayment } from './sumit-verify'
 import { parseSumitWebhook } from './sumit-webhook'
 
 /**
@@ -326,6 +326,81 @@ export class SumitProvider implements PaymentProvider {
   }
 
   /**
+   * A standalone one-time charge for a specific add-on purchase (currently:
+   * the custom-domain unlock, see lib/actions/custom-domain-addon.actions.ts)
+   * — deliberately NOT built on `createOneTimeCheckoutSession` above, which is
+   * tied to a subscription `plan` and a pending `subscriptions` row. This has
+   * neither: correlation on return carries only `expected_customer_id` (same
+   * posture as `update_payment_method` — see class doc). Deliberately NOT a
+   * `user_id` param too — the return handler resolves the actual studio to
+   * credit by reverse-looking-up the SUMIT-*verified* customer id in
+   * `billing_customers`, never from a client-suppliable value, so a forged
+   * `user_id` can't redirect a real payment's credit to a different account.
+   * Same real, final charge mechanics as `createOneTimeCheckoutSession`
+   * (`AuthoriseOnly: 'false'` on `beginredirect`).
+   */
+  async createAddonCheckout(input: {
+    customerId: string
+    itemName: string
+    amountAgorot: number
+    currency: string
+    successUrl: string
+    cancelUrl: string
+  }): Promise<CheckoutSession> {
+    const item: SumitLineItem = {
+      Item: { Name: input.itemName, SearchMode: 'Automatic' },
+      Quantity: 1,
+      UnitPrice: agorotToSumitAmount(input.amountAgorot),
+      Currency: input.currency.toUpperCase(),
+    }
+
+    const redirectUrl = buildSumitReturnUrl({
+      mode: 'custom_domain_addon',
+      params: { expected_customer_id: input.customerId },
+      next: input.successUrl,
+    })
+
+    const response = await this.client().postJson<SumitBeginRedirectResponse>(
+      '/billing/payments/beginredirect/',
+      {
+        Items: [item],
+        Customer: { ID: Number(input.customerId) },
+        VATIncluded: 'true',
+        DocumentLanguage: 'Hebrew',
+        RedirectURL: redirectUrl,
+        CancelRedirectURL: input.cancelUrl,
+        AuthoriseOnly: 'false',
+      }
+    )
+
+    return mapSumitCheckoutFromRedirect(response)
+  }
+
+  /**
+   * Verify-only completion of `createAddonCheckout` — the real charge already
+   * happened inside `beginredirect` above, same as `completeOneTimeCheckout`.
+   * Returns the raw verified payment rather than a `PaymentSubscription`
+   * shape since there's no subscription to map to; the caller (the return
+   * route's `handleCustomDomainAddonCheckout`) decides what to do with it.
+   */
+  async completeAddonCheckout(input: {
+    paymentId: number
+    expectedAmountAgorot: number
+    expectedCustomerId: number
+  }): Promise<VerifiedSumitPayment> {
+    const verified = await verifySumitPayment(this.client(), input.paymentId, false)
+    assertSumitCustomerMatches(verified, input.expectedCustomerId)
+
+    if (Math.abs(verified.amount - agorotToSumitAmount(input.expectedAmountAgorot)) > 0.001) {
+      throw new PaymentError('verification_failed', {
+        detail: `SUMIT addon charge amount mismatch: got ${verified.amount}, expected ${agorotToSumitAmount(input.expectedAmountAgorot)}`,
+      })
+    }
+
+    return verified
+  }
+
+  /**
    * The real recurring-subscription flow (replaces the broken `beginredirect`
    * two-step — see docs/payments-architecture.md). One `/billing/recurring/charge/`
    * call that BOTH charges the card AND opens the standing order, given a
@@ -566,7 +641,7 @@ export class SumitProvider implements PaymentProvider {
  * and only used as the final destination once verification succeeds.
  */
 function buildSumitReturnUrl(input: {
-  mode: 'checkout' | 'one_time_checkout' | 'update_payment_method'
+  mode: 'checkout' | 'one_time_checkout' | 'update_payment_method' | 'custom_domain_addon'
   params: Record<string, string>
   next: string
 }): string {

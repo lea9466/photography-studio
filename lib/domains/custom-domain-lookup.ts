@@ -16,6 +16,17 @@ const METADATA_LOOKUP_TIMEOUT_MS = 4000
  */
 const LOOKUP_TIMEOUT_MS = 4000
 
+export type ResolvedCustomDomain = {
+  slug: string
+  /** True when the domain is verified/DNS-correct but the owner currently
+   *  lacks entitlement (no active subscription/admin override and no
+   *  standalone addon purchase — see lib/subscriptions/entitlements.ts and
+   *  the `suspended_billing` status doc in the schema migration). The
+   *  caller (middleware) redirects rather than serves the site directly in
+   *  this case — see lib/domains/rewrite.ts. */
+  suspended: boolean
+}
+
 /**
  * Resolves a connected custom domain's Host header to its owner's studio
  * slug. Uses the admin client (not the anon/RLS client `updateSession`
@@ -26,7 +37,11 @@ const LOOKUP_TIMEOUT_MS = 4000
  * comment warns about.
  *
  * A single embedded-join query (not two sequential round-trips) — halves
- * the latency this adds to every tenant-domain request. Fails CLOSED: a
+ * the latency this adds to every tenant-domain request. Matches BOTH
+ * 'active' and 'suspended_billing' (unlike getActiveCustomDomainHost below,
+ * which is 'active'-only since it drives canonical/OG tags — a suspended
+ * domain must never be presented as canonical) so a lapsed studio's visitor
+ * still gets a real redirect target instead of a bare 404. Fails CLOSED: a
  * timeout or any query error resolves to null, which the caller (middleware)
  * turns into a 404 rather than hanging — the custom-domain path degrading
  * briefly during a DB hiccup is an acceptable tradeoff for never risking a
@@ -34,7 +49,7 @@ const LOOKUP_TIMEOUT_MS = 4000
  * already failed isKnownAppHost, so the main app domain is never affected by
  * this call, slow or not.
  */
-export async function resolveCustomDomainSlug(hostname: string): Promise<string | null> {
+export async function resolveCustomDomainSlug(hostname: string): Promise<ResolvedCustomDomain | null> {
   const admin = createAdminClient()
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), LOOKUP_TIMEOUT_MS)
@@ -42,14 +57,16 @@ export async function resolveCustomDomainSlug(hostname: string): Promise<string 
   try {
     const { data } = await admin
       .from('custom_domains')
-      .select('users!inner(slug)')
+      .select('status, users!inner(slug)')
       .eq('hostname', hostname)
-      .eq('status', 'active')
+      .in('status', ['active', 'suspended_billing'])
       .abortSignal(controller.signal)
       .maybeSingle()
 
-    const slug = (data as { users: { slug: string | null } | null } | null)?.users?.slug
-    return slug?.trim() || null
+    const row = data as { status: string; users: { slug: string | null } | null } | null
+    const slug = row?.users?.slug?.trim()
+    if (!slug) return null
+    return { slug, suspended: row!.status === 'suspended_billing' }
   } catch (error) {
     console.error('[custom-domain-lookup] failed, treating as not found', {
       hostname,

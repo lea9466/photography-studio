@@ -47,7 +47,21 @@ export async function POST(request: NextRequest) {
     const cancelUrl = getPaymentReturnUrl('/dashboard/subscription?checkout=cancelled')
 
     let session
-    if (body.paymentType === 'one_time') {
+    if (body.paymentType === 'custom_domain_addon') {
+      // Same `checkout` param name every other flow's successUrl/cancelUrl
+      // uses (not e.g. `addon`) — the SUMIT return route's shared
+      // withCheckoutError() always overwrites a `checkout` key on failure; a
+      // differently-named key here would leave both an old "success" and a
+      // new "error" param on the URL at once. Unambiguous in practice since
+      // nothing else ever redirects to /dashboard/custom-domain.
+      const successUrl = getPaymentReturnUrl('/dashboard/custom-domain?checkout=success')
+      const cancelUrl = getPaymentReturnUrl('/dashboard/custom-domain?checkout=cancelled')
+      session = await paymentService.createCustomDomainAddonCheckout({
+        userId: context.userId,
+        successUrl,
+        cancelUrl,
+      })
+    } else if (body.paymentType === 'one_time') {
       if (!isOneTimePaymentEnabled()) throw new PaymentError('invalid_request')
 
       const months = typeof body.months === 'number' ? Math.trunc(body.months) : NaN

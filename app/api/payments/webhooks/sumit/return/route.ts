@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SupabaseBillingRepository } from '@/lib/payments/repository'
 import { SumitProvider } from '@/lib/payments/providers/sumit/sumit-provider'
+import { CUSTOM_DOMAIN_ADDON_PRICE_AGOROT } from '@/lib/domains/custom-domain-addon'
+import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
 
 export const runtime = 'nodejs'
 
@@ -40,6 +42,8 @@ export async function GET(request: NextRequest) {
       await handleOneTimeCheckout(provider, params, paymentId)
     } else if (mode === 'update_payment_method') {
       await handleUpdatePaymentMethod(provider, params, paymentId)
+    } else if (mode === 'custom_domain_addon') {
+      await handleCustomDomainAddonCheckout(provider, params, paymentId)
     } else {
       console.error('[payments][sumit-return] unknown sumit_mode', { mode })
       return NextResponse.redirect(withCheckoutError(next))
@@ -147,6 +151,13 @@ async function handleCheckout(
     lastPaymentAt: now,
     providerSubscriptionId: subscription.id,
   })
+
+  // A domain suspended while she had no entitlement (see
+  // lib/domains/custom-domain-suspension.ts) reactivates the moment a real
+  // subscription goes active — no waiting for the reconciliation cron.
+  if (subscription.status === 'active') {
+    await reactivateSuspendedCustomDomains(row.user_id)
+  }
 }
 
 /**
@@ -238,6 +249,11 @@ async function handleOneTimeCheckout(
         message: error instanceof Error ? error.message : String(error),
       })
     })
+
+  // See the matching comment in handleCheckout above.
+  if (subscription.status === 'active') {
+    await reactivateSuspendedCustomDomains(row.user_id)
+  }
 }
 
 async function handleUpdatePaymentMethod(
@@ -249,4 +265,77 @@ async function handleUpdatePaymentMethod(
   if (!Number.isFinite(expectedCustomerId)) throw new Error('missing expected_customer_id')
 
   await provider.completePaymentMethodUpdate({ paymentId, expectedCustomerId })
+}
+
+/**
+ * Standalone one-time ₪99 addon that unlocks custom_domain independent of
+ * subscription tier (lib/subscriptions/entitlements.ts's buildFeatures) —
+ * see `createAddonCheckout`'s doc comment for why the studio to credit is
+ * resolved from the SUMIT-*verified* customer id (`billing_customers`
+ * reverse lookup) rather than trusted directly off any request param: a
+ * `user_id` query param here would let anyone redirect a real payment's
+ * credit onto a different account by editing the return URL.
+ */
+async function handleCustomDomainAddonCheckout(
+  provider: SumitProvider,
+  params: URLSearchParams,
+  paymentId: number
+) {
+  const expectedCustomerId = Number(params.get('expected_customer_id'))
+  if (!Number.isFinite(expectedCustomerId)) throw new Error('missing expected_customer_id')
+
+  const verified = await provider.completeAddonCheckout({
+    paymentId,
+    expectedAmountAgorot: CUSTOM_DOMAIN_ADDON_PRICE_AGOROT,
+    expectedCustomerId,
+  })
+
+  const admin = createAdminClient()
+  const repository = new SupabaseBillingRepository(admin)
+
+  const billingCustomer = await repository.getBillingCustomerByExternalId(
+    'sumit',
+    String(verified.customerId)
+  )
+  const userId = (billingCustomer as { user_id: string } | null)?.user_id
+  if (!userId) {
+    throw new Error(`no billing_customers row for verified SUMIT customer ${verified.customerId}`)
+  }
+
+  const now = new Date().toISOString()
+
+  // Idempotent by construction: only sets the flag the first time it's ever
+  // null, so a replayed return URL (back button, refresh) after a first
+  // successful run is a harmless no-op rather than re-stamping the purchase
+  // date. The DB write is a single atomic UPDATE ... WHERE ... IS NULL, not
+  // read-then-write, so a genuine race between two callbacks can't double-set.
+  const { error: userUpdateError } = await admin
+    .from('users')
+    .update({ custom_domain_addon_purchased_at: now } as never)
+    .eq('id', userId)
+    .is('custom_domain_addon_purchased_at', null)
+  if (userUpdateError) {
+    throw new Error(`failed to record custom-domain addon purchase: ${userUpdateError.message}`)
+  }
+
+  await reactivateSuspendedCustomDomains(userId)
+
+  await repository
+    .upsertTransaction({
+      userId,
+      subscriptionId: null,
+      provider: 'sumit',
+      externalTransactionId: String(paymentId),
+      status: 'succeeded',
+      amountAgorot: CUSTOM_DOMAIN_ADDON_PRICE_AGOROT,
+      currency: 'ILS',
+      paidAt: now,
+      metadata: { flow: 'custom_domain_addon' },
+    })
+    .catch((error) => {
+      console.error('[payments][sumit-return] custom-domain addon transaction record failed', {
+        userId,
+        message: error instanceof Error ? error.message : String(error),
+      })
+    })
 }

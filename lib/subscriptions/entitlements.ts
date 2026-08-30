@@ -34,7 +34,11 @@ export const PRO_LIMITS: StudioLimits = {
   galleryPhotos: Infinity,
 }
 
-function buildFeatures(isPro: boolean, source: EntitlementSource): StudioFeatures {
+function buildFeatures(
+  isPro: boolean,
+  source: EntitlementSource,
+  hasCustomDomainAddon: boolean
+): StudioFeatures {
   const features = {} as StudioFeatures
   for (const feature of PRO_FEATURES) {
     features[feature] = isPro
@@ -44,11 +48,20 @@ function buildFeatures(isPro: boolean, source: EntitlementSource): StudioFeature
   // decided against the earlier "everyone in trial already gets it for
   // free while a lapsed-trial user has to pay for the same thing" bug.
   // pre_launch was only ever meant to hold the fort until payments existed
-  // at all, not to permanently include this one on top — so both are
-  // excluded; only a real subscription or an explicit admin override count.
-  if (isPro) {
-    features.custom_domain = source === 'subscription' || source === 'admin_override'
-  }
+  // at all, not to permanently include this one on top — so neither counts;
+  // only a real subscription or an explicit admin override do.
+  //
+  // Independently of all that, `hasCustomDomainAddon` is a standalone
+  // one-time ₪99 purchase (lib/actions/custom-domain-addon.actions.ts) that
+  // unlocks JUST this feature regardless of subscription tier — a studio
+  // that's FREE, mid-trial, or even force-downgraded by an admin still keeps
+  // it, since it was paid for separately and isn't part of the Pro bundle.
+  // Actually serving the connected domain still requires it to stay CURRENT
+  // (see the `suspended_billing` status in lib/domains/*) — this addon is
+  // exactly what keeps a domain out of that state without a live subscription.
+  features.custom_domain = Boolean(
+    (isPro && (source === 'subscription' || source === 'admin_override')) || hasCustomDomainAddon
+  )
   return features
 }
 
@@ -98,6 +111,9 @@ export type ResolveStudioEntitlementsInput = {
    *  default this — omitting it would silently mask the pre-launch grace
    *  below, so passing the real flag is mandatory. */
   paymentsCheckoutEnabled: boolean
+  /** `users.custom_domain_addon_purchased_at IS NOT NULL` — a standalone
+   *  one-time purchase, independent of subscription tier. See buildFeatures. */
+  hasCustomDomainAddon: boolean
   now?: Date
 }
 
@@ -124,7 +140,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'admin_override',
       limits: FREE_LIMITS,
-      features: buildFeatures(false, 'admin_override'),
+      features: buildFeatures(false, 'admin_override', input.hasCustomDomainAddon),
     }
   }
 
@@ -142,7 +158,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'free',
       limits: FREE_LIMITS,
-      features: buildFeatures(false, 'free'),
+      features: buildFeatures(false, 'free', input.hasCustomDomainAddon),
     }
   }
 
@@ -160,7 +176,7 @@ export function resolveStudioEntitlements(
     isPro: true,
     source,
     limits: PRO_LIMITS,
-    features: buildFeatures(true, source),
+    features: buildFeatures(true, source, input.hasCustomDomainAddon),
   }
 }
 

@@ -6,8 +6,11 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { CustomDomainSetting } from '@/components/dashboard/CustomDomainSetting'
 import { CustomDomainExplainer } from '@/components/dashboard/CustomDomainExplainer'
 import { ProFeatureLockedPage } from '@/components/dashboard/ProFeatureLockedPage'
+import { CustomDomainAddonPurchaseButton } from '@/components/dashboard/CustomDomainAddonPurchaseButton'
+import { CustomDomainAddonReturnToast } from '@/components/dashboard/CustomDomainAddonReturnToast'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { isVercelConfigured, VERCEL_CNAME_TARGET, VERCEL_APEX_A_RECORD } from '@/lib/vercel/config'
+import { CUSTOM_DOMAIN_ADDON_PRICE_ILS } from '@/lib/domains/custom-domain-addon'
 import type { CustomDomain } from '@/lib/types/database.types'
 
 export default async function CustomDomainPage() {
@@ -67,11 +70,15 @@ export default async function CustomDomainPage() {
     return (
       <div className="animate-fade-in">
         <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
+          <CustomDomainAddonReturnToast />
           {header}
           <CustomDomainExplainer />
           <ProFeatureLockedPage
             title="דומיין אישי דורש מנוי בתשלום"
-            description="הפיצ'ר הזה לא כלול בתקופת הניסיון — שדרגי למנוי כדי לחבר דומיין משלך (למשל www.השם-שלך.com) לאתר שלך במקום כתובת ה-slug."
+            description={`הפיצ'ר הזה לא כלול בתקופת הניסיון — שדרגי למנוי, או פתחי רק אותו בנפרד בעלות חד-פעמית של ₪${CUSTOM_DOMAIN_ADDON_PRICE_ILS}, בלי צורך במנוי מלא.`}
+            secondaryAction={
+              <CustomDomainAddonPurchaseButton priceLabel={`₪${CUSTOM_DOMAIN_ADDON_PRICE_ILS}`} />
+            }
           />
         </div>
       </div>
@@ -81,6 +88,7 @@ export default async function CustomDomainPage() {
   return (
     <div className="animate-fade-in">
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
+        <CustomDomainAddonReturnToast />
         {header}
         <CustomDomainExplainer />
         {vercelReady ? (
