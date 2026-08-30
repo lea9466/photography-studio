@@ -39,12 +39,13 @@ function GridCell({
   height?: number | null
   onClick: () => void
 }) {
-  // Matches initMasonryReveal's per-cell IntersectionObserver in the old
-  // renderer (threshold 0.12, rootMargin '0px 0px -8% 0px', staggered delay
-  // = (index % 4) * 90ms) — same as Classic/ModernPortfolioGrid's GridCell.
-  const delayMs = (index % 4) * 90
+  // Scroll-in reveal tuned to match the private gallery grid
+  // (components/gallery/ClientPhotoMasonry.tsx): low threshold so it starts
+  // as the cell peeks in, per-row stagger across the 3 columns. The slow 3s
+  // ease-out fade/scale itself lives in the .cell rule of the CSS module.
+  const delayMs = (index % 3) * 130
   const { ref, revealed } = useRevealOnScroll<HTMLDivElement>({
-    threshold: 0.12,
+    threshold: 0.05,
     rootMargin: '0px 0px -8% 0px',
     delayMs,
   })

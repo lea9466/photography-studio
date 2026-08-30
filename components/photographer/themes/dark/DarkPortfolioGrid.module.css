@@ -31,16 +31,19 @@
   margin-bottom: 4px;
   overflow: hidden;
   opacity: 0;
-  transform: scale(0.82);
+  /* Slow scroll-in reveal, matched to the private gallery grid
+     (components/gallery/ClientPhotoMasonry.tsx) — deliberately not the old
+     renderer's 0.7s. */
+  transform: translateY(20px) scale(0.9);
   transition:
-    opacity 0.7s ease,
-    transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
+    opacity 3s ease-out,
+    transform 3s ease-out;
   will-change: opacity, transform;
 }
 
 .cell.isVisible {
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
 }
 
 .cell img {
