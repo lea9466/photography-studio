@@ -220,11 +220,22 @@ describe('custom_domain — excluded from trial and pre_launch, unlike every oth
     })
     assert.equal(e.features.custom_domain, false)
   })
-  it('an active trial that ALSO has a real subscription underneath still reports trial and excludes custom_domain (trial takes precedence)', () => {
+  it('an active trial that ALSO has a real subscription underneath still reports source "trial" (badge/display unaffected) but INCLUDES custom_domain — she is genuinely paying, trial bookkeeping must not block it', () => {
     const e = resolveStudioEntitlements({
       trialEndDate: '2026-02-01T00:00:00Z',
       subscriptionTierOverride: 'auto',
       hasActiveSubscription: true,
+      paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
+      now,
+    })
+    assert.equal(e.source, 'trial')
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('an active trial with NO real subscription underneath still excludes custom_domain — the fix above only counts a genuine subscription, not trial alone', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: '2026-02-01T00:00:00Z',
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: false,
       paymentsCheckoutEnabled: true, hasCustomDomainAddon: false,
       now,
     })

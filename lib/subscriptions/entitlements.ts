@@ -37,6 +37,7 @@ export const PRO_LIMITS: StudioLimits = {
 function buildFeatures(
   isPro: boolean,
   source: EntitlementSource,
+  hasActiveSubscription: boolean,
   hasCustomDomainAddon: boolean
 ): StudioFeatures {
   const features = {} as StudioFeatures
@@ -48,8 +49,17 @@ function buildFeatures(
   // decided against the earlier "everyone in trial already gets it for
   // free while a lapsed-trial user has to pay for the same thing" bug.
   // pre_launch was only ever meant to hold the fort until payments existed
-  // at all, not to permanently include this one on top — so neither counts;
-  // only a real subscription or an explicit admin override do.
+  // at all, not to permanently include this one on top — so neither counts.
+  //
+  // Deliberately checks the raw `hasActiveSubscription` flag here instead of
+  // `source === 'subscription'` — `source` reports 'trial' whenever a trial
+  // is still technically active EVEN IF a real subscription already exists
+  // underneath it (trial takes priority in the source calculation below, for
+  // badge/display purposes), which used to wrongly block a studio that pays
+  // for Pro *during* her own trial window until the trial happened to expire
+  // on its own. She's genuinely paying — this should never depend on trial
+  // bookkeeping. `source === 'admin_override'` still covers a forced-PRO
+  // override, which has no "hasActiveSubscription" of its own to check.
   //
   // Independently of all that, `hasCustomDomainAddon` is a standalone
   // one-time ₪99 purchase (lib/actions/custom-domain-addon.actions.ts) that
@@ -60,7 +70,7 @@ function buildFeatures(
   // (see the `suspended_billing` status in lib/domains/*) — this addon is
   // exactly what keeps a domain out of that state without a live subscription.
   features.custom_domain = Boolean(
-    (isPro && (source === 'subscription' || source === 'admin_override')) || hasCustomDomainAddon
+    (isPro && (hasActiveSubscription || source === 'admin_override')) || hasCustomDomainAddon
   )
   return features
 }
@@ -140,7 +150,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'admin_override',
       limits: FREE_LIMITS,
-      features: buildFeatures(false, 'admin_override', input.hasCustomDomainAddon),
+      features: buildFeatures(false, 'admin_override', input.hasActiveSubscription, input.hasCustomDomainAddon),
     }
   }
 
@@ -158,7 +168,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'free',
       limits: FREE_LIMITS,
-      features: buildFeatures(false, 'free', input.hasCustomDomainAddon),
+      features: buildFeatures(false, 'free', input.hasActiveSubscription, input.hasCustomDomainAddon),
     }
   }
 
@@ -176,7 +186,7 @@ export function resolveStudioEntitlements(
     isPro: true,
     source,
     limits: PRO_LIMITS,
-    features: buildFeatures(true, source, input.hasCustomDomainAddon),
+    features: buildFeatures(true, source, input.hasActiveSubscription, input.hasCustomDomainAddon),
   }
 }
 
