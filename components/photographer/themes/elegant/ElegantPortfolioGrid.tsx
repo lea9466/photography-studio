@@ -39,11 +39,11 @@ function GridCell({
   height?: number | null
   onClick: () => void
 }) {
-  // Scroll-in reveal tuned to match the private gallery grid
-  // (components/gallery/ClientPhotoMasonry.tsx): low threshold so it starts
-  // as the cell peeks in, per-row stagger across the 3 columns. The slow 3s
-  // ease-out fade/scale itself lives in the .cell rule of the CSS module.
-  const delayMs = (index % 3) * 130
+  // Scroll-in reveal: low threshold so it starts as the cell peeks in, with
+  // a light per-row stagger across the 3 columns. The 0.9s fade/scale itself
+  // lives in the .cell rule of the CSS module (quicker than the private
+  // gallery grid, components/gallery/ClientPhotoMasonry.tsx).
+  const delayMs = (index % 3) * 70
   const { ref, revealed } = useRevealOnScroll<HTMLDivElement>({
     threshold: 0.05,
     rootMargin: '0px 0px -8% 0px',

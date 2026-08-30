@@ -35,13 +35,13 @@
   margin-bottom: 4px;
   overflow: hidden;
   opacity: 0;
-  /* Slow scroll-in reveal, matched to the private gallery grid
-     (components/gallery/ClientPhotoMasonry.tsx) — deliberately not the old
-     renderer's 0.7s. */
+  /* Gentle scroll-in reveal — quicker than the private gallery grid
+     (components/gallery/ClientPhotoMasonry.tsx), since a public gallery opens
+     with many cells revealing at once and 3s felt sluggish there. */
   transform: translateY(20px) scale(0.9);
   transition:
-    opacity 3s ease-out,
-    transform 3s ease-out;
+    opacity 0.9s ease-out,
+    transform 0.9s ease-out;
   will-change: opacity, transform;
 }
 
