@@ -4,6 +4,7 @@ import type { SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
+import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { ClassicTestimonialCard, type ClassicTestimonial } from './ClassicTestimonialCard'
 import { SectionTitle } from '../shared/SectionTitle'
@@ -18,8 +19,9 @@ export type ClassicTestimonialsSectionProps = {
   /** Mirrors `photographer.testimonial_layout_type` — 'marquee' scrolls
    * every testimonial in an infinite belt regardless of count; otherwise
    * (the default) more than 3 testimonials get the sliding carousel and
-   * 3-or-fewer get the plain static row. */
-  layoutType?: 'carousel' | 'marquee'
+   * 3-or-fewer get the plain static row; 'flip-cards' is the wide
+   * flip-on-hover grid (shared/TestimonialsFlipGrid). */
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
 }
 
 /**
@@ -72,7 +74,14 @@ export function ClassicTestimonialsSection({
           <div className={styles.divider} />
         </div>
 
-        {layoutType === 'marquee' ? (
+        {layoutType === 'flip-cards' ? (
+          <TestimonialsFlipGrid
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+          />
+        ) : layoutType === 'marquee' ? (
           <TestimonialsMarquee items={cards} />
         ) : testimonials.length > 3 ? (
           <TestimonialsCarousel items={cards} language={language} />

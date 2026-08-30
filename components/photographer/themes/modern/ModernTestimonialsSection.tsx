@@ -5,6 +5,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { SectionTitle } from '../shared/SectionTitle'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
+import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernTestimonialCard, type ModernTestimonial } from './ModernTestimonialCard'
 import styles from './ModernTestimonialsSection.module.css'
@@ -16,7 +17,7 @@ export type ModernTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
 }
 
 /**
@@ -77,7 +78,14 @@ export function ModernTestimonialsSection({
           </SectionTitle>
         </div>
 
-        {isMarquee ? (
+        {layoutType === 'flip-cards' ? (
+          <TestimonialsFlipGrid
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+          />
+        ) : isMarquee ? (
           <TestimonialsMarquee items={cards} />
         ) : testimonials.length > 3 ? (
           <TestimonialsCarousel items={cards} language={language} />

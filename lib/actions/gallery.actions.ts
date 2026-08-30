@@ -36,6 +36,8 @@ import {
   isMvpBypassUser,
 } from '@/lib/types/app.types'
 import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
+import { galleryKindColumns } from '@/lib/gallery-kind'
+import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -466,6 +468,53 @@ export async function createGallery(input: CreateGalleryInput) {
   return { id: gallery.id }
 }
 
+export type CreateClientGalleryInput = {
+  title: string
+  clientId: string | null
+  password?: string
+  expiresAt?: string
+  maxAlbumSelection?: number
+  maxEditSelection?: number
+  allowDownloadPreview?: boolean
+  allowDownloadOriginal?: boolean
+  watermarkText?: string
+  autoApplyWatermark?: boolean
+  sendToClient?: boolean
+  coverImage?: string
+}
+
+/**
+ * Creates a private, password-gated client delivery gallery. `gallery_type`
+ * and `is_public` are forced by the kind (see lib/gallery-kind.ts) and are
+ * never caller-controlled — a client gallery can never be public.
+ */
+export async function createClientGallery(input: CreateClientGalleryInput) {
+  const { galleryType, isPublic } = galleryKindColumns('client')
+  return createGallery({ ...input, galleryType, isPublic })
+}
+
+export type CreateShowcaseGalleryInput = {
+  title: string
+  watermarkText?: string
+  autoApplyWatermark?: boolean
+  coverImage?: string
+}
+
+/**
+ * Creates a public portfolio gallery for the studio's own site. No client, no
+ * password; `gallery_type` and `is_public` are forced by the kind.
+ */
+export async function createShowcaseGallery(input: CreateShowcaseGalleryInput) {
+  const { galleryType, isPublic } = galleryKindColumns('showcase')
+  return createGallery({
+    ...input,
+    clientId: null,
+    galleryType,
+    isPublic,
+    sendToClient: false,
+  })
+}
+
 export async function updateGallerySettings(
   galleryId: string,
   input: {
@@ -478,6 +527,11 @@ export async function updateGallerySettings(
     allowDownloadOriginal?: boolean
     watermarkText?: string | null
     autoApplyWatermark?: boolean
+    /**
+     * Showcase galleries only: whether the gallery is shown on the studio's
+     * public site right now. Rejected for client galleries — see the guard
+     * below. This is visibility, never an identity change.
+     */
     isPublic?: boolean
     coverImage?: string | null
   }
@@ -486,6 +540,23 @@ export async function updateGallerySettings(
   const context = await requireDashboardContext()
   const { userId, supabase } = context
   const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
+
+  // Single ownership + kind lookup, reused by the field guard and the isPublic
+  // guard below.
+  const { data: galleryRow } = await supabase
+    .from('galleries')
+    .select('is_public, gallery_type')
+    .eq('id', galleryId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const existingGallery = galleryRow as
+    | { is_public: boolean; gallery_type: string | null }
+    | null
+  if (!existingGallery) throw new Error('גלריה לא נמצאה')
+
+  // A showcase and a client gallery have disjoint editable fields — never let a
+  // caller push a field that doesn't belong to this gallery's kind.
+  assertSettingsInputAllowedForType(existingGallery.gallery_type, input)
 
   if (input.title !== undefined) {
     const { error } = await supabase
@@ -504,38 +575,36 @@ export async function updateGallerySettings(
     }
   }
   if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
+
   if (input.isPublic !== undefined) {
-    if (input.isPublic) {
-      const { data: existingGallery } = await supabase
-        .from('galleries')
-        .select('is_public')
-        .eq('id', galleryId)
-        .eq('user_id', userId)
-        .single()
+    // "Shown on site" is a showcase-gallery concept only. A client gallery's
+    // is_public is security-load-bearing (it gates password-free photo
+    // access — see lib/gallery-access.ts) and must never be flippable here.
+    if (existingGallery.gallery_type !== 'portfolio') {
+      throw new Error('לא ניתן לשנות את מצב ההצגה של גלריית לקוח')
+    }
 
-      const wasPublic = (existingGallery as { is_public: boolean } | null)?.is_public ?? false
-      if (!wasPublic) {
-        const entitlements = await getStudioEntitlements(userId)
-        // FREE: only one displayed gallery. PRO: the flat count cap below applies.
-        if (!effectiveMvp && !entitlements.isPro) {
-          await assertFreeGalleryCanBecomePublic(supabase, userId, galleryId)
-        }
-        if (entitlements.isPro) {
-          const [{ count: publicGalleryCount }, maxGalleries] = await Promise.all([
-            supabase
-              .from('galleries')
-              .select('id', { count: 'exact', head: true })
-              .eq('user_id', userId)
-              .eq('is_public', true),
-            resolvePhotographerGalleryLimit(context),
-          ])
+    if (input.isPublic && !existingGallery.is_public) {
+      const entitlements = await getStudioEntitlements(userId)
+      // FREE: only one shown gallery. PRO: the flat count cap below applies.
+      if (!effectiveMvp && !entitlements.isPro) {
+        await assertFreeGalleryCanBecomePublic(supabase, userId, galleryId)
+      }
+      if (entitlements.isPro) {
+        const [{ count: publicGalleryCount }, maxGalleries] = await Promise.all([
+          supabase
+            .from('galleries')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('is_public', true),
+          resolvePhotographerGalleryLimit(context),
+        ])
 
-          const limitError = buildPublicGalleryCountLimitError(
-            publicGalleryCount ?? 0,
-            maxGalleries
-          )
-          if (limitError) throw new Error(limitError)
-        }
+        const limitError = buildPublicGalleryCountLimitError(
+          publicGalleryCount ?? 0,
+          maxGalleries
+        )
+        if (limitError) throw new Error(limitError)
       }
     }
 
@@ -544,6 +613,7 @@ export async function updateGallerySettings(
       galleryUpdate.status = effectiveMvp ? MVP_GALLERY_DB_STATUS : 'public'
     }
   }
+
   if (input.coverImage !== undefined) galleryUpdate.cover_image = input.coverImage
 
   if (Object.keys(galleryUpdate).length > 0) {
@@ -581,7 +651,8 @@ export async function updateGallerySettings(
   }
 
   revalidatePath(`/dashboard/galleries/${galleryId}`)
-  revalidatePath(`/dashboard/galleries/${galleryId}/settings`)
+  revalidatePath('/dashboard/galleries')
+  revalidatePath('/dashboard/private-galleries')
   revalidatePath('/dashboard')
 
   const { data: galleryMeta } = await supabase

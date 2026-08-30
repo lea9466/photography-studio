@@ -50,6 +50,7 @@ type SidebarNavProps = {
   isUnderConstruction?: boolean
   isPro?: boolean
   canUseCustomDomain?: boolean
+  canCreateClientGalleries?: boolean
   onOpenAssistant?: () => void
   assistantHasMissingContent?: boolean
 }
@@ -70,6 +71,7 @@ export function SidebarNav({
   isUnderConstruction = false,
   isPro = true,
   canUseCustomDomain = true,
+  canCreateClientGalleries = false,
   onOpenAssistant,
   assistantHasMissingContent = false,
 }: SidebarNavProps) {
@@ -159,6 +161,7 @@ export function SidebarNav({
           siteUnavailableLocked={siteUnavailableLocked}
           isPro={isPro}
           canUseCustomDomain={canUseCustomDomain}
+          canCreateClientGalleries={canCreateClientGalleries}
         />
       </div>
 

@@ -30,6 +30,7 @@ type DashboardLayoutWrapperProps = {
   isPro?: boolean
   /** custom_domain is excluded from trial/pre-launch — see lib/subscriptions/entitlements.ts's buildFeatures — so its nav lock can't reuse the plain `isPro` check every other PRO feature uses. */
   canUseCustomDomain?: boolean
+  canCreateClientGalleries?: boolean
   assistantHasMissingContent?: boolean
   assistantMissingSlug?: boolean
 }
@@ -52,6 +53,7 @@ export function DashboardLayoutWrapper({
   announcement = null,
   isPro = true,
   canUseCustomDomain = true,
+  canCreateClientGalleries = false,
   assistantHasMissingContent = false,
   assistantMissingSlug = false,
 }: DashboardLayoutWrapperProps) {
@@ -101,6 +103,7 @@ export function DashboardLayoutWrapper({
         isUnderConstruction={isUnderConstruction}
         isPro={isPro}
         canUseCustomDomain={canUseCustomDomain}
+        canCreateClientGalleries={canCreateClientGalleries}
         onOpenAssistant={siteUnavailableLocked ? undefined : openAssistant}
         assistantHasMissingContent={assistantHasMissingContent}
       />

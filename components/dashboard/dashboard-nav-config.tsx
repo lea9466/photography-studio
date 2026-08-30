@@ -12,6 +12,7 @@ import {
   CreditCard,
   FileText,
   Images,
+  Lock,
   Globe,
 } from 'lucide-react'
 
@@ -124,3 +125,34 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     isActive: (pathname) => pathname.startsWith('/dashboard/contact'),
   },
 ]
+
+export type DashboardNavContext = {
+  /** Whether the private client-gallery flow is available to this account. */
+  canCreateClientGalleries: boolean
+}
+
+/**
+ * The nav items to render for a given account. When private client galleries
+ * are available the single "גלריות" item splits into two distinct sidebar
+ * entries — "גלריות ציבוריות" and a lock-marked "גלריות פרטיות" — that point
+ * at their own list pages. Otherwise the base list is returned unchanged.
+ */
+export function getDashboardNavItems({
+  canCreateClientGalleries,
+}: DashboardNavContext): DashboardNavItem[] {
+  if (!canCreateClientGalleries) return DASHBOARD_NAV_ITEMS
+
+  return DASHBOARD_NAV_ITEMS.flatMap((item) => {
+    if (item.href !== '/dashboard/galleries') return [item]
+    return [
+      { ...item, label: 'גלריות ציבוריות' },
+      {
+        href: '/dashboard/private-galleries',
+        label: 'גלריות פרטיות',
+        icon: <Lock className="h-5 w-5" />,
+        isActive: (pathname: string) =>
+          pathname.startsWith('/dashboard/private-galleries'),
+      },
+    ]
+  })
+}

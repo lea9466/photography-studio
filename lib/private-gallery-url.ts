@@ -13,15 +13,13 @@ export function getPrivateGalleryBaseUrl(): string {
   return configured || getAppBaseUrl()
 }
 
-export function getPrivateGalleryHost(): string | null {
-  const configured = process.env.NEXT_PUBLIC_PRIVATE_GALLERY_URL?.trim()
-  if (!configured) return null
-  try {
-    return new URL(configured).host
-  } catch {
-    return null
-  }
-}
+/**
+ * Re-exported from the Edge-safe, unit-tested source of truth. Kept here too
+ * because this module is the natural import site for private-gallery URL
+ * helpers — but there is only one implementation (with the "don't point this
+ * at the app's own host" guard), in lib/private-gallery/isolation.ts.
+ */
+export { getPrivateGalleryHost } from '@/lib/private-gallery/isolation'
 
 export function buildPrivateGalleryUrl(galleryId: string): string {
   return `${getPrivateGalleryBaseUrl()}/g/${galleryId}`

@@ -62,7 +62,7 @@ export type ElegantHomePageProps = {
   testimonialsTitle: string
   testimonials: ElegantTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  testimonialLayoutType?: 'carousel' | 'marquee'
+  testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
 
   faqItems: unknown
   faqSectionImageUrl: string | null

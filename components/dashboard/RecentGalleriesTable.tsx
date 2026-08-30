@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
-import { 
+import {
   Edit,
   Share2,
   MoreVertical,
@@ -12,7 +12,8 @@ import {
   Trash2,
   Copy,
   Check,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,6 +35,7 @@ import { toast } from 'sonner'
 import { deleteGallery, updateGallerySettings } from '@/lib/actions/gallery.actions'
 import { resolvePortfolioPublicPath } from '@/lib/queries/portfolio-gallery-page'
 import { getDisplayGalleryStatus, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import { galleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
 import type { Gallery, Client, GalleryStatus } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
@@ -79,8 +81,25 @@ function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false)
-  const [isPublic, setIsPublic] = useState(gallery.is_public || false)
   const [isPending, startTransition] = useTransition()
+  const kind = galleryKind(gallery)
+  const [shownOnSite, setShownOnSite] = useState(gallery.is_public ?? false)
+
+  const handleToggleShownOnSite = (checked: boolean) => {
+    startTransition(async () => {
+      try {
+        await updateGallerySettings(gallery.id, { isPublic: checked })
+        setShownOnSite(checked)
+        toast.success(
+          checked
+            ? 'הגלריה תוצג באתר — כרטיס עם תמונת שער + תמונות בסקשן "תמונות אחרונות"'
+            : 'הגלריה לא תוצג באתר'
+        )
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'שגיאה בעדכון')
+      }
+    })
+  }
 
   const handleShare = async () => {
     const path =
@@ -106,22 +125,6 @@ function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps
     await navigator.clipboard.writeText(galleryLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleTogglePublic = (checked: boolean) => {
-    startTransition(async () => {
-      try {
-        await updateGallerySettings(gallery.id, { isPublic: checked })
-        setIsPublic(checked)
-        toast.success(
-          checked
-            ? 'הגלריה תוצג בדף הבית — כרטיס עם תמונת שער + 4 תמונות בסקשן "תמונות אחרונות"'
-            : 'הגלריה לא תוצג בדף הבית'
-        )
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'שגיאה בעדכון')
-      }
-    })
   }
 
   const handleArchive = () => {
@@ -202,18 +205,25 @@ function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps
         </td>
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
         <td className="px-6 py-4">
-          <div
-            className="flex items-center justify-center gap-2"
-            title="הצג בדף הבית — עד 4 גלריות ציבוריות; 4 תמונות מכל גלריה בסקשן תמונות אחרונות"
-          >
-            <Globe className="h-4 w-4 text-[--muted]" />
-            <Switch
-              checked={isPublic}
-              onCheckedChange={handleTogglePublic}
-              disabled={isPending}
-              className="scale-75"
-            />
-          </div>
+          {kind === 'showcase' ? (
+            <div
+              className="flex items-center justify-center gap-2"
+              title="הצג באתר — כרטיס עם תמונת שער; תמונות בסקשן תמונות אחרונות"
+            >
+              <Globe className="h-4 w-4 text-[--muted]" />
+              <Switch
+                checked={shownOnSite}
+                onCheckedChange={handleToggleShownOnSite}
+                disabled={isPending}
+                className="scale-75"
+              />
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-[--muted]">
+              <Lock className="h-4 w-4" />
+              <span>{GALLERY_KIND_LABELS.client}</span>
+            </div>
+          )}
         </td>
         <td className="px-6 py-4">
           <div className="flex items-center justify-end gap-3">
@@ -300,6 +310,11 @@ type RecentGalleriesTableProps = {
   title?: string
   variant?: 'default' | 'section'
   studioPath: string | null
+  /** `variant="section"` only — the numbered chip + sub-heading text. */
+  sectionIndex?: number
+  sectionDescription?: string
+  /** Empty-state copy when there are no galleries in this list. */
+  emptyLabel?: string
 }
 
 function GalleriesSection({
@@ -357,6 +372,9 @@ export function RecentGalleriesTable({
   title = 'גלריות אחרונות',
   variant = 'default',
   studioPath,
+  sectionIndex = 4,
+  sectionDescription = 'ניהול, עריכה ושיתוף של כל הגלריות שלך',
+  emptyLabel = 'אין גלריות עדיין',
 }: RecentGalleriesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
@@ -454,7 +472,7 @@ export function RecentGalleriesTable({
               <th className="px-6 py-3 text-sm font-medium">לקוח</th>
               <th className="px-6 py-3 text-sm font-medium">סטטוס</th>
               <th className="px-6 py-3 text-center text-sm font-medium">תמונות</th>
-              <th className="px-6 py-3 text-center text-sm font-medium">מוצג באתר</th>
+              <th className="px-6 py-3 text-center text-sm font-medium">הצגה באתר</th>
               <th className="px-6 py-3 text-left text-sm font-medium">פעולות</th>
             </tr>
           </thead>
@@ -472,7 +490,7 @@ export function RecentGalleriesTable({
             ) : (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-[--muted]">
-                  אין גלריות עדיין
+                  {emptyLabel}
                 </td>
               </tr>
             )}
@@ -486,9 +504,9 @@ export function RecentGalleriesTable({
     return (
       <GalleriesSection>
         <GalleriesSectionHeader
-          index={4}
+          index={sectionIndex}
           title={title}
-          description="ניהול, עריכה ושיתוף של כל הגלריות שלך"
+          description={sectionDescription}
         />
         {tableContent}
       </GalleriesSection>

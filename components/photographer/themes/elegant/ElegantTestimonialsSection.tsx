@@ -4,6 +4,7 @@ import type { SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
+import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantTestimonialCard, type ElegantTestimonial } from './ElegantTestimonialCard'
 import styles from './ElegantTestimonialsSection.module.css'
@@ -15,7 +16,7 @@ export type ElegantTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
 }
 
 /**
@@ -70,7 +71,14 @@ export function ElegantTestimonialsSection({
         <ElegantSectionHeading title={title} watermark="RECOMMEND" accentColor={accentColor} align="start" />
       </div>
 
-      {isMarquee ? (
+      {layoutType === 'flip-cards' ? (
+        <TestimonialsFlipGrid
+          testimonials={testimonials}
+          accentColor={accentColor}
+          logoUrl={logoUrl}
+          language={language}
+        />
+      ) : isMarquee ? (
         <TestimonialsMarquee items={cards} />
       ) : testimonials.length > 3 ? (
         <TestimonialsCarousel items={cards} language={language} />

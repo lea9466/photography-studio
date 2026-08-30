@@ -4,6 +4,7 @@ import type { SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
+import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import { DarkTestimonialCard, type DarkTestimonial } from './DarkTestimonialCard'
 import styles from './DarkTestimonialsSection.module.css'
@@ -15,7 +16,7 @@ export type DarkTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
 }
 
 /**
@@ -62,7 +63,14 @@ export function DarkTestimonialsSection({
           <div className={styles.divider} />
         </div>
 
-        {layoutType === 'marquee' ? (
+        {layoutType === 'flip-cards' ? (
+          <TestimonialsFlipGrid
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+          />
+        ) : layoutType === 'marquee' ? (
           <TestimonialsMarquee items={cards} />
         ) : testimonials.length > 3 ? (
           <TestimonialsCarousel items={cards} language={language} />

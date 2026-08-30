@@ -5,6 +5,7 @@ import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import { PUBLIC_ONLY_MVP, isMvpBypassUser } from '@/lib/types/app.types'
 type GalleryRow = GalleryWithDetails & {
   photos?: Array<{ count: number }>
 }
@@ -129,5 +130,12 @@ export async function fetchUserEntitlements() {
     tier: entitlements.tier,
     source: entitlements.source,
     limits: entitlements.limits,
+    /**
+     * Whether the private client-gallery flow is available to this account.
+     * Today that's the MVP bypass only; once client galleries ship this
+     * becomes plan-derived. The galleries dashboard uses it to decide whether
+     * to split the list into client vs showcase sections.
+     */
+    canCreateClientGalleries: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
   }
 }
