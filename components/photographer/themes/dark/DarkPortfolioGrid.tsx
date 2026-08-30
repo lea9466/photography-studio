@@ -9,6 +9,8 @@ export type DarkPortfolioPhoto = {
   url: string
   galleryId: string
   galleryName: string
+  width?: number | null
+  height?: number | null
 }
 
 export type DarkPortfolioGridProps = {
@@ -26,11 +28,15 @@ function GridCell({
   url,
   alt,
   index,
+  width,
+  height,
   onClick,
 }: {
   url: string
   alt: string
   index: number
+  width?: number | null
+  height?: number | null
   onClick: () => void
 }) {
   // Matches initMasonryReveal's per-cell IntersectionObserver in the old
@@ -43,11 +49,19 @@ function GridCell({
     delayMs,
   })
 
+  // Reserve the cell's box from the photo's real dimensions so the
+  // CSS-columns masonry settles into its final shape on first paint instead
+  // of re-balancing every column as each image streams in.
+  const hasRatio = Boolean(width && height)
+
   return (
     <div
       ref={ref}
-      className={`${styles.cell} ${revealed ? styles.isVisible : ''}`}
-      style={{ background: DARK_CELL_BG }}
+      className={`${styles.cell} ${hasRatio ? styles.sized : ''} ${revealed ? styles.isVisible : ''}`}
+      style={{
+        background: DARK_CELL_BG,
+        ...(hasRatio ? { aspectRatio: `${width} / ${height}` } : {}),
+      }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={url} alt={alt} loading="lazy" decoding="async" onClick={onClick} />
@@ -68,6 +82,8 @@ export function DarkPortfolioGrid({ photos, pageTitle, language, onPhotoClick }:
           url={photo.url}
           alt={`${pageTitle} - ${index + 1}`}
           index={index}
+          width={photo.width}
+          height={photo.height}
           onClick={() => onPhotoClick(index)}
         />
       ))}

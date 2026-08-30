@@ -23,6 +23,8 @@ export type PortfolioPhoto = {
   url: string
   galleryId: string
   galleryName: string
+  width?: number | null
+  height?: number | null
 }
 
 export type PublicPortfolioPageData = {

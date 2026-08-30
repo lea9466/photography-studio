@@ -18,7 +18,12 @@ export type GalleryDetailViewModelInput = {
     title: string
     photoCount: number
     galleryDate: string
-    photos: Array<{ id: string; url: string | null }>
+    photos: Array<{
+      id: string
+      url: string | null
+      width?: number | null
+      height?: number | null
+    }>
   }
   homepagePath: string
   blogPath: string
@@ -51,7 +56,12 @@ export type GalleryDetailViewModel = {
   title: string
   photoCount: number
   galleryDate: string
-  photos: Array<{ id: string; url: string }>
+  photos: Array<{
+    id: string
+    url: string
+    width?: number | null
+    height?: number | null
+  }>
   contactCardTitle: string | null
   contactCardDescription: string | null
 }
@@ -81,8 +91,16 @@ export function buildGalleryDetailViewModel(input: GalleryDetailViewModelInput):
     photoCount: input.gallery.photoCount,
     galleryDate: input.gallery.galleryDate,
     photos: input.gallery.photos
-      .filter((photo): photo is { id: string; url: string } => Boolean(photo.url))
-      .map((photo) => ({ id: photo.id, url: photo.url })),
+      .filter(
+        (photo): photo is { id: string; url: string; width?: number | null; height?: number | null } =>
+          Boolean(photo.url)
+      )
+      .map((photo) => ({
+        id: photo.id,
+        url: photo.url,
+        width: photo.width ?? null,
+        height: photo.height ?? null,
+      })),
     contactCardTitle: p.contact_card_title,
     contactCardDescription: p.contact_card_description,
   }

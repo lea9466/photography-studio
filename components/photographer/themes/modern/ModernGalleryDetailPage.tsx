@@ -8,7 +8,12 @@ import { ModernPortfolioLightbox } from './ModernPortfolioLightbox'
 import { ModernPortfolioContactCard } from './ModernPortfolioContactCard'
 import styles from './ModernGalleryDetailPage.module.css'
 
-export type ModernGalleryPhoto = { id: string; url: string }
+export type ModernGalleryPhoto = {
+  id: string
+  url: string
+  width?: number | null
+  height?: number | null
+}
 
 export type ModernGalleryDetailPageProps = {
   accentColor: string
@@ -49,6 +54,8 @@ export function ModernGalleryDetailPage({
     url: photo.url,
     galleryId: 'gallery',
     galleryName: title,
+    width: photo.width,
+    height: photo.height,
   }))
 
   function openLightbox(index: number) {

@@ -168,6 +168,8 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
           url: photo.url,
           galleryId: galleryRow.id,
           galleryName,
+          width: photo.width,
+          height: photo.height,
         })
       }
     }

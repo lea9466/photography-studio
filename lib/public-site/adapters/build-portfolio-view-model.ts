@@ -19,7 +19,14 @@ export type PortfolioViewModelInput = {
     contact_card_description: string | null
     gallery_layout_mode: string | null
   }
-  photos: Array<{ id: string; url: string; galleryId: string; galleryName: string }>
+  photos: Array<{
+    id: string
+    url: string
+    galleryId: string
+    galleryName: string
+    width?: number | null
+    height?: number | null
+  }>
   galleryNames: string[]
   homepagePath: string
   portfolioPath: string
@@ -51,7 +58,14 @@ export type PortfolioViewModel = {
 
   pageTitle: string
   sectionTitle: string | null
-  photos: Array<{ id: string; url: string; galleryId: string; galleryName: string }>
+  photos: Array<{
+    id: string
+    url: string
+    galleryId: string
+    galleryName: string
+    width?: number | null
+    height?: number | null
+  }>
   galleryNames: string[]
   contactCardTitle: string | null
   contactCardDescription: string | null

@@ -7,12 +7,18 @@ type AdminClient = ReturnType<typeof createAdminClient>
 export type PublicGalleryDisplayPhoto = {
   id: string
   url: string | null
+  /** Original pixel dimensions, used to reserve each masonry cell's box so
+   * the grid doesn't re-flow as images stream in. Null for older uploads. */
+  width: number | null
+  height: number | null
 }
 
 type PhotoRow = {
   id: string
   preview_url: string | null
   watermarked_preview_url: string | null
+  width: number | null
+  height: number | null
 }
 
 function shuffleInPlace<T>(items: T[]): T[] {
@@ -67,12 +73,14 @@ export async function fetchPublicGalleryDisplayPhotos(
     return photoPaths.map((photo) => ({
       id: photo.id,
       url: signedUrls[photo.path] ?? null,
+      width: null,
+      height: null,
     }))
   }
 
   const { data: regularPhotos } = await admin
     .from('photos')
-    .select('id, preview_url, watermarked_preview_url')
+    .select('id, preview_url, watermarked_preview_url, width, height')
     .eq('gallery_id', galleryId)
     .eq('is_visible_to_client', true)
     .order('sort_order', { ascending: true })
@@ -95,6 +103,8 @@ export async function fetchPublicGalleryDisplayPhotos(
     return photoPaths.map((photo) => ({
       id: photo.id,
       url: signedUrls[photo.path] ?? null,
+      width: null,
+      height: null,
     }))
   }
 
@@ -112,6 +122,8 @@ export async function fetchPublicGalleryDisplayPhotos(
     id: string
     path: string
     bucket: 'watermarked' | 'previews'
+    width: number | null
+    height: number | null
   }> = []
 
   for (const row of selectSubset(rows, limit, random)) {
@@ -120,7 +132,7 @@ export async function fetchPublicGalleryDisplayPhotos(
     if (!path) continue
 
     const bucket = useWatermarked ? 'watermarked' : 'previews'
-    entries.push({ id: row.id, path, bucket })
+    entries.push({ id: row.id, path, bucket, width: row.width, height: row.height })
     if (bucket === 'watermarked') watermarkedPaths.push(path)
     else previewPaths.push(path)
   }
@@ -140,5 +152,7 @@ export async function fetchPublicGalleryDisplayPhotos(
       entry.bucket === 'watermarked'
         ? watermarkedUrls[entry.path] ?? null
         : previewUrls[entry.path] ?? null,
+    width: entry.width,
+    height: entry.height,
   }))
 }

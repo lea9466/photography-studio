@@ -8,7 +8,12 @@ import { ElegantPortfolioLightbox } from './ElegantPortfolioLightbox'
 import { ElegantPortfolioContactCard } from './ElegantPortfolioContactCard'
 import styles from './ElegantGalleryDetailPage.module.css'
 
-export type ElegantGalleryPhoto = { id: string; url: string }
+export type ElegantGalleryPhoto = {
+  id: string
+  url: string
+  width?: number | null
+  height?: number | null
+}
 
 export type ElegantGalleryDetailPageProps = {
   accentColor: string
@@ -47,6 +52,8 @@ export function ElegantGalleryDetailPage({
     url: photo.url,
     galleryId: 'gallery',
     galleryName: title,
+    width: photo.width,
+    height: photo.height,
   }))
 
   function openLightbox(index: number) {

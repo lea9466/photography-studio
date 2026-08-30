@@ -9,7 +9,12 @@ import { ClassicPortfolioContactCard } from './ClassicPortfolioContactCard'
 import styles from './ClassicGalleryDetailPage.module.css'
 import './classic-theme.css'
 
-export type ClassicGalleryPhoto = { id: string; url: string }
+export type ClassicGalleryPhoto = {
+  id: string
+  url: string
+  width?: number | null
+  height?: number | null
+}
 
 export type ClassicGalleryDetailPageProps = {
   accentColor: string
@@ -62,6 +67,8 @@ export function ClassicGalleryDetailPage({
     url: photo.url,
     galleryId: 'gallery',
     galleryName: title,
+    width: photo.width,
+    height: photo.height,
   }))
 
   function openLightbox(index: number) {

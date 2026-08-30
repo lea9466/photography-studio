@@ -26,6 +26,7 @@
 }
 
 .cell {
+  position: relative;
   break-inside: avoid;
   margin-bottom: 4px;
   overflow: hidden;
@@ -48,6 +49,15 @@
   height: auto;
   transition: transform 0.7s ease-out;
   cursor: zoom-in;
+}
+
+/* Cells that carry a reserved aspect-ratio box (photo dimensions were known):
+   pin the image to fill it so image load can't change the cell's height. */
+.cell.sized img {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cell:hover img {

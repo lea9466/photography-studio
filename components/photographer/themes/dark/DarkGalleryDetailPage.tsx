@@ -9,7 +9,12 @@ import { DarkPortfolioContactCard } from './DarkPortfolioContactCard'
 import styles from './DarkGalleryDetailPage.module.css'
 import './dark-theme.css'
 
-export type DarkGalleryPhoto = { id: string; url: string }
+export type DarkGalleryPhoto = {
+  id: string
+  url: string
+  width?: number | null
+  height?: number | null
+}
 
 export type DarkGalleryDetailPageProps = {
   accentColor: string
@@ -45,6 +50,8 @@ export function DarkGalleryDetailPage({
     url: photo.url,
     galleryId: 'gallery',
     galleryName: title,
+    width: photo.width,
+    height: photo.height,
   }))
 
   function openLightbox(index: number) {
