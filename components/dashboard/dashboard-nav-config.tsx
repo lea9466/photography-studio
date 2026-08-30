@@ -109,7 +109,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     isActive: (pathname) => pathname.startsWith('/dashboard/custom-domain'),
     badge: 'new',
     proFeature: 'custom_domain',
-    lockedTooltip: 'דומיין אישי דורש מנוי בתשלום — לא כלול בתקופת הניסיון. שדרגי למנוי כדי לחבר דומיין משלך (למשל www.השם-שלך.com) במקום כתובת ה-slug',
+    lockedTooltip: 'דומיין אישי לא כלול בתקופת הניסיון — שדרגי למנוי, או פתחי רק אותו בנפרד בתוספת חד-פעמית של ₪99, בלי מנוי מלא',
   },
   {
     href: '/dashboard/subscription',
