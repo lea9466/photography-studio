@@ -76,6 +76,7 @@ export function ClassicPostsSection({
           posts={display.map((post) => ({ ...post, excerpt: post.content, href: hrefForPost(post.id) }))}
           accentColor={accentColor}
           language={language}
+          columns={4}
         />
       ) : (
         <div className={styles.grid} data-count={display.length}>

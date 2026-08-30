@@ -1,192 +1,218 @@
 /*
- * BlogCirclesGrid.module.css — 1:1 port of `.blog-grid--circles`/
- * `.blog-card--circle` in lib/public-blog-html.ts (the posts_display_style
- * === 'circles' branch). See BlogCirclesGrid.tsx's doc comment for why this
- * is one shared component instead of one per theme — the source itself is
- * identical across themes here. `.title` reads --headline-font off the
- * nearest theme wrapper (.theme-classic etc.) the same way
- * shared/SectionTitle.module.css does, instead of taking a font prop.
+ * BlogCirclesGrid.module.css — the "circles" post display, redesigned with
+ * Lea (2026-08) as "טיפה על כתם": an organic blob-shaped photo over an
+ * offset accent-tinted watercolour stain, both morphing their border-radius
+ * gently on hover. Replaces the old 1:1 port of `.blog-card--circle`.
+ *
+ * Every colour is a color-mix of `--blog-circle-accent` (set inline from the
+ * studio accentColor) over a translucent base, so it holds on any theme's
+ * ground. `.title` reads `--headline-font` off the nearest theme wrapper.
  */
 
+/* The row always fills: column count tracks `data-count` (post total). Blog
+   list stays at 3 across; the homepage teaser passes `data-cols="4"` so a
+   full set of 4 posts makes one row of 4. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(2.5rem, 5vw, 4rem) clamp(2.25rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(2.5rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
   align-items: start;
   justify-items: center;
   width: 100%;
-  max-width: 1280px;
+  max-width: 1320px;
   margin-inline: auto;
   padding-top: 0.75rem;
   overflow: visible;
   box-sizing: border-box;
 }
 
-@media (max-width: 767px) {
+@media (min-width: 600px) {
   .grid {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 26rem;
-    gap: 2.75rem;
-    padding-top: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 340px);
+    justify-content: center;
+  }
+}
+
+@media (min-width: 940px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 340px);
+    justify-content: center;
+  }
+  .grid[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: center;
+    max-width: 860px;
+  }
+}
+
+@media (min-width: 1180px) {
+  .grid[data-cols='4'][data-count='4'] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 .card {
-  --circle-size: 98%;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
   max-width: 100%;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  overflow: visible;
   text-align: center;
   text-decoration: none;
   color: inherit;
+  opacity: 0;
+  transform: translateY(22px);
   transition:
-    transform 0.7s cubic-bezier(0.2, 0, 0.2, 1),
-    opacity 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+    opacity 0.7s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 .card.visible {
+  opacity: 1;
   transform: translateY(0);
 }
 
-.card.visible:hover,
-.card:hover {
-  transform: translateY(-0.35rem);
-  box-shadow: none;
+.card.visible:hover {
+  transform: translateY(-6px);
 }
 
-@media (max-width: 767px) {
-  .card {
-    --circle-size: min(84vw, 22rem);
-  }
+.card:focus-visible {
+  outline: 2px solid var(--blog-circle-accent);
+  outline-offset: 6px;
+  border-radius: 12px;
 }
 
-@keyframes blogCircleEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(28px) scale(0.9);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes blogCircleBodyEnter {
-  0% {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.media {
+/* ---- the blob + its stain ---- */
+.figure {
   position: relative;
-  width: var(--circle-size);
-  max-width: var(--circle-size);
+  width: 100%;
+  max-width: 380px;
   aspect-ratio: 1;
-  height: auto;
-  box-sizing: border-box;
-  border-radius: 50%;
-  overflow: hidden;
-  padding: 3px;
-  opacity: 0;
-  transform: translateY(28px) scale(0.9);
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--blog-circle-accent, #e85a8c) 88%, #fff) 0%,
-    color-mix(in srgb, var(--blog-circle-accent, #e85a8c) 35%, transparent) 42%,
-    rgba(255, 255, 255, 0.22) 68%,
-    color-mix(in srgb, var(--blog-circle-accent, #e85a8c) 70%, #1a1a22) 100%
-  );
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--blog-circle-accent, #e85a8c) 18%, transparent),
-    0 12px 36px rgba(0, 0, 0, 0.22);
+  overflow: visible;
+  transform: scale(0.93);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.card.visible .media {
-  animation: blogCircleEnter 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+.card.visible .figure {
+  transform: scale(1);
+}
+
+/* Soft watercolour wash rather than a solid tint — a faint accent gradient
+   that fades to nothing, its light source in a different spot per card. */
+.stain {
+  position: absolute;
+  inset: -7% -5% -4% -8%;
+  z-index: 0;
+  --stain-x: 27%;
+  --stain-y: 21%;
+  background: radial-gradient(
+    130% 138% at var(--stain-x) var(--stain-y),
+    color-mix(in srgb, var(--blog-circle-accent) 16%, transparent) 0%,
+    color-mix(in srgb, var(--blog-circle-accent) 6%, transparent) 46%,
+    transparent 80%
+  );
+  border-radius: 60% 40% 55% 45% / 45% 55% 42% 58%;
+  transition: border-radius 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blob {
+  position: absolute;
+  inset: 1.5%;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 48% 52% 45% 55% / 54% 46% 56% 44%;
+  box-shadow:
+    0 18px 38px -20px rgba(0, 0, 0, 0.26),
+    0 0 0 1px color-mix(in srgb, var(--blog-circle-accent) 12%, transparent);
+  transition: border-radius 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* a little per-card variety — shape + wash origin differ each time */
+.card:nth-child(3n + 2) .blob {
+  border-radius: 55% 45% 52% 48% / 46% 58% 42% 55%;
+}
+.card:nth-child(3n + 2) .stain {
+  border-radius: 45% 55% 42% 58% / 58% 42% 55% 45%;
+  --stain-x: 76%;
+  --stain-y: 30%;
+}
+.card:nth-child(3n) .blob {
+  border-radius: 44% 56% 57% 43% / 58% 44% 56% 43%;
+}
+.card:nth-child(3n) .stain {
+  border-radius: 52% 48% 60% 40% / 42% 58% 45% 55%;
+  --stain-x: 44%;
+  --stain-y: 78%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover .blob {
+    border-radius: 57% 43% 55% 45% / 44% 57% 43% 56%;
+  }
+  .card:hover .stain {
+    border-radius: 45% 55% 48% 52% / 55% 45% 58% 42%;
+  }
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 50%;
+  border-radius: inherit;
   display: block;
   transition: transform 0.85s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 .card:hover .image {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
-.veil {
+.placeholder {
   position: absolute;
-  inset: 3px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.22);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.7s cubic-bezier(0.2, 0, 0.2, 1);
-  z-index: 1;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      120% 120% at 30% 24%,
+      color-mix(in srgb, var(--blog-circle-accent) 26%, transparent),
+      transparent 64%
+    ),
+    color-mix(in srgb, var(--blog-circle-accent) 11%, transparent);
 }
 
-.card:hover .veil {
-  opacity: 1;
-}
-
+/* ---- text ---- */
 .body {
   display: flex;
   flex-direction: column;
-  padding: 1.15rem 0.35rem 0;
-  gap: 0.35rem;
-  width: 100%;
-  max-width: 16rem;
   align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  max-width: 20rem;
+  padding-top: 1.25rem;
   text-align: center;
-  opacity: 0;
-  transform: translateY(14px);
-}
-
-.card.visible .body {
-  animation: blogCircleBodyEnter 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.18s both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .media,
-  .body {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    animation: none !important;
-  }
 }
 
 .label {
-  display: block;
   margin: 0;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .title {
   font-family: var(--headline-font, inherit);
-  margin: 0;
-  font-size: clamp(17px, 1.55vw, 22px);
+  margin: 0.15rem 0 0;
+  font-size: clamp(17px, 1.5vw, 21px);
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.32;
   letter-spacing: 0.01em;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -195,33 +221,56 @@
 }
 
 .excerpt {
+  margin: 0.25rem 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  opacity: 0.7;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin: 0.15rem 0 0;
-  font-size: 13px;
-  line-height: 1.55;
-  opacity: 0.68;
-  white-space: normal;
 }
 
 .cta {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  margin-top: 0.55rem;
+  margin-top: 0.75rem;
   font-size: 12px;
-  letter-spacing: 0.08em;
-  opacity: 0;
-  transform: translateY(6px);
-  transition:
-    opacity 0.55s ease,
-    transform 0.55s ease;
+  letter-spacing: 0.07em;
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--blog-circle-accent) 45%, transparent);
 }
 
-.card:hover .cta,
-.card:focus-within .cta {
-  opacity: 0.92;
-  transform: translateY(0);
+.ctaArrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .ctaArrow {
+  transform: translateX(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .figure,
+  .stain,
+  .blob,
+  .image,
+  .ctaArrow {
+    transition: none;
+  }
+  .card {
+    opacity: 1;
+    transform: none;
+  }
+  .card.visible .figure {
+    transform: scale(1);
+  }
+  .card.visible:hover {
+    transform: none;
+  }
+  .card:hover .image {
+    transform: none;
+  }
 }

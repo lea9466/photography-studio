@@ -61,7 +61,7 @@ export default function ElegantBlogListPreviewPage() {
       <ElegantBlogListPage
         accentColor={MOCK_ACCENT}
         language="he"
-        displayStyle="cards"
+        displayStyle="circles"
         pageTitle="הבלוג שלנו"
         posts={MOCK_POSTS}
         hrefForPost={() => '/dev-preview/elegant/blog/post'}

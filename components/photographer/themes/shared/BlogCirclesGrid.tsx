@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { galleryCardArrow } from '@/lib/site-language'
 import type { SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from './useRevealOnScroll'
@@ -23,33 +24,36 @@ export type BlogCirclesGridProps = {
   posts: BlogCircleCardItem[]
   accentColor: string
   language: SiteLanguage
+  /** Max columns on a wide screen: 4 for the homepage teaser (a full row of
+   * 4 when there are 4 posts), 3 everywhere else. The row always fills for
+   * fewer posts (3 → 3, 2 → 2, 1 → centred) via `data-count`. */
+  columns?: 3 | 4
 }
 
 /**
- * The "circles" alternate post grid (`posts_display_style === 'circles'`) —
- * 1:1 port of `.blog-grid--circles`/`.blog-card--circle` in
- * lib/public-blog-html.ts's blogCard()/blogBody(). Shared across all 4
- * themes rather than ported once per theme (like the regular card grids
- * are): checked the real source directly and this markup/CSS is byte-for-
- * byte identical regardless of theme there — the only theme-dependent bits
- * are the accent color (already a per-studio dynamic value here) and the
- * title font, which every theme already exposes as --headline-font on its
- * own root wrapper, so this reads it the same way shared/SectionTitle.tsx
- * does instead of taking a font prop.
+ * The "circles" alternate post grid (`posts_display_style === 'circles'`).
+ * Redesigned with Lea 2026-08 ("טיפה על כתם"): the photo sits in a soft
+ * organic blob shape rather than a hard circle, over an offset accent-tinted
+ * "watercolour stain"; blob + stain morph their `border-radius` gently on
+ * hover. Diverges from the old 1:1 port of `.blog-card--circle`
+ * (lib/public-blog-html.ts).
  *
- * Not ported: the hover/focus "quick preview" peek button + in-page modal
- * (BLOG_MODAL_INIT_SCRIPT) — same simplification every theme's regular card
- * grid already made (see e.g. ClassicBlogListPage.tsx's doc comment); cards
- * here always link straight to the real post page instead.
+ * Still one shared component for all 4 themes — the only theme-dependent bits
+ * are the accent colour (a per-studio dynamic value, passed as
+ * `--blog-circle-accent`) and the title font (each theme sets
+ * `--headline-font` on its own root wrapper, read here the same way
+ * shared/SectionTitle does). Every other colour is a `color-mix` of the
+ * accent over a translucent base, so it holds on light and dark grounds
+ * alike. Links straight to the post page — no quick-preview modal.
  */
-export function BlogCirclesGrid({ posts, accentColor, language }: BlogCirclesGridProps) {
+export function BlogCirclesGrid({ posts, accentColor, language, columns = 3 }: BlogCirclesGridProps) {
   if (posts.length === 0) return null
 
   const arrow = galleryCardArrow(language)
   const readCtaLabel = language === 'en' ? 'Read' : 'לקריאה'
 
   return (
-    <div className={styles.grid}>
+    <div className={styles.grid} data-count={posts.length} data-cols={columns}>
       {posts.map((post, index) => (
         <BlogCircleCard
           key={post.id}
@@ -57,7 +61,7 @@ export function BlogCirclesGrid({ posts, accentColor, language }: BlogCirclesGri
           accentColor={accentColor}
           readCtaLabel={readCtaLabel}
           arrow={arrow}
-          delayMs={(index % 3) * 180}
+          delayMs={(index % 3) * 160}
         />
       ))}
     </div>
@@ -84,14 +88,18 @@ function BlogCircleCard({
       ref={ref}
       href={post.href}
       className={`${styles.card} ${revealed ? styles.visible : ''}`}
-      style={{ '--blog-circle-accent': accentColor } as React.CSSProperties}
+      style={{ '--blog-circle-accent': accentColor } as CSSProperties}
     >
-      <div className={styles.media}>
-        {post.coverUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={post.coverUrl} alt={post.title} loading="lazy" className={styles.image} />
-        ) : null}
-        <span className={styles.veil} aria-hidden="true" />
+      <div className={styles.figure}>
+        <span className={styles.stain} aria-hidden="true" />
+        <div className={styles.blob}>
+          {post.coverUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={post.coverUrl} alt={post.title} loading="lazy" className={styles.image} />
+          ) : (
+            <span className={styles.placeholder} aria-hidden="true" />
+          )}
+        </div>
       </div>
       <div className={styles.body}>
         <span className={styles.label} style={{ color: accentColor }}>
@@ -100,7 +108,10 @@ function BlogCircleCard({
         <h2 className={styles.title}>{post.title}</h2>
         {post.excerpt.trim() ? <p className={styles.excerpt}>{post.excerpt}</p> : null}
         <span className={styles.cta} style={{ color: accentColor }}>
-          {readCtaLabel} <span aria-hidden="true">{arrow}</span>
+          {readCtaLabel}
+          <span className={styles.ctaArrow} aria-hidden="true">
+            {arrow}
+          </span>
         </span>
       </div>
     </a>

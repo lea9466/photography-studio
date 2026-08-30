@@ -60,7 +60,7 @@ export default function DarkBlogListPreviewPage() {
     <DarkBlogListPage
       accentColor={MOCK_ACCENT}
       language="he"
-      displayStyle="cards"
+      displayStyle="circles"
       pageTitle="הבלוג שלנו"
       posts={MOCK_POSTS}
       hrefForPost={() => '/dev-preview/dark/blog/post'}
