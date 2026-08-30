@@ -4,8 +4,11 @@ import Link from 'next/link'
 import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
-import { ElegantPostCard, type ElegantHomepagePost } from './ElegantPostCard'
+import { HomepageBlogCard, type HomepageBlogCardPost } from '../shared/HomepageBlogCard'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+
+/** Kept as a re-export so ElegantHomePage's `posts` prop type doesn't move. */
+export type ElegantHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ElegantPostsSection.module.css'
 
@@ -19,7 +22,7 @@ export type ElegantPostsSectionProps = {
   hrefForPost: (postId: string) => string
 }
 
-const MAX_HOMEPAGE_POSTS = 3
+const MAX_HOMEPAGE_POSTS = 4
 
 /**
  * Elegant theme's homepage "recent posts" teaser — 1:1 port of
@@ -77,9 +80,17 @@ export function ElegantPostsSection({
           language={language}
         />
       ) : (
-        <div className={styles.grid}>
+        <div className={styles.grid} data-count={display.length}>
           {display.map((post, index) => (
-            <ElegantPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} index={index} />
+            <HomepageBlogCard
+              key={post.id}
+              post={post}
+              href={hrefForPost(post.id)}
+              accentColor={accentColor}
+              index={index}
+              total={display.length}
+              language={language}
+            />
           ))}
         </div>
       )}

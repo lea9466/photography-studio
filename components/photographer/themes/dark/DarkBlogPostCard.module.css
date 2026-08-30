@@ -3,8 +3,7 @@
  * BLOG_CSS (lib/public-blog-html.ts, non-circle branch only — see the
  * component doc comment for what's deferred), with TOKENS.dark's card chrome
  * (cardBg #1A1A22, cardRadius 2px, cardBorder 1px solid
- * rgba(255,255,255,0.06)) baked in directly — matches DarkPostCard.module.css
- * exactly, since both read the same theme token map. Title uses
+ * rgba(255,255,255,0.06)) baked in directly from the theme token map. Title uses
  * titleFontClass('dark') = 'font-headline font-bold' → Space Grotesk, weight
  * 700 (font-bold wins over BLOG_CSS's unset weight here since `.blog-card__title`
  * itself sets no font-weight).

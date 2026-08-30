@@ -261,7 +261,10 @@ export default async function PhotographerPage({ params }: PageProps) {
         )
         .eq('user_id', typedPhotographer.id)
         .order('created_at', { ascending: false })
-        .limit(3)
+        // Elegant homepage blog teaser shows 4 across (Lea, 2026-08) — see
+        // MAX_HOMEPAGE_POSTS in ElegantPostsSection. Other themes still
+        // slice to their own max (3).
+        .limit(4)
 
       latestPosts = (latestPostsData ?? []) as HomepagePostRow[]
     } else {

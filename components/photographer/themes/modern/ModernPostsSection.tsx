@@ -5,8 +5,11 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
-import { ModernPostCard, type ModernHomepagePost } from './ModernPostCard'
+import { HomepageBlogCard, type HomepageBlogCardPost } from '../shared/HomepageBlogCard'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+
+/** Kept as a re-export so ModernHomePage's `posts` prop type doesn't move. */
+export type ModernHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ModernPostsSection.module.css'
 
@@ -20,7 +23,7 @@ export type ModernPostsSectionProps = {
   hrefForPost: (postId: string) => string
 }
 
-const MAX_HOMEPAGE_POSTS = 3
+const MAX_HOMEPAGE_POSTS = 4
 
 /**
  * Modern-theme homepage "recent posts" teaser — sits between RecentPhotos
@@ -74,9 +77,17 @@ export function ModernPostsSection({
           language={language}
         />
       ) : (
-        <div className={styles.grid}>
-          {display.map((post) => (
-            <ModernPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+        <div className={styles.grid} data-count={display.length}>
+          {display.map((post, index) => (
+            <HomepageBlogCard
+              key={post.id}
+              post={post}
+              href={hrefForPost(post.id)}
+              accentColor={accentColor}
+              index={index}
+              total={display.length}
+              language={language}
+            />
           ))}
         </div>
       )}

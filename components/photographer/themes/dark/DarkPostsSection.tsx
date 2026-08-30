@@ -4,8 +4,11 @@ import Link from 'next/link'
 import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
-import { DarkPostCard, type DarkHomepagePost } from './DarkPostCard'
+import { HomepageBlogCard, type HomepageBlogCardPost } from '../shared/HomepageBlogCard'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+
+/** Kept as a re-export so DarkHomePage's `posts` prop type doesn't move. */
+export type DarkHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './DarkPostsSection.module.css'
 
@@ -19,7 +22,7 @@ export type DarkPostsSectionProps = {
   hrefForPost: (postId: string) => string
 }
 
-const MAX_HOMEPAGE_POSTS = 3
+const MAX_HOMEPAGE_POSTS = 4
 
 /**
  * Dark theme's homepage "recent posts" teaser — 1:1 port of
@@ -72,9 +75,18 @@ export function DarkPostsSection({
           language={language}
         />
       ) : (
-        <div className={styles.grid}>
-          {display.map((post) => (
-            <DarkPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+        <div className={styles.grid} data-count={display.length}>
+          {display.map((post, index) => (
+            <HomepageBlogCard
+              key={post.id}
+              post={post}
+              href={hrefForPost(post.id)}
+              accentColor={accentColor}
+              index={index}
+              total={display.length}
+              language={language}
+              tone="dark"
+            />
           ))}
         </div>
       )}

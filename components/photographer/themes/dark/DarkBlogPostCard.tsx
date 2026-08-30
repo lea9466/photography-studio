@@ -24,8 +24,8 @@ export type DarkBlogPostCardProps = {
  * (cover image or empty gradient placeholder, title, date, 2-line-clamped
  * excerpt), restyled with dark's own TOKENS.dark card chrome (cardBg
  * #1A1A22, cardRadius 2px, cardBorder 1px solid rgba(255,255,255,0.06) — see
- * lib/public-blog-html.ts's TOKENS map, identical to DarkPostCard.tsx's
- * homepage card) and Space Grotesk title (titleFontClass('dark') resolves to
+ * lib/public-blog-html.ts's TOKENS map) and Space Grotesk title
+ * (titleFontClass('dark') resolves to
  * the real `font-headline` Tailwind key here, unlike the portfolio page's
  * dead `font-headline-md` class).
  */

@@ -5,8 +5,11 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { SectionTitle } from '../shared/SectionTitle'
-import { ClassicPostCard, type ClassicHomepagePost } from './ClassicPostCard'
+import { HomepageBlogCard, type HomepageBlogCardPost } from '../shared/HomepageBlogCard'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+
+/** Kept as a re-export so ClassicHomePage's `posts` prop type doesn't move. */
+export type ClassicHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ClassicPostsSection.module.css'
 
@@ -20,7 +23,7 @@ export type ClassicPostsSectionProps = {
   hrefForPost: (postId: string) => string
 }
 
-const MAX_HOMEPAGE_POSTS = 3
+const MAX_HOMEPAGE_POSTS = 4
 
 /**
  * The homepage's "recent posts" teaser — sits between RecentPhotos and
@@ -75,9 +78,17 @@ export function ClassicPostsSection({
           language={language}
         />
       ) : (
-        <div className={styles.grid}>
-          {display.map((post) => (
-            <ClassicPostCard key={post.id} post={post} href={hrefForPost(post.id)} accentColor={accentColor} />
+        <div className={styles.grid} data-count={display.length}>
+          {display.map((post, index) => (
+            <HomepageBlogCard
+              key={post.id}
+              post={post}
+              href={hrefForPost(post.id)}
+              accentColor={accentColor}
+              index={index}
+              total={display.length}
+              language={language}
+            />
           ))}
         </div>
       )}

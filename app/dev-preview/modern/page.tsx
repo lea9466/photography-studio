@@ -115,6 +115,13 @@ const MOCK_POSTS = [
     date: '5 ביולי 2026',
     coverUrl: null,
   },
+  {
+    id: 'post-4',
+    title: 'אור זהוב בשעה הקסומה — למה זה עובד',
+    content: 'השעה שלפני השקיעה נותנת אור רך ומחמיא. קצת על איך מתכננים צילום סביבה סביב האור הזה.',
+    date: '28 ביוני 2026',
+    coverUrl: 'https://picsum.photos/seed/modern-blog-teaser-4/900/700',
+  },
 ]
 
 const MOCK_FAQ = [

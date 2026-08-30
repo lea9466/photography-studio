@@ -3,14 +3,13 @@
  * BLOG_CSS (lib/public-blog-html.ts, non-circle 'cards' display style only —
  * same deferral as the Classic/Dark/Modern builds: no `circles` variant, no
  * quick-preview modal). Card chrome uses TOKENS.elegant's resolved values
- * (cardBg #fdf8f7, cardRadius 0px, cardBorder 1px solid rgba(0,0,0,0.06)) —
- * identical to ElegantPostCard.module.css's homepage card, since both read
- * the same theme token map. Title font is `titleFontClass('elegant')` =
+ * (cardBg #fdf8f7, cardRadius 0px, cardBorder 1px solid rgba(0,0,0,0.06)),
+ * read from the same theme token map. Title font is `titleFontClass('elegant')` =
  * `font-serif-hebrew` → Frank Ruhl Libre (see ElegantPortfolioHeader.module.css's
  * doc comment for why that's a different font than the homepage's section
- * titles). Excerpt line-clamp is 2 here (this is the dedicated blog LIST
- * page's card, not the homepage's — ElegantPostCard.module.css's own excerpt
- * clamps at 4 lines instead, per its own BLOG_CSS-adjacent but distinct rule).
+ * titles). Excerpt line-clamp is 2 here — this is the dedicated blog LIST
+ * page's card; the homepage teaser is now the shared
+ * shared/HomepageBlogCard (a different "floating card" design).
  */
 
 .card {

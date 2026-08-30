@@ -1,0 +1,234 @@
+/*
+ * HomepageBlogCard.module.css — the shared "floating card" for the homepage
+ * blog teaser (all four themes). Palette flips light/dark via `data-tone`;
+ * every accent-derived value keys off `--card-accent` (set inline from the
+ * studio accentColor). Replaces the old per-theme `{Theme}PostCard.module.css`
+ * 1:1 ports. Entrance reveal is self-contained (`.visible`), not tied to any
+ * theme's `.reveal`/`.stagger-reveal`.
+ */
+
+.card {
+  /* ---- light tone (default) ---- */
+  --hbc-bg: #ffffff;
+  --hbc-bg-wash: color-mix(in srgb, var(--card-accent) 7%, #ffffff);
+  --hbc-bg-warm: #f9f3ec;
+  --hbc-ink: #5c5a57;
+  --hbc-media-bg: rgba(0, 0, 0, 0.06);
+  --hbc-empty-grad: linear-gradient(135deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.12));
+  --hbc-shadow: 0 20px 45px -25px rgba(28, 27, 27, 0.35);
+  --hbc-shadow-hover: 0 30px 60px -25px rgba(28, 27, 27, 0.4);
+  --hbc-token-shadow: 0 6px 16px -4px rgba(28, 27, 27, 0.45);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 14px 14px 0;
+  text-decoration: none;
+  color: inherit;
+  background: var(--hbc-bg);
+  /* Base radius; the corner facing the page edge is exaggerated per position
+     (`data-position` below) so the row "opens outward" like the reference. */
+  border-radius: 16px;
+  box-shadow: var(--hbc-shadow);
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0, 0.2, 1),
+    box-shadow 0.4s ease;
+}
+
+.card[data-tone='dark'] {
+  --hbc-bg: #1a1a22;
+  --hbc-bg-wash: color-mix(in srgb, var(--card-accent) 16%, #1a1a22);
+  --hbc-bg-warm: #221f2b;
+  --hbc-ink: #b6b6c0;
+  --hbc-media-bg: rgba(255, 255, 255, 0.06);
+  --hbc-empty-grad: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.1));
+  --hbc-shadow: 0 20px 45px -22px rgba(0, 0, 0, 0.6);
+  --hbc-shadow-hover: 0 30px 60px -22px rgba(0, 0, 0, 0.72);
+  --hbc-token-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.6);
+}
+
+.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* background rotation: white / accent wash / warm — keyed off
+   `data-variant={index % 3}` in the .tsx */
+.card[data-variant='1'] {
+  background: var(--hbc-bg-wash);
+}
+.card[data-variant='2'] {
+  background: var(--hbc-bg-warm);
+}
+
+/* `data-position` from the .tsx: first = row's inline-start card (right, RTL),
+   last = inline-end card (left, RTL) — exaggerate the outward-facing top
+   corner. `solo`/single-column uses an even, generous round. */
+.card[data-position='first'] {
+  border-start-start-radius: 46px;
+}
+.card[data-position='last'] {
+  border-start-end-radius: 46px;
+}
+.card[data-position='middle'] {
+  border-start-start-radius: 38px;
+  border-start-end-radius: 38px;
+}
+.card[data-position='solo'] {
+  border-radius: 28px;
+}
+
+@media (max-width: 767px) {
+  .card {
+    border-radius: 24px !important;
+  }
+}
+
+.card.visible:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--hbc-shadow-hover);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--card-accent);
+  outline-offset: 3px;
+}
+
+.mediaWrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--hbc-media-bg);
+}
+
+/* image echoes the card's exaggerated corner, at reduced strength */
+.card[data-position='first'] .media {
+  border-start-start-radius: 34px;
+}
+.card[data-position='last'] .media {
+  border-start-end-radius: 34px;
+}
+.card[data-position='middle'] .media {
+  border-start-start-radius: 28px;
+  border-start-end-radius: 28px;
+}
+
+.mediaEmpty::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--hbc-empty-grad);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.7s ease;
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+/* numbered token, docked to the inline-start edge (right, in the RTL site),
+   straddling the image/body boundary */
+.number {
+  position: absolute;
+  inset-inline-start: 18px;
+  bottom: -18px;
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--card-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: var(--hbc-token-shadow);
+}
+
+.body {
+  flex: 1 1 auto;
+  padding: 34px 20px 28px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  font-family: var(--headline-font, 'Playfair Display', 'Frank Ruhl Libre', serif);
+  font-size: 21px;
+  line-height: 1.3;
+  margin: 0;
+  color: var(--card-accent);
+}
+
+.excerpt {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--hbc-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;
+  min-height: calc(1.7em * 3);
+  margin: 0;
+}
+
+.cta {
+  align-self: center;
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--card-accent);
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
+}
+
+.ctaArrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .ctaArrow {
+  transform: translateX(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    opacity: 1;
+    transform: none;
+    transition: box-shadow 0.4s ease;
+  }
+  .card.visible:hover {
+    transform: none;
+  }
+  .image,
+  .ctaArrow {
+    transition: none;
+  }
+}

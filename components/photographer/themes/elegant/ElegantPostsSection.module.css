@@ -28,7 +28,8 @@
   align-items: flex-end;
   width: 100%;
   max-width: 100%;
-  padding-inline: 2%;
+  /* match `.grid`'s gutter so the watermark/title line up with the card row */
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
   margin-bottom: 1.25rem;
   text-align: left;
   direction: ltr;
@@ -77,28 +78,60 @@
   transition: transform 0.3s ease;
 }
 
+/* Floating-card redesign (Lea, 2026-08): edge-to-edge grid, 4 across on wide
+ * screens. Small side gutter (not 0) so the cards' rounded corners + shadow
+ * don't clip against the viewport. Revert this block to `gap: 3-4px` /
+ * `padding-inline: 2%` for the original flat grid. */
 .grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 3px;
+  gap: 1.5rem;
   width: 100%;
   max-width: 100%;
   margin-inline: 0;
-  padding-inline: 2%;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
   box-sizing: border-box;
 }
 
+/* The row always fills: the column count tracks how many posts there are
+   (`data-count` from the .tsx, 1–4) so 3 posts make 3 equal columns rather
+   than 3 cards + an empty slot; a lone post is capped and centred. */
 @media (min-width: 640px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 4px;
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
   }
 }
 
 @media (min-width: 768px) {
   .grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
+  }
+  .grid[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
+  }
+  .grid[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid[data-count='3'] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
