@@ -34,10 +34,20 @@ export const PRO_LIMITS: StudioLimits = {
   galleryPhotos: Infinity,
 }
 
-function buildFeatures(isPro: boolean): StudioFeatures {
+function buildFeatures(isPro: boolean, source: EntitlementSource): StudioFeatures {
   const features = {} as StudioFeatures
   for (const feature of PRO_FEATURES) {
     features[feature] = isPro
+  }
+  // custom_domain is deliberately NOT a trial/pre-launch freebie like every
+  // other PRO feature — it's meant as a real incentive to actually pay,
+  // decided against the earlier "everyone in trial already gets it for
+  // free while a lapsed-trial user has to pay for the same thing" bug.
+  // pre_launch was only ever meant to hold the fort until payments existed
+  // at all, not to permanently include this one on top — so both are
+  // excluded; only a real subscription or an explicit admin override count.
+  if (isPro) {
+    features.custom_domain = source === 'subscription' || source === 'admin_override'
   }
   return features
 }
@@ -114,7 +124,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'admin_override',
       limits: FREE_LIMITS,
-      features: buildFeatures(false),
+      features: buildFeatures(false, 'admin_override'),
     }
   }
 
@@ -132,7 +142,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'free',
       limits: FREE_LIMITS,
-      features: buildFeatures(false),
+      features: buildFeatures(false, 'free'),
     }
   }
 
@@ -150,7 +160,7 @@ export function resolveStudioEntitlements(
     isPro: true,
     source,
     limits: PRO_LIMITS,
-    features: buildFeatures(true),
+    features: buildFeatures(true, source),
   }
 }
 

@@ -164,6 +164,75 @@ describe('canUseFeature', () => {
   }
 })
 
+describe('custom_domain — excluded from trial and pre_launch, unlike every other PRO feature', () => {
+  it('trial source: every other PRO feature is true, custom_domain is false', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: '2026-02-01T00:00:00Z',
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      now,
+    })
+    assert.equal(e.source, 'trial')
+    assert.equal(e.features.custom_domain, false)
+    assert.equal(e.features.posts, true)
+  })
+  it('pre_launch source: also excluded, same as trial', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: false,
+      now,
+    })
+    assert.equal(e.source, 'pre_launch')
+    assert.equal(e.features.custom_domain, false)
+  })
+  it('real subscription: custom_domain is true', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: true,
+      paymentsCheckoutEnabled: true,
+      now,
+    })
+    assert.equal(e.source, 'subscription')
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('admin override to PRO: custom_domain is true', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'pro',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      now,
+    })
+    assert.equal(e.source, 'admin_override')
+    assert.equal(e.features.custom_domain, true)
+  })
+  it('FREE tier: custom_domain is false, same as every other PRO feature', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: null,
+      subscriptionTierOverride: 'free',
+      hasActiveSubscription: false,
+      paymentsCheckoutEnabled: true,
+      now,
+    })
+    assert.equal(e.features.custom_domain, false)
+  })
+  it('an active trial that ALSO has a real subscription underneath still reports trial and excludes custom_domain (trial takes precedence)', () => {
+    const e = resolveStudioEntitlements({
+      trialEndDate: '2026-02-01T00:00:00Z',
+      subscriptionTierOverride: 'auto',
+      hasActiveSubscription: true,
+      paymentsCheckoutEnabled: true,
+      now,
+    })
+    assert.equal(e.source, 'trial')
+    assert.equal(e.features.custom_domain, false)
+  })
+})
+
 describe('pickFreeDisplayedGallery', () => {
   it('returns null when no public galleries', () => {
     const galleries = [{ id: 'a', is_public: false, created_at: '2026-01-01' }]

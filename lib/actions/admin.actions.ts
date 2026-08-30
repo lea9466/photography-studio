@@ -8,8 +8,10 @@ import { deleteStudioCompletely } from '@/lib/admin/delete-studio'
 import {
   fetchActiveSubscriptionByIds,
   getAdminBroadcastRecipients,
+  getAdminCustomDomains,
   getAdminStudios,
   getLatestAnnouncementForAdmin,
+  type AdminCustomDomainRow,
   type AdminStudioRow,
 } from '@/lib/admin/queries'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
@@ -431,6 +433,41 @@ export async function updateReactPublicSiteEnabled(enabled: boolean) {
   revalidatePath('/manage')
 
   return { react_public_site_enabled: Boolean(data.react_public_site_enabled) }
+}
+
+export async function fetchAdminCustomDomains(): Promise<AdminCustomDomainRow[]> {
+  await requireAdmin()
+  return getAdminCustomDomains()
+}
+
+/**
+ * Manual counterpart to the abandoned Site Verification API automation (see
+ * lib/domains/custom-domain-lookup.ts's getGoogleSiteVerificationToken doc
+ * comment for why) — the admin verifies each domain in Search Console
+ * herself (HTML tag method, not DNS) and pastes the resulting token here.
+ * revalidatePath on every public route this could affect isn't practical
+ * (arbitrary custom hostnames aren't a static path set) — the token only
+ * matters the next time Google (or the admin) loads the domain's pages,
+ * which happens on a fresh request regardless of cache.
+ */
+export async function updateCustomDomainVerificationToken(domainId: string, token: string) {
+  await requireAdmin()
+
+  const trimmed = token.trim()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('custom_domains')
+    .update({
+      google_site_verification_token: trimmed || null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq('id', domainId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/manage')
+
+  return { success: true as const }
 }
 
 export async function getAdminAuthState() {

@@ -12,6 +12,7 @@ import {
   CreditCard,
   FileText,
   Images,
+  Globe,
 } from 'lucide-react'
 
 import type { ProFeature } from '@/lib/subscriptions/types'
@@ -99,6 +100,15 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'הגדרות אתר',
     icon: <Settings className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+  },
+  {
+    href: '/dashboard/custom-domain',
+    label: 'דומיין אישי',
+    icon: <Globe className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/custom-domain'),
+    badge: 'new',
+    proFeature: 'custom_domain',
+    lockedTooltip: 'דומיין אישי דורש מנוי בתשלום — לא כלול בתקופת הניסיון. שדרגי למנוי כדי לחבר דומיין משלך (למשל www.השם-שלך.com) במקום כתובת ה-slug',
   },
   {
     href: '/dashboard/subscription',

@@ -50,6 +50,7 @@ export default async function DashboardLayout({
       isImpersonating={isImpersonating}
       siteUnavailableLocked={siteUnavailableLocked}
       isPro={entitlements?.isPro ?? true}
+      canUseCustomDomain={entitlements?.features.custom_domain ?? true}
       isUnderConstruction={Boolean(profile?.is_under_construction)}
       announcement={isImpersonating || siteUnavailableLocked ? null : announcement}
       assistantHasMissingContent={assistantMissing ? hasAnyMissingContent(assistantMissing) : false}

@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
+import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import {
   buildPostCanonicalPath,
@@ -26,6 +29,12 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
   const studioPath = resolveActiveStudioPath(photographer)
   if (!studioPath) notFound()
 
+  // See app/[slug]/page.tsx for why: on a photographer's connected custom
+  // domain, nav links built from the real slug path would 404 there.
+  const isTenantDomain = (await headers()).has(TENANT_HOST_HEADER)
+  const navBasePath = isTenantDomain ? '' : studioPath
+  const homeHref = navBasePath || '/'
+
   const [galleries, posts] = await Promise.all([
     fetchPhotographerDiscoveryGalleries(photographer.id),
     fetchPhotographerDiscoveryPosts(photographer.id),
@@ -39,7 +48,7 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
           רשימת גלריות ופוסטים ציבוריים לסריקה על ידי מנועי חיפוש.
         </p>
         <p className="mt-3">
-          <Link href={studioPath} className="text-sm underline">
+          <Link href={homeHref} className="text-sm underline">
             חזרה לדף הבית של {studioName}
           </Link>
         </p>
@@ -52,7 +61,7 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
         {galleries.length > 0 ? (
           <ul className="list-disc space-y-2 ps-5">
             {galleries.map((gallery) => {
-              const href = resolveValidatedGalleryPath(gallery)
+              const href = resolveValidatedGalleryPath(gallery, navBasePath)
               if (!href) return null
               return (
                 <li key={gallery.id}>
@@ -74,7 +83,7 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
           <ul className="list-disc space-y-2 ps-5">
             {posts.map((post) => (
               <li key={post.id}>
-                <Link href={buildPostCanonicalPath(studioPath, post.id)}>{post.title}</Link>
+                <Link href={buildPostCanonicalPath(navBasePath, post.id)}>{post.title}</Link>
               </li>
             ))}
           </ul>
@@ -98,24 +107,28 @@ export async function generateMetadata({ params }: SeoMapPageProps): Promise<Met
     const studioPath = resolveActiveStudioPath(photographer)
     if (!studioPath) return { title: 'מפת תוכן לא נמצאה' }
 
-    const seoMapPath = buildSeoMapPath(studioPath)
+    const baseUrl = await getCanonicalBaseUrl(photographer.id)
+    const seoMapPath = buildSeoMapPath(baseUrl ? '' : studioPath)
     const title = `מפת תוכן | ${studioName}`
     const description = `רשימת גלריות ופוסטים ציבוריים של ${studioName} לסריקה על ידי מנועי חיפוש.`
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(photographer.id)
 
     return {
       title,
       description,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       robots: {
         index: false,
         follow: true,
       },
       alternates: {
-        canonical: buildCanonicalUrl(seoMapPath),
+        canonical: buildCanonicalUrl(seoMapPath, baseUrl),
       },
       openGraph: buildPublicOpenGraph({
         title,
         description,
         canonicalPath: seoMapPath,
+        baseUrl,
       }),
     }
   } catch {

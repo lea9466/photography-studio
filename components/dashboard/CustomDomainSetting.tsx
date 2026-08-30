@@ -9,14 +9,17 @@ import {
   disconnectCustomDomain,
 } from '@/lib/actions/custom-domain.actions'
 import type { CustomDomain } from '@/lib/types/database.types'
+import { isApexHostname } from '@/lib/validations/domain'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 type CustomDomainSettingProps = {
   initialDomain: CustomDomain | null
-  /** VERCEL_CNAME_TARGET — the CNAME target shown to the photographer. */
+  /** VERCEL_CNAME_TARGET — the CNAME target shown for a subdomain. */
   cnameTarget: string
+  /** VERCEL_APEX_A_RECORD — the A-record IP shown for a bare root domain. */
+  apexARecord: string
   /**
    * False for a downgraded-from-Pro photographer who still has an existing
    * connection to manage — she can view/disconnect it, but not connect a
@@ -60,7 +63,12 @@ function CopyableValue({ value }: { value: string }) {
   )
 }
 
-export function CustomDomainSetting({ initialDomain, cnameTarget, canConnect }: CustomDomainSettingProps) {
+export function CustomDomainSetting({
+  initialDomain,
+  cnameTarget,
+  apexARecord,
+  canConnect,
+}: CustomDomainSettingProps) {
   const [domain, setDomain] = useState(initialDomain)
   const [hostnameInput, setHostnameInput] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -101,7 +109,7 @@ export function CustomDomainSetting({ initialDomain, cnameTarget, canConnect }: 
       try {
         const result = await connectCustomDomain({ hostname })
         setDomain(result)
-        toast.success('הדומיין נוסף — יש להשלים את הגדרות ה-DNS למטה')
+        toast.success(`${result.hostname} נוסף — יש להשלים את הגדרות ה-DNS למטה`)
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'חיבור הדומיין נכשל')
       }
@@ -170,7 +178,7 @@ export function CustomDomainSetting({ initialDomain, cnameTarget, canConnect }: 
           <div className="min-w-0 flex-1 space-y-1">
             <h2 className="text-lg font-semibold text-[--foreground]">דומיין אישי</h2>
             <p className="text-xs leading-relaxed text-[--muted]">
-              חברי דומיין משלך (למשל www.השם-שלך.com) כדי שהאתר יופיע בכתובת שלך במקום ב-slug.
+              חברי דומיין משלך — דומיין ראשי (השם-שלך.com) או תת-דומיין (www.השם-שלך.com) — כדי שהאתר יופיע בכתובת שלך במקום ב-slug.
             </p>
           </div>
         </div>
@@ -247,10 +255,21 @@ export function CustomDomainSetting({ initialDomain, cnameTarget, canConnect }: 
             </Button>
           </div>
           <div className="space-y-2 border-t border-emerald-200/60 pt-3 text-xs leading-relaxed text-[--muted]">
-            <p className="font-medium text-[--foreground]">
-              אם עדיין לא הזנת DNS — הוסיפי רשומת CNAME אצל ספק הדומיין שלך:
-            </p>
-            <CopyableValue value={cnameTarget} />
+            {isApexHostname(domain.hostname) ? (
+              <>
+                <p className="font-medium text-[--foreground]">
+                  אם עדיין לא הזנת DNS — הוסיפי רשומת A אצל ספק הדומיין שלך (שדה Host ריק/@):
+                </p>
+                <CopyableValue value={apexARecord} />
+              </>
+            ) : (
+              <>
+                <p className="font-medium text-[--foreground]">
+                  אם עדיין לא הזנת DNS — הוסיפי רשומת CNAME אצל ספק הדומיין שלך:
+                </p>
+                <CopyableValue value={cnameTarget} />
+              </>
+            )}
             <p>שינויי DNS יכולים לקחת עד כמה שעות עד שהם נכנסים לתוקף בכל העולם — בקרי בכתובת למעלה כדי לוודא שהאתר עולה.</p>
             {!canConnect && (
               <p className="font-medium text-amber-800">

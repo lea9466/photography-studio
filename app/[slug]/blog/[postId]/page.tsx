@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
-import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
@@ -206,6 +206,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       : buildPostCanonicalPath(studioPath, post.id)
     const title = buildPostSeoTitle(post.title, studioName)
     const description = buildPostDescription(post)
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(photographer.id)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(photographer.id, photographer.logo_url) ??
       getBrandingPublicMediaUrl(photographer.logo_url)
@@ -213,6 +214,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     return {
       title,
       description,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       ...(logoIconUrl
         ? {
             icons: {

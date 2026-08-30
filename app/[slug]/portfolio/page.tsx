@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
-import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
@@ -313,6 +313,7 @@ export async function generateMetadata({ params }: PortfolioPageProps): Promise<
     const portfolioPath = `${canonicalPath}/portfolio`
     const title = `תיק עבודות | ${studioName}`
     const description = `תיק העבודות של ${studioName}`
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(typed.id)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(typed.id, typed.logo_url) ??
       getBrandingPublicMediaUrl(typed.logo_url)
@@ -320,6 +321,7 @@ export async function generateMetadata({ params }: PortfolioPageProps): Promise<
     return {
       title,
       description,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       ...(logoIconUrl
         ? {
             icons: {

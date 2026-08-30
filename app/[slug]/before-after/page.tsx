@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
-import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
@@ -225,6 +225,7 @@ export async function generateMetadata({ params }: BeforeAfterPageProps): Promis
       : (getPublicSitePath(photographer.slug, photographer.studio_name) ?? `/${decodedSlug}`)
     const beforeAfterPath = `${canonicalPath}/before-after`
     const title = `${pageTitle} | ${studioName}`
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(photographer.id)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(photographer.id, photographer.logo_url) ??
       getBrandingPublicMediaUrl(photographer.logo_url)
@@ -232,6 +233,7 @@ export async function generateMetadata({ params }: BeforeAfterPageProps): Promis
     return {
       title,
       description,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       ...(logoIconUrl
         ? {
             icons: {

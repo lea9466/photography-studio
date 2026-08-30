@@ -325,3 +325,46 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
     }
   })
 }
+
+export type AdminCustomDomainRow = {
+  id: string
+  hostname: string
+  status: string
+  google_site_verification_token: string | null
+  studio_name: string | null
+  slug: string | null
+}
+
+/**
+ * Every non-deleted connected custom domain, for /manage's Search Console
+ * verification section (see CustomDomainVerificationManager) — the manual
+ * fallback for what full API automation couldn't reach (see
+ * lib/domains/custom-domain-lookup.ts's getGoogleSiteVerificationToken).
+ */
+export async function getAdminCustomDomains(): Promise<AdminCustomDomainRow[]> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('custom_domains')
+    .select('id, hostname, status, google_site_verification_token, users(studio_name, slug)')
+    .neq('status', 'deleted')
+    .order('created_at', { ascending: false })
+
+  if (error) throw new Error(error.message)
+
+  type Row = {
+    id: string
+    hostname: string
+    status: string
+    google_site_verification_token: string | null
+    users: { studio_name: string | null; slug: string | null } | null
+  }
+
+  return ((data ?? []) as Row[]).map((row) => ({
+    id: row.id,
+    hostname: row.hostname,
+    status: row.status,
+    google_site_verification_token: row.google_site_verification_token,
+    studio_name: row.users?.studio_name ?? null,
+    slug: row.users?.slug ?? null,
+  }))
+}

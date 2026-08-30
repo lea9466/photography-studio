@@ -49,6 +49,7 @@ type SidebarNavProps = {
   siteUnavailableLocked?: boolean
   isUnderConstruction?: boolean
   isPro?: boolean
+  canUseCustomDomain?: boolean
   onOpenAssistant?: () => void
   assistantHasMissingContent?: boolean
 }
@@ -68,6 +69,7 @@ export function SidebarNav({
   siteUnavailableLocked = false,
   isUnderConstruction = false,
   isPro = true,
+  canUseCustomDomain = true,
   onOpenAssistant,
   assistantHasMissingContent = false,
 }: SidebarNavProps) {
@@ -156,6 +158,7 @@ export function SidebarNav({
           onNavigate={onMobileClose}
           siteUnavailableLocked={siteUnavailableLocked}
           isPro={isPro}
+          canUseCustomDomain={canUseCustomDomain}
         />
       </div>
 

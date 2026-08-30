@@ -1045,6 +1045,7 @@ export type Database = {
           cloudflare_ssl_status: string | null
           vercel_attached: boolean
           vercel_verification: Record<string, unknown> | null
+          google_site_verification_token: string | null
           last_checked_at: string | null
           last_error: string | null
           created_at: string
@@ -1060,6 +1061,7 @@ export type Database = {
           cloudflare_ssl_status?: string | null
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
+          google_site_verification_token?: string | null
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string
@@ -1075,6 +1077,7 @@ export type Database = {
           cloudflare_ssl_status?: string | null
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
+          google_site_verification_token?: string | null
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string
