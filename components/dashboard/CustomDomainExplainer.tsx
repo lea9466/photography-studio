@@ -100,6 +100,14 @@ const STEPS = [
 export function CustomDomainExplainer() {
   return (
     <div className="space-y-6">
+      <p className="text-sm leading-relaxed text-[--muted]">
+        <span className="font-semibold text-[--foreground]">מה זה בכלל דומיין?</span> זו הכתובת הייחודית של אתר
+        באינטרנט — למשל <span dir="ltr">google.com</span> או <span dir="ltr">nike.com</span>. זו הכתובת שמקלידים
+        בדפדפן כדי להגיע לאתר, וזו הכתובת שמופיעה בתוצאות חיפוש בגוגל. כרגע האתר שלך יושב תחת כתובת של הפלטפורמה
+        (<span dir="ltr">studio-galleries.com/{'{'}slug{'}'}</span>) — דומיין אישי נותן לך כתובת עצמאית משלך, כמו
+        לכל עסק אמיתי.
+      </p>
+
       <section className="relative space-y-5 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
         <h2 className="text-lg font-semibold text-[--foreground]">למה כדאי לחבר דומיין אישי?</h2>
         <div className="grid gap-4 sm:grid-cols-3">
