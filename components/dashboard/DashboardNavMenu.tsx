@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { DASHBOARD_NAV_ITEMS } from './dashboard-nav-config'
+import { getDashboardNavItems } from './dashboard-nav-config'
 import { SubscriptionPlanBadge } from './SubscriptionPlanBadge'
 
 type DashboardNavMenuProps = {
@@ -12,6 +12,9 @@ type DashboardNavMenuProps = {
   className?: string
   siteUnavailableLocked?: boolean
   isPro?: boolean
+  /** custom_domain is excluded from trial/pre-launch (see lib/subscriptions/entitlements.ts's buildFeatures) — its own lock check, separate from the plain isPro every other PRO feature uses. */
+  canUseCustomDomain?: boolean
+  canCreateClientGalleries?: boolean
 }
 
 export function DashboardNavMenu({
@@ -19,8 +22,11 @@ export function DashboardNavMenu({
   className,
   siteUnavailableLocked = false,
   isPro = true,
+  canUseCustomDomain = true,
+  canCreateClientGalleries = false,
 }: DashboardNavMenuProps) {
   const pathname = usePathname()
+  const navItems = getDashboardNavItems({ canCreateClientGalleries })
 
   return (
     <nav className={cn('space-y-1', className)}>
@@ -29,7 +35,7 @@ export function DashboardNavMenu({
           האתר אינו זמין כרגע. ניתן לגשת רק לעמוד המינוי כדי לחדש גישה.
         </p>
       ) : null}
-      {DASHBOARD_NAV_ITEMS.map((item) => {
+      {navItems.map((item) => {
         const active = item.isActive(pathname)
         const lockedByUnavailable =
           siteUnavailableLocked && item.href !== '/dashboard/subscription'

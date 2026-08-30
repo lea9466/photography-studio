@@ -72,7 +72,7 @@ export type ModernHomePageProps = {
   testimonialsTitle: string
   testimonials: ModernTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  testimonialLayoutType?: 'carousel' | 'marquee'
+  testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
 
   faqItems: unknown
 

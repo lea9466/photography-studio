@@ -250,9 +250,9 @@ export async function updateTestimonialsSectionTitle(input: {
 }
 
 export async function updateTestimonialLayoutType(input: {
-  layoutType: 'carousel' | 'marquee'
+  layoutType: 'carousel' | 'marquee' | 'flip-cards'
 }): Promise<{ testimonial_layout_type: string }> {
-  if (input.layoutType !== 'carousel' && input.layoutType !== 'marquee') {
+  if (!['carousel', 'marquee', 'flip-cards'].includes(input.layoutType)) {
     throw new Error('סוג תצוגה לא תקין')
   }
 

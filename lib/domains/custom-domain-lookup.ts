@@ -114,6 +114,42 @@ export const getActiveCustomDomainHost = cache(async (userId: string): Promise<s
 })
 
 /**
+ * The admin-entered Search Console "HTML tag" verification token for a
+ * photographer's connected domain (see /manage's CustomDomainVerification
+ * section) — rendered as Next's built-in `verification.google` metadata
+ * field on every page under that domain. Full API-driven verification
+ * (Site Verification API via a service account/OAuth) was attempted and
+ * abandoned: this Google Cloud org disables service account key creation by
+ * default, and the OAuth fallback hit an access_denied wall that would need
+ * Workspace super-admin access not available here — so this is entered
+ * manually, once per domain, instead. Same cache()/timeout/fail-safe shape
+ * as getActiveCustomDomainHost, for the same reasons.
+ */
+export const getGoogleSiteVerificationToken = cache(async (userId: string): Promise<string | null> => {
+  try {
+    const admin = createAdminClient()
+    const query = admin
+      .from('custom_domains')
+      .select('google_site_verification_token')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    const { data } = await withTimeout(query, METADATA_LOOKUP_TIMEOUT_MS, { data: null, error: null } as Awaited<
+      typeof query
+    >)
+
+    return (data as { google_site_verification_token: string | null } | null)?.google_site_verification_token ?? null
+  } catch (error) {
+    console.error('[custom-domain-lookup] getGoogleSiteVerificationToken failed, treating as none', {
+      userId,
+      error: error instanceof Error ? error.message : error,
+    })
+    return null
+  }
+})
+
+/**
  * Convenience wrapper around getActiveCustomDomainHost for the common
  * call site — every generateMetadata() that wants its canonical/OG/JSON-LD
  * URLs to prefer the photographer's connected domain needs exactly this:

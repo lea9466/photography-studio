@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Images, Plus, Eye, EyeOff } from 'lucide-react'
+import { Images, Eye } from 'lucide-react'
 import { fetchDashboardGalleries, fetchStudioPublicPath, fetchUserEntitlements } from '@/lib/actions/dashboard.actions'
 import {
   fetchGalleryLayoutMode,
@@ -11,10 +10,10 @@ import {
   updateDisplayedGallery,
 } from '@/lib/actions/gallery.actions'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
+import { FloatingNewGalleryButton } from '@/components/dashboard/FloatingNewGalleryButton'
 import { GalleryLayoutModeSetting } from '@/components/dashboard/GalleryLayoutModeSetting'
 import { GalleriesSectionTitleSetting } from '@/components/dashboard/GalleriesSectionTitleSetting'
 import { RecentPhotosSectionTitleSetting } from '@/components/dashboard/RecentPhotosSectionTitleSetting'
-import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 import type { GalleryLayoutMode } from '@/lib/types/database.types'
@@ -22,10 +21,7 @@ import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
   MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
 } from '@/lib/types/app.types'
-import { cn } from '@/lib/utils'
-
-const ACCENT_BUTTON_CLASS =
-  'bg-[#7D3A52] text-white shadow-md shadow-[#7D3A52]/25 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40'
+import { galleryKind } from '@/lib/gallery-kind'
 
 export default function GalleriesPage() {
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
@@ -86,35 +82,23 @@ export default function GalleriesPage() {
     )
   }
 
-  const galleryCount = recentGalleries.length
+  // This page owns public / showcase galleries only — private client galleries
+  // live under /dashboard/private-galleries.
+  const showcaseGalleries = recentGalleries.filter(
+    (gallery) => galleryKind(gallery) === 'showcase'
+  )
+
+  const galleryCount = showcaseGalleries.length
   const hasGalleryLimit = Number.isFinite(maxGalleries)
   const canCreateGallery = !hasGalleryLimit || galleryCount < maxGalleries
 
-  const newGalleryButton = canCreateGallery ? (
-    <Button asChild className={cn(ACCENT_BUTTON_CLASS, 'px-6 py-3 text-base font-semibold shadow-lg')}>
-      <Link href="/dashboard/galleries/new">
-        <Plus className="h-5 w-5 ml-2" />
-        גלריה חדשה
-      </Link>
-    </Button>
-  ) : (
-    <Button
-      disabled
-      className={cn(ACCENT_BUTTON_CLASS, 'cursor-not-allowed px-6 py-3 text-base font-semibold opacity-50')}
-      title={`מקסימום ${maxGalleries} גלריות`}
-    >
-      <Plus className="h-5 w-5 ml-2" />
-      גלריה חדשה
-    </Button>
-  )
-
   return (
     <div className="animate-fade-in">
-      <div className="fixed left-4 top-[70px] z-50 md:left-8 md:top-[22px]">
-        <div className="rounded-2xl border border-[#7D3A52]/15 bg-white/95 p-1.5 shadow-xl shadow-[#7D3A52]/10 backdrop-blur-md">
-          {newGalleryButton}
-        </div>
-      </div>
+      <FloatingNewGalleryButton
+        href="/dashboard/galleries/new?kind=showcase"
+        disabled={!canCreateGallery}
+        disabledTitle={`מקסימום ${maxGalleries} גלריות`}
+      />
 
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
         <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--dashboard-surface] px-7 py-6 md:px-9 md:py-7">
@@ -124,7 +108,7 @@ export default function GalleriesPage() {
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight text-[--foreground] md:text-[1.65rem]">
-                כל הגלריות
+                גלריות ציבוריות
               </h1>
               <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
                 {hasGalleryLimit ? `${galleryCount}/${maxGalleries} גלריות` : `${galleryCount} גלריות`} · {photoCount}/{maxPhotos} תמונות
@@ -134,13 +118,15 @@ export default function GalleriesPage() {
         </div>
 
         <RecentGalleriesTable
-          galleries={recentGalleries}
-          title="כל הגלריות"
+          galleries={showcaseGalleries}
+          title="גלריות ציבוריות"
           variant="section"
+          sectionDescription="גלריות שמוצגות באתר התדמית שלך"
+          emptyLabel="עדיין אין גלריות ציבוריות"
           studioPath={studioPath}
         />
 
-        {!isPro && recentGalleries.length > 1 && (
+        {!isPro && showcaseGalleries.length > 1 && (
           <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--dashboard-surface] px-7 py-6 md:px-9 md:py-7">
             <div className="flex items-start gap-5">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/10">
@@ -180,9 +166,9 @@ export default function GalleriesPage() {
                   <SelectItem value="none">
                     (ללא — אף גלריה לא מוצגת)
                   </SelectItem>
-                  {recentGalleries.map((gallery) => (
+                  {showcaseGalleries.map((gallery) => (
                     <SelectItem key={gallery.id} value={gallery.id}>
-                      {gallery.title} {gallery.is_public ? '🌐' : '🔒'}
+                      {gallery.title}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -2,11 +2,17 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
-import { GALLERY_STATUS_LABELS, GALLERY_TYPE_LABELS, getGalleryStatusLabel } from '@/lib/types/app.types'
+import { getGalleryStatusLabel } from '@/lib/types/app.types'
+import { galleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
+
+const LIST_BY_KIND = {
+  showcase: { href: '/dashboard/galleries', label: 'גלריות ציבוריות' },
+  client: { href: '/dashboard/private-galleries', label: 'גלריות פרטיות' },
+} as const
 
 type GalleryLayoutProps = {
   children: React.ReactNode
@@ -28,6 +34,8 @@ export default async function GalleryLayout({
   }
 
   const gallery = data as Detail
+  const kind = galleryKind(gallery)
+  const list = LIST_BY_KIND[kind]
 
   const clientName =
     (Array.isArray(gallery.clients)
@@ -38,7 +46,11 @@ export default async function GalleryLayout({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <GalleryBreadcrumb galleryTitle={gallery.title} />
+        <GalleryBreadcrumb
+          galleryTitle={gallery.title}
+          backHref={list.href}
+          backLabel={list.label}
+        />
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -49,13 +61,13 @@ export default async function GalleryLayout({
                 {getGalleryStatusLabel(gallery.status)}
               </Badge>
               <Badge variant="outline">
-                {GALLERY_TYPE_LABELS[gallery.gallery_type]}
+                {GALLERY_KIND_LABELS[kind]}
               </Badge>
             </div>
           </div>
 
           <Button variant="outline" size="sm" asChild className="shrink-0">
-            <Link href="/dashboard/galleries">
+            <Link href={list.href}>
               <ChevronRight className="h-4 w-4" />
               חזרה לרשימה
             </Link>

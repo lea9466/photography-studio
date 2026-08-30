@@ -1,8 +1,10 @@
-import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
+import { notFound, redirect } from 'next/navigation'
 import {
   getClientGallery,
   getClientGalleryPublicMeta,
 } from '@/lib/actions/client-gallery.actions'
+import { getPrivateGalleryHost } from '@/lib/private-gallery/isolation'
 import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
@@ -48,6 +50,20 @@ export default async function ClientGalleryPage({
 
   // Public galleries: getClientGallery authorizes via is_public server-side.
   if (meta.is_public) {
+    // The isolated private-gallery subdomain is promised to carry only
+    // password-gated client galleries. A public gallery reaching /g/ there
+    // (an old link, a crawler) is sent to its canonical public URL on the
+    // main domain instead of rendering here. No-op until the subdomain is
+    // configured — getPrivateGalleryHost() is null and this never matches.
+    const privateHost = getPrivateGalleryHost()
+    if (privateHost) {
+      const requestHost = (await headers()).get('host')
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+      if (requestHost === privateHost && appUrl) {
+        redirect(new URL(`/public-gallery/${id}`, appUrl).toString())
+      }
+    }
+
     const data = await getClientGallery(id)
     if (!data) notFound()
     return <ClientGalleryView gallery={data.gallery} photos={data.photos} />

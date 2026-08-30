@@ -64,7 +64,11 @@ type TestimonialFormState = {
   imageUrl: string
 }
 
-type TestimonialLayoutType = 'carousel' | 'marquee'
+type TestimonialLayoutType = 'carousel' | 'marquee' | 'flip-cards'
+
+function normalizeLayoutType(value: string | null | undefined): TestimonialLayoutType {
+  return value === 'marquee' || value === 'flip-cards' ? value : 'carousel'
+}
 
 const LAYOUT_OPTIONS: Array<{
   value: TestimonialLayoutType
@@ -73,7 +77,13 @@ const LAYOUT_OPTIONS: Array<{
   isNew?: boolean
 }> = [
   { value: 'carousel', label: 'קרוסלה', description: 'תצוגה עם נקודות ניווט' },
-  { value: 'marquee', label: 'סרט נע', description: 'גלילה רציפה ואינסופית', isNew: true },
+  { value: 'marquee', label: 'סרט נע', description: 'גלילה רציפה ואינסופית' },
+  {
+    value: 'flip-cards',
+    label: 'כרטיסים מתהפכים',
+    description: 'כרטיסים רחבים — הרקע הוא התמונה בבהיר, ובמעבר עכבר הכרטיס מתהפך ומראה את התמונה המלאה',
+    isNew: true,
+  },
 ]
 
 const EMPTY_FORM: TestimonialFormState = {
@@ -121,7 +131,7 @@ export function TestimonialsManager({
   const [testimonials, setTestimonials] = useState(initialTestimonials)
   const [sectionTitle, setSectionTitle] = useState(initialSectionTitle ?? '')
   const [layoutType, setLayoutType] = useState<TestimonialLayoutType>(() =>
-    initialLayoutType === 'marquee' ? 'marquee' : 'carousel'
+    normalizeLayoutType(initialLayoutType)
   )
   const [isSectionPending, startSectionTransition] = useTransition()
   const [isLayoutPending, startLayoutTransition] = useTransition()
@@ -276,7 +286,7 @@ export function TestimonialsManager({
     startLayoutTransition(async () => {
       try {
         const updated = await updateTestimonialLayoutType({ layoutType: value })
-        setLayoutType(updated.testimonial_layout_type === 'marquee' ? 'marquee' : 'carousel')
+        setLayoutType(normalizeLayoutType(updated.testimonial_layout_type))
         toast.success('סוג התצוגה נשמר')
       } catch (error) {
         setLayoutType(previous)
@@ -324,7 +334,7 @@ export function TestimonialsManager({
         <div className="space-y-2">
           <Label>סוג תצוגה</Label>
           <div
-            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-3"
             role="radiogroup"
             aria-label="סוג תצוגת תגובות"
           >

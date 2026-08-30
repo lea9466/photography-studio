@@ -15,7 +15,7 @@
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(3rem, 5vw, 4.5rem) clamp(2.75rem, 4.5vw, 4.25rem);
+  gap: clamp(2.25rem, 3.5vw, 3rem) clamp(1.75rem, 2.5vw, 2.5rem);
   align-items: start;
   justify-items: center;
   width: 100%;
@@ -26,9 +26,11 @@
   box-sizing: border-box;
 }
 
-/* homepage teaser (columns=4) spreads wider, closer to the page edges */
+/* homepage teaser (columns=4) spreads wide, but with a real margin from the
+   page edges */
 .grid[data-cols='4'] {
-  max-width: 1460px;
+  max-width: 1400px;
+  padding-inline: clamp(1.5rem, 3vw, 3rem);
 }
 
 @media (min-width: 600px) {
@@ -112,7 +114,7 @@
    that fades to nothing, its light source in a different spot per card. */
 .stain {
   position: absolute;
-  inset: -5% -4% -3% -6%;
+  inset: -6% -2.5% -1% -3.5%;
   z-index: 0;
   --stain-x: 27%;
   --stain-y: 21%;
