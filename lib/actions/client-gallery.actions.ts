@@ -48,6 +48,8 @@ export type ClientGalleryPhoto = {
   preview_signed_url: string | null
   lightbox_signed_url: string | null
   edited_signed_url: string | null
+  width: number | null
+  height: number | null
 }
 
 export type ClientGalleryData = {
@@ -324,7 +326,7 @@ async function loadClientGalleryInternal(galleryId: string) {
     .from('photos')
     .select(
       `
-      id, preview_url, watermarked_preview_url, is_visible_to_client, is_processed,
+      id, preview_url, watermarked_preview_url, is_visible_to_client, is_processed, width, height,
       photo_selections (selected_album, selected_edit),
       edited_photos (final_url)
     `
@@ -339,6 +341,8 @@ async function loadClientGalleryInternal(galleryId: string) {
     watermarked_preview_url: string | null
     is_visible_to_client: boolean
     is_processed: boolean
+    width: number | null
+    height: number | null
     photo_selections: { selected_album: boolean; selected_edit: boolean } | { selected_album: boolean; selected_edit: boolean }[] | null
     edited_photos: { final_url: string | null } | { final_url: string | null }[] | null
   }
@@ -410,6 +414,8 @@ async function loadClientGalleryInternal(galleryId: string) {
         preview_signed_url: await signPath(gridBucket, gridPath, galleryId, forceProxy),
         lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId, forceProxy),
         edited_signed_url: await signPath(editedBucket, editedPath, galleryId, forceProxy),
+        width: photo.width,
+        height: photo.height,
       }
     })
   )
@@ -495,7 +501,7 @@ export async function getPublicPortfolioGallery(galleryId: string) {
 
   const { data: photos } = await admin
     .from('photos')
-    .select('id, preview_url, watermarked_preview_url')
+    .select('id, preview_url, watermarked_preview_url, width, height')
     .eq('gallery_id', galleryId)
     .eq('is_visible_to_client', true)
     .order('sort_order', { ascending: true })
@@ -504,6 +510,8 @@ export async function getPublicPortfolioGallery(galleryId: string) {
     id: string
     preview_url: string | null
     watermarked_preview_url: string | null
+    width: number | null
+    height: number | null
   }
 
   const portfolioPhotos = await Promise.all(
@@ -522,6 +530,8 @@ export async function getPublicPortfolioGallery(galleryId: string) {
         lightbox_signed_url: lightboxPath
           ? await signPath(lightboxBucket, lightboxPath, galleryId)
           : null,
+        width: photo.width,
+        height: photo.height,
       }
     })
   )

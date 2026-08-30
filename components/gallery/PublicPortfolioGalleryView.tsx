@@ -9,6 +9,8 @@ type PublicPortfolioPhoto = {
   id: string
   preview_signed_url: string | null
   lightbox_signed_url: string | null
+  width: number | null
+  height: number | null
 }
 
 type PublicPortfolioGalleryViewProps = {
@@ -112,6 +114,8 @@ export function PublicPortfolioGalleryView({
                 src: photo.preview_signed_url,
                 lightboxSrc:
                   photo.lightbox_signed_url ?? photo.preview_signed_url,
+                width: photo.width,
+                height: photo.height,
                 selected_album: false,
                 selected_edit: false,
               }))}
@@ -137,6 +141,8 @@ export function PublicPortfolioGalleryView({
           preview_signed_url: p.preview_signed_url,
           lightbox_signed_url: p.lightbox_signed_url ?? p.preview_signed_url,
           edited_signed_url: null,
+          width: p.width,
+          height: p.height,
         }))}
         index={lightboxIndex}
         open={lightboxOpen}

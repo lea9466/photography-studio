@@ -289,6 +289,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
                         : photo.preview_signed_url,
                     lightboxSrc:
                       photo.lightbox_signed_url ?? photo.preview_signed_url,
+                    width: photo.width,
+                    height: photo.height,
                     selected_album: photo.selected_album,
                     selected_edit: photo.selected_edit,
                   }))}
