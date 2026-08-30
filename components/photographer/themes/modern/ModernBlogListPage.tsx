@@ -1,7 +1,8 @@
 import { SectionTitle } from '../shared/SectionTitle'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
+import { HomepageBlogCard } from '../shared/HomepageBlogCard'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
-import { ModernBlogPostCard, type ModernBlogPostCardItem } from './ModernBlogPostCard'
+import { type ModernBlogPostCardItem } from './ModernBlogPostCard'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ModernBlogListPage.module.css'
@@ -67,13 +68,22 @@ export function ModernBlogListPage(props: ModernBlogListPageProps) {
             language={language}
           />
         ) : (
-          <div className={styles.grid}>
-            {posts.map((post) => (
-              <ModernBlogPostCard
+          <div className={styles.grid} data-count={posts.length}>
+            {posts.map((post, index) => (
+              <HomepageBlogCard
                 key={post.id}
-                post={post}
+                post={{
+                  id: post.id,
+                  title: post.title,
+                  date: post.date,
+                  coverUrl: post.coverUrl,
+                  content: post.excerpt,
+                }}
                 href={hrefForPost(post.id)}
                 accentColor={accentColor}
+                index={index}
+                total={posts.length}
+                language={language}
               />
             ))}
           </div>

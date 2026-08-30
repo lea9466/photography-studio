@@ -46,23 +46,36 @@
   margin-inline: auto;
 }
 
+/* Floating-card grid — same shared HomepageBlogCard as the homepage teaser
+   (Lea, 2026-08), but capped at 3 across on the blog list page (the homepage
+   teaser goes 4). Column count tracks `data-count` (post total) so the row
+   always fills: 1 → capped + centred, 2 → 2 cols, 3+ → up to 3. */
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
 }
 
 @media (min-width: 640px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
   }
 }
 
 @media (min-width: 1024px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 36px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid[data-count='1'] {
+    grid-template-columns: minmax(0, 460px);
+    justify-content: center;
+  }
+  .grid[data-count='2'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

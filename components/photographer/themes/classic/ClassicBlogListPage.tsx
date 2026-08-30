@@ -1,5 +1,6 @@
 import { ClassicSectionScript } from './ClassicSectionScript'
-import { ClassicBlogPostCard, type ClassicBlogPostCardItem } from './ClassicBlogPostCard'
+import { type ClassicBlogPostCardItem } from './ClassicBlogPostCard'
+import { HomepageBlogCard } from '../shared/HomepageBlogCard'
 import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
@@ -59,13 +60,22 @@ export function ClassicBlogListPage(props: ClassicBlogListPageProps) {
               language={language}
             />
           ) : (
-            <div className={styles.grid}>
-              {posts.map((post) => (
-                <ClassicBlogPostCard
+            <div className={styles.grid} data-count={posts.length}>
+              {posts.map((post, index) => (
+                <HomepageBlogCard
                   key={post.id}
-                  post={post}
+                  post={{
+                    id: post.id,
+                    title: post.title,
+                    date: post.date,
+                    coverUrl: post.coverUrl,
+                    content: post.excerpt,
+                  }}
                   href={hrefForPost(post.id)}
                   accentColor={accentColor}
+                  index={index}
+                  total={posts.length}
+                  language={language}
                 />
               ))}
             </div>
