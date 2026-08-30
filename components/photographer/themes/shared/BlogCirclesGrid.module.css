@@ -15,15 +15,20 @@
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: clamp(2.5rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 2.5rem);
+  gap: clamp(3rem, 5vw, 4.5rem) clamp(2.75rem, 4.5vw, 4.25rem);
   align-items: start;
   justify-items: center;
   width: 100%;
-  max-width: 1320px;
+  max-width: 1240px;
   margin-inline: auto;
   padding-top: 0.75rem;
   overflow: visible;
   box-sizing: border-box;
+}
+
+/* homepage teaser (columns=4) spreads wider, closer to the page edges */
+.grid[data-cols='4'] {
+  max-width: 1460px;
 }
 
 @media (min-width: 600px) {
@@ -47,7 +52,7 @@
   .grid[data-count='2'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     justify-content: center;
-    max-width: 860px;
+    max-width: 900px;
   }
 }
 
@@ -107,7 +112,7 @@
    that fades to nothing, its light source in a different spot per card. */
 .stain {
   position: absolute;
-  inset: -7% -5% -4% -8%;
+  inset: -5% -4% -3% -6%;
   z-index: 0;
   --stain-x: 27%;
   --stain-y: 21%;
