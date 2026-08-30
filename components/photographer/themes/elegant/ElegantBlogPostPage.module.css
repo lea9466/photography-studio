@@ -16,7 +16,11 @@
  * Title/hero-title font-weight is always 700 (baked into
  * `.blog-detail__title`/`.blog-post-hero__title` themselves in the shared
  * source, not derived from titleFontClass) — font-family comes from
- * titleFontClass('elegant') = 'font-serif-hebrew' -> Frank Ruhl Libre.
+ * titleFontClass('elegant') = 'font-serif-hebrew', which resolves to
+ * var(--about-title-font): the title follows the "about title font" branding
+ * setting (default Frank Ruhl Libre), NOT --headline-font, matching the old
+ * renderer and keeping a Hebrew-safe default (elegant's --headline-font
+ * default is Playfair Display, Latin-only).
  */
 
 .mainWithHero {
@@ -87,7 +91,7 @@
   line-height: 1.2;
   max-width: min(65%, 760px);
   color: #1c1b1b;
-  font-family: 'Frank Ruhl Libre', serif;
+  font-family: var(--about-title-font, 'Frank Ruhl Libre', serif);
 }
 
 @media (min-width: 768px) {
@@ -142,7 +146,7 @@
   line-height: 1.2;
   margin: 0;
   color: #1c1b1b;
-  font-family: 'Frank Ruhl Libre', serif;
+  font-family: var(--about-title-font, 'Frank Ruhl Libre', serif);
 }
 
 @media (min-width: 768px) {

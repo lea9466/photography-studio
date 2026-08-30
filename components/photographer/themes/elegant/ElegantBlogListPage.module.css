@@ -1,9 +1,13 @@
 /*
  * ElegantBlogListPage.module.css — 1:1 port of blogBody()'s wrapper markup
  * (lib/public-blog-html.ts line ~1130) restyled with elegant's own tokens.
- * Title: titleFontClass('elegant') = 'font-serif-hebrew' -> Frank Ruhl Libre
- * (see ElegantPortfolioHeader.module.css's doc comment for why this is a
- * different font than the homepage's section titles). Eyebrow:
+ * Title: titleFontClass('elegant') = 'font-serif-hebrew', which resolves to
+ * var(--about-title-font) — so the title follows the "about title font"
+ * branding setting (default Frank Ruhl Libre), NOT --headline-font, matching
+ * the old renderer and keeping a Hebrew-safe default (elegant's
+ * --headline-font default is Playfair Display, Latin-only). See
+ * ElegantPortfolioHeader.module.css's doc comment for why this is a
+ * different font than the homepage's section titles. Eyebrow:
  * eyebrowLabel() has no elegant-specific case, so it falls to the function's
  * default literal string "Journal" (always English, regardless of site
  * language — same convention as ElegantSectionHeading's watermark words).
@@ -37,7 +41,7 @@
 }
 
 .title {
-  font-family: 'Frank Ruhl Libre', serif;
+  font-family: var(--about-title-font, 'Frank Ruhl Libre', serif);
   font-size: 40px;
   line-height: 1.1;
   font-weight: 500;
