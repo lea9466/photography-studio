@@ -34,11 +34,44 @@ export const PRO_LIMITS: StudioLimits = {
   galleryPhotos: Infinity,
 }
 
-function buildFeatures(isPro: boolean): StudioFeatures {
+function buildFeatures(
+  isPro: boolean,
+  source: EntitlementSource,
+  hasActiveSubscription: boolean,
+  hasCustomDomainAddon: boolean
+): StudioFeatures {
   const features = {} as StudioFeatures
   for (const feature of PRO_FEATURES) {
     features[feature] = isPro
   }
+  // custom_domain is deliberately NOT a trial/pre-launch freebie like every
+  // other PRO feature — it's meant as a real incentive to actually pay,
+  // decided against the earlier "everyone in trial already gets it for
+  // free while a lapsed-trial user has to pay for the same thing" bug.
+  // pre_launch was only ever meant to hold the fort until payments existed
+  // at all, not to permanently include this one on top — so neither counts.
+  //
+  // Deliberately checks the raw `hasActiveSubscription` flag here instead of
+  // `source === 'subscription'` — `source` reports 'trial' whenever a trial
+  // is still technically active EVEN IF a real subscription already exists
+  // underneath it (trial takes priority in the source calculation below, for
+  // badge/display purposes), which used to wrongly block a studio that pays
+  // for Pro *during* her own trial window until the trial happened to expire
+  // on its own. She's genuinely paying — this should never depend on trial
+  // bookkeeping. `source === 'admin_override'` still covers a forced-PRO
+  // override, which has no "hasActiveSubscription" of its own to check.
+  //
+  // Independently of all that, `hasCustomDomainAddon` is a standalone
+  // one-time ₪99 purchase (lib/actions/custom-domain-addon.actions.ts) that
+  // unlocks JUST this feature regardless of subscription tier — a studio
+  // that's FREE, mid-trial, or even force-downgraded by an admin still keeps
+  // it, since it was paid for separately and isn't part of the Pro bundle.
+  // Actually serving the connected domain still requires it to stay CURRENT
+  // (see the `suspended_billing` status in lib/domains/*) — this addon is
+  // exactly what keeps a domain out of that state without a live subscription.
+  features.custom_domain = Boolean(
+    (isPro && (hasActiveSubscription || source === 'admin_override')) || hasCustomDomainAddon
+  )
   return features
 }
 
@@ -88,6 +121,9 @@ export type ResolveStudioEntitlementsInput = {
    *  default this — omitting it would silently mask the pre-launch grace
    *  below, so passing the real flag is mandatory. */
   paymentsCheckoutEnabled: boolean
+  /** `users.custom_domain_addon_purchased_at IS NOT NULL` — a standalone
+   *  one-time purchase, independent of subscription tier. See buildFeatures. */
+  hasCustomDomainAddon: boolean
   now?: Date
 }
 
@@ -114,7 +150,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'admin_override',
       limits: FREE_LIMITS,
-      features: buildFeatures(false),
+      features: buildFeatures(false, 'admin_override', input.hasActiveSubscription, input.hasCustomDomainAddon),
     }
   }
 
@@ -132,7 +168,7 @@ export function resolveStudioEntitlements(
       isPro: false,
       source: 'free',
       limits: FREE_LIMITS,
-      features: buildFeatures(false),
+      features: buildFeatures(false, 'free', input.hasActiveSubscription, input.hasCustomDomainAddon),
     }
   }
 
@@ -150,7 +186,7 @@ export function resolveStudioEntitlements(
     isPro: true,
     source,
     limits: PRO_LIMITS,
-    features: buildFeatures(true),
+    features: buildFeatures(true, source, input.hasActiveSubscription, input.hasCustomDomainAddon),
   }
 }
 

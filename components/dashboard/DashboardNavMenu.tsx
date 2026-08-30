@@ -12,6 +12,8 @@ type DashboardNavMenuProps = {
   className?: string
   siteUnavailableLocked?: boolean
   isPro?: boolean
+  /** custom_domain is excluded from trial/pre-launch (see lib/subscriptions/entitlements.ts's buildFeatures) — its own lock check, separate from the plain isPro every other PRO feature uses. */
+  canUseCustomDomain?: boolean
 }
 
 export function DashboardNavMenu({
@@ -19,6 +21,7 @@ export function DashboardNavMenu({
   className,
   siteUnavailableLocked = false,
   isPro = true,
+  canUseCustomDomain = true,
 }: DashboardNavMenuProps) {
   const pathname = usePathname()
 
@@ -33,7 +36,8 @@ export function DashboardNavMenu({
         const active = item.isActive(pathname)
         const lockedByUnavailable =
           siteUnavailableLocked && item.href !== '/dashboard/subscription'
-        const lockedByPlan = !isPro && item.proFeature != null
+        const lockedByPlan =
+          item.proFeature === 'custom_domain' ? !canUseCustomDomain : !isPro && item.proFeature != null
         const badgePlan =
           item.href === '/dashboard/subscription'
             ? isPro

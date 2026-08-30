@@ -59,9 +59,23 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
       return NextResponse.redirect(target, 308)
     }
 
-    const slug = await resolveCustomDomainSlug(host!)
-    const rewrittenPath = slug ? resolveCustomDomainRewrite(pathname, slug) : null
-    if (!rewrittenPath) return new NextResponse('Not Found', { status: 404 })
+    const resolved = await resolveCustomDomainSlug(host!)
+    const rewrittenPath = resolved ? resolveCustomDomainRewrite(pathname, resolved.slug) : null
+    if (!resolved || !rewrittenPath) return new NextResponse('Not Found', { status: 404 })
+
+    // Verified/DNS-correct but the owner currently has no entitlement (see
+    // ResolvedCustomDomain's doc) — send visitors to the equivalent page on
+    // the studio-galleries.com/{slug} URL instead of serving the personal
+    // domain directly. 307 (temporary): reactivating (resubscribing or
+    // buying the addon) flips this back with no lasting SEO signal sent in
+    // the meantime — see app/[slug]/*'s canonical logic, which already stops
+    // treating a suspended domain as canonical the same way.
+    if (resolved.suspended) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+      if (!appUrl) return new NextResponse('Not Found', { status: 404 })
+      const target = new URL(rewrittenPath + request.nextUrl.search, appUrl)
+      return NextResponse.redirect(target, 307)
+    }
 
     const url = request.nextUrl.clone()
     url.pathname = rewrittenPath

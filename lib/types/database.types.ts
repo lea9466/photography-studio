@@ -112,6 +112,7 @@ export type Database = {
           dashboard_visit_count: number
           is_under_construction: boolean
           is_site_unavailable: boolean
+          custom_domain_addon_purchased_at: string | null
         }
         Insert: {
           id: string
@@ -179,6 +180,7 @@ export type Database = {
           dashboard_visit_count?: number
           is_under_construction?: boolean
           is_site_unavailable?: boolean
+          custom_domain_addon_purchased_at?: string | null
         }
         Update: {
           id?: string
@@ -246,6 +248,7 @@ export type Database = {
           dashboard_visit_count?: number
           is_under_construction?: boolean
           is_site_unavailable?: boolean
+          custom_domain_addon_purchased_at?: string | null
         }
         Relationships: []
       }
@@ -1045,6 +1048,7 @@ export type Database = {
           cloudflare_ssl_status: string | null
           vercel_attached: boolean
           vercel_verification: Record<string, unknown> | null
+          google_site_verification_token: string | null
           last_checked_at: string | null
           last_error: string | null
           created_at: string
@@ -1060,6 +1064,7 @@ export type Database = {
           cloudflare_ssl_status?: string | null
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
+          google_site_verification_token?: string | null
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string
@@ -1075,6 +1080,7 @@ export type Database = {
           cloudflare_ssl_status?: string | null
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
+          google_site_verification_token?: string | null
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string

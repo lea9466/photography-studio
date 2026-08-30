@@ -83,16 +83,25 @@ export function resolveValidatedGalleryPath(
     if (slug) return `/portfolio/${slug}`
   }
 
-  return studioPath ? `${studioPath}/gallery/${gallery.id}` : `/public-gallery/${gallery.id}`
+  // studioPath !== undefined (not just truthy) so an explicit '' — a
+  // connected custom domain's root-relative base, see app/sitemap.ts — still
+  // takes the {studioPath}/gallery/{id} branch instead of falling through to
+  // the legacy /public-gallery/{id} shim, which isn't a recognized tenant
+  // path (see lib/domains/rewrite.ts) and would 404 there.
+  return studioPath !== undefined ? `${studioPath}/gallery/${gallery.id}` : `/public-gallery/${gallery.id}`
 }
 
+// All three checks below are `=== null` (not a falsy check) so that an
+// explicit '' — a connected custom domain's root-relative base, see
+// app/sitemap.ts — still builds a root-relative path instead of being
+// treated the same as "no path at all" the way `!studioPath` would.
 export function resolveValidatedPostPath(studioPath: string | null, postId: string): string | null {
-  if (!studioPath || !postId.trim()) return null
+  if (studioPath === null || !postId.trim()) return null
   return `${studioPath}/blog/${postId.trim()}`
 }
 
 export function resolveValidatedBlogPath(studioPath: string | null): string | null {
-  if (!studioPath) return null
+  if (studioPath === null) return null
   return `${studioPath}/blog`
 }
 
@@ -100,7 +109,7 @@ export function resolveValidatedPortfolioPath(
   photographer: ValidatablePhotographer,
   studioPath: string | null
 ): string | null {
-  if (!studioPath) return null
+  if (studioPath === null) return null
   if ((photographer.gallery_layout_mode ?? 'separated') !== 'portfolio') return null
   return `${studioPath}/portfolio`
 }

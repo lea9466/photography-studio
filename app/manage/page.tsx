@@ -3,7 +3,8 @@ import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
 import { AdminStudioList } from '@/components/admin/AdminStudioList'
 import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
-import { fetchAdminStudios } from '@/lib/actions/admin.actions'
+import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
+import { fetchAdminCustomDomains, fetchAdminStudios } from '@/lib/actions/admin.actions'
 import { isAdminAuthenticated } from '@/lib/admin/session'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 
@@ -33,10 +34,12 @@ export default async function ManagePage() {
   const reactPublicSiteEnabled = await isReactPublicSiteEnabled()
 
   let studios
+  let customDomains: Awaited<ReturnType<typeof fetchAdminCustomDomains>> = []
   let loadError: string | null = null
 
   try {
     studios = await fetchAdminStudios()
+    customDomains = await fetchAdminCustomDomains()
   } catch (error) {
     loadError =
       error instanceof Error ? error.message : 'טעינת הסטודיואים נכשלה. נסי לרענן את הדף.'
@@ -68,6 +71,7 @@ export default async function ManagePage() {
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
         <ReactPublicSiteToggle initialEnabled={reactPublicSiteEnabled} />
         <PlanPricingManager />
+        <CustomDomainVerificationManager domains={customDomains} />
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>
     </main>

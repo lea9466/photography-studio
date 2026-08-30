@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { connectCustomDomainSchema } from '../lib/validations/domain'
+import { connectCustomDomainSchema, isApexHostname } from '../lib/validations/domain'
 import {
   isBrowserOnlyReservedPath,
   isPassthroughCustomDomainPath,
@@ -11,6 +11,13 @@ import { VercelError } from '../lib/vercel/errors'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '../lib/seo/public-metadata'
 import { buildPhotographerLocalBusinessJsonLd } from '../lib/seo/local-business-schema'
 import { sanitizeCustomDomainHostname } from '../lib/domains/custom-domain-lookup'
+import {
+  resolveValidatedBlogPath,
+  resolveValidatedGalleryPath,
+  resolveValidatedPortfolioPath,
+  resolveValidatedPostPath,
+} from '../lib/seo/sitemap-validation'
+import { buildPhotographerDiscoverySitemapEntries } from '../lib/seo/photographer-discovery'
 
 test('connectCustomDomainSchema accepts a valid subdomain', () => {
   const result = connectCustomDomainSchema.parse({ hostname: 'www.johnphoto.com' })
@@ -22,8 +29,14 @@ test('connectCustomDomainSchema lowercases and strips a pasted https:// URL with
   assert.equal(result.hostname, 'gallery.johnphoto.com')
 })
 
-test('connectCustomDomainSchema rejects a bare apex domain (v1 requires a subdomain)', () => {
-  assert.throws(() => connectCustomDomainSchema.parse({ hostname: 'johnphoto.com' }))
+test('connectCustomDomainSchema accepts a bare apex domain as-is (A-record flow)', () => {
+  const result = connectCustomDomainSchema.parse({ hostname: 'johnphoto.com' })
+  assert.equal(result.hostname, 'johnphoto.com')
+})
+
+test('isApexHostname distinguishes a root domain from a subdomain', () => {
+  assert.equal(isApexHostname('johnphoto.com'), true)
+  assert.equal(isApexHostname('www.johnphoto.com'), false)
 })
 
 test('connectCustomDomainSchema rejects the app\'s own *.vercel.app suffix', () => {
@@ -43,9 +56,17 @@ test('resolveCustomDomainRewrite maps known public paths to the slug', () => {
   assert.equal(resolveCustomDomainRewrite('/seo-map', 'john'), '/john/seo-map')
 })
 
+test('resolveCustomDomainRewrite maps an individual gallery link to /{slug}/gallery/{id}', () => {
+  assert.equal(
+    resolveCustomDomainRewrite('/gallery/8673d1a0-7d3a-493a-b38f-816044140026', 'john'),
+    '/john/gallery/8673d1a0-7d3a-493a-b38f-816044140026'
+  )
+})
+
 test('resolveCustomDomainRewrite returns null for unrecognized paths (404, not a silent fallback)', () => {
   assert.equal(resolveCustomDomainRewrite('/some/random/path', 'john'), null)
   assert.equal(resolveCustomDomainRewrite('/blog/a/b', 'john'), null)
+  assert.equal(resolveCustomDomainRewrite('/gallery/a/b', 'john'), null)
 })
 
 test('isPassthroughCustomDomainPath allows Next internals and API routes through unchanged', () => {
@@ -197,4 +218,61 @@ test('sanitizeCustomDomainHostname strips trailing slashes', () => {
 
 test('sanitizeCustomDomainHostname strips both a protocol and trailing slash together', () => {
   assert.equal(sanitizeCustomDomainHostname('HTTP://www.johnphoto.com/'), 'www.johnphoto.com')
+})
+
+// Passing '' as studioPath (a connected custom domain's root-relative base —
+// see app/sitemap.ts) must build a root-relative path, NOT be treated the
+// same as "no path at all" the way a falsy check would. Each of these
+// mirrors a real bug found and fixed while wiring the per-domain sitemap.
+
+test('resolveValidatedGalleryPath treats an explicit "" studioPath as root-relative, not "no path"', () => {
+  const gallery = { id: 'g1', slug: null, gallery_type: 'regular', is_public: true }
+  assert.equal(resolveValidatedGalleryPath(gallery, ''), '/gallery/g1')
+  assert.equal(resolveValidatedGalleryPath(gallery), '/public-gallery/g1')
+})
+
+test('resolveValidatedPostPath treats an explicit "" studioPath as root-relative, not "no path"', () => {
+  assert.equal(resolveValidatedPostPath('', 'p1'), '/blog/p1')
+  assert.equal(resolveValidatedPostPath(null, 'p1'), null)
+})
+
+test('resolveValidatedBlogPath treats an explicit "" studioPath as root-relative, not "no path"', () => {
+  assert.equal(resolveValidatedBlogPath(''), '/blog')
+  assert.equal(resolveValidatedBlogPath(null), null)
+})
+
+test('resolveValidatedPortfolioPath treats an explicit "" studioPath as root-relative, not "no path"', () => {
+  const photographer = { id: 'u1', slug: 'john', studio_name: 'John', gallery_layout_mode: 'portfolio' }
+  assert.equal(resolveValidatedPortfolioPath(photographer, ''), '/portfolio')
+  assert.equal(resolveValidatedPortfolioPath(photographer, null), null)
+})
+
+test('buildPhotographerDiscoverySitemapEntries with studioPathOverride builds a root-relative sitemap for a custom domain', () => {
+  const photographer = {
+    id: 'u1',
+    slug: 'john',
+    studio_name: 'John Photo',
+    gallery_layout_mode: 'portfolio',
+    created_at: '2026-01-01T00:00:00.000Z',
+  }
+  const galleries = [{ id: 'g1', slug: null, gallery_type: 'regular', is_public: true, title: 'Wedding', created_at: null }]
+  const posts = [{ id: 'p1', title: 'Hello', subtitle: null, content: 'x', created_at: '2026-01-02T00:00:00.000Z' }]
+
+  const entries = buildPhotographerDiscoverySitemapEntries({
+    photographer,
+    galleries,
+    posts,
+    studioPathOverride: '',
+  })
+  const paths = entries.map((entry) => entry.path)
+
+  assert.ok(paths.includes(''), 'homepage should be root-relative (bare origin, equivalent to https://host/)')
+  assert.ok(paths.includes('/gallery/g1'), 'gallery link should be root-relative, not //gallery/g1')
+  assert.ok(paths.includes('/blog'), 'blog index should be root-relative')
+  assert.ok(paths.includes('/blog/p1'), 'post link should be root-relative')
+  assert.ok(paths.includes('/portfolio'), 'portfolio link should be root-relative')
+  assert.ok(
+    paths.every((path) => !path.startsWith('//')),
+    `no entry should be double-slashed: ${JSON.stringify(paths)}`
+  )
 })

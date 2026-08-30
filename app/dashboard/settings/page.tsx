@@ -7,11 +7,8 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
 import { SiteLanguageSetting } from '@/components/dashboard/SiteLanguageSetting'
 import { SiteVisibilitySetting } from '@/components/dashboard/SiteVisibilitySetting'
-import { CustomDomainSetting } from '@/components/dashboard/CustomDomainSetting'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
-import { isVercelConfigured, VERCEL_CNAME_TARGET } from '@/lib/vercel/config'
-import type { CustomDomain } from '@/lib/types/database.types'
 
 import { resolveBrandingPath, resolveBrandingPaths, padHeroUrlSlots } from '@/lib/branding-urls'
 
@@ -36,31 +33,6 @@ export default async function SettingsPage() {
   const { userId, supabase } = context
 
   const entitlements = await getStudioEntitlements(userId)
-
-  const canConnectCustomDomain = entitlements.features.custom_domain
-  const vercelReady = isVercelConfigured()
-
-  // Fetch whenever Vercel is configured, regardless of current Pro status —
-  // a photographer who connected a domain on Pro and later downgraded must
-  // still be able to see and disconnect it from her dashboard, even though
-  // she can no longer connect a NEW one (enforced server-side either way,
-  // see assertFeatureAllowed in custom-domain.actions.ts).
-  let customDomain: CustomDomain | null = null
-  if (vercelReady) {
-    const { data: domainRow } = await supabase
-      .from('custom_domains')
-      .select('*')
-      .eq('user_id', userId)
-      .neq('status', 'deleted')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-    customDomain = (domainRow as CustomDomain | null) ?? null
-  }
-
-  // Shown if she can connect a new domain, OR already has one to manage —
-  // never hides an existing connection just because she's no longer Pro.
-  const showCustomDomainSection = vercelReady && (canConnectCustomDomain || customDomain !== null)
 
   const PROFILE_FIELDS =
     'name, studio_name, theme_primary, about_text, about_title, about_subtitle, about_description, contact_card_title, contact_card_description, contact_title, contact_subtitle, address, phone, stat_projects, stat_clients, stat_experience_years, accent_color, selected_theme, heading_font, about_title_font, logo_url, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls, hero_type, hero_video_url, about_image_url, contact_desktop_url, contact_mobile_url, email, slug, should_color_logo, site_language, is_under_construction'
@@ -346,15 +318,6 @@ export default async function SettingsPage() {
           key={Boolean(profile?.is_under_construction) ? 'hidden' : 'public'}
           initialUnderConstruction={Boolean(profile?.is_under_construction)}
         />
-
-        {showCustomDomainSection && (
-          <CustomDomainSetting
-            key={customDomain?.id ?? 'none'}
-            initialDomain={customDomain}
-            cnameTarget={VERCEL_CNAME_TARGET}
-            canConnect={canConnectCustomDomain}
-          />
-        )}
 
       </div>
 

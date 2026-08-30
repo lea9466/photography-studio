@@ -31,19 +31,38 @@ export function resolveCustomDomainRewrite(pathname: string, slug: string): stri
   const blogPostMatch = pathname.match(/^\/blog\/([^/]+)$/)
   if (blogPostMatch) return `/${slug}/blog/${blogPostMatch[1]}`
 
+  // /{slug}/gallery/[id] (app/[slug]/gallery/[id]/page.tsx) is what the React
+  // public-site homepage/portfolio components link to for an individual
+  // gallery (see hrefForGalleryBase in app/[slug]/page.tsx) — added after
+  // this allowlist was first written, which is exactly why it was missing:
+  // a real gallery link 404'd on a connected custom domain until this was
+  // added. Keep this allowlist in sync with hrefForGalleryBase's callers.
+  const galleryMatch = pathname.match(/^\/gallery\/([^/]+)$/)
+  if (galleryMatch) return `/${slug}/gallery/${galleryMatch[1]}`
+
   return null
 }
 
 /**
- * Next internals and API routes — left completely alone on a tenant custom
- * domain (no rewrite, no redirect). API routes take ids/params rather than
- * depending on the Host header for tenant resolution, and client-side code
- * on a rewritten public page calls them with relative URLs; redirecting them
- * to the main app host would turn same-origin fetches into cross-origin ones
- * and break them on CORS grounds.
+ * Left completely alone on a tenant custom domain (no rewrite, no redirect):
+ * - Next internals and API routes — client-side code on a rewritten public
+ *   page calls them with relative URLs; redirecting them to the main app
+ *   host would turn same-origin fetches into cross-origin ones and break
+ *   them on CORS grounds. They don't depend on the Host header for tenant
+ *   resolution anyway.
+ * - /sitemap.xml and /robots.txt — the opposite reason: these DO need the
+ *   real Host header (app/sitemap.ts and app/robots.ts branch on it
+ *   themselves to serve a scoped, domain-specific sitemap), so they must
+ *   reach those route handlers unrewritten rather than 404 or redirect.
  */
 export function isPassthroughCustomDomainPath(pathname: string): boolean {
-  return pathname === '/favicon.ico' || pathname.startsWith('/_next') || pathname.startsWith('/api')
+  return (
+    pathname === '/favicon.ico' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/robots.txt' ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api')
+  )
 }
 
 /**

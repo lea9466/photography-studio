@@ -131,9 +131,19 @@ export function buildPhotographerDiscoverySitemapEntries(input: {
   photographer: PhotographerDiscoveryRecord
   galleries: DiscoveryGallery[]
   posts: DiscoveryPost[]
+  /**
+   * Pass '' to build entries root-relative to a connected custom domain
+   * (see app/sitemap.ts) instead of the default `/{slug}` prefix — mirrors
+   * the isTenantDomain pattern used for nav links across app/[slug]/*.
+   * Omit for the normal studio-galleries.com/{slug} sitemap.
+   */
+  studioPathOverride?: string
 }): SitemapUrlEntry[] {
-  const studioPath = resolveActiveStudioPath(input.photographer)
-  if (!studioPath) return []
+  const studioPath =
+    input.studioPathOverride !== undefined
+      ? input.studioPathOverride
+      : resolveActiveStudioPath(input.photographer)
+  if (studioPath === null) return []
 
   const baseDate = input.photographer.created_at
     ? new Date(input.photographer.created_at)

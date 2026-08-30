@@ -5,7 +5,7 @@ import { PhotographerHomepage } from '@/components/photographer/PhotographerHome
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
-import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import {
   applyOwnerPreviewBypass,
   resolvePublicSiteGateBySlug,
@@ -657,6 +657,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const canonicalPath = baseUrl
       ? '/'
       : (getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`)
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(typedPhotographer.id)
     const shareImage = await resolvePhotographerShareImage(typedPhotographer)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(typedPhotographer.id, typedPhotographer.logo_url) ??
@@ -679,6 +680,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       keywords,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       ...(logoIconUrl
         ? {
             icons: {

@@ -13,7 +13,7 @@ import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
-import { getCanonicalBaseUrl } from '@/lib/domains/custom-domain-lookup'
+import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
@@ -176,6 +176,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     const blogPath = `${canonicalPath}/blog`
     const title = `${pageTitle} | ${studioName}`
     const description = `הבלוג של ${studioName}`
+    const googleSiteVerificationToken = await getGoogleSiteVerificationToken(typed.id)
     const logoIconUrl =
       getBrandingFaviconPublicUrl(typed.id, typed.logo_url) ??
       getBrandingPublicMediaUrl(typed.logo_url)
@@ -183,6 +184,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
     return {
       title,
       description,
+      ...(googleSiteVerificationToken ? { verification: { google: googleSiteVerificationToken } } : {}),
       ...(logoIconUrl
         ? {
             icons: {
