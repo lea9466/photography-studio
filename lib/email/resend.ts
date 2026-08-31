@@ -2,6 +2,7 @@ import { Resend } from 'resend'
 
 import { getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
+import { CUSTOM_DOMAIN_ADDON_PRICE_ILS } from '@/lib/domains/custom-domain-addon'
 import {
   buildEmailStubLog,
   mustFailWithoutResend,
@@ -545,6 +546,112 @@ export function buildWelcomeEmail(input: { name: string }): {
       contentHtml,
     }),
   }
+}
+
+/**
+ * Pure builder for the custom-domain-feature announcement email — same
+ * preview/snapshot-testable shape as buildWelcomeEmail. Mirrors the content
+ * of /dashboard/custom-domain (CustomDomainExplainer) so the two never say
+ * different things about price or process.
+ */
+export function buildCustomDomainAddonAnnouncementEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const customDomainUrl = appUrl('/dashboard/custom-domain')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const eyebrow = `margin: 0 0 10px; font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 3px; color: ${LUXE.brand}; text-transform: uppercase;`
+  const h1 = `margin: 0 0 20px; font-family: ${LUXE.serif}; font-size: 25px; line-height: 1.4; font-weight: 400; color: ${LUXE.ink};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <p style="${eyebrow}">פיצ'ר חדש</p>
+    <h1 style="${h1}">האתר שלך, בכתובת שלך</h1>
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">מעכשיו אפשר לחבר לאתר שלך דומיין אישי — כתובת עצמאית משלך (למשל <span dir="ltr">www.השם-שלך.com</span>) במקום כתובת ה-slug של הפלטפורמה. בדיוק כמו לכל עסק אמיתי.</p>
+
+    <p style="${eyebrow} margin-top: 28px;">למה כדאי</p>
+    ${luxeList([
+      ['זהות מקצועית וייחודית', 'האתר שלך יופיע בכתובת שלך — הרבה יותר קל לזכור, לשווק ולשים על כרטיס ביקור.'],
+      ['עיגול ייחודי בגוגל', 'ה"עיגול" הקטן ליד השם בתוצאות חיפוש (favicon) משותף לכל מי שנמצאת תחת כתובת הפלטפורמה. דומיין אישי נותן לך עיגול משלך.'],
+      ['אמון גבוה יותר', 'כתובת אישית משדרת עסק מבוסס ורציני, לא עוד "אתר על פלטפורמה".'],
+    ])}
+
+    <p style="${eyebrow} margin-top: 28px;">איך זה עובד</p>
+    ${luxeList([
+      ['קונים דומיין', 'אצל כל ספק שתרצי — עולה בדרך כלל 50–100 ₪ לשנה.'],
+      ['מזינות אותו באזור האישי', 'בטאב "דומיין אישי" — תופענה שם הוראות מדויקות בשבילך.'],
+      ['מוכיחות בעלות', 'מוסיפות רשומה אחת אצל ספק הדומיין — לוקח כמה דקות, ועד כמה שעות עד שזה נכנס לתוקף.'],
+      ['האתר עולה', 'ברגע שהאימות מסתיים, האתר שלך זמין בכתובת האישית שלך עם אבטחה (SSL) מלאה.'],
+    ])}
+    <p style="${pMuted}">חשוב לדעת: אחרי שהאתר עולה, לוקח לגוגל בדרך כלל שבועות עד חודשיים לעדכן את תוצאות החיפוש לכתובת החדשה — זה תהליך הדרגתי, לא מיידי.</p>
+
+    <p style="${eyebrow} margin-top: 28px;">עלות</p>
+    <p style="${p}">אם יש לך מנוי פרו בתשלום — הפיצ'ר כלול אצלך בחינם, בלי תוספת. אם את לא רוצה מנוי מלא, אפשר גם לפתוח רק את הדומיין האישי בנפרד, בתוספת חד-פעמית של ${CUSTOM_DOMAIN_ADDON_PRICE_ILS} ₪ — לתמיד, בלי קשר למנוי.</p>
+
+    ${luxeButton(customDomainUrl, 'לחיבור דומיין אישי')}
+
+    <div style="border-top: 1px solid ${LUXE.accent}; width: 44px; margin: 28px 0;"></div>
+    <p style="${pMuted}">לא בטוחה שתסתדרי לבד עם ההגדרות הטכניות? כדאי לנסות קודם עם עזרה מ-AI (צילום מסך של עמוד ה-DNS אצל ספק הדומיין, בצ'אט עם ג'מיני או ChatGPT) — ברוב המקרים זה עובד מצוין. עדיין תקועה? אני יכולה ללוות אותך אישית בכל התהליך בעלות חד-פעמית של 100 ₪ — <a href="${contactUrl}" style="${link}">יצירת קשר</a>.</p>
+    <p style="${p} margin-bottom: 0;">בהצלחה!</p>`
+
+  return {
+    subject: "פיצ'ר חדש: האתר שלך, בכתובת שלך",
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'מעכשיו אפשר לחבר לאתר שלך דומיין אישי — כתובת עצמאית משלך (למשל www.השם-שלך.com) במקום כתובת ה-slug של הפלטפורמה.',
+      '',
+      'למה כדאי:',
+      '- זהות מקצועית וייחודית — האתר שלך יופיע בכתובת שלך.',
+      '- עיגול ייחודי בגוגל — ה-favicon בתוצאות חיפוש הופך להיות שלך, לא של הפלטפורמה.',
+      '- אמון גבוה יותר אצל לקוחות.',
+      '',
+      'איך זה עובד:',
+      '1. קונים דומיין (50–100 ₪ לשנה בערך).',
+      '2. מזינות אותו באזור האישי, בטאב "דומיין אישי".',
+      '3. מוכיחות בעלות — מוסיפות רשומה אחת אצל ספק הדומיין.',
+      '4. האתר עולה בכתובת האישית שלך, עם SSL מלא.',
+      '',
+      'חשוב לדעת: לוקח לגוגל בדרך כלל שבועות עד חודשיים לעדכן את תוצאות החיפוש לכתובת החדשה.',
+      '',
+      `עלות: כלול בחינם במנוי פרו. בלי מנוי — אפשר לפתוח רק את זה בתוספת חד-פעמית של ${CUSTOM_DOMAIN_ADDON_PRICE_ILS} ₪.`,
+      '',
+      `לחיבור דומיין אישי: ${customDomainUrl}`,
+      '',
+      `לא בטוחה שתסתדרי לבד? נסי קודם עזרה מ-AI (screenshot + ג'מיני/ChatGPT), ואם עדיין תקועה — ליווי אישי ב-100 ₪ חד-פעמי: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader: 'עכשיו אפשר לחבר לאתר שלך דומיין אישי — הכתובת שלך, לא כתובת הפלטפורמה.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendCustomDomainAddonAnnouncementEmail(input: { name: string; email: string }) {
+  const resend = requireResendOrSafeStub({
+    template: 'custom-domain-addon-announcement',
+    email: input.email,
+  })
+  if (!resend) return
+
+  const { subject, text, html } = buildCustomDomainAddonAnnouncementEmail({ name: input.name })
+
+  await resend.emails.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
 }
 
 export async function sendWelcomeEmail(input: { name: string; email: string }) {
