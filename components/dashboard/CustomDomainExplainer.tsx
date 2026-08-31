@@ -1,4 +1,4 @@
-import { Fingerprint, Search, ShieldCheck, ShoppingBag, Link2, KeySquare, CheckCircle2, MessageCircle, Clock } from 'lucide-react'
+import { Fingerprint, Search, ShieldCheck, ShoppingBag, Link2, KeySquare, CheckCircle2, MessageCircle, Clock, ShieldAlert } from 'lucide-react'
 
 const BENEFITS = [
   {
@@ -153,6 +153,15 @@ export function CustomDomainExplainer() {
             לגוגל בדרך כלל <span className="font-semibold">שבועות עד חודשיים</span> להעביר את תוצאות החיפוש לכתובת
             החדשה. בינתיים, האתר שלך עשוי להמשיך להופיע בגוגל עם כתובת ה-slug הישנה (studio-galleries.com/slug) —
             זה תקין וצפוי, ושתי הכתובות ממשיכות לעבוד במקביל בלי בעיה.
+          </p>
+        </div>
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+          <ShieldAlert className="h-5 w-5 shrink-0 text-amber-700" />
+          <p className="text-sm leading-relaxed text-amber-900">
+            <span className="font-semibold">חשוב לדעת — חסימה זמנית של חברות סינון:</span> דומיין חדש שקונים
+            לרוב <span className="font-semibold">חסום בהתחלה</span> אצל חברות סינון תוכן (כמו נטפרי), פשוט כי הוא
+            עדיין לא מסווג אצלן. אחרי שהאתר עולה, כדאי לנסות לפתוח אותו — אם מופיעה חסימה, שולחות לחברת הסינון
+            בקשה לסיווג/פתיחה. ברוב המקרים זה נפתח תוך יום-יומיים.
           </p>
         </div>
       </section>
