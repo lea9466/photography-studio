@@ -8,6 +8,7 @@ import {
 } from '../lib/domains/rewrite'
 import { VercelClient } from '../lib/vercel/client'
 import { VercelError } from '../lib/vercel/errors'
+import { getDomainConfig } from '../lib/vercel/domains'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '../lib/seo/public-metadata'
 import { buildPhotographerLocalBusinessJsonLd } from '../lib/seo/local-business-schema'
 import { sanitizeCustomDomainHostname } from '../lib/domains/custom-domain-lookup'
@@ -127,6 +128,36 @@ test('VercelClient throws VercelError on a non-2xx response, without retrying a 
       (error: unknown) => error instanceof VercelError && error.code === 'domain_taken'
     )
     assert.equal(calls, 1)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('getDomainConfig reports misconfigured:true for a domain with no DNS record yet', async () => {
+  process.env.VERCEL_API_TOKEN = 'test-token'
+  process.env.VERCEL_PROJECT_ID = 'prj_1'
+  delete process.env.VERCEL_TEAM_ID
+
+  let requestedPath = ''
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = (async (url: string | URL) => {
+    requestedPath = new URL(url).pathname
+    // Real shape confirmed by hand (2026-08-31) against a freshly-attached,
+    // never-configured domain: empty cnames/aValues, misconfigured true —
+    // this is exactly what statusFromVerification's `verified: true` can't
+    // detect on its own.
+    return new Response(
+      JSON.stringify({ configuredBy: null, cnames: [], aValues: [], misconfigured: true }),
+      { status: 200 }
+    )
+  }) as typeof fetch
+
+  try {
+    const client = new VercelClient()
+    const config = await getDomainConfig('www.johnphoto.com', client)
+    assert.equal(config.misconfigured, true)
+    // Domain-scoped, not project-scoped — no projectId in the path.
+    assert.equal(requestedPath, '/v6/domains/www.johnphoto.com/config')
   } finally {
     globalThis.fetch = originalFetch
   }

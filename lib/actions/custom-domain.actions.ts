@@ -7,7 +7,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { checkPersistentRateLimit } from '@/lib/rate-limit/persistent'
 import type { CustomDomain } from '@/lib/types/database.types'
 import { connectCustomDomainSchema } from '@/lib/validations/domain'
-import { attachDomainToProject, detachDomainFromProject, getProjectDomain } from '@/lib/vercel/domains'
+import {
+  attachDomainToProject,
+  detachDomainFromProject,
+  getDomainConfig,
+  getProjectDomain,
+} from '@/lib/vercel/domains'
 import { VercelError } from '@/lib/vercel/errors'
 
 const CONNECT_RATE_LIMIT_MAX_ATTEMPTS = 5
@@ -76,6 +81,58 @@ function statusFromVerification(vercelDomain: { verified: boolean }): 'active' |
   return vercelDomain.verified ? 'active' : 'pending_dns'
 }
 
+/**
+ * Separate from statusFromVerification on purpose — see getDomainConfig's
+ * doc comment in lib/vercel/domains.ts. Fail-safe: undefined (not false) on
+ * a transient error, so callers leave dns_live unchanged rather than a
+ * failed check masquerading as a confirmed "DNS not configured yet".
+ */
+async function checkDnsLive(hostname: string): Promise<boolean | undefined> {
+  try {
+    const config = await getDomainConfig(hostname)
+    return !config.misconfigured
+  } catch {
+    return undefined
+  }
+}
+
+/** Matches a PostgREST "unknown column" error for dns_live specifically —
+ *  same defensive shape as lib/subscriptions/loader.ts's
+ *  isMissingOptionalColumnError. Without this, a not-yet-applied migration
+ *  didn't just leave dns_live stuck at its default: it made the ENTIRE
+ *  status update fail (an UPDATE naming an unknown column is rejected
+ *  whole), silently (the polling loop swallows errors on purpose so it
+ *  doesn't spam the photographer) — so status itself stopped refreshing too,
+ *  on every check that got far enough to attempt writing dns_live. That's
+ *  exactly what looked like "sometimes green, sometimes amber" in practice:
+ *  whichever check happened to fail first just left the UI on its last
+ *  successful (pre-dns_live) render. */
+function isMissingDnsLiveColumnError(message: string): boolean {
+  const lowered = message.toLowerCase()
+  return (
+    message.includes('dns_live') &&
+    (lowered.includes('column') || lowered.includes('does not exist') || lowered.includes('pgrst204') || message.includes('42703'))
+  )
+}
+
+/**
+ * Every custom_domains write in this file goes through here instead of a
+ * bare `.update()` — retries once without `dns_live` if that column isn't
+ * applied in this environment yet, so a missing migration degrades to
+ * "dns_live just doesn't update" instead of silently breaking status
+ * updates entirely. See isMissingDnsLiveColumnError.
+ */
+async function updateCustomDomainRow(id: string, patch: Record<string, unknown>) {
+  const attempt = await customDomainsAdmin().update(patch as never).eq('id', id).select('*').single()
+  if (!attempt.error) return attempt
+
+  if ('dns_live' in patch && isMissingDnsLiveColumnError(attempt.error.message)) {
+    const { dns_live: _dropped, ...withoutDnsLive } = patch
+    return customDomainsAdmin().update(withoutDnsLive as never).eq('id', id).select('*').single()
+  }
+  return attempt
+}
+
 export async function connectCustomDomain(input: unknown) {
   const { userId, supabase } = await requireDashboardContext()
   await assertFeatureAllowed(userId, 'custom_domain')
@@ -134,17 +191,15 @@ export async function connectCustomDomain(input: unknown) {
 
   try {
     const vercelDomain = await attachDomainToProject(hostname)
-    const { data: updated, error: updateError } = await customDomainsAdmin()
-      .update({
-        status: statusFromVerification(vercelDomain),
-        vercel_attached: true,
-        vercel_verification: vercelDomain.verification ?? null,
-        last_error: null,
-        updated_at: new Date().toISOString(),
-      } as never)
-      .eq('id', row.id)
-      .select('*')
-      .single()
+    const dnsLive = await checkDnsLive(hostname)
+    const { data: updated, error: updateError } = await updateCustomDomainRow(row.id, {
+      status: statusFromVerification(vercelDomain),
+      vercel_attached: true,
+      vercel_verification: vercelDomain.verification ?? null,
+      ...(dnsLive !== undefined ? { dns_live: dnsLive } : {}),
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    })
 
     if (updateError) throw new Error(updateError.message)
     row = updated as CustomDomain
@@ -187,6 +242,9 @@ export async function checkCustomDomainStatus(domainId: string) {
       patch.status = statusFromVerification(vercelDomain)
       patch.vercel_verification = vercelDomain.verification ?? null
       patch.last_error = null
+
+      const dnsLive = await checkDnsLive(row.hostname)
+      if (dnsLive !== undefined) patch.dns_live = dnsLive
     } else {
       // Detached on Vercel's side outside our flow — surface it rather than
       // silently keep showing a stale "connected" status.
@@ -198,11 +256,7 @@ export async function checkCustomDomainStatus(domainId: string) {
     patch.last_error = error instanceof Error ? error.message : 'בדיקת הסטטוס נכשלה'
   }
 
-  const { data: updated, error: updateError } = await customDomainsAdmin()
-    .update(patch as never)
-    .eq('id', domainId)
-    .select('*')
-    .single()
+  const { data: updated, error: updateError } = await updateCustomDomainRow(domainId, patch)
 
   if (updateError) throw new Error(updateError.message)
 

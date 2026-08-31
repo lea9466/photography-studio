@@ -1049,6 +1049,7 @@ export type Database = {
           vercel_attached: boolean
           vercel_verification: Record<string, unknown> | null
           google_site_verification_token: string | null
+          dns_live: boolean
           last_checked_at: string | null
           last_error: string | null
           created_at: string
@@ -1065,6 +1066,7 @@ export type Database = {
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
           google_site_verification_token?: string | null
+          dns_live?: boolean
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string
@@ -1081,6 +1083,7 @@ export type Database = {
           vercel_attached?: boolean
           vercel_verification?: Record<string, unknown> | null
           google_site_verification_token?: string | null
+          dns_live?: boolean
           last_checked_at?: string | null
           last_error?: string | null
           created_at?: string

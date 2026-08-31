@@ -75,9 +75,15 @@ export function CustomDomainSetting({
   const pollStartedAt = useRef<number | null>(null)
 
   const status = domain?.status ?? null
+  // Keep polling past 'active' while dns_live is still false — Vercel
+  // accepting the attach (status='active') and DNS actually being
+  // configured (dns_live) are separate, independently-timed things; see
+  // getDomainConfig's doc comment in lib/vercel/domains.ts.
+  const stillWaiting =
+    status === 'pending' || status === 'pending_dns' || (status === 'active' && domain?.dns_live === false)
 
   useEffect(() => {
-    if (status !== 'pending' && status !== 'pending_dns') {
+    if (!stillWaiting) {
       pollStartedAt.current = null
       return
     }
@@ -99,7 +105,7 @@ export function CustomDomainSetting({
 
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, domain?.id])
+  }, [stillWaiting, domain?.id])
 
   function handleConnect() {
     const hostname = hostnameInput.trim()
@@ -122,10 +128,10 @@ export function CustomDomainSetting({
       try {
         const result = await checkCustomDomainStatus(domain.id)
         setDomain(result)
-        if (result.status === 'active') {
+        if (result.status === 'active' && result.dns_live) {
           toast.success('הדומיין אומת ומחובר!')
         } else {
-          toast.info('עדיין ממתין לאימות ה-DNS')
+          toast.info('עדיין ממתינה לרשומת ה-DNS')
         }
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'בדיקת הסטטוס נכשלה')
@@ -229,11 +235,11 @@ export function CustomDomainSetting({
         </div>
       )}
 
-      {domain && domain.status === 'active' && (
+      {domain && domain.status === 'active' && domain.dns_live && (
         <div className="space-y-4 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-emerald-900">מחובר ל-Vercel</p>
+              <p className="text-sm font-semibold text-emerald-900">מחובר ופעיל</p>
               <a
                 href={`https://${domain.hostname}`}
                 target="_blank"
@@ -254,28 +260,54 @@ export function CustomDomainSetting({
               נתקי דומיין
             </Button>
           </div>
-          <div className="space-y-2 border-t border-emerald-200/60 pt-3 text-xs leading-relaxed text-[--muted]">
-            {isApexHostname(domain.hostname) ? (
-              <>
-                <p className="font-medium text-[--foreground]">
-                  אם עדיין לא הזנת DNS — הוסיפי רשומת A אצל ספק הדומיין שלך (שדה Host ריק/@):
-                </p>
-                <CopyableValue value={apexARecord} />
-              </>
-            ) : (
-              <>
-                <p className="font-medium text-[--foreground]">
-                  אם עדיין לא הזנת DNS — הוסיפי רשומת CNAME אצל ספק הדומיין שלך:
-                </p>
-                <CopyableValue value={cnameTarget} />
-              </>
-            )}
-            <p>שינויי DNS יכולים לקחת עד כמה שעות עד שהם נכנסים לתוקף בכל העולם — בקרי בכתובת למעלה כדי לוודא שהאתר עולה.</p>
-            {!canConnect && (
-              <p className="font-medium text-amber-800">
-                הדומיין ממשיך לעבוד, אבל חיבור דומיין חדש (אם תנתקי את זה) דורש תוכנית Pro.
-              </p>
-            )}
+          {!canConnect && (
+            <p className="border-t border-emerald-200/60 pt-3 text-xs font-medium text-amber-800">
+              הדומיין ממשיך לעבוד, אבל חיבור דומיין חדש (אם תנתקי את זה) דורש תוכנית Pro.
+            </p>
+          )}
+        </div>
+      )}
+
+      {domain && domain.status === 'active' && !domain.dns_live && (
+        <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin text-amber-700" />
+            <p className="text-sm font-semibold text-amber-900">
+              עדיין ממתינה לרשומת ה-DNS — {domain.hostname}
+            </p>
+          </div>
+          <p className="text-xs leading-relaxed text-[--muted]">
+            הדומיין רשום אצלנו, אבל עדיין לא זיהינו את רשומת ה-DNS אצל ספק הדומיין שלך. האתר לא יעלה עד שהרשומה
+            הבאה תתווסף שם:
+          </p>
+          {isApexHostname(domain.hostname) ? (
+            <div className="space-y-1 text-xs text-[--muted]">
+              <p className="font-medium text-[--foreground]">רשומת A (שדה Host ריק/@):</p>
+              <CopyableValue value={apexARecord} />
+            </div>
+          ) : (
+            <div className="space-y-1 text-xs text-[--muted]">
+              <p className="font-medium text-[--foreground]">רשומת CNAME (שדה Host: www):</p>
+              <CopyableValue value={cnameTarget} />
+            </div>
+          )}
+          <p className="text-xs leading-relaxed text-[--muted]">
+            אחרי שהוספת את הרשומה אצל ספק הדומיין — זה יכול לקחת עד כמה שעות עד שהיא נכנסת לתוקף בכל העולם. אפשר
+            ללחוץ "בדקי סטטוס" מדי פעם כדי לראות אם זה כבר עבד.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" onClick={handleCheckStatus} disabled={isPending}>
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'בדקי סטטוס'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDisconnect}
+              disabled={isPending}
+              className="border-red-300 bg-red-50 text-red-800 hover:bg-red-100"
+            >
+              נתקי דומיין
+            </Button>
           </div>
         </div>
       )}
