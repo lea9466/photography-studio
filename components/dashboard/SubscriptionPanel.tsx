@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, Copy, Gift, Sparkles } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Gift, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   buildReferralLink,
@@ -180,6 +180,14 @@ export function SubscriptionPanel({
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}
               </Button>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-xl border border-amber-300/70 bg-amber-50 p-4 text-amber-900 md:p-5">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
+              <p className="text-sm leading-relaxed">
+                שימי לב: פתיחת חשבון פיקטיבי לקבלת זמן בחינם הינה גזל גמור ונוגדת
+                את כללי המערכת.
+              </p>
             </div>
           </SubscriptionSubPanel>
         </SubscriptionSection>
