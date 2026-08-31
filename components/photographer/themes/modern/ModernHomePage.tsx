@@ -167,6 +167,14 @@ export function ModernHomePage(props: ModernHomePageProps) {
   const heroGalleryAnchor = isPortfolioMode ? '#recent-photos' : '#portfolio'
   const portfolioHref = isPortfolioMode ? (portfolioPath ?? null) : null
 
+  // Some studios saved the same text in both the hero blurb (about_text) and
+  // the Our Story body (about_description). Show it once (in the hero) and drop
+  // the duplicate section instead of repeating the identical paragraph.
+  const aboutStatementText =
+    aboutDescription && aboutText && aboutDescription.trim() === aboutText.trim()
+      ? null
+      : aboutDescription
+
   return (
     <>
       <ScrollToInitialSection />
@@ -196,7 +204,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
         />
 
         <ModernAboutStatement
-          text={aboutDescription}
+          text={aboutStatementText}
           imageUrl={aboutImageUrl}
           accentColor={accentColor}
           language={language}

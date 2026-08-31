@@ -152,6 +152,14 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
   const heroGalleryAnchor = isPortfolioMode ? '#recent-photos' : '#gallery'
   const portfolioHref = isPortfolioMode ? (portfolioPath ?? null) : null
 
+  // Some studios saved the same text in both the hero blurb (about_text) and
+  // the About-section body (about_description). Show it once (in the hero) and
+  // drop the duplicate instead of repeating the identical paragraph.
+  const aboutDescriptionDeduped =
+    aboutDescription && aboutText && aboutDescription.trim() === aboutText.trim()
+      ? null
+      : aboutDescription
+
   return (
     <>
       <ScrollToInitialSection />
@@ -170,7 +178,7 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
         <ElegantAbout
           title={aboutTitle}
           subtitle={aboutSubtitle}
-          description={aboutDescription}
+          description={aboutDescriptionDeduped}
           accentColor={accentColor}
           imageUrl={aboutImageUrl}
           statsClients={statsClients}
