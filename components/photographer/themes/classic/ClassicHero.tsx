@@ -36,7 +36,8 @@ export function ClassicHero(props: ClassicHeroProps) {
   } = props
 
   const copy = getHomepageCopy(language)
-  const bodyText = aboutText?.trim() || copy.about.defaultAboutText
+  // Only the studio's own about_text — no canned default. Empty ⇒ no paragraph.
+  const bodyText = aboutText?.trim()
 
   const { ref, revealed } = useRevealOnScroll<HTMLElement>()
 
@@ -73,7 +74,7 @@ export function ClassicHero(props: ClassicHeroProps) {
                 <h1 className={styles.title}>
                   {photographerName} | {copy.hero.photographySuffix}
                 </h1>
-                <p className={styles.body}>{bodyText}</p>
+                {bodyText ? <p className={styles.body}>{bodyText}</p> : null}
               </div>
               <div className={styles.heroGlassActions}>
                 {/* Plain same-page anchors instead of a querySelector+scrollIntoView

@@ -57,7 +57,8 @@ export function ElegantHero(props: ElegantHeroProps) {
     props
 
   const copy = getHomepageCopy(language)
-  const bodyText = aboutText?.trim() || copy.about.defaultAboutText
+  // Only the studio's own about_text — no canned default. Empty ⇒ no paragraph.
+  const bodyText = aboutText?.trim()
 
   // Elegant's own inline observer (lib/homepage-themes/elegant.ts) uses
   // { threshold: 0.15, rootMargin: '0px 0px -50px 0px' } — different from the
@@ -104,7 +105,7 @@ export function ElegantHero(props: ElegantHeroProps) {
           <h1 className={styles.title}>
             <GlassHeroTitle text={studioName} />
           </h1>
-          <p className={styles.text}>{bodyText}</p>
+          {bodyText ? <p className={styles.text}>{bodyText}</p> : null}
           <div className="flex justify-center">
             {/* Same-page anchor instead of a querySelector+scrollIntoView click
                 handler — the browser's native anchor scrolling (smoothed by
