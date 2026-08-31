@@ -10,7 +10,8 @@ import styles from './ModernHero.module.css'
 export type ModernHeroProps = {
   /** Overrides the default two-line hollow title (line 2 is accent-stroked) — matches aboutTitle in the old renderer. */
   title: string | null
-  subtitle: string | null
+  /** The dedicated short hero blurb (about_text). When empty the hero simply
+   * has no paragraph — it never falls back to About-section copy. */
   description: string | null
   accentColor: string
   desktopImages: string[]
@@ -26,16 +27,18 @@ export type ModernHeroProps = {
  * Modern theme's hero — unlike classic (a short slideshow hero followed by a
  * separate About section with photographer photo/stats), the old renderer
  * literally merges hero + about into one `<section id="about">`: a
- * min-h-screen film-belt background behind a hollow-stroke title, muted
- * subtitle/description, and the "get started"/"view gallery" CTAs. Ported
- * here as ModernHero; the separate stats-cards strip below it is
+ * min-h-screen film-belt background behind a hollow-stroke title, the muted
+ * about_text blurb, and the "get started"/"view gallery" CTAs. (The old
+ * renderer also dropped the About-section subtitle/description into this
+ * section; here those belong to ModernAboutStatement instead, so an empty
+ * about_text just leaves the hero with no paragraph.) Ported here as
+ * ModernHero; the separate stats-cards strip below it is
  * ModernAbout.tsx (modern has no photographer-portrait/quote card — those
  * stats cards are all "about" is otherwise).
  */
 export function ModernHero(props: ModernHeroProps) {
   const {
     title,
-    subtitle,
     description,
     accentColor,
     desktopImages,
@@ -84,7 +87,6 @@ export function ModernHero(props: ModernHeroProps) {
                 <span className={styles.titleAccent}>{copy.about.modernDefaultTitleLine2}</span>
               </h1>
             )}
-            {subtitle ? <p className={styles.body}>{subtitle}</p> : null}
             {description ? <p className={styles.body}>{description}</p> : null}
 
             <div className={reveal(`${styles.actions} delay-200`)}>

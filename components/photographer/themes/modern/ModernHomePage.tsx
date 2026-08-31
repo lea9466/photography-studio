@@ -50,6 +50,10 @@ export type ModernHomePageProps = {
   aboutImageUrl: string | null
   /** Overrides the default two-line hollow title — matches aboutTitle in the old renderer. */
   aboutTitle: string | null
+  /** Accepted for prop-shape parity with the other themes (a real page.tsx
+   * passes the same photographer row to whichever theme is active) — modern
+   * deliberately doesn't render it anywhere: its hero shows only the dedicated
+   * about_text blurb, not the About-section subtitle. */
   aboutSubtitle: string | null
   aboutDescription: string | null
   statsClients: number
@@ -125,7 +129,6 @@ export function ModernHomePage(props: ModernHomePageProps) {
     aboutText,
     aboutImageUrl,
     aboutTitle,
-    aboutSubtitle,
     aboutDescription,
     statsClients,
     statsProjects,
@@ -170,11 +173,11 @@ export function ModernHomePage(props: ModernHomePageProps) {
       <main>
         <ModernHero
           title={aboutTitle}
-          subtitle={aboutSubtitle}
-          // aboutText, not aboutDescription — matches classic/dark/elegant's
-          // hero, which all show the short about_text blurb rather than the
-          // fuller about_description (that now lives in ModernAboutStatement
-          // below, same as those themes' separate About sections).
+          // Only the dedicated about_text blurb — the About-section subtitle
+          // (about_subtitle) is intentionally NOT pulled in here, so an empty
+          // about_text leaves the hero without a paragraph instead of falling
+          // back to About-section copy. aboutDescription lives in
+          // ModernAboutStatement below, same as the other themes' About sections.
           description={aboutText}
           accentColor={accentColor}
           desktopImages={heroDesktopImages}
