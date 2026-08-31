@@ -1,33 +1,41 @@
 /**
  * One-time rollout of the custom-domain-addon announcement email across 3
  * groups (to stay under a 100/day sending-provider quota), one group per
- * day. See supabase/migrations/20260831010000_add_custom_domain_announcement_tracking.sql.
+ * day. State lives in a git-tracked JSON file next to this script — not a
+ * DB migration — since this is one-off campaign bookkeeping, not a
+ * permanent product field (unlike custom_domain_addon_purchased_at, which
+ * genuinely needs to be a DB column entitlements depend on forever). The
+ * file stores only user IDs, group numbers and sent timestamps — no email
+ * addresses or names — both to avoid putting customer PII in git history
+ * and because the actual email/name is always re-fetched fresh from the DB
+ * at send time anyway (so a studio that updates her email after grouping
+ * still gets mailed at the current one, not a stale cached one).
  *
  * Usage:
  *   npx tsx --env-file=.env.local scripts/send-custom-domain-announcement.ts assign
  *   npx tsx --env-file=.env.local scripts/send-custom-domain-announcement.ts send <1|2|3> [--dry-run]
  *
  * "assign" computes the 3 groups ONCE (oldest studios first, newest last)
- * and is a safe no-op if groups are already assigned — it never reassigns.
- * "send" only ever emails a studio whose custom_domain_announcement_sent_at
- * is still null, and marks it sent immediately after each individual
- * successful send (not at the end of the batch) — so a crash or interrupt
- * mid-batch, or re-running the same command, never double-sends: already-
- * sent studios are simply skipped on the next run, and only the remaining
- * ones in that group go out.
+ * and is a safe no-op if the state file already exists — it never
+ * reassigns. "send" only ever emails a studio whose `sentAt` is still null,
+ * and writes the file to disk immediately after each individual successful
+ * send (not at the end of the batch) — so a crash or interrupt mid-batch,
+ * or re-running the same command, never double-sends: already-sent studios
+ * are simply skipped on the next run, and only the remaining ones in that
+ * group go out. Commit the state file to git after each run so it's
+ * durable across machines/sessions and the send history is auditable.
  */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { createAdminClient } from '../lib/supabase/admin.ts'
 import { sendCustomDomainAddonAnnouncementEmail } from '../lib/email/resend.ts'
 
-type UserRow = {
-  id: string
-  email: string | null
-  name: string | null
-  studio_name: string | null
-  created_at: string
-  custom_domain_announcement_group: number | null
-  custom_domain_announcement_sent_at: string | null
-}
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const STATE_PATH = join(__dirname, 'data', 'custom-domain-announcement-state.json')
+
+type StudioState = { group: 1 | 2 | 3; sentAt: string | null }
+type State = { assignedAt: string; studios: Record<string, StudioState> }
 
 const DELAY_BETWEEN_SENDS_MS = 700
 
@@ -35,100 +43,108 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-async function assignGroups() {
-  const admin = createAdminClient()
-  const { data, error } = await admin
-    .from('users')
-    .select('id, email, name, studio_name, created_at, custom_domain_announcement_group, custom_domain_announcement_sent_at')
-    .order('created_at', { ascending: true })
-  if (error) throw error
+function loadState(): State | null {
+  if (!existsSync(STATE_PATH)) return null
+  return JSON.parse(readFileSync(STATE_PATH, 'utf-8')) as State
+}
 
-  const rows = (data ?? []) as UserRow[]
-  const alreadyAssigned = rows.filter((r) => r.custom_domain_announcement_group != null)
-  if (alreadyAssigned.length > 0) {
-    console.log(`Groups already assigned for ${alreadyAssigned.length} studio(s) — not reassigning.`)
-    printGroupCounts(rows)
+function saveState(state: State) {
+  mkdirSync(dirname(STATE_PATH), { recursive: true })
+  writeFileSync(STATE_PATH, JSON.stringify(state, null, 2) + '\n', 'utf-8')
+}
+
+async function assignGroups() {
+  const existing = loadState()
+  if (existing) {
+    console.log(`Already assigned on ${existing.assignedAt} — not reassigning.`)
+    printGroupCounts(existing)
     return
   }
 
-  // Lea's own account (studio owner, not a customer) — never part of the
-  // announcement rollout. Same account behind both PAYMENTS_SMOKE_TEST_USER_ID
-  // and MVP_BYPASS_USER_ID (confirmed: both resolve to the same row).
-  const eligible = rows.filter((r) => r.email && r.email.trim() && r.email.trim() !== 'lea0556769466@gmail.com')
-
-  const groupSize = Math.ceil(eligible.length / 3)
-  for (let i = 0; i < eligible.length; i++) {
-    const group = Math.min(3, Math.floor(i / groupSize) + 1)
-    const { error: updateError } = await admin
-      .from('users')
-      .update({ custom_domain_announcement_group: group } as never)
-      .eq('id', eligible[i].id)
-    if (updateError) {
-      console.error(`Failed to assign group for ${eligible[i].email}:`, updateError.message)
-    }
-  }
-
-  console.log(`Assigned ${eligible.length} studio(s) into 3 groups (oldest -> group 1, newest -> group 3).`)
-  const { data: after } = await admin
-    .from('users')
-    .select('id, custom_domain_announcement_group')
-  printGroupCounts((after ?? []) as UserRow[])
-}
-
-function printGroupCounts(rows: { custom_domain_announcement_group: number | null }[]) {
-  for (const g of [1, 2, 3]) {
-    console.log(`  group ${g}: ${rows.filter((r) => r.custom_domain_announcement_group === g).length}`)
-  }
-  console.log(`  unassigned (excluded, e.g. no email / owner account): ${rows.filter((r) => r.custom_domain_announcement_group == null).length}`)
-}
-
-async function sendGroup(group: number, dryRun: boolean) {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('users')
-    .select('id, email, name, studio_name, created_at, custom_domain_announcement_group, custom_domain_announcement_sent_at')
-    .eq('custom_domain_announcement_group', group)
-    .is('custom_domain_announcement_sent_at', null)
+    .select('id, email, created_at')
     .order('created_at', { ascending: true })
   if (error) throw error
 
-  const pending = (data ?? []) as UserRow[]
-  console.log(`Group ${group}: ${pending.length} studio(s) pending (not yet sent).`)
+  const rows = (data ?? []) as { id: string; email: string | null; created_at: string }[]
+
+  // Lea's own account (studio owner, not a customer) — never part of the
+  // announcement rollout.
+  const eligible = rows.filter((r) => r.email && r.email.trim() && r.email.trim() !== 'lea0556769466@gmail.com')
+
+  const groupSize = Math.ceil(eligible.length / 3)
+  const studios: Record<string, StudioState> = {}
+  eligible.forEach((row, i) => {
+    const group = Math.min(3, Math.floor(i / groupSize) + 1) as 1 | 2 | 3
+    studios[row.id] = { group, sentAt: null }
+  })
+
+  const state: State = { assignedAt: new Date().toISOString(), studios }
+  saveState(state)
+
+  console.log(`Assigned ${eligible.length} studio(s) into 3 groups (oldest -> group 1, newest -> group 3).`)
+  console.log(`Excluded (no email / owner account): ${rows.length - eligible.length}`)
+  printGroupCounts(state)
+  console.log(`\nState written to ${STATE_PATH} — commit this file to git.`)
+}
+
+function printGroupCounts(state: State) {
+  for (const g of [1, 2, 3] as const) {
+    const count = Object.values(state.studios).filter((s) => s.group === g).length
+    const sent = Object.values(state.studios).filter((s) => s.group === g && s.sentAt).length
+    console.log(`  group ${g}: ${count} (${sent} already sent)`)
+  }
+}
+
+async function sendGroup(group: 1 | 2 | 3, dryRun: boolean) {
+  const state = loadState()
+  if (!state) throw new Error('No state file — run "assign" first.')
+
+  const pendingIds = Object.entries(state.studios)
+    .filter(([, s]) => s.group === group && !s.sentAt)
+    .map(([id]) => id)
+
+  console.log(`Group ${group}: ${pendingIds.length} studio(s) pending (not yet sent).`)
+  if (pendingIds.length === 0) return
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .select('id, email, name, studio_name')
+    .in('id', pendingIds)
+  if (error) throw error
+
+  const rows = (data ?? []) as { id: string; email: string | null; name: string | null; studio_name: string | null }[]
 
   if (dryRun) {
-    for (const row of pending) console.log(`  [dry-run] would send to ${row.email} (${row.studio_name ?? row.name ?? 'no name'})`)
+    for (const row of rows) console.log(`  [dry-run] would send to ${row.email} (${row.studio_name ?? row.name ?? 'no name'})`)
     return
   }
 
   let sent = 0
   let failed = 0
-  for (const row of pending) {
+  for (const row of rows) {
     if (!row.email) continue
     try {
       await sendCustomDomainAddonAnnouncementEmail({
         name: row.name?.trim() || row.studio_name?.trim() || 'שלום',
         email: row.email,
       })
-      const { error: markError } = await admin
-        .from('users')
-        .update({ custom_domain_announcement_sent_at: new Date().toISOString() } as never)
-        .eq('id', row.id)
-        .is('custom_domain_announcement_sent_at', null)
-      if (markError) {
-        console.error(`  sent to ${row.email} but FAILED to mark as sent — will re-send on next run:`, markError.message)
-        failed++
-        continue
-      }
+      state.studios[row.id].sentAt = new Date().toISOString()
+      saveState(state)
       sent++
       console.log(`  sent to ${row.email}`)
     } catch (err) {
       failed++
-      console.error(`  FAILED to send to ${row.email}:`, err instanceof Error ? err.message : err)
+      console.error(`  FAILED to send to ${row.email} — will retry on next run:`, err instanceof Error ? err.message : err)
     }
     await sleep(DELAY_BETWEEN_SENDS_MS)
   }
 
   console.log(`Group ${group} done: ${sent} sent, ${failed} failed.`)
+  console.log(`State updated at ${STATE_PATH} — commit this file to git.`)
 }
 
 async function main() {
@@ -142,7 +158,7 @@ async function main() {
   if (command === 'send') {
     const group = Number(arg)
     if (![1, 2, 3].includes(group)) throw new Error('Usage: send <1|2|3> [--dry-run]')
-    await sendGroup(group, dryRun)
+    await sendGroup(group as 1 | 2 | 3, dryRun)
     return
   }
   throw new Error('Usage: assign | send <1|2|3> [--dry-run]')

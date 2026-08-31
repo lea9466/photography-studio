@@ -113,8 +113,6 @@ export type Database = {
           is_under_construction: boolean
           is_site_unavailable: boolean
           custom_domain_addon_purchased_at: string | null
-          custom_domain_announcement_group: number | null
-          custom_domain_announcement_sent_at: string | null
         }
         Insert: {
           id: string
@@ -183,8 +181,6 @@ export type Database = {
           is_under_construction?: boolean
           is_site_unavailable?: boolean
           custom_domain_addon_purchased_at?: string | null
-          custom_domain_announcement_group?: number | null
-          custom_domain_announcement_sent_at?: string | null
         }
         Update: {
           id?: string
@@ -253,8 +249,6 @@ export type Database = {
           is_under_construction?: boolean
           is_site_unavailable?: boolean
           custom_domain_addon_purchased_at?: string | null
-          custom_domain_announcement_group?: number | null
-          custom_domain_announcement_sent_at?: string | null
         }
         Relationships: []
       }
