@@ -171,7 +171,7 @@ export function CustomDomainExplainer() {
             </p>
             <p className="text-sm leading-relaxed text-[--muted]">
               עדיין תקועה? אני כאן — אני יכולה ללוות אותך אישית בכל התהליך, מהקנייה ועד שהאתר עולה, בעלות
-              חד-פעמית של <span className="font-semibold text-[--foreground]">₪100</span>.
+              חד-פעמית של <span className="font-semibold text-[--foreground]">₪89</span>.
             </p>
             <a
               href="/dashboard/contact"

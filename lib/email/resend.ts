@@ -597,7 +597,7 @@ export function buildCustomDomainAddonAnnouncementEmail(input: { name: string })
     ${luxeButton(customDomainUrl, 'לחיבור דומיין אישי')}
 
     <div style="border-top: 1px solid ${LUXE.accent}; width: 44px; margin: 28px 0;"></div>
-    <p style="${pMuted}">לא בטוחה שתסתדרי לבד עם ההגדרות הטכניות? כדאי לנסות קודם עם עזרה מ-AI (צילום מסך של עמוד ה-DNS אצל ספק הדומיין, בצ'אט עם ג'מיני או ChatGPT) — ברוב המקרים זה עובד מצוין. עדיין תקועה? אני יכולה ללוות אותך אישית בכל התהליך בעלות חד-פעמית של 100 ₪ — <a href="${contactUrl}" style="${link}">יצירת קשר</a>.</p>
+    <p style="${pMuted}">לא בטוחה שתסתדרי לבד עם ההגדרות הטכניות? כדאי לנסות קודם עם עזרה מ-AI (צילום מסך של עמוד ה-DNS אצל ספק הדומיין, בצ'אט עם ג'מיני או ChatGPT) — ברוב המקרים זה עובד מצוין. עדיין תקועה? אני יכולה ללוות אותך אישית בכל התהליך בעלות חד-פעמית של 89 ₪ — <a href="${contactUrl}" style="${link}">יצירת קשר</a>.</p>
     <p style="${p} margin-bottom: 0;">בהצלחה!</p>`
 
   return {
@@ -624,7 +624,7 @@ export function buildCustomDomainAddonAnnouncementEmail(input: { name: string })
       '',
       `לחיבור דומיין אישי: ${customDomainUrl}`,
       '',
-      `לא בטוחה שתסתדרי לבד? נסי קודם עזרה מ-AI (screenshot + ג'מיני/ChatGPT), ואם עדיין תקועה — ליווי אישי ב-100 ₪ חד-פעמי: ${contactUrl}`,
+      `לא בטוחה שתסתדרי לבד? נסי קודם עזרה מ-AI (screenshot + ג'מיני/ChatGPT), ואם עדיין תקועה — ליווי אישי ב-89 ₪ חד-פעמי: ${contactUrl}`,
       '',
       'בהצלחה!',
     ].join('\n'),
