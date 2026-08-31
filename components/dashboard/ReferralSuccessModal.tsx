@@ -35,9 +35,9 @@ export function ReferralSuccessModal({ open }: ReferralSuccessModalProps) {
     <Dialog open={visible} onOpenChange={(next) => !next && handleDismiss()}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>🎉 קיבלת 30 יום נוספים!</DialogTitle>
+          <DialogTitle>🎉 קיבלת שבוע נוסף!</DialogTitle>
           <DialogDescription>
-            חברה שהזמנת יצרה את הגלריה השנייה שלה. תקופת הניסיון שלך הוארכה ב-30 יום.
+            חברה שהזמנת יצרה את הגלריה השנייה שלה. תקופת הניסיון שלך הוארכה בשבוע.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

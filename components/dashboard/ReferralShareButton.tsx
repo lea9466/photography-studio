@@ -38,7 +38,7 @@ export function ReferralShareButton({
         <Copy className="h-5 w-5" />
       )}
       {!compact && (
-        <span className="text-sm">{copied ? 'הועתק!' : 'שתפי והרוויחי 30 יום'}</span>
+        <span className="text-sm">{copied ? 'הועתק!' : 'שתפי והרוויחי שבוע'}</span>
       )}
     </button>
   )

@@ -67,7 +67,7 @@ export async function processReferralBonusIfEligible(userId: string) {
   const currentEnd = new Date(
     (referrer as { trial_end_date: string } | null)?.trial_end_date ?? Date.now()
   )
-  currentEnd.setDate(currentEnd.getDate() + 30)
+  currentEnd.setDate(currentEnd.getDate() + 7)
 
   await admin
     .from('users')

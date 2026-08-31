@@ -159,13 +159,13 @@ export function SubscriptionPanel({
             index={2}
             icon={Gift}
             title="חברה מביאה חברה"
-            description="שתפי את הקישור האישי שלך עם צלמות אחרות וקבלי 30 יום נוספים לתקופת הניסיון"
+            description="שתפי את הקישור האישי שלך עם צלמות אחרות וקבלי שבוע נוסף לתקופת הניסיון"
           />
 
           <SubscriptionSubPanel className="space-y-5">
             <p className="text-sm leading-relaxed text-[--muted]">
               כשחברה נרשמת דרך הקישור שלך ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
-              <strong className="text-[--foreground]">30 יום נוספים</strong> לתקופת הניסיון.
+              <strong className="text-[--foreground]">שבוע נוסף</strong> לתקופת הניסיון.
             </p>
 
             <div className="rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] p-4 md:p-5">

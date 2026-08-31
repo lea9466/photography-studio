@@ -104,7 +104,7 @@ export async function MarketingHome() {
           <Reveal>
             <h2 className="text-3xl font-bold tracking-tight">חבילות שימוש</h2>
             <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[--muted]">
-              כל צלמת מתחילה עם חודש ראשון חינם ברמת Pro — אין צורך בכרטיס אשראי.
+              כל צלמת מתחילה עם שבועיים ראשונים חינם ברמת Pro — אין צורך בכרטיס אשראי.
             </p>
           </Reveal>
 
@@ -133,7 +133,7 @@ export async function MarketingHome() {
             <Reveal delayMs={100}>
               <Card className="relative border-violet-300 shadow-xl shadow-violet-900/10 lg:-translate-y-3">
                 <span className="absolute -top-3 right-1/2 translate-x-1/2 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 px-4 py-1 text-xs font-semibold text-white shadow-sm">
-                  החודש הראשון חינם
+                  שבועיים ראשונים חינם
                 </span>
                 <CardContent className="p-8">
                   <div className="flex items-center justify-between">

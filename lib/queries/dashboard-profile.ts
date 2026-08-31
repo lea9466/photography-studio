@@ -18,7 +18,7 @@ export type DashboardProfile = {
 
 function defaultTrialEndDate(createdAt: string) {
   const end = new Date(createdAt)
-  end.setMonth(end.getMonth() + 1)
+  end.setDate(end.getDate() + 14)
   return end.toISOString()
 }
 
