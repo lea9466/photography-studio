@@ -37,6 +37,19 @@ export const GALLERY_STATUS_LABELS: Record<GalleryStatus, string> = {
   locked: 'ארכיב',
 }
 
+/**
+ * The workflow a private client gallery moves through, in order. "public" is
+ * deliberately absent — a client gallery is a separate product and can never
+ * be made public (see galleryKind). This is the list the status picker offers.
+ */
+export const CLIENT_GALLERY_STATUSES: GalleryStatus[] = [
+  'draft',
+  'selection',
+  'editing',
+  'delivery_ready',
+  'locked',
+]
+
 export const GALLERY_TYPE_LABELS: Record<GalleryType, string> = {
   selection: 'בחירה',
   portfolio: 'תיק עבודות',

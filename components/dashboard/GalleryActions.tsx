@@ -11,7 +11,11 @@ import {
 } from '@/lib/actions/gallery.actions'
 import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
 import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
-import { GALLERY_STATUS_LABELS, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import {
+  CLIENT_GALLERY_STATUSES,
+  GALLERY_STATUS_LABELS,
+  PUBLIC_ONLY_MVP,
+} from '@/lib/types/app.types'
 import type { GalleryStatus, GalleryType } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import {
@@ -65,6 +69,10 @@ export function GalleryActions({
   const [isPending, startTransition] = useTransition()
   const resendLabel = galleryType !== 'portfolio' ? resendEmailLabel(status) : null
   const canSendToClient = galleryType !== 'portfolio' && status === 'draft'
+  // A client gallery moves through the delivery workflow and is never "public";
+  // a portfolio gallery only has the one public state.
+  const statusOptions: GalleryStatus[] =
+    galleryType === 'portfolio' ? ['public'] : CLIENT_GALLERY_STATUSES
 
   function run(action: () => Promise<void>, message: string) {
     startTransition(async () => {
@@ -176,15 +184,13 @@ export function GalleryActions({
               <SelectValue placeholder="סטטוס" />
             </SelectTrigger>
             <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
-              {(
-                Object.entries(GALLERY_STATUS_LABELS) as [GalleryStatus, string][]
-              ).map(([value, label]) => (
+              {statusOptions.map((value) => (
                 <SelectItem
                   key={value}
                   value={value}
                   className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
                 >
-                  {label}
+                  {GALLERY_STATUS_LABELS[value]}
                 </SelectItem>
               ))}
             </SelectContent>

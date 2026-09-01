@@ -264,6 +264,20 @@ export async function updateGalleryStatus(
 
   const { userId, supabase } = await requireDashboardContext()
 
+  const { data: existing } = await supabase
+    .from('galleries')
+    .select('gallery_type')
+    .eq('id', galleryId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  const existingType = (existing as { gallery_type: string | null } | null)?.gallery_type
+  // "public" is a showcase-only state — a private client gallery can never be
+  // made public (see lib/gallery-kind.ts).
+  if (status === 'public' && existingType !== 'portfolio') {
+    throw new Error('לא ניתן להפוך גלריית לקוח לציבורית')
+  }
+
   const payload: GalleriesUpdate = { status }
 
   const { error } = await supabase
