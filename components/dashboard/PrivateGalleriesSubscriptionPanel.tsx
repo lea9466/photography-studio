@@ -6,7 +6,7 @@ import { AlertCircle, CheckCircle2, Images, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SumitCardForm } from '@/components/dashboard/subscription/SumitCardForm'
 import type { CurrentSubscriptionView, PlanView } from '@/lib/payments/payment-service'
-import type { PrivateGalleryTier } from '@/lib/private-galleries/types'
+import { PRIVATE_GALLERY_PLAN_CODE_TO_TIER, type PrivateGalleryTier } from '@/lib/private-galleries/types'
 
 type Quota = {
   tier: PrivateGalleryTier
@@ -17,12 +17,21 @@ type Quota = {
   canCreateGallery: boolean
 } | null
 
+type TierLimits = {
+  tier: PrivateGalleryTier
+  max_galleries: number
+  max_photos_per_gallery: number
+  is_lifetime_cap: boolean
+}
+
 type Props = {
   initialStatus: CurrentSubscriptionView
   quota: Quota
   isImpersonating: boolean
   /** Separate rollout kill switch (lib/payments/flags.ts isPrivateGalleryCheckoutEnabled) — the shared public-site checkout flags are already live and are not product-specific. */
   checkoutEnabled: boolean
+  /** Live (admin-editable) quota numbers for all 4 tiers, to show what each plan includes next to its price. */
+  tierLimits: TierLimits[]
 }
 
 const TIER_LABELS: Record<PrivateGalleryTier, string> = {
@@ -53,6 +62,7 @@ export function PrivateGalleriesSubscriptionPanel({
   quota,
   isImpersonating,
   checkoutEnabled,
+  tierLimits,
 }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState(initialStatus)
@@ -162,6 +172,8 @@ export function PrivateGalleriesSubscriptionPanel({
           <div className="grid gap-3 sm:grid-cols-3">
             {plans.map((plan) => {
               const canCheckoutThisPlan = checkoutEnabled && status.paymentsFormEnabled
+              const planTier = PRIVATE_GALLERY_PLAN_CODE_TO_TIER[plan.code]
+              const limits = tierLimits.find((row) => row.tier === planTier)
               return (
                 <div key={plan.code} className="rounded-xl border border-[--border]/60 bg-white/80 p-5 text-right">
                   <p className="font-semibold text-[--foreground]">{plan.name}</p>
@@ -169,6 +181,12 @@ export function PrivateGalleriesSubscriptionPanel({
                     {formatPrice(plan.amountAgorot, plan.currency)}{' '}
                     <span className="text-sm font-medium text-[--muted]">לחודש</span>
                   </p>
+                  {limits ? (
+                    <ul className="mt-3 space-y-1 text-sm text-[--muted]">
+                      <li>עד {limits.max_galleries} גלריות פרטיות במקביל</li>
+                      <li>עד {limits.max_photos_per_gallery} תמונות לגלריה</li>
+                    </ul>
+                  ) : null}
                   <div className="mt-4">
                     {!canCheckoutThisPlan ? (
                       <Button type="button" className="w-full" disabled>

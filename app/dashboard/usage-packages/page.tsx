@@ -6,6 +6,7 @@ import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
 import { createPaymentService } from '@/lib/payments/server'
 import { getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { isPrivateGalleryCheckoutEnabled } from '@/lib/payments/flags'
+import { getAllPrivateGalleryTierLimits } from '@/lib/private-galleries/loader'
 
 export default async function UsagePackagesPage({
   searchParams,
@@ -58,6 +59,13 @@ export default async function UsagePackagesPage({
     return null
   })
 
+  const tierLimits = await getAllPrivateGalleryTierLimits().catch((error) => {
+    console.info('[private-galleries] tier limits unavailable', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+    return []
+  })
+
   return (
     <div className="animate-fade-in">
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
@@ -83,6 +91,7 @@ export default async function UsagePackagesPage({
           quota={quota}
           isImpersonating={isImpersonating}
           checkoutEnabled={isPrivateGalleryCheckoutEnabled()}
+          tierLimits={tierLimits}
         />
       </div>
     </div>

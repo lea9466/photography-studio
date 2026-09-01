@@ -62,3 +62,22 @@ export async function getPrivateGalleryEntitlements(
     lifetimeUsed: Boolean(user?.free_private_gallery_created),
   }
 }
+
+/**
+ * All 4 tiers' live (admin-editable) quota numbers, for display next to each
+ * plan's price on the packages panel — sourced straight from the same
+ * private_gallery_tiers table /manage edits, not hardcoded copy.
+ */
+export async function getAllPrivateGalleryTierLimits(): Promise<PrivateGalleryTierRow[]> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('private_gallery_tiers')
+    .select('tier, max_galleries, max_photos_per_gallery, is_lifetime_cap')
+    .order('display_order', { ascending: true })
+
+  if (error || !data) {
+    throw new Error(error?.message ?? 'private_gallery_tiers is empty')
+  }
+
+  return data as PrivateGalleryTierRow[]
+}
