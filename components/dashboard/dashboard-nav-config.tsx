@@ -40,7 +40,7 @@ export type DashboardNavItem = {
 
 /**
  * Section headers shown above each group of tabs, in render order. Both render
- * as the same pill in the dashboard accent colour (see DashboardNavMenu).
+ * as the same purple pill (see DashboardNavMenu).
  */
 export const DASHBOARD_NAV_GROUPS: { id: DashboardNavGroup; label: string }[] = [
   { id: 'private', label: 'ניהול גלריות פרטיות' },
