@@ -30,6 +30,7 @@ import {
   DASHBOARD_SUBSCRIPTION_PATH,
   isDashboardSubscriptionPath,
 } from '@/lib/site-access/dashboard-lock'
+import { resolveOwnerGallerySessionCookie } from '@/lib/studio-gallery-session'
 
 // A slow/degraded Supabase response must never hang this middleware until
 // Vercel's own 25s function timeout kills it (see the incident this was
@@ -274,6 +275,22 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
       event.waitUntil(recordVisit)
     } else {
       void recordVisit
+    }
+  }
+
+  // Owning photographer opening her own private (selection) gallery: give her
+  // browser the same sg_gallery_<id> cookie the client gets, so the Worker
+  // serves that gallery's media to her over the content-filter-exempt
+  // subdomain. No-op for every other path / non-owner / showcase gallery / when
+  // the private subdomain isn't configured.
+  const effectiveGalleryUserId = isImpersonating ? impersonatedUserId : user?.id
+  if (effectiveGalleryUserId && pathname.startsWith('/dashboard/galleries/')) {
+    const cookie = await resolveOwnerGallerySessionCookie(
+      pathname,
+      effectiveGalleryUserId
+    )
+    if (cookie) {
+      supabaseResponse.cookies.set(cookie.name, cookie.value, cookie.options)
     }
   }
 

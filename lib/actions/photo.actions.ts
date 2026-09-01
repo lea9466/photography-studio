@@ -620,8 +620,23 @@ export async function fetchGallerySelections(galleryId: string) {
       return {
         id: photo.id,
         preview_url: photo.preview_url,
-        preview_signed_url: await resolveMediaUrl('previews', photo.preview_url),
-        edited_signed_url: await resolveMediaUrl('edited', edited?.final_url ?? null),
+        // Owner-only action (assertGalleryOwner) for a private selection
+        // gallery — route her thumbnails through the content-filter-exempt
+        // subdomain (5th arg = forceStudioPrivate).
+        preview_signed_url: await resolveMediaUrl(
+          'previews',
+          photo.preview_url,
+          undefined,
+          false,
+          true
+        ),
+        edited_signed_url: await resolveMediaUrl(
+          'edited',
+          edited?.final_url ?? null,
+          undefined,
+          false,
+          true
+        ),
         selected_album: selection?.selected_album ?? false,
         selected_edit: selection?.selected_edit ?? false,
       } satisfies GallerySelectionPhoto

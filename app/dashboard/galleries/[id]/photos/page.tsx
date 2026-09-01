@@ -3,7 +3,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
 import { fetchGalleryPhotos } from '@/lib/actions/photo.actions'
 import { resolveWatermarkText } from '@/lib/images/process'
-import { signStoragePaths } from '@/lib/storage'
+import { signStoragePaths, resolvePrivateGalleryPaths } from '@/lib/storage'
 import { unwrapOne } from '@/lib/unwrap'
 import { Upload, Send } from 'lucide-react'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
@@ -51,10 +51,12 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
     : galleryDetail.clients != null
 
   const photos = await fetchGalleryPhotos(id)
-  const signedUrls = await signStoragePaths(
-    'previews',
-    photos.map((p) => (p as { preview_url: string | null }).preview_url)
-  )
+  const previewPaths = photos.map((p) => (p as { preview_url: string | null }).preview_url)
+  // Private client gallery → serve the owner her media through the
+  // content-filter-exempt subdomain; showcase galleries stay on the public CDN.
+  const signedUrls = isClientGallery
+    ? await resolvePrivateGalleryPaths('previews', previewPaths)
+    : await signStoragePaths('previews', previewPaths)
 
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">

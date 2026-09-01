@@ -1,7 +1,7 @@
 import { Zap, Info, Settings, Image as ImageIcon, Upload, Link as LinkIcon, Lock } from 'lucide-react'
 import { fetchGallerySelections, fetchGalleryPhotos } from '@/lib/actions/photo.actions'
 import { resolveWatermarkText } from '@/lib/images/process'
-import { signStoragePaths } from '@/lib/storage'
+import { resolvePrivateGalleryPaths } from '@/lib/storage'
 import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import {
@@ -53,7 +53,10 @@ export async function ClientGalleryDetail({
 
   const { albumPhotos, editPhotos } = await fetchGallerySelections(gallery.id)
   const photos = await fetchGalleryPhotos(gallery.id)
-  const signedUrls = await signStoragePaths(
+  // Owner viewing her own private gallery — serve her the media through the
+  // content-filter-exempt subdomain (middleware mints the sg_gallery_<id>
+  // cookie that authorizes it).
+  const signedUrls = await resolvePrivateGalleryPaths(
     'previews',
     photos.map((p) => (p as { preview_url: string | null }).preview_url)
   )

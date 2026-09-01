@@ -135,11 +135,23 @@ export async function mediaObjectExists(bucket: MediaBucket, path: string): Prom
  * exempted from that filtering (a public gallery's photos don't need this;
  * they're already known to pass filtering fine on the regular CDN domain).
  */
+/**
+ * `forceStudioPrivate` is for the *owning photographer* viewing her own private
+ * (selection) gallery in the dashboard: route her media through the
+ * content-filter-exempt `private.` subdomain instead of `albums.`. For
+ * previews/watermarked the URL is left **bare** — the middleware hands her the
+ * same `sg_gallery_<id>` cookie the client gets, and the Worker authorizes on
+ * that (browser-bound, not a shareable signed link). For the sensitive `edited`
+ * bucket (Worker requires a signature there, no cookie fallback) it becomes a
+ * signed URL on the private domain. Falls back to the normal `albums.` behaviour
+ * when `NEXT_PUBLIC_PRIVATE_GALLERY_URL` is unset (local dev / pre-launch).
+ */
 export async function resolveMediaUrl(
   bucket: MediaBucket,
   path: string | null,
   galleryId?: string,
-  forceProxy = false
+  forceProxy = false,
+  forceStudioPrivate = false
 ) {
   if (!path) return null
 
@@ -148,6 +160,10 @@ export async function resolveMediaUrl(
 
   if (canUsePublicUrl(bucket) && publicUrl) {
     if (SIGNED_EDGE_BUCKETS.has(bucket)) {
+      if (forceStudioPrivate) {
+        const privateBase = privateMediaBaseUrl()
+        if (privateBase) return `${privateBase}/${key}`
+      }
       if (!forceProxy) return signEdgeUrl(publicUrl, bucket, path)
       const baseUrl = privateMediaBaseUrl() ?? publicUrl
       return `${baseUrl}/${key}`
@@ -158,21 +174,24 @@ export async function resolveMediaUrl(
     return galleryMediaProxyUrl(key, galleryId)
   }
 
-  return createPresignedDownloadUrl(bucket, path)
+  return createPresignedDownloadUrl(bucket, path, 3600, {
+    forcePrivateDomain: forceStudioPrivate,
+  })
 }
 
 export async function signMediaPaths(
   bucket: MediaBucket,
   paths: (string | null)[],
   galleryId?: string,
-  forceProxy = false
+  forceProxy = false,
+  forceStudioPrivate = false
 ) {
   const unique = [...new Set(paths.filter(Boolean))] as string[]
   const map: Record<string, string> = {}
 
   await Promise.all(
     unique.map(async (path) => {
-      const url = await resolveMediaUrl(bucket, path, galleryId, forceProxy)
+      const url = await resolveMediaUrl(bucket, path, galleryId, forceProxy, forceStudioPrivate)
       if (url) map[path] = url
     })
   )
