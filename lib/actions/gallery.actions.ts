@@ -781,7 +781,13 @@ export async function getPrivateGalleryQuota() {
     getPrivateGalleryEntitlements(userId),
   ])
 
-  const galleryCount = count ?? 0
+  // For the lifetime-cap tier, the number that actually gates creation is the
+  // one-time-use flag, not how many `selection` galleries currently exist —
+  // an account can have more (grandfathered in from before this feature) or
+  // fewer (the one gallery was since deleted, which must NOT free the slot
+  // back up) than the raw count. Show that flag instead so the displayed
+  // "X מתוך Y" always matches what canCreateGallery actually enforces.
+  const galleryCount = pg.limits.isLifetimeCap ? (pg.lifetimeUsed ? 1 : 0) : (count ?? 0)
   const canCreateGallery = pg.limits.isLifetimeCap
     ? !pg.lifetimeUsed
     : galleryCount < pg.limits.maxGalleries
