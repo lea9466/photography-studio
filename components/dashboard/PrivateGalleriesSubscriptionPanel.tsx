@@ -156,45 +156,53 @@ export function PrivateGalleriesSubscriptionPanel({
             ביטול מסלול
           </Button>
         </div>
-      ) : checkoutEnabled && status.paymentsFormEnabled && plans.length > 0 ? (
+      ) : plans.length > 0 ? (
         <div className="space-y-3">
-          <p className="text-sm text-[--muted]">שדרוג למסלול בתשלום:</p>
+          <p className="text-sm text-[--muted]">מסלולים בתשלום:</p>
           <div className="grid gap-3 sm:grid-cols-3">
-            {plans.map((plan) => (
-              <div key={plan.code} className="rounded-xl border border-[--border]/60 bg-white/80 p-5 text-right">
-                <p className="font-semibold text-[--foreground]">{plan.name}</p>
-                <p className="mt-2 text-lg font-bold text-[--foreground]">
-                  {formatPrice(plan.amountAgorot, plan.currency)}{' '}
-                  <span className="text-sm font-medium text-[--muted]">לחודש</span>
-                </p>
-                <div className="mt-4">
-                  {cardFormPlanCode === plan.code ? (
-                    <SumitCardForm
-                      planCode={plan.code}
-                      planName={plan.name}
-                      priceLabel={`${formatPrice(plan.amountAgorot, plan.currency)} לחודש`}
-                      onSuccess={onSubscribeSuccess}
-                      onCancel={() => setCardFormPlanCode(null)}
-                    />
-                  ) : (
-                    <Button
-                      type="button"
-                      className="w-full"
-                      disabled={isImpersonating || cardFormPlanCode !== null}
-                      onClick={() => setCardFormPlanCode(plan.code)}
-                    >
-                      שדרוג
-                    </Button>
-                  )}
+            {plans.map((plan) => {
+              const canCheckoutThisPlan = checkoutEnabled && status.paymentsFormEnabled
+              return (
+                <div key={plan.code} className="rounded-xl border border-[--border]/60 bg-white/80 p-5 text-right">
+                  <p className="font-semibold text-[--foreground]">{plan.name}</p>
+                  <p className="mt-2 text-lg font-bold text-[--foreground]">
+                    {formatPrice(plan.amountAgorot, plan.currency)}{' '}
+                    <span className="text-sm font-medium text-[--muted]">לחודש</span>
+                  </p>
+                  <div className="mt-4">
+                    {!canCheckoutThisPlan ? (
+                      <Button type="button" className="w-full" disabled>
+                        בקרוב
+                      </Button>
+                    ) : cardFormPlanCode === plan.code ? (
+                      <SumitCardForm
+                        planCode={plan.code}
+                        planName={plan.name}
+                        priceLabel={`${formatPrice(plan.amountAgorot, plan.currency)} לחודש`}
+                        onSuccess={onSubscribeSuccess}
+                        onCancel={() => setCardFormPlanCode(null)}
+                      />
+                    ) : (
+                      <Button
+                        type="button"
+                        className="w-full"
+                        disabled={isImpersonating || cardFormPlanCode !== null}
+                        onClick={() => setCardFormPlanCode(plan.code)}
+                      >
+                        שדרוג
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
+          {!checkoutEnabled || !status.paymentsFormEnabled ? (
+            <p className="text-xs text-[--muted]">
+              התשלום בפועל עוד לא פעיל — המסלולים כאן להצגה בלבד בשלב זה.
+            </p>
+          ) : null}
         </div>
-      ) : !isActive ? (
-        <p className="text-sm leading-relaxed text-[--muted]">
-          שדרוג בתשלום למסלולים בתשלום ייפתח בקרוב. בינתיים המסלול החינמי פעיל כרגיל.
-        </p>
       ) : null}
 
       {message ? (
