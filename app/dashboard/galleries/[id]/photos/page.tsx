@@ -60,6 +60,21 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
 
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">
+      {isClientGallery && hasClient ? (
+        <section className="space-y-4 sm:space-y-6">
+          <div className="space-y-2">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
+              <Send className="h-5 w-5" />
+              שליחה ללקוח
+            </h2>
+            <p className="text-sm text-[#48464c]">
+              לאחר שהתמונות עלו — שלחי ללקוח מייל עם קישור לגלריה
+            </p>
+          </div>
+          <SendGalleryToClientButton galleryId={id} status={galleryDetail.status} />
+        </section>
+      ) : null}
+
       <section className="space-y-4 sm:space-y-6">
         <div className="space-y-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
@@ -85,21 +100,6 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           storeOriginalPhotos={isClientGallery}
         />
       </section>
-
-      {isClientGallery && hasClient ? (
-        <section className="space-y-4 sm:space-y-6">
-          <div className="space-y-2">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
-              <Send className="h-5 w-5" />
-              שליחה ללקוח
-            </h2>
-            <p className="text-sm text-[#48464c]">
-              לאחר שהתמונות עלו — שלחי ללקוח מייל עם קישור לגלריה
-            </p>
-          </div>
-          <SendGalleryToClientButton galleryId={id} status={galleryDetail.status} />
-        </section>
-      ) : null}
     </div>
   )
 }

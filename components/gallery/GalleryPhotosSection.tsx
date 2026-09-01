@@ -510,6 +510,16 @@ export function GalleryPhotosSection({
                 >
                   {allSelected ? 'בטל בחירה' : 'בחר הכל'}
                 </Button>
+                {shouldShowToggleButton && showAllPhotos && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAllPhotos(false)}
+                    className="border-[#c9c5cd] hover:bg-[#f7f2f4] text-xs"
+                  >
+                    כווץ תצוגה
+                  </Button>
+                )}
                 {currentSelectedIds.size > 0 && (
                   <>
                     <Button
