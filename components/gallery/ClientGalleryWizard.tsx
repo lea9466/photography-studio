@@ -168,7 +168,7 @@ export function ClientGalleryWizard({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-8 p-4 sm:p-6">
+    <div className="w-full space-y-8">
       {/* Stepper */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:gap-4">
         {WIZARD_STEPS.map((label, index) => {
@@ -198,7 +198,7 @@ export function ClientGalleryWizard({
       {/* Step 1 — client */}
       {step === 1 && (
         <div className="space-y-6">
-          <div className="text-center">
+          <div className="text-right">
             <h3 className="mb-2 text-xl font-semibold text-[#1c1b1d]">מי הלקוח של הגלריה?</h3>
             <p className="text-base text-[#48464c]">גלריית לקוח תמיד משויכת ללקוח אחד.</p>
           </div>
@@ -317,7 +317,7 @@ export function ClientGalleryWizard({
 
       {/* Step 2 — gallery details */}
       {step === 2 && (
-        <div className="mx-auto max-w-2xl space-y-8">
+        <div className="max-w-2xl space-y-8">
           <section className="space-y-3">
             <label className="text-base font-semibold text-[#48464c]" htmlFor="gallery-name">
               שם הגלריה
@@ -368,7 +368,7 @@ export function ClientGalleryWizard({
 
       {/* Step 3 — limits & permissions */}
       {step === 3 && (
-        <div className="mx-auto max-w-3xl space-y-6">
+        <div className="max-w-3xl space-y-6">
           <section className="rounded-xl border border-[#ebebe8] bg-white p-6 sm:p-8">
             <div className="mb-6 flex items-center gap-2">
               <Zap className="h-5 w-5 text-[#7D3A52]" />
