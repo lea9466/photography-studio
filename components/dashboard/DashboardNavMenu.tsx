@@ -116,10 +116,17 @@ export function DashboardNavMenu({
         const groupItems = navItems.filter((item) => item.group === navGroup.id)
         if (groupItems.length === 0) return null
         return (
-          <div key={navGroup.id} className="space-y-1 pt-6 first:pt-0">
-            <p className="px-4 pb-1 text-[11px] font-bold tracking-wide text-[--dashboard-muted]">
-              {navGroup.label}
-            </p>
+          <div key={navGroup.id} className="space-y-1 pt-6 first:pt-1">
+            <div className="px-3 pb-1.5">
+              <span
+                className={cn(
+                  'inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
+                  navGroup.badgeClassName
+                )}
+              >
+                {navGroup.label}
+              </span>
+            </div>
             {groupItems.map(renderItem)}
           </div>
         )
