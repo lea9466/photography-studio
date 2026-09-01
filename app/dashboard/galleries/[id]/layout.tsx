@@ -58,7 +58,7 @@ export default async function GalleryLayout({
             <p className="mt-1 text-sm text-[--muted]">{clientName}</p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Badge variant="muted">
-                {getGalleryStatusLabel(gallery.status)}
+                {getGalleryStatusLabel(gallery.status, gallery.gallery_type)}
               </Badge>
               <Badge variant="outline">
                 {GALLERY_KIND_LABELS[kind]}

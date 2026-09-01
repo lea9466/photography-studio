@@ -56,8 +56,8 @@ type GalleryRowProps = {
   studioPath: string | null
 }
 
-function getStatusBadge(status: string) {
-  const displayStatus = getDisplayGalleryStatus(status as GalleryStatus)
+function getStatusBadge(status: string, galleryType?: string | null) {
+  const displayStatus = getDisplayGalleryStatus(status as GalleryStatus, galleryType)
   const statusConfig: Record<string, { label: string; className: string }> = {
     draft: { label: 'טיוטה', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
     public: { label: 'ציבורי', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' },
@@ -201,7 +201,7 @@ function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps
         </td>
         <td className="px-6 py-4 text-sm text-[--muted]">{gallery.client?.name || 'ללא לקוח'}</td>
         <td className="px-6 py-4">
-          {getStatusBadge(gallery.status)}
+          {getStatusBadge(gallery.status, gallery.gallery_type)}
         </td>
         <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
         <td className="px-6 py-4">

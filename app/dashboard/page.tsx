@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MVP_DEFAULT_DASHBOARD_PATH } from '@/lib/types/app.types'
+import { galleryKind } from '@/lib/gallery-kind'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { fetchDashboardOverview } from '@/lib/actions/dashboard.actions'
@@ -43,10 +44,16 @@ export default function DashboardPage() {
     init()
   }, [router])
 
-  const drafts = recentGalleries.filter(g => g.status === 'draft').length
-  const selection = recentGalleries.filter(g => g.status === 'selection').length
-  const editing = recentGalleries.filter(g => g.status === 'editing').length
-  const expired = recentGalleries.filter(g => {
+  // The dashboard home is the private client-gallery workflow view — showcase
+  // galleries have their own page and don't belong in these stats/list.
+  const clientGalleries = recentGalleries.filter(
+    (g) => galleryKind(g) === 'client'
+  )
+
+  const drafts = clientGalleries.filter(g => g.status === 'draft').length
+  const selection = clientGalleries.filter(g => g.status === 'selection').length
+  const editing = clientGalleries.filter(g => g.status === 'editing').length
+  const expired = clientGalleries.filter(g => {
     if (g.status === 'locked') return true
     if (g.expires_at) {
       return new Date(g.expires_at) < new Date()
@@ -75,11 +82,11 @@ export default function DashboardPage() {
             הנה מה שקורה בסטודיו שלך היום
           </p>
         </div>
-        <Button 
-          asChild 
+        <Button
+          asChild
           className="bg-[#7D3A52] text-white hover:bg-[#6a2f44] shadow-lg shadow-[#7D3A52]/20 px-6 py-3 text-base font-semibold md:flex hidden"
         >
-          <Link href="/dashboard/galleries/new">
+          <Link href="/dashboard/galleries/new?kind=client">
             <Plus className="h-5 w-5 ml-2" />
             גלריה חדשה
           </Link>
@@ -95,7 +102,7 @@ export default function DashboardPage() {
         onFilterChange={setActiveFilter}
       />
 
-      <RecentGalleriesTable galleries={recentGalleries} filter={activeFilter} studioPath={studioPath} />
+      <RecentGalleriesTable galleries={clientGalleries} filter={activeFilter} studioPath={studioPath} />
     </div>
   )
 }

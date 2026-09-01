@@ -58,8 +58,16 @@ export type GalleryListItem = {
 
 export type GalleryStatusFilter = GalleryStatus | 'all'
 
-/** MVP: normalize any gallery status to public for display */
-export function getDisplayGalleryStatus(status: GalleryStatus): GalleryStatus {
+/**
+ * MVP: normalize a showcase gallery's status to "public" for display. A client
+ * (selection) gallery always shows its real workflow status — it is never
+ * "public" — so pass `gallery_type` to keep it accurate.
+ */
+export function getDisplayGalleryStatus(
+  status: GalleryStatus,
+  galleryType?: string | null
+): GalleryStatus {
+  if (galleryType === 'selection') return status
   return PUBLIC_ONLY_MVP ? 'public' : status
 }
 
@@ -113,8 +121,11 @@ export function buildPublicGalleryCountLimitError(
   return null
 }
 
-export function getGalleryStatusLabel(status: GalleryStatus): string {
-  return GALLERY_STATUS_LABELS[getDisplayGalleryStatus(status)]
+export function getGalleryStatusLabel(
+  status: GalleryStatus,
+  galleryType?: string | null
+): string {
+  return GALLERY_STATUS_LABELS[getDisplayGalleryStatus(status, galleryType)]
 }
 
 /** Default landing page while dashboard overview is blocked in MVP */
