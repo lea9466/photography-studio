@@ -4,6 +4,7 @@ import {
   buildPublicGalleryPhotoLimitError,
 } from '@/lib/types/app.types'
 import type { R2UploadRequest } from '@/lib/r2/types'
+import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 
 type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>
 
@@ -61,33 +62,31 @@ export async function assertGalleryPhotoCountWithinLimit(
   return currentCount
 }
 
-/** Max photos (regular + processed combined) in a single private gallery. */
-export const MAX_PRIVATE_GALLERY_PHOTOS = 1000
-
 /**
- * Private galleries skip the account-wide public-photo quota entirely, but
- * with no cap of their own a single gallery could grow unbounded — exactly
- * the scale that made bulk delete/download start timing out before those
- * were fixed to batch/stream. This is a flat per-gallery sanity ceiling,
- * independent of isPhotoLimitTestUser — that flag exists to bypass the
- * *public* quota for large-batch testing, not to exempt anyone from this.
+ * Private galleries skip the account-wide public-photo quota entirely — the
+ * per-gallery ceiling instead comes from the owner's private-gallery tier
+ * (lib/private-galleries), editable live from /manage. Independent of
+ * isPhotoLimitTestUser — that flag exists to bypass the *public* quota for
+ * large-batch testing, not to exempt anyone from this.
  */
 export async function assertPrivateGalleryPhotoCountWithinLimit(
   supabase: AppSupabaseClient,
   galleryId: string,
+  ownerId: string,
   adding = 0
 ): Promise<number> {
-  const { count, error } = await supabase
-    .from('photos')
-    .select('id', { count: 'exact', head: true })
-    .eq('gallery_id', galleryId)
+  const [{ count, error }, pg] = await Promise.all([
+    supabase.from('photos').select('id', { count: 'exact', head: true }).eq('gallery_id', galleryId),
+    getPrivateGalleryEntitlements(ownerId),
+  ])
 
   if (error) throw new Error(error.message)
 
   const currentCount = count ?? 0
-  if (currentCount + adding > MAX_PRIVATE_GALLERY_PHOTOS) {
+  const maxPhotos = pg.limits.maxPhotosPerGallery
+  if (currentCount + adding > maxPhotos) {
     throw new Error(
-      `ניתן להעלות עד ${MAX_PRIVATE_GALLERY_PHOTOS} תמונות בגלריה פרטית (יש כרגע ${currentCount})`
+      `ניתן להעלות עד ${maxPhotos} תמונות בגלריה פרטית במסלול הנוכחי (יש כרגע ${currentCount})`
     )
   }
 

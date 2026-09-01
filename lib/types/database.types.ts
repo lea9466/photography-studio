@@ -113,6 +113,8 @@ export type Database = {
           is_under_construction: boolean
           is_site_unavailable: boolean
           custom_domain_addon_purchased_at: string | null
+          free_private_gallery_created: boolean
+          private_gallery_tier_override: string
         }
         Insert: {
           id: string
@@ -181,6 +183,8 @@ export type Database = {
           is_under_construction?: boolean
           is_site_unavailable?: boolean
           custom_domain_addon_purchased_at?: string | null
+          free_private_gallery_created?: boolean
+          private_gallery_tier_override?: string
         }
         Update: {
           id?: string
@@ -249,6 +253,8 @@ export type Database = {
           is_under_construction?: boolean
           is_site_unavailable?: boolean
           custom_domain_addon_purchased_at?: string | null
+          free_private_gallery_created?: boolean
+          private_gallery_tier_override?: string
         }
         Relationships: []
       }
@@ -345,6 +351,7 @@ export type Database = {
           compare_at_amount_agorot: number | null
           badge: string | null
           is_highlighted: boolean
+          product: 'public_site' | 'private_galleries'
           created_at: string
           updated_at: string
         }
@@ -362,6 +369,7 @@ export type Database = {
           compare_at_amount_agorot?: number | null
           badge?: string | null
           is_highlighted?: boolean
+          product?: 'public_site' | 'private_galleries'
           created_at?: string
           updated_at?: string
         }
@@ -379,6 +387,7 @@ export type Database = {
           compare_at_amount_agorot?: number | null
           badge?: string | null
           is_highlighted?: boolean
+          product?: 'public_site' | 'private_galleries'
           created_at?: string
           updated_at?: string
         }
@@ -401,6 +410,7 @@ export type Database = {
           next_payment_at: string | null
           provider_metadata: Json
           payment_type: 'recurring' | 'one_time'
+          product: 'public_site' | 'private_galleries'
           one_time_reminder_sent_at: string | null
           one_time_expired_email_sent_at: string | null
           created_at: string
@@ -422,6 +432,7 @@ export type Database = {
           next_payment_at?: string | null
           provider_metadata?: Json
           payment_type?: 'recurring' | 'one_time'
+          product?: 'public_site' | 'private_galleries'
           one_time_reminder_sent_at?: string | null
           one_time_expired_email_sent_at?: string | null
           created_at?: string
@@ -443,8 +454,45 @@ export type Database = {
           next_payment_at?: string | null
           provider_metadata?: Json
           payment_type?: 'recurring' | 'one_time'
+          product?: 'public_site' | 'private_galleries'
           one_time_reminder_sent_at?: string | null
           one_time_expired_email_sent_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      private_gallery_tiers: {
+        Row: {
+          id: string
+          tier: 'free' | 'starter' | 'pro' | 'unlimited'
+          plan_id: string | null
+          max_galleries: number
+          max_photos_per_gallery: number
+          is_lifetime_cap: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tier: 'free' | 'starter' | 'pro' | 'unlimited'
+          plan_id?: string | null
+          max_galleries: number
+          max_photos_per_gallery: number
+          is_lifetime_cap?: boolean
+          display_order: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tier?: 'free' | 'starter' | 'pro' | 'unlimited'
+          plan_id?: string | null
+          max_galleries?: number
+          max_photos_per_gallery?: number
+          is_lifetime_cap?: boolean
+          display_order?: number
           created_at?: string
           updated_at?: string
         }

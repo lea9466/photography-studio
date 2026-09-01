@@ -74,3 +74,17 @@ export function isSumitPaymentsConfigured() {
     Boolean(process.env.NEXT_PUBLIC_SUMIT_API_PUBLIC_KEY?.trim())
   )
 }
+
+/**
+ * Separate kill switch for the private-gallery product's checkout (Starter /
+ * Pro / Unlimited). The public-site product's own flags
+ * (isPaymentsCheckoutAllowed / isSumitPaymentsJsEnabled) are already live in
+ * production and are NOT product-specific — without this, shipping the
+ * private-gallery UI would immediately let real customers pay for it too.
+ * Defaults OFF (unset/anything but "true") so the tab, tier info and usage
+ * counts can ship and be reviewed while the actual charge button stays
+ * hidden until a live smoke test, same rollout shape as SUMIT_PAYMENTSJS_ENABLED.
+ */
+export function isPrivateGalleryCheckoutEnabled() {
+  return process.env.PRIVATE_GALLERY_CHECKOUT_ENABLED === 'true'
+}

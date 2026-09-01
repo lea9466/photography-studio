@@ -11,7 +11,7 @@ import {
 import { payMeIterationTypeForPlan } from './providers/payme/payme-iteration'
 import { SumitProvider } from './providers/sumit/sumit-provider'
 import type { PaymentProvider } from './provider'
-import type { BillingRepository } from './repository'
+import type { BillingRepository, SubscriptionProduct } from './repository'
 import { SubscriptionService } from './subscription-service'
 import type {
   CheckoutSession,
@@ -158,6 +158,7 @@ export class PaymentService {
       provider: provider.name,
       externalSubscriptionId: localSubscriptionId,
       status: 'pending',
+      product: planRow.product,
       metadata: {
         local_subscription_id: localSubscriptionId,
         plan_code: plan.code,
@@ -303,6 +304,7 @@ export class PaymentService {
       provider: provider.name,
       externalSubscriptionId: localSubscriptionId,
       status: 'pending',
+      product: planRow.product,
       metadata: {
         local_subscription_id: localSubscriptionId,
         plan_code: plan.code,
@@ -517,8 +519,8 @@ export class PaymentService {
     })
   }
 
-  async cancelSubscription(userId: string) {
-    const subscription = await this.repository.getCurrentSubscription(userId)
+  async cancelSubscription(userId: string, product: SubscriptionProduct = 'public_site') {
+    const subscription = await this.repository.getCurrentSubscription(userId, product)
     if (
       !subscription ||
       subscription.user_id !== userId ||
@@ -545,8 +547,12 @@ export class PaymentService {
     return cancelled
   }
 
-  async updatePaymentMethod(userId: string, returnUrl: string) {
-    const subscription = await this.repository.getCurrentSubscription(userId)
+  async updatePaymentMethod(
+    userId: string,
+    returnUrl: string,
+    product: SubscriptionProduct = 'public_site'
+  ) {
+    const subscription = await this.repository.getCurrentSubscription(userId, product)
     if (
       !subscription ||
       subscription.user_id !== userId ||
@@ -576,10 +582,13 @@ export class PaymentService {
     })
   }
 
-  async getCurrentSubscription(userId: string): Promise<CurrentSubscriptionView> {
+  async getCurrentSubscription(
+    userId: string,
+    product: SubscriptionProduct = 'public_site'
+  ): Promise<CurrentSubscriptionView> {
     const [subscription, availablePlans] = await Promise.all([
-      this.repository.getCurrentSubscription(userId),
-      this.repository.listActivePlans(),
+      this.repository.getCurrentSubscription(userId, product),
+      this.repository.listActivePlans(product),
     ])
 
     const plan = subscription
@@ -627,17 +636,20 @@ export class PaymentService {
    * alternative to an unverified webhook callback and is triggered when the user
    * returns from PayMe. Returns the refreshed subscription view.
    */
-  async verifySubscription(userId: string): Promise<CurrentSubscriptionView> {
-    const subscription = await this.repository.getCurrentSubscription(userId)
+  async verifySubscription(
+    userId: string,
+    product: SubscriptionProduct = 'public_site'
+  ): Promise<CurrentSubscriptionView> {
+    const subscription = await this.repository.getCurrentSubscription(userId, product)
     if (!subscription || subscription.user_id !== userId) {
-      return this.getCurrentSubscription(userId)
+      return this.getCurrentSubscription(userId, product)
     }
 
     const localId = subscription.provider_subscription_id
     const alreadyReal =
       localId && !localId.startsWith('sub_') && subscription.status === 'active'
     if (alreadyReal) {
-      return this.getCurrentSubscription(userId)
+      return this.getCurrentSubscription(userId, product)
     }
 
     // Try every pending local subscription (most recent first) until PayMe
@@ -665,10 +677,10 @@ export class PaymentService {
         lastPaymentAt: new Date().toISOString(),
         providerSubscriptionId: verified.id,
       })
-      return this.getCurrentSubscription(userId)
+      return this.getCurrentSubscription(userId, product)
     }
 
-    return this.getCurrentSubscription(userId)
+    return this.getCurrentSubscription(userId, product)
   }
 
   async processWebhook(input: {

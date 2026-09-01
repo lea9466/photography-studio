@@ -70,7 +70,7 @@ async function assertGalleryUploadPaths(
   if (isPublic) {
     await assertGalleryPhotoCountWithinLimit(supabase, userId, isPublic, 0)
   } else {
-    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, 0)
+    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, userId, 0)
   }
 
   return { id: userId }

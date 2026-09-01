@@ -23,10 +23,13 @@ export type WebhookClaim = {
   status: string
 }
 
+export type SubscriptionProduct = 'public_site' | 'private_galleries'
+
 export interface BillingRepository {
   getUserEmail(userId: string): Promise<string | null>
   getActivePlanByCode(code: string): Promise<SubscriptionPlan | null>
-  listActivePlans(): Promise<SubscriptionPlan[]>
+  /** No `product` filters by nothing (used by admin, which manages both products' plans together). */
+  listActivePlans(product?: SubscriptionProduct): Promise<SubscriptionPlan[]>
   getPlanById(id: string): Promise<SubscriptionPlan | null>
   updatePlan(
     id: string,
@@ -43,7 +46,7 @@ export interface BillingRepository {
     externalCustomerId: string
     email: string
   }): Promise<BillingCustomer>
-  getCurrentSubscription(userId: string): Promise<Subscription | null>
+  getCurrentSubscription(userId: string, product?: SubscriptionProduct): Promise<Subscription | null>
   getSubscriptions(userId: string): Promise<Subscription[]>
   getSubscriptionByExternalId(
     provider: PaymentProviderName,
@@ -56,6 +59,8 @@ export interface BillingRepository {
     provider: PaymentProviderName
     externalSubscriptionId: string
     status: SubscriptionStatus
+    /** Defaults to 'public_site' — callers creating a private-gallery subscription must pass it explicitly. */
+    product?: SubscriptionProduct
     periodStart?: string | null
     periodEnd?: string | null
     nextPaymentAt?: string | null
@@ -180,12 +185,10 @@ export class SupabaseBillingRepository implements BillingRepository {
     return data
   }
 
-  async listActivePlans() {
-    const { data, error } = await this.db
-      .from('subscription_plans')
-      .select('*')
-      .eq('is_active', true)
-      .order('amount_agorot', { ascending: true })
+  async listActivePlans(product?: SubscriptionProduct) {
+    let query = this.db.from('subscription_plans').select('*').eq('is_active', true)
+    if (product) query = query.eq('product', product)
+    const { data, error } = await query.order('amount_agorot', { ascending: true })
     throwIfError(error)
     return data ?? []
   }
@@ -278,11 +281,12 @@ export class SupabaseBillingRepository implements BillingRepository {
     }
   }
 
-  async getCurrentSubscription(userId: string) {
+  async getCurrentSubscription(userId: string, product: SubscriptionProduct = 'public_site') {
     const { data, error } = await this.db
       .from('subscriptions')
       .select('*')
       .eq('user_id', userId)
+      .eq('product', product)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
@@ -331,6 +335,7 @@ export class SupabaseBillingRepository implements BillingRepository {
     provider: PaymentProviderName
     externalSubscriptionId: string
     status: SubscriptionStatus
+    product?: SubscriptionProduct
     periodStart?: string | null
     periodEnd?: string | null
     nextPaymentAt?: string | null
@@ -356,6 +361,7 @@ export class SupabaseBillingRepository implements BillingRepository {
           cancelled_at: input.cancelledAt ?? null,
           provider_metadata: asJson(input.metadata ?? {}),
           payment_type: input.paymentType ?? 'recurring',
+          product: input.product ?? 'public_site',
         },
         { onConflict: 'provider,provider_subscription_id' }
       )

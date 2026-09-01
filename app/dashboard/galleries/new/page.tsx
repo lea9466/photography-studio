@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { Info } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
-import { getPublicGalleryQuota } from '@/lib/actions/gallery.actions'
+import { getPublicGalleryQuota, getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { ShowcaseGalleryForm } from '@/components/gallery/ShowcaseGalleryForm'
 import { ClientGalleryWizard } from '@/components/gallery/ClientGalleryWizard'
@@ -53,10 +53,11 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   const kind = canCreateClientGalleries ? requestedKind : 'showcase'
   const meta = KIND_META[kind]
 
-  const [{ data: profileData }, clients, quota] = await Promise.all([
+  const [{ data: profileData }, clients, quota, privateQuota] = await Promise.all([
     supabase.from('users').select('studio_name').eq('id', userId).single(),
     fetchClients(),
     getPublicGalleryQuota(),
+    getPrivateGalleryQuota(),
   ])
 
   const studioName =
@@ -65,8 +66,10 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   const maxGalleries = quota?.maxGalleries ?? MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER
   const photoCount = quota?.photoCount ?? 0
   const maxPhotos = quota?.maxPhotos ?? MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER
-  // The gallery cap is a public-gallery cap — it never blocks client galleries.
-  const blockedByQuota = kind === 'showcase' && !(quota?.canCreateGallery ?? true)
+  const blockedByQuota =
+    kind === 'showcase'
+      ? !(quota?.canCreateGallery ?? true)
+      : !(privateQuota?.canCreateGallery ?? true)
 
   const downloadPermissionsEnabled =
     DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)
@@ -105,8 +108,22 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
       {blockedByQuota ? (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">
-            ניתן ליצור עד {maxGalleries} גלריות, עם עד {maxPhotos} תמונות בסך הכל.
-            מחקי גלריה קיימת כדי ליצור חדשה.
+            {kind === 'client' ? (
+              privateQuota?.isLifetime ? (
+                'ניצלת כבר את הגלריה הפרטית החינמית שלך — מחיקתה לא תשחרר מקום. יש לשדרג למסלול בתשלום כדי ליצור גלריה נוספת.'
+              ) : (
+                <>
+                  ניתן ליצור עד {privateQuota?.maxGalleries} גלריות פרטיות במקביל במסלול הנוכחי,
+                  עם עד {privateQuota?.maxPhotosPerGallery} תמונות לגלריה. מחקי גלריה קיימת או שדרגי
+                  כדי ליצור חדשה.
+                </>
+              )
+            ) : (
+              <>
+                ניתן ליצור עד {maxGalleries} גלריות, עם עד {maxPhotos} תמונות בסך הכל.
+                מחקי גלריה קיימת כדי ליצור חדשה.
+              </>
+            )}
           </p>
           <Button asChild className="mt-6 bg-[#7D3A52] text-white hover:bg-[#6a2f44]">
             <Link href={meta.list.href}>חזרה לגלריות</Link>

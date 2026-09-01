@@ -80,7 +80,7 @@ export async function reservePhotosBatch(galleryId: string, count: number, isPro
       count
     )
   } else {
-    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, count)
+    await assertPrivateGalleryPhotoCountWithinLimit(supabase, galleryId, user.id, count)
   }
 
   const { data: lastPhoto } = await supabase

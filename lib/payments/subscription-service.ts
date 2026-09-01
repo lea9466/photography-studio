@@ -189,6 +189,7 @@ export class SubscriptionService {
       provider: event.provider,
       externalSubscriptionId: event.externalSubscriptionId,
       status,
+      product: plan.product,
       periodStart: event.data.periodStart,
       periodEnd: event.data.periodEnd,
       nextPaymentAt: event.data.nextPaymentAt,

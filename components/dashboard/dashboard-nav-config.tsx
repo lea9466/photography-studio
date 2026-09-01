@@ -14,6 +14,7 @@ import {
   Images,
   Lock,
   Globe,
+  Layers,
 } from 'lucide-react'
 
 import type { ProFeature } from '@/lib/subscriptions/types'
@@ -186,6 +187,14 @@ export function getDashboardNavItems({
         icon: <Lock className="h-5 w-5" />,
         isActive: (pathname: string) =>
           pathname.startsWith('/dashboard/private-galleries'),
+        group: 'private',
+      },
+      {
+        href: '/dashboard/usage-packages',
+        label: 'חבילות שימוש',
+        icon: <Layers className="h-5 w-5" />,
+        isActive: (pathname: string) =>
+          pathname.startsWith('/dashboard/usage-packages'),
         group: 'private',
       },
       { ...item, label: 'גלריות ציבוריות' },

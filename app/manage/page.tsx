@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
 import { AdminStudioList } from '@/components/admin/AdminStudioList'
 import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
+import { PrivateGalleryTiersManager } from '@/components/admin/PrivateGalleryTiersManager'
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 import { fetchAdminCustomDomains, fetchAdminStudios } from '@/lib/actions/admin.actions'
@@ -71,6 +72,7 @@ export default async function ManagePage() {
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
         <ReactPublicSiteToggle initialEnabled={reactPublicSiteEnabled} />
         <PlanPricingManager />
+        <PrivateGalleryTiersManager />
         <CustomDomainVerificationManager domains={customDomains} />
         <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
       </div>

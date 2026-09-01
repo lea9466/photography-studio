@@ -38,6 +38,8 @@ import {
 import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
 import { galleryKindColumns } from '@/lib/gallery-kind'
 import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
+import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
+import { buildPrivateGalleryCountLimitError } from '@/lib/private-galleries/entitlements'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -381,6 +383,33 @@ export async function createGallery(input: CreateGalleryInput) {
     }
   }
 
+  let unlocksFreePrivateGallerySlot = false
+  if (!willBePublic) {
+    const pg = await getPrivateGalleryEntitlements(userId)
+    if (pg.limits.isLifetimeCap) {
+      const limitError = buildPrivateGalleryCountLimitError(
+        pg.lifetimeUsed ? 1 : 0,
+        1,
+        true
+      )
+      if (limitError) throw new Error(limitError)
+      unlocksFreePrivateGallerySlot = true
+    } else {
+      const { count: privateGalleryCount } = await supabase
+        .from('galleries')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('gallery_type', 'selection')
+
+      const limitError = buildPrivateGalleryCountLimitError(
+        privateGalleryCount ?? 0,
+        pg.limits.maxGalleries,
+        false
+      )
+      if (limitError) throw new Error(limitError)
+    }
+  }
+
   const plainPassword = input.password?.trim() || generatePassword()
   const hashedPassword = await hashGalleryPassword(plainPassword)
 
@@ -413,6 +442,13 @@ export async function createGallery(input: CreateGalleryInput) {
 
   if (galleryError || !gallery) {
     throw new Error(galleryError?.message ?? 'יצירת הגלריה נכשלה')
+  }
+
+  if (unlocksFreePrivateGallerySlot) {
+    await supabase
+      .from('users')
+      .update({ free_private_gallery_created: true } as never)
+      .eq('id', userId)
   }
 
   let watermarkText: string | null = input.watermarkText?.trim() || null
@@ -727,6 +763,36 @@ export async function getPublicGalleryQuota() {
     canCreateGallery: isPro ? galleryCount < maxGalleries : true,
     isPro,
     displayedGalleryId,
+  }
+}
+
+export async function getPrivateGalleryQuota() {
+  const context = await getDashboardContext()
+  if (!context) return null
+
+  const { userId, supabase } = context
+
+  const [{ count }, pg] = await Promise.all([
+    supabase
+      .from('galleries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('gallery_type', 'selection'),
+    getPrivateGalleryEntitlements(userId),
+  ])
+
+  const galleryCount = count ?? 0
+  const canCreateGallery = pg.limits.isLifetimeCap
+    ? !pg.lifetimeUsed
+    : galleryCount < pg.limits.maxGalleries
+
+  return {
+    tier: pg.tier,
+    galleryCount,
+    maxGalleries: pg.limits.maxGalleries,
+    maxPhotosPerGallery: pg.limits.maxPhotosPerGallery,
+    isLifetime: pg.limits.isLifetimeCap,
+    canCreateGallery,
   }
 }
 

@@ -62,6 +62,7 @@ const plan = {
   is_active: true,
   provider: null,
   provider_plan_id: null,
+  product: 'public_site' as const,
   created_at: '2026-08-01T00:00:00.000Z',
   updated_at: '2026-08-01T00:00:00.000Z',
 }
@@ -77,6 +78,7 @@ const yearlyPlan = {
   is_active: true,
   provider: null,
   provider_plan_id: null,
+  product: 'public_site' as const,
   created_at: '2026-08-01T00:00:00.000Z',
   updated_at: '2026-08-01T00:00:00.000Z',
 }
@@ -104,6 +106,7 @@ function subscription(overrides: Record<string, unknown> = {}) {
     last_payment_at: null,
     next_payment_at: null,
     provider_metadata: {},
+    product: 'public_site' as const,
     created_at: '2026-08-01T00:00:00.000Z',
     updated_at: '2026-08-01T00:00:00.000Z',
     ...overrides,
