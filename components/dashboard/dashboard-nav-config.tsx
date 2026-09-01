@@ -39,28 +39,12 @@ export type DashboardNavItem = {
 }
 
 /**
- * Section headers shown above each group of tabs, in render order. Rendered as
- * a coloured pill in the same visual language as the gallery status badges —
- * purple (like "נעול") for the private area, emerald (like "ציבורי") for the
- * public site.
+ * Section headers shown above each group of tabs, in render order. Both render
+ * as the same pill in the dashboard accent colour (see DashboardNavMenu).
  */
-export const DASHBOARD_NAV_GROUPS: {
-  id: DashboardNavGroup
-  label: string
-  badgeClassName: string
-}[] = [
-  {
-    id: 'private',
-    label: 'ניהול גלריות פרטיות',
-    badgeClassName:
-      'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
-  },
-  {
-    id: 'public',
-    label: 'ניהול אתר ציבורי',
-    badgeClassName:
-      'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200',
-  },
+export const DASHBOARD_NAV_GROUPS: { id: DashboardNavGroup; label: string }[] = [
+  { id: 'private', label: 'ניהול גלריות פרטיות' },
+  { id: 'public', label: 'ניהול אתר ציבורי' },
 ]
 
 export const PUBLIC_ONLY_MVP = true

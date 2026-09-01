@@ -118,12 +118,7 @@ export function DashboardNavMenu({
         return (
           <div key={navGroup.id} className="space-y-1 pt-6 first:pt-1">
             <div className="px-3 pb-1.5">
-              <span
-                className={cn(
-                  'inline-block rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider',
-                  navGroup.badgeClassName
-                )}
-              >
+              <span className="inline-block rounded-full bg-[--dashboard-accent]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[--dashboard-accent]">
                 {navGroup.label}
               </span>
             </div>
