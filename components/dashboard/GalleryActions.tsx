@@ -160,6 +160,7 @@ export function GalleryActions({
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-[#48464c]">ניהול סטטוס</h3>
           <Select
+            dir="rtl"
             value={status}
             disabled={isPending}
             onValueChange={(value) => {
@@ -171,14 +172,18 @@ export function GalleryActions({
               )
             }}
           >
-            <SelectTrigger className="h-10 w-full border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] flex-row-reverse">
+            <SelectTrigger className="h-10 w-full bg-white border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]">
               <SelectValue placeholder="סטטוס" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
               {(
                 Object.entries(GALLERY_STATUS_LABELS) as [GalleryStatus, string][]
               ).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
+                <SelectItem
+                  key={value}
+                  value={value}
+                  className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
+                >
                   {label}
                 </SelectItem>
               ))}
