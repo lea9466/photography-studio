@@ -18,11 +18,18 @@ import {
 
 import type { ProFeature } from '@/lib/subscriptions/types'
 
+/**
+ * Which management area a sidebar tab belongs to. The sidebar renders one
+ * labelled section per group ("ניהול גלריות פרטיות" / "ניהול אתר ציבורי").
+ */
+export type DashboardNavGroup = 'private' | 'public'
+
 export type DashboardNavItem = {
   href: string
   label: string
   icon: React.ReactNode
   isActive: (pathname: string) => boolean
+  group: DashboardNavGroup
   frozen?: boolean
   badge?: 'free' | 'new'
   /** Set for tabs whose destination page is a PRO-only feature — shows a lock + upgrade tooltip when the studio is FREE. */
@@ -30,6 +37,12 @@ export type DashboardNavItem = {
   /** Hover tooltip shown on the lock icon when the studio is FREE. Required alongside `proFeature`. */
   lockedTooltip?: string
 }
+
+/** Section headers shown above each group of tabs, in render order. */
+export const DASHBOARD_NAV_GROUPS: { id: DashboardNavGroup; label: string }[] = [
+  { id: 'private', label: 'ניהול גלריות פרטיות' },
+  { id: 'public', label: 'ניהול אתר ציבורי' },
+]
 
 export const PUBLIC_ONLY_MVP = true
 
@@ -39,6 +52,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'לוח בקרה',
     icon: <LayoutDashboard className="h-5 w-5" />,
     isActive: (pathname) => pathname === '/dashboard',
+    group: 'private',
     frozen: PUBLIC_ONLY_MVP,
   },
   {
@@ -46,6 +60,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'לקוחות',
     icon: <Users className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/clients'),
+    group: 'private',
     frozen: PUBLIC_ONLY_MVP,
   },
   {
@@ -53,12 +68,14 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'גלריות',
     icon: <ImageIcon className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/galleries'),
+    group: 'public',
   },
   {
     href: '/dashboard/posts',
     label: 'פוסטים',
     icon: <FileText className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/posts'),
+    group: 'public',
     proFeature: 'posts',
     lockedTooltip: 'פוסטים חסומים בגרסה החינמית — שדרגי לפרו כדי לכתוב ולפרסם פוסטים עם תמונות בבלוג ובדף הבית',
   },
@@ -67,6 +84,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'חבילות צילום',
     icon: <Package className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/packages'),
+    group: 'public',
     proFeature: 'packages',
     lockedTooltip: 'חבילות צילום חסומות בגרסה החינמית — שדרגי לפרו כדי להציג חבילות עם מחיר ורשימת מה כלול',
   },
@@ -75,6 +93,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'תגובות',
     icon: <MessageSquareQuote className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/reviews'),
+    group: 'public',
     proFeature: 'testimonials',
     lockedTooltip: 'תגובות לקוחות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג תגובות בדף הבית שלך',
   },
@@ -83,6 +102,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'לפני ואחרי עיבוד',
     icon: <Images className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/photo-edits'),
+    group: 'public',
     proFeature: 'before_after',
     lockedTooltip: 'לפני ואחרי עיבוד חסום בגרסה החינמית — שדרגי לפרו כדי להציג ללקוחות את ההבדל בין התמונה המקורית לתוצאה המעובדת',
   },
@@ -91,6 +111,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'שאלות נפוצות',
     icon: <CircleHelp className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/faq'),
+    group: 'public',
     proFeature: 'faq',
     lockedTooltip: 'שאלות נפוצות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג סקשן שאלות נפוצות בדף הבית הציבורי שלך',
   },
@@ -99,12 +120,14 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'הגדרות אתר',
     icon: <Settings className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+    group: 'public',
   },
   {
     href: '/dashboard/custom-domain',
     label: 'דומיין אישי',
     icon: <Globe className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/custom-domain'),
+    group: 'public',
     badge: 'new',
     proFeature: 'custom_domain',
     lockedTooltip: 'דומיין אישי לא כלול בתקופת הניסיון — שדרגי למנוי, או פתחי רק אותו בנפרד בתוספת חד-פעמית של ₪99, בלי מנוי מלא',
@@ -114,6 +137,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'מינוי',
     icon: <CreditCard className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/subscription'),
+    group: 'public',
     badge: 'free',
   },
   {
@@ -121,6 +145,7 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'יצירת קשר',
     icon: <Mail className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/contact'),
+    group: 'public',
   },
 ]
 
@@ -139,6 +164,9 @@ const MVP_FROZEN_HREFS = new Set(['/dashboard', '/dashboard/clients'])
  * "גלריות ציבוריות" — that point at their own list pages, and the otherwise
  * frozen "לוח בקרה" / "לקוחות" tabs are unfrozen. Otherwise the base list is
  * returned unchanged.
+ *
+ * Every item carries a `group` (`private` / `public`); the sidebar renders one
+ * labelled section per {@link DASHBOARD_NAV_GROUPS} entry.
  */
 export function getDashboardNavItems({
   canCreateClientGalleries,
@@ -155,6 +183,7 @@ export function getDashboardNavItems({
         icon: <Lock className="h-5 w-5" />,
         isActive: (pathname: string) =>
           pathname.startsWith('/dashboard/private-galleries'),
+        group: 'private',
       },
       { ...item, label: 'גלריות ציבוריות' },
     ]
