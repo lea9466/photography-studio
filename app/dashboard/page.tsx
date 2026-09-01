@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MVP_DEFAULT_DASHBOARD_PATH, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
+import { MVP_DEFAULT_DASHBOARD_PATH } from '@/lib/types/app.types'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { fetchDashboardOverview } from '@/lib/actions/dashboard.actions'
@@ -20,17 +20,16 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (PUBLIC_ONLY_MVP) {
-      router.replace(MVP_DEFAULT_DASHBOARD_PATH)
-      return
-    }
-  }, [router])
-
-  useEffect(() => {
-    if (PUBLIC_ONLY_MVP) return
-    async function fetchData() {
+    async function init() {
       try {
         const overview = await fetchDashboardOverview()
+        // MVP: the dashboard home is blocked for everyone except the bypass
+        // account (server-decided). Non-bypass users are already redirected by
+        // the middleware — this is the backstop.
+        if (!overview.canViewDashboardHome) {
+          router.replace(MVP_DEFAULT_DASHBOARD_PATH)
+          return
+        }
         setUserName(overview.userName)
         setStudioPath(overview.studioPath)
         setRecentGalleries(overview.galleries)
@@ -41,8 +40,8 @@ export default function DashboardPage() {
       }
     }
 
-    fetchData()
-  }, [])
+    init()
+  }, [router])
 
   const drafts = recentGalleries.filter(g => g.status === 'draft').length
   const selection = recentGalleries.filter(g => g.status === 'selection').length

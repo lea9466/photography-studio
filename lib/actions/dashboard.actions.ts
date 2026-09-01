@@ -91,6 +91,7 @@ export async function fetchDashboardOverview() {
     return {
       userName: typedUser?.name || 'משתמש',
       studioPath,
+      canViewDashboardHome: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
       galleries: transformedGalleries.map((gallery) => ({
         ...gallery,
         thumbnail_url: thumbnails[gallery.id] ?? null,
@@ -101,6 +102,7 @@ export async function fetchDashboardOverview() {
     return {
       userName: typedUser?.name || 'משתמש',
       studioPath,
+      canViewDashboardHome: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
       galleries: transformedGalleries,
     }
   }

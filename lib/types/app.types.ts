@@ -123,14 +123,23 @@ export const MVP_DEFAULT_DASHBOARD_PATH = '/dashboard/galleries'
 /** First-time studio setup — slug, theme, branding */
 export const ONBOARDING_SETTINGS_PATH = '/dashboard/settings'
 
-/** Routes blocked entirely during MVP (redirect to galleries list) */
-export function isMvpBlockedDashboardRoute(pathname: string): boolean {
+/**
+ * Routes blocked entirely during MVP (redirect to galleries list). The MVP
+ * bypass account (see `isMvpBypassUser`) sees the full dashboard — the same
+ * accounts that get private client galleries — so pass its `userId` to lift
+ * the block for it.
+ */
+export function isMvpBlockedDashboardRoute(
+  pathname: string,
+  userId?: string | null
+): boolean {
   if (!PUBLIC_ONLY_MVP) return false
+  if (isMvpBypassUser(userId)) return false
   return pathname === '/dashboard' || pathname.startsWith('/dashboard/clients')
 }
 
-export function resolveMvpDashboardPath(path: string): string {
+export function resolveMvpDashboardPath(path: string, userId?: string | null): string {
   const normalized = path.startsWith('/') ? path : MVP_DEFAULT_DASHBOARD_PATH
-  if (isMvpBlockedDashboardRoute(normalized)) return MVP_DEFAULT_DASHBOARD_PATH
+  if (isMvpBlockedDashboardRoute(normalized, userId)) return MVP_DEFAULT_DASHBOARD_PATH
   return normalized
 }

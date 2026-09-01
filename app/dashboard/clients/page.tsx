@@ -5,17 +5,19 @@ import { ClientsManager } from '@/components/dashboard/ClientsManager'
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   PUBLIC_ONLY_MVP,
+  isMvpBypassUser,
 } from '@/lib/types/app.types'
 
 export default async function ClientsPage() {
-  if (PUBLIC_ONLY_MVP) {
-    redirect(MVP_DEFAULT_DASHBOARD_PATH)
-  }
-
+  let context
   try {
-    await requireDashboardContext()
+    context = await requireDashboardContext()
   } catch {
     redirect('/login')
+  }
+
+  if (PUBLIC_ONLY_MVP && !isMvpBypassUser(context.userId)) {
+    redirect(MVP_DEFAULT_DASHBOARD_PATH)
   }
 
   const clients = await fetchClients()

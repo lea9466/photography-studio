@@ -151,6 +151,10 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
   const manageAdminSession = await canUseImpersonationFromRequest(request)
   const hasImpersonationAccess =
     Boolean(impersonatedUserId) && manageAdminSession && !user
+  // The identity dashboard gates should apply to: the impersonated studio when
+  // an admin is impersonating, otherwise the logged-in user.
+  const effectiveUserId =
+    impersonatedUserId && manageAdminSession ? impersonatedUserId : user?.id
 
   async function userNeedsWelcomePopup() {
     if (!user) return false
@@ -220,7 +224,7 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
     return NextResponse.redirect(url)
   }
 
-  if (user && isMvpBlockedDashboardRoute(pathname)) {
+  if (user && isMvpBlockedDashboardRoute(pathname, effectiveUserId)) {
     const url = request.nextUrl.clone()
     url.pathname = await resolveAuthenticatedDashboardPath()
     return NextResponse.redirect(url)
@@ -283,11 +287,10 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
   // serves that gallery's media to her over the content-filter-exempt
   // subdomain. No-op for every other path / non-owner / showcase gallery / when
   // the private subdomain isn't configured.
-  const effectiveGalleryUserId = isImpersonating ? impersonatedUserId : user?.id
-  if (effectiveGalleryUserId && pathname.startsWith('/dashboard/galleries/')) {
+  if (effectiveUserId && pathname.startsWith('/dashboard/galleries/')) {
     const cookie = await resolveOwnerGallerySessionCookie(
       pathname,
-      effectiveGalleryUserId
+      effectiveUserId
     )
     if (cookie) {
       supabaseResponse.cookies.set(cookie.name, cookie.value, cookie.options)

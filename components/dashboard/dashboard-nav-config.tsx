@@ -129,11 +129,16 @@ export type DashboardNavContext = {
   canCreateClientGalleries: boolean
 }
 
+/** Frozen ("בקרוב") during MVP — unfrozen only for the bypass account. */
+const MVP_FROZEN_HREFS = new Set(['/dashboard', '/dashboard/clients'])
+
 /**
  * The nav items to render for a given account. When private client galleries
- * are available the single "גלריות" item splits into two distinct sidebar
- * entries — "גלריות ציבוריות" and a lock-marked "גלריות פרטיות" — that point
- * at their own list pages. Otherwise the base list is returned unchanged.
+ * are available (the MVP bypass account) the single "גלריות" item splits into
+ * two distinct sidebar entries — a lock-marked "גלריות פרטיות" and, below it,
+ * "גלריות ציבוריות" — that point at their own list pages, and the otherwise
+ * frozen "לוח בקרה" / "לקוחות" tabs are unfrozen. Otherwise the base list is
+ * returned unchanged.
  */
 export function getDashboardNavItems({
   canCreateClientGalleries,
@@ -141,9 +146,9 @@ export function getDashboardNavItems({
   if (!canCreateClientGalleries) return DASHBOARD_NAV_ITEMS
 
   return DASHBOARD_NAV_ITEMS.flatMap((item) => {
+    if (MVP_FROZEN_HREFS.has(item.href)) return [{ ...item, frozen: false }]
     if (item.href !== '/dashboard/galleries') return [item]
     return [
-      { ...item, label: 'גלריות ציבוריות' },
       {
         href: '/dashboard/private-galleries',
         label: 'גלריות פרטיות',
@@ -151,6 +156,7 @@ export function getDashboardNavItems({
         isActive: (pathname: string) =>
           pathname.startsWith('/dashboard/private-galleries'),
       },
+      { ...item, label: 'גלריות ציבוריות' },
     ]
   })
 }
