@@ -1,10 +1,6 @@
 import type { Metadata } from 'next'
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
-import { AdminStudioList } from '@/components/admin/AdminStudioList'
-import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
-import { PrivateGalleryTiersManager } from '@/components/admin/PrivateGalleryTiersManager'
-import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
-import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
+import { ManageTabs } from '@/components/admin/ManageTabs'
 import { fetchAdminCustomDomains, fetchAdminStudios } from '@/lib/actions/admin.actions'
 import { isAdminAuthenticated } from '@/lib/admin/session'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
@@ -70,11 +66,12 @@ export default async function ManagePage() {
   return (
     <main className={`${pageShellClass} px-3 py-8 sm:px-4 lg:px-5`}>
       <div className="mx-auto flex w-full max-w-[1800px] flex-col gap-6 justify-center">
-        <ReactPublicSiteToggle initialEnabled={reactPublicSiteEnabled} />
-        <PlanPricingManager />
-        <PrivateGalleryTiersManager />
-        <CustomDomainVerificationManager domains={customDomains} />
-        <AdminStudioList studios={studios!} appBaseUrl={appBaseUrl} />
+        <ManageTabs
+          studios={studios!}
+          appBaseUrl={appBaseUrl}
+          customDomains={customDomains}
+          reactPublicSiteEnabled={reactPublicSiteEnabled}
+        />
       </div>
     </main>
   )

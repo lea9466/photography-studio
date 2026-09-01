@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
@@ -15,7 +15,6 @@ import {
   Hash,
   Lock,
   LogIn,
-  LogOut,
   Search,
   ShieldCheck,
   ShieldOff,
@@ -29,7 +28,6 @@ import {
 } from 'lucide-react'
 import type { AdminStudioRow } from '@/lib/admin/queries'
 import {
-  adminLogout,
   deleteAdminStudio,
   updateAdminStudioSiteAccess,
   updateAdminStudioSubscriptionOverride,
@@ -37,11 +35,7 @@ import {
 import { resolveTierBadge } from '@/lib/subscriptions/entitlements'
 import type { StudioEntitlements } from '@/lib/subscriptions/types'
 import { daysUntilTrialEnd } from '@/lib/referral/referral-utils'
-import { AdminBroadcastForm } from '@/components/admin/AdminBroadcastForm'
-import { AdminCoverCardMaintenance } from '@/components/admin/AdminCoverCardMaintenance'
-import { AdminGalleryOriginalsCleanup } from '@/components/admin/AdminGalleryOriginalsCleanup'
 import { AdminEmailLookupForm } from '@/components/admin/AdminEmailLookupForm'
-import { AnnouncementManagerForm } from '@/components/admin/AnnouncementManagerForm'
 import { AdminStudioSummaryDialog } from '@/components/admin/AdminStudioSummaryDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -287,7 +281,6 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [highlightedStudioId, setHighlightedStudioId] = useState<string | null>(null)
-  const [logoutPending, startLogout] = useTransition()
 
   const stats = useMemo(() => {
     const visitedToday = rows.filter(
@@ -394,13 +387,6 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
     }
   }
 
-  function handleLogout() {
-    startLogout(async () => {
-      await adminLogout()
-      window.location.reload()
-    })
-  }
-
   async function handleOverrideChange(
     studio: AdminStudioRow,
     override: 'auto' | 'pro' | 'free'
@@ -465,29 +451,15 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
     <div className="flex w-full flex-col gap-6">
       <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-md">
         <div className="bg-slate-800 px-6 py-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-sky-200">
-                Gallery Studio
-              </p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
-                ניהול סטודיואים
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-300">
-                מעקב אחר פתיחת סטודיואים, ביקורים בדשבורד ופעולות ניהול מרכזיות
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleLogout}
-              disabled={logoutPending}
-              className="shrink-0 border-slate-500 bg-slate-700 text-white hover:bg-slate-600 hover:text-white"
-            >
-              <LogOut className="h-4 w-4" />
-              {logoutPending ? 'יוצא...' : 'יציאה'}
-            </Button>
-          </div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-sky-200">
+            Gallery Studio
+          </p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-white">
+            ניהול סטודיואים
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-300">
+            מעקב אחר פתיחת סטודיואים, ביקורים בדשבורד ופעולות ניהול מרכזיות
+          </p>
         </div>
         <div className="grid gap-3 border-t border-slate-200/80 bg-slate-50/70 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
           <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-slate-500 bg-white p-4 shadow-sm">
@@ -540,20 +512,12 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
         </div>
       </div>
 
-      <AnnouncementManagerForm />
-
-      <AdminCoverCardMaintenance />
-
-      <AdminGalleryOriginalsCleanup />
-
       <AdminEmailLookupForm
         onStudioFound={(studio) => {
           setFilterKey('all')
           setHighlightedStudioId(studio.id)
         }}
       />
-
-      <AdminBroadcastForm />
 
       <Card className="overflow-hidden border-slate-200/80 shadow-md">
         <CardHeader className="space-y-5 border-b border-[--border]/70 bg-gradient-to-l from-slate-50 via-[--card] to-[--card]">
