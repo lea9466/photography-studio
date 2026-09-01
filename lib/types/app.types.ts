@@ -1,4 +1,5 @@
 import type { GalleryStatus, GalleryType, GalleryLayoutMode } from '@/lib/types/database.types'
+import { galleryKind } from '@/lib/gallery-kind'
 
 /** MVP: all galleries display and behave as public */
 export const PUBLIC_ONLY_MVP = true
@@ -59,15 +60,21 @@ export type GalleryListItem = {
 export type GalleryStatusFilter = GalleryStatus | 'all'
 
 /**
- * MVP: normalize a showcase gallery's status to "public" for display. A client
- * (selection) gallery always shows its real workflow status — it is never
- * "public" — so pass `gallery_type` to keep it accurate.
+ * MVP: normalize a showcase gallery's status to "public" for display.
+ *
+ * A client (private) gallery is a separate product and can never be public
+ * (see galleryKind) — it always shows its real workflow status. `gallery_type`
+ * must be passed to tell the two apart; legacy client rows whose type predates
+ * the kind split still resolve to `client` here, and a stray stored `public`
+ * status on such a row is shown as a plain draft rather than "ציבורי".
  */
 export function getDisplayGalleryStatus(
   status: GalleryStatus,
   galleryType?: string | null
 ): GalleryStatus {
-  if (galleryType === 'selection') return status
+  if (galleryKind({ gallery_type: galleryType }) === 'client') {
+    return status === 'public' ? MVP_GALLERY_DB_STATUS : status
+  }
   return PUBLIC_ONLY_MVP ? 'public' : status
 }
 
