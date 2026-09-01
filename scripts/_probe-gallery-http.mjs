@@ -17,7 +17,7 @@ if (unique.length === 0) {
 for (const id of unique.slice(0, 3)) {
   const res = await fetch(`http://127.0.0.1:3000/g/${id}`)
   const body = await res.text()
-  const hasPasswordGate = /type=["']password["']|סיסמ|password/i.test(body)
+  const hasPasswordGate = /type=["']password["']|סיסמ|password|קוד כניסה/i.test(body)
   const hasSignedUrls = /X-Amz-Signature|preview_signed_url|lightbox_signed_url/i.test(body)
   const isPublicClientView = /ClientGalleryView|data-gallery/i.test(body) && !hasPasswordGate
   console.log({

@@ -5,10 +5,6 @@ import {
   generateGalleryPassword,
   hashGalleryPassword,
 } from '@/lib/gallery-password'
-import {
-  galleryHasPassword,
-  rotateGalleryPassword,
-} from '@/lib/gallery-password-store'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireDashboardContext, getDashboardContext } from '@/lib/auth/dashboard-context'
@@ -160,7 +156,6 @@ export async function deleteGallery(galleryId: string) {
 type GalleryEmailRow = {
   id: string
   title: string
-  password: string | null
   expires_at: string | null
   status: GalleryStatus
   gallery_type: Database['public']['Tables']['galleries']['Row']['gallery_type']
@@ -175,7 +170,7 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
     .from('galleries')
     .select(
       `
-      id, title, password, expires_at, status, gallery_type,
+      id, title, expires_at, status, gallery_type,
       clients (name, email),
       users!galleries_user_id_fkey (studio_name)
     `
@@ -189,30 +184,23 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
   return gallery
 }
 
-async function sendInviteEmailForGallery(
-  gallery: GalleryEmailRow,
-  plainPassword?: string
-) {
+async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
   const client = Array.isArray(gallery.clients)
     ? gallery.clients[0]
     : gallery.clients
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
 
   if (!client?.email) throw new Error('לא נמצא מייל ללקוח')
-  if (!galleryHasPassword(gallery.password)) {
-    throw new Error('לא הוגדרה סיסמה לגלריה')
-  }
 
-  const passwordToEmail =
-    plainPassword ?? (await rotateGalleryPassword(gallery.id))
-
+  // No password/code is emailed here — the client requests a one-time code
+  // from the gate page on entry (see requestGalleryPassword). The invite
+  // email is just the link.
   await sendGalleryInviteEmail({
     galleryId: gallery.id,
     galleryTitle: gallery.title,
     clientEmail: client.email,
     clientName: client.name,
     studioName: profile?.studio_name ?? 'Studio Gallery',
-    password: passwordToEmail,
     expiresAt: gallery.expires_at,
   })
 }
@@ -293,7 +281,7 @@ export async function updateGalleryStatus(
   revalidatePath(`/g/${galleryId}`)
 }
 
-export async function sendGallery(galleryId: string, plainPasswordForEmail?: string) {
+export async function sendGallery(galleryId: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
   // Bypass email sending for public galleries (no client)
@@ -303,7 +291,7 @@ export async function sendGallery(galleryId: string, plainPasswordForEmail?: str
   }
 
   await updateGalleryStatus(galleryId, 'selection')
-  await sendInviteEmailForGallery(gallery, plainPasswordForEmail)
+  await sendInviteEmailForGallery(gallery)
 }
 
 export async function archiveGallery(galleryId: string) {
@@ -498,7 +486,7 @@ export async function createGallery(input: CreateGalleryInput) {
   }
 
   if (input.sendToClient) {
-    await sendGallery(gallery.id, plainPassword)
+    await sendGallery(gallery.id)
   }
 
   return { id: gallery.id }

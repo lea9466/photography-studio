@@ -77,7 +77,7 @@ export default async function ClientGalleryPage({
         galleryId={id}
         galleryTitle={meta.title}
         studioName={meta.studio_name}
-        emailHint={meta.emailHint}
+        maskedEmail={meta.maskedEmail}
       />
     )
   }

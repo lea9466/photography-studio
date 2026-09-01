@@ -6,7 +6,6 @@ import {
   requestGalleryPassword,
   verifyGalleryPassword,
 } from '@/lib/actions/client-gallery.actions'
-import { formatEmailHintMessage, type EmailHint } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,18 +21,24 @@ type PasswordGateProps = {
   galleryId: string
   galleryTitle: string
   studioName?: string | null
-  emailHint?: EmailHint | null
+  maskedEmail?: string | null
+}
+
+function codeSentNotice(masked: string | null) {
+  return masked
+    ? `קוד כניסה נשלח לכתובת ${masked}`
+    : 'קוד כניסה נשלח למייל'
 }
 
 export function PasswordGate({
   galleryId,
   galleryTitle,
   studioName,
-  emailHint,
+  maskedEmail,
 }: PasswordGateProps) {
   const [step, setStep] = useState<'request' | 'enter-code'>('request')
   const [code, setCode] = useState('')
-  const [hint, setHint] = useState(emailHint)
+  const [masked, setMasked] = useState(maskedEmail ?? null)
   const [isPending, startTransition] = useTransition()
   const [isSending, startSendTransition] = useTransition()
 
@@ -41,8 +46,8 @@ export function PasswordGate({
     startSendTransition(async () => {
       try {
         const result = await requestGalleryPassword(galleryId)
-        setHint(result.emailHint)
-        toast.success(formatEmailHintMessage(result.emailHint))
+        setMasked(result.maskedEmail)
+        toast.success(codeSentNotice(result.maskedEmail))
         onSuccess?.()
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'שליחת הקוד נכשלה')
@@ -72,9 +77,12 @@ export function PasswordGate({
         <CardContent className="space-y-4">
           {step === 'request' ? (
             <>
-              {hint ? (
+              {masked ? (
                 <p className="rounded-md border border-[--border] bg-[--muted]/30 px-4 py-3 text-center text-sm text-[--foreground]">
-                  {formatEmailHintMessage(hint)}
+                  כדי להיכנס, נשלח לך קוד כניסה חד-פעמי לכתובת{' '}
+                  <span dir="ltr" className="font-medium">
+                    {masked}
+                  </span>
                 </p>
               ) : (
                 <p className="text-center text-sm text-[--muted]">
@@ -82,21 +90,30 @@ export function PasswordGate({
                 </p>
               )}
 
-              {hint ? (
+              {masked ? (
                 <Button
                   type="button"
                   className="w-full"
                   disabled={isSending}
                   onClick={() => sendCode(() => setStep('enter-code'))}
                 >
-                  {isSending ? 'שולחים...' : 'שלחו לי קוד כניסה למייל'}
+                  {isSending ? 'שולחים...' : 'שלחו לי קוד כניסה'}
                 </Button>
               ) : null}
             </>
           ) : (
             <>
               <p className="rounded-md border border-[--border] bg-[--muted]/30 px-4 py-3 text-center text-sm text-[--foreground]">
-                {hint ? formatEmailHintMessage(hint) : 'קוד נשלח למייל'}
+                {masked ? (
+                  <>
+                    שלחנו קוד כניסה לכתובת{' '}
+                    <span dir="ltr" className="font-medium">
+                      {masked}
+                    </span>
+                  </>
+                ) : (
+                  'קוד כניסה נשלח למייל'
+                )}
               </p>
 
               <form onSubmit={handleSubmitCode} className="space-y-4">

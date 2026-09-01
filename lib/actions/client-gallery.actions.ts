@@ -16,7 +16,7 @@ import {
   sendSelectionDoneEmail,
   sendDeliveryReadyEmail,
 } from '@/lib/email/resend'
-import { getEmailHint, type EmailHint } from '@/lib/utils'
+import { maskEmail } from '@/lib/utils'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -115,7 +115,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
 
   const user = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
   const client = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
-  const emailHint = client?.email ? getEmailHint(client.email) : null
+  const maskedEmail = client?.email ? maskEmail(client.email) : null
 
   return {
     id: gallery.id,
@@ -124,7 +124,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     gallery_type: gallery.gallery_type,
     is_public: gallery.is_public,
     studio_name: user?.studio_name ?? null,
-    emailHint,
+    maskedEmail,
   }
 }
 
@@ -183,7 +183,7 @@ export async function requestGalleryPassword(galleryId: string) {
   }
 
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
-  const emailHint = getEmailHint(client.email)
+  const maskedEmail = maskEmail(client.email)
 
   const code = await rotateGalleryPassword(gallery.id)
 
@@ -198,7 +198,7 @@ export async function requestGalleryPassword(galleryId: string) {
 
   return {
     success: true,
-    emailHint: emailHint as EmailHint,
+    maskedEmail,
   }
 }
 
