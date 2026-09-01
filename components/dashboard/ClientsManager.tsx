@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { Pencil, Plus, Trash2, Mail, Phone, Check } from 'lucide-react'
+import { useMemo, useState, useTransition } from 'react'
+import { Pencil, Plus, Trash2, Mail, Phone, Search } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   createClientRecord,
@@ -9,6 +9,7 @@ import {
   deleteClientRecord,
 } from '@/lib/actions/client.actions'
 import type { Client } from '@/lib/types/database.types'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -45,6 +46,11 @@ function clientToForm(client: Client): ClientFormState {
   }
 }
 
+/** Two-letter monogram for the avatar circle — matches the gallery wizard's client cards. */
+function clientInitials(name: string): string {
+  return name.trim().slice(0, 2) || '?'
+}
+
 export function ClientsManager({ initialClients }: ClientsManagerProps) {
   const [clients, setClients] = useState(initialClients)
   const [isPending, startTransition] = useTransition()
@@ -52,6 +58,18 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClientFormState>(EMPTY_FORM)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [search, setSearch] = useState('')
+
+  const visibleClients = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return clients
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.email || '').toLowerCase().includes(q) ||
+        (c.phone || '').toLowerCase().includes(q)
+    )
+  }, [clients, search])
 
   function openCreateDialog() {
     setEditingId(null)
@@ -128,12 +146,20 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
     })
   }
 
+  const allVisibleSelected =
+    visibleClients.length > 0 &&
+    visibleClients.every((c) => selectedIds.has(c.id))
+
   function toggleSelectAll() {
-    if (selectedIds.size === clients.length) {
-      setSelectedIds(new Set())
-    } else {
-      setSelectedIds(new Set(clients.map((c) => c.id)))
-    }
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (allVisibleSelected) {
+        visibleClients.forEach((c) => next.delete(c.id))
+      } else {
+        visibleClients.forEach((c) => next.add(c.id))
+      }
+      return next
+    })
   }
 
   function toggleSelect(clientId: string) {
@@ -150,13 +176,24 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-[--muted]">
-          {clients.length === 0
-            ? 'עדיין אין לקוחות — הוסיפי את הראשון'
-            : `${clients.length} לקוחות`}
-        </p>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-[--muted]">
+            {clients.length === 0
+              ? 'עדיין אין לקוחות — הוסיפי את הראשון'
+              : `${clients.length} לקוחות`}
+          </p>
+          {clients.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleSelectAll}
+              className="text-sm font-medium text-[#7D3A52] transition-colors hover:text-[#6a2f44]"
+            >
+              {allVisibleSelected ? 'ביטול סימון' : 'סימון הכל'}
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
           {selectedIds.size > 0 && (
             <Button
               type="button"
@@ -176,105 +213,108 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
         </div>
       </div>
 
+      {clients.length > 0 && (
+        <div className="relative w-full sm:max-w-sm">
+          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--muted]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="חיפוש לקוח לפי שם או אימייל..."
+            className="w-full rounded-xl border border-[--border] bg-white py-2.5 pr-10 pl-3 text-sm outline-none transition-colors focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/15"
+          />
+        </div>
+      )}
+
       {clients.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[--border] px-6 py-12 text-center text-sm text-[--muted]">
           לדוגמה: ישראל ישראלי, israel@example.com, 050-1234567
         </div>
+      ) : visibleClients.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-[--border] px-6 py-10 text-center text-sm text-[--muted]">
+          לא נמצאו לקוחות שמתאימים לחיפוש
+        </p>
       ) : (
-        <div className="rounded-xl border border-[--border] overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-[--background] border-b border-[--border]">
-              <tr>
-                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted] w-10">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.size === clients.length && clients.length > 0}
-                    onChange={toggleSelectAll}
-                    className="h-4 w-4"
-                  />
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted]">
-                  שם
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted]">
-                  אימייל
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted]">
-                  טלפון
-                </th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-[--muted]">
-                  פעולות
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((client) => (
-                <tr key={client.id} className="border-b border-[--border] last:border-0">
-                  <td className="px-4 py-3 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(client.id)}
-                      onChange={() => toggleSelect(client.id)}
-                      className="h-4 w-4"
-                    />
-                  </td>
-                  <td className="px-4 py-3 text-sm font-medium text-[--foreground]">
-                    {client.name}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[--muted]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleClients.map((client) => {
+            const selected = selectedIds.has(client.id)
+            return (
+              <div
+                key={client.id}
+                className={cn(
+                  'relative flex flex-col rounded-xl border bg-white p-5 transition-all hover:shadow-sm',
+                  selected
+                    ? 'border-[#7D3A52] bg-[#f1edef]'
+                    : 'border-[--border] hover:border-[#7D3A52]/40'
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#e5dff9] text-base font-bold text-[#100d1f]">
+                    {clientInitials(client.name)}
+                  </div>
+                  <div className="min-w-0 flex-grow">
+                    <h3 className="truncate text-base font-semibold text-[--foreground]">
+                      {client.name}
+                    </h3>
                     {client.email ? (
                       <a
                         href={`mailto:${client.email}`}
-                        className="flex items-center gap-2 hover:text-[--accent]"
+                        className="mt-1 flex items-center gap-1.5 text-sm text-[--muted] transition-colors hover:text-[#7D3A52]"
                       >
-                        <Mail className="h-4 w-4" />
-                        {client.email}
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate">{client.email}</span>
                       </a>
                     ) : (
-                      <span className="text-[--muted]/50">—</span>
+                      <p className="mt-1 text-sm text-[--muted]/60">אין אימייל</p>
                     )}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[--muted]">
                     {client.phone ? (
                       <a
                         href={`tel:${client.phone}`}
-                        className="flex items-center gap-2 hover:text-[--accent]"
+                        className="mt-1 flex items-center gap-1.5 text-sm text-[--muted] transition-colors hover:text-[#7D3A52]"
                       >
-                        <Phone className="h-4 w-4" />
-                        {client.phone}
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate" dir="ltr">
+                          {client.phone}
+                        </span>
                       </a>
-                    ) : (
-                      <span className="text-[--muted]/50">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(client)}
-                        disabled={isPending}
-                      >
-                        <Pencil className="h-4 w-4" />
-                        עריכה
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(client.id)}
-                        disabled={isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        מחיקה
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    ) : null}
+                  </div>
+                  <label className="shrink-0 cursor-pointer p-1" title="בחירה למחיקה מרובה">
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleSelect(client.id)}
+                      className="h-4 w-4 accent-[#7D3A52]"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-4 flex items-center justify-end gap-1 border-t border-[--border] pt-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => openEditDialog(client)}
+                    disabled={isPending}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    עריכה
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(client.id)}
+                    disabled={isPending}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    מחיקה
+                  </Button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
