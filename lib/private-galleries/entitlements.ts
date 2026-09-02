@@ -54,6 +54,36 @@ export function pickLimitsForTier(
   }
 }
 
+/** Remaining photo slots in ONE private gallery — its current photo count against the tier's per-gallery ceiling. */
+export function getRemainingPrivateGalleryPhotoSlots(
+  currentCount: number,
+  maxPhotosPerGallery: number
+): number {
+  return Math.max(0, maxPhotosPerGallery - currentCount)
+}
+
+/**
+ * Hebrew pre-upload error for a private gallery, mirroring
+ * buildPublicGalleryPhotoLimitError — but the private ceiling is per-gallery
+ * (from the owner's tier), not account-wide. The server-side authority is
+ * assertPrivateGalleryPhotoCountWithinLimit (lib/gallery-photo-limits.ts);
+ * this is the friendlier client-side pre-check.
+ */
+export function buildPrivateGalleryPhotoLimitError(
+  currentCount: number,
+  adding: number,
+  maxPhotosPerGallery: number
+): string {
+  const remaining = getRemainingPrivateGalleryPhotoSlots(currentCount, maxPhotosPerGallery)
+  if (remaining === 0) {
+    return `הגעת למקסימום ${maxPhotosPerGallery} תמונות בגלריה זו במסלול הנוכחי`
+  }
+  if (currentCount + adding > maxPhotosPerGallery) {
+    return `ניתן להעלות עוד ${remaining} תמונות בלבד בגלריה זו (מקסימום ${maxPhotosPerGallery} במסלול הנוכחי)`
+  }
+  return ''
+}
+
 /** Hebrew error text, mirroring buildPublicGalleryCountLimitError (lib/types/app.types.ts). */
 export function buildPrivateGalleryCountLimitError(
   currentCount: number,

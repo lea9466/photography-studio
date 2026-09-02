@@ -15,6 +15,14 @@ export const PRIVATE_GALLERY_TIERS: readonly PrivateGalleryTier[] = [
   'unlimited',
 ]
 
+/** Hebrew display label per tier, shared by every dashboard surface that shows the current plan. */
+export const PRIVATE_GALLERY_TIER_LABELS: Record<PrivateGalleryTier, string> = {
+  free: 'חינם',
+  starter: 'Starter',
+  pro: 'Pro',
+  unlimited: 'Unlimited',
+}
+
 /** The plan_id → tier mapping lives in the DB (subscription_plans.code); this maps codes to tiers. */
 export const PRIVATE_GALLERY_PLAN_CODE_TO_TIER: Record<string, PrivateGalleryTier> = {
   private_gallery_starter: 'starter',

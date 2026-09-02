@@ -7,8 +7,13 @@ import { galleryKind } from '@/lib/gallery-kind'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { fetchDashboardOverview } from '@/lib/actions/dashboard.actions'
+import { getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
+import {
+  PrivateGalleryQuotaSummary,
+  type PrivateGalleryQuota,
+} from '@/components/dashboard/PrivateGalleryQuotaSummary'
 import { Button } from '@/components/ui/button'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 
@@ -17,13 +22,18 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('משתמש')
   const [studioPath, setStudioPath] = useState<string | null>(null)
   const [recentGalleries, setRecentGalleries] = useState<GalleryWithDetails[]>([])
+  const [quota, setQuota] = useState<PrivateGalleryQuota | null>(null)
   const [activeFilter, setActiveFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function init() {
       try {
-        const overview = await fetchDashboardOverview()
+        const [overview, privateQuota] = await Promise.all([
+          fetchDashboardOverview(),
+          // A quota failure (e.g. tier rows missing) must not blank the home.
+          getPrivateGalleryQuota().catch(() => null),
+        ])
         // MVP: the dashboard home is blocked for everyone except the bypass
         // account (server-decided). Non-bypass users are already redirected by
         // the middleware — this is the backstop.
@@ -34,6 +44,7 @@ export default function DashboardPage() {
         setUserName(overview.userName)
         setStudioPath(overview.studioPath)
         setRecentGalleries(overview.galleries)
+        setQuota(privateQuota)
       } catch (error) {
         console.error('Failed to load dashboard overview:', error)
       } finally {
@@ -93,6 +104,8 @@ export default function DashboardPage() {
         </Button>
       </header>
 
+      {quota ? <PrivateGalleryQuotaSummary quota={quota} /> : null}
+
       <StatsCards
         drafts={drafts}
         selection={selection}
@@ -102,7 +115,12 @@ export default function DashboardPage() {
         onFilterChange={setActiveFilter}
       />
 
-      <RecentGalleriesTable galleries={clientGalleries} filter={activeFilter} studioPath={studioPath} />
+      <RecentGalleriesTable
+        galleries={clientGalleries}
+        filter={activeFilter}
+        studioPath={studioPath}
+        perGalleryPhotoLimit={quota?.maxPhotosPerGallery}
+      />
     </div>
   )
 }

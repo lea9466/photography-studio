@@ -4,6 +4,7 @@ import { resolveWatermarkText } from '@/lib/images/process'
 import { resolvePrivateGalleryPaths } from '@/lib/storage'
 import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
+import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import {
   PUBLIC_ONLY_MVP,
   DOWNLOAD_PERMISSIONS_ENABLED,
@@ -53,6 +54,10 @@ export async function ClientGalleryDetail({
 
   const { albumPhotos, editPhotos } = await fetchGallerySelections(gallery.id)
   const photos = await fetchGalleryPhotos(gallery.id)
+  // A tier-rows failure must not 500 the manage page — degrade to no hint.
+  const privateGalleryLimits = await getPrivateGalleryEntitlements(userId)
+    .then((e) => e.limits)
+    .catch(() => null)
   // Owner viewing her own private gallery — serve her the media through the
   // content-filter-exempt subdomain (middleware mints the sg_gallery_<id>
   // cookie that authorizes it).
@@ -218,6 +223,7 @@ export async function ClientGalleryDetail({
           publicOnlyMvp={false}
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
           storeOriginalPhotos
+          privateGalleryPhotoLimit={privateGalleryLimits?.maxPhotosPerGallery}
         />
       </section>
     </div>

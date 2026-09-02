@@ -10,6 +10,7 @@ import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { SendGalleryToClientButton } from '@/components/dashboard/SendGalleryToClientButton'
 import type { Gallery, GallerySettings, Client } from '@/lib/types/database.types'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
+import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { galleryKind } from '@/lib/gallery-kind'
 
 type PhotosPageProps = {
@@ -49,6 +50,12 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   const hasClient = Array.isArray(galleryDetail.clients)
     ? galleryDetail.clients.length > 0
     : galleryDetail.clients != null
+
+  const privateGalleryPhotoLimit = isClientGallery
+    ? await getPrivateGalleryEntitlements(userId)
+        .then((e) => e.limits.maxPhotosPerGallery)
+        .catch(() => undefined)
+    : undefined
 
   const photos = await fetchGalleryPhotos(id)
   const previewPaths = photos.map((p) => (p as { preview_url: string | null }).preview_url)
@@ -98,6 +105,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           publicOnlyMvp={!isClientGallery}
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
           storeOriginalPhotos={isClientGallery}
+          privateGalleryPhotoLimit={privateGalleryPhotoLimit}
         />
       </section>
     </div>

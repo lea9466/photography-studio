@@ -23,6 +23,10 @@ import {
 import { deletePhotosBulk, setPhotosVisibilityBulk, setPhotosProcessedBulk } from '@/lib/actions/photo.actions'
 import { getPublicGalleryQuota } from '@/lib/actions/gallery.actions'
 import { PUBLIC_ONLY_MVP, MVP_GALLERY_DB_STATUS, MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER, getRemainingPublicGalleryPhotoSlots, buildPublicGalleryPhotoLimitError } from '@/lib/types/app.types'
+import {
+  buildPrivateGalleryPhotoLimitError,
+  getRemainingPrivateGalleryPhotoSlots,
+} from '@/lib/private-galleries/entitlements'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
@@ -57,6 +61,13 @@ type GalleryPhotosSectionProps = {
    * public galleries never expose a download-original control.
    */
   storeOriginalPhotos?: boolean
+  /**
+   * Set for private (client) galleries only: the per-gallery photo ceiling
+   * from the owner's private-gallery tier (getPrivateGalleryEntitlements).
+   * When present, the upload UI counts against THIS gallery's photos, not the
+   * account-wide public quota — mirrors assertPrivateGalleryPhotoCountWithinLimit.
+   */
+  privateGalleryPhotoLimit?: number
 }
 
 export function GalleryPhotosSection({
@@ -71,8 +82,13 @@ export function GalleryPhotosSection({
   publicOnlyMvp: publicOnlyMvpProp,
   photoCountLimitBypassed = false,
   storeOriginalPhotos = false,
+  privateGalleryPhotoLimit,
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
+  // Private (client) gallery → the photo ceiling is per-gallery (tier-based),
+  // counted against this gallery's own photos; public → account-wide quota.
+  const isPrivateGallery = privateGalleryPhotoLimit != null
+  const galleryPhotoCount = photos.length
   const router = useRouter()
   const objectUrlsRef = useRef<string[]>([])
   const [pendingPhotos, setPendingPhotos] = useState<PendingGalleryPhoto[]>([])
@@ -94,6 +110,8 @@ export function GalleryPhotosSection({
   )
 
   useEffect(() => {
+    // Private galleries don't use the account-wide public quota.
+    if (isPrivateGallery) return
     let cancelled = false
     getPublicGalleryQuota()
       .then((quota) => {
@@ -105,7 +123,7 @@ export function GalleryPhotosSection({
     return () => {
       cancelled = true
     }
-  }, [photos.length])
+  }, [photos.length, isPrivateGallery])
 
   useEffect(() => {
     return () => {
@@ -173,9 +191,14 @@ export function GalleryPhotosSection({
         return
       }
 
-      const limitError = photoCountLimitBypassed
-        ? ''
-        : buildPublicGalleryPhotoLimitError(accountPhotoCount, selected.length)
+      // photoCountLimitBypassed exempts the account-wide *public* quota only
+      // (large-batch upload testing); the per-gallery private ceiling always
+      // applies, matching assertPrivateGalleryPhotoCountWithinLimit server-side.
+      const limitError = privateGalleryPhotoLimit != null
+        ? buildPrivateGalleryPhotoLimitError(galleryPhotoCount, selected.length, privateGalleryPhotoLimit)
+        : photoCountLimitBypassed
+          ? ''
+          : buildPublicGalleryPhotoLimitError(accountPhotoCount, selected.length)
       if (limitError) {
         toast.error(limitError)
         return
@@ -224,7 +247,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, storeOriginalPhotos]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, storeOriginalPhotos, isPrivateGallery, galleryPhotoCount, privateGalleryPhotoLimit]
   )
 
   const regularPhotos = useMemo(
@@ -347,8 +370,17 @@ export function GalleryPhotosSection({
   const displayPhotos = showAllPhotos ? currentPhotos : currentPhotos.slice(0, initialPhotoLimit)
   const hasMorePhotos = currentPhotos.length > initialPhotoLimit
   const shouldShowToggleButton = currentPhotos.length > 0
-  const remainingPhotoSlots = getRemainingPublicGalleryPhotoSlots(accountPhotoCount)
+  const remainingPhotoSlots = privateGalleryPhotoLimit != null
+    ? getRemainingPrivateGalleryPhotoSlots(galleryPhotoCount, privateGalleryPhotoLimit)
+    : getRemainingPublicGalleryPhotoSlots(accountPhotoCount)
   const atPhotoLimit = remainingPhotoSlots === 0
+  const photoLimitHint = isPrivateGallery
+    ? atPhotoLimit
+      ? `הגעת למקסימום ${privateGalleryPhotoLimit} תמונות בגלריה זו`
+      : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות בגלריה זו (מקסימום ${privateGalleryPhotoLimit}).`
+    : atPhotoLimit
+      ? `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
+      : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`
 
   return (
     <div className={showWizardHeader ? 'min-h-screen bg-[#fdf8fa]' : 'bg-transparent'}>
@@ -427,9 +459,7 @@ export function GalleryPhotosSection({
               {isUploading ? 'מעלה תמונות...' : 'גררו תמונות לכאן או לחצו לבחירה'}
             </h3>
             <p className="text-[#48464c] text-sm sm:text-base max-w-sm px-2">
-              {atPhotoLimit
-                ? `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
-                : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`}
+              {photoLimitHint}
             </p>
             <button
               className="mt-4 sm:mt-6 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

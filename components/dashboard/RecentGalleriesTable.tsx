@@ -54,6 +54,10 @@ type GalleryRowProps = {
    * can't be resolved — falls back to the /public-gallery/[id] redirect
    * shim in that case. See app/[slug]/gallery/[id]/page.tsx's doc comment. */
   studioPath: string | null
+  /** Private-gallery lists only: the per-gallery photo ceiling from the
+   * owner's private-gallery tier, so the count reads "120 / 400". Omitted on
+   * the showcase list, where the photo quota is account-wide, not per-gallery. */
+  perGalleryPhotoLimit?: number
 }
 
 function getStatusBadge(status: string, galleryType?: string | null) {
@@ -76,7 +80,7 @@ function getStatusBadge(status: string, galleryType?: string | null) {
   )
 }
 
-function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps) {
+function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLimit }: GalleryRowProps) {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -203,7 +207,16 @@ function GalleryRow({ gallery, selected, onSelect, studioPath }: GalleryRowProps
         <td className="px-6 py-4">
           {getStatusBadge(gallery.status, gallery.gallery_type)}
         </td>
-        <td className="px-6 py-4 text-center text-sm">{gallery.photo_count || 0}</td>
+        <td className="px-6 py-4 text-center text-sm">
+          {perGalleryPhotoLimit != null ? (
+            <span className={(gallery.photo_count || 0) >= perGalleryPhotoLimit ? 'font-semibold text-[#7D3A52]' : undefined}>
+              {gallery.photo_count || 0}
+              <span className="text-[--muted]"> / {perGalleryPhotoLimit}</span>
+            </span>
+          ) : (
+            gallery.photo_count || 0
+          )}
+        </td>
         <td className="px-6 py-4">
           {kind === 'showcase' ? (
             <div
@@ -315,6 +328,8 @@ type RecentGalleriesTableProps = {
   sectionDescription?: string
   /** Empty-state copy when there are no galleries in this list. */
   emptyLabel?: string
+  /** Private-gallery lists only — see GalleryRowProps.perGalleryPhotoLimit. */
+  perGalleryPhotoLimit?: number
 }
 
 function GalleriesSection({
@@ -375,6 +390,7 @@ export function RecentGalleriesTable({
   sectionIndex = 4,
   sectionDescription = 'ניהול, עריכה ושיתוף של כל הגלריות שלך',
   emptyLabel = 'אין גלריות עדיין',
+  perGalleryPhotoLimit,
 }: RecentGalleriesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
@@ -485,6 +501,7 @@ export function RecentGalleriesTable({
                   selected={selectedIds.has(gallery.id)}
                   onSelect={toggleSelect}
                   studioPath={studioPath}
+                  perGalleryPhotoLimit={perGalleryPhotoLimit}
                 />
               ))
             ) : (
