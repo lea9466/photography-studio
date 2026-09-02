@@ -27,6 +27,7 @@ import {
   buildPrivateGalleryPhotoLimitError,
   getRemainingPrivateGalleryPhotoSlots,
 } from '@/lib/private-galleries/entitlements'
+import { isRawPhotoFilename } from '@/lib/media-upload-limits'
 import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
@@ -183,9 +184,24 @@ export function GalleryPhotosSection({
 
   const uploadFiles = useCallback(
     async (fileList: FileList | File[]) => {
-      const selected = Array.from(fileList).filter((file) =>
-        file.type.startsWith('image/')
+      const chosen = Array.from(fileList)
+      // RAW files (CR2/CR3/NEF/ARW/RAF/…) can't be decoded in-browser to
+      // build the preview/watermark derivatives and aren't in
+      // GALLERY_PHOTO_ALLOWED_TYPES — reject them up front with a clear
+      // message instead of letting them fail mid-upload. Browsers usually
+      // report an empty File.type for RAW, so match on the extension.
+      const rawCount = chosen.filter((file) => isRawPhotoFilename(file.name)).length
+      const selected = chosen.filter(
+        (file) => file.type.startsWith('image/') && !isRawPhotoFilename(file.name)
       )
+      if (rawCount > 0) {
+        toast.error(
+          selected.length === 0
+            ? 'קבצי RAW אינם נתמכים — יש לייצא ל-JPG או PNG ולהעלות'
+            : `${rawCount} קבצי RAW דולגו — יש לייצא ל-JPG או PNG. שאר התמונות ממשיכות בהעלאה`
+        )
+        if (selected.length === 0) return
+      }
       if (selected.length === 0) {
         toast.error('יש לבחור קבצי תמונה')
         return
@@ -377,10 +393,10 @@ export function GalleryPhotosSection({
   const photoLimitHint = isPrivateGallery
     ? atPhotoLimit
       ? `הגעת למקסימום ${privateGalleryPhotoLimit} תמונות בגלריה זו`
-      : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות בגלריה זו (מקסימום ${privateGalleryPhotoLimit}).`
+      : `תמיכה בפורמטים JPG, PNG ו-WebP. נותרו ${remainingPhotoSlots} תמונות בגלריה זו (מקסימום ${privateGalleryPhotoLimit}).`
     : atPhotoLimit
       ? `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
-      : `תמיכה בפורמטים JPG, PNG ו-RAW. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`
+      : `תמיכה בפורמטים JPG, PNG ו-WebP. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`
 
   return (
     <div className={showWizardHeader ? 'min-h-screen bg-[#fdf8fa]' : 'bg-transparent'}>

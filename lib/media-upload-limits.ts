@@ -62,3 +62,28 @@ export function validateGalleryPhotoUpload(contentType: string, fileSize?: numbe
     throw new Error(`גודל הקובץ חורג מ-${GALLERY_PHOTO_MAX_MB} MB`)
   }
 }
+
+/**
+ * Camera RAW file extensions. The gallery upload pipeline only ever stores
+ * JPEG/PNG/WebP (GALLERY_PHOTO_ALLOWED_TYPES) and builds its preview +
+ * watermarked derivatives by decoding the file in a browser <canvas>, which
+ * cannot read RAW — so a RAW upload always fails somewhere downstream (the
+ * server content-type allowlist, or "כיווץ נכשל" when it slips through with
+ * an empty File.type). Browsers report an empty or inconsistent File.type
+ * for most RAW files, so detection here is by extension, not MIME type.
+ * List covers the common vendor formats (Canon, Nikon, Sony, Fuji,
+ * Panasonic, Olympus, Pentax, Leica, Adobe DNG, …).
+ */
+export const RAW_PHOTO_EXTENSIONS = [
+  '3fr', 'ari', 'arw', 'bay', 'braw', 'cap', 'cr2', 'cr3', 'crw', 'dcr',
+  'dcs', 'dng', 'drf', 'eip', 'erf', 'fff', 'gpr', 'iiq', 'k25', 'kdc',
+  'mdc', 'mef', 'mos', 'mrw', 'nef', 'nrw', 'obm', 'orf', 'pef', 'ptx',
+  'pxn', 'r3d', 'raf', 'raw', 'rw2', 'rwl', 'rwz', 'sr2', 'srf', 'srw',
+  'x3f',
+] as const
+
+/** True when a filename ends in a known camera-RAW extension (case-insensitive). */
+export function isRawPhotoFilename(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase()
+  return ext !== undefined && (RAW_PHOTO_EXTENSIONS as readonly string[]).includes(ext)
+}
