@@ -12,6 +12,7 @@ import type { Gallery, GallerySettings, Client } from '@/lib/types/database.type
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { galleryKind } from '@/lib/gallery-kind'
+import { isClientSelectionComplete } from '@/lib/types/app.types'
 
 type PhotosPageProps = {
   params: Promise<{ id: string }>
@@ -104,6 +105,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
           storeOriginalPhotos={isClientGallery}
           privateGalleryPhotoLimit={privateGalleryPhotoLimit}
+          processedTabLocked={isClientGallery && !isClientSelectionComplete(galleryDetail.status)}
         />
       </section>
 

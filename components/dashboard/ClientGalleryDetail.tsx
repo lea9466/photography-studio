@@ -5,7 +5,7 @@ import { resolvePrivateGalleryPaths } from '@/lib/storage'
 import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
-import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
+import { DOWNLOAD_PERMISSIONS_ENABLED, isClientSelectionComplete } from '@/lib/types/app.types'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
 import {
   Card,
@@ -216,6 +216,7 @@ export async function ClientGalleryDetail({
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
           storeOriginalPhotos
           privateGalleryPhotoLimit={privateGalleryLimits?.maxPhotosPerGallery}
+          processedTabLocked={!isClientSelectionComplete(gallery.status)}
         />
       </section>
     </div>

@@ -11,7 +11,8 @@ import {
   Hourglass,
   Loader2,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Lock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { GalleryUploadCallbacks } from '@/lib/gallery-upload-client'
@@ -69,6 +70,14 @@ type GalleryPhotosSectionProps = {
    * account-wide public quota — mirrors assertPrivateGalleryPhotoCountWithinLimit.
    */
   privateGalleryPhotoLimit?: number
+  /**
+   * Client galleries: lock the "מעובדות" upload tab until the client has
+   * finished selecting (isClientSelectionComplete). Before that there is
+   * nothing to edit, so uploading processed photos makes no sense — the tab
+   * is disabled and a hover tooltip explains when it opens. No effect when
+   * publicOnlyMvp forces the processed tab anyway.
+   */
+  processedTabLocked?: boolean
 }
 
 export function GalleryPhotosSection({
@@ -84,8 +93,12 @@ export function GalleryPhotosSection({
   photoCountLimitBypassed = false,
   storeOriginalPhotos = false,
   privateGalleryPhotoLimit,
+  processedTabLocked = false,
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
+  // The processed-tab lock only bites on client galleries; when publicOnlyMvp
+  // forces uploads to "מעובדות" there is no "רגילות" track to fall back to.
+  const lockProcessedTab = processedTabLocked && !publicOnlyMvp
   // Private (client) gallery → the photo ceiling is per-gallery (tier-based),
   // counted against this gallery's own photos; public → account-wide quota.
   const isPrivateGallery = privateGalleryPhotoLimit != null
@@ -519,7 +532,10 @@ export function GalleryPhotosSection({
           <div className="space-y-4">
             {activeTab === 'regular' && !publicOnlyMvp && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                <span className="font-semibold">⚠️ לתשומת לב:</span> כדי להעלות תמונות מעובדות, עבר/י לטאב &quot;מעובדות&quot; למטה
+                <span className="font-semibold">⚠️ לתשומת לב:</span>{' '}
+                {lockProcessedTab
+                  ? 'טאב "מעובדות" ייפתח אחרי שהלקוח ילחץ על "סיימתי לבחור". אז אפשר יהיה להעלות אליו את התמונות המעובדות.'
+                  : 'כדי להעלות תמונות מעובדות, עבר/י לטאב "מעובדות" למטה'}
               </div>
             )}
 
@@ -542,17 +558,38 @@ export function GalleryPhotosSection({
                 >
                   רגילות ({regularPhotos.length})
                 </Button>
-                <Button
-                  variant={activeTab === 'processed' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => {
-                    setActiveTab('processed')
-                    activeTabRef.current = 'processed'
-                  }}
-                  className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'}`}
-                >
-                  מעובדות ({processedPhotos.length})
-                </Button>
+                {lockProcessedTab ? (
+                  <span className="group relative flex-1 sm:flex-none">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled
+                      aria-disabled="true"
+                      className="w-full min-w-[7.5rem] gap-1.5 border-[#c9c5cd] opacity-40 sm:w-auto"
+                    >
+                      <Lock className="h-3.5 w-3.5" />
+                      מעובדות ({processedPhotos.length})
+                    </Button>
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute end-0 top-full z-[100] mt-1.5 w-64 max-w-[80vw] rounded-lg bg-[#2b2530] px-3 py-2.5 text-xs leading-relaxed text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100"
+                    >
+                      ייפתח אחרי שהלקוח ילחץ על &quot;סיימתי לבחור&quot; — אז אפשר יהיה להעלות לכאן את התמונות המעובדות.
+                    </span>
+                  </span>
+                ) : (
+                  <Button
+                    variant={activeTab === 'processed' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setActiveTab('processed')
+                      activeTabRef.current = 'processed'
+                    }}
+                    className={`min-w-[7.5rem] flex-1 sm:flex-none ${activeTab === 'processed' ? 'bg-[#6b2d43] hover:bg-[#5a2538]' : 'border-[#c9c5cd] hover:bg-[#f7f2f4]'}`}
+                  >
+                    מעובדות ({processedPhotos.length})
+                  </Button>
+                )}
               </div>
 
               <div className="flex flex-wrap gap-2">

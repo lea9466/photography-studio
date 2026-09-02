@@ -63,6 +63,15 @@ export const CLIENT_GALLERY_STATUSES: GalleryStatus[] = [
   'locked',
 ]
 
+/**
+ * True once the client has submitted their picks (SelectionBar → "סיימתי לבחור",
+ * which flips the gallery from 'selection' to 'editing'). Until then there is
+ * nothing to edit, so the photographer's "מעובדות" upload tab stays locked.
+ */
+export function isClientSelectionComplete(status: GalleryStatus): boolean {
+  return ['editing', 'delivery_ready', 'locked'].includes(status)
+}
+
 export const GALLERY_TYPE_LABELS: Record<GalleryType, string> = {
   selection: 'בחירה',
   portfolio: 'תיק עבודות',
