@@ -79,7 +79,7 @@ export function ClientGalleryEditForm({
 
   return (
     <>
-      <div className="grid gap-6 pb-24 sm:grid-cols-2 sm:pb-0">
+      <div className="grid gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
           <Input
@@ -150,7 +150,7 @@ export function ClientGalleryEditForm({
       </div>
 
       <div
-        className={`relative space-y-4 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-4 sm:p-6 ${
+        className={`relative mt-6 mb-24 space-y-4 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-4 sm:mb-0 sm:p-6 ${
           downloadPermissionsEnabled ? '' : 'pointer-events-none select-none opacity-35'
         }`}
       >
