@@ -798,7 +798,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
   html: string
 } {
   const name = escapeHtml(input.name.trim() || 'שלום')
-  const subject = 'ניהול גלריות פרטיות — הכי פשוט וקל'
+  const subject = 'ניהול גלריות פרטיות — מהיום זה פשוט וקל'
   const privateGalleriesUrl = appUrl('/dashboard/private-galleries')
   const plansUrl = appUrl('/dashboard/usage-packages')
   const contactUrl = appUrl('/dashboard/contact')
@@ -816,10 +816,10 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
         <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STUDIO&nbsp;GALLERY</td>
       </tr>
     </table>
-    <h1 style="${h1}">ניהול גלריות פרטיות — הכי פשוט וקל</h1>
+    <h1 style="${h1}">ניהול גלריות פרטיות — מהיום זה פשוט וקל</h1>
     <p style="${subhead}">שליחה, בחירה ומסירה — כל התהליך בגלריה אחת.</p>
     <p style="${p}">שלום ${name},</p>
-    <p style="${p}">מהיום את שולחת ללקוח גלריה פרטית משלו. הוא מסמן תמונות בעצמו, ואת מורידה בדיוק את מה שבחר — באיכות המלאה שהעלית — בכפתור אחד. בלי רשימות מספרים ובלי להתאים קבצים ידנית.</p>
+    <p style="${p}">את שולחת ללקוח גלריה פרטית משלו. הוא מסמן תמונות בעצמו, ואת מורידה בדיוק את מה שבחר — באיכות המלאה שהעלית — בכפתור אחד. בלי רשימות מספרים ובלי להתאים קבצים ידנית.</p>
 
     ${luxeCheckList([
       ['הבחירה של הלקוח היא הקבצים עצמם', 'לא רשימה של "47, 112, 118" להתאים ידנית — מורידה ZIP עם התמונות שבחר, בקבצים המלאים שהעלית, מסודרים לאלבום ולעיבוד'],
@@ -896,7 +896,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
-      'מהיום את שולחת ללקוח גלריה פרטית משלו. הוא מסמן תמונות בעצמו, ואת מורידה בדיוק את מה שבחר — באיכות המלאה שהעלית — בכפתור אחד. בלי רשימות מספרים ובלי להתאים קבצים ידנית:',
+      'את שולחת ללקוח גלריה פרטית משלו. הוא מסמן תמונות בעצמו, ואת מורידה בדיוק את מה שבחר — באיכות המלאה שהעלית — בכפתור אחד. בלי רשימות מספרים ובלי להתאים קבצים ידנית:',
       '',
       '- הבחירה של הלקוח היא הקבצים עצמם — מורידה ZIP עם התמונות שבחר, בקבצים המלאים שהעלית',
       '- הכול אוטומטי, אין מה לרשום — לוחצת "הורד תמונות נבחרות", ואחרי העריכה מעלה בטאב "מעובדות"',
