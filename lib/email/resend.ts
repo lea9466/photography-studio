@@ -165,6 +165,31 @@ function luxeStepCards(
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0;">${rows}</table>`
 }
 
+/**
+ * Green-check benefit list — `[lead, detail]` pairs, each with a rounded green
+ * ✓ chip (Unicode check, the only tick that renders across every email client).
+ */
+function luxeCheckList(items: ReadonlyArray<readonly [lead: string, detail: string]>) {
+  const rows = items
+    .map(
+      ([lead, detail], i) => `
+        <tr>
+          <td valign="top" width="26" style="width: 26px; padding: ${i === 0 ? '0' : '9px'} 0 9px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" valign="middle" width="21" height="21" style="width: 21px; height: 21px; background: #d5f0e8; border-radius: 11px; font-family: ${LUXE.sans}; font-size: 12px; font-weight: 700; color: #0d9488;">&#10003;</td>
+              </tr>
+            </table>
+          </td>
+          <td valign="top" style="padding: ${i === 0 ? '1px' : '10px'} 10px 9px 0; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.55;">
+            <strong style="color: ${LUXE.ink};">${lead}</strong><span style="color: ${LUXE.muted};"> — ${detail}</span>
+          </td>
+        </tr>`
+    )
+    .join('')
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 8px 0 4px;">${rows}</table>`
+}
+
 /** A single tinted callout panel: a coloured round badge (`badge` glyph) + body copy. */
 function luxeCalloutCard(input: {
   badge: string
@@ -773,18 +798,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
   html: string
 } {
   const name = escapeHtml(input.name.trim() || 'שלום')
-  // First name only for the subject line — personalised subjects lift open
-  // rates. Fall back to the plain subject when there is no usable name (empty,
-  // or the "שלום" placeholder the rollout script passes) or it looks like a
-  // studio name rather than a person's.
-  const firstName = input.name.trim().split(/\s+/)[0] ?? ''
-  const subjectName =
-    firstName && firstName !== 'שלום' && firstName.length <= 12 && !/סטודיו|studio/i.test(firstName)
-      ? firstName
-      : ''
-  const subject = subjectName
-    ? `${subjectName}, הגלריה הפרטית הראשונה שלך — חינם`
-    : 'הגלריה הפרטית הראשונה שלך — חינם'
+  const subject = 'עכשיו ניהול גלריות פרטיות — הכי פשוט וקל'
   const privateGalleriesUrl = appUrl('/dashboard/private-galleries')
   const plansUrl = appUrl('/dashboard/usage-packages')
   const contactUrl = appUrl('/dashboard/contact')
@@ -802,13 +816,20 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
         <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STUDIO&nbsp;GALLERY</td>
       </tr>
     </table>
-    <h1 style="${h1}">גלריות פרטיות ללקוחות</h1>
+    <h1 style="${h1}">ניהול גלריות פרטיות — עכשיו הכי פשוט וקל</h1>
     <p style="${subhead}">שליחה, בחירה ומסירה — כל התהליך בגלריה אחת.</p>
     <p style="${p}">שלום ${name},</p>
-    <p style="${p}">כשלקוח בוחר תמונות, זה בדרך כלל מייל אחרי מייל: "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב". הבחירות מתפזרות בין תיבת המייל לתיקייה ב-Drive — ופתאום המספרים לא תואמים.</p>
-    <p style="${p}">מהיום יש דרך אחת: את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד.</p>
+    <p style="${p}">מהיום את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד:</p>
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 22px 0 8px;">
+    ${luxeCheckList([
+      ['בלי רשימות של מספרי תמונות', 'הלקוח מסמן על התמונה עצמה, לא ב"47, 112, 118..."'],
+      ['בלי מיילים חוזרים שנאבדים', 'הכול נשאר בגלריה אחת — לא מתפזר בין המייל ל-Drive'],
+      ['התמונות מוגנות לאורך כל הבחירה', 'סימן מים, בלי הורדה — עד שאת מאשרת אחרת'],
+      ['פתוח לגמרי בנטפרי', 'הלקוחות רואים את כל התמונות רגיל, בלי חסימות'],
+      ['הכול במקום אחד — נקי ומאורגן', 'הבחירות, ההערות והמסירה, בכתובת אחת קבועה'],
+    ])}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 8px;">
       <tr>
         <td bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px; padding: 24px;">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px;">
@@ -875,9 +896,13 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
-      'כשלקוח בוחר תמונות, זה בדרך כלל מייל אחרי מייל — "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "תשלחי שוב". הבחירות מתפזרות בין המייל לתיקייה ב-Drive, והמספרים לא תמיד תואמים.',
+      'מהיום את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד:',
       '',
-      'מהיום יש דרך אחת: את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד.',
+      '- בלי רשימות של מספרי תמונות — הלקוח מסמן על התמונה עצמה',
+      '- בלי מיילים חוזרים שנאבדים — הכול נשאר בגלריה אחת',
+      '- התמונות מוגנות לאורך כל הבחירה — סימן מים, בלי הורדה עד שאת מאשרת',
+      '- פתוח לגמרי בנטפרי — הלקוחות רואים את כל התמונות רגיל',
+      '- הכול במקום אחד, נקי ומאורגן',
       '',
       `הגלריה הפרטית הראשונה — חינם, בלי הגבלת זמן. גלריית לקוח מלאה מקצה לקצה בלי לשלם שקל. מסלולים לכמה גלריות במקביל: ${plansUrl}`,
       '',
@@ -898,7 +923,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     ].join('\n'),
     html: renderLuxeEmail({
       preheader:
-        'הלקוח בוחר תמונות בעצמו בגלריה מעוצבת, ואת מקבלת רשימה מדויקת במקום אחד — בלי מיילים חוזרים. הראשונה חינם.',
+        'בלי רשימות מספרים, בלי מיילים חוזרים שנאבדים, פתוח בנטפרי — כל תהליך הבחירה עם הלקוח במקום אחד. הגלריה הראשונה חינם.',
       contentHtml,
     }),
   }
