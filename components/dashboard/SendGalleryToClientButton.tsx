@@ -17,6 +17,8 @@ type SendGalleryToClientButtonProps = {
  * Sends the client-gallery invite email — placed on the photo-upload screen so
  * it's used AFTER photos are uploaded, not at creation time.
  * `draft` → first send; once sent (`selection`+) → resend.
+ * Rendered inside a floating bar on the upload screen (see the photos page), so
+ * both states stay on a single row and compact.
  */
 export function SendGalleryToClientButton({ galleryId, status }: SendGalleryToClientButtonProps) {
   const router = useRouter()
@@ -37,8 +39,8 @@ export function SendGalleryToClientButton({ galleryId, status }: SendGalleryToCl
 
   if (alreadySent) {
     return (
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#48464c]">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-[#48464c]">
           <Check className="h-4 w-4 text-emerald-600" />
           המייל נשלח ללקוח
         </span>
@@ -48,9 +50,9 @@ export function SendGalleryToClientButton({ galleryId, status }: SendGalleryToCl
           size="sm"
           disabled={isPending}
           onClick={() => run(() => resendGalleryEmail(galleryId), 'המייל נשלח שוב ללקוח')}
-          className="border-[#c9c5cd] hover:bg-[#f7f2f4] sm:w-auto"
+          className="border-[#c9c5cd] hover:bg-[#f7f2f4]"
         >
-          שלח שוב
+          {isPending ? 'שולח...' : 'שלח שוב'}
         </Button>
       </div>
     )
@@ -59,13 +61,12 @@ export function SendGalleryToClientButton({ galleryId, status }: SendGalleryToCl
   return (
     <Button
       type="button"
-      size="sm"
       disabled={isPending}
       onClick={() => run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')}
-      className="bg-[#6b2d43] text-white hover:bg-[#5a2538] sm:w-auto"
+      className="bg-[#6b2d43] text-white hover:bg-[#5a2538]"
     >
       <Send className="ml-2 h-4 w-4" />
-      {isPending ? 'שולח...' : 'שלח ללקוח'}
+      {isPending ? 'שולח...' : 'שלח ללקוח מייל לבחירת תמונות'}
     </Button>
   )
 }

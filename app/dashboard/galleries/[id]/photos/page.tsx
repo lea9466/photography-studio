@@ -66,19 +66,17 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
     : await signStoragePaths('previews', previewPaths)
 
   return (
-    <div className="animate-fade-in space-y-8 sm:space-y-12">
+    <div className="animate-fade-in space-y-8 pb-28 sm:space-y-12">
       {isClientGallery && hasClient ? (
-        <section className="space-y-4 sm:space-y-6">
-          <div className="space-y-2">
-            <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
-              <Send className="h-5 w-5" />
-              שליחה ללקוח
-            </h2>
-            <p className="text-sm text-[#48464c]">
-              לאחר שהתמונות עלו — שלחי ללקוח מייל עם קישור לגלריה
-            </p>
-          </div>
-          <SendGalleryToClientButton galleryId={id} status={galleryDetail.status} />
+        <section className="space-y-2">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
+            <Send className="h-5 w-5" />
+            שליחה ללקוח
+          </h2>
+          <p className="text-sm text-[#48464c]">
+            לאחר שהתמונות עלו — שלחי ללקוח מייל עם קישור לגלריה לבחירת תמונות.
+            כפתור השליחה צף בתחתית המסך וזמין תוך כדי העלאה.
+          </p>
         </section>
       ) : null}
 
@@ -108,6 +106,14 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           privateGalleryPhotoLimit={privateGalleryPhotoLimit}
         />
       </section>
+
+      {isClientGallery && hasClient ? (
+        <div className="pointer-events-none sticky bottom-4 z-30 flex justify-start sm:bottom-6">
+          <div className="pointer-events-auto rounded-2xl border border-[#e5e1e3] bg-white/95 px-3 py-2 shadow-xl shadow-black/10 backdrop-blur">
+            <SendGalleryToClientButton galleryId={id} status={galleryDetail.status} />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
