@@ -446,6 +446,14 @@ export function GalleryPhotosSection({
         }`}
       >
         <div className="space-y-6 sm:space-y-8">
+          {storeOriginalPhotos ? (
+            <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800">
+              <span className="font-semibold">💡 מומלץ:</span> העלי את התמונות באיכות
+              מלאה — אין צורך לדחוס או להקטין. כך אפשר לאפשר ללקוח הורדת מקור באיכות
+              מלאה (כשההורדה מאושרת), והורדת תמונות הבחירה תהיה באיכות גבוהה ומוכנה
+              לעריכה.
+            </div>
+          ) : null}
           {/* Drag & Drop Zone */}
           <div
             className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-6 sm:p-10 md:p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
