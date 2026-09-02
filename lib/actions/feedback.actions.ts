@@ -253,7 +253,17 @@ export async function submitFeedback(input: {
 
   if (error) throw new Error(error.message)
 
-  await sendFeedbackEmail({ ...input, imageUrl })
+  // The feedback row is already persisted above — the email is just a
+  // notification to us, so a provider failure must not fail the submission.
+  try {
+    await sendFeedbackEmail({ ...input, imageUrl })
+  } catch (emailError) {
+    console.error('[submitFeedback] notification email failed', {
+      type: input.type,
+      message: emailError instanceof Error ? emailError.message : 'unknown',
+    })
+  }
+
   revalidatePath('/')
   revalidatePath('/dashboard/contact')
   return { success: true }

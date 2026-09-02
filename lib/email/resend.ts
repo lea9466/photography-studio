@@ -1,18 +1,12 @@
-import { Resend } from 'resend'
-
 import { getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
 import { CUSTOM_DOMAIN_ADDON_PRICE_ILS } from '@/lib/domains/custom-domain-addon'
+import { createEmailProvider } from '@/lib/email/provider-factory'
+import type { EmailProvider } from '@/lib/email/provider'
 import {
   buildEmailStubLog,
   mustFailWithoutResend,
 } from '@/lib/email/stub-log'
-
-function getResend() {
-  const key = process.env.RESEND_API_KEY
-  if (!key) return null
-  return new Resend(key)
-}
 
 function getAppBaseUrl() {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
@@ -168,18 +162,18 @@ function renderLuxeEmail(input: { preheader: string; contentHtml: string }) {
 }
 
 /**
- * Resolve Resend client or handle missing key safely.
+ * Resolve the configured email provider or handle missing credentials safely.
  * Production: throws (no secret logging fallback).
  * Development: logs redacted metadata only, returns null.
  */
-function requireResendOrSafeStub(input: {
+function requireEmailProviderOrSafeStub(input: {
   template: string
   email?: string | null
   resourceId?: string | null
   extra?: Record<string, string | number | boolean | null | undefined>
-}): Resend | null {
-  const resend = getResend()
-  if (resend) return resend
+}): EmailProvider | null {
+  const provider = createEmailProvider()
+  if (provider) return provider
 
   if (mustFailWithoutResend()) {
     throw new Error('Email provider is not configured (RESEND_API_KEY)')
@@ -194,13 +188,13 @@ export async function sendPhotographerPasswordResetEmail(input: {
   name: string
   password: string
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'photographer-password-reset',
     email: input.email,
   })
-  if (!resend) return
+  if (!provider) return
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'סיסמה חדשה — Studio Gallery',
@@ -224,14 +218,14 @@ export async function sendGalleryPasswordEmail(input: {
   studioName: string
   code: string
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'gallery-password',
     email: input.clientEmail,
     resourceId: input.galleryId,
   })
-  if (!resend) return
+  if (!provider) return
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.clientEmail,
     subject: `קוד הכניסה לגלריה: ${input.galleryTitle}`,
@@ -255,18 +249,18 @@ export async function sendGalleryInviteEmail(input: {
   studioName: string
   expiresAt?: string | null
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'gallery-invite',
     email: input.clientEmail,
     resourceId: input.galleryId,
   })
-  if (!resend) return
+  if (!provider) return
 
   const expiry = input.expiresAt
     ? `<p>תוקף הגלריה: ${new Date(input.expiresAt).toLocaleDateString('he-IL')}</p>`
     : ''
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.clientEmail,
     subject: `${input.studioName} שלחו לך גלריה: ${input.galleryTitle}`,
@@ -318,12 +312,12 @@ export async function sendSelectionDoneEmail(input: {
     return
   }
 
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'selection-done',
     email: to,
     resourceId: input.galleryId,
   })
-  if (!resend) return
+  if (!provider) return
 
   const note = input.clientNote?.trim()
   const noteHtml = note
@@ -333,7 +327,7 @@ export async function sendSelectionDoneEmail(input: {
       </div>`
     : ''
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to,
     subject: `${input.clientName} סיים/ה לבחור תמונות`,
@@ -355,14 +349,14 @@ export async function sendDeliveryReadyEmail(input: {
   clientEmail: string
   clientName: string
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'delivery-ready',
     email: input.clientEmail,
     resourceId: input.galleryId,
   })
-  if (!resend) return
+  if (!provider) return
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.clientEmail,
     subject: 'התמונות המעובדות שלך מוכנות!',
@@ -386,11 +380,11 @@ export async function sendContactInquiryEmail(input: {
   subject?: string
   message: string
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'contact-inquiry',
     email: input.photographerEmail,
   })
-  if (!resend) return
+  if (!provider) return
 
   const siteLink = input.sitePath
     ? `<p><a href="${appUrl(input.sitePath)}">צפייה באתר שלך</a></p>`
@@ -403,7 +397,7 @@ export async function sendContactInquiryEmail(input: {
     ? `<p><strong>נושא:</strong> ${input.subject}</p>`
     : ''
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.photographerEmail,
     replyTo: input.clientEmail,
@@ -424,13 +418,13 @@ export async function sendContactInquiryEmail(input: {
 }
 
 export async function sendAdminLoginCodeEmail(input: { code: string }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'admin-login-code',
     email: getFeedbackEmail(),
   })
-  if (!resend) return
+  if (!provider) return
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: getFeedbackEmail(),
     subject: 'קוד כניסה — ניהול Studio Galleries',
@@ -453,11 +447,11 @@ export async function sendAdminBroadcastEmail(input: {
   message: string
   imageUrl?: string | null
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'admin-broadcast',
     email: input.to,
   })
-  if (!resend) return
+  if (!provider) return
 
   const greeting = input.recipientName ? `שלום ${input.recipientName},` : 'שלום,'
   const bodyHtml = input.message.replace(/\n/g, '<br>')
@@ -473,7 +467,7 @@ export async function sendAdminBroadcastEmail(input: {
       `
     : ''
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.to,
     subject: input.subject,
@@ -649,15 +643,15 @@ export function buildCustomDomainAddonAnnouncementEmail(input: { name: string })
 }
 
 export async function sendCustomDomainAddonAnnouncementEmail(input: { name: string; email: string }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'custom-domain-addon-announcement',
     email: input.email,
   })
-  if (!resend) return
+  if (!provider) return
 
   const { subject, text, html } = buildCustomDomainAddonAnnouncementEmail({ name: input.name })
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     replyTo: getFeedbackEmail(),
@@ -668,15 +662,15 @@ export async function sendCustomDomainAddonAnnouncementEmail(input: { name: stri
 }
 
 export async function sendWelcomeEmail(input: { name: string; email: string }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'welcome',
     email: input.email,
   })
-  if (!resend) return
+  if (!provider) return
 
   const { subject, text, html } = buildWelcomeEmail({ name: input.name })
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     replyTo: getFeedbackEmail(),
@@ -695,13 +689,13 @@ export async function sendTrialUpdateEmail(input: {
   email: string
   monthlyPrice: string
 }): Promise<{ sent: boolean }> {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'trial-update',
     email: input.email,
   })
-  if (!resend) return { sent: false }
+  if (!provider) return { sent: false }
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'עדכון קטן לגבי Studio Gallery 💛',
@@ -751,17 +745,17 @@ export async function sendTrialEndingReminderEmail(input: {
   monthlyPrice: string
   slug: string | null
 }): Promise<{ sent: boolean }> {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'trial-ending-reminder',
     email: input.email,
   })
-  if (!resend) return { sent: false }
+  if (!provider) return { sent: false }
 
   const subscriptionUrl = appUrl('/dashboard/subscription')
   const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
   const displayName = input.name.trim() || 'שם'
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'תקופת הניסיון שלך עומדת להסתיים',
@@ -819,11 +813,11 @@ export async function sendTrialExpiredEmail(input: {
   checkoutEnabled: boolean
   slug: string | null
 }): Promise<{ sent: boolean }> {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'trial-expired',
     email: input.email,
   })
-  if (!resend) return { sent: false }
+  if (!provider) return { sent: false }
 
   const displayName = input.name.trim() || 'שם'
   const subscriptionUrl = appUrl('/dashboard/subscription')
@@ -840,7 +834,7 @@ export async function sendTrialExpiredEmail(input: {
       'נשלח לך מייל נוסף כשהתשלום ייפתח.',
     ].join('\n')
 
-    await resend.emails.send({
+    await provider.send({
       from: emailFrom(),
       to: input.email,
       subject: 'תקופת הניסיון שלך הסתיימה',
@@ -876,7 +870,7 @@ export async function sendTrialExpiredEmail(input: {
 
   const text = [`היי ${displayName},`, '', ...limitsLines].join('\n')
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'תקופת הניסיון שלך הסתיימה',
@@ -927,17 +921,17 @@ export async function sendOneTimePlanEndingReminderEmail(input: {
   email: string
   slug: string | null
 }): Promise<{ sent: boolean }> {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'one-time-plan-ending-reminder',
     email: input.email,
   })
-  if (!resend) return { sent: false }
+  if (!provider) return { sent: false }
 
   const subscriptionUrl = appUrl('/dashboard/subscription')
   const siteUrl = input.slug ? appUrl(`/${input.slug}`) : null
   const displayName = input.name.trim() || 'שם'
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'עוד 3 ימים והחשבון שלך חוזר למסלול החינמי',
@@ -991,11 +985,11 @@ export async function sendOneTimePlanExpiredEmail(input: {
   email: string
   slug: string | null
 }): Promise<{ sent: boolean }> {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'one-time-plan-expired',
     email: input.email,
   })
-  if (!resend) return { sent: false }
+  if (!provider) return { sent: false }
 
   const displayName = input.name.trim() || 'שם'
   const subscriptionUrl = appUrl('/dashboard/subscription')
@@ -1020,7 +1014,7 @@ export async function sendOneTimePlanExpiredEmail(input: {
 
   const text = [`היי ${displayName},`, '', ...limitsLines].join('\n')
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: input.email,
     subject: 'התשלום החד-פעמי שלך פג',
@@ -1069,12 +1063,12 @@ export async function sendFeedbackEmail(input: {
   studio?: string
   imageUrl?: string | null
 }) {
-  const resend = requireResendOrSafeStub({
+  const provider = requireEmailProviderOrSafeStub({
     template: 'feedback',
     email: input.email,
     extra: { type: input.type },
   })
-  if (!resend) return
+  if (!provider) return
 
   const imageHref = input.imageUrl
     ? getTestimonialImagePreviewUrl(input.imageUrl)
@@ -1089,7 +1083,7 @@ export async function sendFeedbackEmail(input: {
       `
     : ''
 
-  await resend.emails.send({
+  await provider.send({
     from: emailFrom(),
     to: getFeedbackEmail(),
     subject: `[משוב] ${input.type} — ${input.name}`,

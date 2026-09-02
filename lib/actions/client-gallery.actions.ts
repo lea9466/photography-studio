@@ -212,14 +212,25 @@ export async function requestGalleryPassword(
 
   const code = await rotateGalleryPassword(gallery.id)
 
-  await sendGalleryPasswordEmail({
-    galleryId: gallery.id,
-    galleryTitle: gallery.title,
-    clientEmail: client.email,
-    clientName: client.name,
-    studioName: profile?.studio_name ?? 'Studio Gallery',
-    code,
-  })
+  // The code was already rotated, so on a send failure the client's previous
+  // code is dead and they never got the new one — surface it so they can
+  // request another (which just rotates + sends again).
+  try {
+    await sendGalleryPasswordEmail({
+      galleryId: gallery.id,
+      galleryTitle: gallery.title,
+      clientEmail: client.email,
+      clientName: client.name,
+      studioName: profile?.studio_name ?? 'Studio Gallery',
+      code,
+    })
+  } catch (error) {
+    console.error('[requestGalleryPassword] email send failed', {
+      galleryId: gallery.id,
+      message: error instanceof Error ? error.message : 'unknown',
+    })
+    return { ok: false, error: 'שליחת קוד הכניסה נכשלה כרגע. נסו שוב בעוד רגע.' }
+  }
 
   return { ok: true, maskedEmail }
 }

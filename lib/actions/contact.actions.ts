@@ -91,16 +91,26 @@ export async function submitContactInquiry(input: {
 
   const sitePath = getPublicSitePath(photographer.slug, photographer.studio_name)
 
-  await sendContactInquiryEmail({
-    photographerEmail: photographer.email,
-    photographerName: photographer.studio_name || photographer.name,
-    sitePath,
-    clientName: name,
-    clientEmail: email,
-    clientPhone: phone,
-    subject,
-    message,
-  })
+  // The email *is* the deliverable here — there's no DB row to fall back on,
+  // so a provider rejection has to reach the sender, not vanish.
+  try {
+    await sendContactInquiryEmail({
+      photographerEmail: photographer.email,
+      photographerName: photographer.studio_name || photographer.name,
+      sitePath,
+      clientName: name,
+      clientEmail: email,
+      clientPhone: phone,
+      subject,
+      message,
+    })
+  } catch (error) {
+    console.error('[submitContactInquiry] email send failed', {
+      photographerId: input.photographerId,
+      message: error instanceof Error ? error.message : 'unknown',
+    })
+    throw new Error('שליחת הפנייה נכשלה כרגע. נסו שוב בעוד רגע.')
+  }
 
   return { success: true }
 }
