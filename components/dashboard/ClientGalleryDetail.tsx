@@ -19,6 +19,7 @@ import { ClientEditForm } from '@/components/dashboard/ClientEditForm'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { ClientGalleryEditForm } from '@/components/dashboard/ClientGalleryEditForm'
+import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
 
 type ClientGalleryDetailProps = {
   gallery: Gallery
@@ -60,6 +61,9 @@ export async function ClientGalleryDetail({
 
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">
+      {/* Deep-link from the "client finished selecting" email (?section=selections). */}
+      <ScrollToSection />
+
       <section className={SECTION_CLASS}>
         <div className="space-y-2">
           <h2 className="flex items-center gap-2 text-xl font-semibold text-[#100d1f]">

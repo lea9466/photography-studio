@@ -461,7 +461,7 @@ export async function sendSelectionDoneEmail(input: {
         <p>גלריה: ${input.galleryTitle}</p>
         <p>${summaryParts.join(' &nbsp;|&nbsp; ')}</p>
         ${noteHtml}
-        <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}#selections`)}">צפייה בבחירות</a></p>
+        <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}?section=selections`)}">צפייה בבחירות</a></p>
       </div>
     `,
   })
