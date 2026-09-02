@@ -554,7 +554,8 @@ export async function getPublicPortfolioGallery(galleryId: string) {
 
 export async function completeClientSelection(
   galleryId: string,
-  selections: ClientSelectionPayload[]
+  selections: ClientSelectionPayload[],
+  clientNote?: string
 ) {
   const allowed = await touchGallerySession(galleryId)
   if (!allowed) throw new Error('גישה נדחתה')
@@ -647,6 +648,7 @@ export async function completeClientSelection(
     clientName: client?.name ?? 'לקוח',
     albumCount,
     editCount,
+    clientNote: clientNote?.trim().slice(0, 2000) || undefined,
   })
 
   revalidatePath(`/g/${galleryId}`)

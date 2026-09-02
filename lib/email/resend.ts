@@ -289,6 +289,8 @@ export async function sendSelectionDoneEmail(input: {
   clientName: string
   albumCount: number
   editCount: number
+  /** Optional free-text note the client left when finishing — shown in the email, not stored. */
+  clientNote?: string
 }) {
   const { createAdminClient } = await import('@/lib/supabase/admin')
   const admin = createAdminClient()
@@ -323,6 +325,14 @@ export async function sendSelectionDoneEmail(input: {
   })
   if (!resend) return
 
+  const note = input.clientNote?.trim()
+  const noteHtml = note
+    ? `<div style="margin: 16px 0; padding: 12px 16px; background: #f7f2f4; border-radius: 8px;">
+        <p style="margin: 0 0 6px; font-weight: 600;">הודעה מ${input.clientName}:</p>
+        <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(note).replace(/\n/g, '<br>')}</p>
+      </div>`
+    : ''
+
   await resend.emails.send({
     from: emailFrom(),
     to,
@@ -332,6 +342,7 @@ export async function sendSelectionDoneEmail(input: {
         <h2>${input.clientName} סיים/ה לבחור</h2>
         <p>גלריה: ${input.galleryTitle}</p>
         <p>❤️ אלבום: ${input.albumCount} | ✨ עיבוד: ${input.editCount}</p>
+        ${noteHtml}
         <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}`)}">צפייה בבחירות</a></p>
       </div>
     `,
