@@ -177,7 +177,9 @@ export async function ClientGalleryDetail({
         </Card>
       </section>
 
-      <section className={SECTION_CLASS}>
+      {/* id + scroll-mt: the "selection done" email links straight here (#selections),
+          the margin keeps the heading clear of the fixed mobile header. */}
+      <section id="selections" className={`${SECTION_CLASS} scroll-mt-24 md:scroll-mt-8`}>
         <div className="space-y-2">
           <h2 className="flex items-center gap-2 text-xl font-semibold text-[#100d1f]">
             <ImageIcon className="h-5 w-5" />
