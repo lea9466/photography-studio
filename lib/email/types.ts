@@ -1,4 +1,4 @@
-export const EMAIL_PROVIDER_NAMES = ['resend', 'mailjet'] as const
+export const EMAIL_PROVIDER_NAMES = ['resend', 'mailjet', 'brevo'] as const
 export type EmailProviderName = (typeof EMAIL_PROVIDER_NAMES)[number]
 
 /**

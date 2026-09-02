@@ -9,7 +9,20 @@ import {
 } from '../lib/email/failover-email-provider.ts'
 import { ResendProvider } from '../lib/email/providers/resend/resend-provider.ts'
 import { MailjetProvider } from '../lib/email/providers/mailjet/mailjet-provider.ts'
+import { BrevoProvider } from '../lib/email/providers/brevo/brevo-provider.ts'
 import { createEmailProvider } from '../lib/email/provider-factory.ts'
+
+function stubFetch(res: { ok: boolean; status: number; body: unknown }) {
+  const real = globalThis.fetch
+  globalThis.fetch = (async () => ({
+    ok: res.ok,
+    status: res.status,
+    json: async () => res.body,
+  })) as unknown as typeof fetch
+  return () => {
+    globalThis.fetch = real
+  }
+}
 
 const MESSAGE: EmailMessage = {
   from: 'Studio <no-reply@studio-galleries.com>',
@@ -133,6 +146,21 @@ describe('FailoverEmailProvider', () => {
 
     await assert.rejects(() => fo.send(MESSAGE), /5xx/)
   })
+
+  it('walks a 3-provider chain: Resend quota → Mailjet blocked → Brevo sends', async () => {
+    const resend = new FakeProvider('resend', [quota()])
+    const mailjet = new FakeProvider('mailjet', [
+      new EmailSendError('mailjet: mj-0001 suspended', { failover: true }),
+    ])
+    const brevo = new FakeProvider('brevo', ['ok'])
+    const fo = new FailoverEmailProvider([resend, mailjet, brevo])
+
+    const result = await fo.send(MESSAGE)
+    assert.equal(result.id, 'brevo-ok')
+    assert.equal(resend.calls, 1)
+    assert.equal(mailjet.calls, 1)
+    assert.equal(brevo.calls, 1)
+  })
 })
 
 describe('adapter error tagging', () => {
@@ -178,16 +206,10 @@ describe('adapter error tagging', () => {
   })
 
   it('MailjetProvider tags HTTP 429 as failover + quotaExceeded', async () => {
-    const realFetch = globalThis.fetch
-    globalThis.fetch = (async () => ({
-      ok: false,
-      status: 429,
-      json: async () => ({ ErrorMessage: 'rate limited' }),
-    })) as unknown as typeof fetch
+    const restore = stubFetch({ ok: false, status: 429, body: { ErrorMessage: 'rate limited' } })
     try {
-      const provider = new MailjetProvider('k', 's')
       await assert.rejects(
-        () => provider.send(MESSAGE),
+        () => new MailjetProvider('k', 's').send(MESSAGE),
         (err: unknown) => {
           assert.ok(err instanceof EmailSendError)
           assert.equal(err.failover, true)
@@ -196,7 +218,80 @@ describe('adapter error tagging', () => {
         }
       )
     } finally {
-      globalThis.fetch = realFetch
+      restore()
+    }
+  })
+
+  it('MailjetProvider tags a 401 (suspended account) as failover, not quota', async () => {
+    const restore = stubFetch({
+      ok: false,
+      status: 401,
+      body: { ErrorMessage: 'Your account has been temporarily blocked', ErrorCode: 'mj-0001' },
+    })
+    try {
+      await assert.rejects(
+        () => new MailjetProvider('k', 's').send(MESSAGE),
+        (err: unknown) => {
+          assert.ok(err instanceof EmailSendError)
+          assert.equal(err.failover, true)
+          assert.equal(err.quotaExceeded, false)
+          return true
+        }
+      )
+    } finally {
+      restore()
+    }
+  })
+
+  it('BrevoProvider tags 402 not_enough_credits as failover + quotaExceeded', async () => {
+    const restore = stubFetch({
+      ok: false,
+      status: 402,
+      body: { code: 'not_enough_credits', message: 'Not enough credits' },
+    })
+    try {
+      await assert.rejects(
+        () => new BrevoProvider('xkeysib-x').send(MESSAGE),
+        (err: unknown) => {
+          assert.ok(err instanceof EmailSendError)
+          assert.equal(err.failover, true)
+          assert.equal(err.quotaExceeded, true)
+          return true
+        }
+      )
+    } finally {
+      restore()
+    }
+  })
+
+  it('BrevoProvider tags a 403 (account under validation) as failover, not quota', async () => {
+    const restore = stubFetch({
+      ok: false,
+      status: 403,
+      body: { code: 'permission_denied', message: 'account not yet activated' },
+    })
+    try {
+      await assert.rejects(
+        () => new BrevoProvider('xkeysib-x').send(MESSAGE),
+        (err: unknown) => {
+          assert.ok(err instanceof EmailSendError)
+          assert.equal(err.failover, true)
+          assert.equal(err.quotaExceeded, false)
+          return true
+        }
+      )
+    } finally {
+      restore()
+    }
+  })
+
+  it('BrevoProvider returns the messageId on success', async () => {
+    const restore = stubFetch({ ok: true, status: 201, body: { messageId: '<abc@brevo>' } })
+    try {
+      const result = await new BrevoProvider('xkeysib-x').send(MESSAGE)
+      assert.equal(result.id, '<abc@brevo>')
+    } finally {
+      restore()
     }
   })
 })
@@ -240,5 +335,27 @@ describe('createEmailProvider wiring', () => {
     delete process.env.MAILJET_SECRET_KEY
     const p = createEmailProvider()
     assert.equal(p?.name, 'resend')
+  })
+
+  it('comma-separated fallback list builds a chain of every configured provider', () => {
+    process.env.EMAIL_PROVIDER = 'resend'
+    process.env.RESEND_API_KEY = 're_x'
+    process.env.EMAIL_FALLBACK_PROVIDER = 'mailjet, brevo'
+    process.env.MAILJET_API_KEY = 'k'
+    process.env.MAILJET_SECRET_KEY = 's'
+    process.env.BREVO_API_KEY = 'xkeysib-x'
+    const p = createEmailProvider()
+    assert.equal(p?.name, 'failover')
+  })
+
+  it('comma-separated list where only one fallback has keys → still a failover chain', () => {
+    process.env.EMAIL_PROVIDER = 'resend'
+    process.env.RESEND_API_KEY = 're_x'
+    process.env.EMAIL_FALLBACK_PROVIDER = 'mailjet,brevo'
+    delete process.env.MAILJET_API_KEY
+    delete process.env.MAILJET_SECRET_KEY
+    process.env.BREVO_API_KEY = 'xkeysib-x'
+    const p = createEmailProvider()
+    assert.equal(p?.name, 'failover')
   })
 })

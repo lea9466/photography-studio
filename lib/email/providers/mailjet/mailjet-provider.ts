@@ -8,8 +8,9 @@ import type { EmailMessage, EmailSendResult } from '../../types'
  *
  * Like `ResendProvider`, a non-2xx response — or a 2xx whose per-message
  * `Status` is not `"success"` — is surfaced as a thrown `EmailSendError`.
- * A 429 (quota / rate limit), a 5xx, or a network error is tagged `failover`
- * so `FailoverEmailProvider` can move to the next provider.
+ * A 429 (quota / rate limit), a 5xx, a 401/403 (bad key or an account still
+ * suspended under Mailjet's new-account review), or a network error is
+ * tagged `failover` so `FailoverEmailProvider` can move to the next provider.
  */
 const MAILJET_SEND_URL = 'https://api.mailjet.com/v3.1/send'
 
@@ -94,13 +95,14 @@ export class MailjetProvider implements EmailProvider {
 
     if (!response.ok) {
       const quotaExceeded = response.status === 429
+      const failover =
+        quotaExceeded ||
+        response.status === 401 ||
+        response.status === 403 ||
+        response.status >= 500
       throw new EmailSendError(
         `mailjet: ${describeFailure(body, `HTTP ${response.status}`)}`,
-        {
-          cause: body,
-          failover: quotaExceeded || response.status >= 500,
-          quotaExceeded,
-        }
+        { cause: body, failover, quotaExceeded }
       )
     }
 
