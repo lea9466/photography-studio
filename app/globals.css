@@ -102,6 +102,18 @@ body {
   overflow-x: hidden;
 }
 
+/* Smooth document scrolling only while a client gallery is on screen — e.g. its
+   back-to-top control, a native `#top` anchor with no imperative scroll call. */
+html:has([data-client-gallery-root]) {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has([data-client-gallery-root]) {
+    scroll-behavior: auto;
+  }
+}
+
 * {
   border-color: var(--border);
 }

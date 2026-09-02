@@ -11,6 +11,7 @@ import {
 import { StatusBanner } from '@/components/gallery/StatusBanner'
 import { Lightbox } from '@/components/gallery/Lightbox'
 import { SelectionBar } from '@/components/gallery/SelectionBar'
+import { BackToTopButton } from '@/components/gallery/BackToTopButton'
 import { ClientEditedDownloadButton } from '@/components/gallery/ClientEditedDownloadButton'
 import { ClientDownloadButton } from '@/components/gallery/ClientDownloadButton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -175,6 +176,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
     <div
       className="min-h-screen pb-16"
       dir="rtl"
+      data-client-gallery-root
       data-theme={gallery.selected_theme}
       style={{ '--client-accent': gallery.accent_color } as React.CSSProperties}
     >
@@ -387,6 +389,9 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         onToggleAlbum={(id) => toggleField(id, 'selected_album')}
         onToggleEdit={(id) => toggleField(id, 'selected_edit')}
       />
+
+      {/* Lifted above the selection bar while it's on screen so they don't overlap. */}
+      <BackToTopButton className={canSelect ? 'bottom-20 sm:bottom-24' : undefined} />
     </div>
   )
 }
