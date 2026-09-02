@@ -64,6 +64,7 @@ export default function DashboardPage() {
   const drafts = clientGalleries.filter(g => g.status === 'draft').length
   const selection = clientGalleries.filter(g => g.status === 'selection').length
   const editing = clientGalleries.filter(g => g.status === 'editing').length
+  const deliveryReady = clientGalleries.filter(g => g.status === 'delivery_ready').length
   const expired = clientGalleries.filter(g => {
     if (g.status === 'locked') return true
     if (g.expires_at) {
@@ -110,6 +111,7 @@ export default function DashboardPage() {
         drafts={drafts}
         selection={selection}
         editing={editing}
+        deliveryReady={deliveryReady}
         expired={expired}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}

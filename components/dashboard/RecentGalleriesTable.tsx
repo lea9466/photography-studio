@@ -403,6 +403,7 @@ export function RecentGalleriesTable({
         if (filter === 'public') return gallery.status === 'public'
         if (filter === 'selection') return gallery.status === 'selection'
         if (filter === 'editing') return gallery.status === 'editing'
+        if (filter === 'delivery_ready') return gallery.status === 'delivery_ready'
         if (filter === 'expired') {
           // Include locked galleries and expired galleries
           if (gallery.status === 'locked') return true
