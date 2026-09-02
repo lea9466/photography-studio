@@ -417,8 +417,12 @@ export function ClientGalleryWizard({
                       className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
                       placeholder="ללא הגבלה"
                       type="number"
+                      min={1}
+                      inputMode="numeric"
                       value={state.maxAlbumSelection}
-                      onChange={(e) => updateState('maxAlbumSelection', e.target.value)}
+                      onChange={(e) =>
+                        updateState('maxAlbumSelection', e.target.value.replace(/\D/g, ''))
+                      }
                     />
                   </div>
                 )}
@@ -430,7 +434,7 @@ export function ClientGalleryWizard({
                       בחירת תמונות לעיבוד
                     </p>
                     <p className="mt-1 text-xs text-[#48464c]/80">
-                      הלקוח מסמן אילו תמונות לשלוח לריטוש
+                      הלקוח מסמן אילו תמונות לשלוח לעיבוד
                     </p>
                   </div>
                   <Switch
@@ -449,8 +453,12 @@ export function ClientGalleryWizard({
                       className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
                       placeholder="ללא הגבלה"
                       type="number"
+                      min={1}
+                      inputMode="numeric"
                       value={state.maxEditSelection}
-                      onChange={(e) => updateState('maxEditSelection', e.target.value)}
+                      onChange={(e) =>
+                        updateState('maxEditSelection', e.target.value.replace(/\D/g, ''))
+                      }
                     />
                   </div>
                 )}

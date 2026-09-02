@@ -160,8 +160,10 @@ export function ClientGalleryEditForm({
               <Input
                 id="max-album"
                 type="number"
+                min={1}
+                inputMode="numeric"
                 value={maxAlbum}
-                onChange={(e) => setMaxAlbum(e.target.value)}
+                onChange={(e) => setMaxAlbum(e.target.value.replace(/\D/g, ''))}
                 placeholder="למשל: 50"
                 className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
               />
@@ -173,7 +175,7 @@ export function ClientGalleryEditForm({
             <div className="min-w-0">
               <Label className="text-[#100d1f]">בחירת תמונות לעיבוד</Label>
               <p className="mt-1 text-xs text-[#48464c]">
-                הלקוח מסמן אילו תמונות לשלוח לריטוש
+                הלקוח מסמן אילו תמונות לשלוח לעיבוד
               </p>
             </div>
             <Switch
@@ -189,8 +191,10 @@ export function ClientGalleryEditForm({
               <Input
                 id="max-edit"
                 type="number"
+                min={1}
+                inputMode="numeric"
                 value={maxEdit}
-                onChange={(e) => setMaxEdit(e.target.value)}
+                onChange={(e) => setMaxEdit(e.target.value.replace(/\D/g, ''))}
                 placeholder="למשל: 30"
                 className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
               />

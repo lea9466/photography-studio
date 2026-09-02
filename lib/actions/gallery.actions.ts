@@ -349,6 +349,17 @@ function portfolioSlug(title: string) {
   return `${slugifyPortfolioTitle(title)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+/**
+ * Album/edit selection caps are a "max N photos" count — a zero or negative
+ * value is meaningless. The dashboard inputs already block non-digits, so
+ * this is the backstop for a direct API call: anything that isn't a positive
+ * integer becomes null ("no limit").
+ */
+function normalizeSelectionCap(value: number | null | undefined): number | null {
+  if (value == null || !Number.isFinite(value) || value < 1) return null
+  return Math.floor(value)
+}
+
 export async function createGallery(input: CreateGalleryInput) {
   const context = await requireDashboardContext()
   const { userId, supabase } = context
@@ -476,8 +487,8 @@ export async function createGallery(input: CreateGalleryInput) {
   const settingsPayload: Database['public']['Tables']['gallery_settings']['Insert'] =
     {
       gallery_id: gallery.id,
-      max_album_selection: input.maxAlbumSelection ?? null,
-      max_edit_selection: input.maxEditSelection ?? null,
+      max_album_selection: normalizeSelectionCap(input.maxAlbumSelection),
+      max_edit_selection: normalizeSelectionCap(input.maxEditSelection),
       album_selection_enabled: input.albumSelectionEnabled ?? true,
       edit_selection_enabled: input.editSelectionEnabled ?? true,
       allow_download_preview: input.allowDownloadPreview ?? false,
@@ -681,9 +692,9 @@ export async function updateGallerySettings(
   const settingsUpdate: Database['public']['Tables']['gallery_settings']['Update'] =
     {}
   if (input.maxAlbumSelection !== undefined)
-    settingsUpdate.max_album_selection = input.maxAlbumSelection
+    settingsUpdate.max_album_selection = normalizeSelectionCap(input.maxAlbumSelection)
   if (input.maxEditSelection !== undefined)
-    settingsUpdate.max_edit_selection = input.maxEditSelection
+    settingsUpdate.max_edit_selection = normalizeSelectionCap(input.maxEditSelection)
   if (input.albumSelectionEnabled !== undefined)
     settingsUpdate.album_selection_enabled = input.albumSelectionEnabled
   if (input.editSelectionEnabled !== undefined)
