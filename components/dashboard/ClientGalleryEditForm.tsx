@@ -136,20 +136,6 @@ export function ClientGalleryEditForm({
             />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="expires" className="text-[#100d1f]">תאריך תפוגה</Label>
-          <Input
-            id="expires"
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-          />
-          <p className="text-xs text-[#48464c]">
-            לאחר תאריך זה הגישה לגלריה תיחסם. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל
-            — אין סיסמה קבועה להגדרה.
-          </p>
-        </div>
         <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -211,6 +197,20 @@ export function ClientGalleryEditForm({
               />
             </div>
           ) : null}
+        </div>
+        <div className="space-y-2 sm:col-span-2">
+          <Label htmlFor="expires" className="text-[#100d1f]">תאריך תפוגה</Label>
+          <Input
+            id="expires"
+            type="date"
+            value={expiresAt}
+            onChange={(e) => setExpiresAt(e.target.value)}
+            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] sm:max-w-xs"
+          />
+          <p className="text-xs text-[#48464c]">
+            לאחר תאריך זה הגישה לגלריה תיחסם. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל
+            — אין סיסמה קבועה להגדרה.
+          </p>
         </div>
       </div>
 
