@@ -341,7 +341,7 @@ export async function sendSelectionDoneEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>${input.clientName} סיים/ה לבחור</h2>
         <p>גלריה: ${input.galleryTitle}</p>
-        <p>❤️ אלבום: ${input.albumCount} | ✨ עיבוד: ${input.editCount}</p>
+        <p>🖼️ לאלבום: ${input.albumCount} &nbsp;|&nbsp; ✏️ לעיבוד: ${input.editCount}</p>
         ${noteHtml}
         <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}`)}">צפייה בבחירות</a></p>
       </div>

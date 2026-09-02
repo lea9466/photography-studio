@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { Album, Check, Pencil } from 'lucide-react'
+import { useEffect, useState, useTransition } from 'react'
+import { Album, AlertCircle, Check, Pencil, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { completeClientSelection } from '@/lib/actions/client-gallery.actions'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,8 @@ import {
 } from '@/lib/gallery-selection'
 
 const MAX_NOTE_LENGTH = 2000
+
+const noteDraftKey = (galleryId: string) => `gallery-note-${galleryId}`
 
 type SelectionBarProps = {
   galleryId: string
@@ -39,21 +41,62 @@ export function SelectionBar({
   const [isPending, startTransition] = useTransition()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [note, setNote] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [sessionExpired, setSessionExpired] = useState(false)
+
+  // Keep the note across an accidental reload / re-login — the photo picks are
+  // already persisted the same way (selectionStorageKey), so a dropped session
+  // shouldn't cost the client their message either.
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(noteDraftKey(galleryId))
+      if (saved) setNote(saved)
+    } catch {
+      // ignore
+    }
+  }, [galleryId])
+
+  function updateNote(value: string) {
+    const next = value.slice(0, MAX_NOTE_LENGTH)
+    setNote(next)
+    try {
+      if (next) sessionStorage.setItem(noteDraftKey(galleryId), next)
+      else sessionStorage.removeItem(noteDraftKey(galleryId))
+    } catch {
+      // ignore
+    }
+  }
 
   function handleComplete() {
+    setError(null)
+    setSessionExpired(false)
     startTransition(async () => {
+      let result
       try {
-        await completeClientSelection(galleryId, selections, note.trim() || undefined)
-        try {
-          sessionStorage.removeItem(selectionStorageKey(galleryId))
-        } catch {
-          // ignore
-        }
-        toast.success('הבחירה נשלחה לצלמת!')
-        window.location.reload()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'שגיאה')
+        result = await completeClientSelection(
+          galleryId,
+          selections,
+          note.trim() || undefined
+        )
+      } catch {
+        setError('משהו השתבש בשליחה. בדקו את החיבור לאינטרנט ונסו שוב.')
+        return
       }
+
+      if (!result.ok) {
+        setError(result.error)
+        if (result.expired) setSessionExpired(true)
+        return
+      }
+
+      try {
+        sessionStorage.removeItem(selectionStorageKey(galleryId))
+        sessionStorage.removeItem(noteDraftKey(galleryId))
+      } catch {
+        // ignore
+      }
+      toast.success('הבחירה נשלחה לצלמת!')
+      window.location.reload()
     })
   }
 
@@ -103,7 +146,7 @@ export function SelectionBar({
             <Textarea
               id="selection-note"
               value={note}
-              onChange={(e) => setNote(e.target.value.slice(0, MAX_NOTE_LENGTH))}
+              onChange={(e) => updateNote(e.target.value)}
               maxLength={MAX_NOTE_LENGTH}
               rows={4}
               disabled={isPending}
@@ -111,6 +154,13 @@ export function SelectionBar({
               className="bg-white border-[#c9c5cd] focus-visible:ring-[#7D3A52]"
             />
           </div>
+
+          {error ? (
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          ) : null}
 
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
@@ -121,10 +171,17 @@ export function SelectionBar({
             >
               חזרה
             </Button>
-            <Button type="button" onClick={handleComplete} disabled={isPending}>
-              <Check className="h-4 w-4" />
-              {isPending ? 'שולח...' : 'שליחת הבחירה'}
-            </Button>
+            {sessionExpired ? (
+              <Button type="button" onClick={() => window.location.reload()}>
+                <RefreshCw className="h-4 w-4" />
+                התחברות מחדש
+              </Button>
+            ) : (
+              <Button type="button" onClick={handleComplete} disabled={isPending}>
+                <Check className="h-4 w-4" />
+                {isPending ? 'שולח...' : 'שליחת הבחירה'}
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -44,26 +44,38 @@ export function PasswordGate({
 
   function sendCode(onSuccess?: () => void) {
     startSendTransition(async () => {
+      let result
       try {
-        const result = await requestGalleryPassword(galleryId)
-        setMasked(result.maskedEmail)
-        toast.success(codeSentNotice(result.maskedEmail))
-        onSuccess?.()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'שליחת הקוד נכשלה')
+        result = await requestGalleryPassword(galleryId)
+      } catch {
+        toast.error('שליחת הקוד נכשלה. בדקו את החיבור ונסו שוב.')
+        return
       }
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setMasked(result.maskedEmail)
+      toast.success(codeSentNotice(result.maskedEmail))
+      onSuccess?.()
     })
   }
 
   function handleSubmitCode(e: React.FormEvent) {
     e.preventDefault()
     startTransition(async () => {
+      let result
       try {
-        await verifyGalleryPassword(galleryId, code)
-        window.location.reload()
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : 'קוד שגוי')
+        result = await verifyGalleryPassword(galleryId, code)
+      } catch {
+        toast.error('הכניסה נכשלה. בדקו את החיבור ונסו שוב.')
+        return
       }
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      window.location.reload()
     })
   }
 

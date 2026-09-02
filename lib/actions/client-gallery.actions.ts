@@ -22,7 +22,7 @@ import type { MediaBucket } from '@/lib/r2/types'
 import type { GalleryStatus } from '@/lib/types/database.types'
 import {
   countSelections,
-  validateSelectionLimits,
+  checkSelectionLimits,
   type ClientSelectionPayload,
 } from '@/lib/gallery-selection'
 import { verifyGalleryPassword as checkGalleryPassword } from '@/lib/gallery-password'
@@ -93,7 +93,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
   const { data } = await admin
     .from('galleries')
     .select(
-      'id, title, status, gallery_type, is_public, users!galleries_user_id_fkey(studio_name), clients(email)'
+      'id, title, status, gallery_type, is_public, expires_at, users!galleries_user_id_fkey(studio_name), clients(email)'
     )
     .eq('id', galleryId)
     .single()
@@ -104,6 +104,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     status: GalleryStatus
     gallery_type: string
     is_public: boolean
+    expires_at: string | null
     users: { studio_name: string | null } | { studio_name: string | null }[] | null
     clients: { email: string | null } | { email: string | null }[] | null
   }
@@ -123,12 +124,28 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     status: gallery.status,
     gallery_type: gallery.gallery_type,
     is_public: gallery.is_public,
+    // Client galleries carry an optional access deadline; portfolios don't expire.
+    is_expired:
+      !gallery.is_public &&
+      gallery.expires_at != null &&
+      new Date(gallery.expires_at) < new Date(),
     studio_name: user?.studio_name ?? null,
     maskedEmail,
   }
 }
 
-export async function requestGalleryPassword(galleryId: string) {
+/**
+ * Result of a client-facing gallery action. Errors are *returned*, not thrown:
+ * Next.js swaps thrown Server Action error messages for a generic string in
+ * production, so a thrown message never reaches the browser.
+ */
+export type GalleryActionResult<T = Record<never, never>> =
+  | ({ ok: true } & T)
+  | { ok: false; error: string; expired?: boolean }
+
+export async function requestGalleryPassword(
+  galleryId: string
+): Promise<GalleryActionResult<{ maskedEmail: string | null }>> {
   const headerStore = await headers()
   const ip =
     headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -139,7 +156,7 @@ export async function requestGalleryPassword(galleryId: string) {
   const requestRate = checkRateLimit(requestRateKey, 3, 15 * 60 * 1000)
   if (!requestRate.allowed) {
     const minutes = Math.max(1, Math.ceil((requestRate.retryAfterMs ?? 60_000) / 60_000))
-    throw new Error(`יותר מדי בקשות. נסו שוב בעוד ${minutes} דקות.`)
+    return { ok: false, error: `יותר מדי בקשות. נסו שוב בעוד ${minutes} דקות.` }
   }
 
   const admin = createAdminClient()
@@ -167,19 +184,27 @@ export async function requestGalleryPassword(galleryId: string) {
   }
 
   const gallery = data as GalleryRow | null
-  if (!gallery) throw new Error('גלריה לא נמצאה')
-  if (gallery.status === 'draft') throw new Error('הגלריה עדיין לא נשלחה')
-  if (gallery.status === 'locked') throw new Error('הגלריה סגורה')
+  if (!gallery) return { ok: false, error: 'הגלריה לא נמצאה' }
+  if (gallery.status === 'draft') {
+    return { ok: false, error: 'הגלריה עדיין לא נשלחה על ידי הצלם/ת' }
+  }
+  if (gallery.status === 'locked') {
+    return { ok: false, error: 'הגלריה נסגרה על ידי הצלם/ת' }
+  }
   if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
-    throw new Error('פג תוקף הגלריה')
+    return {
+      ok: false,
+      expired: true,
+      error: 'פג תוקף הגלריה. פנו לצלם/ת כדי לחדש את הגישה.',
+    }
   }
 
   const client = Array.isArray(gallery.clients) ? gallery.clients[0] : gallery.clients
   if (!client?.email) {
-    throw new Error('לא נמצא מייל ללקוח — פנו לצלם/ת')
+    return { ok: false, error: 'לא נמצא מייל ללקוח — פנו לצלם/ת' }
   }
   if (!galleryHasPassword(gallery.password)) {
-    throw new Error('לא הוגדרה סיסמה לגלריה')
+    return { ok: false, error: 'לא הוגדרה סיסמה לגלריה — פנו לצלם/ת' }
   }
 
   const profile = Array.isArray(gallery.users) ? gallery.users[0] : gallery.users
@@ -196,13 +221,13 @@ export async function requestGalleryPassword(galleryId: string) {
     code,
   })
 
-  return {
-    success: true,
-    maskedEmail,
-  }
+  return { ok: true, maskedEmail }
 }
 
-export async function verifyGalleryPassword(galleryId: string, password: string) {
+export async function verifyGalleryPassword(
+  galleryId: string,
+  password: string
+): Promise<GalleryActionResult> {
   const headerStore = await headers()
   const ip =
     headerStore.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -213,7 +238,7 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
   const rate = checkRateLimit(rateKey)
   if (!rate.allowed) {
     const minutes = Math.max(1, Math.ceil((rate.retryAfterMs ?? 60_000) / 60_000))
-    throw new Error(`יותר מדי ניסיונות. נסו שוב בעוד ${minutes} דקות.`)
+    return { ok: false, error: `יותר מדי ניסיונות. נסו שוב בעוד ${minutes} דקות.` }
   }
 
   const admin = createAdminClient()
@@ -232,10 +257,16 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
   }
 
   const gallery = data as GalleryRow | null
-  if (!gallery) throw new Error('גלריה לא נמצאה')
-  if (gallery.status === 'locked') throw new Error('הגלריה סגורה')
+  if (!gallery) return { ok: false, error: 'הגלריה לא נמצאה' }
+  if (gallery.status === 'locked') {
+    return { ok: false, error: 'הגלריה נסגרה על ידי הצלם/ת' }
+  }
   if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
-    throw new Error('פג תוקף הגלריה')
+    return {
+      ok: false,
+      expired: true,
+      error: 'פג תוקף הגלריה. פנו לצלם/ת כדי לחדש את הגישה.',
+    }
   }
 
   const { valid, needsRehash } = await checkGalleryPassword(
@@ -243,7 +274,10 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
     gallery.password
   )
   if (!valid) {
-    throw new Error('סיסמה שגויה')
+    return {
+      ok: false,
+      error: 'הקוד שגוי או שכבר נעשה בו שימוש. בקשו קוד חדש ונסו שוב.',
+    }
   }
 
   if (needsRehash) {
@@ -256,7 +290,7 @@ export async function verifyGalleryPassword(galleryId: string, password: string)
 
   resetRateLimit(rateKey)
   await setGallerySession(galleryId)
-  return { success: true }
+  return { ok: true }
 }
 
 async function requireValidGalleryAccess(galleryId: string) {
@@ -556,9 +590,16 @@ export async function completeClientSelection(
   galleryId: string,
   selections: ClientSelectionPayload[],
   clientNote?: string
-) {
+): Promise<GalleryActionResult> {
   const allowed = await touchGallerySession(galleryId)
-  if (!allowed) throw new Error('גישה נדחתה')
+  if (!allowed) {
+    return {
+      ok: false,
+      expired: true,
+      error:
+        'פג תוקף החיבור לגלריה מרוב חוסר פעילות. הבחירות שלך נשמרו — יש להתחבר מחדש כדי לשלוח אותן.',
+    }
+  }
 
   const admin = createAdminClient()
 
@@ -577,9 +618,12 @@ export async function completeClientSelection(
   }
 
   const gallery = galleryData as GalleryWithClient | null
-  if (!gallery) throw new Error('גלריה לא נמצאה')
+  if (!gallery) return { ok: false, error: 'הגלריה לא נמצאה' }
   if (!['selection'].includes(gallery.status)) {
-    throw new Error('הבחירה אינה פתוחה')
+    return {
+      ok: false,
+      error: 'שלב בחירת התמונות בגלריה זו כבר נסגר. פנו לצלם/ת אם צריך לשנות.',
+    }
   }
 
   const { data: settingsData } = await admin
@@ -593,11 +637,12 @@ export async function completeClientSelection(
     max_edit_selection: number | null
   } | null
 
-  validateSelectionLimits(
+  const limitError = checkSelectionLimits(
     selections,
     settings?.max_album_selection,
     settings?.max_edit_selection
   )
+  if (limitError) return { ok: false, error: limitError }
 
   const { data: galleryPhotos } = await admin
     .from('photos')
@@ -626,7 +671,9 @@ export async function completeClientSelection(
 
   if (rows.length > 0) {
     const { error } = await admin.from('photo_selections').insert(rows as never)
-    if (error) throw new Error('שמירת הבחירות נכשלה')
+    if (error) {
+      return { ok: false, error: 'שמירת הבחירות נכשלה. נסו שוב בעוד רגע.' }
+    }
   }
 
   await admin
@@ -653,7 +700,7 @@ export async function completeClientSelection(
 
   revalidatePath(`/g/${galleryId}`)
   revalidatePath(`/dashboard/galleries/${galleryId}`)
-  return { success: true }
+  return { ok: true }
 }
 
 export async function markDeliveryReady(galleryId: string) {

@@ -7,6 +7,7 @@ import {
 import { getPrivateGalleryHost } from '@/lib/private-gallery/isolation'
 import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
+import { GalleryUnavailable } from '@/components/gallery/GalleryUnavailable'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -46,6 +47,20 @@ export default async function ClientGalleryPage({
 
   if (!meta || (meta.status === 'draft' && !meta.is_public)) {
     notFound()
+  }
+
+  // An expired client gallery is a hard stop for everyone — even a browser that
+  // still holds a valid session cookie — so it's checked before the public /
+  // password branches below. Show a plain "why you can't get in" screen rather
+  // than bouncing to the password gate, where the code request would just fail.
+  if (meta.is_expired) {
+    return (
+      <GalleryUnavailable
+        reason="expired"
+        galleryTitle={meta.title}
+        studioName={meta.studio_name}
+      />
+    )
   }
 
   // Public galleries: getClientGallery authorizes via is_public server-side.

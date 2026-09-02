@@ -38,20 +38,27 @@ export function canToggleSelection(
   return countSelections(items, field) < max
 }
 
-export function validateSelectionLimits(
+/**
+ * Returns a client-facing error message when the selection exceeds a limit,
+ * or null when it's within bounds. Returns (rather than throws) so a Server
+ * Action can forward the message to the browser — Next.js replaces thrown
+ * error messages with a generic string in production.
+ */
+export function checkSelectionLimits(
   selections: Pick<SelectionItem, 'selected_album' | 'selected_edit'>[],
   maxAlbum?: number | null,
   maxEdit?: number | null
-) {
+): string | null {
   const albumCount = countSelections(selections, 'selected_album')
   const editCount = countSelections(selections, 'selected_edit')
 
   if (maxAlbum != null && albumCount > maxAlbum) {
-    throw new Error('הגעת למקסימום הבחירות לאלבום')
+    return `בחרת ${albumCount} תמונות לאלבום — המקסימום הוא ${maxAlbum}`
   }
   if (maxEdit != null && editCount > maxEdit) {
-    throw new Error('הגעת למקסימום הבחירות לעיבוד')
+    return `בחרת ${editCount} תמונות לעיבוד — המקסימום הוא ${maxEdit}`
   }
+  return null
 }
 
 export function selectionStorageKey(galleryId: string) {
