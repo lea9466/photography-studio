@@ -274,7 +274,7 @@ export async function sendGalleryInviteEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${input.clientName},</h2>
         <p>${input.studioName} שלחו לך גלריה חדשה: <strong>${input.galleryTitle}</strong></p>
-        <p>לכניסה לחצו על הקישור למטה ובקשו קוד כניסה — קוד חד-פעמי יישלח לכתובת המייל הזו, ופג לאחר שימוש.</p>
+        <p>לכניסה לחצו על הקישור למטה ובקשו קוד כניסה — קוד חד-פעמי יישלח לכתובת המייל הזו, ויפוג לאחר שימוש.</p>
         ${expiry}
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
