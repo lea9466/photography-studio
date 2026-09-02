@@ -19,12 +19,12 @@ const TYPE_CONFIG = {
   album: {
     label: 'לאלבום',
     Icon: Album,
-    active: 'bg-rose-500 text-white ring-rose-500',
+    active: 'bg-transparent text-rose-500 ring-rose-500',
   },
   edit: {
     label: 'לעיבוד',
     Icon: Pencil,
-    active: 'bg-amber-400 text-black ring-amber-400',
+    active: 'bg-transparent text-amber-400 ring-amber-400',
   },
 } as const
 
@@ -58,10 +58,10 @@ export function SelectionToggle({
         'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-all',
         'text-sm font-medium ring-1 hover:scale-105',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        'drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]',
+        'drop-shadow-[0_1px_4px_rgba(0,0,0,0.85)]',
         selected
           ? config.active
-          : 'bg-black/55 text-white ring-white/25 hover:bg-black/70',
+          : 'bg-transparent text-white ring-white/60 hover:ring-white',
         className
       )}
       aria-label={config.label}
