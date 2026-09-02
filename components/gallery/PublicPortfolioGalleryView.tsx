@@ -119,7 +119,8 @@ export function PublicPortfolioGalleryView({
                 selected_album: false,
                 selected_edit: false,
               }))}
-              canSelect={false}
+              canSelectAlbum={false}
+              canSelectEdit={false}
               onOpen={openLightbox}
               onToggleAlbum={() => {}}
               onToggleEdit={() => {}}
@@ -152,7 +153,8 @@ export function PublicPortfolioGalleryView({
           setLightboxIndex(nextIndex)
           setLightboxActiveSrc(null)
         }}
-        canSelect={false}
+        canSelectAlbum={false}
+        canSelectEdit={false}
         isLimitedQuality={false}
         onToggleAlbum={() => {}}
         onToggleEdit={() => {}}

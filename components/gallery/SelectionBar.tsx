@@ -27,6 +27,8 @@ type SelectionBarProps = {
   editCount: number
   maxAlbum?: number | null
   maxEdit?: number | null
+  showAlbum?: boolean
+  showEdit?: boolean
   selections: ClientSelectionPayload[]
 }
 
@@ -36,6 +38,8 @@ export function SelectionBar({
   editCount,
   maxAlbum,
   maxEdit,
+  showAlbum = true,
+  showEdit = true,
   selections,
 }: SelectionBarProps) {
   const [isPending, startTransition] = useTransition()
@@ -105,16 +109,20 @@ export function SelectionBar({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[--border] bg-white px-4 py-1.5">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-xs sm:text-sm">
-            <span className="inline-flex items-center gap-1 text-rose-500">
-              <Album className="h-3.5 w-3.5" />
-              לאלבום {albumCount}
-              {maxAlbum != null ? `/${maxAlbum}` : ''}
-            </span>
-            <span className="inline-flex items-center gap-1 text-amber-500">
-              <Pencil className="h-3.5 w-3.5" />
-              לעיבוד {editCount}
-              {maxEdit != null ? `/${maxEdit}` : ''}
-            </span>
+            {showAlbum ? (
+              <span className="inline-flex items-center gap-1 text-rose-500">
+                <Album className="h-3.5 w-3.5" />
+                לאלבום {albumCount}
+                {maxAlbum != null ? `/${maxAlbum}` : ''}
+              </span>
+            ) : null}
+            {showEdit ? (
+              <span className="inline-flex items-center gap-1 text-amber-500">
+                <Pencil className="h-3.5 w-3.5" />
+                לעיבוד {editCount}
+                {maxEdit != null ? `/${maxEdit}` : ''}
+              </span>
+            ) : null}
           </div>
           <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={isPending}>
             <Check className="h-3.5 w-3.5" />

@@ -320,6 +320,8 @@ export type CreateGalleryInput = {
   expiresAt?: string
   maxAlbumSelection?: number
   maxEditSelection?: number
+  albumSelectionEnabled?: boolean
+  editSelectionEnabled?: boolean
   allowDownloadPreview?: boolean
   allowDownloadOriginal?: boolean
   watermarkText?: string
@@ -470,6 +472,8 @@ export async function createGallery(input: CreateGalleryInput) {
       gallery_id: gallery.id,
       max_album_selection: input.maxAlbumSelection ?? null,
       max_edit_selection: input.maxEditSelection ?? null,
+      album_selection_enabled: input.albumSelectionEnabled ?? true,
+      edit_selection_enabled: input.editSelectionEnabled ?? true,
       allow_download_preview: input.allowDownloadPreview ?? false,
       allow_download_original: input.allowDownloadOriginal ?? false,
       watermark_text: watermarkText,
@@ -513,6 +517,8 @@ export type CreateClientGalleryInput = {
   expiresAt?: string
   maxAlbumSelection?: number
   maxEditSelection?: number
+  albumSelectionEnabled?: boolean
+  editSelectionEnabled?: boolean
   allowDownloadPreview?: boolean
   allowDownloadOriginal?: boolean
   watermarkText?: string
@@ -561,6 +567,8 @@ export async function updateGallerySettings(
     expiresAt?: string | null
     maxAlbumSelection?: number | null
     maxEditSelection?: number | null
+    albumSelectionEnabled?: boolean
+    editSelectionEnabled?: boolean
     allowDownloadPreview?: boolean
     allowDownloadOriginal?: boolean
     watermarkText?: string | null
@@ -670,6 +678,10 @@ export async function updateGallerySettings(
     settingsUpdate.max_album_selection = input.maxAlbumSelection
   if (input.maxEditSelection !== undefined)
     settingsUpdate.max_edit_selection = input.maxEditSelection
+  if (input.albumSelectionEnabled !== undefined)
+    settingsUpdate.album_selection_enabled = input.albumSelectionEnabled
+  if (input.editSelectionEnabled !== undefined)
+    settingsUpdate.edit_selection_enabled = input.editSelectionEnabled
   if (input.allowDownloadPreview !== undefined)
     settingsUpdate.allow_download_preview = input.allowDownloadPreview
   if (input.allowDownloadOriginal !== undefined)

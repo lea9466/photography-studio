@@ -61,6 +61,11 @@ function mergeStoredSelections(
 export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const canSelect = ['selection'].includes(gallery.status)
   const isDelivered = ['delivery_ready', 'locked'].includes(gallery.status)
+  // Per-gallery: the photographer can turn off a whole selection track.
+  const albumEnabled = gallery.album_selection_enabled
+  const editEnabled = gallery.edit_selection_enabled
+  const canSelectAlbum = canSelect && albumEnabled
+  const canSelectEdit = canSelect && editEnabled
   const [items, setItems] = useState(photos)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
@@ -72,7 +77,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const showEdited = items.some((p) => p.edited_signed_url)
   const [tab, setTab] = useState(() => {
     if (['delivery_ready', 'locked'].includes(gallery.status)) {
-      return photos.some((p) => p.edited_signed_url) ? 'processed' : 'album'
+      if (photos.some((p) => p.edited_signed_url)) return 'processed'
+      return albumEnabled ? 'album' : 'regular'
     }
     return 'regular'
   })
@@ -228,6 +234,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
             status={gallery.status}
             maxAlbum={gallery.max_album_selection}
             maxEdit={gallery.max_edit_selection}
+            albumEnabled={albumEnabled}
+            editEnabled={editEnabled}
           />
         </div>
 
@@ -240,18 +248,22 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
               >
                 תמונות רגילות
               </TabsTrigger>
-              <TabsTrigger
-                value="edit"
-                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
-              >
-                לעיבוד
-              </TabsTrigger>
-              <TabsTrigger
-                value="album"
-                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
-              >
-                אלבום
-              </TabsTrigger>
+              {editEnabled && (
+                <TabsTrigger
+                  value="edit"
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  לעיבוד
+                </TabsTrigger>
+              )}
+              {albumEnabled && (
+                <TabsTrigger
+                  value="album"
+                  className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  אלבום
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="processed"
                 className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
@@ -296,7 +308,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
                     selected_album: photo.selected_album,
                     selected_edit: photo.selected_edit,
                   }))}
-                  canSelect={canSelect}
+                  canSelectAlbum={canSelectAlbum}
+                  canSelectEdit={canSelectEdit}
                   onOpen={openLightbox}
                   onToggleAlbum={(id) => toggleField(id, 'selected_album')}
                   onToggleEdit={(id) => toggleField(id, 'selected_edit')}
@@ -315,6 +328,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
           editCount={editCount}
           maxAlbum={gallery.max_album_selection}
           maxEdit={gallery.max_edit_selection}
+          showAlbum={albumEnabled}
+          showEdit={editEnabled}
           selections={buildSelections(items)}
         />
       ) : null}
@@ -384,7 +399,8 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
           setLightboxIndex(nextIndex)
           setLightboxActiveSrc(null)
         }}
-        canSelect={canSelect}
+        canSelectAlbum={canSelectAlbum}
+        canSelectEdit={canSelectEdit}
         isLimitedQuality={!['delivery_ready', 'locked'].includes(gallery.status)}
         onToggleAlbum={(id) => toggleField(id, 'selected_album')}
         onToggleEdit={(id) => toggleField(id, 'selected_edit')}

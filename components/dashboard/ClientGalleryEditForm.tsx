@@ -20,6 +20,8 @@ type ClientGalleryEditFormProps = {
     auto_apply_watermark?: boolean
     max_album_selection: number | null
     max_edit_selection: number | null
+    album_selection_enabled?: boolean
+    edit_selection_enabled?: boolean
     allow_download_preview: boolean
     allow_download_original: boolean
   } | null
@@ -49,6 +51,12 @@ export function ClientGalleryEditForm({
   )
   const [maxAlbum, setMaxAlbum] = useState(settings?.max_album_selection?.toString() ?? '')
   const [maxEdit, setMaxEdit] = useState(settings?.max_edit_selection?.toString() ?? '')
+  const [albumSelectionEnabled, setAlbumSelectionEnabled] = useState(
+    settings?.album_selection_enabled ?? true
+  )
+  const [editSelectionEnabled, setEditSelectionEnabled] = useState(
+    settings?.edit_selection_enabled ?? true
+  )
   const [allowDownloadPreview, setAllowDownloadPreview] = useState(
     settings?.allow_download_preview ?? false
   )
@@ -57,6 +65,10 @@ export function ClientGalleryEditForm({
   )
 
   function handleSave() {
+    if (!albumSelectionEnabled && !editSelectionEnabled) {
+      toast.error('צריך להשאיר לפחות מסלול בחירה אחד פעיל — לאלבום או לעיבוד')
+      return
+    }
     startTransition(async () => {
       try {
         await updateGallerySettings(gallery.id, {
@@ -66,6 +78,8 @@ export function ClientGalleryEditForm({
           autoApplyWatermark,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum, 10) : undefined,
           maxEditSelection: maxEdit ? parseInt(maxEdit, 10) : undefined,
+          albumSelectionEnabled,
+          editSelectionEnabled,
           allowDownloadPreview: downloadPermissionsEnabled ? allowDownloadPreview : false,
           allowDownloadOriginal: downloadPermissionsEnabled ? allowDownloadOriginal : false,
         })
@@ -125,27 +139,63 @@ export function ClientGalleryEditForm({
             — אין סיסמה קבועה להגדרה.
           </p>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="max-album" className="text-[#100d1f]">מקסימום אלבום</Label>
-          <Input
-            id="max-album"
-            type="number"
-            value={maxAlbum}
-            onChange={(e) => setMaxAlbum(e.target.value)}
-            placeholder="למשל: 50"
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-          />
+        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <Label className="text-[#100d1f]">בחירת תמונות לאלבום</Label>
+              <p className="mt-1 text-xs text-[#48464c]">
+                הלקוח מסמן אילו תמונות ייכנסו לאלבום
+              </p>
+            </div>
+            <Switch
+              checked={albumSelectionEnabled}
+              onCheckedChange={setAlbumSelectionEnabled}
+            />
+          </div>
+          {albumSelectionEnabled ? (
+            <div className="space-y-2">
+              <Label htmlFor="max-album" className="text-xs text-[#48464c]">
+                מקסימום תמונות לאלבום (ריק = ללא הגבלה)
+              </Label>
+              <Input
+                id="max-album"
+                type="number"
+                value={maxAlbum}
+                onChange={(e) => setMaxAlbum(e.target.value)}
+                placeholder="למשל: 50"
+                className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+              />
+            </div>
+          ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="max-edit" className="text-[#100d1f]">מקסימום עיבוד</Label>
-          <Input
-            id="max-edit"
-            type="number"
-            value={maxEdit}
-            onChange={(e) => setMaxEdit(e.target.value)}
-            placeholder="למשל: 30"
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-          />
+        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <Label className="text-[#100d1f]">בחירת תמונות לעיבוד</Label>
+              <p className="mt-1 text-xs text-[#48464c]">
+                הלקוח מסמן אילו תמונות לשלוח לריטוש
+              </p>
+            </div>
+            <Switch
+              checked={editSelectionEnabled}
+              onCheckedChange={setEditSelectionEnabled}
+            />
+          </div>
+          {editSelectionEnabled ? (
+            <div className="space-y-2">
+              <Label htmlFor="max-edit" className="text-xs text-[#48464c]">
+                מקסימום תמונות לעיבוד (ריק = ללא הגבלה)
+              </Label>
+              <Input
+                id="max-edit"
+                type="number"
+                value={maxEdit}
+                onChange={(e) => setMaxEdit(e.target.value)}
+                placeholder="למשל: 30"
+                className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

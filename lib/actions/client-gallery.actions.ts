@@ -70,6 +70,8 @@ export type ClientGalleryData = {
   stat_experience_years: number
   max_album_selection: number | null
   max_edit_selection: number | null
+  album_selection_enabled: boolean
+  edit_selection_enabled: boolean
   allow_download_preview: boolean
   allow_download_original: boolean
 }
@@ -337,6 +339,7 @@ async function loadClientGalleryInternal(galleryId: string) {
       users!galleries_user_id_fkey (studio_name, logo_url),
       gallery_settings (
         max_album_selection, max_edit_selection,
+        album_selection_enabled, edit_selection_enabled,
         allow_download_preview, allow_download_original
       )
     `
@@ -356,9 +359,11 @@ async function loadClientGalleryInternal(galleryId: string) {
     gallery_settings: {
       max_album_selection: number | null
       max_edit_selection: number | null
+      album_selection_enabled: boolean
+      edit_selection_enabled: boolean
       allow_download_preview: boolean
       allow_download_original: boolean
-    } | { max_album_selection: number | null; max_edit_selection: number | null; allow_download_preview: boolean; allow_download_original: boolean }[] | null
+    } | { max_album_selection: number | null; max_edit_selection: number | null; album_selection_enabled: boolean; edit_selection_enabled: boolean; allow_download_preview: boolean; allow_download_original: boolean }[] | null
   }
 
   const gallery = galleryData as GalleryDetail
@@ -483,6 +488,8 @@ async function loadClientGalleryInternal(galleryId: string) {
     stat_experience_years: (user as any)?.stat_experience_years ?? 0,
     max_album_selection: settings?.max_album_selection ?? null,
     max_edit_selection: settings?.max_edit_selection ?? null,
+    album_selection_enabled: settings?.album_selection_enabled ?? true,
+    edit_selection_enabled: settings?.edit_selection_enabled ?? true,
     allow_download_preview: settings?.allow_download_preview ?? false,
     allow_download_original: settings?.allow_download_original ?? false,
   }
@@ -639,17 +646,32 @@ export async function completeClientSelection(
 
   const { data: settingsData } = await admin
     .from('gallery_settings')
-    .select('max_album_selection, max_edit_selection')
+    .select(
+      'max_album_selection, max_edit_selection, album_selection_enabled, edit_selection_enabled'
+    )
     .eq('gallery_id', galleryId)
     .single()
 
   const settings = settingsData as {
     max_album_selection: number | null
     max_edit_selection: number | null
+    album_selection_enabled: boolean
+    edit_selection_enabled: boolean
   } | null
 
+  const albumEnabled = settings?.album_selection_enabled ?? true
+  const editEnabled = settings?.edit_selection_enabled ?? true
+
+  // A disabled track has no UI, but drop anything that slips through anyway so
+  // the photographer never sees selections for a track they turned off.
+  const cleanSelections = selections.map((selection) => ({
+    ...selection,
+    selected_album: albumEnabled && selection.selected_album,
+    selected_edit: editEnabled && selection.selected_edit,
+  }))
+
   const limitError = checkSelectionLimits(
-    selections,
+    cleanSelections,
     settings?.max_album_selection,
     settings?.max_edit_selection
   )
@@ -665,7 +687,7 @@ export async function completeClientSelection(
     ((galleryPhotos ?? []) as { id: string }[]).map((photo) => photo.id)
   )
 
-  const rows = selections
+  const rows = cleanSelections
     .filter(
       (selection) =>
         validPhotoIds.has(selection.photoId) &&
@@ -692,8 +714,8 @@ export async function completeClientSelection(
     .update({ status: 'editing' } as never)
     .eq('id', galleryId)
 
-  const albumCount = countSelections(selections, 'selected_album')
-  const editCount = countSelections(selections, 'selected_edit')
+  const albumCount = countSelections(cleanSelections, 'selected_album')
+  const editCount = countSelections(cleanSelections, 'selected_edit')
 
   const client = Array.isArray(gallery.clients)
     ? gallery.clients[0]
@@ -706,6 +728,8 @@ export async function completeClientSelection(
     clientName: client?.name ?? 'לקוח',
     albumCount,
     editCount,
+    albumEnabled,
+    editEnabled,
     clientNote: clientNote?.trim().slice(0, 2000) || undefined,
   })
 

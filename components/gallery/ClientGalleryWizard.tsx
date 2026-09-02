@@ -34,6 +34,8 @@ type WizardState = {
   newClientPhone: string
   title: string
   expiresAt: string
+  albumSelectionEnabled: boolean
+  editSelectionEnabled: boolean
   maxAlbumSelection: string
   maxEditSelection: string
   allowDownloadPreview: boolean
@@ -69,6 +71,8 @@ export function ClientGalleryWizard({
     newClientPhone: '',
     title: '',
     expiresAt: '',
+    albumSelectionEnabled: true,
+    editSelectionEnabled: true,
     maxAlbumSelection: '',
     maxEditSelection: '',
     allowDownloadPreview: false,
@@ -117,6 +121,10 @@ export function ClientGalleryWizard({
       toast.error('שם הגלריה הוא שדה חובה')
       return
     }
+    if (!state.albumSelectionEnabled && !state.editSelectionEnabled) {
+      toast.error('צריך להשאיר לפחות מסלול בחירה אחד פעיל — לאלבום או לעיבוד')
+      return
+    }
 
     startTransition(async () => {
       try {
@@ -150,8 +158,16 @@ export function ClientGalleryWizard({
           title: state.title,
           clientId,
           expiresAt: state.expiresAt || undefined,
-          maxAlbumSelection: state.maxAlbumSelection ? Number(state.maxAlbumSelection) : undefined,
-          maxEditSelection: state.maxEditSelection ? Number(state.maxEditSelection) : undefined,
+          albumSelectionEnabled: state.albumSelectionEnabled,
+          editSelectionEnabled: state.editSelectionEnabled,
+          maxAlbumSelection:
+            state.albumSelectionEnabled && state.maxAlbumSelection
+              ? Number(state.maxAlbumSelection)
+              : undefined,
+          maxEditSelection:
+            state.editSelectionEnabled && state.maxEditSelection
+              ? Number(state.maxEditSelection)
+              : undefined,
           allowDownloadPreview: downloadPermissionsEnabled ? state.allowDownloadPreview : false,
           allowDownloadOriginal: downloadPermissionsEnabled ? state.allowDownloadOriginal : false,
           watermarkText: state.watermarkText || undefined,
@@ -372,32 +388,72 @@ export function ClientGalleryWizard({
           <section className="rounded-xl border border-[#ebebe8] bg-white p-6 sm:p-8">
             <div className="mb-6 flex items-center gap-2">
               <Zap className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">מגבלות בחירה</h2>
+              <h2 className="text-base font-semibold text-[#100d1f]">מסלולי בחירה</h2>
             </div>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-[#48464c]">
-                  מקסימום תמונות לאלבום
-                </label>
-                <input
-                  className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="ללא הגבלה"
-                  type="number"
-                  value={state.maxAlbumSelection}
-                  onChange={(e) => updateState('maxAlbumSelection', e.target.value)}
-                />
+              <div className="space-y-3 rounded-xl border border-[#ebebe8] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[#100d1f]">
+                      בחירת תמונות לאלבום
+                    </p>
+                    <p className="mt-1 text-xs text-[#48464c]/80">
+                      הלקוח מסמן אילו תמונות ייכנסו לאלבום
+                    </p>
+                  </div>
+                  <Switch
+                    checked={state.albumSelectionEnabled}
+                    onCheckedChange={(checked) =>
+                      updateState('albumSelectionEnabled', checked)
+                    }
+                  />
+                </div>
+                {state.albumSelectionEnabled && (
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold text-[#48464c]">
+                      מקסימום תמונות לאלבום
+                    </label>
+                    <input
+                      className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+                      placeholder="ללא הגבלה"
+                      type="number"
+                      value={state.maxAlbumSelection}
+                      onChange={(e) => updateState('maxAlbumSelection', e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-[#48464c]">
-                  מקסימום תמונות לעריכה
-                </label>
-                <input
-                  className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="ללא הגבלה"
-                  type="number"
-                  value={state.maxEditSelection}
-                  onChange={(e) => updateState('maxEditSelection', e.target.value)}
-                />
+              <div className="space-y-3 rounded-xl border border-[#ebebe8] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[#100d1f]">
+                      בחירת תמונות לעיבוד
+                    </p>
+                    <p className="mt-1 text-xs text-[#48464c]/80">
+                      הלקוח מסמן אילו תמונות לשלוח לריטוש
+                    </p>
+                  </div>
+                  <Switch
+                    checked={state.editSelectionEnabled}
+                    onCheckedChange={(checked) =>
+                      updateState('editSelectionEnabled', checked)
+                    }
+                  />
+                </div>
+                {state.editSelectionEnabled && (
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold text-[#48464c]">
+                      מקסימום תמונות לעיבוד
+                    </label>
+                    <input
+                      className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+                      placeholder="ללא הגבלה"
+                      type="number"
+                      value={state.maxEditSelection}
+                      onChange={(e) => updateState('maxEditSelection', e.target.value)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </section>

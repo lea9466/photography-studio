@@ -857,6 +857,8 @@ export type Database = {
           allow_download_original: boolean
           max_album_selection: number | null
           max_edit_selection: number | null
+          album_selection_enabled: boolean
+          edit_selection_enabled: boolean
           watermark_text: string | null
           watermark_position: string
           auto_apply_watermark: boolean
@@ -869,6 +871,8 @@ export type Database = {
           allow_download_original?: boolean
           max_album_selection?: number | null
           max_edit_selection?: number | null
+          album_selection_enabled?: boolean
+          edit_selection_enabled?: boolean
           watermark_text?: string | null
           watermark_position?: string
           auto_apply_watermark?: boolean
@@ -881,6 +885,8 @@ export type Database = {
           allow_download_original?: boolean
           max_album_selection?: number | null
           max_edit_selection?: number | null
+          album_selection_enabled?: boolean
+          edit_selection_enabled?: boolean
           watermark_text?: string | null
           watermark_position?: string
           auto_apply_watermark?: boolean

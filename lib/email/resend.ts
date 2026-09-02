@@ -283,6 +283,9 @@ export async function sendSelectionDoneEmail(input: {
   clientName: string
   albumCount: number
   editCount: number
+  /** Selection tracks the photographer left on for this gallery — a disabled track is left out of the summary line. Both default on. */
+  albumEnabled?: boolean
+  editEnabled?: boolean
   /** Optional free-text note the client left when finishing — shown in the email, not stored. */
   clientNote?: string
 }) {
@@ -327,6 +330,10 @@ export async function sendSelectionDoneEmail(input: {
       </div>`
     : ''
 
+  const summaryParts: string[] = []
+  if (input.albumEnabled !== false) summaryParts.push(`🖼️ לאלבום: ${input.albumCount}`)
+  if (input.editEnabled !== false) summaryParts.push(`✏️ לעיבוד: ${input.editCount}`)
+
   await provider.send({
     from: emailFrom(),
     to,
@@ -335,7 +342,7 @@ export async function sendSelectionDoneEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>${input.clientName} סיים/ה לבחור</h2>
         <p>גלריה: ${input.galleryTitle}</p>
-        <p>🖼️ לאלבום: ${input.albumCount} &nbsp;|&nbsp; ✏️ לעיבוד: ${input.editCount}</p>
+        <p>${summaryParts.join(' &nbsp;|&nbsp; ')}</p>
         ${noteHtml}
         <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}`)}">צפייה בבחירות</a></p>
       </div>

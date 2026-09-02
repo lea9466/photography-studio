@@ -16,7 +16,8 @@ type MasonryPhoto = {
 
 type ClientPhotoMasonryProps = {
   photos: MasonryPhoto[]
-  canSelect: boolean
+  canSelectAlbum: boolean
+  canSelectEdit: boolean
   onOpen: (index: number, lightboxSrc: string | null) => void
   onToggleAlbum: (id: string) => void
   onToggleEdit: (id: string) => void
@@ -114,7 +115,8 @@ function toColumns(
 
 export function ClientPhotoMasonry({
   photos,
-  canSelect,
+  canSelectAlbum,
+  canSelectEdit,
   onOpen,
   onToggleAlbum,
   onToggleEdit,
@@ -135,7 +137,8 @@ export function ClientPhotoMasonry({
               key={photo.id}
               photo={photo}
               revealDelayMs={Math.min(rowIndex, 5) * 70}
-              canSelect={canSelect}
+              canSelectAlbum={canSelectAlbum}
+              canSelectEdit={canSelectEdit}
               onOpen={onOpen}
               onToggleAlbum={onToggleAlbum}
               onToggleEdit={onToggleEdit}
@@ -151,7 +154,8 @@ export function ClientPhotoMasonry({
 type MasonryTileProps = {
   photo: MasonryPhoto
   revealDelayMs: number
-  canSelect: boolean
+  canSelectAlbum: boolean
+  canSelectEdit: boolean
   onOpen: (index: number, lightboxSrc: string | null) => void
   onToggleAlbum: (id: string) => void
   onToggleEdit: (id: string) => void
@@ -161,7 +165,8 @@ type MasonryTileProps = {
 function MasonryTile({
   photo,
   revealDelayMs,
-  canSelect,
+  canSelectAlbum,
+  canSelectEdit,
   onOpen,
   onToggleAlbum,
   onToggleEdit,
@@ -208,7 +213,7 @@ function MasonryTile({
         ) : null}
       </button>
 
-      {canSelect ? (
+      {canSelectAlbum || canSelectEdit ? (
         <div
           className={`absolute inset-x-0 bottom-0 flex flex-wrap justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8 transition-opacity ${
             photo.selected_album || photo.selected_edit
@@ -216,20 +221,24 @@ function MasonryTile({
               : 'opacity-0 group-hover:opacity-100'
           }`}
         >
-          <SelectionToggle
-            type="album"
-            selected={photo.selected_album}
-            onClick={() => onToggleAlbum(photo.id)}
-            showLabel
-            size="sm"
-          />
-          <SelectionToggle
-            type="edit"
-            selected={photo.selected_edit}
-            onClick={() => onToggleEdit(photo.id)}
-            showLabel
-            size="sm"
-          />
+          {canSelectAlbum ? (
+            <SelectionToggle
+              type="album"
+              selected={photo.selected_album}
+              onClick={() => onToggleAlbum(photo.id)}
+              showLabel
+              size="sm"
+            />
+          ) : null}
+          {canSelectEdit ? (
+            <SelectionToggle
+              type="edit"
+              selected={photo.selected_edit}
+              onClick={() => onToggleEdit(photo.id)}
+              showLabel
+              size="sm"
+            />
+          ) : null}
         </div>
       ) : null}
     </div>

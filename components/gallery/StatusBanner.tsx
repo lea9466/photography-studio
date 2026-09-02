@@ -15,9 +15,17 @@ type StatusBannerProps = {
   status: GalleryStatus
   maxAlbum?: number | null
   maxEdit?: number | null
+  albumEnabled?: boolean
+  editEnabled?: boolean
 }
 
-export function StatusBanner({ status, maxAlbum, maxEdit }: StatusBannerProps) {
+export function StatusBanner({
+  status,
+  maxAlbum,
+  maxEdit,
+  albumEnabled = true,
+  editEnabled = true,
+}: StatusBannerProps) {
   if (status === 'draft' || status === 'public') return null
 
   return (
@@ -29,14 +37,18 @@ export function StatusBanner({ status, maxAlbum, maxEdit }: StatusBannerProps) {
 
       {status === 'selection' ? (
         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[--muted]">
-          <span className="inline-flex items-center gap-1.5">
-            <Album className="h-4 w-4 shrink-0 text-rose-500" />
-            סימון לאלבום{maxAlbum != null ? ` · עד ${maxAlbum} תמונות` : ''}
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <Pencil className="h-4 w-4 shrink-0 text-amber-500" />
-            סימון לעיבוד{maxEdit != null ? ` · עד ${maxEdit} תמונות` : ''}
-          </span>
+          {albumEnabled ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Album className="h-4 w-4 shrink-0 text-rose-500" />
+              סימון לאלבום{maxAlbum != null ? ` · עד ${maxAlbum} תמונות` : ''}
+            </span>
+          ) : null}
+          {editEnabled ? (
+            <span className="inline-flex items-center gap-1.5">
+              <Pencil className="h-4 w-4 shrink-0 text-amber-500" />
+              סימון לעיבוד{maxEdit != null ? ` · עד ${maxEdit} תמונות` : ''}
+            </span>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -20,7 +20,8 @@ type LightboxProps = {
   activeSrc?: string | null
   onOpenChange: (open: boolean) => void
   onNavigate: (index: number) => void
-  canSelect: boolean
+  canSelectAlbum: boolean
+  canSelectEdit: boolean
   isLimitedQuality?: boolean
   onToggleAlbum: (photoId: string) => void
   onToggleEdit: (photoId: string) => void
@@ -33,7 +34,8 @@ export function Lightbox({
   activeSrc,
   onOpenChange,
   onNavigate,
-  canSelect,
+  canSelectAlbum,
+  canSelectEdit,
   isLimitedQuality = false,
   onToggleAlbum,
   onToggleEdit,
@@ -85,22 +87,26 @@ export function Lightbox({
               <ChevronRight className="h-4 w-4" />
             </Button>
 
-            {canSelect ? (
+            {canSelectAlbum || canSelectEdit ? (
               <div className="flex gap-4">
-                <SelectionToggle
-                  type="album"
-                  selected={photo.selected_album}
-                  onClick={() => onToggleAlbum(photo.id)}
-                  showLabel
-                  size="lg"
-                />
-                <SelectionToggle
-                  type="edit"
-                  selected={photo.selected_edit}
-                  onClick={() => onToggleEdit(photo.id)}
-                  showLabel
-                  size="lg"
-                />
+                {canSelectAlbum ? (
+                  <SelectionToggle
+                    type="album"
+                    selected={photo.selected_album}
+                    onClick={() => onToggleAlbum(photo.id)}
+                    showLabel
+                    size="lg"
+                  />
+                ) : null}
+                {canSelectEdit ? (
+                  <SelectionToggle
+                    type="edit"
+                    selected={photo.selected_edit}
+                    onClick={() => onToggleEdit(photo.id)}
+                    showLabel
+                    size="lg"
+                  />
+                ) : null}
               </div>
             ) : (
               <span className="text-sm text-white/70">
