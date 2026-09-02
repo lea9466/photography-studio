@@ -352,7 +352,13 @@ function portfolioSlug(title: string) {
 export async function createGallery(input: CreateGalleryInput) {
   const context = await requireDashboardContext()
   const { userId, supabase } = context
-  const effectiveMvp = PUBLIC_ONLY_MVP && !isMvpBypassUser(userId)
+  // MVP public-forcing only ever applied to showcase galleries. A client
+  // (selection) gallery is a private product — it is never forced public,
+  // for any account.
+  const effectiveMvp =
+    input.galleryType !== 'selection' &&
+    PUBLIC_ONLY_MVP &&
+    !isMvpBypassUser(userId)
 
   const title = input.title.trim()
   if (!title) {

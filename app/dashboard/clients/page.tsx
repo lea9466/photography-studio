@@ -2,22 +2,15 @@ import { redirect } from 'next/navigation'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { ClientsManager } from '@/components/dashboard/ClientsManager'
-import {
-  MVP_DEFAULT_DASHBOARD_PATH,
-  PUBLIC_ONLY_MVP,
-  isMvpBypassUser,
-} from '@/lib/types/app.types'
 
+// The clients CRM is part of the private client-gallery workspace, open to
+// every account. If it needs re-gating, isMvpBlockedDashboardRoute
+// (CLIENT_GALLERIES_ENABLED) is the one seam — the middleware enforces it.
 export default async function ClientsPage() {
-  let context
   try {
-    context = await requireDashboardContext()
+    await requireDashboardContext()
   } catch {
     redirect('/login')
-  }
-
-  if (PUBLIC_ONLY_MVP && !isMvpBypassUser(context.userId)) {
-    redirect(MVP_DEFAULT_DASHBOARD_PATH)
   }
 
   const clients = await fetchClients()

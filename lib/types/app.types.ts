@@ -1,11 +1,20 @@
 import type { GalleryStatus, GalleryType, GalleryLayoutMode } from '@/lib/types/database.types'
 import { galleryKind } from '@/lib/gallery-kind'
 
-/** MVP: all galleries display and behave as public */
+/** MVP: showcase galleries display and behave as public on the public site. */
 export const PUBLIC_ONLY_MVP = true
 
-/** Download permissions UI is frozen until client delivery flow ships */
-export const DOWNLOAD_PERMISSIONS_ENABLED = false
+/**
+ * The private client-gallery workspace — private galleries, the clients CRM,
+ * and the dashboard overview — is open to every account. Was gated behind
+ * `PUBLIC_ONLY_MVP` + the `MVP_BYPASS_USER_ID` allowlist while the flow was in
+ * preview; `PUBLIC_ONLY_MVP` itself still governs how the *public showcase
+ * site* renders and is deliberately left on. Set back to `false` to re-gate.
+ */
+export const CLIENT_GALLERIES_ENABLED = true
+
+/** Client-gallery download permissions (full-res / watermarked, per the photographer's choice). */
+export const DOWNLOAD_PERMISSIONS_ENABLED = true
 
 /**
  * Temporary bypass for testing the private-gallery/client workflow before it
@@ -159,15 +168,16 @@ export const MVP_DEFAULT_DASHBOARD_PATH = '/dashboard/galleries'
 export const ONBOARDING_SETTINGS_PATH = '/dashboard/settings'
 
 /**
- * Routes blocked entirely during MVP (redirect to galleries list). The MVP
- * bypass account (see `isMvpBypassUser`) sees the full dashboard — the same
- * accounts that get private client galleries — so pass its `userId` to lift
- * the block for it.
+ * Routes that used to be blocked during MVP (dashboard overview + clients CRM).
+ * Now that the client-gallery workspace is open to everyone
+ * (`CLIENT_GALLERIES_ENABLED`) nothing is blocked; kept as a seam so the
+ * workspace can be re-gated from one place.
  */
 export function isMvpBlockedDashboardRoute(
   pathname: string,
   userId?: string | null
 ): boolean {
+  if (CLIENT_GALLERIES_ENABLED) return false
   if (!PUBLIC_ONLY_MVP) return false
   if (isMvpBypassUser(userId)) return false
   return pathname === '/dashboard' || pathname.startsWith('/dashboard/clients')

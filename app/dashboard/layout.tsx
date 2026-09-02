@@ -5,7 +5,7 @@ import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
 import { getActiveAnnouncement } from '@/lib/queries/announcement'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { getAssistantMissingFlags, hasAnyMissingContent } from '@/lib/assistant/studio-context'
-import { PUBLIC_ONLY_MVP, isMvpBypassUser } from '@/lib/types/app.types'
+import { CLIENT_GALLERIES_ENABLED } from '@/lib/types/app.types'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,8 +28,7 @@ export default async function DashboardLayout({
   const assistantMissing = context
     ? await getAssistantMissingFlags(context.userId, context.supabase)
     : null
-  const canCreateClientGalleries =
-    !PUBLIC_ONLY_MVP || (context ? isMvpBypassUser(context.userId) : false)
+  const canCreateClientGalleries = CLIENT_GALLERIES_ENABLED
 
   return (
     <DashboardLayoutWrapper

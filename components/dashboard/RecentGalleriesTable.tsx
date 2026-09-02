@@ -107,17 +107,19 @@ function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLi
 
   const handleShare = async () => {
     const path =
-      gallery.gallery_type === 'portfolio' && gallery.slug
-        ? resolvePortfolioPublicPath({
-            id: gallery.id,
-            slug: gallery.slug,
-            gallery_type: gallery.gallery_type,
-          })
-        : gallery.is_public || PUBLIC_ONLY_MVP
-          ? studioPath
-            ? `${studioPath}/gallery/${gallery.id}`
-            : `/public-gallery/${gallery.id}`
-          : `/g/${gallery.id}`
+      kind === 'client'
+        ? `/g/${gallery.id}`
+        : gallery.gallery_type === 'portfolio' && gallery.slug
+          ? resolvePortfolioPublicPath({
+              id: gallery.id,
+              slug: gallery.slug,
+              gallery_type: gallery.gallery_type,
+            })
+          : gallery.is_public || PUBLIC_ONLY_MVP
+            ? studioPath
+              ? `${studioPath}/gallery/${gallery.id}`
+              : `/public-gallery/${gallery.id}`
+            : `/g/${gallery.id}`
     // Private galleries are meant to live on their own isolated subdomain
     // (see middleware.ts) — falls back to the main app domain until it's
     // actually configured.

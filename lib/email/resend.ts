@@ -107,6 +107,95 @@ function luxeList(items: ReadonlyArray<readonly [string, string]>) {
 }
 
 /**
+ * Cool violet→teal sweep for the landing-page step cards / accents — an
+ * analogous family so a page full of coloured blocks still reads as one
+ * designed system, not a rainbow. Each entry: `ink` (badge + heading),
+ * `bg` (card fill), `border`.
+ */
+const LUXE_STEP_COLORS = [
+  { ink: '#6d28d9', bg: '#f3edfe', border: '#e4d6fb' },
+  { ink: '#4f46e5', bg: '#ecedfd', border: '#dadbfa' },
+  { ink: '#2563eb', bg: '#e9f1fe', border: '#d2e3fb' },
+  { ink: '#0891b2', bg: '#e4f5fa', border: '#c6e8f0' },
+  { ink: '#0d9488', bg: '#e3f6f2', border: '#c4ebe2' },
+] as const
+
+/** Small uppercase section marker with a short rule beneath it, in `color`. */
+function luxeSectionLabel(text: string, color: string = LUXE.brand) {
+  return `
+    <p style="margin: 0 0 4px; font-family: ${LUXE.sans}; font-size: 12px; font-weight: 700; letter-spacing: 2.5px; color: ${color}; text-transform: uppercase;">${text}</p>
+    <div style="width: 26px; height: 3px; background: ${color}; border-radius: 2px; margin: 0 0 16px;"></div>`
+}
+
+/**
+ * Landing-page step cards — each `[title, description]` pair becomes its own
+ * rounded coloured panel with a rounded-square number badge, cycling through
+ * `LUXE_STEP_COLORS`. Table-based for broad email-client support; radius
+ * degrades to square in old Outlook.
+ */
+function luxeStepCards(items: ReadonlyArray<readonly [string, string]>) {
+  const rows = items
+    .map(([title, desc], i) => {
+      const c = LUXE_STEP_COLORS[i % LUXE_STEP_COLORS.length]
+      return `
+        <tr>
+          <td style="padding-top: ${i === 0 ? '0' : '12px'};">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: ${c.bg}; border: 1px solid ${c.border}; border-radius: 14px;">
+              <tr>
+                <td valign="top" width="40" style="width: 40px; padding: 18px 18px 18px 10px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center" valign="middle" width="38" height="38" style="width: 38px; height: 38px; background: ${c.ink}; border-radius: 11px; font-family: ${LUXE.sans}; font-size: 17px; font-weight: 700; color: #ffffff;">${i + 1}</td>
+                    </tr>
+                  </table>
+                </td>
+                <td valign="top" style="padding: 18px 2px 18px 18px; font-family: ${LUXE.sans};">
+                  <div style="font-size: 15.5px; font-weight: 700; line-height: 1.4; color: ${LUXE.ink}; margin-bottom: 3px;">${title}</div>
+                  <div style="font-size: 14px; line-height: 1.6; color: ${LUXE.muted};">${desc}</div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>`
+    })
+    .join('')
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0;">${rows}</table>`
+}
+
+/** A single tinted callout panel: a coloured round badge (`badge` glyph) + body copy. */
+function luxeCalloutCard(input: {
+  badge: string
+  ink: string
+  bg: string
+  border: string
+  title: string
+  body: string
+}) {
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0;">
+      <tr>
+        <td style="background: ${input.bg}; border: 1px solid ${input.border}; border-radius: 14px; padding: 18px 20px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+              <td valign="top" width="34" style="width: 34px; padding-left: 12px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" valign="middle" width="30" height="30" style="width: 30px; height: 30px; background: ${input.ink}; border-radius: 15px; font-family: ${LUXE.sans}; font-size: 15px; font-weight: 700; color: #ffffff;">${input.badge}</td>
+                  </tr>
+                </table>
+              </td>
+              <td valign="top" style="font-family: ${LUXE.sans};">
+                <div style="font-size: 15px; font-weight: 700; color: ${LUXE.ink}; margin-bottom: 3px;">${input.title}</div>
+                <div style="font-size: 14px; line-height: 1.65; color: ${LUXE.muted};">${input.body}</div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`
+}
+
+/**
  * Wraps body content in the branded STG shell: violet header with the
  * monogram + wordmark, a white content card, and a quiet footer. Built with
  * tables + inline styles for broad email-client support.
@@ -657,6 +746,170 @@ export async function sendCustomDomainAddonAnnouncementEmail(input: { name: stri
   if (!provider) return
 
   const { subject, text, html } = buildCustomDomainAddonAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
+ * Pure builder for the private-galleries feature announcement — same
+ * preview/snapshot-testable shape as buildWelcomeEmail. A "landing page"
+ * style email: the workflow it replaces (repeated email + Drive back-and-forth),
+ * a 5-step how-it-works, the NetFree note, and the free-first-gallery offer.
+ * Rollout preconditions live in scripts/send-private-galleries-announcement.ts.
+ */
+export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const privateGalleriesUrl = appUrl('/dashboard/private-galleries')
+  const plansUrl = appUrl('/dashboard/usage-packages')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const h1 = `margin: 0 0 8px; font-family: ${LUXE.serif}; font-size: 27px; line-height: 1.3; font-weight: 400; color: ${LUXE.ink};`
+  const subhead = `margin: 0 0 22px; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.6; color: ${LUXE.muted};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+  const sectionSpacer = `<div style="height: 30px; line-height: 30px; font-size: 0;">&nbsp;</div>`
+
+  const contentHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STUDIO&nbsp;GALLERY</td>
+      </tr>
+    </table>
+    <h1 style="${h1}">גלריות פרטיות ללקוחות</h1>
+    <p style="${subhead}">שליחה, בחירה ומסירה — כל התהליך בגלריה אחת.</p>
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">מהיום אפשר לשלוח ללקוח גלריה פרטית משלו: הוא נכנס, עובר על התמונות, מסמן מה שהוא בוחר, ואת מקבלת את הבחירות מסודרות במקום אחד.</p>
+
+    ${sectionSpacer}
+    ${luxeSectionLabel('במקום מיילים בלי סוף', '#78716c')}
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0;">
+      <tr>
+        <td style="background: #f6f5f4; border: 1px solid #e7e5e2; border-radius: 14px; padding: 16px 20px;">
+          <div style="font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #78716c; margin-bottom: 7px;">היום</div>
+          <div style="font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: #57534e;">מייל אחרי מייל: "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב", "הקישור פג". הבחירות מתפזרות בין תיבת המייל לתיקייה ב-Drive.</div>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align: center; font-family: ${LUXE.sans}; font-size: 20px; line-height: 1; color: #c4b5fd; margin: 8px 0;">&darr;</div>
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: LUXE.brand,
+      bg: '#f3edfe',
+      border: '#e4d6fb',
+      title: 'עם גלריה פרטית',
+      body: 'קישור אחד קבוע. הלקוח מסמן בעצמו על התמונה, ואת רואה את הבחירות מסודרות במקום אחד — בלי לרדוף אחרי מיילים, בלי לחפש בין המייל ל-Drive.',
+    })}
+
+    ${sectionSpacer}
+    ${luxeSectionLabel('איך זה עובד', LUXE.brand)}
+    ${luxeStepCards([
+      [
+        'יוצרת גלריה ומשייכת ללקוח',
+        'שם, תאריך תפוגה, כמה תמונות מותר לבחור, סימן מים, והרשאות הורדה: אם הלקוח יכול להוריד תמונות ובאיזו איכות — מלאה, או מוגבלת עם סימן מים — הכול לפי מה שאת מאשרת. אין סיסמאות לנהל: הלקוח מקבל קוד כניסה חד-פעמי במייל בכל כניסה.',
+      ],
+      [
+        'מעלה תמונות ושולחת קישור',
+        'בלחיצה אחת הלקוח מקבל מייל עם קישור לגלריה הפרטית שלו. התמונות עצמן לא נשלחות במייל — הכול נשאר בגלריה.',
+      ],
+      [
+        'הלקוח עובר ובוחר בעצמו',
+        'גלריה מעוצבת שנטענת מהר. הוא מסמן תמונות לאלבום ותמונות לעיבוד, כל רשימה בנפרד, לפי המגבלה שהגדרת.',
+      ],
+      [
+        'מקבלת מייל כשהוא סיים לבחור',
+        'לא את התמונות — קישור לאזור האישי. שם את רואה בדיוק מה הוא בחר (והערה אישית אם השאיר), ובלחיצת כפתור מורידה את כל הבחירות למחשב.',
+      ],
+      [
+        'מעלה את המעובדות לאותה גלריה',
+        'סיימת לערוך? מעלה את התמונות המוכנות לאותה גלריה. הלקוח מקבל מייל שהן מוכנות, ומוריד את כולן בקליק אחד.',
+      ],
+    ])}
+
+    ${sectionSpacer}
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: '#0d9488',
+      bg: '#e3f6f2',
+      border: '#c4ebe2',
+      title: 'עובד מצוין בנטפרי',
+      body: 'הדומיין של הגלריות הפרטיות אושר בנטפרי — כולל התמונות עצמן. לקוחות על סינון נטפרי ייכנסו לגלריה ויראו את כל התמונות רגיל לגמרי: בלי חסימות, בלי "לבדיקת התמונה פנו לנטפרי", בלי הוראות. פשוט עובד.',
+    })}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 26px 0 6px;">
+      <tr>
+        <td bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px; padding: 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px;">
+            <tr>
+              <td style="background: #8b5cf6; border-radius: 999px; padding: 5px 13px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">מתנה</td>
+            </tr>
+          </table>
+          <p style="margin: 0 0 6px; font-family: ${LUXE.serif}; font-size: 21px; color: #ffffff;">הגלריה הפרטית הראשונה — חינם</p>
+          <p style="margin: 0; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: #f1e9fb;">בלי הגבלת זמן. גלריית לקוח מלאה — לשלוח, לקבל בחירות ולמסור — בלי לשלם שקל. רוצה כמה גלריות במקביל? <a href="${plansUrl}" style="color: #ffffff; text-decoration: underline;">יש מסלולים בהמשך</a>.</p>
+        </td>
+      </tr>
+    </table>
+
+    ${luxeButton(privateGalleriesUrl, 'ליצירת גלריה פרטית')}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 26px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה, או משהו שלא עבד חלק? אני כאן — דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
+
+  return {
+    subject: 'סוף למיילים בלי סוף — הגלריות הפרטיות שלך פה',
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'מהיום אפשר לשלוח ללקוח גלריה פרטית משלו — הוא נכנס, עובר על התמונות, מסמן מה שבחר, ואת מקבלת את הבחירות מסודרות במקום אחד. כל התהליך, מהשליחה ועד המסירה, בגלריה אחת.',
+      '',
+      'במקום מיילים בלי סוף:',
+      'היום כדי שלקוח יבחר תמונות הולך ובא מייל אחרי מייל — "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב", "הקישור פג". הבחירות מתפזרות בין המייל לתיקייה ב-Drive, והמספרים לא תמיד תואמים כי הקבצים קיבלו שם אחר.',
+      'עכשיו זה קישור אחד קבוע. הלקוח מסמן בעצמו על התמונה, ואת רואה את הבחירות מסודרות במקום אחד.',
+      '',
+      'איך זה עובד:',
+      '1. יוצרת גלריה ומשייכת ללקוח — שם, תאריך תפוגה, מכסת בחירה, סימן מים, והרשאות הורדה: אם הלקוח יכול להוריד ובאיזו איכות (מלאה, או מוגבלת עם סימן מים) — לפי מה שאת מאשרת. בלי סיסמאות: קוד חד-פעמי במייל בכל כניסה.',
+      '2. מעלה תמונות ושולחת קישור — הלקוח מקבל מייל עם קישור לגלריה שלו. התמונות עצמן לא נשלחות במייל.',
+      '3. הלקוח עובר ובוחר בעצמו — מסמן תמונות לאלבום ותמונות לעיבוד, כל רשימה בנפרד.',
+      '4. מקבלת מייל כשהוא סיים לבחור — לא את התמונות, אלא קישור לאזור האישי. שם את רואה מה הוא בחר (והערה אם השאיר), ובלחיצת כפתור מורידה את כל הבחירות למחשב.',
+      '5. מעלה את המעובדות לאותה גלריה — הלקוח מקבל מייל שהן מוכנות, ומוריד את כולן בקליק אחד.',
+      '',
+      'עובד מצוין בנטפרי: הדומיין של הגלריות הפרטיות אושר בנטפרי, כולל התמונות. לקוחות על סינון נטפרי רואים הכול רגיל — בלי חסימות ובלי הוראות.',
+      '',
+      `הגלריה הפרטית הראשונה — חינם, בלי הגבלת זמן. גלריית לקוח מלאה מקצה לקצה בלי לשלם. מסלולים לכמה גלריות במקביל: ${plansUrl}`,
+      '',
+      `ליצירת גלריה פרטית: ${privateGalleriesUrl}`,
+      '',
+      `שאלה או תקלה? טאב יצירת הקשר במערכת: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader:
+        'הלקוח בוחר תמונות בעצמו בגלריה מעוצבת, ואת מקבלת את הבחירות מסודרות במקום אחד — בלי מיילים חוזרים, בלי לחפש בין המייל ל-Drive.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendPrivateGalleriesAnnouncementEmail(input: { name: string; email: string }) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'private-galleries-announcement',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildPrivateGalleriesAnnouncementEmail({ name: input.name })
 
   await provider.send({
     from: emailFrom(),

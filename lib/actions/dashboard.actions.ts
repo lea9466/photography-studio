@@ -5,7 +5,7 @@ import { resolveGalleryTableThumbnails } from '@/lib/actions/gallery.actions'
 import type { GalleryWithDetails } from '@/components/dashboard/RecentGalleriesTable'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
-import { PUBLIC_ONLY_MVP, isMvpBypassUser } from '@/lib/types/app.types'
+import { CLIENT_GALLERIES_ENABLED } from '@/lib/types/app.types'
 type GalleryRow = GalleryWithDetails & {
   photos?: Array<{ count: number }>
 }
@@ -91,7 +91,7 @@ export async function fetchDashboardOverview() {
     return {
       userName: typedUser?.name || 'משתמש',
       studioPath,
-      canViewDashboardHome: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
+      canViewDashboardHome: CLIENT_GALLERIES_ENABLED,
       galleries: transformedGalleries.map((gallery) => ({
         ...gallery,
         thumbnail_url: thumbnails[gallery.id] ?? null,
@@ -102,7 +102,7 @@ export async function fetchDashboardOverview() {
     return {
       userName: typedUser?.name || 'משתמש',
       studioPath,
-      canViewDashboardHome: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
+      canViewDashboardHome: CLIENT_GALLERIES_ENABLED,
       galleries: transformedGalleries,
     }
   }
@@ -138,6 +138,6 @@ export async function fetchUserEntitlements() {
      * becomes plan-derived. The galleries dashboard uses it to decide whether
      * to split the list into client vs showcase sections.
      */
-    canCreateClientGalleries: !PUBLIC_ONLY_MVP || isMvpBypassUser(userId),
+    canCreateClientGalleries: CLIENT_GALLERIES_ENABLED,
   }
 }

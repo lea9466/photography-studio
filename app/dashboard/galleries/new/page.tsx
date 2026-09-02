@@ -12,9 +12,8 @@ import { isGalleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
 import {
   MAX_PUBLIC_GALLERIES_PER_PHOTOGRAPHER,
   MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER,
-  PUBLIC_ONLY_MVP,
+  CLIENT_GALLERIES_ENABLED,
   DOWNLOAD_PERMISSIONS_ENABLED,
-  isMvpBypassUser,
 } from '@/lib/types/app.types'
 
 type NewGalleryPageProps = {
@@ -47,7 +46,7 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   // The kind is decided by which list the "גלריה חדשה" button was pressed on —
   // there is no in-flow chooser. Accounts without private galleries are always
   // showcase.
-  const canCreateClientGalleries = !PUBLIC_ONLY_MVP || isMvpBypassUser(userId)
+  const canCreateClientGalleries = CLIENT_GALLERIES_ENABLED
   const kindParam = (await searchParams).kind
   const requestedKind = isGalleryKind(kindParam) ? kindParam : 'showcase'
   const kind = canCreateClientGalleries ? requestedKind : 'showcase'
@@ -71,8 +70,7 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
       ? !(quota?.canCreateGallery ?? true)
       : !(privateQuota?.canCreateGallery ?? true)
 
-  const downloadPermissionsEnabled =
-    DOWNLOAD_PERMISSIONS_ENABLED || isMvpBypassUser(userId)
+  const downloadPermissionsEnabled = DOWNLOAD_PERMISSIONS_ENABLED
 
   return (
     <div className="space-y-6">
