@@ -1,6 +1,6 @@
 'use client'
 
-import { Heart, Sparkles } from 'lucide-react'
+import { Album, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type SelectionType = 'album' | 'edit'
@@ -17,25 +17,21 @@ type SelectionToggleProps = {
 
 const TYPE_CONFIG = {
   album: {
-    label: 'אלבום',
-    Icon: Heart,
-    idle: 'text-rose-400 hover:text-rose-300',
-    active: 'text-rose-500',
-    fill: 'fill-rose-500',
+    label: 'לאלבום',
+    Icon: Album,
+    active: 'bg-rose-500 text-white ring-rose-500',
   },
   edit: {
-    label: 'עיבוד',
-    Icon: Sparkles,
-    idle: 'text-amber-400 hover:text-amber-300',
-    active: 'text-amber-400',
-    fill: 'fill-amber-400',
+    label: 'לעיבוד',
+    Icon: Pencil,
+    active: 'bg-amber-400 text-black ring-amber-400',
   },
 } as const
 
 const SIZE_CLASSES = {
-  sm: 'h-5 w-5',
-  md: 'h-6 w-6',
-  lg: 'h-7 w-7',
+  sm: 'h-4 w-4',
+  md: 'h-5 w-5',
+  lg: 'h-6 w-6',
 } as const
 
 export function SelectionToggle({
@@ -59,26 +55,20 @@ export function SelectionToggle({
         onClick()
       }}
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full p-1.5 transition-all',
-        'hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50',
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 transition-all',
+        'text-sm font-medium ring-1 hover:scale-105',
+        'disabled:cursor-not-allowed disabled:opacity-50',
         'drop-shadow-[0_1px_3px_rgba(0,0,0,0.55)]',
-        selected ? config.active : config.idle,
+        selected
+          ? config.active
+          : 'bg-black/55 text-white ring-white/25 hover:bg-black/70',
         className
       )}
       aria-label={config.label}
       aria-pressed={selected}
     >
-      <Icon
-        className={cn(
-          SIZE_CLASSES[size],
-          'transition-all',
-          selected ? config.fill : 'fill-transparent'
-        )}
-        strokeWidth={selected ? 2.25 : 2}
-      />
-      {showLabel ? (
-        <span className="text-sm font-medium">{config.label}</span>
-      ) : null}
+      <Icon className={SIZE_CLASSES[size]} strokeWidth={2} />
+      {showLabel ? <span>{config.label}</span> : null}
     </button>
   )
 }

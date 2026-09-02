@@ -210,7 +210,7 @@ function MasonryTile({
 
       {canSelect ? (
         <div
-          className={`absolute inset-x-0 bottom-0 flex justify-center gap-3 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8 transition-opacity ${
+          className={`absolute inset-x-0 bottom-0 flex flex-wrap justify-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-3 pb-3 pt-8 transition-opacity ${
             photo.selected_album || photo.selected_edit
               ? 'opacity-100'
               : 'opacity-0 group-hover:opacity-100'
@@ -220,11 +220,15 @@ function MasonryTile({
             type="album"
             selected={photo.selected_album}
             onClick={() => onToggleAlbum(photo.id)}
+            showLabel
+            size="sm"
           />
           <SelectionToggle
             type="edit"
             selected={photo.selected_edit}
             onClick={() => onToggleEdit(photo.id)}
+            showLabel
+            size="sm"
           />
         </div>
       ) : null}

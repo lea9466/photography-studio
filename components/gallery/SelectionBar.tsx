@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Check, Heart, Sparkles } from 'lucide-react'
+import { Album, Check, Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { completeClientSelection } from '@/lib/actions/client-gallery.actions'
 import { Button } from '@/components/ui/button'
@@ -63,13 +63,13 @@ export function SelectionBar({
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-xs sm:text-sm">
             <span className="inline-flex items-center gap-1 text-rose-500">
-              <Heart className="h-3.5 w-3.5 fill-rose-500" />
-              {albumCount}
+              <Album className="h-3.5 w-3.5" />
+              לאלבום {albumCount}
               {maxAlbum != null ? `/${maxAlbum}` : ''}
             </span>
-            <span className="inline-flex items-center gap-1 text-amber-400">
-              <Sparkles className="h-3.5 w-3.5 fill-amber-400" />
-              {editCount}
+            <span className="inline-flex items-center gap-1 text-amber-500">
+              <Pencil className="h-3.5 w-3.5" />
+              לעיבוד {editCount}
               {maxEdit != null ? `/${maxEdit}` : ''}
             </span>
           </div>
