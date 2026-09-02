@@ -1,3 +1,4 @@
+import { FailoverEmailProvider } from './failover-email-provider'
 import type { EmailProvider } from './provider'
 import { MailjetProvider } from './providers/mailjet/mailjet-provider'
 import { ResendProvider } from './providers/resend/resend-provider'
@@ -15,27 +16,46 @@ export function getConfiguredEmailProviderName(): EmailProviderName {
   return 'resend'
 }
 
+/** A single provider with its own credentials, or null when they're missing. */
+function buildSingleProvider(name: string): EmailProvider | null {
+  if (name === 'resend') {
+    const apiKey = process.env.RESEND_API_KEY
+    return apiKey ? new ResendProvider(apiKey) : null
+  }
+  if (name === 'mailjet') {
+    const apiKey = process.env.MAILJET_API_KEY
+    const secretKey = process.env.MAILJET_SECRET_KEY
+    return apiKey && secretKey ? new MailjetProvider(apiKey, secretKey) : null
+  }
+  return null
+}
+
+function failoverCooldownMs(): number | undefined {
+  const raw = Number(process.env.EMAIL_FAILOVER_COOLDOWN_MINUTES)
+  return Number.isFinite(raw) && raw > 0 ? raw * 60 * 1000 : undefined
+}
+
 /**
- * Returns the configured provider, or `null` when it has no credentials —
- * the caller (`requireEmailProviderOrSafeStub` in lib/email/resend.ts)
- * turns `null` into a hard failure in production and a redacted stub log in
- * development, exactly as the old `getResend()` did.
+ * Returns the send path, or `null` when nothing is configured —
+ * `requireEmailProviderOrSafeStub` in lib/email/resend.ts turns `null` into a
+ * hard failure in production and a redacted stub log in development.
+ *
+ * With `EMAIL_FALLBACK_PROVIDER` set (and both providers' keys present) the
+ * result is a `FailoverEmailProvider`: the primary is tried first, and a
+ * quota / rate-limit / 5xx failure rolls over to the fallback. Unset →
+ * a single provider, identical to before.
  */
 export function createEmailProvider(
   name = getConfiguredEmailProviderName()
 ): EmailProvider | null {
-  if (name === 'resend') {
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) return null
-    return new ResendProvider(apiKey)
-  }
+  const primary = buildSingleProvider(name)
 
-  if (name === 'mailjet') {
-    const apiKey = process.env.MAILJET_API_KEY
-    const secretKey = process.env.MAILJET_SECRET_KEY
-    if (!apiKey || !secretKey) return null
-    return new MailjetProvider(apiKey, secretKey)
-  }
+  const fallbackName = process.env.EMAIL_FALLBACK_PROVIDER?.trim().toLowerCase()
+  const fallback =
+    fallbackName && fallbackName !== name ? buildSingleProvider(fallbackName) : null
 
-  return null
+  const chain = [primary, fallback].filter((p): p is EmailProvider => p !== null)
+  if (chain.length === 0) return null
+  if (chain.length === 1) return chain[0]
+  return new FailoverEmailProvider(chain, { cooldownMs: failoverCooldownMs() })
 }
