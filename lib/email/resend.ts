@@ -45,6 +45,17 @@ function emailFrom() {
   )
 }
 
+/**
+ * From-line for feature announcements — a personal sender name lifts open
+ * rates over a bare brand name. Set `ANNOUNCEMENT_EMAIL_FROM` (e.g.
+ * `לאה · Studio Gallery <noreply@studio-galleries.com>` — the address must be
+ * verified in the provider, same domain as EMAIL_FROM). Falls back to the
+ * regular from-line. `replyTo` on these emails already routes to Lea's inbox.
+ */
+function announcementEmailFrom() {
+  return process.env.ANNOUNCEMENT_EMAIL_FROM?.trim() || emailFrom()
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Branded email shell — "STG" luxe layout                                   */
 /* -------------------------------------------------------------------------- */
@@ -128,14 +139,17 @@ function luxeSectionLabel(text: string, color: string = LUXE.brand) {
 }
 
 /**
- * Landing-page step cards — each `[title, description]` pair becomes its own
- * rounded coloured panel with a rounded-square number badge, cycling through
- * `LUXE_STEP_COLORS`. Table-based for broad email-client support; radius
- * degrades to square in old Outlook.
+ * Landing-page step cards — each `[title, description, icon]` becomes its own
+ * rounded coloured panel with a rounded-square number badge and an emoji icon
+ * (emoji, not SVG/`<img>`, is the only iconography Gmail + Outlook render
+ * inline in email), cycling through `LUXE_STEP_COLORS`. Table-based for broad
+ * email-client support; radius degrades to square in old Outlook.
  */
-function luxeStepCards(items: ReadonlyArray<readonly [string, string]>) {
+function luxeStepCards(
+  items: ReadonlyArray<readonly [title: string, desc: string, icon: string]>
+) {
   const rows = items
-    .map(([title, desc], i) => {
+    .map(([title, desc, icon], i) => {
       const c = LUXE_STEP_COLORS[i % LUXE_STEP_COLORS.length]
       return `
         <tr>
@@ -145,12 +159,12 @@ function luxeStepCards(items: ReadonlyArray<readonly [string, string]>) {
                 <td valign="top" width="40" style="width: 40px; padding: 18px 18px 18px 10px;">
                   <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                     <tr>
-                      <td align="center" valign="middle" width="38" height="38" style="width: 38px; height: 38px; background: ${c.ink}; border-radius: 11px; font-family: ${LUXE.sans}; font-size: 17px; font-weight: 700; color: #ffffff;">${i + 1}</td>
+                      <td align="center" valign="middle" width="38" height="38" style="width: 38px; height: 38px; background: ${c.ink}; border-radius: 11px; font-family: ${LUXE.sans}; font-size: 16px; font-weight: 700; color: #ffffff;">${i + 1}</td>
                     </tr>
                   </table>
                 </td>
-                <td valign="top" style="padding: 18px 2px 18px 18px; font-family: ${LUXE.sans};">
-                  <div style="font-size: 15.5px; font-weight: 700; line-height: 1.4; color: ${LUXE.ink}; margin-bottom: 3px;">${title}</div>
+                <td valign="top" style="padding: 16px 2px 16px 16px; font-family: ${LUXE.sans};">
+                  <div style="font-size: 15.5px; font-weight: 700; line-height: 1.4; color: ${LUXE.ink}; margin-bottom: 3px;"><span style="font-size: 18px;">${icon}</span>&nbsp;&nbsp;${title}</div>
                   <div style="font-size: 14px; line-height: 1.6; color: ${LUXE.muted};">${desc}</div>
                 </td>
               </tr>
@@ -790,50 +804,52 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     <h1 style="${h1}">גלריות פרטיות ללקוחות</h1>
     <p style="${subhead}">שליחה, בחירה ומסירה — כל התהליך בגלריה אחת.</p>
     <p style="${p}">שלום ${name},</p>
-    <p style="${p}">מהיום אפשר לשלוח ללקוח גלריה פרטית משלו: הוא נכנס, עובר על התמונות, מסמן מה שהוא בוחר, ואת מקבלת את הבחירות מסודרות במקום אחד.</p>
+    <p style="${p}">כשלקוח בוחר תמונות, זה בדרך כלל מייל אחרי מייל: "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב". הבחירות מתפזרות בין תיבת המייל לתיקייה ב-Drive — ופתאום המספרים לא תואמים.</p>
+    <p style="${p}">מהיום יש דרך אחת: את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד.</p>
 
-    ${sectionSpacer}
-    ${luxeSectionLabel('במקום מיילים בלי סוף', '#78716c')}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 4px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 22px 0 8px;">
       <tr>
-        <td style="background: #f6f5f4; border: 1px solid #e7e5e2; border-radius: 14px; padding: 16px 20px;">
-          <div style="font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #78716c; margin-bottom: 7px;">היום</div>
-          <div style="font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: #57534e;">מייל אחרי מייל: "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב", "הקישור פג". הבחירות מתפזרות בין תיבת המייל לתיקייה ב-Drive.</div>
+        <td bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px; padding: 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px;">
+            <tr>
+              <td style="background: #8b5cf6; border-radius: 999px; padding: 5px 13px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">🎁&nbsp;&nbsp;מתנה</td>
+            </tr>
+          </table>
+          <p style="margin: 0 0 6px; font-family: ${LUXE.serif}; font-size: 22px; color: #ffffff;">הגלריה הפרטית הראשונה — חינם</p>
+          <p style="margin: 0; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: #f1e9fb;">בלי הגבלת זמן. גלריית לקוח מלאה מקצה לקצה — לשלוח, לקבל בחירות ולמסור — בלי לשלם שקל. רוצה כמה גלריות במקביל? <a href="${plansUrl}" style="color: #ffffff; text-decoration: underline;">יש מסלולים בהמשך</a>.</p>
         </td>
       </tr>
     </table>
-    <div style="text-align: center; font-family: ${LUXE.sans}; font-size: 20px; line-height: 1; color: #c4b5fd; margin: 8px 0;">&darr;</div>
-    ${luxeCalloutCard({
-      badge: '✓',
-      ink: LUXE.brand,
-      bg: '#f3edfe',
-      border: '#e4d6fb',
-      title: 'עם גלריה פרטית',
-      body: 'קישור אחד קבוע. הלקוח מסמן בעצמו על התמונה, ואת רואה את הבחירות מסודרות במקום אחד — בלי לרדוף אחרי מיילים, בלי לחפש בין המייל ל-Drive.',
-    })}
+
+    ${luxeButton(privateGalleriesUrl, 'ליצירת הגלריה הפרטית שלך')}
 
     ${sectionSpacer}
     ${luxeSectionLabel('איך זה עובד', LUXE.brand)}
     ${luxeStepCards([
       [
         'יוצרת גלריה ומשייכת ללקוח',
-        'שם, תאריך תפוגה, כמה תמונות מותר לבחור, סימן מים, והרשאות הורדה: אם הלקוח יכול להוריד תמונות ובאיזו איכות — מלאה, או מוגבלת עם סימן מים — הכול לפי מה שאת מאשרת. אין סיסמאות לנהל: הלקוח מקבל קוד כניסה חד-פעמי במייל בכל כניסה.',
+        'שם, תאריך תפוגה, מכסת בחירה, סימן מים והרשאות הורדה. בלי סיסמה לנהל — הלקוח מקבל קוד חד-פעמי במייל בכל כניסה.',
+        '🎨',
       ],
       [
         'מעלה תמונות ושולחת קישור',
-        'בלחיצה אחת הלקוח מקבל מייל עם קישור לגלריה הפרטית שלו. התמונות עצמן לא נשלחות במייל — הכול נשאר בגלריה.',
+        'לחיצה אחת, והלקוח מקבל מייל עם קישור לגלריה שלו. התמונות עצמן לא נשלחות — הכול נשאר בגלריה.',
+        '🔗',
       ],
       [
-        'הלקוח עובר ובוחר בעצמו',
-        'גלריה מעוצבת שנטענת מהר. הוא מסמן תמונות לאלבום ותמונות לעיבוד, כל רשימה בנפרד, לפי המגבלה שהגדרת.',
+        'הלקוח בוחר בעצמו',
+        'גלריה מעוצבת שנטענת מהר. הוא מסמן תמונות לאלבום ולעיבוד — כל רשימה בנפרד, לפי המכסה שהגדרת.',
+        '✅',
       ],
       [
-        'מקבלת מייל כשהוא סיים לבחור',
-        'לא את התמונות — קישור לאזור האישי. שם את רואה בדיוק מה הוא בחר (והערה אישית אם השאיר), ובלחיצת כפתור מורידה את כל הבחירות למחשב.',
+        'מקבלת מייל כשהוא סיים',
+        'קישור לאזור האישי: רואה בדיוק מה הוא בחר (והערה אם השאיר), ומורידה את כל הבחירות בכפתור אחד.',
+        '📥',
       ],
       [
-        'מעלה את המעובדות לאותה גלריה',
-        'סיימת לערוך? מעלה את התמונות המוכנות לאותה גלריה. הלקוח מקבל מייל שהן מוכנות, ומוריד את כולן בקליק אחד.',
+        'מעלה מעובדות — הלקוח מוריד בקליק',
+        'העלית את התמונות המוכנות לאותה גלריה? הלקוח מקבל מייל שהן מוכנות, ומוריד את כולן בקליק אחד — באיכות שאישרת.',
+        '✨',
       ],
     ])}
 
@@ -844,51 +860,36 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
       bg: '#e3f6f2',
       border: '#c4ebe2',
       title: 'עובד מצוין בנטפרי',
-      body: 'הדומיין של הגלריות הפרטיות אושר בנטפרי — כולל התמונות עצמן. לקוחות על סינון נטפרי ייכנסו לגלריה ויראו את כל התמונות רגיל לגמרי: בלי חסימות, בלי "לבדיקת התמונה פנו לנטפרי", בלי הוראות. פשוט עובד.',
+      body: 'הדומיין של הגלריות הפרטיות אושר בנטפרי — כולל התמונות עצמן. לקוחות על סינון נטפרי ייכנסו ויראו את הכול רגיל: בלי חסימות, בלי "לבדיקת התמונה פנו לנטפרי", בלי הוראות.',
     })}
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 26px 0 6px;">
-      <tr>
-        <td bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px; padding: 24px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px;">
-            <tr>
-              <td style="background: #8b5cf6; border-radius: 999px; padding: 5px 13px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">מתנה</td>
-            </tr>
-          </table>
-          <p style="margin: 0 0 6px; font-family: ${LUXE.serif}; font-size: 21px; color: #ffffff;">הגלריה הפרטית הראשונה — חינם</p>
-          <p style="margin: 0; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: #f1e9fb;">בלי הגבלת זמן. גלריית לקוח מלאה — לשלוח, לקבל בחירות ולמסור — בלי לשלם שקל. רוצה כמה גלריות במקביל? <a href="${plansUrl}" style="color: #ffffff; text-decoration: underline;">יש מסלולים בהמשך</a>.</p>
-        </td>
-      </tr>
-    </table>
-
+    <p style="${pMuted} margin-top: 22px;">להקים גלריה ראשונה לוקח כ-3 דקות. הכול מתוך האזור האישי.</p>
     ${luxeButton(privateGalleriesUrl, 'ליצירת גלריה פרטית')}
 
-    <div style="border-top: 1px solid ${LUXE.border}; margin: 26px 0 18px;"></div>
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
     <p style="${pMuted} margin-bottom: 0;">שאלה, או משהו שלא עבד חלק? אני כאן — דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
 
   return {
-    subject: 'סוף למיילים בלי סוף — הגלריות הפרטיות שלך פה',
+    subject: 'הגלריה הפרטית הראשונה שלך — חינם',
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
-      'מהיום אפשר לשלוח ללקוח גלריה פרטית משלו — הוא נכנס, עובר על התמונות, מסמן מה שבחר, ואת מקבלת את הבחירות מסודרות במקום אחד. כל התהליך, מהשליחה ועד המסירה, בגלריה אחת.',
+      'כשלקוח בוחר תמונות, זה בדרך כלל מייל אחרי מייל — "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "תשלחי שוב". הבחירות מתפזרות בין המייל לתיקייה ב-Drive, והמספרים לא תמיד תואמים.',
       '',
-      'במקום מיילים בלי סוף:',
-      'היום כדי שלקוח יבחר תמונות הולך ובא מייל אחרי מייל — "שלחתי לך את הגלריה", "תכתבי לי אילו מספרים בחרת", "לא הצלחתי לפתוח, תשלחי שוב", "הקישור פג". הבחירות מתפזרות בין המייל לתיקייה ב-Drive, והמספרים לא תמיד תואמים כי הקבצים קיבלו שם אחר.',
-      'עכשיו זה קישור אחד קבוע. הלקוח מסמן בעצמו על התמונה, ואת רואה את הבחירות מסודרות במקום אחד.',
+      'מהיום יש דרך אחת: את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד.',
+      '',
+      `הגלריה הפרטית הראשונה — חינם, בלי הגבלת זמן. גלריית לקוח מלאה מקצה לקצה בלי לשלם שקל. מסלולים לכמה גלריות במקביל: ${plansUrl}`,
       '',
       'איך זה עובד:',
-      '1. יוצרת גלריה ומשייכת ללקוח — שם, תאריך תפוגה, מכסת בחירה, סימן מים, והרשאות הורדה: אם הלקוח יכול להוריד ובאיזו איכות (מלאה, או מוגבלת עם סימן מים) — לפי מה שאת מאשרת. בלי סיסמאות: קוד חד-פעמי במייל בכל כניסה.',
-      '2. מעלה תמונות ושולחת קישור — הלקוח מקבל מייל עם קישור לגלריה שלו. התמונות עצמן לא נשלחות במייל.',
-      '3. הלקוח עובר ובוחר בעצמו — מסמן תמונות לאלבום ותמונות לעיבוד, כל רשימה בנפרד.',
-      '4. מקבלת מייל כשהוא סיים לבחור — לא את התמונות, אלא קישור לאזור האישי. שם את רואה מה הוא בחר (והערה אם השאיר), ובלחיצת כפתור מורידה את כל הבחירות למחשב.',
-      '5. מעלה את המעובדות לאותה גלריה — הלקוח מקבל מייל שהן מוכנות, ומוריד את כולן בקליק אחד.',
+      '1. יוצרת גלריה ומשייכת ללקוח — שם, תפוגה, מכסת בחירה, סימן מים והרשאות הורדה. בלי סיסמה: קוד חד-פעמי במייל בכל כניסה.',
+      '2. מעלה תמונות ושולחת קישור — הלקוח מקבל מייל עם קישור לגלריה שלו.',
+      '3. הלקוח בוחר בעצמו — מסמן תמונות לאלבום ולעיבוד, כל רשימה בנפרד.',
+      '4. מקבלת מייל כשהוא סיים — קישור לאזור האישי, ומורידה את כל הבחירות בכפתור אחד.',
+      '5. מעלה מעובדות לאותה גלריה — הלקוח מקבל מייל ומוריד את כולן בקליק, באיכות שאישרת.',
       '',
       'עובד מצוין בנטפרי: הדומיין של הגלריות הפרטיות אושר בנטפרי, כולל התמונות. לקוחות על סינון נטפרי רואים הכול רגיל — בלי חסימות ובלי הוראות.',
       '',
-      `הגלריה הפרטית הראשונה — חינם, בלי הגבלת זמן. גלריית לקוח מלאה מקצה לקצה בלי לשלם. מסלולים לכמה גלריות במקביל: ${plansUrl}`,
-      '',
-      `ליצירת גלריה פרטית: ${privateGalleriesUrl}`,
+      `להקים גלריה ראשונה לוקח כ-3 דקות: ${privateGalleriesUrl}`,
       '',
       `שאלה או תקלה? טאב יצירת הקשר במערכת: ${contactUrl}`,
       '',
@@ -896,7 +897,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     ].join('\n'),
     html: renderLuxeEmail({
       preheader:
-        'הלקוח בוחר תמונות בעצמו בגלריה מעוצבת, ואת מקבלת את הבחירות מסודרות במקום אחד — בלי מיילים חוזרים, בלי לחפש בין המייל ל-Drive.',
+        'הלקוח בוחר תמונות בעצמו בגלריה מעוצבת, ואת מקבלת רשימה מדויקת במקום אחד — בלי מיילים חוזרים. הראשונה חינם.',
       contentHtml,
     }),
   }
@@ -912,7 +913,7 @@ export async function sendPrivateGalleriesAnnouncementEmail(input: { name: strin
   const { subject, text, html } = buildPrivateGalleriesAnnouncementEmail({ name: input.name })
 
   await provider.send({
-    from: emailFrom(),
+    from: announcementEmailFrom(),
     to: input.email,
     replyTo: getFeedbackEmail(),
     subject,
