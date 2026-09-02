@@ -401,7 +401,10 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         }}
         canSelectAlbum={canSelectAlbum}
         canSelectEdit={canSelectEdit}
-        isLimitedQuality={!['delivery_ready', 'locked'].includes(gallery.status)}
+        // The lightbox only ever renders a down-scaled proof — never a
+        // full-size delivered file — so the note holds at every stage and
+        // regardless of whether a watermark is burned in.
+        isLimitedQuality
         onToggleAlbum={(id) => toggleField(id, 'selected_album')}
         onToggleEdit={(id) => toggleField(id, 'selected_edit')}
       />
