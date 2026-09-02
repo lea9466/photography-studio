@@ -798,7 +798,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
   html: string
 } {
   const name = escapeHtml(input.name.trim() || 'שלום')
-  const subject = 'עכשיו ניהול גלריות פרטיות — הכי פשוט וקל'
+  const subject = 'ניהול גלריות פרטיות — הכי פשוט וקל'
   const privateGalleriesUrl = appUrl('/dashboard/private-galleries')
   const plansUrl = appUrl('/dashboard/usage-packages')
   const contactUrl = appUrl('/dashboard/contact')
@@ -816,7 +816,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
         <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STUDIO&nbsp;GALLERY</td>
       </tr>
     </table>
-    <h1 style="${h1}">ניהול גלריות פרטיות — עכשיו הכי פשוט וקל</h1>
+    <h1 style="${h1}">ניהול גלריות פרטיות — הכי פשוט וקל</h1>
     <p style="${subhead}">שליחה, בחירה ומסירה — כל התהליך בגלריה אחת.</p>
     <p style="${p}">שלום ${name},</p>
     <p style="${p}">מהיום את שולחת ללקוח גלריה פרטית משלו, הוא מסמן בעצמו על התמונה, ואת מקבלת רשימה מדויקת — הכול במקום אחד:</p>
