@@ -387,7 +387,9 @@ export class PaymentService {
       await reactivateSuspendedCustomDomains(input.userId)
     }
 
-    return this.getCurrentSubscription(input.userId)
+    // Return the view for THIS plan's product — a private-gallery charge must
+    // not fall back to the public_site default and show that product's plans.
+    return this.getCurrentSubscription(input.userId, planRow.product)
   }
 
   /**
