@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { DisableWatermarkDialog } from '@/components/gallery/DisableWatermarkDialog'
 import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 
 type ClientGalleryEditFormProps = {
@@ -49,6 +50,7 @@ export function ClientGalleryEditForm({
   const [autoApplyWatermark, setAutoApplyWatermark] = useState(
     settings?.auto_apply_watermark ?? true
   )
+  const [disableWatermarkOpen, setDisableWatermarkOpen] = useState(false)
   const [maxAlbum, setMaxAlbum] = useState(settings?.max_album_selection?.toString() ?? '')
   const [maxEdit, setMaxEdit] = useState(settings?.max_edit_selection?.toString() ?? '')
   const [albumSelectionEnabled, setAlbumSelectionEnabled] = useState(
@@ -122,7 +124,16 @@ export function ClientGalleryEditForm({
                 בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה שהלקוח רואה
               </p>
             </div>
-            <Switch checked={autoApplyWatermark} onCheckedChange={setAutoApplyWatermark} />
+            <Switch
+              checked={autoApplyWatermark}
+              onCheckedChange={(checked) => {
+                if (!checked) {
+                  setDisableWatermarkOpen(true)
+                  return
+                }
+                setAutoApplyWatermark(true)
+              }}
+            />
           </div>
         </div>
         <div className="space-y-2">
@@ -240,6 +251,15 @@ export function ClientGalleryEditForm({
           {isPending ? 'שומר...' : 'שמור הגדרות'}
         </Button>
       </div>
+
+      <DisableWatermarkDialog
+        open={disableWatermarkOpen}
+        onOpenChange={setDisableWatermarkOpen}
+        onConfirm={() => {
+          setAutoApplyWatermark(false)
+          setDisableWatermarkOpen(false)
+        }}
+      />
     </>
   )
 }

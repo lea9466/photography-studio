@@ -21,6 +21,7 @@ import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import type { Client } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { DisableWatermarkDialog } from '@/components/gallery/DisableWatermarkDialog'
 
 const WIZARD_STEPS = ['בחירת לקוח', 'פרטי הגלריה', 'מגבלות והרשאות']
 
@@ -63,6 +64,7 @@ export function ClientGalleryWizard({
   const [step, setStep] = useState(1)
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [disableWatermarkOpen, setDisableWatermarkOpen] = useState(false)
   const [state, setState] = useState<WizardState>({
     clientMode: clients.length > 0 ? 'existing' : 'new',
     clientId: clients[0]?.id ?? '',
@@ -481,7 +483,13 @@ export function ClientGalleryWizard({
                 </div>
                 <Switch
                   checked={state.autoApplyWatermark}
-                  onCheckedChange={(checked) => updateState('autoApplyWatermark', checked)}
+                  onCheckedChange={(checked) => {
+                    if (!checked) {
+                      setDisableWatermarkOpen(true)
+                      return
+                    }
+                    updateState('autoApplyWatermark', true)
+                  }}
                 />
               </div>
               <div>
@@ -594,6 +602,15 @@ export function ClientGalleryWizard({
           </Button>
         )}
       </div>
+
+      <DisableWatermarkDialog
+        open={disableWatermarkOpen}
+        onOpenChange={setDisableWatermarkOpen}
+        onConfirm={() => {
+          updateState('autoApplyWatermark', false)
+          setDisableWatermarkOpen(false)
+        }}
+      />
     </div>
   )
 }
