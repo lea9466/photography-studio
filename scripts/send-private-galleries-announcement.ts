@@ -16,8 +16,9 @@
  *      subscription charge has been smoke-tested end-to-end.
  *   3. NetFree confirmed showing real client photos (not the placeholder) on
  *      a clean browser with a real NetFree account.
- *   4. `ANNOUNCEMENT_EMAIL_FROM` set in the environment (personal sender name,
- *      e.g. "לאה מ-Studio Galleries <noreply@studio-galleries.com>").
+ *
+ * The subject line is personalised with the recipient's first name
+ * ("<שם>, הגלריה הפרטית הראשונה שלך — חינם").
  *
  * Usage:
  *   npx tsx --env-file=.env.local scripts/send-private-galleries-announcement.ts assign

@@ -45,17 +45,6 @@ function emailFrom() {
   )
 }
 
-/**
- * From-line for feature announcements — a personal sender name lifts open
- * rates over a bare brand name. Set `ANNOUNCEMENT_EMAIL_FROM` (e.g.
- * `לאה · Studio Gallery <noreply@studio-galleries.com>` — the address must be
- * verified in the provider, same domain as EMAIL_FROM). Falls back to the
- * regular from-line. `replyTo` on these emails already routes to Lea's inbox.
- */
-function announcementEmailFrom() {
-  return process.env.ANNOUNCEMENT_EMAIL_FROM?.trim() || emailFrom()
-}
-
 /* -------------------------------------------------------------------------- */
 /*  Branded email shell — "STG" luxe layout                                   */
 /* -------------------------------------------------------------------------- */
@@ -784,6 +773,18 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
   html: string
 } {
   const name = escapeHtml(input.name.trim() || 'שלום')
+  // First name only for the subject line — personalised subjects lift open
+  // rates. Fall back to the plain subject when there is no usable name (empty,
+  // or the "שלום" placeholder the rollout script passes) or it looks like a
+  // studio name rather than a person's.
+  const firstName = input.name.trim().split(/\s+/)[0] ?? ''
+  const subjectName =
+    firstName && firstName !== 'שלום' && firstName.length <= 12 && !/סטודיו|studio/i.test(firstName)
+      ? firstName
+      : ''
+  const subject = subjectName
+    ? `${subjectName}, הגלריה הפרטית הראשונה שלך — חינם`
+    : 'הגלריה הפרטית הראשונה שלך — חינם'
   const privateGalleriesUrl = appUrl('/dashboard/private-galleries')
   const plansUrl = appUrl('/dashboard/usage-packages')
   const contactUrl = appUrl('/dashboard/contact')
@@ -870,7 +871,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
     <p style="${pMuted} margin-bottom: 0;">שאלה, או משהו שלא עבד חלק? אני כאן — דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
 
   return {
-    subject: 'הגלריה הפרטית הראשונה שלך — חינם',
+    subject,
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
@@ -913,7 +914,7 @@ export async function sendPrivateGalleriesAnnouncementEmail(input: { name: strin
   const { subject, text, html } = buildPrivateGalleriesAnnouncementEmail({ name: input.name })
 
   await provider.send({
-    from: announcementEmailFrom(),
+    from: emailFrom(),
     to: input.email,
     replyTo: getFeedbackEmail(),
     subject,
