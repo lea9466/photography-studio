@@ -99,7 +99,7 @@ export function SelectionsView({
           onClick={handleDownload}
         >
           <Download className="h-4 w-4" />
-          הורד תמונות נבחרות ({downloadFileCount}, ZIP)
+          הורד תמונות נבחרות באיכות מלאה ({downloadFileCount}, ZIP)
         </Button>
       </div>
 

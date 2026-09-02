@@ -64,7 +64,7 @@ export function ClientEditedDownloadButton({
       }
     >
       <Download className="h-4 w-4" />
-      {isPending ? 'מכין ZIP...' : 'הורד מעובדות (ZIP)'}
+      {isPending ? 'מכין ZIP...' : 'הורד מעובדות באיכות מלאה (ZIP)'}
     </Button>
   )
 }
