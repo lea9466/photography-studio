@@ -47,6 +47,19 @@ test('bypass account is not blocked; other accounts still are', () => {
   })
 })
 
+test('MVP_BYPASS_USER_ID accepts a comma-separated list of ids', () => {
+  const saved = process.env.MVP_BYPASS_USER_ID
+  try {
+    process.env.MVP_BYPASS_USER_ID = ` ${BYPASS_ID} , second-bypass-0003 `
+    assert.equal(isMvpBlockedDashboardRoute('/dashboard', BYPASS_ID), false)
+    assert.equal(isMvpBlockedDashboardRoute('/dashboard', 'second-bypass-0003'), false)
+    assert.equal(isMvpBlockedDashboardRoute('/dashboard', OTHER_ID), true)
+  } finally {
+    if (saved === undefined) delete process.env.MVP_BYPASS_USER_ID
+    else process.env.MVP_BYPASS_USER_ID = saved
+  }
+})
+
 test('a blank / unset MVP_BYPASS_USER_ID never lifts the block', () => {
   const saved = process.env.MVP_BYPASS_USER_ID
   try {
