@@ -418,33 +418,26 @@ async function loadClientGalleryInternal(galleryId: string) {
       const editedPath = matchedEditPath ?? (photo.is_processed ? photo.preview_url : null)
       const editedBucket: MediaBucket = matchedEditPath ? 'edited' : 'previews'
 
-      const lightboxPath = forcePublicWatermarked
-        ? photo.watermarked_preview_url
-        : useWatermarked
-          ? photo.watermarked_preview_url
-          : editedPath ?? photo.preview_url
+      // The client only ever sees a clean (un-watermarked) image for a photo
+      // that has genuinely been delivered — an uploaded edit, or one the
+      // photographer marked "processed" — once the gallery is in a delivery
+      // state. Everything else stays watermarked at every stage: an un-edited
+      // photo is still just a proof, whether the client is mid-selection or the
+      // gallery is already delivered. Falls back to the clean preview only for
+      // legacy photos that never got a watermarked derivative.
+      const deliverClean = isDelivered && Boolean(editedPath)
 
-      const gridPath = forcePublicWatermarked
+      const displayPath = forcePublicWatermarked
         ? photo.watermarked_preview_url
-        : isDelivered && editedPath
+        : deliverClean
           ? editedPath
-          : useWatermarked && photo.watermarked_preview_url
-            ? photo.watermarked_preview_url
-            : photo.preview_url
+          : photo.watermarked_preview_url ?? photo.preview_url
 
-      const gridBucket: MediaBucket = forcePublicWatermarked
+      const displayBucket: MediaBucket = forcePublicWatermarked
         ? 'watermarked'
-        : isDelivered && editedPath
+        : deliverClean
           ? editedBucket
-          : useWatermarked && photo.watermarked_preview_url
-            ? 'watermarked'
-            : 'previews'
-
-      const lightboxBucket: MediaBucket = forcePublicWatermarked
-        ? 'watermarked'
-        : isDelivered && editedPath
-          ? editedBucket
-          : useWatermarked
+          : photo.watermarked_preview_url
             ? 'watermarked'
             : 'previews'
 
@@ -461,8 +454,8 @@ async function loadClientGalleryInternal(galleryId: string) {
         selected_album: selection?.selected_album ?? false,
         selected_edit: selection?.selected_edit ?? false,
         edited_url: editedPath,
-        preview_signed_url: await signPath(gridBucket, gridPath, galleryId, forceProxy),
-        lightbox_signed_url: await signPath(lightboxBucket, lightboxPath, galleryId, forceProxy),
+        preview_signed_url: await signPath(displayBucket, displayPath, galleryId, forceProxy),
+        lightbox_signed_url: await signPath(displayBucket, displayPath, galleryId, forceProxy),
         edited_signed_url: await signPath(editedBucket, editedPath, galleryId, forceProxy),
         width: photo.width,
         height: photo.height,
