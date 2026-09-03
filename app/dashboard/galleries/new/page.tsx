@@ -5,7 +5,7 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { getPublicGalleryQuota, getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { fetchActiveGalleryPassBundles } from '@/lib/gallery-pass/loader'
-import { fetchAvailableGalleryPassCredit } from '@/lib/gallery-pass/credits'
+import { fetchAvailableGalleryPassCredits } from '@/lib/gallery-pass/credits'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { ShowcaseGalleryForm } from '@/components/gallery/ShowcaseGalleryForm'
 import { ClientGalleryWizard } from '@/components/gallery/ClientGalleryWizard'
@@ -20,7 +20,7 @@ import {
 } from '@/lib/types/app.types'
 
 type NewGalleryPageProps = {
-  searchParams: Promise<{ kind?: string }>
+  searchParams: Promise<{ kind?: string; buy?: string }>
 }
 
 const KIND_META = {
@@ -50,10 +50,11 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   // there is no in-flow chooser. Accounts without private galleries are always
   // showcase.
   const canCreateClientGalleries = CLIENT_GALLERIES_ENABLED
-  const kindParam = (await searchParams).kind
+  const { kind: kindParam, buy } = await searchParams
   const requestedKind = isGalleryKind(kindParam) ? kindParam : 'showcase'
   const kind = canCreateClientGalleries ? requestedKind : 'showcase'
   const meta = KIND_META[kind]
+  const wantsBuyPanel = buy === '1'
 
   const [{ data: profileData }, clients, quota, privateQuota] = await Promise.all([
     supabase.from('users').select('studio_name').eq('id', userId).single(),
@@ -73,18 +74,84 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
       ? !(quota?.canCreateGallery ?? true)
       : !(privateQuota?.canCreateGallery ?? true)
 
-  // When a client gallery is blocked by the tier: use a bought pass credit if
-  // she has one, otherwise offer to buy one — instead of a dead end.
-  const needsPass = kind === 'client' && blockedByQuota
-  const [passBundles, availableCredit] = needsPass
+  const isClient = kind === 'client'
+  const [passBundles, availableCredits] = isClient
     ? await Promise.all([
         fetchActiveGalleryPassBundles().catch(() => []),
-        fetchAvailableGalleryPassCredit(userId).catch(() => null),
+        fetchAvailableGalleryPassCredits(userId).catch(() => []),
       ])
-    : [[], null]
+    : [[], []]
   const canBuyPass = passBundles.length > 0
+  const tierBlocked = isClient && blockedByQuota
+
+  const buyPanel = (
+    <GalleryPassPurchasePanel
+      backHref={wantsBuyPanel ? '/dashboard/galleries/new?kind=client' : meta.list.href}
+      bundles={passBundles.map((b) => ({
+        code: b.code,
+        name: b.name,
+        photoCap: b.photo_cap,
+        validityDays: b.validity_days,
+        amountAgorot: b.amount_agorot,
+      }))}
+    />
+  )
 
   const downloadPermissionsEnabled = DOWNLOAD_PERMISSIONS_ENABLED
+
+  // What to render below the header:
+  //  - explicit "buy a pass" request, or tier-blocked with no credit to fall
+  //    back on → the purchase panel (falling through to the dead-end copy only
+  //    when there's nothing to sell);
+  //  - otherwise the wizard, which itself lets her choose tier vs. which credit.
+  let body: React.ReactNode
+  if (isClient && (wantsBuyPanel || (tierBlocked && availableCredits.length === 0)) && canBuyPass) {
+    body = buyPanel
+  } else if (blockedByQuota && !(isClient && availableCredits.length > 0)) {
+    body = (
+      <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
+        <p className="text-[#48464c]">
+          {kind === 'client' ? (
+            privateQuota?.isLifetime ? (
+              'ניצלת כבר את הגלריה הפרטית החינמית שלך — מחיקתה לא תשחרר מקום. יש לשדרג למסלול בתשלום כדי ליצור גלריה נוספת.'
+            ) : (
+              <>
+                ניתן ליצור עד {privateQuota?.maxGalleries} גלריות פרטיות במקביל במסלול הנוכחי,
+                עם עד {privateQuota?.maxPhotosPerGallery} תמונות לגלריה. מחקי גלריה קיימת או שדרגי
+                כדי ליצור חדשה.
+              </>
+            )
+          ) : (
+            <>
+              ניתן ליצור עד {maxGalleries} גלריות, עם עד {maxPhotos} תמונות בסך הכל.
+              מחקי גלריה קיימת כדי ליצור חדשה.
+            </>
+          )}
+        </p>
+        <Button asChild className="mt-6 bg-[#7D3A52] text-white hover:bg-[#6a2f44]">
+          <Link href={meta.list.href}>חזרה לגלריות</Link>
+        </Button>
+      </div>
+    )
+  } else if (isClient) {
+    body = (
+      <ClientGalleryWizard
+        clients={clients}
+        defaultWatermarkText={studioName}
+        downloadPermissionsEnabled={downloadPermissionsEnabled}
+        tierBlocked={tierBlocked}
+        buyMoreHref={canBuyPass ? '/dashboard/galleries/new?kind=client&buy=1' : null}
+        availableCredits={availableCredits.map((c) => ({
+          id: c.id,
+          name: c.bundle_code,
+          photoCap: c.photo_cap,
+          validityDays: c.validity_days,
+        }))}
+      />
+    )
+  } else {
+    body = <ShowcaseGalleryForm defaultWatermarkText={studioName} />
+  }
 
   return (
     <div className="space-y-6">
@@ -117,58 +184,7 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
         <p>{meta.note}</p>
       </div>
 
-      {needsPass && !availableCredit && canBuyPass ? (
-        <GalleryPassPurchasePanel
-          backHref={meta.list.href}
-          bundles={passBundles.map((b) => ({
-            code: b.code,
-            name: b.name,
-            photoCap: b.photo_cap,
-            validityDays: b.validity_days,
-            amountAgorot: b.amount_agorot,
-          }))}
-        />
-      ) : blockedByQuota && !(kind === 'client' && availableCredit) ? (
-        <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
-          <p className="text-[#48464c]">
-            {kind === 'client' ? (
-              privateQuota?.isLifetime ? (
-                'ניצלת כבר את הגלריה הפרטית החינמית שלך — מחיקתה לא תשחרר מקום. יש לשדרג למסלול בתשלום כדי ליצור גלריה נוספת.'
-              ) : (
-                <>
-                  ניתן ליצור עד {privateQuota?.maxGalleries} גלריות פרטיות במקביל במסלול הנוכחי,
-                  עם עד {privateQuota?.maxPhotosPerGallery} תמונות לגלריה. מחקי גלריה קיימת או שדרגי
-                  כדי ליצור חדשה.
-                </>
-              )
-            ) : (
-              <>
-                ניתן ליצור עד {maxGalleries} גלריות, עם עד {maxPhotos} תמונות בסך הכל.
-                מחקי גלריה קיימת כדי ליצור חדשה.
-              </>
-            )}
-          </p>
-          <Button asChild className="mt-6 bg-[#7D3A52] text-white hover:bg-[#6a2f44]">
-            <Link href={meta.list.href}>חזרה לגלריות</Link>
-          </Button>
-        </div>
-      ) : kind === 'client' ? (
-        <ClientGalleryWizard
-          clients={clients}
-          defaultWatermarkText={studioName}
-          downloadPermissionsEnabled={downloadPermissionsEnabled}
-          usingCredit={
-            availableCredit
-              ? {
-                  photoCap: availableCredit.photo_cap,
-                  validityDays: availableCredit.validity_days,
-                }
-              : null
-          }
-        />
-      ) : (
-        <ShowcaseGalleryForm defaultWatermarkText={studioName} />
-      )}
+      {body}
     </div>
   )
 }

@@ -37,7 +37,7 @@ import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { buildPrivateGalleryCountLimitError } from '@/lib/private-galleries/entitlements'
 import {
-  fetchAvailableGalleryPassCredit,
+  resolveGalleryPassCreditForCreation,
   consumeGalleryPassCredit,
   type GalleryPassCredit,
 } from '@/lib/gallery-pass/credits'
@@ -363,6 +363,11 @@ export type CreateGalleryInput = {
   sendToClient?: boolean
   isPublic?: boolean
   coverImage?: string
+  /** A specific bought gallery-pass credit to consume for this gallery. When
+   * set, that credit's cap/validity govern the gallery even if the tier
+   * wouldn't have blocked creation. When absent and the tier blocks, the oldest
+   * available credit is used automatically. */
+  passCreditId?: string
 }
 
 function generatePassword() {
@@ -439,16 +444,17 @@ export async function createGallery(input: CreateGalleryInput) {
   }
 
   let unlocksFreePrivateGallerySlot = false
-  // When the private-gallery tier gate would block creation, a bought gallery-
-  // pass credit covers it instead — its snapshot cap/validity govern this one
-  // gallery, and it's consumed right after the row is inserted.
+  // A bought gallery-pass credit's snapshot cap/validity govern this one
+  // gallery; it's consumed right after the row is inserted. Used either because
+  // she explicitly picked it (`passCreditId` — even a subscriber wanting one
+  // oversized gallery), or because the tier gate would otherwise block her.
   let passCredit: GalleryPassCredit | null = null
   if (!willBePublic) {
     const pg = await getPrivateGalleryEntitlements(userId)
     let limitError: string | null = null
     if (pg.limits.isLifetimeCap) {
       limitError = buildPrivateGalleryCountLimitError(pg.lifetimeUsed ? 1 : 0, 1, true)
-      if (!limitError) unlocksFreePrivateGallerySlot = true
+      if (!limitError && !input.passCreditId) unlocksFreePrivateGallerySlot = true
     } else {
       const { count: privateGalleryCount } = await supabase
         .from('galleries')
@@ -462,11 +468,12 @@ export async function createGallery(input: CreateGalleryInput) {
       )
     }
 
-    if (limitError) {
-      passCredit = await fetchAvailableGalleryPassCredit(userId)
+    if (input.passCreditId) {
+      passCredit = await resolveGalleryPassCreditForCreation(userId, input.passCreditId)
+      if (!passCredit) throw new Error('הפאס שנבחר אינו זמין')
+    } else if (limitError) {
+      passCredit = await resolveGalleryPassCreditForCreation(userId)
       if (!passCredit) throw new Error(limitError)
-      // A credit doesn't come out of the free lifetime slot.
-      unlocksFreePrivateGallerySlot = false
     }
   }
 
@@ -598,6 +605,8 @@ export type CreateClientGalleryInput = {
   autoApplyWatermark?: boolean
   sendToClient?: boolean
   coverImage?: string
+  /** A specific bought gallery-pass credit to consume — see CreateGalleryInput. */
+  passCreditId?: string
 }
 
 /**

@@ -5,13 +5,13 @@ export type GalleryPassCredit =
   Database['public']['Tables']['gallery_pass_credits']['Row']
 
 /**
- * The photographer's oldest usable (paid, not yet consumed) gallery-pass
- * credit, or null. This is what lets a tier-blocked client-gallery creation go
- * through without a payment step.
+ * Every usable (paid, not yet consumed) gallery-pass credit the photographer is
+ * holding, oldest first. She may hold several — of different sizes — bought for
+ * different jobs, and she chooses which one a new gallery consumes.
  */
-export async function fetchAvailableGalleryPassCredit(
+export async function fetchAvailableGalleryPassCredits(
   userId: string
-): Promise<GalleryPassCredit | null> {
+): Promise<GalleryPassCredit[]> {
   const admin = createAdminClient()
   const { data } = await admin
     .from('gallery_pass_credits')
@@ -19,24 +19,27 @@ export async function fetchAvailableGalleryPassCredit(
     .eq('user_id', userId)
     .eq('status', 'paid')
     .order('purchased_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
 
-  return (data as GalleryPassCredit | null) ?? null
+  return (data ?? []) as GalleryPassCredit[]
 }
 
-/** How many usable credits the photographer is holding — for dashboard copy. */
-export async function countAvailableGalleryPassCredits(
-  userId: string
-): Promise<number> {
-  const admin = createAdminClient()
-  const { count } = await admin
-    .from('gallery_pass_credits')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('status', 'paid')
-
-  return count ?? 0
+/**
+ * The credit a gallery creation should consume:
+ *   - `explicitId` given → that exact credit, if it's the user's and still paid
+ *     (she picked it — used even when her tier wouldn't have blocked, e.g. a
+ *     subscriber wanting one oversized gallery);
+ *   - otherwise → her oldest available credit (the tier-blocked auto path).
+ * Returns null when there's nothing usable.
+ */
+export async function resolveGalleryPassCreditForCreation(
+  userId: string,
+  explicitId?: string | null
+): Promise<GalleryPassCredit | null> {
+  const credits = await fetchAvailableGalleryPassCredits(userId)
+  if (explicitId) {
+    return credits.find((c) => c.id === explicitId) ?? null
+  }
+  return credits[0] ?? null
 }
 
 /**

@@ -47,10 +47,11 @@ type WizardState = {
   coverImageFile: File | null
 }
 
-/** Set when the photographer is creating this gallery against a bought pass
- * credit (no tier slot) — shown as an info banner; the credit is consumed
- * server-side by createClientGallery. */
+/** One bought, still-unused gallery-pass credit the photographer can spend on
+ * the gallery she's creating. */
 export type GalleryPassCreditView = {
+  id: string
+  name: string
   photoCap: number
   validityDays: number
 }
@@ -59,14 +60,23 @@ type ClientGalleryWizardProps = {
   clients: Client[]
   defaultWatermarkText?: string
   downloadPermissionsEnabled?: boolean
-  usingCredit?: GalleryPassCreditView | null
+  /** She has no tier slot — the "לפי המסלול" option is hidden and a credit must
+   * be chosen. */
+  tierBlocked?: boolean
+  /** Credits she's holding. When any exist, the wizard shows a "how to create
+   * this gallery" selector (tier vs. which credit). */
+  availableCredits?: GalleryPassCreditView[]
+  /** Link to the buy-a-pass panel, or null when nothing is for sale. */
+  buyMoreHref?: string | null
 }
 
 export function ClientGalleryWizard({
   clients,
   defaultWatermarkText = '',
   downloadPermissionsEnabled: downloadPermissionsEnabledProp,
-  usingCredit = null,
+  tierBlocked = false,
+  availableCredits = [],
+  buyMoreHref = null,
 }: ClientGalleryWizardProps) {
   const router = useRouter()
   const downloadPermissionsEnabled =
@@ -76,6 +86,10 @@ export function ClientGalleryWizard({
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
   const [disableWatermarkOpen, setDisableWatermarkOpen] = useState(false)
+  // 'tier' = create against the subscription/free slot; otherwise a credit id.
+  const [creationMode, setCreationMode] = useState<string>(
+    tierBlocked ? (availableCredits[0]?.id ?? 'tier') : 'tier'
+  )
   const [state, setState] = useState<WizardState>({
     clientMode: clients.length > 0 ? 'existing' : 'new',
     clientId: clients[0]?.id ?? '',
@@ -149,6 +163,7 @@ export function ClientGalleryWizard({
       watermarkText: state.watermarkText || undefined,
       autoApplyWatermark: state.autoApplyWatermark,
       coverImage: coverImageUrl,
+      passCreditId: creationMode === 'tier' ? undefined : creationMode,
     }
   }
 
@@ -159,6 +174,10 @@ export function ClientGalleryWizard({
     }
     if (!state.albumSelectionEnabled && !state.editSelectionEnabled) {
       toast.error('צריך להשאיר לפחות מסלול בחירה אחד פעיל — לאלבום או לעיבוד')
+      return
+    }
+    if (tierBlocked && creationMode === 'tier') {
+      toast.error('יש לבחור פאס לגלריה זו')
       return
     }
 
@@ -201,17 +220,70 @@ export function ClientGalleryWizard({
     })
   }
 
+  const showModeSelector = availableCredits.length > 0 || tierBlocked
+
   return (
     <div className="w-full space-y-8">
-      {usingCredit ? (
-        <div className="flex items-start gap-2.5 rounded-xl border-2 border-[#7D3A52]/30 bg-[#7D3A52]/5 px-4 py-3 text-sm leading-relaxed text-[#48464c]">
-          <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
-          <p>
-            את יוצרת גלריה מתוך פאס שרכשת — עד{' '}
-            <strong>{usingCredit.photoCap.toLocaleString('he-IL')}</strong> תמונות (רגילות
-            + מעובדות), תוקף <strong>{usingCredit.validityDays}</strong> ימים ללקוח מרגע
-            השליחה.
-          </p>
+      {!showModeSelector && buyMoreHref ? (
+        <p className="rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/5 px-4 py-3 text-xs text-[#48464c]">
+          צריך גלריה גדולה מהמכסה שלך, או גלריה נוספת?{' '}
+          <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
+            רכשי פאס לגלריה בודדת
+          </a>{' '}
+          — ואז תוכלי לבחור אותו כאן.
+        </p>
+      ) : null}
+
+      {showModeSelector ? (
+        <div className="rounded-xl border-2 border-[#7D3A52]/30 bg-[#7D3A52]/5 p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#100d1f]">
+            <CreditCard className="h-4 w-4 text-[#7D3A52]" aria-hidden />
+            איך ליצור את הגלריה הזו?
+          </div>
+          <div className="space-y-2">
+            {!tierBlocked ? (
+              <label className="flex cursor-pointer items-start gap-2 text-sm text-[#48464c]">
+                <input
+                  type="radio"
+                  name="creation-mode"
+                  className="mt-1"
+                  checked={creationMode === 'tier'}
+                  onChange={() => setCreationMode('tier')}
+                />
+                <span>לפי המסלול שלי (המכסה הרגילה)</span>
+              </label>
+            ) : null}
+            {availableCredits.map((credit) => (
+              <label
+                key={credit.id}
+                className="flex cursor-pointer items-start gap-2 text-sm text-[#48464c]"
+              >
+                <input
+                  type="radio"
+                  name="creation-mode"
+                  className="mt-1"
+                  checked={creationMode === credit.id}
+                  onChange={() => setCreationMode(credit.id)}
+                />
+                <span>
+                  פאס שרכשת — עד{' '}
+                  <strong>{credit.photoCap.toLocaleString('he-IL')}</strong> תמונות (רגילות
+                  + מעובדות), תוקף <strong>{credit.validityDays}</strong> ימים ללקוח מרגע
+                  השליחה
+                </span>
+              </label>
+            ))}
+          </div>
+          {buyMoreHref ? (
+            <p className="mt-3 text-xs text-[#48464c]/70">
+              {tierBlocked && availableCredits.length === 0
+                ? 'אין לך מנוי פעיל — '
+                : 'צריך גלריה גדולה יותר? '}
+              <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
+                רכשי פאס לגלריה בודדת
+              </a>
+            </p>
+          ) : null}
         </div>
       ) : null}
 
