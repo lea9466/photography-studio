@@ -41,6 +41,8 @@ export function AnnouncementManagerForm() {
   const [content, setContent] = useState('')
   const [icon, setIcon] = useState<AnnouncementIconKey>('info')
   const [isActive, setIsActive] = useState(true)
+  const [ctaLabel, setCtaLabel] = useState('')
+  const [ctaHref, setCtaHref] = useState('')
 
   const selectedIcon = getAnnouncementIconOption(icon)
 
@@ -53,6 +55,8 @@ export function AnnouncementManagerForm() {
           setContent(announcement.content)
           setIcon(announcement.icon as AnnouncementIconKey)
           setIsActive(announcement.is_active)
+          setCtaLabel(announcement.cta_label ?? '')
+          setCtaHref(announcement.cta_href ?? '')
         }
       })
       .catch(() => {
@@ -76,6 +80,8 @@ export function AnnouncementManagerForm() {
           content: content.trim(),
           icon,
           isActive,
+          ctaLabel: ctaLabel.trim() || null,
+          ctaHref: ctaHref.trim() || null,
         })
 
         setLatestAnnouncement(announcement)
@@ -183,6 +189,33 @@ export function AnnouncementManagerForm() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200/80 border-r-4 border-r-rose-400 bg-white p-4 shadow-sm">
+              <Label className="text-slate-700">כפתור (אופציונלי)</Label>
+              <p className="mt-1 text-xs text-slate-500">
+                כפתור בתחתית הבאנר שמוביל למקום מסוים. השאירי ריק לבאנר טקסט בלבד.
+              </p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={ctaLabel}
+                  onChange={(e) => setCtaLabel(e.target.value)}
+                  placeholder="טקסט הכפתור — לדוגמה: צרי גלריה פרטית"
+                  disabled={isPending}
+                  className="border-slate-200 bg-slate-50 focus-visible:ring-rose-300"
+                />
+                <Input
+                  value={ctaHref}
+                  onChange={(e) => setCtaHref(e.target.value)}
+                  placeholder="/dashboard/private-galleries"
+                  dir="ltr"
+                  disabled={isPending}
+                  className="border-slate-200 bg-slate-50 focus-visible:ring-rose-300"
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-400">
+                הקישור: נתיב פנימי שמתחיל ב-/ , או כתובת מלאה עם https://
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200/80 border-r-4 border-r-emerald-400 bg-white p-4 shadow-sm">

@@ -116,7 +116,7 @@ export async function getLatestAnnouncementForAdmin(): Promise<Announcement | nu
   const admin = createAdminClient()
   const { data, error } = await admin
     .from('announcements')
-    .select('id, title, content, icon, is_active, created_at, updated_at')
+    .select('id, title, content, icon, is_active, cta_label, cta_href, created_at, updated_at')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()

@@ -8,7 +8,7 @@ export async function getActiveAnnouncement(): Promise<Announcement | null> {
 
   const { data, error } = await context.supabase
     .from('announcements')
-    .select('id, title, content, icon, is_active, created_at, updated_at')
+    .select('id, title, content, icon, is_active, cta_label, cta_href, created_at, updated_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false })
     .limit(1)

@@ -265,6 +265,8 @@ export type Database = {
           content: string
           icon: string
           is_active: boolean
+          cta_label: string | null
+          cta_href: string | null
           created_at: string
           updated_at: string
         }
@@ -274,6 +276,8 @@ export type Database = {
           content: string
           icon?: string
           is_active?: boolean
+          cta_label?: string | null
+          cta_href?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -283,6 +287,8 @@ export type Database = {
           content?: string
           icon?: string
           is_active?: boolean
+          cta_label?: string | null
+          cta_href?: string | null
           created_at?: string
           updated_at?: string
         }

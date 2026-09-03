@@ -604,6 +604,8 @@ export async function publishAnnouncement(input: {
   content: string
   icon: string
   isActive: boolean
+  ctaLabel?: string | null
+  ctaHref?: string | null
 }) {
   await requireAdmin()
 
@@ -616,6 +618,17 @@ export async function publishAnnouncement(input: {
   if (!content) throw new Error('נא להזין תוכן')
   if (!isAnnouncementIconKey(icon)) {
     throw new Error('סוג אייקון לא תקין')
+  }
+
+  // Optional CTA — a labelled button in the banner. Both must be present
+  // together; the link is limited to an internal path or an https URL.
+  const ctaLabel = input.ctaLabel?.trim() || ''
+  const ctaHref = input.ctaHref?.trim() || ''
+  if ((ctaLabel && !ctaHref) || (!ctaLabel && ctaHref)) {
+    throw new Error('כפתור בהודעה צריך גם טקסט וגם קישור')
+  }
+  if (ctaHref && !/^\/(?!\/)/.test(ctaHref) && !/^https:\/\//.test(ctaHref)) {
+    throw new Error('קישור הכפתור חייב להתחיל ב-/ (נתיב פנימי) או ב-https://')
   }
 
   const admin = createAdminClient()
@@ -636,9 +649,11 @@ export async function publishAnnouncement(input: {
       content,
       icon,
       is_active: isActive,
+      cta_label: ctaLabel || null,
+      cta_href: ctaHref || null,
       updated_at: new Date().toISOString(),
     })
-    .select('id, title, content, icon, is_active, created_at, updated_at')
+    .select('id, title, content, icon, is_active, cta_label, cta_href, created_at, updated_at')
     .single()
 
   if (error || !data) {

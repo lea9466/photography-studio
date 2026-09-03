@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X } from 'lucide-react'
+import Link from 'next/link'
+import { ArrowLeft, X } from 'lucide-react'
 import {
   getAnnouncementIconComponent,
   getAnnouncementIconStyles,
@@ -48,6 +49,13 @@ export function AnnouncementBanner({
     dismissAnnouncement(announcement!.id)
     setVisible(false)
   }
+
+  const ctaLabel = announcement.cta_label?.trim()
+  const ctaHref = announcement.cta_href?.trim()
+  const cta =
+    ctaLabel && ctaHref && (ctaHref.startsWith('/') || ctaHref.startsWith('https://'))
+      ? { label: ctaLabel, href: ctaHref, internal: ctaHref.startsWith('/') }
+      : null
 
   return (
     <div
@@ -101,9 +109,36 @@ export function AnnouncementBanner({
           <h2 className="text-base font-bold text-slate-900 sm:text-lg">
             {announcement.title}
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600 sm:text-[15px]">
+          <p className="whitespace-pre-line text-sm leading-relaxed text-slate-600 sm:text-[15px]">
             {announcement.content}
           </p>
+          {cta ? (
+            <div className="pt-2">
+              {cta.internal ? (
+                <Link
+                  href={cta.href}
+                  onClick={handleDismiss}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
+                  style={accentColor ? { backgroundColor: accentColor } : undefined}
+                >
+                  {cta.label}
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              ) : (
+                <a
+                  href={cta.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleDismiss}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
+                  style={accentColor ? { backgroundColor: accentColor } : undefined}
+                >
+                  {cta.label}
+                  <ArrowLeft className="h-4 w-4" />
+                </a>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

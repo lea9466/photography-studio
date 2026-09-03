@@ -4,6 +4,9 @@ export type Announcement = {
   content: string
   icon: string
   is_active: boolean
+  /** Optional CTA rendered as a button in the banner. Both null → plain banner. */
+  cta_label: string | null
+  cta_href: string | null
   created_at: string
   updated_at: string
 }
