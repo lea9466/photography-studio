@@ -226,7 +226,7 @@ export function ClientGalleryWizard({
     <div className="w-full space-y-8">
       {!showModeSelector && buyMoreHref ? (
         <p className="rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/5 px-4 py-3 text-xs text-[#48464c]">
-          צריך גלריה גדולה מהמכסה שלך, או גלריה נוספת?{' '}
+          צריכה גלריה גדולה מהמכסה שלך, או גלריה נוספת?{' '}
           <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
             רכשי פאס לגלריה בודדת
           </a>{' '}
@@ -278,7 +278,7 @@ export function ClientGalleryWizard({
             <p className="mt-3 text-xs text-[#48464c]/70">
               {tierBlocked && availableCredits.length === 0
                 ? 'אין לך מנוי פעיל — '
-                : 'צריך גלריה גדולה יותר? '}
+                : 'צריכה גלריה גדולה יותר? '}
               <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
                 רכשי פאס לגלריה בודדת
               </a>

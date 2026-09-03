@@ -52,7 +52,7 @@ export function GalleryPassPurchasePanel({ bundles, backHref }: GalleryPassPurch
       <p className="mb-5 text-sm text-[#48464c]/80">
         אין לך מנוי פעיל. אפשר לרכוש גלריית לקוח אחת בתשלום חד-פעמי — בחרי חבילה לפי
         מספר התמונות (רגילות + מעובדות יחד). לאחר התשלום תחזרי לכאן ותגדירי את הגלריה
-        רגיל. התוקף ללקוח מתחיל כששולחים לו, לא עכשיו.
+        כרגיל. התוקף ללקוח מתחיל כששולחים לו, לא עכשיו.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -82,7 +82,7 @@ export function GalleryPassPurchasePanel({ bundles, backHref }: GalleryPassPurch
       </div>
 
       <p className="mt-4 text-xs text-[#48464c]/70">
-        צריך יותר מ-1500 תמונות?{' '}
+        צריכה יותר מ-1500 תמונות?{' '}
         <a href="/dashboard/contact" className="font-semibold text-[#7D3A52] underline">
           דברי איתנו להתאמה אישית
         </a>
@@ -101,7 +101,7 @@ export function GalleryPassPurchasePanel({ bundles, backHref }: GalleryPassPurch
         >
           <CreditCard className="ml-2 h-4 w-4" />
           {isPending
-            ? 'מעביר לתשלום...'
+            ? 'מעבירה לתשלום...'
             : selected
               ? `המשך לתשלום · ₪${(selected.amountAgorot / 100).toLocaleString('he-IL')}`
               : 'בחרי חבילה'}

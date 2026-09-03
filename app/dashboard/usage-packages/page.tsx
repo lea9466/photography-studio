@@ -2,11 +2,14 @@ import { redirect } from 'next/navigation'
 import { Layers } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { PrivateGalleriesSubscriptionPanel } from '@/components/dashboard/PrivateGalleriesSubscriptionPanel'
+import { GalleryPassPackagesSection } from '@/components/dashboard/GalleryPassPackagesSection'
 import type { CurrentSubscriptionView } from '@/lib/payments/payment-service'
 import { createPaymentService } from '@/lib/payments/server'
 import { getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { isPrivateGalleryCheckoutEnabled } from '@/lib/payments/flags'
 import { getAllPrivateGalleryTierLimits } from '@/lib/private-galleries/loader'
+import { fetchActiveGalleryPassBundles } from '@/lib/gallery-pass/loader'
+import { fetchAvailableGalleryPassCredits } from '@/lib/gallery-pass/credits'
 
 export default async function UsagePackagesPage({
   searchParams,
@@ -66,6 +69,11 @@ export default async function UsagePackagesPage({
     return []
   })
 
+  const [passBundles, passCredits] = await Promise.all([
+    fetchActiveGalleryPassBundles().catch(() => []),
+    fetchAvailableGalleryPassCredits(userId).catch(() => []),
+  ])
+
   return (
     <div className="animate-fade-in">
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
@@ -92,6 +100,18 @@ export default async function UsagePackagesPage({
           isImpersonating={isImpersonating}
           checkoutEnabled={isPrivateGalleryCheckoutEnabled()}
           tierLimits={tierLimits}
+        />
+
+        <GalleryPassPackagesSection
+          isImpersonating={isImpersonating}
+          creditsCount={passCredits.length}
+          bundles={passBundles.map((b) => ({
+            code: b.code,
+            name: b.name,
+            photoCap: b.photo_cap,
+            validityDays: b.validity_days,
+            amountAgorot: b.amount_agorot,
+          }))}
         />
       </div>
     </div>
