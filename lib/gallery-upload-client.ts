@@ -7,7 +7,10 @@ import {
   finalizeGalleryUpload,
   reservePhotosBatch,
 } from '@/lib/actions/photo.actions'
-import { buildPhotoStoragePaths } from '@/lib/images/process'
+import {
+  buildPhotoStoragePaths,
+  type WatermarkPlacement,
+} from '@/lib/images/process'
 import {
   formatMediaUploadCount,
   uploadMediaPhotosWithQueue,
@@ -36,7 +39,12 @@ export async function uploadGalleryPhotosWithQueue(
   isProcessed = false,
   applyAutoWatermark = true,
   /** Per-account override, computed server-side — see isMvpBypassUser / DOWNLOAD_PERMISSIONS_ENABLED. */
-  storeOriginals = false
+  storeOriginals = false,
+  /**
+   * Client selection galleries pass `center` — a large, faint mark the client
+   * can't crop out. Showcase/public galleries keep the `corner` stamp.
+   */
+  watermarkPlacement: WatermarkPlacement = 'corner'
 ): Promise<GalleryUploadResult> {
   return uploadMediaPhotosWithQueue(
     {
@@ -55,6 +63,7 @@ export async function uploadGalleryPhotosWithQueue(
     watermarkText,
     onProgress,
     callbacks,
-    applyAutoWatermark
+    applyAutoWatermark,
+    watermarkPlacement
   )
 }

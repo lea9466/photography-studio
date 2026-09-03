@@ -47,10 +47,19 @@ function canvasToBlob(canvas: HTMLCanvasElement, quality: number) {
   })
 }
 
-function applyWatermark(canvas: HTMLCanvasElement, text: string) {
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
+/**
+ * `corner` — a small stamp in the bottom-left (public site: portfolio, posts,
+ * before/after). `center` — one large, faint mark across the middle of the
+ * frame, used for client selection galleries: a corner stamp is trivially
+ * cropped out, a centred one can't be removed without destroying the photo.
+ */
+export type WatermarkPlacement = 'corner' | 'center'
 
+function applyCornerWatermark(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  text: string
+) {
   const fontSize = Math.max(14, Math.round(canvas.width * 0.032))
   const padding = Math.max(12, Math.round(canvas.width * 0.02))
 
@@ -69,6 +78,63 @@ function applyWatermark(canvas: HTMLCanvasElement, text: string) {
   ctx.fillText(text, x, y)
 
   ctx.restore()
+}
+
+function applyCenterWatermark(
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  text: string
+) {
+  ctx.save()
+
+  // Start large, then shrink to fit the frame's width with a margin so long
+  // studio names never spill past the edges.
+  const maxTextWidth = canvas.width * 0.86
+  let fontSize = Math.max(18, Math.round(canvas.width * 0.11))
+  ctx.font = `600 ${fontSize}px Heebo, Arial, sans-serif`
+  const measured = ctx.measureText(text).width
+  if (measured > maxTextWidth) {
+    fontSize = Math.max(14, Math.floor(fontSize * (maxTextWidth / measured)))
+    ctx.font = `600 ${fontSize}px Heebo, Arial, sans-serif`
+  }
+
+  const x = canvas.width / 2
+  const y = canvas.height / 2
+
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+
+  // Soft shadow keeps it legible on both light and dark photos.
+  ctx.shadowColor = 'rgba(0,0,0,0.35)'
+  ctx.shadowBlur = Math.max(4, Math.round(fontSize * 0.12))
+  ctx.globalAlpha = 0.3
+  ctx.fillStyle = '#ffffff'
+  ctx.fillText(text, x, y)
+
+  // Thin dark outline for separation against bright areas.
+  ctx.shadowColor = 'transparent'
+  ctx.globalAlpha = 0.18
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)'
+  ctx.lineWidth = Math.max(1, Math.round(fontSize * 0.02))
+  ctx.strokeText(text, x, y)
+
+  ctx.restore()
+}
+
+function applyWatermark(
+  canvas: HTMLCanvasElement,
+  text: string,
+  placement: WatermarkPlacement = 'corner'
+) {
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+
+  if (placement === 'center') {
+    applyCenterWatermark(ctx, canvas, text)
+  } else {
+    applyCornerWatermark(ctx, canvas, text)
+  }
+
   return canvas
 }
 
@@ -181,7 +247,8 @@ export function buildPhotoEditStoragePaths(
 export async function applyWatermarkToBlob(
   preview: Blob,
   watermarkText?: string,
-  applyAutoWatermark = true
+  applyAutoWatermark = true,
+  placement: WatermarkPlacement = 'corner'
 ): Promise<Blob> {
   if (!applyAutoWatermark) return preview
 
@@ -197,7 +264,7 @@ export async function applyWatermarkToBlob(
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('Canvas not supported')
   ctx.drawImage(img, 0, 0)
-  applyWatermark(canvas, text)
+  applyWatermark(canvas, text, placement)
   const blob = await canvasToBlob(canvas, WATERMARK_QUALITY)
   canvas.width = 0
   canvas.height = 0

@@ -6,6 +6,7 @@ import type { R2UploadRequest } from '@/lib/r2/types'
 import {
   applyWatermarkToBlob,
   readImageDimensions,
+  type WatermarkPlacement,
 } from '@/lib/images/process'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 
@@ -173,6 +174,7 @@ async function uploadReservedPhoto(
   job: ActiveJob,
   watermarkText: string | null | undefined,
   applyAutoWatermark: boolean,
+  watermarkPlacement: WatermarkPlacement,
   uploadUrls: string[]
 ): Promise<
   | {
@@ -210,7 +212,8 @@ async function uploadReservedPhoto(
   const watermarkedBlob = await applyWatermarkToBlob(
     previewBlob,
     resolvedWatermark,
-    applyAutoWatermark
+    applyAutoWatermark,
+    watermarkPlacement
   )
 
   if (displayOnly) {
@@ -412,7 +415,8 @@ export async function uploadMediaPhotosWithQueue(
   watermarkText: string | null | undefined,
   onProgress: (progress: MediaUploadProgress) => void,
   callbacks?: MediaUploadCallbacks,
-  applyAutoWatermark = true
+  applyAutoWatermark = true,
+  watermarkPlacement: WatermarkPlacement = 'corner'
 ): Promise<MediaUploadResult> {
   const total = files.length
   if (total === 0) return { ok: false, uploaded: 0, message: 'לא נבחרו תמונות' }
@@ -460,7 +464,14 @@ export async function uploadMediaPhotosWithQueue(
         try {
           const timeoutMs = timeoutForFile(job.file)
           const result = await withTimeout(
-            uploadReservedPhoto(deps, job, watermarkText, applyAutoWatermark, urls),
+            uploadReservedPhoto(
+              deps,
+              job,
+              watermarkText,
+              applyAutoWatermark,
+              watermarkPlacement,
+              urls
+            ),
             timeoutMs,
             `${job.file.name}: פג תוקף ההעלאה (${Math.round(timeoutMs / 1000)} שניות)`
           )

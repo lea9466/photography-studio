@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { Photo } from '@/lib/types/database.types'
+import type { WatermarkPlacement } from '@/lib/images/process'
 
 type GalleryPhotosSectionProps = {
   galleryId: string
@@ -78,6 +79,12 @@ type GalleryPhotosSectionProps = {
    * publicOnlyMvp forces the processed tab anyway.
    */
   processedTabLocked?: boolean
+  /**
+   * `center` for client selection galleries — one large, faint mark that can't
+   * be cropped out. Defaults to the `corner` stamp used by showcase/public
+   * galleries.
+   */
+  watermarkPlacement?: WatermarkPlacement
 }
 
 export function GalleryPhotosSection({
@@ -94,6 +101,7 @@ export function GalleryPhotosSection({
   storeOriginalPhotos = false,
   privateGalleryPhotoLimit,
   processedTabLocked = false,
+  watermarkPlacement = 'corner',
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   // The processed-tab lock only bites on client galleries; when publicOnlyMvp
@@ -251,7 +259,8 @@ export function GalleryPhotosSection({
           uploadCallbacks,
           activeTabRef.current === 'processed',
           applyAutoWatermark,
-          storeOriginalPhotos
+          storeOriginalPhotos,
+          watermarkPlacement
         )
 
         if (result.ok) {
@@ -276,7 +285,7 @@ export function GalleryPhotosSection({
         setUploadProgress(null)
       }
     },
-    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, storeOriginalPhotos, isPrivateGallery, galleryPhotoCount, privateGalleryPhotoLimit]
+    [galleryId, userId, watermarkText, applyAutoWatermark, uploadCallbacks, router, accountPhotoCount, photoCountLimitBypassed, storeOriginalPhotos, isPrivateGallery, galleryPhotoCount, privateGalleryPhotoLimit, watermarkPlacement]
   )
 
   const regularPhotos = useMemo(
