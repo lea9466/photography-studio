@@ -101,16 +101,30 @@ export async function MarketingHome() {
           className="pointer-events-none absolute -top-24 right-1/2 h-96 w-96 translate-x-1/2 rounded-full bg-violet-400/10 blur-[100px]"
           aria-hidden
         />
-        <div className="relative mx-auto max-w-6xl text-center">
-          <Reveal>
+        <div className="relative mx-auto max-w-5xl">
+          <Reveal className="text-center">
             <h2 className="text-3xl font-bold tracking-tight">חבילות שימוש</h2>
-            <p className="mx-auto mt-4 max-w-xl leading-relaxed text-[--muted]">
-              כל צלמת מתחילה עם שבועיים ראשונים חינם ברמת Pro — אין צורך בכרטיס אשראי.
+            <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-[--muted]">
+              שני מוצרים נפרדים לגמרי — כל אחד עם מסלול ומחיר משלו, ואפשר להשתמש בכל אחד בפני עצמו:
+              אתר תדמית ציבורי שמופיע בגוגל, וניהול גלריות פרטיות לבחירת תמונות מול לקוחות.
             </p>
           </Reveal>
 
-          <div className="mt-12 grid items-start gap-6 text-right lg:grid-cols-3">
-            <Reveal>
+          {/* מוצר 1 — האתר הציבורי */}
+          <Reveal className="mt-14 rounded-3xl border border-[--border] bg-[--foreground]/[0.015] p-6 text-right sm:p-10">
+            <div className="mb-8 flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                <Globe className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-xl font-bold">האתר הציבורי שלך</h3>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed text-[--muted]">
+                  אתר תדמית שמופיע בחיפוש בגוגל — פורטפוליו, בלוג וחבילות. שבועיים ראשונים חינם ברמת Pro, בלי כרטיס אשראי.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid items-start gap-6 sm:grid-cols-2">
               <Card className="shadow-sm">
                 <CardContent className="p-8">
                   <h3 className="text-xl font-semibold">חינם</h3>
@@ -129,10 +143,8 @@ export async function MarketingHome() {
                   </Button>
                 </CardContent>
               </Card>
-            </Reveal>
 
-            <Reveal delayMs={100}>
-              <Card className="relative border-violet-300 shadow-xl shadow-violet-900/10 lg:-translate-y-3">
+              <Card className="relative border-violet-300 shadow-xl shadow-violet-900/10">
                 <span className="absolute -top-3 right-1/2 translate-x-1/2 rounded-full bg-gradient-to-br from-violet-600 to-violet-800 px-4 py-1 text-xs font-semibold text-white shadow-sm">
                   שבועיים ראשונים חינם
                 </span>
@@ -174,9 +186,30 @@ export async function MarketingHome() {
                   </Button>
                 </CardContent>
               </Card>
-            </Reveal>
+            </div>
+          </Reveal>
 
-            <Reveal delayMs={200}>
+          <div className="my-8 flex items-center gap-4" aria-hidden>
+            <span className="h-px flex-1 bg-[--border]" />
+            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[--muted]">או</span>
+            <span className="h-px flex-1 bg-[--border]" />
+          </div>
+
+          {/* מוצר 2 — גלריות פרטיות */}
+          <Reveal className="rounded-3xl border border-[--border] bg-[--foreground]/[0.015] p-6 text-right sm:p-10">
+            <div className="mb-8 flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+                <Lock className="h-5 w-5" />
+              </span>
+              <div>
+                <h3 className="text-xl font-bold">גלריות פרטיות ללקוחות</h3>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed text-[--muted]">
+                  כל תהליך בחירת התמונות והמסירה מול הלקוח — נפרד לגמרי מהאתר הציבורי, עם מסלול ומחיר משלו.
+                </p>
+              </div>
+            </div>
+
+            <div className="mx-auto max-w-sm">
               <Card className="shadow-sm">
                 <CardContent className="p-8">
                   <h3 className="text-xl font-semibold">ניהול גלריות פרטיות</h3>
@@ -203,8 +236,8 @@ export async function MarketingHome() {
                   </Button>
                 </CardContent>
               </Card>
-            </Reveal>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
