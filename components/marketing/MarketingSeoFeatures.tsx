@@ -1,4 +1,4 @@
-import { Images, FileText, LayoutTemplate, ShieldCheck, Users } from 'lucide-react'
+import { Images, FileText, LayoutTemplate, ShieldCheck, Users, Unlock } from 'lucide-react'
 import { MARKETING_FEATURES } from '@/lib/seo/marketing-metadata'
 import { Reveal } from '@/components/marketing/Reveal'
 
@@ -12,6 +12,7 @@ const COMPACT_FEATURE_ICONS = [
   { icon: FileText, iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
   { icon: ShieldCheck, iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
   { icon: Users, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+  { icon: Unlock, iconBg: 'bg-teal-100', iconColor: 'text-teal-600' },
 ] as const
 
 export function MarketingSeoFeatures({ compact = false }: MarketingSeoFeaturesProps) {
@@ -55,7 +56,7 @@ export function MarketingSeoFeatures({ compact = false }: MarketingSeoFeaturesPr
           </p>
         ) : null}
       </Reveal>
-      <ul className={compact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2 lg:grid-cols-5'}>
+      <ul className={compact ? 'grid gap-4 sm:grid-cols-2' : 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3'}>
         {MARKETING_FEATURES.map((feature, index) => {
           const compactIcon = COMPACT_FEATURE_ICONS[index]
           const Icon = compactIcon?.icon
