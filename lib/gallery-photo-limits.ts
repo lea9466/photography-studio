@@ -63,11 +63,15 @@ export async function assertGalleryPhotoCountWithinLimit(
 }
 
 /**
- * Private galleries skip the account-wide public-photo quota entirely — the
- * per-gallery ceiling instead comes from the owner's private-gallery tier
- * (lib/private-galleries), editable live from /manage. Independent of
- * isPhotoLimitTestUser — that flag exists to bypass the *public* quota for
- * large-batch testing, not to exempt anyone from this.
+ * Private galleries skip the account-wide public-photo quota entirely. The
+ * per-gallery ceiling comes from ONE of two sources, in order:
+ *   1. the gallery's own bought gallery pass (`pass_photo_cap`) — a one-time
+ *      pay-per-gallery purchase, snapshot at purchase so later catalogue edits
+ *      never shrink it (lib/gallery-pass);
+ *   2. otherwise the owner's private-gallery tier (lib/private-galleries),
+ *      editable live from /manage.
+ * Independent of isPhotoLimitTestUser — that flag exists to bypass the *public*
+ * quota for large-batch testing, not to exempt anyone from this.
  */
 export async function assertPrivateGalleryPhotoCountWithinLimit(
   supabase: AppSupabaseClient,
@@ -75,18 +79,23 @@ export async function assertPrivateGalleryPhotoCountWithinLimit(
   ownerId: string,
   adding = 0
 ): Promise<number> {
-  const [{ count, error }, pg] = await Promise.all([
+  const [{ count, error }, { data: galleryRow }, pg] = await Promise.all([
     supabase.from('photos').select('id', { count: 'exact', head: true }).eq('gallery_id', galleryId),
+    supabase.from('galleries').select('pass_photo_cap').eq('id', galleryId).maybeSingle(),
     getPrivateGalleryEntitlements(ownerId),
   ])
 
   if (error) throw new Error(error.message)
 
   const currentCount = count ?? 0
-  const maxPhotos = pg.limits.maxPhotosPerGallery
+  const passCap = (galleryRow as { pass_photo_cap: number | null } | null)?.pass_photo_cap ?? null
+  const maxPhotos = passCap ?? pg.limits.maxPhotosPerGallery
+
   if (currentCount + adding > maxPhotos) {
     throw new Error(
-      `ניתן להעלות עד ${maxPhotos} תמונות בגלריה פרטית במסלול הנוכחי (יש כרגע ${currentCount})`
+      passCap != null
+        ? `הגלריה נרכשה עם מכסה של ${maxPhotos} תמונות (יש כרגע ${currentCount})`
+        : `ניתן להעלות עד ${maxPhotos} תמונות בגלריה פרטית במסלול הנוכחי (יש כרגע ${currentCount})`
     )
   }
 

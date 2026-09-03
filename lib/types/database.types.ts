@@ -626,6 +626,48 @@ export type Database = {
           },
         ]
       }
+      gallery_pass_bundles: {
+        Row: {
+          id: string
+          code: string
+          name: string
+          photo_cap: number
+          validity_days: number
+          amount_agorot: number
+          currency: string
+          display_order: number
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          name: string
+          photo_cap: number
+          validity_days: number
+          amount_agorot: number
+          currency?: string
+          display_order: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          name?: string
+          photo_cap?: number
+          validity_days?: number
+          amount_agorot?: number
+          currency?: string
+          display_order?: number
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       galleries: {
         Row: {
           id: string
@@ -640,6 +682,11 @@ export type Database = {
           is_public: boolean
           cover_image: string | null
           created_at: string
+          pass_bundle_id: string | null
+          pass_photo_cap: number | null
+          pass_validity_days: number | null
+          pass_purchased_at: string | null
+          pass_expiry_reminder_sent_at: string | null
         }
         Insert: {
           id?: string
@@ -654,6 +701,11 @@ export type Database = {
           is_public?: boolean
           cover_image?: string | null
           created_at?: string
+          pass_bundle_id?: string | null
+          pass_photo_cap?: number | null
+          pass_validity_days?: number | null
+          pass_purchased_at?: string | null
+          pass_expiry_reminder_sent_at?: string | null
         }
         Update: {
           id?: string
@@ -668,6 +720,11 @@ export type Database = {
           is_public?: boolean
           cover_image?: string | null
           created_at?: string
+          pass_bundle_id?: string | null
+          pass_photo_cap?: number | null
+          pass_validity_days?: number | null
+          pass_purchased_at?: string | null
+          pass_expiry_reminder_sent_at?: string | null
         }
         Relationships: [
           {
@@ -682,6 +739,13 @@ export type Database = {
             columns: ['client_id']
             isOneToOne: false
             referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'galleries_pass_bundle_id_fkey'
+            columns: ['pass_bundle_id']
+            isOneToOne: false
+            referencedRelation: 'gallery_pass_bundles'
             referencedColumns: ['id']
           },
         ]

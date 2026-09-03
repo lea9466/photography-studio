@@ -52,11 +52,16 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
     ? galleryDetail.clients.length > 0
     : galleryDetail.clients != null
 
-  const privateGalleryPhotoLimit = isClientGallery
-    ? await getPrivateGalleryEntitlements(userId)
+  // A bought gallery pass carries its own photo cap (regular + edited together),
+  // snapshot at purchase; it wins over the owner's private-gallery tier.
+  const passPhotoCap =
+    (galleryDetail as { pass_photo_cap: number | null }).pass_photo_cap ?? undefined
+  const privateGalleryPhotoLimit = !isClientGallery
+    ? undefined
+    : passPhotoCap ??
+      (await getPrivateGalleryEntitlements(userId)
         .then((e) => e.limits.maxPhotosPerGallery)
-        .catch(() => undefined)
-    : undefined
+        .catch(() => undefined))
 
   const photos = await fetchGalleryPhotos(id)
   const previewPaths = photos.map((p) => (p as { preview_url: string | null }).preview_url)

@@ -221,7 +221,10 @@ export async function ClientGalleryDetail({
           publicOnlyMvp={false}
           photoCountLimitBypassed={isPhotoLimitTestUser(userId)}
           storeOriginalPhotos
-          privateGalleryPhotoLimit={privateGalleryLimits?.maxPhotosPerGallery}
+          privateGalleryPhotoLimit={
+            (gallery as { pass_photo_cap: number | null }).pass_photo_cap ??
+            privateGalleryLimits?.maxPhotosPerGallery
+          }
           processedTabLocked={!isClientSelectionComplete(gallery.status)}
         />
       </section>

@@ -23,6 +23,7 @@ import { AdminCoverCardMaintenance } from '@/components/admin/AdminCoverCardMain
 import { AdminGalleryOriginalsCleanup } from '@/components/admin/AdminGalleryOriginalsCleanup'
 import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
 import { PrivateGalleryTiersManager } from '@/components/admin/PrivateGalleryTiersManager'
+import { GalleryPassBundlesManager } from '@/components/admin/GalleryPassBundlesManager'
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 
@@ -158,6 +159,7 @@ export function ManageTabs({
       >
         <PlanPricingManager />
         <PrivateGalleryTiersManager />
+        <GalleryPassBundlesManager />
       </div>
 
       <div
