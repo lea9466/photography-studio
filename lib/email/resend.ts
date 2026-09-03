@@ -467,6 +467,70 @@ export async function sendSelectionDoneEmail(input: {
   })
 }
 
+/**
+ * Reminds a photographer ~3 days before a pay-per-gallery pass gallery's client
+ * window closes (galleries.expires_at). Plain style, matching its sibling
+ * sendSelectionDoneEmail — a short operational nudge, not a marketing email.
+ */
+export async function sendGalleryPassExpiringEmail(input: {
+  galleryId: string
+  galleryTitle: string
+  userId: string
+  expiresAt: string
+}) {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  const { data: user } = await admin
+    .from('users')
+    .select('email')
+    .eq('id', input.userId)
+    .single()
+
+  const to = (user as { email: string | null } | null)?.email
+  if (!to) {
+    if (mustFailWithoutResend()) {
+      throw new Error('Photographer email missing for gallery-pass expiry reminder')
+    }
+    console.info(
+      '[email stub]',
+      buildEmailStubLog({
+        template: 'gallery-pass-expiring',
+        resourceId: input.galleryId,
+        extra: { reason: 'no-photographer-email' },
+      })
+    )
+    return
+  }
+
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'gallery-pass-expiring',
+    email: to,
+    resourceId: input.galleryId,
+  })
+  if (!provider) return
+
+  const expiryLabel = new Date(input.expiresAt).toLocaleDateString('he-IL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
+  await provider.send({
+    from: emailFrom(),
+    to,
+    subject: `הגלריה "${input.galleryTitle}" נסגרת ללקוח בקרוב`,
+    html: `
+      <div dir="rtl" style="font-family: sans-serif;">
+        <h2>הגלריה נסגרת בקרוב</h2>
+        <p>חלון הגישה של הלקוח לגלריה <strong>${escapeHtml(input.galleryTitle)}</strong> נסגר בתאריך ${expiryLabel}.</p>
+        <p>לאחר מכן הלקוח לא יוכל לצפות בתמונות או להוריד אותן — כדאי לוודא שהוא סיים.</p>
+        <p><a href="${appUrl(`/dashboard/galleries/${input.galleryId}`)}">מעבר לגלריה</a></p>
+      </div>
+    `,
+  })
+}
+
 export async function sendDeliveryReadyEmail(input: {
   galleryId: string
   galleryTitle: string
