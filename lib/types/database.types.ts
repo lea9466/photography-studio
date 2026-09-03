@@ -626,6 +626,57 @@ export type Database = {
           },
         ]
       }
+      gallery_pass_credits: {
+        Row: {
+          id: string
+          user_id: string
+          bundle_id: string | null
+          bundle_code: string
+          photo_cap: number
+          validity_days: number
+          amount_agorot: number
+          currency: string
+          status: 'pending' | 'paid' | 'consumed'
+          purchased_at: string | null
+          consumed_by_gallery_id: string | null
+          consumed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          bundle_id?: string | null
+          bundle_code: string
+          photo_cap: number
+          validity_days: number
+          amount_agorot: number
+          currency?: string
+          status?: 'pending' | 'paid' | 'consumed'
+          purchased_at?: string | null
+          consumed_by_gallery_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          bundle_id?: string | null
+          bundle_code?: string
+          photo_cap?: number
+          validity_days?: number
+          amount_agorot?: number
+          currency?: string
+          status?: 'pending' | 'paid' | 'consumed'
+          purchased_at?: string | null
+          consumed_by_gallery_id?: string | null
+          consumed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gallery_pass_bundles: {
         Row: {
           id: string

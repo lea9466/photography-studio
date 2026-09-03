@@ -5,9 +5,11 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { getPublicGalleryQuota, getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
 import { fetchActiveGalleryPassBundles } from '@/lib/gallery-pass/loader'
+import { fetchAvailableGalleryPassCredit } from '@/lib/gallery-pass/credits'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { ShowcaseGalleryForm } from '@/components/gallery/ShowcaseGalleryForm'
 import { ClientGalleryWizard } from '@/components/gallery/ClientGalleryWizard'
+import { GalleryPassPurchasePanel } from '@/components/gallery/GalleryPassPurchasePanel'
 import { Button } from '@/components/ui/button'
 import { isGalleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
 import {
@@ -71,12 +73,15 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
       ? !(quota?.canCreateGallery ?? true)
       : !(privateQuota?.canCreateGallery ?? true)
 
-  // When a client gallery is blocked by the tier, offer a one-time gallery pass
-  // instead of a dead end. Fetched only when it's actually needed.
-  const passBundles =
-    kind === 'client' && blockedByQuota
-      ? await fetchActiveGalleryPassBundles().catch(() => [])
-      : []
+  // When a client gallery is blocked by the tier: use a bought pass credit if
+  // she has one, otherwise offer to buy one — instead of a dead end.
+  const needsPass = kind === 'client' && blockedByQuota
+  const [passBundles, availableCredit] = needsPass
+    ? await Promise.all([
+        fetchActiveGalleryPassBundles().catch(() => []),
+        fetchAvailableGalleryPassCredit(userId).catch(() => null),
+      ])
+    : [[], null]
   const canBuyPass = passBundles.length > 0
 
   const downloadPermissionsEnabled = DOWNLOAD_PERMISSIONS_ENABLED
@@ -112,7 +117,18 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
         <p>{meta.note}</p>
       </div>
 
-      {blockedByQuota && !(kind === 'client' && canBuyPass) ? (
+      {needsPass && !availableCredit && canBuyPass ? (
+        <GalleryPassPurchasePanel
+          backHref={meta.list.href}
+          bundles={passBundles.map((b) => ({
+            code: b.code,
+            name: b.name,
+            photoCap: b.photo_cap,
+            validityDays: b.validity_days,
+            amountAgorot: b.amount_agorot,
+          }))}
+        />
+      ) : blockedByQuota && !(kind === 'client' && availableCredit) ? (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">
             {kind === 'client' ? (
@@ -141,15 +157,14 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
           clients={clients}
           defaultWatermarkText={studioName}
           downloadPermissionsEnabled={downloadPermissionsEnabled}
-          requiresPass={blockedByQuota && canBuyPass}
-          passBundles={passBundles.map((b) => ({
-            code: b.code,
-            name: b.name,
-            photoCap: b.photo_cap,
-            validityDays: b.validity_days,
-            amountAgorot: b.amount_agorot,
-            currency: b.currency,
-          }))}
+          usingCredit={
+            availableCredit
+              ? {
+                  photoCap: availableCredit.photo_cap,
+                  validityDays: availableCredit.validity_days,
+                }
+              : null
+          }
         />
       ) : (
         <ShowcaseGalleryForm defaultWatermarkText={studioName} />

@@ -252,17 +252,17 @@ export class PaymentService {
   }
 
   /**
-   * One-time checkout for a "gallery pass" — a pay-per-gallery bundle bought at
-   * gallery-creation time by a photographer without an active private-gallery
-   * subscription. SUMIT-only, same trust posture as the custom-domain addon:
-   * the return handler resolves the studio from the SUMIT-*verified* customer,
-   * and re-derives the expected amount from the gallery's stored bundle. The
-   * `gallery_id` echoed on the return URL only locates the row to credit — it
-   * never decides the outcome.
+   * One-time checkout for a "gallery pass" credit — a pay-per-gallery bundle
+   * bought up front by a photographer without an active private-gallery
+   * subscription, then consumed when she creates a client gallery. SUMIT-only,
+   * same trust posture as the custom-domain addon: the return handler resolves
+   * the studio from the SUMIT-*verified* customer and re-derives the expected
+   * amount from the stored `gallery_pass_credits` row. The `credit_id` echoed on
+   * the return URL only locates that row — it never decides the outcome.
    */
   async createGalleryPassCheckout(input: {
     userId: string
-    galleryId: string
+    creditId: string
     itemName: string
     amountAgorot: number
     currency: string
@@ -295,7 +295,7 @@ export class PaymentService {
     this.logger.info('creating gallery-pass checkout', {
       provider: provider.name,
       userId: input.userId,
-      galleryId: input.galleryId,
+      creditId: input.creditId,
     })
 
     return provider.createAddonCheckout({
@@ -306,7 +306,7 @@ export class PaymentService {
       successUrl: input.successUrl,
       cancelUrl: input.cancelUrl,
       mode: 'gallery_pass',
-      extraReturnParams: { gallery_id: input.galleryId },
+      extraReturnParams: { credit_id: input.creditId },
     })
   }
 

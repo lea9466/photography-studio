@@ -4,7 +4,6 @@ import { SupabaseBillingRepository } from '@/lib/payments/repository'
 import { SumitProvider } from '@/lib/payments/providers/sumit/sumit-provider'
 import { CUSTOM_DOMAIN_ADDON_PRICE_AGOROT } from '@/lib/domains/custom-domain-addon'
 import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
-import { fetchGalleryPassBundleById } from '@/lib/gallery-pass/loader'
 
 export const runtime = 'nodejs'
 
@@ -344,13 +343,14 @@ async function handleCustomDomainAddonCheckout(
 }
 
 /**
- * One-time "gallery pass" purchase — a pay-per-gallery bundle bought at
- * gallery-creation time (see lib/actions/gallery-pass.actions.ts). Same trust
- * model as handleCustomDomainAddonCheckout: the expected amount is re-derived
- * server-side from the gallery's stored bundle (never a request param), the
- * studio is resolved from the SUMIT-verified customer, and the `gallery_id`
- * param is only used to locate the row — it's cross-checked against that
- * resolved studio before anything is written.
+ * One-time "gallery pass" credit purchase — a pay-per-gallery bundle bought up
+ * front (see lib/actions/gallery-pass.actions.ts), later consumed when the
+ * photographer creates a client gallery. Same trust model as
+ * handleCustomDomainAddonCheckout: the expected amount is re-derived from the
+ * stored gallery_pass_credits row (never a request param), the studio is
+ * resolved from the SUMIT-verified customer, and the `credit_id` param is only
+ * used to locate the row — it's cross-checked against that resolved studio
+ * before anything is written.
  */
 async function handleGalleryPassCheckout(
   provider: SumitProvider,
@@ -360,30 +360,32 @@ async function handleGalleryPassCheckout(
   const expectedCustomerId = Number(params.get('expected_customer_id'))
   if (!Number.isFinite(expectedCustomerId)) throw new Error('missing expected_customer_id')
 
-  const galleryId = params.get('gallery_id')?.trim()
-  if (!galleryId) throw new Error('missing gallery_id')
+  const creditId = params.get('credit_id')?.trim()
+  if (!creditId) throw new Error('missing credit_id')
 
   const admin = createAdminClient()
   const repository = new SupabaseBillingRepository(admin)
 
-  const { data: galleryRow } = await admin
-    .from('galleries')
-    .select('id, user_id, pass_bundle_id, pass_purchased_at')
-    .eq('id', galleryId)
+  const { data: creditRow } = await admin
+    .from('gallery_pass_credits')
+    .select('id, user_id, bundle_code, amount_agorot, currency, status')
+    .eq('id', creditId)
     .maybeSingle()
-  const gallery = galleryRow as
-    | { id: string; user_id: string; pass_bundle_id: string | null; pass_purchased_at: string | null }
+  const credit = creditRow as
+    | {
+        id: string
+        user_id: string
+        bundle_code: string
+        amount_agorot: number
+        currency: string
+        status: 'pending' | 'paid' | 'consumed'
+      }
     | null
-  if (!gallery || !gallery.pass_bundle_id) {
-    throw new Error(`gallery ${galleryId} has no pending gallery pass`)
-  }
-
-  const bundle = await fetchGalleryPassBundleById(gallery.pass_bundle_id)
-  if (!bundle) throw new Error(`gallery pass bundle ${gallery.pass_bundle_id} not found`)
+  if (!credit) throw new Error(`gallery pass credit ${creditId} not found`)
 
   const verified = await provider.completeAddonCheckout({
     paymentId,
-    expectedAmountAgorot: bundle.amount_agorot,
+    expectedAmountAgorot: credit.amount_agorot,
     expectedCustomerId,
   })
 
@@ -395,23 +397,23 @@ async function handleGalleryPassCheckout(
   if (!userId) {
     throw new Error(`no billing_customers row for verified SUMIT customer ${verified.customerId}`)
   }
-  if (userId !== gallery.user_id) {
+  if (userId !== credit.user_id) {
     throw new Error(
-      `gallery-pass payment customer ${verified.customerId} does not own gallery ${galleryId}`
+      `gallery-pass payment customer ${verified.customerId} does not own credit ${creditId}`
     )
   }
 
   const now = new Date().toISOString()
 
-  // Atomic + idempotent: only stamps a gallery whose pass is still unpaid, so a
-  // replayed return URL (back button, refresh) is a harmless no-op.
+  // Atomic + idempotent: only a still-pending credit is promoted, so a replayed
+  // return URL (back button, refresh) is a harmless no-op.
   const { error: updateError } = await admin
-    .from('galleries')
-    .update({ pass_purchased_at: now } as never)
-    .eq('id', galleryId)
-    .is('pass_purchased_at', null)
+    .from('gallery_pass_credits')
+    .update({ status: 'paid', purchased_at: now } as never)
+    .eq('id', creditId)
+    .eq('status', 'pending')
   if (updateError) {
-    throw new Error(`failed to record gallery-pass purchase: ${updateError.message}`)
+    throw new Error(`failed to record gallery-pass credit purchase: ${updateError.message}`)
   }
 
   await repository
@@ -421,15 +423,15 @@ async function handleGalleryPassCheckout(
       provider: 'sumit',
       externalTransactionId: String(paymentId),
       status: 'succeeded',
-      amountAgorot: bundle.amount_agorot,
-      currency: bundle.currency,
+      amountAgorot: credit.amount_agorot,
+      currency: credit.currency,
       paidAt: now,
-      metadata: { flow: 'gallery_pass', gallery_id: galleryId, bundle_code: bundle.code },
+      metadata: { flow: 'gallery_pass', credit_id: creditId, bundle_code: credit.bundle_code },
     })
     .catch((error) => {
       console.error('[payments][sumit-return] gallery-pass transaction record failed', {
         userId,
-        galleryId,
+        creditId,
         message: error instanceof Error ? error.message : String(error),
       })
     })

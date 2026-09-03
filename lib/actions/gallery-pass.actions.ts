@@ -1,17 +1,10 @@
 'use server'
 
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { createPaymentService } from '@/lib/payments/server'
 import { getPaymentReturnUrl } from '@/lib/payments/http'
-import {
-  fetchGalleryPassBundleByCode,
-  fetchGalleryPassBundleById,
-} from '@/lib/gallery-pass/loader'
-import type { GalleryPassBundle } from '@/lib/gallery-pass/types'
-import {
-  createClientGallery,
-  type CreateClientGalleryInput,
-} from '@/lib/actions/gallery.actions'
+import { fetchGalleryPassBundleByCode } from '@/lib/gallery-pass/loader'
 
 /**
  * Client-facing Server Actions return { ok, error } rather than throwing — Next
@@ -19,30 +12,32 @@ import {
  * the SUMIT checkout URL for the client to redirect to.
  */
 type GalleryPassCheckoutResult =
-  | { ok: true; checkoutUrl: string; galleryId: string }
+  | { ok: true; checkoutUrl: string }
   | { ok: false; error: string }
 
-async function buildGalleryPassCheckout(
+async function buildCreditCheckout(
   userId: string,
-  galleryId: string,
-  bundle: GalleryPassBundle
+  credit: {
+    id: string
+    bundle_name: string
+    amount_agorot: number
+    currency: string
+  }
 ): Promise<GalleryPassCheckoutResult> {
   try {
     const session = await createPaymentService().createGalleryPassCheckout({
       userId,
-      galleryId,
-      itemName: `פאס גלריה · ${bundle.name}`,
-      amountAgorot: bundle.amount_agorot,
-      currency: bundle.currency,
-      successUrl: getPaymentReturnUrl(
-        `/dashboard/galleries/${galleryId}/photos?checkout=success`
-      ),
-      cancelUrl: getPaymentReturnUrl(
-        `/dashboard/galleries/${galleryId}?checkout=cancelled`
-      ),
+      creditId: credit.id,
+      itemName: `פאס גלריה · ${credit.bundle_name}`,
+      amountAgorot: credit.amount_agorot,
+      currency: credit.currency,
+      // Back to the new-client-gallery flow — she now holds a paid credit, so
+      // the wizard renders normally with no payment step.
+      successUrl: getPaymentReturnUrl('/dashboard/galleries/new?kind=client&checkout=success'),
+      cancelUrl: getPaymentReturnUrl('/dashboard/private-galleries?checkout=cancelled'),
     })
     if (!session.url) return { ok: false, error: 'יצירת התשלום נכשלה' }
-    return { ok: true, checkoutUrl: session.url, galleryId }
+    return { ok: true, checkoutUrl: session.url }
   } catch (error) {
     return {
       ok: false,
@@ -52,13 +47,12 @@ async function buildGalleryPassCheckout(
 }
 
 /**
- * Pay-per-gallery creation: makes the client gallery as an unpaid draft with
- * the chosen bundle's cap/validity snapshot onto it, then returns a SUMIT
- * one-time checkout URL. Uploads and send-to-client stay blocked until the
- * return handler confirms the charge (sets pass_purchased_at).
+ * Buy a gallery-pass bundle as a standalone credit. Creates a `pending` credit
+ * row and returns a SUMIT one-time checkout URL; the return handler promotes it
+ * to `paid`. The credit is consumed later, when she creates a client gallery.
  */
-export async function createClientGalleryWithPass(
-  input: CreateClientGalleryInput & { bundleCode: string }
+export async function purchaseGalleryPassCredit(
+  bundleCode: string
 ): Promise<GalleryPassCheckoutResult> {
   let userId: string
   try {
@@ -71,74 +65,85 @@ export async function createClientGalleryWithPass(
     return { ok: false, error: 'נדרשת התחברות' }
   }
 
-  const { bundleCode, ...galleryInput } = input
   const bundle = await fetchGalleryPassBundleByCode(bundleCode)
   if (!bundle) return { ok: false, error: 'הבאנדל שנבחר אינו זמין' }
 
-  let galleryId: string
-  try {
-    const created = await createClientGallery({
-      ...galleryInput,
-      // Never auto-send at creation for a pass gallery — the client window
-      // only starts once she deliberately sends, after uploading.
-      sendToClient: false,
-      passBundle: {
-        id: bundle.id,
-        photoCap: bundle.photo_cap,
-        validityDays: bundle.validity_days,
-      },
-    })
-    galleryId = created.id
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'יצירת הגלריה נכשלה',
-    }
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('gallery_pass_credits')
+    .insert({
+      user_id: userId,
+      bundle_id: bundle.id,
+      bundle_code: bundle.code,
+      photo_cap: bundle.photo_cap,
+      validity_days: bundle.validity_days,
+      amount_agorot: bundle.amount_agorot,
+      currency: bundle.currency,
+      status: 'pending',
+    } as never)
+    .select('id')
+    .single()
+
+  const credit = data as { id: string } | null
+  if (error || !credit) {
+    return { ok: false, error: error?.message ?? 'יצירת הרכישה נכשלה' }
   }
 
-  return buildGalleryPassCheckout(userId, galleryId, bundle)
+  return buildCreditCheckout(userId, {
+    id: credit.id,
+    bundle_name: bundle.name,
+    amount_agorot: bundle.amount_agorot,
+    currency: bundle.currency,
+  })
 }
 
 /**
- * Re-opens checkout for a gallery whose pass was selected but never paid (the
- * photographer closed the SUMIT page). Surfaced as a "complete payment" button
- * on the gallery when pass_bundle_id is set and pass_purchased_at is null.
+ * Re-open checkout for a credit whose payment was never completed (she closed
+ * the SUMIT page). Surfaced from the "purchase pending" state on the buy panel.
  */
-export async function retryGalleryPassCheckout(
-  galleryId: string
+export async function retryGalleryPassCreditCheckout(
+  creditId: string
 ): Promise<GalleryPassCheckoutResult> {
   let userId: string
-  let supabase: Awaited<ReturnType<typeof requireDashboardContext>>['supabase']
   try {
     const ctx = await requireDashboardContext()
     if (ctx.isImpersonating) {
       return { ok: false, error: 'לא ניתן לבצע רכישה במצב התחזות' }
     }
     userId = ctx.userId
-    supabase = ctx.supabase
   } catch {
     return { ok: false, error: 'נדרשת התחברות' }
   }
 
-  const { data } = await supabase
-    .from('galleries')
-    .select('id, pass_bundle_id, pass_purchased_at')
-    .eq('id', galleryId)
-    .eq('user_id', userId)
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('gallery_pass_credits')
+    .select('id, user_id, bundle_code, amount_agorot, currency, status')
+    .eq('id', creditId)
     .maybeSingle()
-  const gallery = data as
-    | { id: string; pass_bundle_id: string | null; pass_purchased_at: string | null }
+  const credit = data as
+    | {
+        id: string
+        user_id: string
+        bundle_code: string
+        amount_agorot: number
+        currency: string
+        status: 'pending' | 'paid' | 'consumed'
+      }
     | null
 
-  if (!gallery || !gallery.pass_bundle_id) {
-    return { ok: false, error: 'לגלריה זו אין פאס ממתין לתשלום' }
+  if (!credit || credit.user_id !== userId) {
+    return { ok: false, error: 'הרכישה לא נמצאה' }
   }
-  if (gallery.pass_purchased_at) {
-    return { ok: false, error: 'הפאס של הגלריה כבר שולם' }
+  if (credit.status !== 'pending') {
+    return { ok: false, error: 'הרכישה כבר הושלמה' }
   }
 
-  const bundle = await fetchGalleryPassBundleById(gallery.pass_bundle_id)
-  if (!bundle) return { ok: false, error: 'הבאנדל שנבחר אינו זמין' }
-
-  return buildGalleryPassCheckout(userId, galleryId, bundle)
+  const bundle = await fetchGalleryPassBundleByCode(credit.bundle_code)
+  return buildCreditCheckout(userId, {
+    id: credit.id,
+    bundle_name: bundle?.name ?? 'גלריה בודדת',
+    amount_agorot: credit.amount_agorot,
+    currency: credit.currency,
+  })
 }

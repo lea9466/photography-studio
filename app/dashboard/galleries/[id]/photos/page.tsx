@@ -8,7 +8,6 @@ import { unwrapOne } from '@/lib/unwrap'
 import { Upload, Send } from 'lucide-react'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { SendGalleryToClientButton } from '@/components/dashboard/SendGalleryToClientButton'
-import { GalleryPassPendingBanner } from '@/components/gallery/GalleryPassPendingBanner'
 import type { Gallery, GallerySettings, Client } from '@/lib/types/database.types'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
@@ -52,11 +51,6 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   const hasClient = Array.isArray(galleryDetail.clients)
     ? galleryDetail.clients.length > 0
     : galleryDetail.clients != null
-  const pass = galleryDetail as {
-    pass_bundle_id: string | null
-    pass_purchased_at: string | null
-  }
-  const passPaymentPending = Boolean(pass.pass_bundle_id) && !pass.pass_purchased_at
 
   // A bought gallery pass carries its own photo cap (regular + edited together),
   // snapshot at purchase; it wins over the owner's private-gallery tier.
@@ -79,8 +73,6 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
 
   return (
     <div className="animate-fade-in space-y-8 pb-28 sm:space-y-12">
-      {passPaymentPending ? <GalleryPassPendingBanner galleryId={id} /> : null}
-
       {isClientGallery && hasClient ? (
         <section className="space-y-2">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
@@ -119,6 +111,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           storeOriginalPhotos={isClientGallery}
           privateGalleryPhotoLimit={privateGalleryPhotoLimit}
           processedTabLocked={isClientGallery && !isClientSelectionComplete(galleryDetail.status)}
+          watermarkPlacement={isClientGallery ? 'center' : 'corner'}
         />
       </section>
 

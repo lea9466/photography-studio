@@ -36,6 +36,11 @@ import { galleryKindColumns } from '@/lib/gallery-kind'
 import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { buildPrivateGalleryCountLimitError } from '@/lib/private-galleries/entitlements'
+import {
+  fetchAvailableGalleryPassCredit,
+  consumeGalleryPassCredit,
+  type GalleryPassCredit,
+} from '@/lib/gallery-pass/credits'
 
 type GalleriesUpdate = Database['public']['Tables']['galleries']['Update']
 
@@ -358,10 +363,6 @@ export type CreateGalleryInput = {
   sendToClient?: boolean
   isPublic?: boolean
   coverImage?: string
-  /** Set for a pay-per-gallery "gallery pass" creation: bypasses the private
-   * tier count gate and snapshots the bought cap/validity onto the row. The
-   * gallery is created unpaid — see createClientGalleryWithPass. */
-  passBundle?: { id: string; photoCap: number; validityDays: number }
 }
 
 function generatePassword() {
@@ -438,32 +439,34 @@ export async function createGallery(input: CreateGalleryInput) {
   }
 
   let unlocksFreePrivateGallerySlot = false
-  // A bought gallery pass is its own entitlement — it bypasses the private-
-  // gallery tier count gate entirely (the pass, not the tier, governs this one
-  // gallery's photo cap and client window).
-  if (!willBePublic && !input.passBundle) {
+  // When the private-gallery tier gate would block creation, a bought gallery-
+  // pass credit covers it instead — its snapshot cap/validity govern this one
+  // gallery, and it's consumed right after the row is inserted.
+  let passCredit: GalleryPassCredit | null = null
+  if (!willBePublic) {
     const pg = await getPrivateGalleryEntitlements(userId)
+    let limitError: string | null = null
     if (pg.limits.isLifetimeCap) {
-      const limitError = buildPrivateGalleryCountLimitError(
-        pg.lifetimeUsed ? 1 : 0,
-        1,
-        true
-      )
-      if (limitError) throw new Error(limitError)
-      unlocksFreePrivateGallerySlot = true
+      limitError = buildPrivateGalleryCountLimitError(pg.lifetimeUsed ? 1 : 0, 1, true)
+      if (!limitError) unlocksFreePrivateGallerySlot = true
     } else {
       const { count: privateGalleryCount } = await supabase
         .from('galleries')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('gallery_type', 'selection')
-
-      const limitError = buildPrivateGalleryCountLimitError(
+      limitError = buildPrivateGalleryCountLimitError(
         privateGalleryCount ?? 0,
         pg.limits.maxGalleries,
         false
       )
-      if (limitError) throw new Error(limitError)
+    }
+
+    if (limitError) {
+      passCredit = await fetchAvailableGalleryPassCredit(userId)
+      if (!passCredit) throw new Error(limitError)
+      // A credit doesn't come out of the free lifetime slot.
+      unlocksFreePrivateGallerySlot = false
     }
   }
 
@@ -487,14 +490,12 @@ export async function createGallery(input: CreateGalleryInput) {
     ...(input.galleryType === 'portfolio'
       ? { slug: portfolioSlug(title) }
       : {}),
-    ...(input.passBundle
+    ...(passCredit
       ? {
-          pass_bundle_id: input.passBundle.id,
-          pass_photo_cap: input.passBundle.photoCap,
-          pass_validity_days: input.passBundle.validityDays,
-          // Paid only once the SUMIT return handler confirms the charge —
-          // until then uploads and send-to-client stay blocked.
-          pass_purchased_at: null,
+          pass_bundle_id: passCredit.bundle_id,
+          pass_photo_cap: passCredit.photo_cap,
+          pass_validity_days: passCredit.validity_days,
+          pass_purchased_at: passCredit.purchased_at,
         }
       : {}),
   }
@@ -509,6 +510,15 @@ export async function createGallery(input: CreateGalleryInput) {
 
   if (galleryError || !gallery) {
     throw new Error(galleryError?.message ?? 'יצירת הגלריה נכשלה')
+  }
+
+  if (passCredit) {
+    const consumed = await consumeGalleryPassCredit(passCredit.id, gallery.id)
+    if (!consumed) {
+      // Lost a race for the same credit — undo the gallery we just made.
+      await supabase.from('galleries').delete().eq('id', gallery.id)
+      throw new Error('הגלריה שרכשת כבר נוצלה — נסי שוב')
+    }
   }
 
   if (unlocksFreePrivateGallerySlot) {
@@ -588,8 +598,6 @@ export type CreateClientGalleryInput = {
   autoApplyWatermark?: boolean
   sendToClient?: boolean
   coverImage?: string
-  /** Pay-per-gallery pass — see createGallery's CreateGalleryInput.passBundle. */
-  passBundle?: { id: string; photoCap: number; validityDays: number }
 }
 
 /**
