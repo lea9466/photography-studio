@@ -4,6 +4,7 @@ import { Info } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchClients } from '@/lib/actions/client.actions'
 import { getPublicGalleryQuota, getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
+import { fetchActiveGalleryPassBundles } from '@/lib/gallery-pass/loader'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
 import { ShowcaseGalleryForm } from '@/components/gallery/ShowcaseGalleryForm'
 import { ClientGalleryWizard } from '@/components/gallery/ClientGalleryWizard'
@@ -70,6 +71,14 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
       ? !(quota?.canCreateGallery ?? true)
       : !(privateQuota?.canCreateGallery ?? true)
 
+  // When a client gallery is blocked by the tier, offer a one-time gallery pass
+  // instead of a dead end. Fetched only when it's actually needed.
+  const passBundles =
+    kind === 'client' && blockedByQuota
+      ? await fetchActiveGalleryPassBundles().catch(() => [])
+      : []
+  const canBuyPass = passBundles.length > 0
+
   const downloadPermissionsEnabled = DOWNLOAD_PERMISSIONS_ENABLED
 
   return (
@@ -103,7 +112,7 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
         <p>{meta.note}</p>
       </div>
 
-      {blockedByQuota ? (
+      {blockedByQuota && !(kind === 'client' && canBuyPass) ? (
         <div className="rounded-xl border border-[#c9c5cd] bg-white p-8 text-center">
           <p className="text-[#48464c]">
             {kind === 'client' ? (
@@ -132,6 +141,15 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
           clients={clients}
           defaultWatermarkText={studioName}
           downloadPermissionsEnabled={downloadPermissionsEnabled}
+          requiresPass={blockedByQuota && canBuyPass}
+          passBundles={passBundles.map((b) => ({
+            code: b.code,
+            name: b.name,
+            photoCap: b.photo_cap,
+            validityDays: b.validity_days,
+            amountAgorot: b.amount_agorot,
+            currency: b.currency,
+          }))}
         />
       ) : (
         <ShowcaseGalleryForm defaultWatermarkText={studioName} />

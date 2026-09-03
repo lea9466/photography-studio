@@ -13,9 +13,11 @@ import {
   Droplets,
   Download,
   Send,
+  CreditCard,
 } from 'lucide-react'
 import { createClientRecord } from '@/lib/actions/client.actions'
 import { createClientGallery } from '@/lib/actions/gallery.actions'
+import { createClientGalleryWithPass } from '@/lib/actions/gallery-pass.actions'
 import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
 import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import type { Client } from '@/lib/types/database.types'
@@ -46,16 +48,32 @@ type WizardState = {
   coverImageFile: File | null
 }
 
+export type GalleryPassBundleView = {
+  code: string
+  name: string
+  photoCap: number
+  validityDays: number
+  amountAgorot: number
+  currency: string
+}
+
 type ClientGalleryWizardProps = {
   clients: Client[]
   defaultWatermarkText?: string
   downloadPermissionsEnabled?: boolean
+  /** The owner has no free/subscription slot — this gallery must be bought as a
+   * one-time pass. Publish then goes through SUMIT checkout instead of a plain
+   * create. */
+  requiresPass?: boolean
+  passBundles?: GalleryPassBundleView[]
 }
 
 export function ClientGalleryWizard({
   clients,
   defaultWatermarkText = '',
   downloadPermissionsEnabled: downloadPermissionsEnabledProp,
+  requiresPass = false,
+  passBundles = [],
 }: ClientGalleryWizardProps) {
   const router = useRouter()
   const downloadPermissionsEnabled =
@@ -65,6 +83,11 @@ export function ClientGalleryWizard({
   const [search, setSearch] = useState('')
   const [isPending, startTransition] = useTransition()
   const [disableWatermarkOpen, setDisableWatermarkOpen] = useState(false)
+  const [selectedBundleCode, setSelectedBundleCode] = useState(
+    passBundles[0]?.code ?? ''
+  )
+  const selectedBundle =
+    passBundles.find((b) => b.code === selectedBundleCode) ?? null
   const [state, setState] = useState<WizardState>({
     clientMode: clients.length > 0 ? 'existing' : 'new',
     clientId: clients[0]?.id ?? '',
@@ -118,6 +141,29 @@ export function ClientGalleryWizard({
     setStep((prev) => Math.max(prev - 1, 1))
   }
 
+  function buildGalleryInput(clientId: string, coverImageUrl: string | undefined) {
+    return {
+      title: state.title,
+      clientId,
+      expiresAt: state.expiresAt || undefined,
+      albumSelectionEnabled: state.albumSelectionEnabled,
+      editSelectionEnabled: state.editSelectionEnabled,
+      maxAlbumSelection:
+        state.albumSelectionEnabled && state.maxAlbumSelection
+          ? Number(state.maxAlbumSelection)
+          : undefined,
+      maxEditSelection:
+        state.editSelectionEnabled && state.maxEditSelection
+          ? Number(state.maxEditSelection)
+          : undefined,
+      allowDownloadPreview: downloadPermissionsEnabled ? state.allowDownloadPreview : false,
+      allowDownloadOriginal: downloadPermissionsEnabled ? state.allowDownloadOriginal : false,
+      watermarkText: state.watermarkText || undefined,
+      autoApplyWatermark: state.autoApplyWatermark,
+      coverImage: coverImageUrl,
+    }
+  }
+
   function handlePublish() {
     if (!state.title.trim()) {
       toast.error('שם הגלריה הוא שדה חובה')
@@ -125,6 +171,10 @@ export function ClientGalleryWizard({
     }
     if (!state.albumSelectionEnabled && !state.editSelectionEnabled) {
       toast.error('צריך להשאיר לפחות מסלול בחירה אחד פעיל — לאלבום או לעיבוד')
+      return
+    }
+    if (requiresPass && !selectedBundle) {
+      toast.error('יש לבחור באנדל')
       return
     }
 
@@ -156,27 +206,24 @@ export function ClientGalleryWizard({
           }
         }
 
-        const gallery = await createClientGallery({
-          title: state.title,
-          clientId,
-          expiresAt: state.expiresAt || undefined,
-          albumSelectionEnabled: state.albumSelectionEnabled,
-          editSelectionEnabled: state.editSelectionEnabled,
-          maxAlbumSelection:
-            state.albumSelectionEnabled && state.maxAlbumSelection
-              ? Number(state.maxAlbumSelection)
-              : undefined,
-          maxEditSelection:
-            state.editSelectionEnabled && state.maxEditSelection
-              ? Number(state.maxEditSelection)
-              : undefined,
-          allowDownloadPreview: downloadPermissionsEnabled ? state.allowDownloadPreview : false,
-          allowDownloadOriginal: downloadPermissionsEnabled ? state.allowDownloadOriginal : false,
-          watermarkText: state.watermarkText || undefined,
-          autoApplyWatermark: state.autoApplyWatermark,
-          coverImage: coverImageUrl,
-        })
+        const input = buildGalleryInput(clientId, coverImageUrl)
 
+        if (requiresPass && selectedBundle) {
+          const result = await createClientGalleryWithPass({
+            ...input,
+            bundleCode: selectedBundle.code,
+          })
+          if (!result.ok) {
+            toast.error(result.error)
+            return
+          }
+          // Hand off to the SUMIT hosted page; the return handler brings her
+          // back to the gallery's photos screen.
+          window.location.href = result.checkoutUrl
+          return
+        }
+
+        const gallery = await createClientGallery(input)
         toast.success('הגלריה נוצרה — כעת העלי תמונות')
         router.push(`/dashboard/galleries/${gallery.id}/photos`)
       } catch (error) {
@@ -550,6 +597,51 @@ export function ClientGalleryWizard({
             </div>
           </section>
 
+          {requiresPass && passBundles.length > 0 ? (
+            <section className="rounded-xl border-2 border-[#7D3A52]/30 bg-white p-6 sm:p-8">
+              <div className="mb-2 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-[#7D3A52]" />
+                <h2 className="text-base font-semibold text-[#100d1f]">רכישת גלריה בודדת</h2>
+              </div>
+              <p className="mb-5 text-xs text-[#48464c]/80">
+                אין לך מנוי פעיל — הגלריה הזו נרכשת בתשלום חד-פעמי. בחרי חבילה לפי מספר
+                התמונות (רגילות + מעובדות יחד). התוקף ללקוח מתחיל כששולחים לו, לא עכשיו.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {passBundles.map((bundle) => {
+                  const active = bundle.code === selectedBundleCode
+                  return (
+                    <button
+                      key={bundle.code}
+                      type="button"
+                      onClick={() => setSelectedBundleCode(bundle.code)}
+                      className={`flex flex-col items-start rounded-xl border-2 p-4 text-right transition-all ${
+                        active
+                          ? 'border-[#7D3A52] bg-[#7D3A52]/5'
+                          : 'border-[#ebebe8] hover:border-[#7D3A52]/40'
+                      }`}
+                    >
+                      <span className="text-sm font-semibold text-[#100d1f]">{bundle.name}</span>
+                      <span className="mt-1 text-2xl font-bold text-[#7D3A52]">
+                        ₪{(bundle.amountAgorot / 100).toLocaleString('he-IL')}
+                      </span>
+                      <span className="mt-1 text-xs text-[#48464c]/70">
+                        תוקף {bundle.validityDays} ימים ללקוח
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-4 text-xs text-[#48464c]/70">
+                צריך יותר מ-1500 תמונות?{' '}
+                <a href="/dashboard/contact" className="font-semibold text-[#7D3A52] underline">
+                  דברי איתנו להתאמה אישית
+                </a>
+                .
+              </p>
+            </section>
+          ) : null}
+
           <div className="flex items-start gap-2.5 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-4 py-3 text-sm leading-relaxed text-[#48464c]">
             <Send className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
             <p>
@@ -588,11 +680,16 @@ export function ClientGalleryWizard({
             type="button"
             size="lg"
             onClick={handlePublish}
-            disabled={isPending}
+            disabled={isPending || (requiresPass && !selectedBundle)}
             className="h-12 bg-[#7D3A52] px-8 text-white shadow-lg hover:bg-[#6a2f44] sm:w-auto"
           >
             {isPending ? (
-              'שומר גלריה...'
+              requiresPass ? 'מעביר לתשלום...' : 'שומר גלריה...'
+            ) : requiresPass && selectedBundle ? (
+              <>
+                <CreditCard className="ml-2 h-5 w-5" />
+                המשך לתשלום · ₪{(selectedBundle.amountAgorot / 100).toLocaleString('he-IL')}
+              </>
             ) : (
               <>
                 <Send className="ml-2 h-5 w-5" />

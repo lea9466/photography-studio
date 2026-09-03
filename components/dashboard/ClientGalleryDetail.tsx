@@ -19,6 +19,7 @@ import { ClientEditForm } from '@/components/dashboard/ClientEditForm'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { ClientGalleryEditForm } from '@/components/dashboard/ClientGalleryEditForm'
+import { GalleryPassPendingBanner } from '@/components/gallery/GalleryPassPendingBanner'
 import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
 
 type ClientGalleryDetailProps = {
@@ -59,10 +60,16 @@ export async function ClientGalleryDetail({
     photos.map((p) => (p as { preview_url: string | null }).preview_url)
   )
 
+  const passPaymentPending =
+    Boolean((gallery as { pass_bundle_id: string | null }).pass_bundle_id) &&
+    !(gallery as { pass_purchased_at: string | null }).pass_purchased_at
+
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">
       {/* Deep-link from the "client finished selecting" email (?section=selections). */}
       <ScrollToSection />
+
+      {passPaymentPending ? <GalleryPassPendingBanner galleryId={gallery.id} /> : null}
 
       <section className={SECTION_CLASS}>
         <div className="space-y-2">
