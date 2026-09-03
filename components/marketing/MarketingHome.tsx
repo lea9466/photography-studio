@@ -20,11 +20,12 @@ const PRO_FEATURES_HE = [
   'וידאו רקע בהירו',
 ]
 
-const PLUS_FEATURES_HE = [
-  'כל מה שיש בחבילת Pro',
-  'אתר ציבורי מלא ללא הגבלת גלריות',
-  'ניהול גלריות פרטיות מלא ללקוחות',
-  'בחירת תמונות ללקוח — לאלבום ולעיבוד',
+const PRIVATE_GALLERY_FEATURES_HE = [
+  'גלריה פרטית ומאובטחת לכל לקוח, בכתובת נפרדת',
+  'התמונות מוגנות בסימן מים לאורך כל הבחירה',
+  'הלקוח מסמן על התמונה עצמה — בלי רשימות מספרים',
+  'בחירה לאלבום ולעיבוד, והורדת הכל בקבצים מלאים בכפתור אחד',
+  'פתוח בנטפרי, כולל התמונות',
 ]
 
 export async function MarketingHome() {
@@ -176,26 +177,29 @@ export async function MarketingHome() {
             </Reveal>
 
             <Reveal delayMs={200}>
-              <Card className="border-dashed opacity-80 shadow-sm">
+              <Card className="shadow-sm">
                 <CardContent className="p-8">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold">Plus</h3>
-                    <span className="rounded-full bg-[--foreground]/5 px-2.5 py-1 text-[11px] font-semibold text-[--muted]">
-                      בקרוב
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-[--muted]">אתר ציבורי מלא + ניהול גלריות פרטיות</p>
-                  <p className="mt-6 text-3xl font-bold text-[--muted]">בקרוב</p>
+                  <h3 className="text-xl font-semibold">ניהול גלריות פרטיות</h3>
+                  <p className="mt-1 text-sm text-[--muted]">
+                    כל תהליך בחירת התמונות מול הלקוח, במקום אחד
+                  </p>
+                  <p className="mt-6 flex items-baseline gap-2">
+                    <span className="text-3xl font-bold">חינם</span>
+                    <span className="text-sm text-[--muted]">לגלריה הראשונה</span>
+                  </p>
+                  <p className="mt-1 text-xs text-[--muted]">
+                    בלי הגבלת זמן · מסלולים בתשלום למספר גלריות במקביל
+                  </p>
                   <ul className="mt-6 space-y-3">
-                    {PLUS_FEATURES_HE.map((item) => (
+                    {PRIVATE_GALLERY_FEATURES_HE.map((item) => (
                       <li key={item} className="flex items-start justify-start gap-2.5 text-sm text-[--muted]">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-[--muted]" />
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-violet-600" />
                         {item}
                       </li>
                     ))}
                   </ul>
-                  <Button variant="outline" className="mt-8 w-full" disabled>
-                    זמין בקרוב
+                  <Button className="mt-8 w-full" asChild>
+                    <Link href="/register">התחילי עכשיו</Link>
                   </Button>
                 </CardContent>
               </Card>
