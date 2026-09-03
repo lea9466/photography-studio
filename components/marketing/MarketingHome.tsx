@@ -105,8 +105,8 @@ export async function MarketingHome() {
           <Reveal className="text-center">
             <h2 className="text-3xl font-bold tracking-tight">חבילות שימוש</h2>
             <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-[--muted]">
-              שני מוצרים נפרדים לגמרי — כל אחד עם מסלול ומחיר משלו, ואפשר להשתמש בכל אחד בפני עצמו:
-              אתר תדמית ציבורי שמופיע בגוגל, וניהול גלריות פרטיות לבחירת תמונות מול לקוחות.
+              שני מוצרים נפרדים — כל אחד עם מסלול ומחיר משלו: אתר תדמית ציבורי שמופיע בגוגל,
+              וניהול גלריות פרטיות לבחירת תמונות מול לקוחות. אפשר להשתמש בכל אחד בנפרד או בשניהם יחד.
             </p>
           </Reveal>
 
@@ -191,7 +191,9 @@ export async function MarketingHome() {
 
           <div className="my-8 flex items-center gap-4" aria-hidden>
             <span className="h-px flex-1 bg-[--border]" />
-            <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[--muted]">או</span>
+            <span className="whitespace-nowrap text-xs font-semibold tracking-wide text-[--muted]">
+              או / וגם
+            </span>
             <span className="h-px flex-1 bg-[--border]" />
           </div>
 
