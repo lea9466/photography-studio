@@ -62,7 +62,11 @@ export async function createClientGalleryWithPass(
 ): Promise<GalleryPassCheckoutResult> {
   let userId: string
   try {
-    ;({ userId } = await requireDashboardContext())
+    const ctx = await requireDashboardContext()
+    if (ctx.isImpersonating) {
+      return { ok: false, error: 'לא ניתן לבצע רכישה במצב התחזות' }
+    }
+    userId = ctx.userId
   } catch {
     return { ok: false, error: 'נדרשת התחברות' }
   }
@@ -106,7 +110,12 @@ export async function retryGalleryPassCheckout(
   let userId: string
   let supabase: Awaited<ReturnType<typeof requireDashboardContext>>['supabase']
   try {
-    ;({ userId, supabase } = await requireDashboardContext())
+    const ctx = await requireDashboardContext()
+    if (ctx.isImpersonating) {
+      return { ok: false, error: 'לא ניתן לבצע רכישה במצב התחזות' }
+    }
+    userId = ctx.userId
+    supabase = ctx.supabase
   } catch {
     return { ok: false, error: 'נדרשת התחברות' }
   }
