@@ -33,6 +33,24 @@ export async function fetchGalleryPassBundleByCode(
   return (data as GalleryPassBundle | null) ?? null
 }
 
+/**
+ * One bundle by id, INCLUDING inactive ones — the payment return handler needs
+ * to honor a purchase even if the bundle was deactivated between gallery
+ * creation and the customer completing checkout.
+ */
+export async function fetchGalleryPassBundleById(
+  id: string
+): Promise<GalleryPassBundle | null> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('gallery_pass_bundles')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+
+  return (data as GalleryPassBundle | null) ?? null
+}
+
 /** Every bundle including inactive ones — for the /manage editor. */
 export async function fetchAllGalleryPassBundles(): Promise<GalleryPassBundle[]> {
   const admin = createAdminClient()

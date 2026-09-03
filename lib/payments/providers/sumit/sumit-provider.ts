@@ -346,6 +346,12 @@ export class SumitProvider implements PaymentProvider {
     currency: string
     successUrl: string
     cancelUrl: string
+    /** Return-route dispatch key. Defaults to the original custom-domain addon. */
+    mode?: 'custom_domain_addon' | 'gallery_pass'
+    /** Extra correlation params echoed back on the return URL (e.g. gallery_id).
+     * Never trusted for the outcome — only to locate the row to credit, which
+     * is re-checked against the SUMIT-verified customer server-side. */
+    extraReturnParams?: Record<string, string>
   }): Promise<CheckoutSession> {
     const item: SumitLineItem = {
       Item: { Name: input.itemName, SearchMode: 'Automatic' },
@@ -355,8 +361,8 @@ export class SumitProvider implements PaymentProvider {
     }
 
     const redirectUrl = buildSumitReturnUrl({
-      mode: 'custom_domain_addon',
-      params: { expected_customer_id: input.customerId },
+      mode: input.mode ?? 'custom_domain_addon',
+      params: { expected_customer_id: input.customerId, ...input.extraReturnParams },
       next: input.successUrl,
     })
 
@@ -641,7 +647,12 @@ export class SumitProvider implements PaymentProvider {
  * and only used as the final destination once verification succeeds.
  */
 function buildSumitReturnUrl(input: {
-  mode: 'checkout' | 'one_time_checkout' | 'update_payment_method' | 'custom_domain_addon'
+  mode:
+    | 'checkout'
+    | 'one_time_checkout'
+    | 'update_payment_method'
+    | 'custom_domain_addon'
+    | 'gallery_pass'
   params: Record<string, string>
   next: string
 }): string {

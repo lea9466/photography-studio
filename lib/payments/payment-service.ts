@@ -252,6 +252,65 @@ export class PaymentService {
   }
 
   /**
+   * One-time checkout for a "gallery pass" — a pay-per-gallery bundle bought at
+   * gallery-creation time by a photographer without an active private-gallery
+   * subscription. SUMIT-only, same trust posture as the custom-domain addon:
+   * the return handler resolves the studio from the SUMIT-*verified* customer,
+   * and re-derives the expected amount from the gallery's stored bundle. The
+   * `gallery_id` echoed on the return URL only locates the row to credit — it
+   * never decides the outcome.
+   */
+  async createGalleryPassCheckout(input: {
+    userId: string
+    galleryId: string
+    itemName: string
+    amountAgorot: number
+    currency: string
+    successUrl: string
+    cancelUrl: string
+  }): Promise<CheckoutSession> {
+    const provider = this.resolveProvider()
+    if (!(provider instanceof SumitProvider)) {
+      throw new PaymentError('provider_not_configured')
+    }
+
+    const email = await this.repository.getUserEmail(input.userId)
+    if (!email) throw new PaymentError('invalid_request')
+
+    let customerRow = await this.repository.getBillingCustomer(input.userId, provider.name)
+    let customer: PaymentCustomer | null = customerRow?.provider_customer_id
+      ? { id: customerRow.provider_customer_id, provider: provider.name, email: customerRow.email }
+      : null
+
+    if (!customer) {
+      customer = await provider.createCustomer({ userId: input.userId, email })
+      customerRow = await this.repository.saveBillingCustomer({
+        userId: input.userId,
+        provider: provider.name,
+        externalCustomerId: customer.id,
+        email,
+      })
+    }
+
+    this.logger.info('creating gallery-pass checkout', {
+      provider: provider.name,
+      userId: input.userId,
+      galleryId: input.galleryId,
+    })
+
+    return provider.createAddonCheckout({
+      customerId: customer.id,
+      itemName: input.itemName,
+      amountAgorot: input.amountAgorot,
+      currency: input.currency,
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
+      mode: 'gallery_pass',
+      extraReturnParams: { gallery_id: input.galleryId },
+    })
+  }
+
+  /**
    * SUMIT PaymentsJS recurring flow: the client tokenizes the card in-site and
    * sends us a single-use `token`; one `provider.createSubscription` call both
    * charges it and opens the standing order. Replaces the broken redirect

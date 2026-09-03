@@ -49,12 +49,21 @@ async function assertGalleryUploadPaths(
 
   const { data: gallery } = await supabase
     .from('galleries')
-    .select('id, is_public')
+    .select('id, is_public, pass_bundle_id, pass_purchased_at')
     .eq('id', galleryId)
     .eq('user_id', userId)
     .single()
 
   if (!gallery) throw new Error('גלריה לא נמצאה')
+
+  // A pay-per-gallery pass gallery can't take uploads until the pass is paid.
+  const passGallery = gallery as {
+    pass_bundle_id: string | null
+    pass_purchased_at: string | null
+  }
+  if (passGallery.pass_bundle_id && !passGallery.pass_purchased_at) {
+    throw new Error('יש להשלים את תשלום הפאס לפני העלאת תמונות לגלריה')
+  }
 
   const prefix = `${userId}/${galleryId}/`
   for (const item of items) {

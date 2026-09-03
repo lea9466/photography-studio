@@ -159,6 +159,9 @@ type GalleryEmailRow = {
   expires_at: string | null
   status: GalleryStatus
   gallery_type: Database['public']['Tables']['galleries']['Row']['gallery_type']
+  pass_bundle_id: string | null
+  pass_validity_days: number | null
+  pass_purchased_at: string | null
   clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
   users: { studio_name: string | null } | { studio_name: string | null }[] | null
 }
@@ -171,6 +174,7 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
     .select(
       `
       id, title, expires_at, status, gallery_type,
+      pass_bundle_id, pass_validity_days, pass_purchased_at,
       clients (name, email),
       users!galleries_user_id_fkey (studio_name)
     `
@@ -298,6 +302,31 @@ export async function updateGalleryStatus(
 export async function sendGallery(galleryId: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
+  // A pay-per-gallery pass must be paid before the gallery can go out.
+  if (gallery.pass_bundle_id && !gallery.pass_purchased_at) {
+    throw new Error('יש להשלים את תשלום הפאס לפני שליחת הגלריה ללקוח')
+  }
+
+  // The client-access window for a pass gallery starts on the FIRST send — not
+  // at creation (the photographer gets unlimited prep time). Guarded on a null
+  // expires_at so a resend never re-extends it.
+  if (
+    gallery.pass_bundle_id &&
+    gallery.pass_purchased_at &&
+    gallery.pass_validity_days &&
+    !gallery.expires_at
+  ) {
+    const { userId, supabase } = await requireDashboardContext()
+    const expiresAt = new Date(
+      Date.now() + gallery.pass_validity_days * 24 * 60 * 60 * 1000
+    ).toISOString()
+    await supabase
+      .from('galleries')
+      .update({ expires_at: expiresAt } as never)
+      .eq('id', galleryId)
+      .eq('user_id', userId)
+  }
+
   // Bypass email sending for public galleries (no client)
   if (!gallery.clients || (Array.isArray(gallery.clients) && gallery.clients.length === 0)) {
     await updateGalleryStatus(galleryId, 'selection')
@@ -329,6 +358,10 @@ export type CreateGalleryInput = {
   sendToClient?: boolean
   isPublic?: boolean
   coverImage?: string
+  /** Set for a pay-per-gallery "gallery pass" creation: bypasses the private
+   * tier count gate and snapshots the bought cap/validity onto the row. The
+   * gallery is created unpaid — see createClientGalleryWithPass. */
+  passBundle?: { id: string; photoCap: number; validityDays: number }
 }
 
 function generatePassword() {
@@ -405,7 +438,10 @@ export async function createGallery(input: CreateGalleryInput) {
   }
 
   let unlocksFreePrivateGallerySlot = false
-  if (!willBePublic) {
+  // A bought gallery pass is its own entitlement — it bypasses the private-
+  // gallery tier count gate entirely (the pass, not the tier, governs this one
+  // gallery's photo cap and client window).
+  if (!willBePublic && !input.passBundle) {
     const pg = await getPrivateGalleryEntitlements(userId)
     if (pg.limits.isLifetimeCap) {
       const limitError = buildPrivateGalleryCountLimitError(
@@ -450,6 +486,16 @@ export async function createGallery(input: CreateGalleryInput) {
     cover_image: input.coverImage || null,
     ...(input.galleryType === 'portfolio'
       ? { slug: portfolioSlug(title) }
+      : {}),
+    ...(input.passBundle
+      ? {
+          pass_bundle_id: input.passBundle.id,
+          pass_photo_cap: input.passBundle.photoCap,
+          pass_validity_days: input.passBundle.validityDays,
+          // Paid only once the SUMIT return handler confirms the charge —
+          // until then uploads and send-to-client stay blocked.
+          pass_purchased_at: null,
+        }
       : {}),
   }
 
@@ -542,6 +588,8 @@ export type CreateClientGalleryInput = {
   autoApplyWatermark?: boolean
   sendToClient?: boolean
   coverImage?: string
+  /** Pay-per-gallery pass — see createGallery's CreateGalleryInput.passBundle. */
+  passBundle?: { id: string; photoCap: number; validityDays: number }
 }
 
 /**
