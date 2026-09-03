@@ -1,13 +1,15 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
+import type { PrivateGalleryEntitlements } from '@/lib/private-galleries/types'
 
 export type AdminStudioSummary = {
-  galleries: number
+  /** Public-site content — the "ניהול האתר" half of the dialog. */
+  showcaseGalleries: number
   publicGalleries: number
-  photos: number
-  clients: number
-  packages: number
+  showcaseGalleryPhotos: number
   posts: number
   postPhotos: number
+  packages: number
   faqItems: number
   testimonials: number
   photoEditComparisons: number
@@ -15,6 +17,19 @@ export type AdminStudioSummary = {
   heroImages: number
   heroDesktopImages: number
   heroMobileImages: number
+  /** Private (client) gallery product — the "גלריות פרטיות ולקוחות" half. */
+  clientGalleries: number
+  clientGalleryPhotos: number
+  clients: number
+  galleryPassCreditsAvailable: number
+  galleryPassCreditsConsumed: number
+  galleryPassCreditsPending: number
+}
+
+export type AdminStudioDetails = {
+  summary: AdminStudioSummary
+  /** null when private_gallery_tiers can't be resolved — the site half still renders. */
+  privateGallery: PrivateGalleryEntitlements | null
 }
 
 function asCount(value: unknown): number {
@@ -32,13 +47,12 @@ export async function getAdminStudioSummary(userId: string): Promise<AdminStudio
   const row = (data ?? {}) as Record<string, unknown>
 
   return {
-    galleries: asCount(row.galleries),
+    showcaseGalleries: asCount(row.showcaseGalleries),
     publicGalleries: asCount(row.publicGalleries),
-    photos: asCount(row.photos),
-    clients: asCount(row.clients),
-    packages: asCount(row.packages),
+    showcaseGalleryPhotos: asCount(row.showcaseGalleryPhotos),
     posts: asCount(row.posts),
     postPhotos: asCount(row.postPhotos),
+    packages: asCount(row.packages),
     faqItems: asCount(row.faqItems),
     testimonials: asCount(row.testimonials),
     photoEditComparisons: asCount(row.photoEditComparisons),
@@ -46,5 +60,29 @@ export async function getAdminStudioSummary(userId: string): Promise<AdminStudio
     heroImages: asCount(row.heroImages),
     heroDesktopImages: asCount(row.heroDesktopImages),
     heroMobileImages: asCount(row.heroMobileImages),
+    clientGalleries: asCount(row.clientGalleries),
+    clientGalleryPhotos: asCount(row.clientGalleryPhotos),
+    clients: asCount(row.clients),
+    galleryPassCreditsAvailable: asCount(row.galleryPassCreditsAvailable),
+    galleryPassCreditsConsumed: asCount(row.galleryPassCreditsConsumed),
+    galleryPassCreditsPending: asCount(row.galleryPassCreditsPending),
   }
+}
+
+/**
+ * Everything the admin studio dialog shows for one studio: the content counts
+ * plus the studio's live private-gallery entitlement (tier + quota). The
+ * entitlement load is best-effort — if it fails the dialog still shows the
+ * counts.
+ */
+export async function getAdminStudioDetails(userId: string): Promise<AdminStudioDetails> {
+  const [summary, privateGallery] = await Promise.all([
+    getAdminStudioSummary(userId),
+    getPrivateGalleryEntitlements(userId).catch((error) => {
+      console.error('[admin studio details] private-gallery entitlement load failed:', error)
+      return null
+    }),
+  ])
+
+  return { summary, privateGallery }
 }

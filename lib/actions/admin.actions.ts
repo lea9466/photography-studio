@@ -15,7 +15,7 @@ import {
   type AdminStudioRow,
 } from '@/lib/admin/queries'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
-import { getAdminStudioSummary } from '@/lib/admin/studio-summary'
+import { getAdminStudioDetails } from '@/lib/admin/studio-summary'
 import {
   isAnnouncementIconKey,
   normalizeAnnouncementIcon,
@@ -317,7 +317,7 @@ export async function fetchAdminStudioSummary(userId: string) {
     throw new Error('מזהה סטודיו חסר')
   }
 
-  return getAdminStudioSummary(trimmedId)
+  return getAdminStudioDetails(trimmedId)
 }
 
 export async function deleteAdminStudio(userId: string) {
