@@ -20,7 +20,7 @@ import {
 } from '@/lib/types/app.types'
 
 type NewGalleryPageProps = {
-  searchParams: Promise<{ kind?: string; buy?: string }>
+  searchParams: Promise<{ kind?: string; buy?: string; checkout?: string }>
 }
 
 const KIND_META = {
@@ -50,11 +50,12 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   // there is no in-flow chooser. Accounts without private galleries are always
   // showcase.
   const canCreateClientGalleries = CLIENT_GALLERIES_ENABLED
-  const { kind: kindParam, buy } = await searchParams
+  const { kind: kindParam, buy, checkout } = await searchParams
   const requestedKind = isGalleryKind(kindParam) ? kindParam : 'showcase'
   const kind = canCreateClientGalleries ? requestedKind : 'showcase'
   const meta = KIND_META[kind]
   const wantsBuyPanel = buy === '1'
+  const justPurchased = checkout === 'success'
 
   const [{ data: profileData }, clients, quota, privateQuota] = await Promise.all([
     supabase.from('users').select('studio_name').eq('id', userId).single(),
@@ -178,6 +179,12 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
           <Link href={meta.list.href}>ביטול</Link>
         </Button>
       </div>
+
+      {justPurchased && isClient && availableCredits.length > 0 ? (
+        <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          ✓ הרכישה הושלמה — הפאס זמין למטה. הגדירי את הגלריה ובחרי אותו.
+        </div>
+      ) : null}
 
       <div className="flex items-start gap-2.5 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-4 py-3 text-sm leading-relaxed text-[#48464c]">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />

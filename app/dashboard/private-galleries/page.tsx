@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { fetchDashboardGalleries, fetchStudioPublicPath } from '@/lib/actions/dashboard.actions'
 import { getPrivateGalleryQuota } from '@/lib/actions/gallery.actions'
+import { listAvailableGalleryPassCredits } from '@/lib/actions/gallery-pass.actions'
 import { RecentGalleriesTable } from '@/components/dashboard/RecentGalleriesTable'
 import { FloatingNewGalleryButton } from '@/components/dashboard/FloatingNewGalleryButton'
 import {
@@ -17,22 +18,27 @@ export default function PrivateGalleriesPage() {
   const [galleries, setGalleries] = useState<GalleryWithDetails[]>([])
   const [studioPath, setStudioPath] = useState<string | null>(null)
   const [quota, setQuota] = useState<PrivateGalleryQuota | null>(null)
+  const [passCredits, setPassCredits] = useState<
+    { id: string; photoCap: number; validityDays: number }[]
+  >([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const [all, path, privateQuota] = await Promise.all([
+        const [all, path, privateQuota, credits] = await Promise.all([
           fetchDashboardGalleries(),
           fetchStudioPublicPath(),
           // A quota failure (e.g. tier rows missing) must not blank the list.
           getPrivateGalleryQuota().catch(() => null),
+          listAvailableGalleryPassCredits().catch(() => []),
         ])
         if (cancelled) return
         setGalleries(all)
         setStudioPath(path)
         setQuota(privateQuota)
+        setPassCredits(credits)
       } catch (error) {
         console.error('Failed to load private galleries:', error)
       } finally {
@@ -61,15 +67,10 @@ export default function PrivateGalleriesPage() {
 
   return (
     <div className="animate-fade-in">
-      <FloatingNewGalleryButton
-        href="/dashboard/galleries/new?kind=client"
-        disabled={quota ? !quota.canCreateGallery : false}
-        disabledTitle={
-          quota?.isLifetime
-            ? 'ניצלת את הגלריה הפרטית החינמית שלך'
-            : `מקסימום ${quota?.maxGalleries ?? ''} גלריות במסלול`
-        }
-      />
+      {/* Never disabled: at the tier cap, /galleries/new?kind=client shows the
+          buy-a-pass panel (or, if nothing's for sale, an explanatory message) —
+          more useful than a dead, tooltip-only button. */}
+      <FloatingNewGalleryButton href="/dashboard/galleries/new?kind=client" />
 
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
         <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--dashboard-surface] px-7 py-6 md:px-9 md:py-7">
@@ -89,7 +90,9 @@ export default function PrivateGalleriesPage() {
           </div>
         </div>
 
-        {quota ? <PrivateGalleryQuotaSummary quota={quota} /> : null}
+        {quota ? (
+          <PrivateGalleryQuotaSummary quota={quota} passCredits={passCredits} />
+        ) : null}
 
         <RecentGalleriesTable
           galleries={clientGalleries}

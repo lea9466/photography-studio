@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createPaymentService } from '@/lib/payments/server'
 import { getPaymentReturnUrl } from '@/lib/payments/http'
 import { fetchGalleryPassBundleByCode } from '@/lib/gallery-pass/loader'
+import { fetchAvailableGalleryPassCredits } from '@/lib/gallery-pass/credits'
 
 /**
  * Client-facing Server Actions return { ok, error } rather than throwing — Next
@@ -43,6 +44,23 @@ async function buildCreditCheckout(
       ok: false,
       error: error instanceof Error ? error.message : 'יצירת התשלום נכשלה',
     }
+  }
+}
+
+/** The photographer's bought-but-unused gallery passes, for a dashboard hint. */
+export async function listAvailableGalleryPassCredits(): Promise<
+  { id: string; photoCap: number; validityDays: number }[]
+> {
+  try {
+    const { userId } = await requireDashboardContext()
+    const credits = await fetchAvailableGalleryPassCredits(userId)
+    return credits.map((c) => ({
+      id: c.id,
+      photoCap: c.photo_cap,
+      validityDays: c.validity_days,
+    }))
+  } catch {
+    return []
   }
 }
 

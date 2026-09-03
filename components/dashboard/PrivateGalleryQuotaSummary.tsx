@@ -15,6 +15,9 @@ export type PrivateGalleryQuota = {
 
 type PrivateGalleryQuotaSummaryProps = {
   quota: PrivateGalleryQuota
+  /** Bought-but-unused gallery passes — each usable for one client gallery
+   * beyond the tier's cap. */
+  passCredits?: { id: string; photoCap: number; validityDays: number }[]
 }
 
 /**
@@ -24,7 +27,10 @@ type PrivateGalleryQuotaSummaryProps = {
  * quota panel on /dashboard/usage-packages shows, sourced from
  * getPrivateGalleryQuota(). Purely presentational.
  */
-export function PrivateGalleryQuotaSummary({ quota }: PrivateGalleryQuotaSummaryProps) {
+export function PrivateGalleryQuotaSummary({
+  quota,
+  passCredits = [],
+}: PrivateGalleryQuotaSummaryProps) {
   const atLimit = !quota.canCreateGallery
 
   return (
@@ -59,6 +65,17 @@ export function PrivateGalleryQuotaSummary({ quota }: PrivateGalleryQuotaSummary
           <p className="font-semibold text-[--foreground]">עד {quota.maxPhotosPerGallery}</p>
         </div>
       </div>
+
+      {passCredits.length > 0 ? (
+        <p className="mt-3 text-xs leading-relaxed text-[#7D3A52]">
+          יש לך {passCredits.length === 1 ? 'פאס' : `${passCredits.length} פאסים`} שרכשת
+          וטרם ניצלת
+          {passCredits.length === 1
+            ? ` — עד ${passCredits[0]!.photoCap.toLocaleString('he-IL')} תמונות`
+            : ''}
+          . הפאס ייבחר בעת יצירת גלריה חדשה.
+        </p>
+      ) : null}
 
       {atLimit ? (
         <p className="mt-3 text-xs leading-relaxed text-[--muted]">
