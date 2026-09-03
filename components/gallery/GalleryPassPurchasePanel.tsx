@@ -51,8 +51,9 @@ export function GalleryPassPurchasePanel({ bundles, backHref }: GalleryPassPurch
       </div>
       <p className="mb-5 text-sm text-[#48464c]/80">
         אין לך מנוי פעיל. אפשר לרכוש גלריית לקוח אחת בתשלום חד-פעמי — בחרי חבילה לפי
-        מספר התמונות (רגילות + מעובדות יחד). לאחר התשלום תחזרי לכאן ותגדירי את הגלריה
-        כרגיל. התוקף ללקוח מתחיל כששולחים לו, לא עכשיו.
+        מספר התמונות. <strong>המכסה סופרת תמונות רגילות ומעובדות יחד.</strong> לאחר
+        התשלום תחזרי לכאן ותגדירי את הגלריה כרגיל. התוקף ללקוח מתחיל כששולחים לו, לא
+        עכשיו.
       </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -70,6 +71,7 @@ export function GalleryPassPurchasePanel({ bundles, backHref }: GalleryPassPurch
               }`}
             >
               <span className="text-sm font-semibold text-[#100d1f]">{bundle.name}</span>
+              <span className="text-[11px] text-[#48464c]/60">רגילות + מעובדות יחד</span>
               <span className="mt-1 text-2xl font-bold text-[#7D3A52]">
                 ₪{(bundle.amountAgorot / 100).toLocaleString('he-IL')}
               </span>

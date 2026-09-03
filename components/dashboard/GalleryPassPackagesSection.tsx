@@ -59,7 +59,8 @@ export function GalleryPassPackagesSection({
         <div>
           <h2 className="font-semibold text-[--foreground]">גלריה בודדת — תשלום חד-פעמי</h2>
           <p className="text-xs text-[--muted]">
-            בלי מנוי. פאס לגלריית לקוח אחת, לפי מספר התמונות (רגילות + מעובדות יחד).
+            בלי מנוי. פאס לגלריית לקוח אחת. המכסה סופרת{' '}
+            <strong className="text-[--foreground]">תמונות רגילות ומעובדות יחד</strong>.
           </p>
         </div>
       </div>

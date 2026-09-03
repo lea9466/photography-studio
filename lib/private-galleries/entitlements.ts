@@ -76,10 +76,10 @@ export function buildPrivateGalleryPhotoLimitError(
 ): string {
   const remaining = getRemainingPrivateGalleryPhotoSlots(currentCount, maxPhotosPerGallery)
   if (remaining === 0) {
-    return `הגעת למקסימום ${maxPhotosPerGallery} תמונות בגלריה זו במסלול הנוכחי`
+    return `הגעת למקסימום ${maxPhotosPerGallery} תמונות בגלריה זו — רגילות ומעובדות יחד`
   }
   if (currentCount + adding > maxPhotosPerGallery) {
-    return `ניתן להעלות עוד ${remaining} תמונות בלבד בגלריה זו (מקסימום ${maxPhotosPerGallery} במסלול הנוכחי)`
+    return `ניתן להעלות עוד ${remaining} תמונות בלבד בגלריה זו — רגילות ומעובדות יחד (מקסימום ${maxPhotosPerGallery})`
   }
   return ''
 }

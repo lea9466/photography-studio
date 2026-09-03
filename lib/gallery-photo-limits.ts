@@ -94,8 +94,8 @@ export async function assertPrivateGalleryPhotoCountWithinLimit(
   if (currentCount + adding > maxPhotos) {
     throw new Error(
       passCap != null
-        ? `הגלריה נרכשה עם מכסה של ${maxPhotos} תמונות (יש כרגע ${currentCount})`
-        : `ניתן להעלות עד ${maxPhotos} תמונות בגלריה פרטית במסלול הנוכחי (יש כרגע ${currentCount})`
+        ? `הגלריה נרכשה עם מכסה של ${maxPhotos} תמונות — רגילות ומעובדות יחד (יש כרגע ${currentCount})`
+        : `ניתן להעלות עד ${maxPhotos} תמונות בגלריה פרטית במסלול הנוכחי — רגילות ומעובדות יחד (יש כרגע ${currentCount})`
     )
   }
 

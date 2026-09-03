@@ -61,7 +61,7 @@ export function PrivateGalleryQuotaSummary({
         </div>
 
         <div>
-          <p className="text-xs text-[--muted]">תמונות לגלריה</p>
+          <p className="text-xs text-[--muted]">תמונות לגלריה (רגילות + מעובדות)</p>
           <p className="font-semibold text-[--foreground]">עד {quota.maxPhotosPerGallery}</p>
         </div>
       </div>
@@ -71,7 +71,7 @@ export function PrivateGalleryQuotaSummary({
           יש לך {passCredits.length === 1 ? 'פאס' : `${passCredits.length} פאסים`} שרכשת
           וטרם ניצלת
           {passCredits.length === 1
-            ? ` — עד ${passCredits[0]!.photoCap.toLocaleString('he-IL')} תמונות`
+            ? ` — עד ${passCredits[0]!.photoCap.toLocaleString('he-IL')} תמונות (רגילות + מעובדות יחד)`
             : ''}
           . הפאס ייבחר בעת יצירת גלריה חדשה.
         </p>

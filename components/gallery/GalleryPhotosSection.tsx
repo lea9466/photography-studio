@@ -414,8 +414,8 @@ export function GalleryPhotosSection({
   const atPhotoLimit = remainingPhotoSlots === 0
   const photoLimitHint = isPrivateGallery
     ? atPhotoLimit
-      ? `הגעת למקסימום ${privateGalleryPhotoLimit} תמונות בגלריה זו`
-      : `תמיכה בפורמטים JPG, PNG ו-WebP. נותרו ${remainingPhotoSlots} תמונות בגלריה זו (מקסימום ${privateGalleryPhotoLimit}).`
+      ? `הגעת למקסימום ${privateGalleryPhotoLimit} תמונות בגלריה זו (רגילות + מעובדות יחד)`
+      : `תמיכה בפורמטים JPG, PNG ו-WebP. נותרו ${remainingPhotoSlots} תמונות בגלריה זו (מקסימום ${privateGalleryPhotoLimit} — רגילות + מעובדות יחד).`
     : atPhotoLimit
       ? `הגעת למקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} תמונות בכל הגלריות`
       : `תמיכה בפורמטים JPG, PNG ו-WebP. נותרו ${remainingPhotoSlots} תמונות (מקסימום ${MAX_PUBLIC_PHOTOS_PER_PHOTOGRAPHER} לכל הגלריות).`
