@@ -349,7 +349,7 @@ export function ClientGalleryWizard({
                 <label className="mb-2 block text-sm font-semibold text-[#48464c]">שם הלקוח</label>
                 <input
                   className="w-full rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="הזן שם מלא"
+                  placeholder="שם מלא"
                   type="text"
                   value={state.newClientName}
                   onChange={(e) => updateState('newClientName', e.target.value)}
@@ -381,7 +381,7 @@ export function ClientGalleryWizard({
                   className="w-full rounded-xl bg-[#7D3A52] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#6a2f44]"
                   onClick={() => updateState('clientMode', 'existing')}
                 >
-                  בחר לקוח קיים במקום
+                  בחרי לקוח קיים במקום
                 </button>
               )}
             </div>
@@ -596,7 +596,7 @@ export function ClientGalleryWizard({
                 <label className="mb-2 block text-xs font-semibold text-[#48464c]">טקסט לסימן מים</label>
                 <input
                   className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="הזן טקסט למיתוג..."
+                  placeholder="טקסט למיתוג..."
                   type="text"
                   value={state.watermarkText}
                   onChange={(e) => updateState('watermarkText', e.target.value)}
