@@ -14,7 +14,7 @@ insert into public.subscription_plans (
 values (
   'studio_yearly',
   'מנוי שנתי',
-  'מנוי שנתי ל-Studio Gallery',
+  'מנוי שנתי ל-STG',
   40000,
   'ILS',
   'year',

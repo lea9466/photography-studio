@@ -1,4 +1,4 @@
--- Studio Gallery — provider-neutral payment and subscription infrastructure
+-- STG — provider-neutral payment and subscription infrastructure
 -- Prepared only. Apply in a local/sandbox environment before production.
 -- This is a one-time Supabase migration. An accidental manual rerun fails on
 -- CREATE TABLE and rolls back atomically rather than hiding schema drift.
@@ -60,7 +60,7 @@ insert into public.subscription_plans (
 values (
   'studio_monthly',
   'מנוי חודשי',
-  'מנוי חודשי ל-Studio Gallery',
+  'מנוי חודשי ל-STG',
   4000,
   'ILS',
   'month',
