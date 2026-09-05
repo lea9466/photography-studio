@@ -6,6 +6,7 @@ import { runOneTimePaymentReminders } from '@/lib/subscriptions/one-time-payment
 import { runOneTimePaymentExpiredNotifications } from '@/lib/subscriptions/one-time-payment-expired-notifications'
 import { suspendCustomDomainsWithLapsedEntitlement } from '@/lib/domains/custom-domain-suspension'
 import { runClientGalleryLifecycle } from '@/lib/private-galleries/client-gallery-lifecycle'
+import { suspendClientGalleriesWithLapsedSubscription } from '@/lib/private-galleries/gallery-suspension'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -138,6 +139,22 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Reconciliation for the private-gallery suspension direction — a lapsed
+  // subscription past its 15-day grace suspends the studio's client galleries
+  // (see lib/private-galleries/gallery-suspension.ts). Reactivation is
+  // synchronous wherever a subscription is (re)granted.
+  let clientGallerySuspension: Record<string, unknown> = { error: 'did not run' }
+
+  try {
+    const result = await suspendClientGalleriesWithLapsedSubscription()
+    clientGallerySuspension = { checked: result.checked, suspended: result.suspended }
+  } catch (error) {
+    hadFailure = true
+    console.error('[client-gallery-suspension] cron failed', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+  }
+
   const body = {
     ok: !hadFailure,
     reminders,
@@ -146,6 +163,7 @@ export async function GET(request: NextRequest) {
     oneTimeExpired,
     customDomainSuspension,
     clientGalleryLifecycle,
+    clientGallerySuspension,
   }
   console.info('[trial-ending-reminders] cron response', body)
   return cronJson(body, hadFailure ? 500 : 200)

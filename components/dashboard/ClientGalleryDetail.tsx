@@ -48,6 +48,35 @@ export async function ClientGalleryDetail({
   // docs/private-gallery-lifecycle-plan.md).
   const albumLocked = Boolean(gallery.photos_locked_at)
 
+  // Suspended = the private-gallery subscription lapsed past its 15-day grace.
+  // The client AND the photographer are blocked from the content until renewal.
+  if (gallery.suspended_at) {
+    return (
+      <div className="animate-fade-in">
+        <div className={`${SECTION_CLASS} mx-auto max-w-lg text-center`}>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#7D3A52]/10 text-[#7D3A52]">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-semibold text-[#100d1f]">הגלריה מושהית</h2>
+          <p className="text-sm leading-relaxed text-[#48464c]">
+            המנוי לגלריות פרטיות פג ולא חודש, ולכן כל גלריות הלקוח שלך מושהות —
+            הלקוחות ואת חסומים מהתוכן. חידוש המנוי מחזיר את הגישה לכל הגלריות
+            מיד.
+          </p>
+          <a
+            href="/dashboard/usage-packages"
+            className="inline-flex items-center justify-center rounded-xl bg-[#6b2d43] px-6 py-3 text-sm font-bold text-white hover:bg-[#5a2538]"
+          >
+            חידוש מנוי
+          </a>
+          <p className="text-xs text-[#48464c]">
+            שימי לב: המחיקה האוטומטית (60 יום מהשליחה) ממשיכה גם על גלריות מושהות.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   const { albumPhotos, editPhotos } = await fetchGallerySelections(gallery.id)
   const photos = await fetchGalleryPhotos(gallery.id)
   // A tier-rows failure must not 500 the manage page — degrade to no hint.

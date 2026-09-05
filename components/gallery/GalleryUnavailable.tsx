@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card'
 
 type GalleryUnavailableProps = {
-  reason: 'expired' | 'locked'
+  reason: 'expired' | 'locked' | 'suspended'
   galleryTitle: string
   studioName?: string | null
 }
@@ -24,6 +24,11 @@ const REASON_CONFIG = {
     Icon: Lock,
     title: 'הגלריה סגורה',
     body: 'הגלריה נסגרה על ידי הצלם/ת ואינה זמינה כרגע לצפייה.',
+  },
+  suspended: {
+    Icon: Lock,
+    title: 'הגלריה אינה זמינה כרגע',
+    body: 'הגישה לגלריה מושהית זמנית. אפשר לפנות לצלם/ת — ברגע שהמצב יוסדר הגישה תחזור.',
   },
 } as const
 

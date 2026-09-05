@@ -25,6 +25,7 @@ import {
   CUSTOM_DOMAIN_ADDON_PRICE_AGOROT,
 } from '@/lib/domains/custom-domain-addon'
 import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
+import { reactivateSuspendedClientGalleries } from '@/lib/private-galleries/gallery-suspension'
 
 export type PaymentLogger = {
   info(message: string, context?: Record<string, string | boolean | null>): void
@@ -444,6 +445,7 @@ export class PaymentService {
     // See the matching comment on handleCheckout in the SUMIT return route.
     if (subscription.status === 'active') {
       await reactivateSuspendedCustomDomains(input.userId)
+      await reactivateSuspendedClientGalleries(input.userId)
     }
 
     // Return the view for THIS plan's product — a private-gallery charge must

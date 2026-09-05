@@ -64,6 +64,18 @@ export default async function ClientGalleryPage({
     )
   }
 
+  // Suspended = the studio's private-gallery subscription lapsed past its grace.
+  // Same hard stop as expired — checked before the password / public branches.
+  if (meta.suspended) {
+    return (
+      <GalleryUnavailable
+        reason="suspended"
+        galleryTitle={meta.title}
+        studioName={meta.studio_name}
+      />
+    )
+  }
+
   // Public galleries: getClientGallery authorizes via is_public server-side.
   if (meta.is_public) {
     // The isolated private-gallery subdomain is promised to carry only

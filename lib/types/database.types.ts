@@ -740,6 +740,7 @@ export type Database = {
           pass_expiry_reminder_sent_at: string | null
           photos_locked_at: string | null
           deletion_warning_stage: number
+          suspended_at: string | null
         }
         Insert: {
           id?: string
@@ -761,6 +762,7 @@ export type Database = {
           pass_expiry_reminder_sent_at?: string | null
           photos_locked_at?: string | null
           deletion_warning_stage?: number
+          suspended_at?: string | null
         }
         Update: {
           id?: string
@@ -782,6 +784,7 @@ export type Database = {
           pass_expiry_reminder_sent_at?: string | null
           photos_locked_at?: string | null
           deletion_warning_stage?: number
+          suspended_at?: string | null
         }
         Relationships: [
           {

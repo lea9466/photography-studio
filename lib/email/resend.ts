@@ -615,6 +615,78 @@ export async function sendClientGalleryDeletionWarningEmail(input: {
   })
 }
 
+/**
+ * The private-gallery subscription lapsed and its 15-day grace ran out, so all
+ * the studio's client galleries are now suspended — client and photographer
+ * both blocked until she renews (docs/private-gallery-lifecycle-plan.md §1.ה).
+ * Sent once, by the suspension sweep.
+ */
+export async function sendClientGalleriesSuspendedEmail(userId: string) {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  const { data: user } = await admin
+    .from('users')
+    .select('email, name')
+    .eq('id', userId)
+    .single()
+
+  const to = (user as { email: string | null } | null)?.email
+  if (!to) {
+    if (mustFailWithoutResend()) {
+      throw new Error('Photographer email missing for client-galleries suspended notice')
+    }
+    console.info(
+      '[email stub]',
+      buildEmailStubLog({
+        template: 'client-galleries-suspended',
+        resourceId: userId,
+        extra: { reason: 'no-photographer-email' },
+      })
+    )
+    return
+  }
+
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'client-galleries-suspended',
+    email: to,
+    resourceId: userId,
+  })
+  if (!provider) return
+
+  const displayName = (user as { name: string | null }).name?.trim() || 'שם'
+  const renewUrl = appUrl('/dashboard/usage-packages')
+
+  await provider.send({
+    from: emailFrom(),
+    to,
+    subject: 'גלריות הלקוח שלך הושהו — נדרש חידוש מנוי',
+    text: [
+      `היי ${displayName},`,
+      '',
+      'המנוי לגלריות פרטיות פג ולא חודש, ולכן כל גלריות הלקוח שלך הושהו —',
+      'הלקוחות ואת לא יכולים לגשת אליהן כרגע.',
+      '',
+      'חידוש המנוי מחזיר את הגישה לכל הגלריות מיד:',
+      renewUrl,
+      '',
+      'שימי לב: המחיקה האוטומטית של גלריות (60 יום מהשליחה) ממשיכה כרגיל,',
+      'גם על גלריות מושהות.',
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>המנוי לגלריות פרטיות פג ולא חודש, ולכן <strong>כל גלריות הלקוח שלך הושהו</strong> — הלקוחות ואת לא יכולים לגשת אליהן כרגע.</p>
+        <p style="margin: 24px 0;">
+          <a href="${renewUrl}" style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">חידוש מנוי</a>
+        </p>
+        <p>חידוש המנוי מחזיר את הגישה לכל הגלריות מיד.</p>
+        <p style="font-size: 13px; color: #666;">המחיקה האוטומטית של גלריות (60 יום מהשליחה) ממשיכה כרגיל, גם על גלריות מושהות.</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendDeliveryReadyEmail(input: {
   galleryId: string
   galleryTitle: string

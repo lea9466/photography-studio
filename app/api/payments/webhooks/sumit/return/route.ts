@@ -4,6 +4,7 @@ import { SupabaseBillingRepository } from '@/lib/payments/repository'
 import { SumitProvider } from '@/lib/payments/providers/sumit/sumit-provider'
 import { CUSTOM_DOMAIN_ADDON_PRICE_AGOROT } from '@/lib/domains/custom-domain-addon'
 import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
+import { reactivateSuspendedClientGalleries } from '@/lib/private-galleries/gallery-suspension'
 
 export const runtime = 'nodejs'
 
@@ -154,11 +155,14 @@ async function handleCheckout(
     providerSubscriptionId: subscription.id,
   })
 
-  // A domain suspended while she had no entitlement (see
-  // lib/domains/custom-domain-suspension.ts) reactivates the moment a real
-  // subscription goes active — no waiting for the reconciliation cron.
+  // A domain / client galleries suspended while she had no entitlement (see
+  // lib/domains/custom-domain-suspension.ts and
+  // lib/private-galleries/gallery-suspension.ts) reactivate the moment a real
+  // subscription goes active — no waiting for the reconciliation cron. Each
+  // re-checks the relevant entitlement, so calling both here is safe.
   if (subscription.status === 'active') {
     await reactivateSuspendedCustomDomains(row.user_id)
+    await reactivateSuspendedClientGalleries(row.user_id)
   }
 }
 
@@ -255,6 +259,7 @@ async function handleOneTimeCheckout(
   // See the matching comment in handleCheckout above.
   if (subscription.status === 'active') {
     await reactivateSuspendedCustomDomains(row.user_id)
+    await reactivateSuspendedClientGalleries(row.user_id)
   }
 }
 

@@ -64,6 +64,9 @@ export default function PrivateGalleriesPage() {
   }
 
   const clientGalleries = galleries.filter((gallery) => galleryKind(gallery) === 'client')
+  const anySuspended = clientGalleries.some(
+    (gallery) => (gallery as { suspended_at?: string | null }).suspended_at
+  )
 
   return (
     <div className="animate-fade-in">
@@ -89,6 +92,18 @@ export default function PrivateGalleriesPage() {
             </div>
           </div>
         </div>
+
+        {anySuspended ? (
+          <div className="rounded-2xl border border-[#7D3A52]/30 bg-[#7D3A52]/[0.06] px-6 py-4 text-sm text-[#7D3A52]">
+            <p className="font-semibold">גלריות הלקוח שלך מושהות</p>
+            <p className="mt-1 leading-relaxed">
+              המנוי לגלריות פרטיות פג ולא חודש. הלקוחות ואת חסומים מהתוכן עד לחידוש.{' '}
+              <a href="/dashboard/usage-packages" className="font-semibold underline">
+                לחידוש המנוי
+              </a>
+            </p>
+          </div>
+        ) : null}
 
         {quota ? (
           <PrivateGalleryQuotaSummary quota={quota} passCredits={passCredits} />

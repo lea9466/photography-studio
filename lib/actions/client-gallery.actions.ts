@@ -96,7 +96,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
   const { data } = await admin
     .from('galleries')
     .select(
-      'id, title, status, gallery_type, is_public, expires_at, users!galleries_user_id_fkey(studio_name), clients(email)'
+      'id, title, status, gallery_type, is_public, expires_at, suspended_at, users!galleries_user_id_fkey(studio_name), clients(email)'
     )
     .eq('id', galleryId)
     .single()
@@ -108,6 +108,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     gallery_type: string
     is_public: boolean
     expires_at: string | null
+    suspended_at: string | null
     users: { studio_name: string | null } | { studio_name: string | null }[] | null
     clients: { email: string | null } | { email: string | null }[] | null
   }
@@ -132,6 +133,8 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
       !gallery.is_public &&
       gallery.expires_at != null &&
       new Date(gallery.expires_at) < new Date(),
+    // Suspended = owner's private-gallery subscription lapsed past its grace.
+    suspended: !gallery.is_public && gallery.suspended_at != null,
     studio_name: user?.studio_name ?? null,
     maskedEmail,
   }
@@ -168,7 +171,7 @@ export async function requestGalleryPassword(
     .from('galleries')
     .select(
       `
-      id, title, password, expires_at, status,
+      id, title, password, expires_at, status, suspended_at,
       clients (name, email),
       users!galleries_user_id_fkey (studio_name)
     `
@@ -182,6 +185,7 @@ export async function requestGalleryPassword(
     password: string | null
     expires_at: string | null
     status: GalleryStatus
+    suspended_at: string | null
     clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
     users: { studio_name: string | null } | { studio_name: string | null }[] | null
   }
@@ -193,6 +197,9 @@ export async function requestGalleryPassword(
   }
   if (gallery.status === 'locked') {
     return { ok: false, error: 'הגלריה נסגרה על ידי הצלם/ת' }
+  }
+  if (gallery.suspended_at) {
+    return { ok: false, error: 'הגלריה אינה זמינה כרגע. פנו לצלם/ת.' }
   }
   if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
     return {
@@ -259,7 +266,7 @@ export async function verifyGalleryPassword(
 
   const { data } = await admin
     .from('galleries')
-    .select('id, password, expires_at, status')
+    .select('id, password, expires_at, status, suspended_at')
     .eq('id', galleryId)
     .single()
 
@@ -268,12 +275,16 @@ export async function verifyGalleryPassword(
     password: string | null
     expires_at: string | null
     status: GalleryStatus
+    suspended_at: string | null
   }
 
   const gallery = data as GalleryRow | null
   if (!gallery) return { ok: false, error: 'הגלריה לא נמצאה' }
   if (gallery.status === 'locked') {
     return { ok: false, error: 'הגלריה נסגרה על ידי הצלם/ת' }
+  }
+  if (gallery.suspended_at) {
+    return { ok: false, error: 'הגלריה אינה זמינה כרגע. פנו לצלם/ת.' }
   }
   if (gallery.expires_at && new Date(gallery.expires_at) < new Date()) {
     return {
@@ -311,12 +322,15 @@ async function requireValidGalleryAccess(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
-    .select('id, is_public')
+    .select('id, is_public, suspended_at')
     .eq('id', galleryId)
     .maybeSingle()
 
-  const gallery = data as { id: string; is_public: boolean } | null
+  const gallery = data as { id: string; is_public: boolean; suspended_at: string | null } | null
   if (!gallery) return null
+  // A suspended client gallery is a hard stop for everyone, even a valid
+  // session cookie — no photo access until the owner renews.
+  if (!gallery.is_public && gallery.suspended_at) return null
 
   // Called from app/g/[id]/page.tsx during Server Component render (both
   // directly and via getClientGallery), where cookies() cannot be written —
@@ -617,7 +631,7 @@ export async function completeClientSelection(
 
   const { data: galleryData } = await admin
     .from('galleries')
-    .select('id, title, status, user_id, clients(name, email)')
+    .select('id, title, status, user_id, suspended_at, clients(name, email)')
     .eq('id', galleryId)
     .single()
 
@@ -626,11 +640,15 @@ export async function completeClientSelection(
     title: string
     status: GalleryStatus
     user_id: string
+    suspended_at: string | null
     clients: { name: string; email: string | null } | { name: string; email: string | null }[] | null
   }
 
   const gallery = galleryData as GalleryWithClient | null
   if (!gallery) return { ok: false, error: 'הגלריה לא נמצאה' }
+  if (gallery.suspended_at) {
+    return { ok: false, error: 'הגלריה אינה זמינה כרגע. פנו לצלם/ת.' }
+  }
   if (!['selection'].includes(gallery.status)) {
     return {
       ok: false,

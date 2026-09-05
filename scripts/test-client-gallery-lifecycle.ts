@@ -9,6 +9,10 @@ import {
   daysUntil,
   targetWarningStage,
 } from '../lib/private-galleries/client-gallery-lifecycle'
+import {
+  SUSPENSION_GRACE_DAYS,
+  isPastSuspensionGrace,
+} from '../lib/private-galleries/gallery-suspension'
 
 /**
  * "One-time use": a client (selection) gallery's source album is frozen the
@@ -86,4 +90,19 @@ test('daysUntil rounds up — anything still in the future is at least 1', () =>
   assert.equal(daysUntil('2026-09-07T12:00:00.000Z', now), 1)
   assert.equal(daysUntil('2026-09-08T11:00:00.000Z', now), 2)
   assert.equal(daysUntil('2026-11-05T12:00:00.000Z', now), 60)
+})
+
+// --- phase 4: lapsed-subscription suspension ------------------------------
+
+test('isPastSuspensionGrace: only true once 15 days past the lapse', () => {
+  const now = Date.parse('2026-09-30T12:00:00.000Z')
+  assert.equal(SUSPENSION_GRACE_DAYS, 15)
+  // lapsed 5 days ago → still in grace
+  assert.equal(isPastSuspensionGrace('2026-09-25T12:00:00.000Z', now), false)
+  // lapsed exactly 15 days ago → grace over
+  assert.equal(isPastSuspensionGrace('2026-09-15T12:00:00.000Z', now), true)
+  // lapsed 40 days ago → long past
+  assert.equal(isPastSuspensionGrace('2026-08-21T12:00:00.000Z', now), true)
+  // no lapse date → never suspend on this basis
+  assert.equal(isPastSuspensionGrace(null, now), false)
 })
