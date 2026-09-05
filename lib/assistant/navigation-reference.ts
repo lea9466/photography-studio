@@ -17,6 +17,8 @@ const DASHBOARD_TABS = [
   { label: 'הגדרות אתר', href: '/dashboard/settings' },
   { label: 'מינוי', href: '/dashboard/subscription' },
   { label: 'יצירת קשר (פניות שהתקבלו)', href: '/dashboard/contact' },
+  { label: 'אודות — גלריות פרטיות (מדריך מאויר)', href: '/dashboard/about/private-galleries' },
+  { label: 'אודות — האתר הציבורי (מדריך מאויר)', href: '/dashboard/about/public-site' },
 ] as const
 
 // Human labels for SITE_SETTINGS_HELP.fields keys — that object already has

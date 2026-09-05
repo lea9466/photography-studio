@@ -12,6 +12,7 @@ import {
   CreditCard,
   FileText,
   Images,
+  Info,
   Lock,
   Globe,
   Layers,
@@ -149,6 +150,24 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     label: 'יצירת קשר',
     icon: <Mail className="h-5 w-5" />,
     isActive: (pathname) => pathname.startsWith('/dashboard/contact'),
+    group: 'public',
+  },
+  // "אודות" — a friendly illustrated guide per management area. Kept last in
+  // the array so DashboardNavMenu's per-group filter renders each one at the
+  // bottom of its group. Informational only — never frozen, no proFeature.
+  {
+    href: '/dashboard/about/private-galleries',
+    label: 'אודות — גלריות פרטיות',
+    icon: <Info className="h-5 w-5" />,
+    isActive: (pathname) =>
+      pathname.startsWith('/dashboard/about/private-galleries'),
+    group: 'private',
+  },
+  {
+    href: '/dashboard/about/public-site',
+    label: 'אודות — האתר הציבורי',
+    icon: <Info className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/about/public-site'),
     group: 'public',
   },
 ]
