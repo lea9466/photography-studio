@@ -1,11 +1,19 @@
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
+import type { GalleryType } from '@/lib/types/database.types'
+
+type OwnedGalleryRow = {
+  id: string
+  is_public: boolean
+  gallery_type: GalleryType
+  photos_locked_at: string | null
+}
 
 export async function assertGalleryOwner(galleryId: string) {
   const context = await requireDashboardContext()
 
   const { data: gallery } = await context.supabase
     .from('galleries')
-    .select('id, is_public')
+    .select('id, is_public, gallery_type, photos_locked_at')
     .eq('id', galleryId)
     .eq('user_id', context.userId)
     .single()
@@ -15,7 +23,7 @@ export async function assertGalleryOwner(galleryId: string) {
   return {
     supabase: context.supabase,
     user: { id: context.userId },
-    gallery: gallery as { id: string; is_public: boolean },
+    gallery: gallery as OwnedGalleryRow,
     isImpersonating: context.isImpersonating,
   }
 }
@@ -23,6 +31,7 @@ export async function assertGalleryOwner(galleryId: string) {
 type OwnedPhotoRow = {
   id: string
   gallery_id: string
+  is_processed: boolean
   original_url: string | null
   preview_url: string | null
   watermarked_preview_url: string | null
@@ -33,7 +42,7 @@ export async function assertPhotoInOwnedGallery(photoId: string) {
 
   const { data: photo } = await context.supabase
     .from('photos')
-    .select('id, gallery_id, original_url, preview_url, watermarked_preview_url')
+    .select('id, gallery_id, is_processed, original_url, preview_url, watermarked_preview_url')
     .eq('id', photoId)
     .single()
 
@@ -42,7 +51,7 @@ export async function assertPhotoInOwnedGallery(photoId: string) {
 
   const { data: gallery } = await context.supabase
     .from('galleries')
-    .select('id')
+    .select('id, gallery_type, photos_locked_at')
     .eq('id', row.gallery_id)
     .eq('user_id', context.userId)
     .single()
@@ -53,7 +62,7 @@ export async function assertPhotoInOwnedGallery(photoId: string) {
     supabase: context.supabase,
     user: { id: context.userId },
     photo: row,
+    gallery: gallery as { id: string; gallery_type: GalleryType; photos_locked_at: string | null },
     isImpersonating: context.isImpersonating,
   }
 }
-

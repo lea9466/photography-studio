@@ -738,6 +738,7 @@ export type Database = {
           pass_validity_days: number | null
           pass_purchased_at: string | null
           pass_expiry_reminder_sent_at: string | null
+          photos_locked_at: string | null
         }
         Insert: {
           id?: string
@@ -757,6 +758,7 @@ export type Database = {
           pass_validity_days?: number | null
           pass_purchased_at?: string | null
           pass_expiry_reminder_sent_at?: string | null
+          photos_locked_at?: string | null
         }
         Update: {
           id?: string
@@ -776,6 +778,7 @@ export type Database = {
           pass_validity_days?: number | null
           pass_purchased_at?: string | null
           pass_expiry_reminder_sent_at?: string | null
+          photos_locked_at?: string | null
         }
         Relationships: [
           {

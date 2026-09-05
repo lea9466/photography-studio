@@ -48,6 +48,10 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
   const galleryDetail = galleryData as Detail
   const settings = unwrapOne(galleryDetail.gallery_settings)
   const isClientGallery = galleryKind(galleryDetail) === 'client'
+  // One-time use: a sent client gallery's source album is frozen (see
+  // docs/private-gallery-lifecycle-plan.md).
+  const albumLocked =
+    isClientGallery && Boolean((galleryDetail as Gallery).photos_locked_at)
   const hasClient = Array.isArray(galleryDetail.clients)
     ? galleryDetail.clients.length > 0
     : galleryDetail.clients != null
@@ -93,9 +97,11 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
             העלאת תמונות
           </h2>
           <p className="text-sm text-[#48464c]">
-            {isClientGallery
-              ? 'העלאת תמונות לגלריה — נשמרות גם תמונות המקור'
-              : 'העלאת תמונות לגלריה'}
+            {albumLocked
+              ? 'הגלריה נשלחה ללקוח — אלבום המקור נעול. ניתן להעלות תמונות מעובדות בלבד.'
+              : isClientGallery
+                ? 'העלאת תמונות לגלריה — נשמרות גם תמונות המקור'
+                : 'העלאת תמונות לגלריה'}
           </p>
         </div>
         <GalleryPhotosSection
@@ -112,6 +118,7 @@ export default async function GalleryPhotosPage({ params }: PhotosPageProps) {
           privateGalleryPhotoLimit={privateGalleryPhotoLimit}
           processedTabLocked={isClientGallery && !isClientSelectionComplete(galleryDetail.status)}
           watermarkPlacement={isClientGallery ? 'center' : 'corner'}
+          albumLocked={albumLocked}
         />
       </section>
 

@@ -44,6 +44,9 @@ export async function ClientGalleryDetail({
   studioName,
 }: ClientGalleryDetailProps) {
   const clientLink = `/g/${gallery.id}`
+  // One-time use: once sent, the source album is frozen (see
+  // docs/private-gallery-lifecycle-plan.md).
+  const albumLocked = Boolean(gallery.photos_locked_at)
 
   const { albumPhotos, editPhotos } = await fetchGallerySelections(gallery.id)
   const photos = await fetchGalleryPhotos(gallery.id)
@@ -174,6 +177,7 @@ export async function ClientGalleryDetail({
                 title: gallery.title,
                 expires_at: gallery.expires_at,
               }}
+              locked={albumLocked}
               settings={settings}
               downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED}
             />
@@ -206,7 +210,9 @@ export async function ClientGalleryDetail({
             העלאה וניהול
           </h2>
           <p className="text-sm text-[#48464c]">
-            העלאת תמונות חדשות — בגלריית לקוח נשמרות גם תמונות המקור
+            {albumLocked
+              ? 'הגלריה נשלחה ללקוח — אלבום המקור נעול. ניתן להעלות תמונות מעובדות בלבד.'
+              : 'העלאת תמונות חדשות — בגלריית לקוח נשמרות גם תמונות המקור'}
           </p>
         </div>
         <GalleryPhotosSection
@@ -227,6 +233,7 @@ export async function ClientGalleryDetail({
           }
           processedTabLocked={!isClientSelectionComplete(gallery.status)}
           watermarkPlacement="center"
+          albumLocked={albumLocked}
         />
       </section>
     </div>

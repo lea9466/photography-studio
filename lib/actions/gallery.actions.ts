@@ -165,6 +165,7 @@ type GalleryEmailRow = {
   expires_at: string | null
   status: GalleryStatus
   gallery_type: Database['public']['Tables']['galleries']['Row']['gallery_type']
+  photos_locked_at: string | null
   pass_bundle_id: string | null
   pass_validity_days: number | null
   pass_purchased_at: string | null
@@ -179,7 +180,7 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
     .from('galleries')
     .select(
       `
-      id, title, expires_at, status, gallery_type,
+      id, title, expires_at, status, gallery_type, photos_locked_at,
       pass_bundle_id, pass_validity_days, pass_purchased_at,
       clients (name, email),
       users!galleries_user_id_fkey (studio_name)
@@ -329,6 +330,20 @@ export async function sendGallery(galleryId: string) {
     await supabase
       .from('galleries')
       .update({ expires_at: expiresAt } as never)
+      .eq('id', galleryId)
+      .eq('user_id', userId)
+  }
+
+  // One-time use: the FIRST send freezes a client gallery's source album — from
+  // now on the photographer can only upload edited deliverables, not add/delete
+  // album photos (see lib/private-galleries/gallery-lock.ts and
+  // docs/private-gallery-lifecycle-plan.md). Guarded on a null photos_locked_at
+  // so a resend never re-stamps it.
+  if (gallery.gallery_type === 'selection' && !gallery.photos_locked_at) {
+    const { userId, supabase } = await requireDashboardContext()
+    await supabase
+      .from('galleries')
+      .update({ photos_locked_at: new Date().toISOString() } as never)
       .eq('id', galleryId)
       .eq('user_id', userId)
   }
@@ -674,12 +689,12 @@ export async function updateGallerySettings(
   // guard below.
   const { data: galleryRow } = await supabase
     .from('galleries')
-    .select('is_public, gallery_type')
+    .select('is_public, gallery_type, photos_locked_at')
     .eq('id', galleryId)
     .eq('user_id', userId)
     .maybeSingle()
   const existingGallery = galleryRow as
-    | { is_public: boolean; gallery_type: string | null }
+    | { is_public: boolean; gallery_type: string | null; photos_locked_at: string | null }
     | null
   if (!existingGallery) throw new Error('גלריה לא נמצאה')
 
@@ -703,7 +718,17 @@ export async function updateGallerySettings(
       galleryUpdate.password = await hashGalleryPassword(trimmed)
     }
   }
-  if (input.expiresAt !== undefined) galleryUpdate.expires_at = input.expiresAt
+  if (input.expiresAt !== undefined) {
+    // One-time use: a client gallery's window is fixed at its first send — no
+    // extending (or shortening) it after the fact. Title stays editable.
+    if (
+      existingGallery.gallery_type === 'selection' &&
+      existingGallery.photos_locked_at
+    ) {
+      throw new Error('לא ניתן לשנות את תאריך התפוגה אחרי שהגלריה נשלחה ללקוח')
+    }
+    galleryUpdate.expires_at = input.expiresAt
+  }
 
   if (input.isPublic !== undefined) {
     // "Shown on site" is a showcase-gallery concept only. A client gallery's

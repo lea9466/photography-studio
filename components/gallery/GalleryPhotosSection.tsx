@@ -85,6 +85,13 @@ type GalleryPhotosSectionProps = {
    * galleries.
    */
   watermarkPlacement?: WatermarkPlacement
+  /**
+   * Client galleries: the source album has been frozen by the gallery's first
+   * send ("one-time use"). On the "רגילות" tab, uploading and deleting album
+   * photos is disabled; the "מעובדות" (edited deliverables) tab is unaffected.
+   * See docs/private-gallery-lifecycle-plan.md.
+   */
+  albumLocked?: boolean
 }
 
 export function GalleryPhotosSection({
@@ -102,6 +109,7 @@ export function GalleryPhotosSection({
   privateGalleryPhotoLimit,
   processedTabLocked = false,
   watermarkPlacement = 'corner',
+  albumLocked = false,
 }: GalleryPhotosSectionProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   // The processed-tab lock only bites on client galleries; when publicOnlyMvp
@@ -476,7 +484,15 @@ export function GalleryPhotosSection({
               לעריכה.
             </div>
           ) : null}
-          {/* Drag & Drop Zone */}
+          {/* Drag & Drop Zone — hidden on the "רגילות" tab once the album is
+              frozen (client gallery sent). The "מעובדות" tab still uploads. */}
+          {albumLocked && activeTab === 'regular' ? (
+            <div className="rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-6 text-center text-sm text-[#48464c]">
+              <span className="font-semibold text-[#100d1f]">האלבום נעול.</span> הגלריה
+              נשלחה ללקוח — לא ניתן להוסיף או למחוק תמונות באלבום. ניתן להעלות תמונות
+              מעובדות בטאב &quot;מעובדות&quot;.
+            </div>
+          ) : (
           <div
             className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-6 sm:p-10 md:p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
               atPhotoLimit || isUploading
@@ -531,6 +547,7 @@ export function GalleryPhotosSection({
               }}
             />
           </div>
+          )}
 
           {/* Upload Progress Bar */}
           {isUploading && uploadProgress ? (
@@ -638,14 +655,16 @@ export function GalleryPhotosSection({
                     >
                       הסתר מלקוח
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      className="border-red-300 hover:bg-red-50 text-red-600 text-xs"
-                    >
-                      מחק נבחרים ({currentSelectedIds.size})
-                    </Button>
+                    {!(albumLocked && activeTab === 'regular') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setDeleteDialogOpen(true)}
+                        className="border-red-300 hover:bg-red-50 text-red-600 text-xs"
+                      >
+                        מחק נבחרים ({currentSelectedIds.size})
+                      </Button>
+                    )}
                   </>
                 )}
               </div>

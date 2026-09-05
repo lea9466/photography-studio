@@ -16,6 +16,11 @@ type ClientGalleryEditFormProps = {
     title: string
     expires_at: string | null
   }
+  /**
+   * The gallery has been sent to the client — its window (expires_at) is fixed
+   * and can no longer be changed. See docs/private-gallery-lifecycle-plan.md.
+   */
+  locked?: boolean
   settings: {
     watermark_text: string | null
     auto_apply_watermark?: boolean
@@ -36,6 +41,7 @@ type ClientGalleryEditFormProps = {
  */
 export function ClientGalleryEditForm({
   gallery,
+  locked = false,
   settings,
   downloadPermissionsEnabled: downloadPermissionsEnabledProp,
 }: ClientGalleryEditFormProps) {
@@ -75,7 +81,9 @@ export function ClientGalleryEditForm({
       try {
         await updateGallerySettings(gallery.id, {
           title,
-          expiresAt: expiresAt || undefined,
+          // Locked galleries: the window is fixed — never re-send expiresAt
+          // (the server rejects a change on a sent gallery).
+          expiresAt: locked ? undefined : expiresAt || undefined,
           watermarkText: watermark || undefined,
           autoApplyWatermark,
           maxAlbumSelection: maxAlbum ? parseInt(maxAlbum, 10) : undefined,
@@ -204,12 +212,14 @@ export function ClientGalleryEditForm({
             id="expires"
             type="date"
             value={expiresAt}
+            disabled={locked}
             onChange={(e) => setExpiresAt(e.target.value)}
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] sm:max-w-xs"
+            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] disabled:opacity-60 sm:max-w-xs"
           />
           <p className="text-xs text-[#48464c]">
-            לאחר תאריך זה הגישה לגלריה תיחסם. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל
-            — אין סיסמה קבועה להגדרה.
+            {locked
+              ? 'הגלריה נשלחה ללקוח — התאריך נעול. במקרים חריגים ניתן לפנות אלינו.'
+              : 'לאחר תאריך זה הגישה לגלריה תיחסם. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל — אין סיסמה קבועה להגדרה.'}
           </p>
         </div>
       </div>

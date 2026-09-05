@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { ExternalLink, Mail, Send, Truck, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -11,6 +11,7 @@ import {
 } from '@/lib/actions/gallery.actions'
 import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
 import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
+import { SendGalleryConfirmDialog } from '@/components/dashboard/SendGalleryConfirmDialog'
 import {
   CLIENT_GALLERY_STATUSES,
   GALLERY_STATUS_LABELS,
@@ -67,6 +68,7 @@ export function GalleryActions({
 }: GalleryActionsProps) {
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const [isPending, startTransition] = useTransition()
+  const [sendConfirmOpen, setSendConfirmOpen] = useState(false)
   const resendLabel = galleryType !== 'portfolio' ? resendEmailLabel(status) : null
   const canSendToClient = galleryType !== 'portfolio' && status === 'draft'
   // A client gallery moves through the delivery workflow and is never "public";
@@ -105,9 +107,7 @@ export function GalleryActions({
                 <Button
                   size="sm"
                   disabled={isPending}
-                  onClick={() =>
-                    run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
-                  }
+                  onClick={() => setSendConfirmOpen(true)}
                   className="bg-[#6b2d43] hover:bg-[#5a2538]"
                 >
                   <Send className="h-4 w-4" />
@@ -206,6 +206,16 @@ export function GalleryActions({
           />
         </div>
       </CardContent>
+
+      <SendGalleryConfirmDialog
+        open={sendConfirmOpen}
+        onOpenChange={setSendConfirmOpen}
+        pending={isPending}
+        onConfirm={() => {
+          setSendConfirmOpen(false)
+          run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
+        }}
+      />
     </Card>
   )
 }

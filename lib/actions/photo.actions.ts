@@ -10,6 +10,11 @@ import {
   assertGalleryPhotoCountWithinLimit,
   assertPrivateGalleryPhotoCountWithinLimit,
 } from '@/lib/gallery-photo-limits'
+import {
+  CLIENT_ALBUM_LOCKED_MESSAGE,
+  assertClientAlbumEditable,
+  isClientAlbumFrozen,
+} from '@/lib/private-galleries/gallery-lock'
 
 type PhotoInsert = Database['public']['Tables']['photos']['Insert']
 
@@ -71,6 +76,10 @@ export async function reservePhotosBatch(galleryId: string, count: number, isPro
   if (count <= 0) {
     return []
   }
+
+  // One-time use: once a client gallery is sent, its source album is frozen —
+  // only edited deliverables (isProcessed) may still be uploaded.
+  if (!isProcessed) assertClientAlbumEditable(gallery)
 
   if (gallery.is_public) {
     await assertGalleryPhotoCountWithinLimit(
@@ -357,11 +366,11 @@ export async function togglePhotoVisibility(photoId: string, visible: boolean) {
 export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
   if (photoIds.length === 0) return { deleted: 0 }
 
-  const { supabase, user } = await assertGalleryOwner(galleryId)
+  const { supabase, gallery, user } = await assertGalleryOwner(galleryId)
 
   const { data: photos, error: fetchError } = await supabase
     .from('photos')
-    .select('id, original_url, preview_url, watermarked_preview_url')
+    .select('id, is_processed, original_url, preview_url, watermarked_preview_url')
     .eq('gallery_id', galleryId)
     .in('id', photoIds)
 
@@ -369,6 +378,7 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
 
   type PhotoRow = {
     id: string
+    is_processed: boolean
     original_url: string | null
     preview_url: string | null
     watermarked_preview_url: string | null
@@ -376,6 +386,12 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
 
   const rows = (photos ?? []) as PhotoRow[]
   if (rows.length === 0) return { deleted: 0 }
+
+  // One-time use: a sent client gallery's album photos can't be deleted. Edited
+  // deliverables (is_processed) may still be removed and re-uploaded.
+  if (isClientAlbumFrozen(gallery) && rows.some((row) => !row.is_processed)) {
+    throw new Error(CLIENT_ALBUM_LOCKED_MESSAGE)
+  }
 
   const ids = rows.map((row) => row.id)
 
@@ -433,7 +449,13 @@ export async function deletePhotosBulk(galleryId: string, photoIds: string[]) {
 }
 
 export async function deletePhoto(photoId: string) {
-  const { supabase, user, photo } = await assertPhotoInOwnedGallery(photoId)
+  const { supabase, user, photo, gallery } = await assertPhotoInOwnedGallery(photoId)
+
+  // One-time use: a sent client gallery's album photos can't be deleted (edited
+  // deliverables still can).
+  if (isClientAlbumFrozen(gallery) && !photo.is_processed) {
+    throw new Error(CLIENT_ALBUM_LOCKED_MESSAGE)
+  }
 
   const paths = [
     { bucket: 'originals' as const, path: photo.original_url },
