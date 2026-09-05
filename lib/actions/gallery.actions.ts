@@ -314,38 +314,36 @@ export async function sendGallery(galleryId: string) {
     throw new Error('יש להשלים את תשלום הפאס לפני שליחת הגלריה ללקוח')
   }
 
-  // The client-access window for a pass gallery starts on the FIRST send — not
-  // at creation (the photographer gets unlimited prep time). Guarded on a null
-  // expires_at so a resend never re-extends it.
-  if (
-    gallery.pass_bundle_id &&
-    gallery.pass_purchased_at &&
-    gallery.pass_validity_days &&
-    !gallery.expires_at
-  ) {
-    const { userId, supabase } = await requireDashboardContext()
-    const expiresAt = new Date(
-      Date.now() + gallery.pass_validity_days * 24 * 60 * 60 * 1000
-    ).toISOString()
-    await supabase
-      .from('galleries')
-      .update({ expires_at: expiresAt } as never)
-      .eq('id', galleryId)
-      .eq('user_id', userId)
-  }
-
-  // One-time use: the FIRST send freezes a client gallery's source album — from
-  // now on the photographer can only upload edited deliverables, not add/delete
-  // album photos (see lib/private-galleries/gallery-lock.ts and
-  // docs/private-gallery-lifecycle-plan.md). Guarded on a null photos_locked_at
-  // so a resend never re-stamps it.
+  // The FIRST send starts a client gallery's life (docs/private-gallery-lifecycle-plan.md):
+  //  - freezes the source album (one-time use — from now on only edited
+  //    deliverables can be uploaded, see lib/private-galleries/gallery-lock.ts);
+  //  - opens the client window: pass_validity_days for a pass gallery, else a
+  //    60-day default (unless she picked her own expires_at). This same
+  //    expires_at is BOTH the client-access cutoff AND the auto-deletion date.
+  // The photographer gets unlimited prep time — nothing here runs until she
+  // actually sends. Guarded on a null photos_locked_at so a resend re-stamps
+  // nothing.
   if (gallery.gallery_type === 'selection' && !gallery.photos_locked_at) {
     const { userId, supabase } = await requireDashboardContext()
+    const update: { photos_locked_at: string; expires_at?: string } = {
+      photos_locked_at: new Date().toISOString(),
+    }
+    if (!gallery.expires_at) {
+      const windowDays =
+        gallery.pass_bundle_id && gallery.pass_validity_days
+          ? gallery.pass_validity_days
+          : 60
+      update.expires_at = new Date(
+        Date.now() + windowDays * 24 * 60 * 60 * 1000
+      ).toISOString()
+    }
     await supabase
       .from('galleries')
-      .update({ photos_locked_at: new Date().toISOString() } as never)
+      .update(update as never)
       .eq('id', galleryId)
       .eq('user_id', userId)
+    // Keep the local row current so the invite email shows the right window.
+    if (update.expires_at) gallery.expires_at = update.expires_at
   }
 
   // Bypass email sending for public galleries (no client)

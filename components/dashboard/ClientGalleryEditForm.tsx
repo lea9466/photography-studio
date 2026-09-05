@@ -52,6 +52,13 @@ export function ClientGalleryEditForm({
   const [expiresAt, setExpiresAt] = useState(
     gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
   )
+  const expiresAtLabel = gallery.expires_at
+    ? new Date(gallery.expires_at).toLocaleDateString('he-IL', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+    : ''
   const [watermark, setWatermark] = useState(settings?.watermark_text ?? '')
   const [autoApplyWatermark, setAutoApplyWatermark] = useState(
     settings?.auto_apply_watermark ?? true
@@ -218,8 +225,12 @@ export function ClientGalleryEditForm({
           />
           <p className="text-xs text-[#48464c]">
             {locked
-              ? 'הגלריה נשלחה ללקוח — התאריך נעול. במקרים חריגים ניתן לפנות אלינו.'
-              : 'לאחר תאריך זה הגישה לגלריה תיחסם. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל — אין סיסמה קבועה להגדרה.'}
+              ? `הגלריה נשלחה ללקוח — התאריך נעול${
+                  expiresAtLabel
+                    ? `. בתאריך ${expiresAtLabel} הגישה של הלקוח תסתיים והגלריה (כולל כל התמונות) תימחק`
+                    : ''
+                }. במקרים חריגים ניתן לפנות אלינו.`
+              : 'לאחר תאריך זה הגישה לגלריה תיחסם, והגלריה תימחק אוטומטית. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל — אין סיסמה קבועה להגדרה.'}
           </p>
         </div>
       </div>

@@ -533,6 +533,88 @@ export async function sendGalleryPassExpiringEmail(input: {
   })
 }
 
+/**
+ * The photographer's warning that a client gallery is about to be permanently
+ * deleted (60-day life, docs/private-gallery-lifecycle-plan.md §1.ב). Sent
+ * 14 / 3 / 1 days before deletion by the daily lifecycle cron. Operational
+ * nudge — asks her to download anything she still needs.
+ */
+export async function sendClientGalleryDeletionWarningEmail(input: {
+  galleryId: string
+  galleryTitle: string
+  userId: string
+  deletionAt: string
+  daysLeft: number
+}) {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  const { data: user } = await admin
+    .from('users')
+    .select('email')
+    .eq('id', input.userId)
+    .single()
+
+  const to = (user as { email: string | null } | null)?.email
+  if (!to) {
+    if (mustFailWithoutResend()) {
+      throw new Error('Photographer email missing for client-gallery deletion warning')
+    }
+    console.info(
+      '[email stub]',
+      buildEmailStubLog({
+        template: 'client-gallery-deletion-warning',
+        resourceId: input.galleryId,
+        extra: { reason: 'no-photographer-email' },
+      })
+    )
+    return
+  }
+
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'client-gallery-deletion-warning',
+    email: to,
+    resourceId: input.galleryId,
+  })
+  if (!provider) return
+
+  const deletionLabel = new Date(input.deletionAt).toLocaleDateString('he-IL', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+  const galleryUrl = appUrl(`/dashboard/galleries/${input.galleryId}`)
+  const whenText =
+    input.daysLeft <= 1 ? 'מחר' : `בעוד ${input.daysLeft} ימים`
+
+  await provider.send({
+    from: emailFrom(),
+    to,
+    subject: `הגלריה "${input.galleryTitle}" תימחק ${whenText}`,
+    text: [
+      `הגלריה "${input.galleryTitle}" תימחק לצמיתות בתאריך ${deletionLabel} (${whenText}).`,
+      '',
+      'יימחקו הגלריה, כל התמונות (כולל המקור והמעובדות) והקבצים — אצלך ואצל הלקוח.',
+      'אם צריך משהו מהגלריה — כדאי להוריד עכשיו.',
+      '',
+      `מעבר לגלריה: ${galleryUrl}`,
+      '',
+      'אין אפשרות להאריך. במקרים חריגים ניתן לפנות אלינו.',
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <h2>הגלריה תימחק ${whenText}</h2>
+        <p>הגלריה <strong>${escapeHtml(input.galleryTitle)}</strong> תימחק לצמיתות בתאריך ${deletionLabel}.</p>
+        <p>יימחקו הגלריה, כל התמונות (כולל המקור והמעובדות) והקבצים — אצלך ואצל הלקוח. אם צריך משהו מהגלריה, כדאי להוריד עכשיו.</p>
+        <p style="margin: 24px 0;">
+          <a href="${galleryUrl}" style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">מעבר לגלריה</a>
+        </p>
+        <p style="font-size: 13px; color: #666;">אין אפשרות להאריך. במקרים חריגים ניתן לפנות אלינו.</p>
+      </div>
+    `,
+  })
+}
+
 export async function sendDeliveryReadyEmail(input: {
   galleryId: string
   galleryTitle: string

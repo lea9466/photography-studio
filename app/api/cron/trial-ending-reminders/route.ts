@@ -5,7 +5,7 @@ import { runTrialExpiredNotifications } from '@/lib/trial/trial-expired-notifica
 import { runOneTimePaymentReminders } from '@/lib/subscriptions/one-time-payment-reminders'
 import { runOneTimePaymentExpiredNotifications } from '@/lib/subscriptions/one-time-payment-expired-notifications'
 import { suspendCustomDomainsWithLapsedEntitlement } from '@/lib/domains/custom-domain-suspension'
-import { runGalleryPassLifecycle } from '@/lib/gallery-pass/lifecycle'
+import { runClientGalleryLifecycle } from '@/lib/private-galleries/client-gallery-lifecycle'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -124,15 +124,16 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Pay-per-gallery pass housekeeping: lock expired galleries, delete abandoned
-  // unpaid drafts, remind photographers ~3 days before a window closes.
-  let galleryPassLifecycle: Record<string, unknown> = { error: 'did not run' }
+  // Client-gallery lifecycle: 14/3/1-day deletion warnings, permanent deletion
+  // once the 60-day life is up, plus grandfathered pass housekeeping and
+  // abandoned unpaid pass credits (docs/private-gallery-lifecycle-plan.md).
+  let clientGalleryLifecycle: Record<string, unknown> = { error: 'did not run' }
 
   try {
-    galleryPassLifecycle = await runGalleryPassLifecycle()
+    clientGalleryLifecycle = await runClientGalleryLifecycle()
   } catch (error) {
     hadFailure = true
-    console.error('[gallery-pass-lifecycle] cron failed', {
+    console.error('[client-gallery-lifecycle] cron failed', {
       reason: error instanceof Error ? error.name : 'unknown',
     })
   }
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
     oneTimeReminders,
     oneTimeExpired,
     customDomainSuspension,
-    galleryPassLifecycle,
+    clientGalleryLifecycle,
   }
   console.info('[trial-ending-reminders] cron response', body)
   return cronJson(body, hadFailure ? 500 : 200)
