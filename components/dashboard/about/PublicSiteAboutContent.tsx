@@ -40,7 +40,7 @@ export function PublicSiteAboutContent() {
       <AboutSection icon={<Palette className="h-5 w-5" />} title="מה זה כולל">
         <ConceptGrid>
           <ConceptCard
-            tone="plum"
+            tone="accent"
             icon={<Palette className="h-5 w-5" />}
             title="אתר תדמית מלא"
           >
@@ -79,7 +79,7 @@ export function PublicSiteAboutContent() {
       >
         <SiteAnatomy
           sections={[
-            { tone: 'plum', label: 'כותרת ראשית', hint: 'תמונת רקע + שם הסטודיו' },
+            { tone: 'accent', label: 'כותרת ראשית', hint: 'תמונת רקע + שם הסטודיו' },
             { tone: 'rose', label: 'אודות', hint: 'טקסט, תמונה ושורת נתונים' },
             { tone: 'sky', label: 'תיק עבודות', hint: 'הגלריות הציבוריות שלך' },
             { tone: 'violet', label: 'לפני / אחרי עיבוד', pro: true },
@@ -87,7 +87,7 @@ export function PublicSiteAboutContent() {
             { tone: 'emerald', label: 'המלצות לקוחות', pro: true },
             { tone: 'rose', label: 'מהבלוג', hint: 'פוסטים אחרונים', pro: true },
             { tone: 'sky', label: 'שאלות נפוצות', pro: true },
-            { tone: 'plum', label: 'יצירת קשר', hint: 'טופס + פרטים' },
+            { tone: 'accent', label: 'יצירת קשר', hint: 'טופס + פרטים' },
           ]}
         />
       </AboutSection>
@@ -165,7 +165,7 @@ export function PublicSiteAboutContent() {
         <AboutFlow
           steps={[
             {
-              tone: 'plum',
+              tone: 'accent',
               icon: <Globe className="h-5 w-5" />,
               title: 'בוחרת כתובת',
               caption: 'ה-slug של האתר. בלי כתובת האתר לא זמין לצפייה.',

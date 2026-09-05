@@ -7,6 +7,7 @@ import { CTABanner } from '@/components/marketing/CTABanner'
 import { Footer } from '@/components/marketing/Footer'
 import { MarketingSeoFeatures } from '@/components/marketing/MarketingSeoFeatures'
 import { ExampleSiteShowcase } from '@/components/marketing/ExampleSiteShowcase'
+import { HowItWorks } from '@/components/marketing/HowItWorks'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Reveal } from '@/components/marketing/Reveal'
@@ -95,6 +96,8 @@ export async function MarketingHome() {
           </Reveal>
         </div>
       </section>
+
+      <HowItWorks />
 
       <section className="relative overflow-hidden border-y border-[--border] px-4 py-20" id="pricing">
         <div

@@ -44,7 +44,7 @@ export function PrivateGalleriesAboutContent() {
       >
         <ConceptGrid>
           <ConceptCard
-            tone="plum"
+            tone="accent"
             icon={<KeyRound className="h-5 w-5" />}
             title="גלריה נפרדת לכל לקוח"
           >
@@ -82,7 +82,7 @@ export function PrivateGalleriesAboutContent() {
         <AboutFlow
           steps={[
             {
-              tone: 'plum',
+              tone: 'accent',
               icon: <FolderPlus className="h-5 w-5" />,
               title: 'יוצרת גלריה',
               caption: 'משייכת ללקוח, קובעת שם, תפוגה, מכסת בחירה וסימן מים.',
@@ -140,7 +140,7 @@ export function PrivateGalleriesAboutContent() {
             גלריית לקוח מלאה מקצה לקצה, בלי הגבלת זמן.
           </ConceptCard>
           <ConceptCard
-            tone="plum"
+            tone="accent"
             icon={<Layers className="h-5 w-5" />}
             title="מסלול"
           >
