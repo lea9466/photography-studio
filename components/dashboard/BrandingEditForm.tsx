@@ -118,7 +118,7 @@ export function BrandingEditForm({ branding }: BrandingEditFormProps) {
             id="studio-name"
             value={studioName}
             onChange={(e) => setStudioName(e.target.value)}
-            placeholder="למשל: סטודיו גלריה"
+            placeholder="למשל: אורלי לוי צילום"
             className="border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] h-12"
           />
           <p className="text-xs text-gray-500">השם שיופיע בכותרת דף הבית שלך</p>

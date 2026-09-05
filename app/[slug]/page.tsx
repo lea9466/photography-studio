@@ -23,6 +23,7 @@ import {
   resolvePhotographerShareImage,
 } from '@/lib/seo/public-metadata'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import Script from 'next/script'
 import { resolveBrandingPath, resolveBrandingPaths } from '@/lib/branding-urls'
 import { resolveMediaUrl } from '@/lib/r2/storage'
@@ -504,7 +505,7 @@ export default async function PhotographerPage({ params }: PageProps) {
       ? ''
       : (getPublicSitePath(typedPhotographer.slug, typedPhotographer.studio_name) ?? `/${decodedSlug}`)
     const studioName =
-      typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
+      typedPhotographer.studio_name || typedPhotographer.name || FALLBACK_STUDIO_NAME
     const [discoveryGalleries, discoveryPosts] = await Promise.all([
       fetchPhotographerDiscoveryGalleries(typedPhotographer.id),
       fetchPhotographerDiscoveryPosts(typedPhotographer.id),
@@ -642,13 +643,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!photographer) {
       return {
-        title: 'סטודיו לא נמצא | סטודיו גלריה',
+        title: 'הסטודיו לא נמצא',
         description: 'הסטודיו המבוקש אינו קיים.',
       }
     }
 
     const typedPhotographer = photographer as any
-    const studioName = typedPhotographer.studio_name || typedPhotographer.name || 'סטודיו גלריה'
+    const studioName = typedPhotographer.studio_name || typedPhotographer.name || FALLBACK_STUDIO_NAME
     // When the photographer has an active custom domain, its canonical path
     // is root-relative (the domain itself IS the identity — johnphoto.com/,
     // not johnphoto.com/lea-studio) regardless of which host actually served
@@ -703,7 +704,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   } catch (error) {
     return {
-      title: 'סטודיו גלריה',
+      title: 'סטודיו לצילום מקצועי',
       description: 'סטודיו לצילום מקצועי',
     }
   }

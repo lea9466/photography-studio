@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
@@ -181,7 +182,7 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
 
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = typed.studio_name ?? 'Studio Gallery'
+  const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
   // See app/[slug]/page.tsx for why: on a photographer's connected custom
   // domain, nav links built from the real slug path would 404 there (only a
   // small fixed set of tenant-relative paths is recognized — see
@@ -307,7 +308,7 @@ export async function generateMetadata({ params }: PortfolioPageProps): Promise<
       return { title: 'תיק עבודות לא נמצא' }
     }
 
-    const studioName = typed.studio_name ?? 'Studio Gallery'
+    const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
     const baseUrl = await getCanonicalBaseUrl(typed.id)
     const canonicalPath = baseUrl
       ? ''

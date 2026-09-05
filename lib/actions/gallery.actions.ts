@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireDashboardContext, getDashboardContext } from '@/lib/auth/dashboard-context'
 import { assertFreeGalleryCanBecomePublic } from '@/lib/subscriptions/gallery-gate'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import type { DashboardAuthContext } from '@/lib/auth/dashboard-context'
 import { processReferralBonusIfEligible } from '@/lib/referral/referral'
@@ -209,7 +210,7 @@ async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
     galleryTitle: gallery.title,
     clientEmail: client.email,
     clientName: client.name,
-    studioName: profile?.studio_name ?? 'Studio Gallery',
+    studioName: profile?.studio_name ?? FALLBACK_STUDIO_NAME,
     expiresAt: gallery.expires_at,
   })
 }

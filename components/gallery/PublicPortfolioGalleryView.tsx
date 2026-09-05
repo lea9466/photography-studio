@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Lightbox } from '@/components/gallery/Lightbox'
 import { ClientPhotoMasonry } from '@/components/gallery/ClientPhotoMasonry'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 
 type PublicPortfolioPhoto = {
   id: string
@@ -82,7 +83,7 @@ export function PublicPortfolioGalleryView({
                 </div>
               )}
               <p className="text-lg font-medium">
-                {studioName ?? 'Studio Gallery'}
+                {studioName ?? FALLBACK_STUDIO_NAME}
               </p>
               <h1 className="mt-2 text-3xl font-semibold sm:text-4xl lg:text-5xl">
                 {title}
@@ -95,7 +96,7 @@ export function PublicPortfolioGalleryView({
 
       <header className={`border-b border-[--border] px-4 py-6 text-center ${!heroImageUrl ? '' : 'hidden'}`}>
         <p className="text-sm text-[--muted]">
-          {studioName ?? 'Studio Gallery'}
+          {studioName ?? FALLBACK_STUDIO_NAME}
         </p>
         <h1 className="mt-1 text-2xl font-semibold">{title}</h1>
         <p className="mt-1 text-sm text-[--muted]">{date}</p>

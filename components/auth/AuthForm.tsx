@@ -73,7 +73,7 @@ export function AuthForm({ mode, action, next, referralCode }: AuthFormProps) {
                   id="studio_name"
                   name="studio_name"
                   type="text"
-                  placeholder="Studio Gallery"
+                  placeholder="למשל: אורלי לוי צילום"
                 />
               </div>
             </>

@@ -9,6 +9,7 @@ import {
   type WatermarkPlacement,
 } from '@/lib/images/process'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 
 export type MediaUploadProgress = {
   completed: number
@@ -208,7 +209,7 @@ async function uploadReservedPhoto(
     return { ok: false, message: `כיווץ נכשל: ${job.file.name}`, paths }
   }
 
-  const resolvedWatermark = watermarkText?.trim() || 'Studio Gallery'
+  const resolvedWatermark = watermarkText?.trim() || FALLBACK_STUDIO_NAME
   const watermarkedBlob = await applyWatermarkToBlob(
     previewBlob,
     resolvedWatermark,

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
 import { resolveMediaUrl } from '@/lib/r2/storage'
@@ -314,7 +315,7 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
 
   type UserRow = { studio_name: string | null }
   const profile = user as UserRow | null
-  const studioName = profile?.studio_name || 'Studio Gallery'
+  const studioName = profile?.studio_name || FALLBACK_STUDIO_NAME
   const title = `${gallery.title} | ${studioName}`
   const description = `תיק עבודות מאת ${studioName}`
   const canonicalPath = `/portfolio/${slug}`

@@ -1,3 +1,5 @@
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
+
 const MAX_PREVIEW_SIZE = 1600
 const PREVIEW_QUALITY = 0.82
 const WATERMARK_QUALITY = 0.85
@@ -148,7 +150,7 @@ export function resolveWatermarkText(
   const studio = studioName?.trim()
   if (studio) return studio
 
-  return 'Studio Gallery'
+  return FALLBACK_STUDIO_NAME
 }
 
 export type ProcessedImages = {

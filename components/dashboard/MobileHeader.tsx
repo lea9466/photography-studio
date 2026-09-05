@@ -2,6 +2,7 @@
 
 import { Menu, X } from 'lucide-react'
 import { Logo } from './Logo'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 
 type MobileHeaderProps = {
   studioName?: string
@@ -32,7 +33,7 @@ export function MobileHeader({
         </div>
         <div className="flex flex-col min-w-0">
           <h1 className="text-[18px] font-bold text-[--foreground] leading-tight truncate">
-            {studioName || 'Studio Gallery'}
+            {studioName || FALLBACK_STUDIO_NAME}
           </h1>
           <span className="text-[10px] text-[--muted] uppercase tracking-wider">
             ניהול סטודיו

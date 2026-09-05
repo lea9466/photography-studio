@@ -5,7 +5,7 @@ import { Footer } from '@/components/marketing/Footer'
 import { buildMarketingMetadata } from '@/lib/seo/marketing-metadata'
 
 export const metadata: Metadata = buildMarketingMetadata({
-  title: 'הצהרת נגישות | סטודיו גלריה',
+  title: 'הצהרת נגישות | STG',
   canonicalPath: '/accessibility',
 })
 
@@ -18,7 +18,7 @@ const sections = [
     content: (
       <>
         <p>
-          סטודיו גלריה מחויבת להנגשת האתר והשירותים הדיגיטליים שלה, כדי לאפשר לכל אדם,
+          STG מחויבת להנגשת האתר והשירותים הדיגיטליים שלה, כדי לאפשר לכל אדם,
           לרבות אנשים עם מוגבלות, לגלוש באתר, לנהל גלריות צילום, לשתף תמונות עם לקוחות
           ולהשתמש בכלל הכלים המוצעים בצורה עצמאית, שוויונית, מכבדת, בטוחה ונוחה.
         </p>
@@ -94,7 +94,7 @@ const sections = [
       <>
         <p>
           אם נתקלתם בבעיית נגישות באתר, או שיש לכם הצעות לשיפור, נשמח לשמוע מכם.
-          ניתן לפנות לרכז/ת הנגישות של סטודיו גלריה בדרכים הבאות:
+          ניתן לפנות לרכז/ת הנגישות של STG בדרכים הבאות:
         </p>
         <address className="mt-4 not-italic rounded-xl border border-[--border] bg-[--background] p-6">
           <dl className="space-y-3 text-sm sm:text-base">
@@ -189,7 +189,7 @@ export default function AccessibilityPage() {
               הצהרת נגישות
             </h1>
             <p className="mt-4 text-base leading-relaxed text-[--muted] sm:text-lg">
-              מסמך זה מפרט את מחויבות סטודיו גלריה להנגשת האתר והשירותים הדיגיטליים
+              מסמך זה מפרט את מחויבות STG להנגשת האתר והשירותים הדיגיטליים
               לצלמים וללקוחותיהם, בהתאם לתקן WCAG 2.1 ברמת AA.
             </p>
             <p className="mt-2 text-sm text-[--muted]">

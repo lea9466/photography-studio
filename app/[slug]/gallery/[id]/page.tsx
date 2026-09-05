@@ -1,5 +1,6 @@
 import { notFound, permanentRedirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
 import {
   fetchGalleryForPublicPage,
@@ -130,7 +131,7 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
   const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
   const accentColor = userData?.accent_color ?? '#7c3aed'
   const siteTheme = normalizeSiteTheme(userData?.selected_theme)
-  const studioName = userData?.studio_name ?? 'Studio Gallery'
+  const studioName = userData?.studio_name ?? FALLBACK_STUDIO_NAME
   const homepagePath = resolveHomepagePath(userData?.slug, userData?.studio_name)
   const canonicalPath = `/${decodedSlug}`
   const portfolioPath = `${canonicalPath}/portfolio`
@@ -244,7 +245,7 @@ export async function generateMetadata({ params }: GalleryDetailPageProps) {
     .maybeSingle()
 
   const typedUser = user as { studio_name: string | null; logo_url: string | null } | null
-  const studioName = typedUser?.studio_name || 'Studio Gallery'
+  const studioName = typedUser?.studio_name || FALLBACK_STUDIO_NAME
   const title = `${gallery.title} | ${studioName}`
   const description = `גלריה ציבורית מאת ${studioName}`
   const canonicalPath = `/${decodedSlug}/gallery/${gallery.id}`

@@ -11,6 +11,7 @@ import {
   touchGallerySession,
 } from '@/lib/gallery-session'
 import { prepareGalleryForDelivery } from '@/lib/actions/photo.actions'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import {
   sendGalleryPasswordEmail,
   sendSelectionDoneEmail,
@@ -223,7 +224,7 @@ export async function requestGalleryPassword(
       galleryTitle: gallery.title,
       clientEmail: client.email,
       clientName: client.name,
-      studioName: profile?.studio_name ?? 'Studio Gallery',
+      studioName: profile?.studio_name ?? FALLBACK_STUDIO_NAME,
       code,
     })
   } catch (error) {

@@ -5,6 +5,7 @@ import {
   getClientGalleryPublicMeta,
 } from '@/lib/actions/client-gallery.actions'
 import { getPrivateGalleryHost } from '@/lib/private-gallery/isolation'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { hasGallerySession } from '@/lib/gallery-session'
 import { ClientGalleryView } from '@/components/gallery/ClientGalleryView'
 import { GalleryUnavailable } from '@/components/gallery/GalleryUnavailable'
@@ -133,8 +134,8 @@ export async function generateMetadata({ params }: ClientGalleryPageProps) {
     .single()
 
   const galleryRow = gallery as { cover_image: string | null; slug: string | null } | null
-  const title = `${meta.title} | ${meta.studio_name || 'Studio Gallery'}`
-  const description = `תיק עבודות מאת ${meta.studio_name || 'Studio Gallery'}`
+  const title = `${meta.title} | ${meta.studio_name || FALLBACK_STUDIO_NAME}`
+  const description = `תיק עבודות מאת ${meta.studio_name || FALLBACK_STUDIO_NAME}`
   const canonicalPath =
     galleryRow?.slug && meta.gallery_type === 'portfolio'
       ? `/portfolio/${galleryRow.slug}`

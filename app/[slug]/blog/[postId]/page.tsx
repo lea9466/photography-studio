@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
@@ -83,7 +84,7 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
 
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
+  const studioName = photographer.studio_name ?? photographer.name ?? FALLBACK_STUDIO_NAME
   const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(photographer.slug, photographer.studio_name)
   const canonicalPath = isTenantDomain
     ? ''
@@ -193,7 +194,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     const post = await fetchPublicBlogPostById(photographer.id, postId, photographer.site_language)
     if (!post) return { title: 'פוסט לא נמצא' }
 
-    const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
+    const studioName = photographer.studio_name ?? photographer.name ?? FALLBACK_STUDIO_NAME
     const studioPath = resolveActiveStudioPath(photographer)
     if (!studioPath) return { title: 'פוסט לא נמצא' }
 

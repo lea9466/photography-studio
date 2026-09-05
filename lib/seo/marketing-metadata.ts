@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { buildCanonicalUrl } from '@/lib/seo/public-metadata'
 
 export const MARKETING_SEO_TITLE =
-  'סטודיו גלריה | בניית אתר לצלמות בקלות, גלריות תמונות דיגיטליות ותיק עבודות מעוצב'
+  'STG | בניית אתר לצלמות בקלות, גלריות תמונות דיגיטליות ותיק עבודות מעוצב'
 
 export const MARKETING_SEO_DESCRIPTION =
   'מחפשת בניית אתר לצלמת בקלות ובחינם? הקימי אתר תדמית מקצועי ב-10 דקות — עם בלוג פוסטים, גלריות תמונות ותיק עבודות. מערכת מתקדמת לניהול גלריות, שיתוף תמונות עם לקוחות והגנה מלאה בסימני מים.'

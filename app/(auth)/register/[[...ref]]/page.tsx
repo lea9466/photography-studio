@@ -11,7 +11,7 @@ import { getPublicStudios } from '@/lib/actions/public-studios.actions'
 import { buildMarketingMetadata, MARKETING_H1, REGISTER_SEO_DESCRIPTION } from '@/lib/seo/marketing-metadata'
 
 export const metadata: Metadata = buildMarketingMetadata({
-  title: 'הרשמה חינם | סטודיו גלריה — בניית אתר לצלמות וגלריות דיגיטליות',
+  title: 'הרשמה חינם | STG — בניית אתר לצלמות וגלריות דיגיטליות',
   description: REGISTER_SEO_DESCRIPTION,
   canonicalPath: '/register',
 })

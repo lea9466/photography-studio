@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
@@ -25,7 +26,7 @@ export default async function PhotographerSeoMapPage({ params }: SeoMapPageProps
 
   if (!photographer) notFound()
 
-  const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
+  const studioName = photographer.studio_name ?? photographer.name ?? FALLBACK_STUDIO_NAME
   const studioPath = resolveActiveStudioPath(photographer)
   if (!studioPath) notFound()
 
@@ -103,7 +104,7 @@ export async function generateMetadata({ params }: SeoMapPageProps): Promise<Met
     const photographer = await findPhotographerBySlug(decodedSlug)
     if (!photographer) return { title: 'מפת תוכן לא נמצאה' }
 
-    const studioName = photographer.studio_name ?? photographer.name ?? 'Studio Gallery'
+    const studioName = photographer.studio_name ?? photographer.name ?? FALLBACK_STUDIO_NAME
     const studioPath = resolveActiveStudioPath(photographer)
     if (!studioPath) return { title: 'מפת תוכן לא נמצאה' }
 

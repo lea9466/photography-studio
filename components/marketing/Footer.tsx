@@ -16,7 +16,10 @@ export function Footer() {
               <circle cx="12" cy="13" r="3.5" fill="var(--background)" />
             </svg>
           </span>
-          Studio Gallery
+          <span className="flex flex-col leading-none">
+            <span>STG</span>
+            <span className="text-[9px] font-normal uppercase tracking-[0.2em] text-[--muted]">Studio Gallery</span>
+          </span>
         </Link>
         <nav
           aria-label="קישורים משפטיים"
@@ -41,7 +44,7 @@ export function Footer() {
             תקנון ותנאי שימוש
           </Link>
         </nav>
-        <p className="text-sm text-[--muted]">© כל הזכויות שמורות {year} Studio Gallery</p>
+        <p className="text-sm text-[--muted]">© כל הזכויות שמורות {year} STG</p>
       </div>
     </footer>
   )

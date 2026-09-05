@@ -15,7 +15,10 @@ export function Nav() {
               <circle cx="12" cy="13" r="3.5" fill="var(--background)" />
             </svg>
           </span>
-          <span>Studio Gallery</span>
+          <span className="flex flex-col leading-none">
+            <span className="text-base">STG</span>
+            <span className="text-[9px] font-normal uppercase tracking-[0.2em] text-[--muted]">Studio Gallery</span>
+          </span>
         </Link>
         <nav className="hidden md:flex items-center gap-7">
           <Link href="#example" className="text-sm text-[--muted] hover:text-[--foreground] transition-colors">

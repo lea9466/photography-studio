@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { resolveBrandingPath } from '@/lib/branding-urls'
@@ -55,7 +56,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
 
   const siteTheme = normalizeSiteTheme(typed.selected_theme)
   const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = typed.studio_name ?? 'Studio Gallery'
+  const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
   // See app/[slug]/page.tsx for why: on a photographer's connected custom
   // domain, nav links built from the real slug path would 404 there (only a
   // small fixed set of tenant-relative paths is recognized — see
@@ -167,7 +168,7 @@ export async function generateMetadata({ params }: BlogPageProps): Promise<Metad
 
     const typed = photographer as typeof photographer & { posts_page_title: string | null }
     const siteTheme = normalizeSiteTheme(typed.selected_theme)
-    const studioName = typed.studio_name ?? 'Studio Gallery'
+    const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
     const pageTitle = resolvePostsPageTitle(siteTheme, typed.posts_page_title)
     const baseUrl = await getCanonicalBaseUrl(typed.id)
     const canonicalPath = baseUrl

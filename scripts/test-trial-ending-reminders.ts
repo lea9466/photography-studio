@@ -431,7 +431,7 @@ test('email copy and wiring stay payment-free until checkout opens', async () =>
   assert.doesNotMatch(routeSource, /email:|name:|trial_end_date|userId/)
 
   assert.match(emailSource, /sendTrialUpdateEmail/)
-  assert.match(emailSource, /עדכון קטן לגבי Studio Gallery/)
+  assert.match(emailSource, /עדכון קטן לגבי STG/)
   assert.match(emailSource, /אין צורך לעשות שום דבר/)
   assert.match(emailSource, /הגישה שלך לא תיחסם/)
   assert.match(emailSource, /sendTrialEndingReminderEmail/)

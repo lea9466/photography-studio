@@ -25,6 +25,7 @@ import { parseFaqItems, sanitizeFaqItems, type FaqItem } from '@/lib/faq'
 import { generateHomepageSectionScrollScript } from '@/lib/photographer-site-paths'
 import { resolvePackagesSectionCopy } from '@/lib/packages-section-copy'
 import { resolveContactSectionCopy } from '@/lib/contact-section-copy'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { resolveTestimonialsSectionTitle, resolveTestimonialsSectionSubtitle } from '@/lib/testimonials-section-copy'
 import { resolveGalleriesSectionTitle } from '@/lib/galleries-section-copy'
 import { resolveRecentPhotosSectionTitle } from '@/lib/recent-photos-section-copy'
@@ -553,7 +554,7 @@ export function generateHomepageHTML(
 
 
 
-  const studioName = studio_name || name || 'סטודיו גלריה'
+  const studioName = studio_name || name || FALLBACK_STUDIO_NAME
 
   const blogModalHeadBlock =
     posts.length > 0 ? buildHomepageBlogModalHeadBlock(primaryColor) : ''

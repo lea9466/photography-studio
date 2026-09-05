@@ -1,4 +1,5 @@
 import { CalendarX, Lock } from 'lucide-react'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import {
   Card,
   CardContent,
@@ -43,7 +44,7 @@ export function GalleryUnavailable({
           </div>
           <CardTitle>{config.title}</CardTitle>
           <CardDescription>
-            {studioName ?? 'Studio Gallery'} · {galleryTitle}
+            {studioName ?? FALLBACK_STUDIO_NAME} · {galleryTitle}
           </CardDescription>
         </CardHeader>
         <CardContent>

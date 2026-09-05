@@ -41,7 +41,7 @@ function privateGalleryUrl(galleryId: string) {
 
 function emailFrom() {
   return (
-    process.env.EMAIL_FROM ?? 'Studio Gallery <onboarding@resend.dev>'
+    process.env.EMAIL_FROM ?? 'STG <onboarding@resend.dev>'
   )
 }
 
@@ -252,7 +252,8 @@ function renderLuxeEmail(input: { preheader: string; contentHtml: string }) {
                   <td align="center" valign="middle" width="66" height="66" style="width: 66px; height: 66px; background: #ffffff; border-radius: 16px; font-family: ${LUXE.serif}; font-size: 21px; font-weight: 700; letter-spacing: 3px; color: ${LUXE.brand};">STG</td>
                 </tr>
               </table>
-              <div style="margin-top: 20px; font-family: ${LUXE.serif}; font-size: 13px; letter-spacing: 6px; color: #ffffff;">STUDIO&nbsp;GALLERY</div>
+              <div style="margin-top: 18px; font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 6px; color: #ffffff;">STUDIO&nbsp;GALLERY</div>
+              <div style="margin-top: 5px; font-family: ${LUXE.sans}; font-size: 11px; letter-spacing: 1px; color: rgba(255, 255, 255, 0.72);">המרחב הדיגיטלי לצלמות</div>
               <div style="width: 44px; margin: 16px auto 0; border-top: 1px solid rgba(255, 255, 255, 0.5);"></div>
             </td>
           </tr>
@@ -265,8 +266,9 @@ function renderLuxeEmail(input: { preheader: string; contentHtml: string }) {
 
           <tr>
             <td align="center" bgcolor="${LUXE.card}" style="background: ${LUXE.card}; border-top: 1px solid ${LUXE.border}; border-radius: 0 0 16px 16px; padding: 26px 40px 34px; font-family: ${LUXE.sans};">
-              <div style="font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 4px; color: ${LUXE.muted};">STUDIO GALLERY</div>
-              <p style="margin: 10px 0 0; font-size: 12px; line-height: 1.65; color: ${LUXE.muted};">המרחב הדיגיטלי לצלמות — אתר, גלריות ולקוחות במקום אחד.<br />© ${year} Studio Gallery · כל הזכויות שמורות.</p>
+              <div style="font-family: ${LUXE.serif}; font-size: 15px; font-weight: 700; letter-spacing: 3px; color: ${LUXE.brand};">STG</div>
+              <div style="margin-top: 3px; font-family: ${LUXE.serif}; font-size: 10px; letter-spacing: 4px; color: ${LUXE.muted};">STUDIO GALLERY</div>
+              <p style="margin: 10px 0 0; font-size: 12px; line-height: 1.65; color: ${LUXE.muted};">המרחב הדיגיטלי לצלמות — אתר, גלריות ולקוחות במקום אחד.<br />© ${year} STG · כל הזכויות שמורות.</p>
             </td>
           </tr>
 
@@ -314,7 +316,7 @@ export async function sendPhotographerPasswordResetEmail(input: {
   await provider.send({
     from: emailFrom(),
     to: input.email,
-    subject: 'סיסמה חדשה — Studio Gallery',
+    subject: 'סיסמה חדשה — STG',
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${input.name},</h2>
@@ -710,7 +712,7 @@ export function buildWelcomeEmail(input: { name: string }): {
     <p style="${p} margin-bottom: 0;">בהצלחה!</p>`
 
   return {
-    subject: 'ברוכה הבאה ל‑Studio Gallery — הסטודיו שלך מוכן',
+    subject: 'ברוכה הבאה ל‑STG — הסטודיו שלך מוכן',
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
@@ -877,7 +879,7 @@ export function buildPrivateGalleriesAnnouncementEmail(input: { name: string }):
   const contentHtml = `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
       <tr>
-        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STUDIO&nbsp;GALLERY</td>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STG</td>
       </tr>
     </table>
     <h1 style="${h1}">ניהול גלריות פרטיות — מהיום זה פשוט וקל</h1>
@@ -1049,7 +1051,7 @@ export async function sendTrialUpdateEmail(input: {
   await provider.send({
     from: emailFrom(),
     to: input.email,
-    subject: 'עדכון קטן לגבי Studio Gallery 💛',
+    subject: 'עדכון קטן לגבי STG 💛',
     text: [
       'היי,',
       '',
@@ -1065,7 +1067,7 @@ export async function sendTrialUpdateEmail(input: {
       'ברגע שהאפשרות תיפתח,',
       'נשלח לך מייל נוסף עם קישור ישיר להצטרפות.',
       '',
-      'תודה שאת חלק מ-Studio Gallery ❤️',
+      'תודה שאת חלק מ-STG ❤️',
     ].join('\n'),
     html: `
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
@@ -1081,7 +1083,7 @@ export async function sendTrialUpdateEmail(input: {
           ברגע שהאפשרות תיפתח,<br />
           נשלח לך מייל נוסף עם קישור ישיר להצטרפות.
         </p>
-        <p>תודה שאת חלק מ-Studio Gallery ❤️</p>
+        <p>תודה שאת חלק מ-STG ❤️</p>
       </div>
     `,
   })
@@ -1113,7 +1115,7 @@ export async function sendTrialEndingReminderEmail(input: {
     text: [
       `היי ${displayName},`,
       '',
-      'רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.',
+      'רצינו להזכיר שתקופת הניסיון שלך ב־STG תסתיים בעוד 3 ימים.',
       `כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של ${input.monthlyPrice} ₪.`,
       '',
       `המשך למנוי: ${subscriptionUrl}`,
@@ -1126,7 +1128,7 @@ export async function sendTrialEndingReminderEmail(input: {
     html: `
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
         <p>היי ${displayName},</p>
-        <p>רצינו להזכיר שתקופת הניסיון שלך ב־Studio Gallery תסתיים בעוד 3 ימים.</p>
+        <p>רצינו להזכיר שתקופת הניסיון שלך ב־STG תסתיים בעוד 3 ימים.</p>
         <p>כדי להמשיך להשתמש במערכת, אפשר להצטרף למנוי החודשי בעלות של ${input.monthlyPrice} ₪.</p>
         <p style="margin: 24px 0;">
           <a
@@ -1289,7 +1291,7 @@ export async function sendOneTimePlanEndingReminderEmail(input: {
     text: [
       `היי ${displayName},`,
       '',
-      'התשלום החד-פעמי שביצעת ב־Studio Gallery עומד לפוג בעוד 3 ימים.',
+      'התשלום החד-פעמי שביצעת ב־STG עומד לפוג בעוד 3 ימים.',
       'מכיוון שזה היה תשלום חד-פעמי, לא יתבצע חיוב אוטומטי — כדי להמשיך במסלול המלא צריך לחדש ידנית.',
       '',
       `המשך שדרוג: ${subscriptionUrl}`,
@@ -1300,7 +1302,7 @@ export async function sendOneTimePlanEndingReminderEmail(input: {
     html: `
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
         <p>היי ${displayName},</p>
-        <p>התשלום החד-פעמי שביצעת ב־Studio Gallery עומד לפוג בעוד 3 ימים.</p>
+        <p>התשלום החד-פעמי שביצעת ב־STG עומד לפוג בעוד 3 ימים.</p>
         <p>מכיוון שזה היה תשלום חד-פעמי, לא יתבצע חיוב אוטומטי — כדי להמשיך במסלול המלא צריך לחדש ידנית.</p>
         <p style="margin: 24px 0;">
           <a

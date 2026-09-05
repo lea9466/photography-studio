@@ -5,7 +5,7 @@ import { Footer } from '@/components/marketing/Footer'
 import { buildMarketingMetadata } from '@/lib/seo/marketing-metadata'
 
 export const metadata: Metadata = buildMarketingMetadata({
-  title: 'מדיניות פרטיות | סטודיו גלריה',
+  title: 'מדיניות פרטיות | STG',
   canonicalPath: '/privacy',
 })
 
@@ -18,7 +18,7 @@ const sections = [
     content: (
       <>
         <p>
-          סטודיו גלריה (&quot;החברה&quot;, &quot;אנחנו&quot;) מפעילה פלטפורמה לניהול גלריות
+          STG (&quot;החברה&quot;, &quot;אנחנו&quot;) מפעילה פלטפורמה לניהול גלריות
           צילום, אתרי תדמית לצלמים ושיתוף תמונות עם לקוחות. מדיניות פרטיות זו מסבירה כיצד
           אנו אוספים, משתמשים, שומרים ומגנים על המידע האישי שלך בעת השימוש באתר ובשירותים
           שלנו.
@@ -242,7 +242,7 @@ export default function PrivacyPage() {
               מדיניות פרטיות
             </h1>
             <p className="mt-4 text-base leading-relaxed text-[--muted] sm:text-lg">
-              מסמך זה מפרט כיצד סטודיו גלריה אוספת, משתמשת ומגינה על המידע האישי של
+              מסמך זה מפרט כיצד STG אוספת, משתמשת ומגינה על המידע האישי של
               משתמשי הפלטפורמה ולקוחותיהם.
             </p>
             <p className="mt-2 text-sm text-[--muted]">

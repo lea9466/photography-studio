@@ -21,6 +21,7 @@ import {
   type ClientSelectionPayload,
 } from '@/lib/gallery-selection'
 import { resolveMediaUrl } from '@/lib/r2/storage'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 
 type ClientGalleryViewProps = {
   gallery: ClientGalleryData
@@ -211,7 +212,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
                 </div>
               )}
               <p className="text-lg font-medium">
-                {gallery.studio_name ?? 'Studio Gallery'}
+                {gallery.studio_name ?? FALLBACK_STUDIO_NAME}
               </p>
               <h1 className="mt-2 text-3xl font-semibold sm:text-4xl lg:text-5xl">
                 {gallery.title}
@@ -223,7 +224,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
 
       <header className={`border-b border-[--border] px-4 py-6 text-center ${!gallery.hero_desktop_url && !gallery.hero_mobile_url ? '' : 'hidden'}`}>
         <p className="text-sm text-[--muted]">
-          {gallery.studio_name ?? 'Studio Gallery'}
+          {gallery.studio_name ?? FALLBACK_STUDIO_NAME}
         </p>
         <h1 className="mt-1 text-2xl font-semibold">{gallery.title}</h1>
       </header>

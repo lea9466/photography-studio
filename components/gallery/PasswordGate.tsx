@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import {
   Card,
   CardContent,
@@ -83,7 +84,7 @@ export function PasswordGate({
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center">
-          <CardTitle>{studioName ?? 'Studio Gallery'}</CardTitle>
+          <CardTitle>{studioName ?? FALLBACK_STUDIO_NAME}</CardTitle>
           <CardDescription>{galleryTitle}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
