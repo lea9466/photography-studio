@@ -10,7 +10,8 @@ import {
 const now = new Date('2026-01-15T12:00:00Z')
 
 const tierRows: PrivateGalleryTierRow[] = [
-  { tier: 'free', max_galleries: 1, max_photos_per_gallery: 400, is_lifetime_cap: true },
+  // free is now a CONCURRENT cap of 1 (phase 3) — delete the gallery, slot reopens.
+  { tier: 'free', max_galleries: 1, max_photos_per_gallery: 400, is_lifetime_cap: false },
   { tier: 'starter', max_galleries: 8, max_photos_per_gallery: 400, is_lifetime_cap: false },
   { tier: 'pro', max_galleries: 16, max_photos_per_gallery: 850, is_lifetime_cap: false },
   { tier: 'unlimited', max_galleries: 35, max_photos_per_gallery: 1500, is_lifetime_cap: false },
@@ -98,9 +99,9 @@ describe('resolvePrivateGalleryTier', () => {
 })
 
 describe('pickLimitsForTier', () => {
-  it('free tier is a lifetime cap of 1 gallery / 400 photos', () => {
+  it('free tier is a concurrent cap of 1 gallery / 400 photos', () => {
     const limits = pickLimitsForTier('free', tierRows)
-    assert.deepEqual(limits, { maxGalleries: 1, maxPhotosPerGallery: 400, isLifetimeCap: true })
+    assert.deepEqual(limits, { maxGalleries: 1, maxPhotosPerGallery: 400, isLifetimeCap: false })
   })
   it('starter/pro/unlimited are concurrent caps', () => {
     assert.equal(pickLimitsForTier('starter', tierRows).isLifetimeCap, false)
@@ -122,6 +123,13 @@ describe('buildPrivateGalleryCountLimitError', () => {
     assert.ok(message)
     assert.match(message!, /8/)
     assert.match(message!, /מחקי/)
+  })
+  it('free (concurrent cap of 1): one gallery = blocked, but deleting it reopens the slot', () => {
+    const blocked = buildPrivateGalleryCountLimitError(1, 1, false)
+    assert.ok(blocked)
+    assert.match(blocked!, /מחקי/)
+    assert.doesNotMatch(blocked!, /לא תשחרר מקום/) // NOT the old lifetime copy
+    assert.equal(buildPrivateGalleryCountLimitError(0, 1, false), null)
   })
   it('at the lifetime limit = blocked, explicitly says deleting does not help', () => {
     const message = buildPrivateGalleryCountLimitError(1, 1, true)

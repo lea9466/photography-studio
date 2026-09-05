@@ -457,7 +457,6 @@ export async function createGallery(input: CreateGalleryInput) {
     }
   }
 
-  let unlocksFreePrivateGallerySlot = false
   // A bought gallery-pass credit's snapshot cap/validity govern this one
   // gallery; it's consumed right after the row is inserted. Used either because
   // she explicitly picked it (`passCreditId` — even a subscriber wanting one
@@ -465,22 +464,19 @@ export async function createGallery(input: CreateGalleryInput) {
   let passCredit: GalleryPassCredit | null = null
   if (!willBePublic) {
     const pg = await getPrivateGalleryEntitlements(userId)
-    let limitError: string | null = null
-    if (pg.limits.isLifetimeCap) {
-      limitError = buildPrivateGalleryCountLimitError(pg.lifetimeUsed ? 1 : 0, 1, true)
-      if (!limitError && !input.passCreditId) unlocksFreePrivateGallerySlot = true
-    } else {
-      const { count: privateGalleryCount } = await supabase
-        .from('galleries')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('gallery_type', 'selection')
-      limitError = buildPrivateGalleryCountLimitError(
-        privateGalleryCount ?? 0,
-        pg.limits.maxGalleries,
-        false
-      )
-    }
+    // Every tier now caps *concurrent* client galleries — free included
+    // (1 at a time). Deleting one frees the slot (see
+    // docs/private-gallery-lifecycle-plan.md §1.ג / §1.ד).
+    const { count: privateGalleryCount } = await supabase
+      .from('galleries')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('gallery_type', 'selection')
+    const limitError = buildPrivateGalleryCountLimitError(
+      privateGalleryCount ?? 0,
+      pg.limits.maxGalleries,
+      false
+    )
 
     if (input.passCreditId) {
       passCredit = await resolveGalleryPassCreditForCreation(userId, input.passCreditId)
@@ -540,13 +536,6 @@ export async function createGallery(input: CreateGalleryInput) {
       await supabase.from('galleries').delete().eq('id', gallery.id)
       throw new Error('הגלריה שרכשת כבר נוצלה — נסי שוב')
     }
-  }
-
-  if (unlocksFreePrivateGallerySlot) {
-    await supabase
-      .from('users')
-      .update({ free_private_gallery_created: true } as never)
-      .eq('id', userId)
   }
 
   let watermarkText: string | null = input.watermarkText?.trim() || null
@@ -901,23 +890,18 @@ export async function getPrivateGalleryQuota() {
     getPrivateGalleryEntitlements(userId),
   ])
 
-  // For the lifetime-cap tier, the number that actually gates creation is the
-  // one-time-use flag, not how many `selection` galleries currently exist —
-  // an account can have more (grandfathered in from before this feature) or
-  // fewer (the one gallery was since deleted, which must NOT free the slot
-  // back up) than the raw count. Show that flag instead so the displayed
-  // "X מתוך Y" always matches what canCreateGallery actually enforces.
-  const galleryCount = pg.limits.isLifetimeCap ? (pg.lifetimeUsed ? 1 : 0) : (count ?? 0)
-  const canCreateGallery = pg.limits.isLifetimeCap
-    ? !pg.lifetimeUsed
-    : galleryCount < pg.limits.maxGalleries
+  // Every tier caps *concurrent* client galleries now (free = 1 at a time);
+  // deleting one frees the slot. "X מתוך Y" = current selection galleries
+  // against the tier's max.
+  const galleryCount = count ?? 0
+  const canCreateGallery = galleryCount < pg.limits.maxGalleries
 
   return {
     tier: pg.tier,
     galleryCount,
     maxGalleries: pg.limits.maxGalleries,
     maxPhotosPerGallery: pg.limits.maxPhotosPerGallery,
-    isLifetime: pg.limits.isLifetimeCap,
+    isLifetime: false,
     canCreateGallery,
   }
 }
