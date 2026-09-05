@@ -1,4 +1,4 @@
--- Studio Gallery — testimonials RLS policies
+-- STG — testimonials RLS policies
 -- Photographers: full access to own testimonials
 -- Public read for testimonials on photographer's public site
 

@@ -1,4 +1,4 @@
-# Studio Gallery — Supabase local config
+# STG — Supabase local config
 # Docs: https://supabase.com/docs/guides/cli/config
 
 project_id = "studio-gallery"

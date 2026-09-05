@@ -1,4 +1,4 @@
--- Studio Gallery — Storage buckets + RLS
+-- STG — Storage buckets + RLS
 -- Path convention: {user_id}/{gallery_id}/{filename}
 -- originals are NEVER exposed to clients directly (server-side only)
 

@@ -1,4 +1,4 @@
--- Studio Gallery — testimonials table
+-- STG — testimonials table
 -- Client reviews/testimonials for photographers
 
 -- ---------------------------------------------------------------------------

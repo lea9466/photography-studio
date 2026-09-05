@@ -1,4 +1,4 @@
--- Studio Gallery — posts table for photographer blog posts
+-- STG — posts table for photographer blog posts
 
 -- ---------------------------------------------------------------------------
 -- posts

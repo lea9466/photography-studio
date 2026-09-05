@@ -1,4 +1,4 @@
--- Studio Gallery — Row Level Security
+-- STG — Row Level Security
 -- Photographers: full access to own data via auth.uid()
 -- Public/client policies added in later steps (gallery password gate)
 

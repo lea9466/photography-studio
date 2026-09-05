@@ -1,4 +1,4 @@
--- Studio Gallery — User-selectable heading fonts
+-- STG — User-selectable heading fonts
 -- Maps to CSS variables --headline-font and --about-title-font
 
 alter table public.users

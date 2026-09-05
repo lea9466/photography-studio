@@ -1,4 +1,4 @@
-# Supabase — Studio Gallery
+# Supabase — STG
 
 ## מה נוצר בשלב 1
 

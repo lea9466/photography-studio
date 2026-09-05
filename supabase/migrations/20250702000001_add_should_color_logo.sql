@@ -1,4 +1,4 @@
--- Studio Gallery — Logo Coloring Feature
+-- STG — Logo Coloring Feature
 -- Add should_color_logo field to users table
 
 -- Add should_color_logo column to users table

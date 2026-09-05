@@ -1,4 +1,4 @@
--- Studio Gallery — table grants for Supabase API roles
+-- STG — table grants for Supabase API roles
 -- RLS policies alone are not enough: authenticated/anon need table privileges.
 
 grant usage on schema public to postgres, anon, authenticated, service_role;

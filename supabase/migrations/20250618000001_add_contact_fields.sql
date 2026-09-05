@@ -1,4 +1,4 @@
--- Studio Gallery — Contact and URL fields
+-- STG — Contact and URL fields
 -- Add slug column to users table (email already exists)
 
 -- Add new URL column to users table

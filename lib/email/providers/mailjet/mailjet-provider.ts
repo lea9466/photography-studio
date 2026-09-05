@@ -16,7 +16,7 @@ const MAILJET_SEND_URL = 'https://api.mailjet.com/v3.1/send'
 
 type MailjetAddress = { Email: string; Name?: string }
 
-/** "Studio Gallery <no-reply@x.com>" → { Name, Email }; bare address → { Email }. */
+/** "STG <no-reply@x.com>" → { Name, Email }; bare address → { Email }. */
 function parseAddress(value: string): MailjetAddress {
   const match = value.match(/^\s*(.*?)\s*<\s*([^>]+?)\s*>\s*$/)
   if (match) {

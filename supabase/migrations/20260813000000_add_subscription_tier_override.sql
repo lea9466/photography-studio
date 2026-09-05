@@ -1,4 +1,4 @@
--- Studio Gallery — platform-admin subscription tier override
+-- STG — platform-admin subscription tier override
 -- Adds the single column required for the Free/Pro entitlement system.
 -- Nothing else is modified: no trial dates, no billing data, no user content.
 

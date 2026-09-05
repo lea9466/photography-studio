@@ -1,4 +1,4 @@
--- Studio Gallery — photo edit comparisons (before/after editing)
+-- STG — photo edit comparisons (before/after editing)
 -- Ownership: user_id (= photographer / studio owner), matching existing multi-tenant model.
 
 -- ---------------------------------------------------------------------------

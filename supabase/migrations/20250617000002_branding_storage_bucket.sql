@@ -1,4 +1,4 @@
--- Studio Gallery — Branding Storage Bucket
+-- STG — Branding Storage Bucket
 -- Create storage bucket for branding images (logo, hero images, about image)
 
 -- Create branding bucket

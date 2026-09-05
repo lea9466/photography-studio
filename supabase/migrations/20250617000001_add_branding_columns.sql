@@ -1,4 +1,4 @@
--- Studio Gallery — Personal Branding and Customization
+-- STG — Personal Branding and Customization
 -- Add branding columns to users table
 
 -- Add new branding columns to users table

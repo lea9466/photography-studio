@@ -14,7 +14,7 @@ const BREVO_SEND_URL = 'https://api.brevo.com/v3/smtp/email'
 
 type BrevoAddress = { email: string; name?: string }
 
-/** "Studio Gallery <no-reply@x.com>" → { name, email }; bare address → { email }. */
+/** "STG <no-reply@x.com>" → { name, email }; bare address → { email }. */
 function parseAddress(value: string): BrevoAddress {
   const match = value.match(/^\s*(.*?)\s*<\s*([^>]+?)\s*>\s*$/)
   if (match) {

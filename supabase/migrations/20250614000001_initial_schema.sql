@@ -1,4 +1,4 @@
--- Studio Gallery — initial schema
+-- STG — initial schema
 -- Step 1: tables, enums, indexes, auth trigger
 
 -- ---------------------------------------------------------------------------
