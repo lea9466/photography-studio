@@ -18,13 +18,22 @@ const PHONE_BEZEL_BORDER = 6
 
 export function ExampleSiteShowcase() {
   const desktopRef = useRef<HTMLDivElement>(null)
-  const [phoneWidth, setPhoneWidth] = useState(260)
+  // Only set once the mockups sit side by side (lg+); until then the phone
+  // takes its width from CSS (near-full on mobile) instead of shrinking to
+  // match the stacked desktop mockup's height.
+  const [phoneWidth, setPhoneWidth] = useState<number | null>(null)
 
   useEffect(() => {
     const el = desktopRef.current
     if (!el) return
 
+    const sideBySide = window.matchMedia('(min-width: 1024px)')
+
     const update = () => {
+      if (!sideBySide.matches) {
+        setPhoneWidth(null)
+        return
+      }
       const contentHeight = el.offsetHeight - PHONE_BEZEL_BORDER * 2
       const width = contentHeight / PHONE_ASPECT + PHONE_BEZEL_BORDER * 2
       setPhoneWidth(Math.max(180, width))
@@ -33,7 +42,11 @@ export function ExampleSiteShowcase() {
 
     const observer = new ResizeObserver(update)
     observer.observe(el)
-    return () => observer.disconnect()
+    sideBySide.addEventListener('change', update)
+    return () => {
+      observer.disconnect()
+      sideBySide.removeEventListener('change', update)
+    }
   }, [])
 
   return (
@@ -86,7 +99,10 @@ export function ExampleSiteShowcase() {
             </div>
           </div>
 
-          <div className="shrink-0" style={{ width: phoneWidth }}>
+          <div
+            className="w-full max-w-[360px] shrink-0 lg:w-auto lg:max-w-none"
+            style={phoneWidth != null ? { width: phoneWidth } : undefined}
+          >
             <div className="flex items-center justify-center gap-1.5 pb-2 text-xs text-[--muted]">
               <Smartphone className="h-3.5 w-3.5" />
               תצוגת טלפון
