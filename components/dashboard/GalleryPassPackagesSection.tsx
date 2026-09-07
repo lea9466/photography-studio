@@ -51,16 +51,16 @@ export function GalleryPassPackagesSection({
   }
 
   return (
-    <section className="rounded-2xl border border-[--border] bg-[--dashboard-surface] px-5 py-5 md:px-7 md:py-6">
-      <div className="mb-3 flex items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
-          <Ticket className="h-4 w-4" />
+    <section className="rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+      <div className="mb-4 flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
+          <Ticket className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="font-semibold text-[--foreground]">גלריה בודדת — תשלום חד-פעמי</h2>
-          <p className="text-xs text-[--muted]">
-            בלי מנוי. פאס לגלריית לקוח אחת. המכסה סופרת{' '}
-            <strong className="text-[--foreground]">תמונות רגילות ומעובדות יחד</strong>.
+          <h2 className="text-lg font-semibold text-[--foreground]">גלריה בודדת — תשלום חד-פעמי</h2>
+          <p className="mt-1 text-sm text-[--muted]">
+            הדרך הפשוטה להתחיל: בלי מנוי, פאס לגלריית לקוח אחת, משלמת רק כשיש עבודה.
+            המכסה סופרת <strong className="text-[--foreground]">תמונות רגילות ומעובדות יחד</strong>.
           </p>
         </div>
       </div>

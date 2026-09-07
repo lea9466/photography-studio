@@ -87,21 +87,16 @@ export default async function UsagePackagesPage({
                 חבילות שימוש
               </h1>
               <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
-                מסלול נפרד למכסת הגלריות הפרטיות שלך — כמה גלריות לקוח אפשר לנהל
-                ובאיזה גודל, בנפרד לגמרי מהמנוי לאתר הציבורי
+                תשלום לפי גלריה — פאס חד-פעמי לכל גלריית לקוח, בלי מנוי. או מסלול
+                חודשי אם את מנהלת הרבה גלריות במקביל. נפרד לגמרי מהמנוי לאתר הציבורי.
               </p>
             </div>
           </div>
         </div>
 
-        <PrivateGalleriesSubscriptionPanel
-          initialStatus={billingStatus}
-          quota={quota}
-          isImpersonating={isImpersonating}
-          checkoutEnabled={isPrivateGalleryCheckoutEnabled()}
-          tierLimits={tierLimits}
-        />
-
+        {/* Pay-per-gallery first: for this audience it's the lower-commitment
+            entry point, and the monthly tiers are the "if you run many at once"
+            upsell — not the default. */}
         <GalleryPassPackagesSection
           isImpersonating={isImpersonating}
           creditsCount={passCredits.length}
@@ -112,6 +107,14 @@ export default async function UsagePackagesPage({
             validityDays: b.validity_days,
             amountAgorot: b.amount_agorot,
           }))}
+        />
+
+        <PrivateGalleriesSubscriptionPanel
+          initialStatus={billingStatus}
+          quota={quota}
+          isImpersonating={isImpersonating}
+          checkoutEnabled={isPrivateGalleryCheckoutEnabled()}
+          tierLimits={tierLimits}
         />
       </div>
     </div>
