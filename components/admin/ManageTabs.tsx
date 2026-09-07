@@ -157,9 +157,9 @@ export function ManageTabs({
         role="tabpanel"
         className={activeTab === 'pricing' ? 'flex flex-col gap-6' : 'hidden'}
       >
+        <GalleryPassBundlesManager />
         <PlanPricingManager />
         <PrivateGalleryTiersManager />
-        <GalleryPassBundlesManager />
       </div>
 
       <div
