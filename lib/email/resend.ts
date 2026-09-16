@@ -350,9 +350,9 @@ export async function sendGalleryPasswordEmail(input: {
     subject: `קוד הכניסה לגלריה: ${input.galleryTitle}`,
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
-        <h2>שלום ${input.clientName},</h2>
-        <p>קוד הכניסה החד-פעמי לגלריה <strong>${input.galleryTitle}</strong> הוא:</p>
-        <p style="font-size: 1.5rem; letter-spacing: 0.25rem;"><strong>${input.code}</strong></p>
+        <h2>שלום ${escapeHtml(input.clientName)},</h2>
+        <p>קוד הכניסה החד-פעמי לגלריה <strong>${escapeHtml(input.galleryTitle)}</strong> הוא:</p>
+        <p style="font-size: 1.5rem; letter-spacing: 0.25rem;"><strong>${escapeHtml(input.code)}</strong></p>
         <p>הקוד תקף לכניסה אחת בלבד. אם תצטרכו קוד נוסף, ניתן לבקש קוד חדש מהעמוד עצמו.</p>
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
@@ -385,8 +385,8 @@ export async function sendGalleryInviteEmail(input: {
     subject: `${input.studioName} שלחו לך גלריה: ${input.galleryTitle}`,
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
-        <h2>שלום ${input.clientName},</h2>
-        <p>${input.studioName} שלחו לך גלריה חדשה: <strong>${input.galleryTitle}</strong></p>
+        <h2>שלום ${escapeHtml(input.clientName)},</h2>
+        <p>${escapeHtml(input.studioName)} שלחו לך גלריה חדשה: <strong>${escapeHtml(input.galleryTitle)}</strong></p>
         <p>לכניסה לחצו על הקישור למטה ובקשו קוד כניסה — קוד חד-פעמי יישלח לכתובת המייל הזו, ויפוג לאחר שימוש.</p>
         ${expiry}
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
@@ -706,8 +706,8 @@ export async function sendDeliveryReadyEmail(input: {
     subject: 'התמונות המעובדות שלך מוכנות!',
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
-        <h2>שלום ${input.clientName},</h2>
-        <p>התמונות המעובדות שלך בגלריה <strong>${input.galleryTitle}</strong> מוכנות!</p>
+        <h2>שלום ${escapeHtml(input.clientName)},</h2>
+        <p>התמונות המעובדות שלך בגלריה <strong>${escapeHtml(input.galleryTitle)}</strong> מוכנות!</p>
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,
@@ -735,10 +735,10 @@ export async function sendContactInquiryEmail(input: {
     : ''
 
   const phoneRow = input.clientPhone
-    ? `<p><strong>טלפון:</strong> ${input.clientPhone}</p>`
+    ? `<p><strong>טלפון:</strong> ${escapeHtml(input.clientPhone)}</p>`
     : ''
   const subjectRow = input.subject
-    ? `<p><strong>נושא:</strong> ${input.subject}</p>`
+    ? `<p><strong>נושא:</strong> ${escapeHtml(input.subject)}</p>`
     : ''
 
   await provider.send({
@@ -748,13 +748,13 @@ export async function sendContactInquiryEmail(input: {
     subject: `פנייה חדשה מהאתר שלך — ${input.clientName}`,
     html: `
       <div dir="rtl" style="font-family: sans-serif;">
-        <h2>פנייה חדשה מהאתר של ${input.photographerName}</h2>
-        <p><strong>שם:</strong> ${input.clientName}</p>
-        <p><strong>אימייל:</strong> ${input.clientEmail}</p>
+        <h2>פנייה חדשה מהאתר של ${escapeHtml(input.photographerName)}</h2>
+        <p><strong>שם:</strong> ${escapeHtml(input.clientName)}</p>
+        <p><strong>אימייל:</strong> ${escapeHtml(input.clientEmail)}</p>
         ${phoneRow}
         ${subjectRow}
         <p><strong>הודעה:</strong></p>
-        <p>${input.message.replace(/\n/g, '<br>')}</p>
+        <p>${escapeHtml(input.message).replace(/\n/g, '<br>')}</p>
         ${siteLink}
       </div>
     `,
@@ -1157,6 +1157,144 @@ export async function sendPrivateGalleriesAnnouncementEmail(input: { name: strin
   if (!provider) return
 
   const { subject, text, html } = buildPrivateGalleriesAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
+ * Pure builder for the "launch price ending soon" re-engagement email — a
+ * one-off nudge to studios whose free trial already lapsed without
+ * converting to a paid Pro subscription. Same preview/snapshot-testable
+ * shape as buildWelcomeEmail. Pricing is passed in rather than hard-coded
+ * here — same convention as sendTrialEndingReminderEmail's `monthlyPrice` —
+ * since an admin can edit amount_agorot/compare_at_amount_agorot for the
+ * studio_monthly/studio_yearly plans from /manage at any time (see
+ * app/api/admin/plans/route.ts). Callers should read subscription_plans
+ * fresh at send time rather than repeat a number that can drift from
+ * reality (this file avoids `lib/payments/marketing-pricing.ts` here since
+ * it's `server-only` and this email is also sent from plain Node scripts,
+ * not just Next server code — see scripts/send-promo-price-ending-announcement.ts).
+ */
+export function buildPromoPriceEndingAnnouncementEmail(input: {
+  name: string
+  monthlyPrice: string
+  monthlyCompareAt: string | null
+  yearlyPrice: string
+  yearlyCompareAt: string | null
+}): { subject: string; text: string; html: string } {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  // Deliberately relative wording ("בעוד 7 ימים"), not a calendar date — Lea's
+  // call after trying a specific date (Hebrew+Gregorian) in an earlier draft.
+  const countdown = 'בעוד 7 ימים'
+  const subject = `מחיר ההשקה של STG מסתיים ${countdown}`
+  const subscriptionUrl = appUrl('/dashboard/subscription')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const eyebrow = `margin: 0 0 10px; font-family: ${LUXE.serif}; font-size: 12px; letter-spacing: 3px; color: ${LUXE.brand}; text-transform: uppercase;`
+  const h1 = `margin: 0 0 20px; font-family: ${LUXE.serif}; font-size: 25px; line-height: 1.4; font-weight: 400; color: ${LUXE.ink};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const yearlyCompareLine = input.yearlyCompareAt
+    ? `<span style="text-decoration: line-through; color: rgba(255,255,255,0.65); font-size: 15px; margin-inline-start: 8px;">${input.yearlyCompareAt} ₪</span>`
+    : ''
+  const monthlyCompareLine = input.monthlyCompareAt
+    ? `<span style="text-decoration: line-through; color: ${LUXE.muted}; font-size: 13px; margin-inline-start: 6px;">${input.monthlyCompareAt} ₪</span>`
+    : ''
+
+  const contentHtml = `
+    <p style="${eyebrow}">תזכורת</p>
+    <h1 style="${h1}">מחיר ההשקה נגמר ${countdown}</h1>
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">תקופת הניסיון החינמית שלך ב-STG כבר הסתיימה, והחשבון שלך פעיל היום במסלול החינמי.</p>
+    <p style="${p}">מחיר ההשקה של מסלול הפרו חוזר למחיר הרשמי <strong>${countdown}</strong> — אז אם עדיין לא הצטרפת, כדאי לנצל את זה עד אז.</p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 8px;">
+      <tr>
+        <td bgcolor="${LUXE.brand}" style="background: ${LUXE.brand}; background: linear-gradient(135deg, ${LUXE.brand} 0%, ${LUXE.brandDeep} 100%); border-radius: 16px; padding: 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 10px;">
+            <tr>
+              <td style="background: #8b5cf6; border-radius: 999px; padding: 5px 13px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">⏳&nbsp;&nbsp;${countdown}</td>
+            </tr>
+          </table>
+          <p style="margin: 0 0 4px; font-family: ${LUXE.serif}; font-size: 26px; color: #ffffff;">${input.yearlyPrice} ₪ לשנה${yearlyCompareLine}</p>
+          <p style="margin: 0 0 14px; font-family: ${LUXE.sans}; font-size: 13px; color: #f1e9fb;">במקום המחיר הרשמי — מסלול שנתי, הכי משתלם</p>
+          <div style="border-top: 1px solid rgba(255,255,255,0.3); margin: 14px 0;"></div>
+          <p style="margin: 0; font-family: ${LUXE.sans}; font-size: 14px; color: #ffffff;">או ${input.monthlyPrice} ₪ לחודש${monthlyCompareLine} — במסלול החודשי, בלי התחייבות</p>
+        </td>
+      </tr>
+    </table>
+
+    ${luxeButton(subscriptionUrl, 'להצטרפות במחיר ההשקה')}
+
+    <p style="${eyebrow} margin-top: 28px;">מה מקבלים במסלול הפרו</p>
+    ${luxeList([
+      ['עד 4 גלריות ציבוריות במקביל', 'במקום גלריה ציבורית אחת מוצגת בכל רגע נתון.'],
+      ["פיצ'רים נוספים", 'וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי ושאלות נפוצות.'],
+    ])}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה לפני שמצטרפים? אפשר לפנות דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת.</p>`
+
+  const yearlyCompareText = input.yearlyCompareAt ? ` (במקום ${input.yearlyCompareAt} ₪)` : ''
+  const monthlyCompareText = input.monthlyCompareAt ? ` (במקום ${input.monthlyCompareAt} ₪)` : ''
+
+  return {
+    subject,
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'תקופת הניסיון החינמית שלך ב-STG כבר הסתיימה, והחשבון שלך פעיל היום במסלול החינמי.',
+      '',
+      `מחיר ההשקה של מסלול הפרו חוזר למחיר הרשמי ${countdown} — אז אם עדיין לא הצטרפת, כדאי לנצל את זה עד אז:`,
+      '',
+      `- מסלול שנתי: ${input.yearlyPrice} ₪ לשנה${yearlyCompareText} — הכי משתלם`,
+      `- מסלול חודשי: ${input.monthlyPrice} ₪ לחודש${monthlyCompareText} — בלי התחייבות`,
+      '',
+      `להצטרפות במחיר ההשקה: ${subscriptionUrl}`,
+      '',
+      'מה מקבלים במסלול הפרו:',
+      '- עד 4 גלריות ציבוריות במקביל, במקום גלריה אחת בכל רגע נתון',
+      "- פיצ'רים נוספים: וידאו hero, פוסטים, המלצות, חבילות, לפני/אחרי ושאלות נפוצות",
+      '',
+      `שאלה לפני שמצטרפים? טאב יצירת הקשר במערכת: ${contactUrl}`,
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader: `${countdown}: ${input.yearlyPrice} ₪ לשנה בלבד, לפני שהמחיר חוזר למחיר הרשמי.`,
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendPromoPriceEndingAnnouncementEmail(input: {
+  name: string
+  email: string
+  monthlyPrice: string
+  monthlyCompareAt: string | null
+  yearlyPrice: string
+  yearlyCompareAt: string | null
+}) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'promo-price-ending-announcement',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildPromoPriceEndingAnnouncementEmail({
+    name: input.name,
+    monthlyPrice: input.monthlyPrice,
+    monthlyCompareAt: input.monthlyCompareAt,
+    yearlyPrice: input.yearlyPrice,
+    yearlyCompareAt: input.yearlyCompareAt,
+  })
 
   await provider.send({
     from: emailFrom(),

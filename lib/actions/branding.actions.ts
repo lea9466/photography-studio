@@ -6,7 +6,7 @@ import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Database } from '@/lib/types/database.types'
 import { isR2Configured } from '@/lib/r2/config'
-import { createPresignedUploadUrl } from '@/lib/r2/storage'
+import { createPresignedUploadUrl, downloadMediaObject, uploadMediaObject } from '@/lib/r2/storage'
 import {
   PRIMARY_IMAGE_MAX_BYTES,
   validatePrimaryImageFile,
@@ -15,6 +15,7 @@ import {
   deleteBrandingLogoFavicon,
   syncBrandingLogoFavicon,
 } from '@/lib/branding/logo-favicon'
+import { sanitizeSvg } from '@/lib/security/sanitize-svg'
 import { HEX_COLOR_REGEX } from '@/lib/color'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 import { assertOwnedBrandingRef } from '@/lib/branding-preview-url'
@@ -144,6 +145,16 @@ export async function finalizeBrandingUpload(
   const { userId, supabase } = await requireDashboardContext()
   if (!path.startsWith(`${userId}/`)) {
     throw new Error('נתיב קובץ לא תקין')
+  }
+
+  // The upload itself is a presigned PUT straight to R2 — the server never
+  // sees the bytes in transit, so an SVG (allowed for logos/branding images)
+  // can only be neutralized here, after the fact, before anything reads it
+  // back as image/svg+xml or feeds it to the favicon rasterizer.
+  if (path.toLowerCase().endsWith('.svg')) {
+    const sourceBytes = await downloadMediaObject('branding', path)
+    const sanitized = sanitizeSvg(Buffer.from(sourceBytes).toString('utf8'))
+    await uploadMediaObject('branding', path, Buffer.from(sanitized, 'utf8'), 'image/svg+xml')
   }
 
   if (type === 'packages_desktop' || type === 'packages_mobile') {

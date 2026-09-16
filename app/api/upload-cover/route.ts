@@ -8,6 +8,7 @@ import {
   deriveCoverCardStoragePath,
 } from '@/lib/images/cover-process'
 import { compressCoverCardBuffer } from '@/lib/images/cover-card.server'
+import { sanitizeSvg } from '@/lib/security/sanitize-svg'
 
 function toBuffer(data: ArrayBuffer | SharedArrayBuffer): Buffer {
   return Buffer.from(new Uint8Array(data))
@@ -52,8 +53,9 @@ export async function POST(request: NextRequest) {
     const inputBuffer = toBuffer(bytes)
 
     if (file.type === 'image/svg+xml') {
+      const sanitized = sanitizeSvg(inputBuffer.toString('utf8'))
       const path = buildCoverStoragePath(user.id, Date.now(), file.type)
-      await uploadMediaObject('branding', path, toUploadBody(inputBuffer), file.type)
+      await uploadMediaObject('branding', path, toUploadBody(Buffer.from(sanitized, 'utf8')), file.type)
       const url = await resolveMediaUrl('branding', path)
       if (!url) {
         return NextResponse.json({ error: 'לא ניתן ליצור כתובת לתמונה' }, { status: 500 })

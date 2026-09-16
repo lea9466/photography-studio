@@ -87,6 +87,10 @@ export async function POST(request: NextRequest) {
       const newPath = parsed.path
       const metadata = parsed.metadata
 
+      if (!isOwnedHeroVideoPath(userId, newPath)) {
+        return jsonError('נתיב קובץ לא תקין', 400)
+      }
+
       const { data: updated, error: updateError } = await admin
         .from('users')
         .update({ hero_video_url: newPath })

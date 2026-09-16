@@ -17,6 +17,7 @@ import {
 } from '@/lib/post-photo-limits'
 import { assertPostOwner } from '@/lib/auth/post-owner'
 import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
+import { isOwnedStorageKey } from '@/lib/r2/owned-path'
 
 // Buckets this action is actually ever asked to generate upload URLs for in
 // the real client code (grep-verified: media-upload-pipeline.ts uses
@@ -65,9 +66,8 @@ async function assertGalleryUploadPaths(
     throw new Error('יש להשלים את תשלום הפאס לפני העלאת תמונות לגלריה')
   }
 
-  const prefix = `${userId}/${galleryId}/`
   for (const item of items) {
-    if (!item.path.startsWith(prefix)) {
+    if (!isOwnedStorageKey(item.path, userId, galleryId)) {
       throw new Error('נתיב קובץ לא תקין')
     }
   }
@@ -104,9 +104,9 @@ async function assertPostUploadPaths(postId: string, items: R2UploadRequest[]) {
   const { user, supabase } = await assertPostOwner(postId)
   await assertFeatureAllowed(user.id, 'posts')
 
-  const prefix = `${user.id}/posts/${postId}/`
+  const resourcePrefix = `posts/${postId}`
   for (const item of items) {
-    if (!item.path.startsWith(prefix)) {
+    if (!isOwnedStorageKey(item.path, user.id, resourcePrefix)) {
       throw new Error('נתיב קובץ לא תקין')
     }
   }

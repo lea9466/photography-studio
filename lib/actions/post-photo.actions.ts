@@ -7,7 +7,7 @@ import { assertPostOwner } from '@/lib/auth/post-owner'
 import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { assertPostPhotoCountWithinLimit } from '@/lib/post-photo-limits'
 import { buildPostPhotoStoragePaths } from '@/lib/images/process'
-import { isOwnedStorageKey } from '@/lib/r2/owned-path'
+import { assertOwnedStorageKey, isOwnedStorageKey } from '@/lib/r2/owned-path'
 
 type PostPhotoInsert = Database['public']['Tables']['post_photos']['Insert']
 
@@ -64,6 +64,13 @@ export async function completePostPhotosBatch(
 
   const { supabase, user } = await assertPostOwner(postId)
   await assertFeatureAllowed(user.id, 'posts')
+
+  const resourcePrefix = `posts/${postId}`
+  for (const item of items) {
+    if (item.originalPath) assertOwnedStorageKey(item.originalPath, user.id, resourcePrefix)
+    assertOwnedStorageKey(item.previewPath, user.id, resourcePrefix)
+    assertOwnedStorageKey(item.watermarkedPath, user.id, resourcePrefix)
+  }
 
   for (let offset = 0; offset < items.length; offset += COMPLETE_BATCH_SIZE) {
     const chunk = items.slice(offset, offset + COMPLETE_BATCH_SIZE)

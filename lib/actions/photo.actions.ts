@@ -22,7 +22,7 @@ const COMPLETE_BATCH_SIZE = 50
 
 import { assertGalleryOwner, assertPhotoInOwnedGallery } from '@/lib/auth/gallery-owner'
 import { buildPhotoStoragePaths } from '@/lib/images/process'
-import { isOwnedStorageKey } from '@/lib/r2/owned-path'
+import { assertOwnedStorageKey, isOwnedStorageKey } from '@/lib/r2/owned-path'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
 type ActionSupabaseClient = Awaited<ReturnType<typeof assertGalleryOwner>>['supabase']
@@ -137,7 +137,13 @@ export async function completePhotosBatch(
     return
   }
 
-  const { supabase } = await assertGalleryOwner(galleryId)
+  const { supabase, user } = await assertGalleryOwner(galleryId)
+
+  for (const item of items) {
+    if (item.originalPath) assertOwnedStorageKey(item.originalPath, user.id, galleryId)
+    assertOwnedStorageKey(item.previewPath, user.id, galleryId)
+    assertOwnedStorageKey(item.watermarkedPath, user.id, galleryId)
+  }
 
   for (let offset = 0; offset < items.length; offset += COMPLETE_BATCH_SIZE) {
     const chunk = items.slice(offset, offset + COMPLETE_BATCH_SIZE)
@@ -247,6 +253,10 @@ export async function registerPhoto(input: {
   sortOrder?: number
 }) {
   const { supabase, user } = await assertGalleryOwner(input.galleryId)
+
+  assertOwnedStorageKey(input.originalPath, user.id, input.galleryId)
+  assertOwnedStorageKey(input.previewPath, user.id, input.galleryId)
+  assertOwnedStorageKey(input.watermarkedPath, user.id, input.galleryId)
 
   const payload: PhotoInsert = {
     gallery_id: input.galleryId,
@@ -508,7 +518,17 @@ export async function registerEditedPhoto(input: {
   photoId: string
   editedPath: string
 }) {
-  const { supabase } = await assertGalleryOwner(input.galleryId)
+  const { supabase, user } = await assertGalleryOwner(input.galleryId)
+
+  assertOwnedStorageKey(input.editedPath, user.id, input.galleryId)
+
+  const { data: ownedPhoto } = await supabase
+    .from('photos')
+    .select('id')
+    .eq('id', input.photoId)
+    .eq('gallery_id', input.galleryId)
+    .maybeSingle()
+  if (!ownedPhoto) throw new Error('תמונה לא נמצאה')
 
   const { data: existing } = await supabase
     .from('edited_photos')
@@ -542,7 +562,21 @@ export async function registerEditedPhotosBatch(input: {
 }) {
   if (input.items.length === 0) return { uploaded: 0 }
 
-  const { supabase } = await assertGalleryOwner(input.galleryId)
+  const { supabase, user } = await assertGalleryOwner(input.galleryId)
+
+  for (const item of input.items) {
+    assertOwnedStorageKey(item.editedPath, user.id, input.galleryId)
+  }
+
+  const { data: ownedPhotoRows } = await supabase
+    .from('photos')
+    .select('id')
+    .eq('gallery_id', input.galleryId)
+    .in('id', input.items.map((item) => item.photoId))
+  const ownedPhotoIds = new Set((ownedPhotoRows ?? []).map((row) => (row as { id: string }).id))
+  if (input.items.some((item) => !ownedPhotoIds.has(item.photoId))) {
+    throw new Error('תמונה לא נמצאה')
+  }
 
   for (const item of input.items) {
     const { data: existing } = await supabase
