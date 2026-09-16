@@ -20,7 +20,7 @@
   --muted: #737373;
   --border: #e5e5e5;
 }
-
+/*trigger*/
 @theme inline {
   --font-sans: 'Heebo', system-ui, sans-serif;
   --color-background: var(--background);
