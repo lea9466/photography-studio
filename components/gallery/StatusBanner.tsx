@@ -29,10 +29,7 @@ export function StatusBanner({
   if (status === 'draft' || status === 'public') return null
 
   return (
-    // A fixed light surface regardless of the studio's page-background choice — like the
-    // tabs bar and selection bar below, it stays a calm, legible "chrome" element rather
-    // than flipping dark, so it doesn't compete with a dark photo-forward background.
-    <div className="rounded-xl border border-[#e5e5e5] bg-white px-4 py-3 text-center text-[#171717] animate-fade-in">
+    <div className="rounded-xl border border-border bg-background px-4 py-3 text-center animate-fade-in">
       <Badge variant="default" className="mb-2">
         {status === 'delivery_ready' ? 'מוכן' : 'עדכון'}
       </Badge>
