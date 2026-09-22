@@ -125,9 +125,11 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Client-gallery lifecycle: 14/3/1-day deletion warnings, permanent deletion
-  // once the 60-day life is up, plus grandfathered pass housekeeping and
-  // abandoned unpaid pass credits (docs/private-gallery-lifecycle-plan.md).
+  // Client-gallery lifecycle: 14/3/1-day deletion warnings + permanent
+  // deletion for free/pass galleries once their fixed-length life is up, plus
+  // grandfathered pass housekeeping, abandoned unpaid pass credits, and final
+  // warning + permanent deletion for subscription galleries suspended too
+  // long on a lapsed subscription (docs/private-gallery-lifecycle-plan.md).
   let clientGalleryLifecycle: Record<string, unknown> = { error: 'did not run' }
 
   try {

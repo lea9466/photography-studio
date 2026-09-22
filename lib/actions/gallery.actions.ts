@@ -37,7 +37,10 @@ import { galleryKind, galleryKindColumns } from '@/lib/gallery-kind'
 import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
-import { buildPrivateGalleryCountLimitError } from '@/lib/private-galleries/entitlements'
+import {
+  buildPrivateGalleryCountLimitError,
+  galleryPersistsWhileSubscribed,
+} from '@/lib/private-galleries/entitlements'
 import {
   resolveGalleryPassCreditForCreation,
   consumeGalleryPassCredit,
@@ -339,25 +342,37 @@ export async function sendGallery(galleryId: string) {
   // The FIRST send starts a client gallery's life (docs/private-gallery-lifecycle-plan.md):
   //  - freezes the source album (one-time use — from now on only edited
   //    deliverables can be uploaded, see lib/private-galleries/gallery-lock.ts);
-  //  - opens the client window: pass_validity_days for a pass gallery, else a
-  //    60-day default (unless she picked her own expires_at). This same
-  //    expires_at is BOTH the client-access cutoff AND the auto-deletion date.
+  //  - opens the client window: pass_validity_days for a pass gallery,
+  //    60 days for a free-tier gallery (unless she picked her own
+  //    expires_at) — this same expires_at is BOTH the client-access cutoff
+  //    AND the auto-deletion date; an active-subscription gallery gets NO
+  //    expires_at at all, so it stays out of the deletion pipeline entirely
+  //    and persists for as long as the subscription does (deletion for those
+  //    instead flows from lib/private-galleries/gallery-suspension.ts on a
+  //    lapsed subscription).
   // The photographer gets unlimited prep time — nothing here runs until she
   // actually sends. Guarded on a null photos_locked_at so a resend re-stamps
-  // nothing.
+  // nothing. Entitlement is checked live at send time (not creation time), so
+  // a gallery created under one tier but sent after her tier changed gets the
+  // correct treatment for her tier at that moment.
   if (gallery.gallery_type === 'selection' && !gallery.photos_locked_at) {
     const { userId, supabase } = await requireDashboardContext()
     const update: { photos_locked_at: string; expires_at?: string } = {
       photos_locked_at: new Date().toISOString(),
     }
     if (!gallery.expires_at) {
-      const windowDays =
-        gallery.pass_bundle_id && gallery.pass_validity_days
-          ? gallery.pass_validity_days
-          : 60
-      update.expires_at = new Date(
-        Date.now() + windowDays * 24 * 60 * 60 * 1000
-      ).toISOString()
+      let windowDays: number | null = null
+      if (gallery.pass_bundle_id && gallery.pass_validity_days) {
+        windowDays = gallery.pass_validity_days
+      } else {
+        const pg = await getPrivateGalleryEntitlements(userId)
+        if (!galleryPersistsWhileSubscribed(pg)) windowDays = 60
+      }
+      if (windowDays !== null) {
+        update.expires_at = new Date(
+          Date.now() + windowDays * 24 * 60 * 60 * 1000
+        ).toISOString()
+      }
     }
     await supabase
       .from('galleries')

@@ -18,10 +18,44 @@ export function isPastSuspensionGrace(lapseAt: string | null, now: number): bool
 }
 
 /**
+ * Additional days a suspended (non-pass) client gallery is kept before
+ * permanent deletion — on top of SUSPENSION_GRACE_DAYS, so 30 days total
+ * since the subscription lapsed. Consumed by
+ * lib/private-galleries/client-gallery-lifecycle.ts, which does the actual
+ * deletion; pass galleries are never suspended by this file in the first
+ * place (see the .is('pass_bundle_id', null) filters below), so they never
+ * reach that deletion step either.
+ */
+export const SUSPENDED_DELETE_GRACE_DAYS = 15
+export const SUSPENDED_FINAL_WARNING_LEAD_DAYS = 3
+
+/** True once a suspended gallery is far enough past `suspended_at` that it
+ * should be permanently deleted. Exported for tests. */
+export function isPastSuspendedDeleteGrace(suspendedAt: string | null, now: number): boolean {
+  if (!suspendedAt) return false
+  return new Date(suspendedAt).getTime() + SUSPENDED_DELETE_GRACE_DAYS * DAY_MS <= now
+}
+
+/** True during the ~3-day window right before a suspended gallery's permanent
+ * deletion — when the one final warning email should fire. Exported for
+ * tests. */
+export function isInSuspendedFinalWarningWindow(suspendedAt: string | null, now: number): boolean {
+  if (!suspendedAt) return false
+  const deleteAt = new Date(suspendedAt).getTime() + SUSPENDED_DELETE_GRACE_DAYS * DAY_MS
+  const warnAt = deleteAt - SUSPENDED_FINAL_WARNING_LEAD_DAYS * DAY_MS
+  return now >= warnAt && now < deleteAt
+}
+
+/**
  * Clear the suspension on all of a user's client galleries — call right after a
  * private-gallery subscription (re)activates (mirrors
  * reactivateSuspendedCustomDomains). Re-checks entitlement so it is always safe
- * to call: a no-op if she is still on free, or has nothing suspended.
+ * to call: a no-op if she is still on free, or has nothing suspended. Scoped
+ * to pass_bundle_id IS NULL — gallery-pass galleries have their own
+ * independent, already-paid-for lifecycle and are never touched by this
+ * (separate) subscription's suspend/reactivate cycle. Also resets
+ * deletion_warning_stage so a later lapse-then-suspend cycle can send its
+ * final-deletion warning again instead of finding it stuck at stage 4.
  */
 export async function reactivateSuspendedClientGalleries(userId: string): Promise<void> {
   const pg = await getPrivateGalleryEntitlements(userId).catch(() => null)
@@ -30,9 +64,10 @@ export async function reactivateSuspendedClientGalleries(userId: string): Promis
   const admin = createAdminClient()
   const { error } = await admin
     .from('galleries')
-    .update({ suspended_at: null } as never)
+    .update({ suspended_at: null, deletion_warning_stage: 0 } as never)
     .eq('user_id', userId)
     .eq('gallery_type', 'selection')
+    .is('pass_bundle_id', null)
     .not('suspended_at', 'is', null)
 
   if (error) {
@@ -56,10 +91,15 @@ type LapsedSubRow = {
  * suspendCustomDomainsWithLapsedEntitlement.
  *
  * A studio whose private-gallery subscription lapsed more than
- * SUSPENSION_GRACE_DAYS ago has ALL her client galleries suspended (client and
- * photographer both blocked) until she renews. A studio that never had a
- * private-gallery subscription (pure free) is left alone — only the create
- * limit applies to her.
+ * SUSPENSION_GRACE_DAYS ago has all her non-pass client galleries suspended
+ * (client and photographer both blocked) until she renews — pass_bundle_id IS
+ * NOT NULL galleries are excluded, since a gallery pass is a separate,
+ * already-paid-for purchase unrelated to this subscription. A studio that
+ * never had a private-gallery subscription (pure free) is left alone — only
+ * the create limit applies to her. A gallery still suspended
+ * SUSPENDED_DELETE_GRACE_DAYS after THIS sweep first suspended it is
+ * permanently deleted by runClientGalleryLifecycle
+ * (lib/private-galleries/client-gallery-lifecycle.ts).
  */
 export async function suspendClientGalleriesWithLapsedSubscription(): Promise<{
   checked: number
@@ -114,6 +154,7 @@ export async function suspendClientGalleriesWithLapsedSubscription(): Promise<{
       .update({ suspended_at: new Date(now).toISOString() } as never)
       .eq('user_id', userId)
       .eq('gallery_type', 'selection')
+      .is('pass_bundle_id', null)
       .is('suspended_at', null)
     if (updateError) {
       console.error('[gallery-suspension] suspend failed', {

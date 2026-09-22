@@ -670,8 +670,8 @@ export async function sendClientGalleriesSuspendedEmail(userId: string) {
       'חידוש המנוי מחזיר את הגישה לכל הגלריות מיד:',
       renewUrl,
       '',
-      'שימי לב: המחיקה האוטומטית של גלריות (60 יום מהשליחה) ממשיכה כרגיל,',
-      'גם על גלריות מושהות.',
+      'שימי לב: אם המנוי לא יחודש בתוך 15 יום נוספים (30 יום סה"כ מאז שפג),',
+      'הגלריות המושהות (למעט גלריות-פאס שרכשת בנפרד) יימחקו לצמיתות.',
     ].join('\n'),
     html: `
       <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
@@ -681,7 +681,82 @@ export async function sendClientGalleriesSuspendedEmail(userId: string) {
           <a href="${renewUrl}" style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">חידוש מנוי</a>
         </p>
         <p>חידוש המנוי מחזיר את הגישה לכל הגלריות מיד.</p>
-        <p style="font-size: 13px; color: #666;">המחיקה האוטומטית של גלריות (60 יום מהשליחה) ממשיכה כרגיל, גם על גלריות מושהות.</p>
+        <p style="font-size: 13px; color: #666;">אם המנוי לא יחודש בתוך 15 יום נוספים (30 יום סה״כ מאז שפג), הגלריות המושהות (למעט גלריות-פאס שרכשת בנפרד) יימחקו לצמיתות.</p>
+      </div>
+    `,
+  })
+}
+
+/**
+ * Final warning before permanent deletion: a studio's private-gallery
+ * subscription has been lapsed long enough that her suspended client
+ * galleries (galleries.suspended_at, gallery-suspension.ts) are ~3 days from
+ * the 30-day-total deadline (15-day suspension grace + 15 more days) and will
+ * be deleted if she doesn't renew. Sent once per studio (not once per
+ * gallery) by the daily lifecycle cron, mirroring
+ * sendClientGalleriesSuspendedEmail's batching.
+ */
+export async function sendSuspendedGalleriesFinalWarningEmail(input: {
+  userId: string
+  galleryCount: number
+}) {
+  const { createAdminClient } = await import('@/lib/supabase/admin')
+  const admin = createAdminClient()
+
+  const { data: user } = await admin
+    .from('users')
+    .select('email, name')
+    .eq('id', input.userId)
+    .single()
+
+  const to = (user as { email: string | null } | null)?.email
+  if (!to) {
+    if (mustFailWithoutResend()) {
+      throw new Error('Photographer email missing for suspended-galleries final warning')
+    }
+    console.info(
+      '[email stub]',
+      buildEmailStubLog({
+        template: 'suspended-galleries-final-warning',
+        resourceId: input.userId,
+        extra: { reason: 'no-photographer-email' },
+      })
+    )
+    return
+  }
+
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'suspended-galleries-final-warning',
+    email: to,
+    resourceId: input.userId,
+  })
+  if (!provider) return
+
+  const displayName = (user as { name: string | null }).name?.trim() || 'שם'
+  const renewUrl = appUrl('/dashboard/usage-packages')
+  const galleryWord = input.galleryCount === 1 ? 'גלריה אחת' : `${input.galleryCount} גלריות`
+
+  await provider.send({
+    from: emailFrom(),
+    to,
+    subject: `${galleryWord} שלך יימחקו בקרוב — נדרש חידוש מנוי`,
+    text: [
+      `היי ${displayName},`,
+      '',
+      `המנוי לגלריות פרטיות עדיין לא חודש, ובעוד כ-3 ימים ${galleryWord} מושהות אצלך יימחקו לצמיתות`,
+      '(הגלריה, כל התמונות והקבצים — אצלך ואצל הלקוח). זה לא כולל גלריות-פאס שרכשת בנפרד.',
+      '',
+      'חידוש המנוי עכשיו עוצר את המחיקה ומחזיר את הגישה מיד:',
+      renewUrl,
+    ].join('\n'),
+    html: `
+      <div dir="rtl" style="font-family: sans-serif; line-height: 1.6; color: #1a1a1a;">
+        <p>היי ${displayName},</p>
+        <p>המנוי לגלריות פרטיות עדיין לא חודש, ובעוד כ-3 ימים <strong>${galleryWord} מושהות אצלך יימחקו לצמיתות</strong> — הגלריה, כל התמונות והקבצים, אצלך ואצל הלקוח. זה לא כולל גלריות-פאס שרכשת בנפרד.</p>
+        <p style="margin: 24px 0;">
+          <a href="${renewUrl}" style="display: inline-block; background: #7D3A52; color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 8px; font-weight: 600;">חידוש מנוי</a>
+        </p>
+        <p style="font-size: 13px; color: #666;">חידוש המנוי עכשיו עוצר את המחיקה ומחזיר את הגישה מיד.</p>
       </div>
     `,
   })

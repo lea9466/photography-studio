@@ -2,12 +2,18 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   sendClientGalleryDeletionWarningEmail,
   sendGalleryPassExpiringEmail,
+  sendSuspendedGalleriesFinalWarningEmail,
 } from '@/lib/email/resend'
 import { deleteClientGalleryCompletely } from '@/lib/private-galleries/delete-client-gallery'
+import {
+  SUSPENDED_DELETE_GRACE_DAYS,
+  SUSPENDED_FINAL_WARNING_LEAD_DAYS,
+} from '@/lib/private-galleries/gallery-suspension'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const PASS_REMINDER_LEAD_DAYS = 3
 const ABANDONED_CREDIT_HOURS = 48
+const SUSPENDED_FINAL_WARNING_STAGE = 4
 
 /** Warning schedule: how many days before deletion each stage fires. */
 const WARNING_STAGES = [
@@ -22,6 +28,11 @@ type LifecycleGalleryRow = {
   title: string
   user_id: string
   expires_at: string
+  deletion_warning_stage: number
+}
+type SuspendedGalleryRow = {
+  id: string
+  user_id: string
   deletion_warning_stage: number
 }
 
@@ -43,18 +54,28 @@ export function targetWarningStage(daysLeft: number): number {
 }
 
 /**
- * Daily housekeeping for client (selection) galleries — the "one-time use +
- * 60-day life" model (docs/private-gallery-lifecycle-plan.md). Each step is
- * independent and safe to re-run:
+ * Daily housekeeping for client (selection) galleries. Free-tier and
+ * gallery-pass galleries keep the original "one-time use + fixed-length
+ * life" model (docs/private-gallery-lifecycle-plan.md) — expires_at ticking
+ * down from send. A gallery sent under an active paid subscription instead
+ * gets NO expires_at at all (see sendGallery, lib/actions/gallery.actions.ts)
+ * and persists indefinitely; its only path to deletion is a lapsed
+ * subscription (lib/private-galleries/gallery-suspension.ts). Each step below
+ * is independent and safe to re-run:
  *
  *   1. deletion warnings — email the photographer 14 / 3 / 1 days before a sent
- *      gallery's expires_at (its deletion date), claim-then-send;
+ *      free/pass gallery's expires_at (its deletion date), claim-then-send;
  *   2. deletion — once expires_at has passed, permanently remove the gallery,
  *      its photos and all R2 storage;
  *   3. grandfathered pass galleries (sent before phase 1, photos_locked_at
  *      null → NOT in the auto-delete regime): keep the old "window closing"
  *      reminder ~3 days out, and lock them when the window closes;
- *   4. delete `pending` pass credits abandoned at checkout.
+ *   4. delete `pending` pass credits abandoned at checkout;
+ *   5. subscription galleries suspended for a lapsed subscription: one final
+ *      warning email per studio ~3 days before, then permanent deletion,
+ *      SUSPENDED_DELETE_GRACE_DAYS after suspended_at (30 days total since
+ *      the subscription lapsed, on top of gallery-suspension.ts's own 15-day
+ *      pre-suspension grace).
  */
 export async function runClientGalleryLifecycle() {
   const admin = createAdminClient()
@@ -191,11 +212,77 @@ export async function runClientGalleryLifecycle() {
     await admin.from('gallery_pass_credits').delete().in('id', abandonedIds)
   }
 
+  // --- 5. Suspended subscription galleries: final warning + deletion ------
+  // pass_bundle_id IS NULL — pass galleries are never suspended by
+  // gallery-suspension.ts in the first place, so they never reach here.
+  const suspendedDeleteDeadline = new Date(now - SUSPENDED_DELETE_GRACE_DAYS * DAY_MS).toISOString()
+  const suspendedFinalWarningStart = new Date(
+    now - (SUSPENDED_DELETE_GRACE_DAYS - SUSPENDED_FINAL_WARNING_LEAD_DAYS) * DAY_MS
+  ).toISOString()
+
+  const { data: suspendedWarnCandidates } = await admin
+    .from('galleries')
+    .select('id, user_id, deletion_warning_stage')
+    .eq('gallery_type', 'selection')
+    .is('pass_bundle_id', null)
+    .not('suspended_at', 'is', null)
+    .lte('suspended_at', suspendedFinalWarningStart)
+    .gt('suspended_at', suspendedDeleteDeadline)
+    .lt('deletion_warning_stage', SUSPENDED_FINAL_WARNING_STAGE)
+
+  const claimedByUser = new Map<string, number>()
+  for (const row of (suspendedWarnCandidates ?? []) as SuspendedGalleryRow[]) {
+    const { data: claimed } = await admin
+      .from('galleries')
+      .update({ deletion_warning_stage: SUSPENDED_FINAL_WARNING_STAGE } as never)
+      .eq('id', row.id)
+      .eq('deletion_warning_stage', row.deletion_warning_stage)
+      .select('id')
+    if (!claimed || claimed.length === 0) continue
+    claimedByUser.set(row.user_id, (claimedByUser.get(row.user_id) ?? 0) + 1)
+  }
+
+  let suspendedFinalWarningsSent = 0
+  for (const [userId, galleryCount] of claimedByUser) {
+    try {
+      await sendSuspendedGalleriesFinalWarningEmail({ userId, galleryCount })
+      suspendedFinalWarningsSent += 1
+    } catch (error) {
+      console.error('[client-gallery-lifecycle] suspended final warning failed', {
+        userId,
+        reason: error instanceof Error ? error.name : 'unknown',
+      })
+    }
+  }
+
+  const { data: suspendedExpiredRows } = await admin
+    .from('galleries')
+    .select('id')
+    .eq('gallery_type', 'selection')
+    .is('pass_bundle_id', null)
+    .not('suspended_at', 'is', null)
+    .lte('suspended_at', suspendedDeleteDeadline)
+
+  let suspendedGalleriesDeleted = 0
+  for (const row of (suspendedExpiredRows ?? []) as IdRow[]) {
+    try {
+      await deleteClientGalleryCompletely(row.id)
+      suspendedGalleriesDeleted += 1
+    } catch (error) {
+      console.error('[client-gallery-lifecycle] suspended gallery deletion failed', {
+        galleryId: row.id,
+        reason: error instanceof Error ? error.name : 'unknown',
+      })
+    }
+  }
+
   return {
     deletionWarningsSent,
     galleriesDeleted,
     legacyPassLocked: legacyExpiredIds.length,
     legacyPassReminders,
     deletedAbandonedCredits: abandonedIds.length,
+    suspendedFinalWarningsSent,
+    suspendedGalleriesDeleted,
   }
 }

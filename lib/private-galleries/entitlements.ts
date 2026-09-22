@@ -38,6 +38,22 @@ export function resolvePrivateGalleryTier(input: {
   return { tier: 'free', source: 'free' }
 }
 
+/**
+ * True when a gallery sent right now, under this entitlement, should persist
+ * indefinitely (no expires_at, no auto-delete clock) instead of getting the
+ * free tier's fixed 60-day life — i.e. she's genuinely paying (a live
+ * subscription, or an admin override to a paid tier). Consumed by
+ * sendGallery (lib/actions/gallery.actions.ts); deletion for these instead
+ * flows from a lapsed subscription (lib/private-galleries/gallery-suspension.ts).
+ * Exported for tests.
+ */
+export function galleryPersistsWhileSubscribed(pg: {
+  source: PrivateGalleryEntitlementSource
+  tier: PrivateGalleryTier
+}): boolean {
+  return pg.source === 'subscription' || (pg.source === 'admin_override' && pg.tier !== 'free')
+}
+
 /** Pure lookup — pulls the live (admin-editable) quota numbers for one tier out of the rows the loader fetched. */
 export function pickLimitsForTier(
   tier: PrivateGalleryTier,

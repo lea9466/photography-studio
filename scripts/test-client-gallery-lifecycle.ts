@@ -11,8 +11,12 @@ import {
 } from '../lib/private-galleries/client-gallery-lifecycle'
 import {
   SUSPENSION_GRACE_DAYS,
+  SUSPENDED_DELETE_GRACE_DAYS,
   isPastSuspensionGrace,
+  isPastSuspendedDeleteGrace,
+  isInSuspendedFinalWarningWindow,
 } from '../lib/private-galleries/gallery-suspension'
+import { galleryPersistsWhileSubscribed } from '../lib/private-galleries/entitlements'
 
 /**
  * "One-time use": a client (selection) gallery's source album is frozen the
@@ -105,4 +109,39 @@ test('isPastSuspensionGrace: only true once 15 days past the lapse', () => {
   assert.equal(isPastSuspensionGrace('2026-08-21T12:00:00.000Z', now), true)
   // no lapse date → never suspend on this basis
   assert.equal(isPastSuspensionGrace(null, now), false)
+})
+
+// --- galleries persist while a subscription is active ----------------------
+
+test('galleryPersistsWhileSubscribed: only a real subscription or a paid admin override', () => {
+  assert.equal(galleryPersistsWhileSubscribed({ source: 'subscription', tier: 'starter' }), true)
+  assert.equal(galleryPersistsWhileSubscribed({ source: 'admin_override', tier: 'unlimited' }), true)
+  // an admin override can also force someone onto the free tier — that still
+  // gets the fixed-length life, not indefinite persistence.
+  assert.equal(galleryPersistsWhileSubscribed({ source: 'admin_override', tier: 'free' }), false)
+  assert.equal(galleryPersistsWhileSubscribed({ source: 'free', tier: 'free' }), false)
+})
+
+// --- suspended-gallery final warning + permanent deletion (30 days total) --
+
+test('isPastSuspendedDeleteGrace: only true 15 days past suspended_at (30 days total incl. SUSPENSION_GRACE_DAYS)', () => {
+  const now = Date.parse('2026-10-15T12:00:00.000Z')
+  assert.equal(SUSPENDED_DELETE_GRACE_DAYS, 15)
+  // suspended 10 days ago → not yet
+  assert.equal(isPastSuspendedDeleteGrace('2026-10-05T12:00:00.000Z', now), false)
+  // suspended exactly 15 days ago → grace over, delete
+  assert.equal(isPastSuspendedDeleteGrace('2026-09-30T12:00:00.000Z', now), true)
+  // never suspended → never delete on this basis
+  assert.equal(isPastSuspendedDeleteGrace(null, now), false)
+})
+
+test('isInSuspendedFinalWarningWindow: fires only in the ~3 days right before deletion, once', () => {
+  const now = Date.parse('2026-10-15T12:00:00.000Z')
+  // suspended 11 days ago (4 days left) → not yet in the warning window
+  assert.equal(isInSuspendedFinalWarningWindow('2026-10-04T12:00:00.000Z', now), false)
+  // suspended 13 days ago (2 days left) → inside the window
+  assert.equal(isInSuspendedFinalWarningWindow('2026-10-02T12:00:00.000Z', now), true)
+  // suspended exactly 15 days ago → already at the delete threshold, window closed
+  assert.equal(isInSuspendedFinalWarningWindow('2026-09-30T12:00:00.000Z', now), false)
+  assert.equal(isInSuspendedFinalWarningWindow(null, now), false)
 })
