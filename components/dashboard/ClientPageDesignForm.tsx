@@ -5,12 +5,15 @@ import { toast } from 'sonner'
 import {
   removeClientPageLogo,
   saveClientPageAccent,
+  saveClientPageHeroStyle,
   type ClientPageDesign,
 } from '@/lib/actions/client-page-design.actions'
 import { DEFAULT_CLIENT_ACCENT, resolveClientPageAccent } from '@/lib/branding/client-page-colors'
+import type { ClientPageHeroStyle } from '@/lib/branding/client-page-hero-style'
 import { uploadClientPageLogo } from '@/lib/client-page-logo-upload'
 import { useObjectUrl } from '@/lib/hooks/use-object-url'
 import { ClientPageColorField } from '@/components/dashboard/ClientPageColorField'
+import { ClientPageHeroStyleField } from '@/components/dashboard/ClientPageHeroStyleField'
 import { ClientPageLogoField } from '@/components/dashboard/ClientPageLogoField'
 import { ClientPagePreview } from '@/components/dashboard/ClientPagePreview'
 import { Button } from '@/components/ui/button'
@@ -32,6 +35,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
   const [saved, setSaved] = useState(design.override)
   const [draftAccent, setDraftAccent] = useState<string | null>(design.override.accent)
   const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [heroStyle, setHeroStyle] = useState<ClientPageHeroStyle>(design.heroStyle)
   const [isPending, startTransition] = useTransition()
   const pickedLogoUrl = useObjectUrl(logoFile)
 
@@ -66,6 +70,20 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
     })
   }
 
+  function handleSelectHeroStyle(style: ClientPageHeroStyle) {
+    const previous = heroStyle
+    setHeroStyle(style)
+    startTransition(async () => {
+      const result = await saveClientPageHeroStyle(style)
+      if (!result.ok) {
+        setHeroStyle(previous)
+        toast.error(result.error)
+        return
+      }
+      toast.success('עיצוב ראש הדף נשמר')
+    })
+  }
+
   function handleRemoveLogo() {
     startTransition(async () => {
       const result = await removeClientPageLogo()
@@ -91,16 +109,34 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
       ? 'כרגע הלוגו נלקח מהאתר שלך'
       : 'אין לוגו — בראש הדף יוצג שם הסטודיו בלבד'
 
+  const shownAccentResolved = resolveClientPageAccent(shownAccent)
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h3 className="text-sm font-semibold text-[#100d1f]">כך ייראה ראש הדף שהלקוח רואה</h3>
         <ClientPagePreview
           studioName={design.studioName}
-          accent={resolveClientPageAccent(shownAccent)}
+          accent={shownAccentResolved}
           logoUrl={shownLogo}
+          heroStyle={heroStyle}
         />
       </div>
+
+      <section className={CARD_CLASS}>
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold text-[#100d1f]">עיצוב ראש הדף</h3>
+          <p className="text-sm text-[#48464c]">שלושה כיוונים לפריסת הלוגו והכותרת — נשמר מיד עם הבחירה</p>
+        </div>
+        <ClientPageHeroStyleField
+          value={heroStyle}
+          onChange={handleSelectHeroStyle}
+          studioName={design.studioName}
+          accent={shownAccentResolved}
+          logoUrl={shownLogo}
+          disabled={isPending}
+        />
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className={CARD_CLASS}>

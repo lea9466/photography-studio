@@ -20,6 +20,10 @@ import {
 import { maskEmail } from '@/lib/utils'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { resolveClientPageAccent } from '@/lib/branding/client-page-colors'
+import {
+  resolveClientPageHeroStyle,
+  type ClientPageHeroStyle,
+} from '@/lib/branding/client-page-hero-style'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -65,6 +69,7 @@ export type ClientPageBrand = {
   logo_image_url: string | null
   accent_color: string
   accent_foreground: string
+  hero_style: ClientPageHeroStyle
 }
 
 export type ClientGalleryData = ClientPageBrand & {
@@ -99,7 +104,7 @@ async function signPath(
 
 /** The users columns a client-facing page reads its brand from. */
 const CLIENT_PAGE_BRAND_USER_COLUMNS =
-  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color'
+  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style'
 
 type BrandingUserRow = {
   studio_name: string | null
@@ -107,13 +112,16 @@ type BrandingUserRow = {
   accent_color: string | null
   client_page_logo_url: string | null
   client_page_accent_color: string | null
+  client_page_hero_style: string | null
 }
 
 /**
- * Logo + accent for a client-facing page. The studio's client-page override
- * wins; without one it inherits the public-site brand. Only the studio's own
- * public brand — the gallery's cover image is deliberately not part of this,
- * because it is behind the gallery session and is not shown before it.
+ * Logo + accent + hero layout for a client-facing page. The studio's
+ * client-page override wins; without one it inherits the public-site brand
+ * (hero layout has no site equivalent — it's client-page-only). Only the
+ * studio's own public brand — the gallery's cover image is deliberately not
+ * part of this, because it is behind the gallery session and is not shown
+ * before it.
  */
 async function resolveClientPageBrand(
   user: Omit<BrandingUserRow, 'studio_name'> | null | undefined
@@ -126,6 +134,7 @@ async function resolveClientPageBrand(
     logo_image_url: await resolveBrandingPath(user?.client_page_logo_url || user?.logo_url),
     accent_color: accent,
     accent_foreground: foreground,
+    hero_style: resolveClientPageHeroStyle(user?.client_page_hero_style),
   }
 }
 

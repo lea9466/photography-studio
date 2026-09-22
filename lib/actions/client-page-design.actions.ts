@@ -5,6 +5,11 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { normalizeHexColor } from '@/lib/branding/client-page-colors'
 import {
+  isClientPageHeroStyle,
+  resolveClientPageHeroStyle,
+  type ClientPageHeroStyle,
+} from '@/lib/branding/client-page-hero-style'
+import {
   finalizeBrandingUpload,
   prepareBrandingUpload,
   removeBrandingImage,
@@ -28,6 +33,8 @@ export type ClientPageDesign = {
   studioName: string | null
   site: { accent: string | null; logoUrl: string | null }
   override: { accent: string | null; logoUrl: string | null }
+  /** Hero layout has no site equivalent — it's client-page-only, always resolved to a real value. */
+  heroStyle: ClientPageHeroStyle
 }
 
 const GENERIC_ERROR = 'הפעולה נכשלה. נסי שוב.'
@@ -42,7 +49,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
     const { data, error } = await supabase
       .from('users')
       .select(
-        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color'
+        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style'
       )
       .eq('id', userId)
       .single()
@@ -54,6 +61,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
       accent_color: string | null
       client_page_logo_url: string | null
       client_page_accent_color: string | null
+      client_page_hero_style: string | null
     }
 
     return {
@@ -68,6 +76,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
           accent: normalizeHexColor(row.client_page_accent_color),
           logoUrl: await resolveBrandingPath(row.client_page_logo_url),
         },
+        heroStyle: resolveClientPageHeroStyle(row.client_page_hero_style),
       },
     }
   } catch (error) {
@@ -93,6 +102,28 @@ export async function saveClientPageAccent(
       return { ok: false, error: 'שמירת הצבע נכשלה' }
     }
     return { ok: true, accent: normalized }
+  } catch (error) {
+    return { ok: false, error: messageOf(error) }
+  }
+}
+
+/** Saves which hero layout the client-facing gallery page uses. */
+export async function saveClientPageHeroStyle(
+  heroStyle: string
+): Promise<ClientPageDesignResult<{ heroStyle: ClientPageHeroStyle }>> {
+  if (!isClientPageHeroStyle(heroStyle)) return { ok: false, error: 'עיצוב לא תקין' }
+
+  try {
+    const { userId } = await requireDashboardContext()
+    const { error } = await createAdminClient()
+      .from('users')
+      .update({ client_page_hero_style: heroStyle } as never)
+      .eq('id', userId)
+    if (error) {
+      console.error('[client-page-design] save hero style failed', { code: error.code })
+      return { ok: false, error: 'שמירת העיצוב נכשלה' }
+    }
+    return { ok: true, heroStyle }
   } catch (error) {
     return { ok: false, error: messageOf(error) }
   }

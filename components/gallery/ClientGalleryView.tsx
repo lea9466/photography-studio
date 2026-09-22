@@ -180,6 +180,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         studioName={gallery.studio_name}
         logoUrl={gallery.logo_image_url}
         coverUrl={gallery.cover_image_url}
+        heroStyle={gallery.hero_style}
       />
 
       <main className="w-full space-y-6 py-6">
