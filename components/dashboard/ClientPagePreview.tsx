@@ -10,6 +10,7 @@ type ClientPagePreviewProps = {
   logoUrl: string | null
   heroStyle: ClientPageHeroStyle
   background: ClientPageBackground
+  headingFont: string | null
 }
 
 /**
@@ -23,6 +24,7 @@ export function ClientPagePreview({
   logoUrl,
   heroStyle,
   background,
+  headingFont,
 }: ClientPagePreviewProps) {
   return (
     <div
@@ -42,6 +44,7 @@ export function ClientPagePreview({
         logoUrl={logoUrl}
         coverUrl={null}
         heroStyle={heroStyle}
+        headingFont={headingFont}
       />
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg">

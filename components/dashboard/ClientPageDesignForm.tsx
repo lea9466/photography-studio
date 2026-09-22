@@ -139,6 +139,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
           logoUrl={shownLogo}
           heroStyle={heroStyle}
           background={background}
+          headingFont={design.headingFont}
         />
       </div>
 
@@ -162,6 +163,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
           accent={shownAccentResolved}
           logoUrl={shownLogo}
           background={background}
+          headingFont={design.headingFont}
           disabled={isPending}
         />
       </section>

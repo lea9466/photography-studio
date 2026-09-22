@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { Palette } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { getClientPageDesign } from '@/lib/actions/client-page-design.actions'
+import { getGoogleFontUrl } from '@/lib/fonts'
 import { ClientPageDesignExplainer } from '@/components/dashboard/ClientPageDesignExplainer'
 import { ClientPageDesignForm } from '@/components/dashboard/ClientPageDesignForm'
 
@@ -18,9 +19,11 @@ export default async function ClientPageDesignPage() {
   }
 
   const result = await getClientPageDesign()
+  const fontHref = result.ok ? getGoogleFontUrl(result.design.headingFont, null) : null
 
   return (
     <div className="animate-fade-in">
+      {fontHref ? <link rel="stylesheet" href={fontHref} /> : null}
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
         <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--dashboard-surface] px-7 py-6 md:px-9 md:py-7">
           <div className="flex items-start gap-5">

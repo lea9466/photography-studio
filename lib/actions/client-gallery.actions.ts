@@ -28,6 +28,7 @@ import {
   resolveClientPageBackground,
   type ClientPageBackground,
 } from '@/lib/branding/client-page-background'
+import { isAllowedFont } from '@/constants/fonts'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -75,6 +76,8 @@ export type ClientPageBrand = {
   accent_foreground: string
   hero_style: ClientPageHeroStyle
   background: ClientPageBackground
+  /** Whitelisted Google/system font name, or null to use the page's default (Heebo). */
+  heading_font: string | null
 }
 
 export type ClientGalleryData = ClientPageBrand & {
@@ -109,7 +112,7 @@ async function signPath(
 
 /** The users columns a client-facing page reads its brand from. */
 const CLIENT_PAGE_BRAND_USER_COLUMNS =
-  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background'
+  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font'
 
 type BrandingUserRow = {
   studio_name: string | null
@@ -119,6 +122,7 @@ type BrandingUserRow = {
   client_page_accent_color: string | null
   client_page_hero_style: string | null
   client_page_background: string | null
+  heading_font: string | null
 }
 
 /**
@@ -142,6 +146,9 @@ async function resolveClientPageBrand(
     accent_foreground: foreground,
     hero_style: resolveClientPageHeroStyle(user?.client_page_hero_style),
     background: resolveClientPageBackground(user?.client_page_background),
+    // No client-page override for this one — it's the same heading font as her
+    // public site, or null (page default) if she never set one there either.
+    heading_font: isAllowedFont(user?.heading_font) ? user!.heading_font : null,
   }
 }
 

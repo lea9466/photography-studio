@@ -21,9 +21,32 @@ import {
   buildPublicOpenGraph,
   resolveGalleryShareImage,
 } from '@/lib/seo/public-metadata'
+import { getGoogleFontUrl } from '@/lib/fonts'
+import type { ClientGalleryData, ClientGalleryPhoto } from '@/lib/actions/client-gallery.actions'
 
 type ClientGalleryPageProps = {
   params: Promise<{ id: string }>
+}
+
+/**
+ * ClientGalleryView plus the Google Fonts stylesheet for the studio's chosen
+ * heading font, when it's a Google font (system fonts need no link). Kept
+ * together since both render paths below need it.
+ */
+function ClientGalleryPageBody({
+  gallery,
+  photos,
+}: {
+  gallery: ClientGalleryData
+  photos: ClientGalleryPhoto[]
+}) {
+  const fontHref = getGoogleFontUrl(gallery.heading_font, null)
+  return (
+    <>
+      {fontHref ? <link rel="stylesheet" href={fontHref} /> : null}
+      <ClientGalleryView gallery={gallery} photos={photos} />
+    </>
+  )
 }
 
 export default async function ClientGalleryPage({
@@ -94,7 +117,7 @@ export default async function ClientGalleryPage({
 
     const data = await getClientGallery(id)
     if (!data) notFound()
-    return <ClientGalleryView gallery={data.gallery} photos={data.photos} />
+    return <ClientGalleryPageBody gallery={data.gallery} photos={data.photos} />
   }
 
   const hasSession = await hasGallerySession(id)
@@ -114,7 +137,7 @@ export default async function ClientGalleryPage({
   const data = await getClientGallery(id)
   if (!data) notFound()
 
-  return <ClientGalleryView gallery={data.gallery} photos={data.photos} />
+  return <ClientGalleryPageBody gallery={data.gallery} photos={data.photos} />
 }
 
 export async function generateMetadata({ params }: ClientGalleryPageProps) {

@@ -182,6 +182,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         logoUrl={gallery.logo_image_url}
         coverUrl={gallery.cover_image_url}
         heroStyle={gallery.hero_style}
+        headingFont={gallery.heading_font}
       />
 
       <main className="w-full space-y-6 py-6">

@@ -17,6 +17,7 @@ type ClientPageHeroStyleFieldProps = {
   accent: ClientPageAccent
   logoUrl: string | null
   background: ClientPageBackground
+  headingFont: string | null
   disabled?: boolean
 }
 
@@ -31,6 +32,7 @@ export function ClientPageHeroStyleField({
   accent,
   logoUrl,
   background,
+  headingFont,
   disabled = false,
 }: ClientPageHeroStyleFieldProps) {
   return (
@@ -61,6 +63,7 @@ export function ClientPageHeroStyleField({
               logoUrl={logoUrl}
               heroStyle={style}
               background={background}
+              headingFont={headingFont}
             />
             <div className="px-3 py-2.5">
               <p className="text-sm font-semibold text-[#100d1f]">{label.name}</p>

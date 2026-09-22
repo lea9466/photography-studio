@@ -19,6 +19,7 @@ import {
   prepareBrandingUpload,
   removeBrandingImage,
 } from '@/lib/actions/branding.actions'
+import { isAllowedFont } from '@/constants/fonts'
 
 /**
  * Result of a design-tab action. Errors are *returned*, not thrown: Next.js
@@ -41,6 +42,8 @@ export type ClientPageDesign = {
   /** Hero layout and background have no site equivalent — client-page-only, always resolved to a real value. */
   heroStyle: ClientPageHeroStyle
   background: ClientPageBackground
+  /** Same heading font as her public site (no client-page override for this one) — whitelisted name, or null. */
+  headingFont: string | null
 }
 
 const GENERIC_ERROR = 'הפעולה נכשלה. נסי שוב.'
@@ -55,7 +58,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
     const { data, error } = await supabase
       .from('users')
       .select(
-        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background'
+        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font'
       )
       .eq('id', userId)
       .single()
@@ -69,6 +72,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
       client_page_accent_color: string | null
       client_page_hero_style: string | null
       client_page_background: string | null
+      heading_font: string | null
     }
 
     return {
@@ -85,6 +89,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
         },
         heroStyle: resolveClientPageHeroStyle(row.client_page_hero_style),
         background: resolveClientPageBackground(row.client_page_background),
+        headingFont: isAllowedFont(row.heading_font) ? row.heading_font : null,
       },
     }
   } catch (error) {
