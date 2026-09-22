@@ -1,6 +1,7 @@
 import { ClientGalleryHero } from '@/components/gallery/ClientGalleryHero'
 import type { ClientPageAccent } from '@/lib/branding/client-page-colors'
 import type { ClientPageHeroStyle } from '@/lib/branding/client-page-hero-style'
+import { clientPageDataTheme, type ClientPageBackground } from '@/lib/branding/client-page-background'
 
 type ClientPagePreviewProps = {
   studioName: string | null
@@ -8,6 +9,7 @@ type ClientPagePreviewProps = {
   /** The logo as it will show — a saved URL or a blob URL of a file not saved yet. */
   logoUrl: string | null
   heroStyle: ClientPageHeroStyle
+  background: ClientPageBackground
 }
 
 /**
@@ -15,11 +17,18 @@ type ClientPagePreviewProps = {
  * client sees, so the preview can't drift from the real thing. Purely visual —
  * hidden from assistive tech so its heading doesn't compete with the page's own.
  */
-export function ClientPagePreview({ studioName, accent, logoUrl, heroStyle }: ClientPagePreviewProps) {
+export function ClientPagePreview({
+  studioName,
+  accent,
+  logoUrl,
+  heroStyle,
+  background,
+}: ClientPagePreviewProps) {
   return (
     <div
       aria-hidden="true"
-      className="overflow-hidden rounded-xl border border-[#c9c5cd] bg-white"
+      data-theme={clientPageDataTheme(background)}
+      className="overflow-hidden rounded-xl border border-border bg-background"
       style={
         {
           '--client-accent': accent.accent,

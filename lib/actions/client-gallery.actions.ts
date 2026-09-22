@@ -24,6 +24,10 @@ import {
   resolveClientPageHeroStyle,
   type ClientPageHeroStyle,
 } from '@/lib/branding/client-page-hero-style'
+import {
+  resolveClientPageBackground,
+  type ClientPageBackground,
+} from '@/lib/branding/client-page-background'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -70,6 +74,7 @@ export type ClientPageBrand = {
   accent_color: string
   accent_foreground: string
   hero_style: ClientPageHeroStyle
+  background: ClientPageBackground
 }
 
 export type ClientGalleryData = ClientPageBrand & {
@@ -104,7 +109,7 @@ async function signPath(
 
 /** The users columns a client-facing page reads its brand from. */
 const CLIENT_PAGE_BRAND_USER_COLUMNS =
-  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style'
+  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background'
 
 type BrandingUserRow = {
   studio_name: string | null
@@ -113,6 +118,7 @@ type BrandingUserRow = {
   client_page_logo_url: string | null
   client_page_accent_color: string | null
   client_page_hero_style: string | null
+  client_page_background: string | null
 }
 
 /**
@@ -135,6 +141,7 @@ async function resolveClientPageBrand(
     accent_color: accent,
     accent_foreground: foreground,
     hero_style: resolveClientPageHeroStyle(user?.client_page_hero_style),
+    background: resolveClientPageBackground(user?.client_page_background),
   }
 }
 

@@ -10,6 +10,11 @@ import {
   type ClientPageHeroStyle,
 } from '@/lib/branding/client-page-hero-style'
 import {
+  isClientPageBackground,
+  resolveClientPageBackground,
+  type ClientPageBackground,
+} from '@/lib/branding/client-page-background'
+import {
   finalizeBrandingUpload,
   prepareBrandingUpload,
   removeBrandingImage,
@@ -33,8 +38,9 @@ export type ClientPageDesign = {
   studioName: string | null
   site: { accent: string | null; logoUrl: string | null }
   override: { accent: string | null; logoUrl: string | null }
-  /** Hero layout has no site equivalent — it's client-page-only, always resolved to a real value. */
+  /** Hero layout and background have no site equivalent — client-page-only, always resolved to a real value. */
   heroStyle: ClientPageHeroStyle
+  background: ClientPageBackground
 }
 
 const GENERIC_ERROR = 'הפעולה נכשלה. נסי שוב.'
@@ -49,7 +55,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
     const { data, error } = await supabase
       .from('users')
       .select(
-        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style'
+        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background'
       )
       .eq('id', userId)
       .single()
@@ -62,6 +68,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
       client_page_logo_url: string | null
       client_page_accent_color: string | null
       client_page_hero_style: string | null
+      client_page_background: string | null
     }
 
     return {
@@ -77,6 +84,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
           logoUrl: await resolveBrandingPath(row.client_page_logo_url),
         },
         heroStyle: resolveClientPageHeroStyle(row.client_page_hero_style),
+        background: resolveClientPageBackground(row.client_page_background),
       },
     }
   } catch (error) {
@@ -124,6 +132,28 @@ export async function saveClientPageHeroStyle(
       return { ok: false, error: 'שמירת העיצוב נכשלה' }
     }
     return { ok: true, heroStyle }
+  } catch (error) {
+    return { ok: false, error: messageOf(error) }
+  }
+}
+
+/** Saves the client-facing gallery page's light/dark background. */
+export async function saveClientPageBackground(
+  background: string
+): Promise<ClientPageDesignResult<{ background: ClientPageBackground }>> {
+  if (!isClientPageBackground(background)) return { ok: false, error: 'רקע לא תקין' }
+
+  try {
+    const { userId } = await requireDashboardContext()
+    const { error } = await createAdminClient()
+      .from('users')
+      .update({ client_page_background: background } as never)
+      .eq('id', userId)
+    if (error) {
+      console.error('[client-page-design] save background failed', { code: error.code })
+      return { ok: false, error: 'שמירת הרקע נכשלה' }
+    }
+    return { ok: true, background }
   } catch (error) {
     return { ok: false, error: messageOf(error) }
   }

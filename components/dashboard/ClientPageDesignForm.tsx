@@ -5,13 +5,16 @@ import { toast } from 'sonner'
 import {
   removeClientPageLogo,
   saveClientPageAccent,
+  saveClientPageBackground,
   saveClientPageHeroStyle,
   type ClientPageDesign,
 } from '@/lib/actions/client-page-design.actions'
 import { DEFAULT_CLIENT_ACCENT, resolveClientPageAccent } from '@/lib/branding/client-page-colors'
 import type { ClientPageHeroStyle } from '@/lib/branding/client-page-hero-style'
+import type { ClientPageBackground } from '@/lib/branding/client-page-background'
 import { uploadClientPageLogo } from '@/lib/client-page-logo-upload'
 import { useObjectUrl } from '@/lib/hooks/use-object-url'
+import { ClientPageBackgroundField } from '@/components/dashboard/ClientPageBackgroundField'
 import { ClientPageColorField } from '@/components/dashboard/ClientPageColorField'
 import { ClientPageHeroStyleField } from '@/components/dashboard/ClientPageHeroStyleField'
 import { ClientPageLogoField } from '@/components/dashboard/ClientPageLogoField'
@@ -36,6 +39,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
   const [draftAccent, setDraftAccent] = useState<string | null>(design.override.accent)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [heroStyle, setHeroStyle] = useState<ClientPageHeroStyle>(design.heroStyle)
+  const [background, setBackground] = useState<ClientPageBackground>(design.background)
   const [isPending, startTransition] = useTransition()
   const pickedLogoUrl = useObjectUrl(logoFile)
 
@@ -84,6 +88,20 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
     })
   }
 
+  function handleSelectBackground(next: ClientPageBackground) {
+    const previous = background
+    setBackground(next)
+    startTransition(async () => {
+      const result = await saveClientPageBackground(next)
+      if (!result.ok) {
+        setBackground(previous)
+        toast.error(result.error)
+        return
+      }
+      toast.success('רקע הדף נשמר')
+    })
+  }
+
   function handleRemoveLogo() {
     startTransition(async () => {
       const result = await removeClientPageLogo()
@@ -120,8 +138,17 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
           accent={shownAccentResolved}
           logoUrl={shownLogo}
           heroStyle={heroStyle}
+          background={background}
         />
       </div>
+
+      <section className={CARD_CLASS}>
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold text-[#100d1f]">רקע הדף</h3>
+          <p className="text-sm text-[#48464c]">בהיר או כהה — כמו ערכת &quot;נועז&quot; באתר שלך</p>
+        </div>
+        <ClientPageBackgroundField value={background} onChange={handleSelectBackground} disabled={isPending} />
+      </section>
 
       <section className={CARD_CLASS}>
         <div className="space-y-1">
@@ -134,6 +161,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
           studioName={design.studioName}
           accent={shownAccentResolved}
           logoUrl={shownLogo}
+          background={background}
           disabled={isPending}
         />
       </section>

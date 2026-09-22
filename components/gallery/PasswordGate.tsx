@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
+import { clientPageDataTheme } from '@/lib/branding/client-page-background'
 import {
   Card,
   CardContent,
@@ -29,7 +30,7 @@ type PasswordGateProps = {
    * The studio's logo + accent. The gallery's cover is deliberately absent:
    * it is behind the gallery session and is not shown before the client is in.
    */
-  brand?: Pick<ClientPageBrand, 'logo_image_url' | 'accent_color' | 'accent_foreground'>
+  brand?: Pick<ClientPageBrand, 'logo_image_url' | 'accent_color' | 'accent_foreground' | 'background'>
 }
 
 const PRIMARY_ACTION_CLASS = 'w-full bg-accent text-accent-fg hover:brightness-110'
@@ -92,7 +93,8 @@ export function PasswordGate({
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center p-4"
+      className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground"
+      data-theme={brand ? clientPageDataTheme(brand.background) : undefined}
       style={
         brand
           ? ({
@@ -102,7 +104,9 @@ export function PasswordGate({
           : undefined
       }
     >
-      <Card className="w-full max-w-md animate-fade-in border-t-4 border-t-accent">
+      {/* bg/text/border overrides: Card's own [--var] classes don't compile in this
+          Tailwind v4 setup (see the same fix elsewhere in this file's siblings). */}
+      <Card className="w-full max-w-md animate-fade-in border-border border-t-4 border-t-accent bg-background text-foreground">
         <CardHeader className="text-center">
           {brand?.logo_image_url ? (
             <Image

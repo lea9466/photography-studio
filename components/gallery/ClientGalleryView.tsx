@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ClientPhotoMasonry } from '@/components/gallery/ClientPhotoMasonry'
 import { ClientGalleryHero } from '@/components/gallery/ClientGalleryHero'
+import { clientPageDataTheme } from '@/lib/branding/client-page-background'
 import {
   type ClientGalleryData,
   type ClientGalleryPhoto,
@@ -167,7 +168,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
       className="min-h-screen pb-16"
       dir="rtl"
       data-client-gallery-root
-      data-theme="classic"
+      data-theme={clientPageDataTheme(gallery.background)}
       style={
         {
           '--client-accent': gallery.accent_color,

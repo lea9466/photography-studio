@@ -3,6 +3,7 @@
 import { Check } from 'lucide-react'
 import { ClientPagePreview } from '@/components/dashboard/ClientPagePreview'
 import type { ClientPageAccent } from '@/lib/branding/client-page-colors'
+import type { ClientPageBackground } from '@/lib/branding/client-page-background'
 import {
   CLIENT_PAGE_HERO_STYLES,
   CLIENT_PAGE_HERO_STYLE_LABELS,
@@ -15,6 +16,7 @@ type ClientPageHeroStyleFieldProps = {
   studioName: string | null
   accent: ClientPageAccent
   logoUrl: string | null
+  background: ClientPageBackground
   disabled?: boolean
 }
 
@@ -28,6 +30,7 @@ export function ClientPageHeroStyleField({
   studioName,
   accent,
   logoUrl,
+  background,
   disabled = false,
 }: ClientPageHeroStyleFieldProps) {
   return (
@@ -57,6 +60,7 @@ export function ClientPageHeroStyleField({
               accent={accent}
               logoUrl={logoUrl}
               heroStyle={style}
+              background={background}
             />
             <div className="px-3 py-2.5">
               <p className="text-sm font-semibold text-[#100d1f]">{label.name}</p>

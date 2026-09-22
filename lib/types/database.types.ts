@@ -118,6 +118,7 @@ export type Database = {
           client_page_accent_color: string | null
           client_page_logo_url: string | null
           client_page_hero_style: string | null
+          client_page_background: string | null
         }
         Insert: {
           id: string
@@ -191,6 +192,7 @@ export type Database = {
           client_page_accent_color?: string | null
           client_page_logo_url?: string | null
           client_page_hero_style?: string | null
+          client_page_background?: string | null
         }
         Update: {
           id?: string
@@ -264,6 +266,7 @@ export type Database = {
           client_page_accent_color?: string | null
           client_page_logo_url?: string | null
           client_page_hero_style?: string | null
+          client_page_background?: string | null
         }
         Relationships: []
       }

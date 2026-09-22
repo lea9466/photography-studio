@@ -103,7 +103,10 @@ function BelowPhotoHero({ title, studioName, logoUrl, coverUrl }: Omit<ClientGal
   return (
     <header className="w-full">
       <div className={`relative w-full overflow-hidden ${coverUrl ? HERO_HEIGHT_CLASS : 'h-40 sm:h-52'}`}>
-        <HeroBackdrop coverUrl={coverUrl} />
+        <HeroBackdrop
+          coverUrl={coverUrl}
+          gradient="bg-gradient-to-b from-black/15 via-transparent to-black/30"
+        />
       </div>
       <div
         className={`flex flex-col items-center gap-3 px-4 py-8 text-center sm:py-10 ${
