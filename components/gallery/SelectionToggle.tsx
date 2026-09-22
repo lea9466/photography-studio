@@ -15,16 +15,21 @@ type SelectionToggleProps = {
   className?: string
 }
 
+// Both types share the studio's brand colour when active — the icon + label
+// (always shown, see showLabel on every call site) already distinguish album
+// from edit, so the colour doesn't need to carry that distinction too.
+const ACTIVE_CLASS = 'bg-transparent text-accent ring-accent'
+
 const TYPE_CONFIG = {
   album: {
     label: 'לאלבום',
     Icon: Album,
-    active: 'bg-transparent text-rose-500 ring-rose-500',
+    active: ACTIVE_CLASS,
   },
   edit: {
     label: 'לעיבוד',
     Icon: Pencil,
-    active: 'bg-transparent text-amber-400 ring-amber-400',
+    active: ACTIVE_CLASS,
   },
 } as const
 
