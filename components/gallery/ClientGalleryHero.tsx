@@ -82,16 +82,12 @@ function CenteredHero({
         coverUrl={coverUrl}
         gradient="bg-gradient-to-b from-black/5 via-transparent to-black/25"
       />
-      {logoUrl ? (
-        <div className="absolute inset-x-0 top-6 flex justify-center sm:top-8">
-          <LogoChip logoUrl={logoUrl} size="sm" />
-        </div>
-      ) : null}
       <div
         className={`absolute inset-x-0 bottom-8 flex flex-col items-center gap-3 px-4 text-center sm:bottom-12 ${
           coverUrl ? 'text-white' : 'text-accent-fg'
         }`}
       >
+        {logoUrl ? <LogoChip logoUrl={logoUrl} size="sm" /> : null}
         <h1
           className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl"
           style={heroTextStyle(fontFamily)}
