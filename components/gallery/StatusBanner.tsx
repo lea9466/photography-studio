@@ -29,7 +29,10 @@ export function StatusBanner({
   if (status === 'draft' || status === 'public') return null
 
   return (
-    <div className="rounded-xl border border-border bg-background px-4 py-3 text-center animate-fade-in">
+    // A fixed light surface regardless of the studio's page-background choice — like the
+    // tabs bar and selection bar below, it stays a calm, legible "chrome" element rather
+    // than flipping dark, so it doesn't compete with a dark photo-forward background.
+    <div className="rounded-xl border border-[#e5e5e5] bg-white px-4 py-3 text-center text-[#171717] animate-fade-in">
       <Badge variant="default" className="mb-2">
         {status === 'delivery_ready' ? 'מוכן' : 'עדכון'}
       </Badge>
@@ -39,13 +42,13 @@ export function StatusBanner({
         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted">
           {albumEnabled ? (
             <span className="inline-flex items-center gap-1.5">
-              <Album className="h-4 w-4 shrink-0 text-rose-500" />
+              <Album className="h-4 w-4 shrink-0 text-accent" />
               סימון לאלבום{maxAlbum != null ? ` · עד ${maxAlbum} תמונות` : ''}
             </span>
           ) : null}
           {editEnabled ? (
             <span className="inline-flex items-center gap-1.5">
-              <Pencil className="h-4 w-4 shrink-0 text-amber-500" />
+              <Pencil className="h-4 w-4 shrink-0 text-accent" />
               סימון לעיבוד{maxEdit != null ? ` · עד ${maxEdit} תמונות` : ''}
             </span>
           ) : null}

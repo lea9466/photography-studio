@@ -108,20 +108,20 @@ export function SelectionBar({
 
   return (
     <>
-      {/* Not portalled (unlike the Dialog below), so it's a real descendant of the themed
-          gallery root and bg-background correctly follows the studio's light/dark choice. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background px-4 py-1.5 text-foreground">
+      {/* Fixed light chrome — same reasoning as StatusBanner and the tabs bar: a calm,
+          legible surface regardless of the studio's light/dark page-background choice. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e5e5e5] bg-white px-4 py-1.5 text-[#171717]">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-xs sm:text-sm">
             {showAlbum ? (
-              <span className="inline-flex items-center gap-1 text-rose-500">
+              <span className="inline-flex items-center gap-1 text-accent">
                 <Album className="h-3.5 w-3.5" />
                 לאלבום {albumCount}
                 {maxAlbum != null ? `/${maxAlbum}` : ''}
               </span>
             ) : null}
             {showEdit ? (
-              <span className="inline-flex items-center gap-1 text-amber-500">
+              <span className="inline-flex items-center gap-1 text-accent">
                 <Pencil className="h-3.5 w-3.5" />
                 לעיבוד {editCount}
                 {maxEdit != null ? `/${maxEdit}` : ''}

@@ -196,8 +196,10 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-border bg-background p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-foreground/5 p-1 sm:w-auto">
+          {/* Fixed light chrome, same reasoning as StatusBanner — stays a calm, legible
+              surface regardless of the studio's light/dark page-background choice. */}
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-[#e5e5e5] bg-white p-3 text-[#171717] shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-black/5 p-1 sm:w-auto">
               <TabsTrigger
                 value="regular"
                 className={TAB_TRIGGER_CLASS}
@@ -228,7 +230,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
+            <div className="flex flex-wrap items-center gap-2 border-t border-[#e5e5e5] pt-3 sm:border-t-0 sm:pt-0">
               {gallery.allow_download_preview && (
                 <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
               )}
