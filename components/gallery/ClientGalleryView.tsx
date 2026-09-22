@@ -198,50 +198,56 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-border bg-background p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-foreground/5 p-1 sm:w-auto">
-              <TabsTrigger
-                value="regular"
-                className={TAB_TRIGGER_CLASS}
-              >
-                תמונות רגילות
-              </TabsTrigger>
-              {editEnabled && (
+          {/* Same mx-auto/max-w-7xl/px recipe as the status banner's wrapper
+              above (not on this div directly, the way it used to be) — the
+              two cards previously lined up at different widths because this
+              one carried its own slightly different padding. */}
+          <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
+            <div className="flex w-full flex-col gap-3 rounded-2xl border border-border bg-background p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-foreground/5 p-1 sm:w-auto">
                 <TabsTrigger
-                  value="edit"
+                  value="regular"
                   className={TAB_TRIGGER_CLASS}
                 >
-                  לעיבוד
+                  תמונות רגילות
                 </TabsTrigger>
-              )}
-              {albumEnabled && (
+                {editEnabled && (
+                  <TabsTrigger
+                    value="edit"
+                    className={TAB_TRIGGER_CLASS}
+                  >
+                    לעיבוד
+                  </TabsTrigger>
+                )}
+                {albumEnabled && (
+                  <TabsTrigger
+                    value="album"
+                    className={TAB_TRIGGER_CLASS}
+                  >
+                    אלבום
+                  </TabsTrigger>
+                )}
                 <TabsTrigger
-                  value="album"
+                  value="processed"
                   className={TAB_TRIGGER_CLASS}
                 >
-                  אלבום
+                  מעובדות
                 </TabsTrigger>
-              )}
-              <TabsTrigger
-                value="processed"
-                className={TAB_TRIGGER_CLASS}
-              >
-                מעובדות
-              </TabsTrigger>
-            </TabsList>
+              </TabsList>
 
-            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
-              {gallery.allow_download_preview && (
-                <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
-              )}
-              {gallery.allow_download_original && (
-                <ClientDownloadButton galleryId={gallery.id} type="original" />
-              )}
-              <ClientEditedDownloadButton
-                galleryId={gallery.id}
-                hasProcessed={showEdited}
-                isDelivered={isDelivered}
-              />
+              <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
+                {gallery.allow_download_preview && (
+                  <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
+                )}
+                {gallery.allow_download_original && (
+                  <ClientDownloadButton galleryId={gallery.id} type="original" />
+                )}
+                <ClientEditedDownloadButton
+                  galleryId={gallery.id}
+                  hasProcessed={showEdited}
+                  isDelivered={isDelivered}
+                />
+              </div>
             </div>
           </div>
 
