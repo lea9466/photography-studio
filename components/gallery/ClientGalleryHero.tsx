@@ -63,14 +63,29 @@ function LogoChip({ logoUrl, size = 'md' }: { logoUrl: string; size?: 'sm' | 'md
   )
 }
 
-/** Full-bleed cover photo (or the accent-coloured fallback block) behind everything else, settling in from a slight zoom. */
+/**
+ * Full-bleed cover photo (or the accent-coloured fallback block) behind
+ * everything else — an "ambient blur" treatment (same pattern as Spotify's
+ * now-playing screen or Apple Photos: a blurred, darkened, oversized copy of
+ * the photo fills the whole hero as a backdrop, cropping wherever it needs to
+ * since none of it has to stay sharp; the actual photo sits framed and
+ * uncropped, smaller, on top). This also solves the text-over-photo
+ * legibility problem structurally: text always sits over the blurred backdrop
+ * margin, never over the sharp photo itself, so the sharp photo doesn't need
+ * darkening at all.
+ */
 function HeroBackdrop({
   coverUrl,
-  gradient,
+  insetBottomClass = 'inset-x-[7%] inset-y-[9%]',
 }: {
   coverUrl: string | null
-  /** Tailwind gradient classes drawn over the photo for text legibility — omitted when there's no photo. */
-  gradient?: string
+  /**
+   * Positions the sharp, framed copy of the photo — a Tailwind inset-*
+   * utility string. Layouts whose text overlays the bottom of the hero pass a
+   * taller bottom margin here so the text has clear blurred backdrop under it
+   * rather than fighting the sharp photo's edge.
+   */
+  insetBottomClass?: string
 }) {
   if (!coverUrl) {
     return <div aria-hidden className="absolute inset-0 animate-hero-image-in bg-accent" />
@@ -83,9 +98,19 @@ function HeroBackdrop({
         fill
         priority
         sizes="100vw"
-        className="animate-hero-image-in object-cover"
+        aria-hidden
+        className="animate-hero-image-in scale-110 object-cover opacity-90 blur-3xl brightness-50"
       />
-      {gradient ? <div aria-hidden className={`absolute inset-0 ${gradient}`} /> : null}
+      <div className={`absolute ${insetBottomClass} overflow-hidden rounded-2xl`}>
+        <Image
+          src={coverUrl}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="animate-hero-image-in object-contain drop-shadow-2xl"
+        />
+      </div>
     </>
   )
 }
@@ -111,10 +136,7 @@ function CenteredHero({ title, studioName, logoUrl, coverUrl, fontFamily, siteLi
   const name = studioName ?? FALLBACK_STUDIO_NAME
   return (
     <header className={`relative isolate w-full overflow-hidden ${HERO_HEIGHT_CLASS}`}>
-      <HeroBackdrop
-        coverUrl={coverUrl}
-        gradient="bg-gradient-to-b from-black/5 via-transparent to-black/25"
-      />
+      <HeroBackdrop coverUrl={coverUrl} insetBottomClass="inset-x-[8%] top-[8%] bottom-[27%]" />
       {siteLink ? <SiteLinkBadge siteLink={siteLink} /> : null}
       <div
         className={`absolute inset-x-0 bottom-8 flex flex-col items-center gap-3 px-4 text-center sm:bottom-12 ${
@@ -147,7 +169,7 @@ function BottomRightHero({ title, studioName, logoUrl, coverUrl, fontFamily, sit
   const name = studioName ?? FALLBACK_STUDIO_NAME
   return (
     <header className={`relative isolate w-full overflow-hidden ${HERO_HEIGHT_CLASS}`}>
-      <HeroBackdrop coverUrl={coverUrl} gradient="bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
+      <HeroBackdrop coverUrl={coverUrl} insetBottomClass="inset-x-[8%] top-[8%] bottom-[25%]" />
       {siteLink ? <SiteLinkBadge siteLink={siteLink} /> : null}
       <div
         className={`absolute inset-x-0 bottom-8 flex flex-col items-end gap-2.5 px-5 text-end sm:bottom-10 sm:px-10 ${
