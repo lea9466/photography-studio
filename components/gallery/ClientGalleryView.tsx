@@ -165,7 +165,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
 
   return (
     <div
-      className="min-h-screen pb-16"
+      className="min-h-screen bg-background pb-16 text-foreground"
       dir="rtl"
       data-client-gallery-root
       data-theme={clientPageDataTheme(gallery.background)}

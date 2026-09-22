@@ -145,7 +145,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
       <section className={CARD_CLASS}>
         <div className="space-y-1">
           <h3 className="text-base font-semibold text-[#100d1f]">רקע הדף</h3>
-          <p className="text-sm text-[#48464c]">בהיר או כהה — כמו ערכת &quot;נועז&quot; באתר שלך</p>
+          <p className="text-sm text-[#48464c]">בהיר או כהה</p>
         </div>
         <ClientPageBackgroundField value={background} onChange={handleSelectBackground} disabled={isPending} />
       </section>
