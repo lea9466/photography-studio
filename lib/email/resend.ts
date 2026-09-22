@@ -1169,13 +1169,25 @@ export async function sendPrivateGalleriesAnnouncementEmail(input: { name: strin
 }
 
 /**
+ * A real client-gallery screenshot (Lea's own demo gallery, cleared for
+ * marketing use — not a real client's photos) showing the new cover +
+ * asymmetric hero + dark background in place. Compressed with sharp and
+ * uploaded once to the public `branding` bucket (unsigned — same bucket used
+ * for OG images, safe for an email client to fetch unauthenticated). Not
+ * gallery-privacy-sensitive, so no signed URL needed.
+ */
+const CLIENT_PAGE_DESIGN_SCREENSHOT_URL =
+  'https://albums.studio-galleries.com/branding/email-assets/client-page-design-announcement-hero.jpg'
+
+/**
  * Pure builder for the client-page-design feature announcement — the design
  * tab (logo/accent/hero-style/background, plus a per-gallery cover image)
  * added on top of the existing private-galleries feature. Shorter than
  * buildPrivateGalleriesAnnouncementEmail (a settings addition, not a new
- * workflow): a benefit checklist, one CTA to /dashboard/client-page-design,
- * and a reassurance callout that doing nothing changes nothing. Rollout
- * script: scripts/send-client-page-design-announcement.ts.
+ * workflow): a screenshot, a benefit checklist, one CTA to
+ * /dashboard/client-page-design, and a reassurance callout that doing
+ * nothing changes nothing. Rollout script:
+ * scripts/send-client-page-design-announcement.ts.
  */
 export function buildClientPageDesignAnnouncementEmail(input: { name: string }): {
   subject: string
@@ -1199,10 +1211,18 @@ export function buildClientPageDesignAnnouncementEmail(input: { name: string }):
         <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STG</td>
       </tr>
     </table>
-    <h1 style="${h1}">הדף שהלקוחה שלך רואה — מעכשיו מעוצב על ידך</h1>
-    <p style="${subhead}">לוגו, צבע, תמונת כיסוי וסגנון — נשמר מיד עם הבחירה</p>
+    <h1 style="${h1}">לעצב את הדף שהלקוחה שלך רואה</h1>
+    <p style="${subhead}">לוגו, צבע ותמונת כיסוי לכל גלריה — חדש, ונשמר מיד עם הבחירה</p>
+
+    <img
+      src="${CLIENT_PAGE_DESIGN_SCREENSHOT_URL}"
+      alt="דוגמה לדף גלריה פרטית עם תמונת כיסוי, לוגו וצבע מותאמים אישית"
+      width="516"
+      style="display: block; width: 100%; max-width: 516px; height: auto; border-radius: 12px; border: 1px solid ${LUXE.border}; margin: 0 0 24px;"
+    />
+
     <p style="${p}">שלום ${name},</p>
-    <p style="${p}">כשאת שולחת גלריה פרטית ללקוחה, היא נכנסת לדף שיכול עכשיו להיראות כמו שלך — לא כמו תבנית גנרית. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו.</p>
+    <p style="${p}">נוסף עמוד חדש שבו את קובעת איך נראה הדף שהלקוחה שלך פותחת כשהיא נכנסת לגלריה הפרטית שלה — לא תבנית גנרית, אלא בדיוק כמו שאת רוצה. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו.</p>
 
     ${luxeCheckList([
       ['תמונת כיסוי לכל גלריה', 'נבחרת ביצירת הגלריה, או בכל שלב אחר כך בהגדרות שלה'],
@@ -1230,7 +1250,7 @@ export function buildClientPageDesignAnnouncementEmail(input: { name: string }):
     text: [
       `שלום ${input.name.trim() || ''},`.trim(),
       '',
-      'כשאת שולחת גלריה פרטית ללקוחה, היא נכנסת לדף שיכול עכשיו להיראות כמו שלך — לא כמו תבנית גנרית. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו:',
+      'נוסף עמוד חדש שבו את קובעת איך נראה הדף שהלקוחה שלך פותחת כשהיא נכנסת לגלריה הפרטית שלה — לא תבנית גנרית, אלא בדיוק כמו שאת רוצה. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו:',
       '',
       '- תמונת כיסוי לכל גלריה — נבחרת ביצירת הגלריה, או בכל שלב אחר כך בהגדרות שלה',
       '- לוגו וצבע אחידים לכל הגלריות — נלקחים אוטומטית מהאתר שלך אם יש לך, או שאפשר להגדיר ערכים אחרים רק לדפי הלקוחות',
