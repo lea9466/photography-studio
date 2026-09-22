@@ -29,6 +29,8 @@ import {
   type ClientPageBackground,
 } from '@/lib/branding/client-page-background'
 import { isAllowedFont } from '@/constants/fonts'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import { buildCanonicalUrl } from '@/lib/seo/public-metadata'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
@@ -78,6 +80,8 @@ export type ClientPageBrand = {
   background: ClientPageBackground
   /** Whitelisted Google/system font name, or null to use the page's default (Heebo). */
   heading_font: string | null
+  /** A small badge linking to her public site — null unless she opted in AND has a resolvable site. */
+  site_link: { studioName: string; url: string } | null
 }
 
 export type ClientGalleryData = ClientPageBrand & {
@@ -112,10 +116,11 @@ async function signPath(
 
 /** The users columns a client-facing page reads its brand from. */
 const CLIENT_PAGE_BRAND_USER_COLUMNS =
-  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font'
+  'studio_name, slug, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font, client_page_show_site_link'
 
 type BrandingUserRow = {
   studio_name: string | null
+  slug: string | null
   logo_url: string | null
   accent_color: string | null
   client_page_logo_url: string | null
@@ -123,6 +128,7 @@ type BrandingUserRow = {
   client_page_hero_style: string | null
   client_page_background: string | null
   heading_font: string | null
+  client_page_show_site_link: boolean | null
 }
 
 /**
@@ -134,12 +140,19 @@ type BrandingUserRow = {
  * before it.
  */
 async function resolveClientPageBrand(
-  user: Omit<BrandingUserRow, 'studio_name'> | null | undefined
+  user: BrandingUserRow | null | undefined
 ): Promise<ClientPageBrand> {
   const { accent, foreground } = resolveClientPageAccent(
     user?.client_page_accent_color,
     user?.accent_color
   )
+
+  const sitePath = getPublicSitePath(user?.slug, user?.studio_name)
+  const siteLink =
+    user?.client_page_show_site_link && sitePath
+      ? { studioName: user.studio_name || FALLBACK_STUDIO_NAME, url: buildCanonicalUrl(sitePath) }
+      : null
+
   return {
     logo_image_url: await resolveBrandingPath(user?.client_page_logo_url || user?.logo_url),
     accent_color: accent,
@@ -149,6 +162,7 @@ async function resolveClientPageBrand(
     // No client-page override for this one — it's the same heading font as her
     // public site, or null (page default) if she never set one there either.
     heading_font: isAllowedFont(user?.heading_font) ? user!.heading_font : null,
+    site_link: siteLink,
   }
 }
 

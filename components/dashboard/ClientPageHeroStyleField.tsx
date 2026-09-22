@@ -35,6 +35,9 @@ export function ClientPageHeroStyleField({
   headingFont,
   disabled = false,
 }: ClientPageHeroStyleFieldProps) {
+  // Never shown in these small comparison cards — the "selected" checkmark
+  // already sits in the same top-left corner, and this feature previews fine
+  // in the larger preview above. showSiteLink there reflects the real choice.
   return (
     <div className="flex flex-col gap-4" role="radiogroup" aria-label="עיצוב ראש הדף">
       {CLIENT_PAGE_HERO_STYLES.map((style) => {
@@ -64,6 +67,7 @@ export function ClientPageHeroStyleField({
               heroStyle={style}
               background={background}
               headingFont={headingFont}
+              showSiteLink={false}
             />
             <div className="px-3 py-2.5">
               <p className="text-sm font-semibold text-[#100d1f]">{label.name}</p>

@@ -11,6 +11,7 @@ type ClientPagePreviewProps = {
   heroStyle: ClientPageHeroStyle
   background: ClientPageBackground
   headingFont: string | null
+  showSiteLink: boolean
 }
 
 /**
@@ -25,6 +26,7 @@ export function ClientPagePreview({
   heroStyle,
   background,
   headingFont,
+  showSiteLink,
 }: ClientPagePreviewProps) {
   return (
     <div
@@ -45,6 +47,7 @@ export function ClientPagePreview({
         coverUrl={null}
         heroStyle={heroStyle}
         headingFont={headingFont}
+        siteLink={showSiteLink ? { studioName: studioName || 'האתר שלי', url: '#' } : null}
       />
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <span className="rounded-full bg-accent px-4 py-1.5 text-sm font-medium text-accent-fg">

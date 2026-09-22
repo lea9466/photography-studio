@@ -20,6 +20,7 @@ import {
   removeBrandingImage,
 } from '@/lib/actions/branding.actions'
 import { isAllowedFont } from '@/constants/fonts'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
 /**
  * Result of a design-tab action. Errors are *returned*, not thrown: Next.js
@@ -44,6 +45,12 @@ export type ClientPageDesign = {
   background: ClientPageBackground
   /** Same heading font as her public site (no client-page override for this one) — whitelisted name, or null. */
   headingFont: string | null
+  siteLink: {
+    /** Her saved preference. Meaningless (never actually shown) when `available` is false. */
+    enabled: boolean
+    /** Whether she has a public site to link to at all — gates the toggle in the UI. */
+    available: boolean
+  }
 }
 
 const GENERIC_ERROR = 'הפעולה נכשלה. נסי שוב.'
@@ -58,7 +65,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
     const { data, error } = await supabase
       .from('users')
       .select(
-        'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font'
+        'studio_name, slug, logo_url, accent_color, client_page_logo_url, client_page_accent_color, client_page_hero_style, client_page_background, heading_font, client_page_show_site_link'
       )
       .eq('id', userId)
       .single()
@@ -66,6 +73,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
 
     const row = data as {
       studio_name: string | null
+      slug: string | null
       logo_url: string | null
       accent_color: string | null
       client_page_logo_url: string | null
@@ -73,6 +81,7 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
       client_page_hero_style: string | null
       client_page_background: string | null
       heading_font: string | null
+      client_page_show_site_link: boolean | null
     }
 
     return {
@@ -90,6 +99,10 @@ export async function getClientPageDesign(): Promise<ClientPageDesignResult<{ de
         heroStyle: resolveClientPageHeroStyle(row.client_page_hero_style),
         background: resolveClientPageBackground(row.client_page_background),
         headingFont: isAllowedFont(row.heading_font) ? row.heading_font : null,
+        siteLink: {
+          enabled: Boolean(row.client_page_show_site_link),
+          available: Boolean(getPublicSitePath(row.slug, row.studio_name)),
+        },
       },
     }
   } catch (error) {
@@ -159,6 +172,26 @@ export async function saveClientPageBackground(
       return { ok: false, error: 'שמירת הרקע נכשלה' }
     }
     return { ok: true, background }
+  } catch (error) {
+    return { ok: false, error: messageOf(error) }
+  }
+}
+
+/** Saves whether the client-facing gallery page shows a "visit my site" badge. */
+export async function saveClientPageShowSiteLink(
+  enabled: boolean
+): Promise<ClientPageDesignResult<{ enabled: boolean }>> {
+  try {
+    const { userId } = await requireDashboardContext()
+    const { error } = await createAdminClient()
+      .from('users')
+      .update({ client_page_show_site_link: enabled } as never)
+      .eq('id', userId)
+    if (error) {
+      console.error('[client-page-design] save show-site-link failed', { code: error.code })
+      return { ok: false, error: 'שמירת ההגדרה נכשלה' }
+    }
+    return { ok: true, enabled }
   } catch (error) {
     return { ok: false, error: messageOf(error) }
   }

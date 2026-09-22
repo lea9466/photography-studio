@@ -7,6 +7,7 @@ import {
   saveClientPageAccent,
   saveClientPageBackground,
   saveClientPageHeroStyle,
+  saveClientPageShowSiteLink,
   type ClientPageDesign,
 } from '@/lib/actions/client-page-design.actions'
 import { DEFAULT_CLIENT_ACCENT, resolveClientPageAccent } from '@/lib/branding/client-page-colors'
@@ -20,6 +21,7 @@ import { ClientPageHeroStyleField } from '@/components/dashboard/ClientPageHeroS
 import { ClientPageLogoField } from '@/components/dashboard/ClientPageLogoField'
 import { ClientPagePreview } from '@/components/dashboard/ClientPagePreview'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 
 type ClientPageDesignFormProps = {
   design: ClientPageDesign
@@ -40,6 +42,7 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [heroStyle, setHeroStyle] = useState<ClientPageHeroStyle>(design.heroStyle)
   const [background, setBackground] = useState<ClientPageBackground>(design.background)
+  const [showSiteLink, setShowSiteLink] = useState(design.siteLink.enabled)
   const [isPending, startTransition] = useTransition()
   const pickedLogoUrl = useObjectUrl(logoFile)
 
@@ -102,6 +105,20 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
     })
   }
 
+  function handleToggleSiteLink(next: boolean) {
+    const previous = showSiteLink
+    setShowSiteLink(next)
+    startTransition(async () => {
+      const result = await saveClientPageShowSiteLink(next)
+      if (!result.ok) {
+        setShowSiteLink(previous)
+        toast.error(result.error)
+        return
+      }
+      toast.success(next ? 'הכפתור לאתר שלך יוצג בגלריות' : 'הכפתור לאתר שלך הוסר')
+    })
+  }
+
   function handleRemoveLogo() {
     startTransition(async () => {
       const result = await removeClientPageLogo()
@@ -140,8 +157,27 @@ export function ClientPageDesignForm({ design }: ClientPageDesignFormProps) {
           heroStyle={heroStyle}
           background={background}
           headingFont={design.headingFont}
+          showSiteLink={showSiteLink}
         />
       </div>
+
+      <section className={CARD_CLASS}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold text-[#100d1f]">כפתור לאתר שלך</h3>
+            <p className="text-sm text-[#48464c]">
+              {design.siteLink.available
+                ? 'תג קטן בפינת התמונה, עם קישור לאתר הציבורי שלך — כבוי כברירת מחדל'
+                : 'זמין רק כשיש לך אתר ציבורי (שם סטודיו או קישור אישי מוגדרים)'}
+            </p>
+          </div>
+          <Switch
+            checked={showSiteLink}
+            onCheckedChange={handleToggleSiteLink}
+            disabled={isPending || !design.siteLink.available}
+          />
+        </div>
+      </section>
 
       <section className={CARD_CLASS}>
         <div className="space-y-1">
