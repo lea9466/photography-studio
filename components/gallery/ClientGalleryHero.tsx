@@ -55,7 +55,7 @@ function HeroBackdrop({
   )
 }
 
-const HERO_HEIGHT_CLASS = 'h-[56vh] max-h-[600px] min-h-[320px]'
+const HERO_HEIGHT_CLASS = 'h-[78vh] max-h-[760px] min-h-[420px]'
 
 /**
  * Hollow, glowing letterforms in the studio's own accent colour — a
