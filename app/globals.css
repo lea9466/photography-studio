@@ -82,6 +82,20 @@
   }
 }
 
+/* Client-gallery hero entrance: the cover photo settles in from a slight
+   zoom, while the logo/text pieces on top of it use float-up/slide-up
+   (below) with staggered delays — see ClientGalleryHero.tsx. */
+@keyframes hero-image-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.4s ease-out both;
 }
@@ -96,6 +110,10 @@
 
 .animate-pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+.animate-hero-image-in {
+  animation: hero-image-in 1.1s ease-out both;
 }
 
 body {

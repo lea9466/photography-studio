@@ -19,12 +19,16 @@ type ClientGalleryHeroProps = {
   siteLink: { studioName: string; url: string } | null
 }
 
+/** Staggered entrance delays, applied in each layout's own visual top-to-bottom order. */
+const ENTRANCE_DELAY = ['[animation-delay:100ms]', '[animation-delay:250ms]', '[animation-delay:400ms]', '[animation-delay:550ms]']
+
 /**
  * Small opt-in badge, top-left of the cover photo, linking out to the
  * studio's own public site. White chip (legible on any photo or the accent
  * fallback block) with the arrow pulsing gently to draw the eye without being
  * obnoxious. Must sit inside a `relative`-positioned ancestor sized to the
- * photo area — each hero layout places it accordingly.
+ * photo area — each hero layout places it accordingly. Fades in last, after
+ * the rest of the hero has settled.
  */
 function SiteLinkBadge({ siteLink }: { siteLink: { studioName: string; url: string } }) {
   return (
@@ -32,7 +36,7 @@ function SiteLinkBadge({ siteLink }: { siteLink: { studioName: string; url: stri
       href={siteLink.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-accent shadow-sm transition hover:bg-white sm:left-6 sm:top-6"
+      className={`absolute left-4 top-4 z-10 inline-flex animate-fade-in items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-semibold text-accent shadow-sm transition hover:bg-white sm:left-6 sm:top-6 ${ENTRANCE_DELAY[3]}`}
     >
       <ArrowUpRight className="h-3.5 w-3.5 animate-pulse-soft" aria-hidden />
       {siteLink.studioName}
@@ -44,9 +48,9 @@ function SiteLinkBadge({ siteLink }: { siteLink: { studioName: string; url: stri
 function LogoChip({ logoUrl, size = 'md' }: { logoUrl: string; size?: 'sm' | 'md' }) {
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-2xl bg-white/95 shadow-sm ${
+      className={`inline-flex animate-float-up items-center justify-center rounded-2xl bg-white/95 shadow-sm ${
         size === 'sm' ? 'px-3 py-1.5' : 'px-4 py-2'
-      }`}
+      } ${ENTRANCE_DELAY[0]}`}
     >
       <Image
         src={logoUrl}
@@ -59,7 +63,7 @@ function LogoChip({ logoUrl, size = 'md' }: { logoUrl: string; size?: 'sm' | 'md
   )
 }
 
-/** Full-bleed cover photo (or the accent-coloured fallback block) behind everything else. */
+/** Full-bleed cover photo (or the accent-coloured fallback block) behind everything else, settling in from a slight zoom. */
 function HeroBackdrop({
   coverUrl,
   gradient,
@@ -69,11 +73,18 @@ function HeroBackdrop({
   gradient?: string
 }) {
   if (!coverUrl) {
-    return <div aria-hidden className="absolute inset-0 bg-accent" />
+    return <div aria-hidden className="absolute inset-0 animate-hero-image-in bg-accent" />
   }
   return (
     <>
-      <Image src={coverUrl} alt="" fill priority sizes="100vw" className="object-cover" />
+      <Image
+        src={coverUrl}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="animate-hero-image-in object-cover"
+      />
       {gradient ? <div aria-hidden className={`absolute inset-0 ${gradient}`} /> : null}
     </>
   )
@@ -112,13 +123,19 @@ function CenteredHero({ title, studioName, logoUrl, coverUrl, fontFamily, siteLi
       >
         {logoUrl ? <LogoChip logoUrl={logoUrl} size="sm" /> : null}
         <h1
-          className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl"
+          className={`animate-slide-up text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl ${ENTRANCE_DELAY[1]}`}
           style={heroTextStyle(fontFamily)}
         >
           {title}
         </h1>
-        <span aria-hidden className="h-[3px] w-9 rounded-full bg-[var(--client-accent)] opacity-80" />
-        <p className="text-sm font-medium tracking-wide opacity-90 sm:text-base" style={heroTextStyle(fontFamily)}>
+        <span
+          aria-hidden
+          className={`h-[3px] w-9 animate-fade-in rounded-full bg-[var(--client-accent)] opacity-80 ${ENTRANCE_DELAY[2]}`}
+        />
+        <p
+          className={`animate-float-up text-sm font-medium tracking-wide opacity-90 sm:text-base ${ENTRANCE_DELAY[3]}`}
+          style={heroTextStyle(fontFamily)}
+        >
           {name}
         </p>
       </div>
@@ -138,11 +155,14 @@ function BottomRightHero({ title, studioName, logoUrl, coverUrl, fontFamily, sit
         }`}
       >
         {logoUrl ? <LogoChip logoUrl={logoUrl} size="sm" /> : null}
-        <p className="text-sm font-medium opacity-85" style={heroTextStyle(fontFamily)}>
+        <p
+          className={`animate-float-up text-sm font-medium opacity-85 ${ENTRANCE_DELAY[1]}`}
+          style={heroTextStyle(fontFamily)}
+        >
           {name}
         </p>
         <h1
-          className="max-w-md text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
+          className={`max-w-md animate-slide-up text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl ${ENTRANCE_DELAY[2]}`}
           style={heroTextStyle(fontFamily)}
         >
           {title}
@@ -165,11 +185,14 @@ function BelowPhotoHero({ title, studioName, logoUrl, coverUrl, fontFamily, site
           above, with or without a cover) — so it always needs text-foreground. */}
       <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-foreground sm:py-10">
         {logoUrl ? <LogoChip logoUrl={logoUrl} /> : null}
-        <p className="text-sm font-medium tracking-wide opacity-90 sm:text-base" style={heroTextStyle(fontFamily)}>
+        <p
+          className={`animate-float-up text-sm font-medium tracking-wide opacity-90 sm:text-base ${ENTRANCE_DELAY[1]}`}
+          style={heroTextStyle(fontFamily)}
+        >
           {name}
         </p>
         <h1
-          className="text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl"
+          className={`animate-slide-up text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl ${ENTRANCE_DELAY[2]}`}
           style={heroTextStyle(fontFamily)}
         >
           {title}
