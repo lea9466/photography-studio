@@ -108,11 +108,11 @@ function BelowPhotoHero({ title, studioName, logoUrl, coverUrl }: Omit<ClientGal
           gradient="bg-gradient-to-b from-black/15 via-transparent to-black/30"
         />
       </div>
-      <div
-        className={`flex flex-col items-center gap-3 px-4 py-8 text-center sm:py-10 ${
-          coverUrl ? 'text-foreground' : 'text-accent-fg'
-        }`}
-      >
+      {/* Unlike the other two layouts, this text always sits on the page's own
+          background below the image block — never on the accent block itself
+          (that's only the placeholder above, with or without a cover) — so it
+          always needs text-foreground, never text-accent-fg. */}
+      <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-foreground sm:py-10">
         {logoUrl ? <LogoChip logoUrl={logoUrl} /> : null}
         <p className="text-sm font-medium tracking-wide opacity-90 sm:text-base">{name}</p>
         <h1 className="text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl">{title}</h1>

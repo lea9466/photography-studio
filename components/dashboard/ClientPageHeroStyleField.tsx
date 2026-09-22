@@ -34,7 +34,7 @@ export function ClientPageHeroStyleField({
   disabled = false,
 }: ClientPageHeroStyleFieldProps) {
   return (
-    <div className="grid gap-4 sm:grid-cols-3" role="radiogroup" aria-label="עיצוב ראש הדף">
+    <div className="flex flex-col gap-4" role="radiogroup" aria-label="עיצוב ראש הדף">
       {CLIENT_PAGE_HERO_STYLES.map((style) => {
         const selected = style === value
         const label = CLIENT_PAGE_HERO_STYLE_LABELS[style]
