@@ -285,6 +285,15 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
     hasCustomDomainAddon: false,
   })
 
+  const { data: galleryRows } = await admin
+    .from('galleries')
+    .select('gallery_type')
+    .eq('user_id', row.id)
+
+  const galleryTypes = new Set(
+    ((galleryRows ?? []) as { gallery_type: string | null }[]).map((g) => g.gallery_type)
+  )
+
   return {
     exists: true,
     studio: {
@@ -300,6 +309,8 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
       is_under_construction: Boolean(row.is_under_construction),
       is_site_unavailable: Boolean(row.is_site_unavailable),
       has_hero_video: Boolean(row.hero_video_url?.trim()),
+      has_client_gallery: [...galleryTypes].some((t) => t !== 'portfolio'),
+      has_showcase_gallery: galleryTypes.has('portfolio'),
       site_path: getPublicSitePath(row.slug, row.studio_name),
       subscription_tier_override: override,
       tier: entitlements.tier,

@@ -12,6 +12,7 @@ import {
   ExternalLink,
   Filter,
   Gift,
+  Globe,
   Hash,
   Lock,
   LogIn,
@@ -54,6 +55,7 @@ type AdminStudioListProps = {
 
 type SortKey = 'created' | 'last_visit' | 'visit_count'
 type FilterKey = 'all' | 'active_today' | 'never_visited' | 'new_this_month'
+type GalleryFilterKey = 'any' | 'has' | 'missing'
 
 const SORT_OPTIONS: {
   key: SortKey
@@ -128,6 +130,12 @@ const FILTER_OPTIONS: {
   },
 ]
 
+const GALLERY_FILTER_OPTIONS: { key: GalleryFilterKey; label: string }[] = [
+  { key: 'any', label: 'הכל' },
+  { key: 'has', label: 'יש' },
+  { key: 'missing', label: 'אין' },
+]
+
 const ADMIN_TIMEZONE = 'Asia/Jerusalem'
 
 function toDateKey(date: Date): string {
@@ -184,6 +192,12 @@ function isToday(iso: string) {
 
 function isThisMonth(iso: string) {
   return toMonthKey(new Date(iso)) === toMonthKey(new Date())
+}
+
+function matchesGalleryFilter(hasGallery: boolean, filterKey: GalleryFilterKey) {
+  if (filterKey === 'has') return hasGallery
+  if (filterKey === 'missing') return !hasGallery
+  return true
 }
 
 function matchesFilter(row: AdminStudioRow, filterKey: FilterKey) {
@@ -279,6 +293,8 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [impersonatingId, setImpersonatingId] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>('last_visit')
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
+  const [clientGalleryFilter, setClientGalleryFilter] = useState<GalleryFilterKey>('any')
+  const [showcaseGalleryFilter, setShowcaseGalleryFilter] = useState<GalleryFilterKey>('any')
   const [searchQuery, setSearchQuery] = useState('')
   const [highlightedStudioId, setHighlightedStudioId] = useState<string | null>(null)
 
@@ -306,9 +322,13 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const filteredRows = useMemo(
     () =>
       rows.filter(
-        (row) => matchesFilter(row, filterKey) && matchesSearch(row, searchQuery)
+        (row) =>
+          matchesFilter(row, filterKey) &&
+          matchesSearch(row, searchQuery) &&
+          matchesGalleryFilter(row.has_client_gallery, clientGalleryFilter) &&
+          matchesGalleryFilter(row.has_showcase_gallery, showcaseGalleryFilter)
       ),
-    [rows, filterKey, searchQuery]
+    [rows, filterKey, searchQuery, clientGalleryFilter, showcaseGalleryFilter]
   )
 
   const sortedRows = useMemo(() => {
@@ -589,6 +609,60 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                   </button>
                 )
               })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <Lock className="h-4 w-4 text-amber-600" />
+                גלריה פרטית
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {GALLERY_FILTER_OPTIONS.map((option) => {
+                  const isActive = clientGalleryFilter === option.key
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setClientGalleryFilter(option.key)}
+                      className={`rounded-full border px-3.5 py-2 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'border-amber-300 bg-amber-500 text-white shadow-sm'
+                          : 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-300 hover:bg-amber-100'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <Globe className="h-4 w-4 text-sky-600" />
+                גלריה ציבורית
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {GALLERY_FILTER_OPTIONS.map((option) => {
+                  const isActive = showcaseGalleryFilter === option.key
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setShowcaseGalleryFilter(option.key)}
+                      className={`rounded-full border px-3.5 py-2 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'border-sky-300 bg-sky-500 text-white shadow-sm'
+                          : 'border-sky-200 bg-sky-50 text-sky-800 hover:border-sky-300 hover:bg-sky-100'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 

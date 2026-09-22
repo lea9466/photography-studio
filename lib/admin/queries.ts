@@ -31,6 +31,8 @@ export type AdminStudioRow = {
   is_under_construction: boolean
   is_site_unavailable: boolean
   has_hero_video: boolean
+  has_client_gallery: boolean
+  has_showcase_gallery: boolean
   site_path: string | null
   subscription_tier_override: SubscriptionTierOverride
   tier: EntitlementTier
@@ -110,6 +112,50 @@ async function fetchDistinctUserIds(
   }
 
   return ids
+}
+
+/**
+ * Which studios have at least one gallery of each kind (see
+ * lib/gallery-kind.ts: `gallery_type: 'portfolio'` = showcase/public,
+ * anything else = client/private), for the /manage studio-list filters.
+ */
+async function fetchGalleryKindUserIds(): Promise<{
+  clientIds: Set<string>
+  showcaseIds: Set<string>
+}> {
+  const admin = createAdminClient()
+  const clientIds = new Set<string>()
+  const showcaseIds = new Set<string>()
+  const pageSize = 1000
+  let from = 0
+
+  while (true) {
+    const { data, error } = await admin
+      .from('galleries')
+      .select('user_id, gallery_type')
+      .range(from, from + pageSize - 1)
+
+    if (error) throw new Error(error.message)
+
+    const rows = data ?? []
+    for (const row of rows) {
+      const { user_id: userId, gallery_type: galleryType } = row as {
+        user_id: string | null
+        gallery_type: string | null
+      }
+      if (!userId) continue
+      if (galleryType === 'portfolio') {
+        showcaseIds.add(userId)
+      } else {
+        clientIds.add(userId)
+      }
+    }
+
+    if (rows.length < pageSize) break
+    from += pageSize
+  }
+
+  return { clientIds, showcaseIds }
 }
 
 export async function getLatestAnnouncementForAdmin(): Promise<Announcement | null> {
@@ -286,9 +332,10 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   }
 
   const rows = (data ?? []) as AdminStudioQueryRow[]
-  const activeSubscriptions = await fetchActiveSubscriptionByIds(
-    rows.map((studio) => studio.id)
-  )
+  const [activeSubscriptions, galleryKindIds] = await Promise.all([
+    fetchActiveSubscriptionByIds(rows.map((studio) => studio.id)),
+    fetchGalleryKindUserIds(),
+  ])
   const paymentsCheckoutEnabled = isPaymentsCheckoutEnabled()
 
   return rows.map((studio) => {
@@ -318,6 +365,8 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
       is_under_construction: Boolean(studio.is_under_construction),
       is_site_unavailable: Boolean(studio.is_site_unavailable),
       has_hero_video: Boolean(studio.hero_video_url?.trim()),
+      has_client_gallery: galleryKindIds.clientIds.has(studio.id),
+      has_showcase_gallery: galleryKindIds.showcaseIds.has(studio.id),
       site_path: getPublicSitePath(studio.slug, studio.studio_name),
       subscription_tier_override:
         (studio.subscription_tier_override as SubscriptionTierOverride) ??
