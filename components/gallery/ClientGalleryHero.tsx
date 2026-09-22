@@ -58,21 +58,14 @@ function HeroBackdrop({
 const HERO_HEIGHT_CLASS = 'h-[78vh] max-h-[760px] min-h-[420px]'
 
 /**
- * Hollow, glowing letterforms in the studio's own accent colour — a
- * transparent fill with a coloured outline and a soft layered glow, instead
- * of a solid-coloured fill. Works on any background (photo or solid block):
- * the glow itself is what reads, not a colour contrast against what's behind
- * it. `strokeWidth` scales with the text size (thicker for a big title,
- * thinner for the small studio-name line) so the outline stays proportionate.
+ * Tried a hollow/glowing (transparent fill + coloured outline + shadow) text
+ * treatment here — illegible on a busy or light photo (the outline has no
+ * solid body to read against), reverted. Solid fill + a plain drop-shadow for
+ * legibility on a photo is the tried-and-tested approach; only the font
+ * changes with `fontFamily`.
  */
-function glowTextStyle(strokeWidth: string, fontFamily: string | null): React.CSSProperties {
-  return {
-    color: 'transparent',
-    WebkitTextStroke: `${strokeWidth} var(--client-accent)`,
-    textShadow:
-      '0 0 6px var(--client-accent), 0 0 16px var(--client-accent), 0 0 34px var(--client-accent)',
-    ...(fontFamily ? { fontFamily } : {}),
-  }
+function heroTextStyle(fontFamily: string | null): React.CSSProperties {
+  return fontFamily ? { fontFamily } : {}
 }
 
 function CenteredHero({
@@ -94,18 +87,19 @@ function CenteredHero({
           <LogoChip logoUrl={logoUrl} size="sm" />
         </div>
       ) : null}
-      <div className="absolute inset-x-0 bottom-8 flex flex-col items-center gap-3 px-4 text-center sm:bottom-12">
+      <div
+        className={`absolute inset-x-0 bottom-8 flex flex-col items-center gap-3 px-4 text-center sm:bottom-12 ${
+          coverUrl ? 'text-white' : 'text-accent-fg'
+        }`}
+      >
         <h1
-          className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl"
-          style={glowTextStyle('1.5px', fontFamily)}
+          className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-5xl"
+          style={heroTextStyle(fontFamily)}
         >
           {title}
         </h1>
         <span aria-hidden className="h-[3px] w-9 rounded-full bg-[var(--client-accent)] opacity-80" />
-        <p
-          className="text-sm font-semibold tracking-wide sm:text-base"
-          style={glowTextStyle('0.8px', fontFamily)}
-        >
+        <p className="text-sm font-medium tracking-wide opacity-90 sm:text-base" style={heroTextStyle(fontFamily)}>
           {name}
         </p>
       </div>
@@ -124,14 +118,18 @@ function BottomRightHero({
   return (
     <header className={`relative isolate w-full overflow-hidden ${HERO_HEIGHT_CLASS}`}>
       <HeroBackdrop coverUrl={coverUrl} gradient="bg-gradient-to-t from-black/40 via-black/5 to-transparent" />
-      <div className="absolute inset-x-0 bottom-8 flex flex-col items-end gap-2.5 px-5 text-end sm:bottom-10 sm:px-10">
+      <div
+        className={`absolute inset-x-0 bottom-8 flex flex-col items-end gap-2.5 px-5 text-end sm:bottom-10 sm:px-10 ${
+          coverUrl ? 'text-white' : 'text-accent-fg'
+        }`}
+      >
         {logoUrl ? <LogoChip logoUrl={logoUrl} size="sm" /> : null}
-        <p className="text-sm font-semibold" style={glowTextStyle('0.7px', fontFamily)}>
+        <p className="text-sm font-medium opacity-85" style={heroTextStyle(fontFamily)}>
           {name}
         </p>
         <h1
           className="max-w-md text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
-          style={glowTextStyle('1.3px', fontFamily)}
+          style={heroTextStyle(fontFamily)}
         >
           {title}
         </h1>
@@ -155,15 +153,15 @@ function BelowPhotoHero({
       </div>
       {/* This text always sits on the page's own background below the image
           block — never on the accent block itself (that's only the placeholder
-          above, with or without a cover) — so the glow reads the same either way. */}
-      <div className="flex flex-col items-center gap-3 px-4 py-8 text-center sm:py-10">
+          above, with or without a cover) — so it always needs text-foreground. */}
+      <div className="flex flex-col items-center gap-3 px-4 py-8 text-center text-foreground sm:py-10">
         {logoUrl ? <LogoChip logoUrl={logoUrl} /> : null}
-        <p className="text-sm font-semibold tracking-wide sm:text-base" style={glowTextStyle('0.8px', fontFamily)}>
+        <p className="text-sm font-medium tracking-wide opacity-90 sm:text-base" style={heroTextStyle(fontFamily)}>
           {name}
         </p>
         <h1
-          className="text-2xl font-bold leading-tight sm:text-3xl lg:text-4xl"
-          style={glowTextStyle('1.4px', fontFamily)}
+          className="text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl"
+          style={heroTextStyle(fontFamily)}
         >
           {title}
         </h1>
@@ -177,9 +175,9 @@ function BelowPhotoHero({
  * lib/branding/client-page-hero-style.ts). Each falls back to a solid block in
  * the studio's accent colour when the gallery has no cover, so every gallery
  * looks branded even without one. The accent comes from the `--client-accent` /
- * `--client-accent-fg` variables ClientGalleryView sets on its root; the title
- * and studio name are hollow, glowing text in that same colour (see
- * glowTextStyle) rather than a solid fill, so they read on any backdrop.
+ * `--client-accent-fg` variables ClientGalleryView sets on its root, so text
+ * always reads on the fallback block; the title and studio name also pick up
+ * the studio's own heading font (headingFont) when she has one set.
  */
 export function ClientGalleryHero({ heroStyle, headingFont, ...props }: ClientGalleryHeroProps) {
   const fontFamily = headingFont ? toCssFontStack(headingFont) : null
