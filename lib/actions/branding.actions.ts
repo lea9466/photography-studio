@@ -35,6 +35,7 @@ type BrandingImageType =
   | 'packages_desktop'
   | 'packages_mobile'
   | 'faq_section'
+  | 'client_page_logo'
 
 function validateBrandingFile(contentType: string, fileSize: number) {
   validatePrimaryImageFile(contentType, fileSize)
@@ -170,6 +171,7 @@ export async function finalizeBrandingUpload(
     updateData.logo_url = path
     await syncBrandingLogoFavicon(userId, path)
   }
+  if (type === 'client_page_logo') updateData.client_page_logo_url = path
   if (type === 'about') updateData.about_image_url = path
   if (type === 'contact_desktop') updateData.contact_desktop_url = path
   if (type === 'contact_mobile') updateData.contact_mobile_url = path
@@ -279,6 +281,7 @@ const SINGLE_BRANDING_FIELD: Record<
   keyof UsersUpdate
 > = {
   logo: 'logo_url',
+  client_page_logo: 'client_page_logo_url',
   about: 'about_image_url',
   contact_desktop: 'contact_desktop_url',
   contact_mobile: 'contact_mobile_url',

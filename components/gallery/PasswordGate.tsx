@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import {
   requestGalleryPassword,
   verifyGalleryPassword,
+  type ClientPageBrand,
 } from '@/lib/actions/client-gallery.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +25,14 @@ type PasswordGateProps = {
   galleryTitle: string
   studioName?: string | null
   maskedEmail?: string | null
+  /**
+   * The studio's logo + accent. The gallery's cover is deliberately absent:
+   * it is behind the gallery session and is not shown before the client is in.
+   */
+  brand?: Pick<ClientPageBrand, 'logo_image_url' | 'accent_color' | 'accent_foreground'>
 }
+
+const PRIMARY_ACTION_CLASS = 'w-full bg-accent text-accent-fg hover:brightness-110'
 
 function codeSentNotice(masked: string | null) {
   return masked
@@ -36,6 +45,7 @@ export function PasswordGate({
   galleryTitle,
   studioName,
   maskedEmail,
+  brand,
 }: PasswordGateProps) {
   const [step, setStep] = useState<'request' | 'enter-code'>('request')
   const [code, setCode] = useState('')
@@ -81,9 +91,28 @@ export function PasswordGate({
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md animate-fade-in">
+    <div
+      className="flex min-h-screen items-center justify-center p-4"
+      style={
+        brand
+          ? ({
+              '--client-accent': brand.accent_color,
+              '--client-accent-fg': brand.accent_foreground,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
+      <Card className="w-full max-w-md animate-fade-in border-t-4 border-t-accent">
         <CardHeader className="text-center">
+          {brand?.logo_image_url ? (
+            <Image
+              src={brand.logo_image_url}
+              alt=""
+              width={240}
+              height={96}
+              className="mx-auto mb-2 h-14 w-auto max-w-[200px] object-contain"
+            />
+          ) : null}
           <CardTitle>{studioName ?? FALLBACK_STUDIO_NAME}</CardTitle>
           <CardDescription>{galleryTitle}</CardDescription>
         </CardHeader>
@@ -91,14 +120,14 @@ export function PasswordGate({
           {step === 'request' ? (
             <>
               {masked ? (
-                <p className="rounded-md border border-[--border] bg-[--muted]/30 px-4 py-3 text-center text-sm text-[--foreground]">
+                <p className="rounded-md border border-border bg-muted/30 px-4 py-3 text-center text-sm text-foreground">
                   כדי להיכנס, נשלח לך קוד כניסה חד-פעמי לכתובת{' '}
                   <span dir="ltr" className="font-medium">
                     {masked}
                   </span>
                 </p>
               ) : (
-                <p className="text-center text-sm text-[--muted]">
+                <p className="text-center text-sm text-muted">
                   לא נמצא מייל ללקוח — פנו לצלם/ת לקבלת גישה
                 </p>
               )}
@@ -106,7 +135,7 @@ export function PasswordGate({
               {masked ? (
                 <Button
                   type="button"
-                  className="w-full"
+                  className={PRIMARY_ACTION_CLASS}
                   disabled={isSending}
                   onClick={() => sendCode(() => setStep('enter-code'))}
                 >
@@ -116,7 +145,7 @@ export function PasswordGate({
             </>
           ) : (
             <>
-              <p className="rounded-md border border-[--border] bg-[--muted]/30 px-4 py-3 text-center text-sm text-[--foreground]">
+              <p className="rounded-md border border-border bg-muted/30 px-4 py-3 text-center text-sm text-foreground">
                 {masked ? (
                   <>
                     שלחנו קוד כניסה לכתובת{' '}
@@ -145,7 +174,7 @@ export function PasswordGate({
                     autoFocus
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={isPending}>
+                <Button type="submit" className={PRIMARY_ACTION_CLASS} disabled={isPending}>
                   {isPending ? 'נכנסים...' : 'כניסה לגלריה'}
                 </Button>
               </form>
@@ -153,7 +182,7 @@ export function PasswordGate({
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full"
+                className="w-full text-foreground hover:bg-foreground/5"
                 disabled={isSending}
                 onClick={() => sendCode()}
               >

@@ -165,8 +165,24 @@ export async function resolveMediaUrl(
         if (privateBase) return `${privateBase}/${key}`
       }
       if (!forceProxy) return signEdgeUrl(publicUrl, bucket, path)
-      const baseUrl = privateMediaBaseUrl() ?? publicUrl
-      return `${baseUrl}/${key}`
+
+      const privateBase = privateMediaBaseUrl()
+      if (privateBase) return `${privateBase}/${key}`
+
+      // No private-gallery domain configured (e.g. local dev — see the comment
+      // in .env.local). A bare CDN URL here relies on the gallery-session
+      // cookie reaching albums.studio-galleries.com, but cookieDomain() (see
+      // lib/gallery-session.ts) only widens that cookie to the shared parent
+      // domain in production — outside production it's host-only for
+      // localhost and never accompanies this cross-origin request, so the
+      // Worker 403s every private-gallery photo. Route through this app's own
+      // same-origin proxy instead: it reads the session cookie directly
+      // (lib/gallery-session.ts's touchGallerySession) with no cross-domain
+      // cookie delivery involved.
+      if (process.env.NODE_ENV !== 'production') {
+        return galleryMediaProxyUrl(key, galleryId)
+      }
+      return `${publicUrl}/${key}`
     }
     return `${publicUrl}/${key}`
   }

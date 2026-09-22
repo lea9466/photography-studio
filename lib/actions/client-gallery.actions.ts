@@ -18,6 +18,9 @@ import {
   sendDeliveryReadyEmail,
 } from '@/lib/email/resend'
 import { maskEmail } from '@/lib/utils'
+import { resolveBrandingPath } from '@/lib/branding-urls'
+import { resolveClientPageAccent } from '@/lib/branding/client-page-colors'
+import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -53,22 +56,25 @@ export type ClientGalleryPhoto = {
   height: number | null
 }
 
-export type ClientGalleryData = {
+/**
+ * What the client-facing pages show of the studio's brand. Colour and logo
+ * come from the studio's site settings; every value here is already resolved
+ * (validated colour, ready-to-use image URL) so the browser never has to.
+ */
+export type ClientPageBrand = {
+  logo_image_url: string | null
+  accent_color: string
+  accent_foreground: string
+}
+
+export type ClientGalleryData = ClientPageBrand & {
   id: string
   title: string
   status: GalleryStatus
   gallery_type: string
   studio_name: string | null
-  logo_url: string | null
-  accent_color: string
-  selected_theme: string
-  hero_desktop_url: string | null
-  hero_mobile_url: string | null
-  about_text: string | null
-  about_image_url: string | null
-  stat_projects: number
-  stat_clients: number
-  stat_experience_years: number
+  /** The gallery's standalone cover image, or null when none was set. */
+  cover_image_url: string | null
   max_album_selection: number | null
   max_edit_selection: number | null
   album_selection_enabled: boolean
@@ -91,12 +97,44 @@ async function signPath(
   return resolveMediaUrl(bucket, path, galleryId, forceProxy)
 }
 
+/** The users columns a client-facing page reads its brand from. */
+const CLIENT_PAGE_BRAND_USER_COLUMNS =
+  'studio_name, logo_url, accent_color, client_page_logo_url, client_page_accent_color'
+
+type BrandingUserRow = {
+  studio_name: string | null
+  logo_url: string | null
+  accent_color: string | null
+  client_page_logo_url: string | null
+  client_page_accent_color: string | null
+}
+
+/**
+ * Logo + accent for a client-facing page. The studio's client-page override
+ * wins; without one it inherits the public-site brand. Only the studio's own
+ * public brand — the gallery's cover image is deliberately not part of this,
+ * because it is behind the gallery session and is not shown before it.
+ */
+async function resolveClientPageBrand(
+  user: Omit<BrandingUserRow, 'studio_name'> | null | undefined
+): Promise<ClientPageBrand> {
+  const { accent, foreground } = resolveClientPageAccent(
+    user?.client_page_accent_color,
+    user?.accent_color
+  )
+  return {
+    logo_image_url: await resolveBrandingPath(user?.client_page_logo_url || user?.logo_url),
+    accent_color: accent,
+    accent_foreground: foreground,
+  }
+}
+
 export async function getClientGalleryPublicMeta(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
     .select(
-      'id, title, status, gallery_type, is_public, expires_at, suspended_at, users!galleries_user_id_fkey(studio_name), clients(email)'
+      'id, title, status, gallery_type, is_public, expires_at, suspended_at, users!galleries_user_id_fkey(' + CLIENT_PAGE_BRAND_USER_COLUMNS + '), clients(email)'
     )
     .eq('id', galleryId)
     .single()
@@ -109,7 +147,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     is_public: boolean
     expires_at: string | null
     suspended_at: string | null
-    users: { studio_name: string | null } | { studio_name: string | null }[] | null
+    users: BrandingUserRow | BrandingUserRow[] | null
     clients: { email: string | null } | { email: string | null }[] | null
   }
 
@@ -136,6 +174,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     // Suspended = owner's private-gallery subscription lapsed past its grace.
     suspended: !gallery.is_public && gallery.suspended_at != null,
     studio_name: user?.studio_name ?? null,
+    brand: await resolveClientPageBrand(user),
     maskedEmail,
   }
 }
@@ -350,8 +389,8 @@ async function loadClientGalleryInternal(galleryId: string) {
     .from('galleries')
     .select(
       `
-      id, title, status, gallery_type, user_id, is_public,
-      users!galleries_user_id_fkey (studio_name, logo_url),
+      id, title, status, gallery_type, user_id, is_public, cover_image,
+      users!galleries_user_id_fkey (${CLIENT_PAGE_BRAND_USER_COLUMNS}),
       gallery_settings (
         max_album_selection, max_edit_selection,
         album_selection_enabled, edit_selection_enabled,
@@ -369,8 +408,10 @@ async function loadClientGalleryInternal(galleryId: string) {
     title: string
     status: GalleryStatus
     gallery_type: string
+    user_id: string
     is_public: boolean
-    users: { studio_name: string | null; logo_url: string | null } | { studio_name: string | null; logo_url: string | null }[] | null
+    cover_image: string | null
+    users: BrandingUserRow | BrandingUserRow[] | null
     gallery_settings: {
       max_album_selection: number | null
       max_edit_selection: number | null
@@ -478,22 +519,22 @@ async function loadClientGalleryInternal(galleryId: string) {
     })
   )
 
+  // The cover is a standalone file under the gallery's own previews prefix. Only
+  // a path we generated for this very gallery is signed; anything else stored in
+  // the column is ignored. Same proxy rule as the photos: a private gallery's
+  // URL goes through the session-gated route.
+  const coverImageUrl = isClientCoverPath(gallery.cover_image, gallery.user_id, galleryId)
+    ? await signPath('previews', gallery.cover_image, galleryId, !gallery.is_public)
+    : null
+
   const meta: ClientGalleryData = {
     id: gallery.id,
     title: gallery.title,
     status: gallery.status,
     gallery_type: gallery.gallery_type,
     studio_name: user?.studio_name ?? null,
-    logo_url: user?.logo_url ?? null,
-    accent_color: (user as any)?.accent_color ?? '#7c3aed',
-    selected_theme: (user as any)?.selected_theme ?? 'classic',
-    hero_desktop_url: (user as any)?.hero_desktop_url ?? null,
-    hero_mobile_url: (user as any)?.hero_mobile_url ?? null,
-    about_text: (user as any)?.about_text ?? null,
-    about_image_url: (user as any)?.about_image_url ?? null,
-    stat_projects: (user as any)?.stat_projects ?? 0,
-    stat_clients: (user as any)?.stat_clients ?? 0,
-    stat_experience_years: (user as any)?.stat_experience_years ?? 0,
+    ...(await resolveClientPageBrand(user)),
+    cover_image_url: coverImageUrl,
     max_album_selection: settings?.max_album_selection ?? null,
     max_edit_selection: settings?.max_edit_selection ?? null,
     album_selection_enabled: settings?.album_selection_enabled ?? true,

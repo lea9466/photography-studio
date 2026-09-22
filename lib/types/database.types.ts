@@ -115,6 +115,8 @@ export type Database = {
           custom_domain_addon_purchased_at: string | null
           free_private_gallery_created: boolean
           private_gallery_tier_override: string
+          client_page_accent_color: string | null
+          client_page_logo_url: string | null
         }
         Insert: {
           id: string
@@ -185,6 +187,8 @@ export type Database = {
           custom_domain_addon_purchased_at?: string | null
           free_private_gallery_created?: boolean
           private_gallery_tier_override?: string
+          client_page_accent_color?: string | null
+          client_page_logo_url?: string | null
         }
         Update: {
           id?: string
@@ -255,6 +259,8 @@ export type Database = {
           custom_domain_addon_purchased_at?: string | null
           free_private_gallery_created?: boolean
           private_gallery_tier_override?: string
+          client_page_accent_color?: string | null
+          client_page_logo_url?: string | null
         }
         Relationships: []
       }

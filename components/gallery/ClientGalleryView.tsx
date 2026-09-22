@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Image from 'next/image'
 import { toast } from 'sonner'
 import { ClientPhotoMasonry } from '@/components/gallery/ClientPhotoMasonry'
+import { ClientGalleryHero } from '@/components/gallery/ClientGalleryHero'
 import {
   type ClientGalleryData,
   type ClientGalleryPhoto,
@@ -20,8 +20,6 @@ import {
   selectionStorageKey,
   type ClientSelectionPayload,
 } from '@/lib/gallery-selection'
-import { resolveMediaUrl } from '@/lib/r2/storage'
-import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 
 type ClientGalleryViewProps = {
   gallery: ClientGalleryData
@@ -32,6 +30,10 @@ type StoredSelections = Record<
   string,
   Pick<ClientGalleryPhoto, 'selected_album' | 'selected_edit'>
 >
+
+/** Active tab takes the studio's accent, with text picked to read on it. */
+const TAB_TRIGGER_CLASS =
+  'rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-accent-fg data-[state=active]:shadow-sm'
 
 function buildSelections(items: ClientGalleryPhoto[]): ClientSelectionPayload[] {
   return items.map((photo) => ({
@@ -71,9 +73,6 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
   const [lightboxIndex, setLightboxIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxActiveSrc, setLightboxActiveSrc] = useState<string | null>(null)
-  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null)
-  const [logoImageUrl, setLogoImageUrl] = useState<string | null>(null)
-  const [aboutImageUrl, setAboutImageUrl] = useState<string | null>(null)
 
   const showEdited = items.some((p) => p.edited_signed_url)
   const [tab, setTab] = useState(() => {
@@ -95,22 +94,6 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
       // ignore invalid draft data
     }
   }, [canSelect, gallery.id, photos])
-
-  useEffect(() => {
-    async function loadBrandingImages() {
-      const heroPath = gallery.hero_desktop_url || gallery.hero_mobile_url
-      if (heroPath) {
-        setHeroImageUrl(await resolveMediaUrl('branding', heroPath))
-      }
-      if (gallery.logo_url) {
-        setLogoImageUrl(await resolveMediaUrl('branding', gallery.logo_url))
-      }
-      if (gallery.about_image_url) {
-        setAboutImageUrl(await resolveMediaUrl('branding', gallery.about_image_url))
-      }
-    }
-    loadBrandingImages()
-  }, [gallery.hero_desktop_url, gallery.hero_mobile_url, gallery.logo_url, gallery.about_image_url])
 
   useEffect(() => {
     if (!canSelect) return
@@ -184,50 +167,20 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
       className="min-h-screen pb-16"
       dir="rtl"
       data-client-gallery-root
-      data-theme={gallery.selected_theme}
-      style={{ '--client-accent': gallery.accent_color } as React.CSSProperties}
+      data-theme="classic"
+      style={
+        {
+          '--client-accent': gallery.accent_color,
+          '--client-accent-fg': gallery.accent_foreground,
+        } as React.CSSProperties
+      }
     >
-      {/* Hero Section */}
-      {heroImageUrl && (
-        <div className="relative h-64 w-full overflow-hidden sm:h-96 lg:h-[500px]">
-          <Image
-            src={heroImageUrl}
-            alt=""
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-            <div className="text-center text-white">
-              {logoImageUrl && (
-                <div className="mb-4 flex justify-center">
-                  <Image
-                    src={logoImageUrl}
-                    alt="Logo"
-                    width={120}
-                    height={120}
-                    className="h-20 w-20 rounded-full object-contain"
-                  />
-                </div>
-              )}
-              <p className="text-lg font-medium">
-                {gallery.studio_name ?? FALLBACK_STUDIO_NAME}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold sm:text-4xl lg:text-5xl">
-                {gallery.title}
-              </h1>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <header className={`border-b border-[--border] px-4 py-6 text-center ${!gallery.hero_desktop_url && !gallery.hero_mobile_url ? '' : 'hidden'}`}>
-        <p className="text-sm text-[--muted]">
-          {gallery.studio_name ?? FALLBACK_STUDIO_NAME}
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold">{gallery.title}</h1>
-      </header>
+      <ClientGalleryHero
+        title={gallery.title}
+        studioName={gallery.studio_name}
+        logoUrl={gallery.logo_image_url}
+        coverUrl={gallery.cover_image_url}
+      />
 
       <main className="w-full space-y-6 py-6">
         <div className="mx-auto w-full max-w-7xl px-3 sm:px-4">
@@ -241,18 +194,18 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-[--border] bg-[--background] p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
-            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-[--foreground]/[0.05] p-1 sm:w-auto">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 rounded-2xl border border-border bg-background p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <TabsList className="h-auto w-full flex-wrap justify-start gap-1 rounded-full border-none bg-foreground/5 p-1 sm:w-auto">
               <TabsTrigger
                 value="regular"
-                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className={TAB_TRIGGER_CLASS}
               >
                 תמונות רגילות
               </TabsTrigger>
               {editEnabled && (
                 <TabsTrigger
                   value="edit"
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className={TAB_TRIGGER_CLASS}
                 >
                   לעיבוד
                 </TabsTrigger>
@@ -260,20 +213,20 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
               {albumEnabled && (
                 <TabsTrigger
                   value="album"
-                  className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                  className={TAB_TRIGGER_CLASS}
                 >
                   אלבום
                 </TabsTrigger>
               )}
               <TabsTrigger
                 value="processed"
-                className="rounded-full px-4 py-2 data-[state=active]:bg-accent data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className={TAB_TRIGGER_CLASS}
               >
                 מעובדות
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex flex-wrap items-center gap-2 border-t border-[--border] pt-3 sm:border-t-0 sm:pt-0">
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
               {gallery.allow_download_preview && (
                 <ClientDownloadButton galleryId={gallery.id} type="watermarked" />
               )}
@@ -290,7 +243,7 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
 
           <TabsContent value={tab} className="mt-6">
             {filtered.length === 0 ? (
-              <p className="py-12 text-center text-sm text-[--muted]">
+              <p className="py-12 text-center text-sm text-muted">
                 אין תמונות בטאב זה
               </p>
             ) : (
@@ -334,61 +287,6 @@ export function ClientGalleryView({ gallery, photos }: ClientGalleryViewProps) {
           selections={buildSelections(items)}
         />
       ) : null}
-
-      {/* About Section */}
-      {(gallery.about_text || aboutImageUrl || gallery.stat_projects > 0 || gallery.stat_clients > 0 || gallery.stat_experience_years > 0) && (
-        <section className="mx-auto mt-12 max-w-5xl px-4 py-8">
-          <div className="grid gap-8 md:grid-cols-2">
-            {aboutImageUrl && (
-              <div className="relative aspect-square overflow-hidden rounded-xl">
-                <Image
-                  src={aboutImageUrl}
-                  alt="About"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                />
-              </div>
-            )}
-            <div className={`flex flex-col justify-center ${aboutImageUrl ? '' : 'md:col-span-2'}`}>
-              {gallery.about_text && (
-                <div className="mb-6">
-                  <h2 className="mb-3 text-2xl font-semibold">אודות</h2>
-                  <p className="text-sm leading-relaxed text-[--muted] whitespace-pre-line">
-                    {gallery.about_text}
-                  </p>
-                </div>
-              )}
-              <div className="grid gap-4 sm:grid-cols-3">
-                {gallery.stat_projects > 0 && (
-                  <div className="rounded-lg border border-[--border] p-4 text-center">
-                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
-                      {gallery.stat_projects}
-                    </p>
-                    <p className="mt-1 text-sm text-[--muted]">פרויקטים</p>
-                  </div>
-                )}
-                {gallery.stat_clients > 0 && (
-                  <div className="rounded-lg border border-[--border] p-4 text-center">
-                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
-                      {gallery.stat_clients}
-                    </p>
-                    <p className="mt-1 text-sm text-[--muted]">לקוחות</p>
-                  </div>
-                )}
-                {gallery.stat_experience_years > 0 && (
-                  <div className="rounded-lg border border-[--border] p-4 text-center">
-                    <p className="text-3xl font-semibold" style={{ color: 'var(--client-accent)' }}>
-                      {gallery.stat_experience_years}
-                    </p>
-                    <p className="mt-1 text-sm text-[--muted]">שנות ניסיון</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
 
       <Lightbox
         photos={items}

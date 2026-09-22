@@ -106,6 +106,7 @@ export default async function ClientGalleryPage({
         galleryTitle={meta.title}
         studioName={meta.studio_name}
         maskedEmail={meta.maskedEmail}
+        brand={meta.brand}
       />
     )
   }

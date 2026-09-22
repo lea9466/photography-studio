@@ -5,6 +5,7 @@ import { resolvePrivateGalleryPaths } from '@/lib/storage'
 import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
+import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { DOWNLOAD_PERMISSIONS_ENABLED, isClientSelectionComplete } from '@/lib/types/app.types'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
 import {
@@ -90,6 +91,14 @@ export async function ClientGalleryDetail({
     'previews',
     photos.map((p) => (p as { preview_url: string | null }).preview_url)
   )
+  // The cover is a separate upload in the gallery's gated prefix (not a photo
+  // row), so it is signed on its own — and only when it's a path we generated.
+  const coverPath = isClientCoverPath(gallery.cover_image, userId, gallery.id)
+    ? gallery.cover_image
+    : null
+  const coverUrl = coverPath
+    ? ((await resolvePrivateGalleryPaths('previews', [coverPath]))[coverPath] ?? null)
+    : null
 
   return (
     <div className="animate-fade-in space-y-8 sm:space-y-12">
@@ -189,7 +198,7 @@ export async function ClientGalleryDetail({
             הגדרות
           </h2>
           <p className="text-sm text-[#48464c]">
-            שם, תפוגה, מגבלות בחירה, הרשאות הורדה וסימן מים
+            תמונת כיסוי, שם, תפוגה, מגבלות בחירה, הרשאות הורדה וסימן מים
           </p>
         </div>
         <Card className="border-[#c9c5cd] shadow-sm">
@@ -209,6 +218,7 @@ export async function ClientGalleryDetail({
               locked={albumLocked}
               settings={settings}
               downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED}
+              coverUrl={coverUrl}
             />
           </CardContent>
         </Card>

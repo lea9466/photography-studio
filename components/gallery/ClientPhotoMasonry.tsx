@@ -181,7 +181,7 @@ function MasonryTile({
   return (
     <div
       ref={ref}
-      className={`group relative overflow-hidden bg-[--foreground]/[0.04] transition duration-[900ms] ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100 ${
+      className={`group relative overflow-hidden bg-foreground/[0.04] transition duration-[900ms] ease-out motion-reduce:transition-none motion-reduce:transform-none motion-reduce:opacity-100 ${
         revealed
           ? 'translate-y-0 scale-100 opacity-100'
           : 'translate-y-5 scale-[0.9] opacity-0'

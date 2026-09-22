@@ -44,7 +44,7 @@ export function GalleryUnavailable({
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md animate-fade-in text-center">
         <CardHeader>
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[--muted]/40 text-[--muted]">
+          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-muted/40 text-muted">
             <Icon className="h-6 w-6" />
           </div>
           <CardTitle>{config.title}</CardTitle>
@@ -53,7 +53,7 @@ export function GalleryUnavailable({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-[--muted]">{config.body}</p>
+          <p className="text-sm text-muted">{config.body}</p>
         </CardContent>
       </Card>
     </div>

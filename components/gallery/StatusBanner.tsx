@@ -29,14 +29,14 @@ export function StatusBanner({
   if (status === 'draft' || status === 'public') return null
 
   return (
-    <div className="rounded-xl border border-[--border] bg-[--background] px-4 py-3 text-center animate-fade-in">
+    <div className="rounded-xl border border-border bg-background px-4 py-3 text-center animate-fade-in">
       <Badge variant="default" className="mb-2">
         {status === 'delivery_ready' ? 'מוכן' : 'עדכון'}
       </Badge>
       <p className="text-sm font-medium">{MESSAGES[status]}</p>
 
       {status === 'selection' ? (
-        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-[--muted]">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-muted">
           {albumEnabled ? (
             <span className="inline-flex items-center gap-1.5">
               <Album className="h-4 w-4 shrink-0 text-rose-500" />

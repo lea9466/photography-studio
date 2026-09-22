@@ -16,6 +16,7 @@ import {
   Lock,
   Globe,
   Layers,
+  Palette,
 } from 'lucide-react'
 
 import type { ProFeature } from '@/lib/subscriptions/types'
@@ -207,6 +208,15 @@ export function getDashboardNavItems({
         isActive: (pathname: string) =>
           pathname.startsWith('/dashboard/private-galleries'),
         group: 'private',
+      },
+      {
+        href: '/dashboard/client-page-design',
+        label: 'עיצוב גלריה פרטית',
+        icon: <Palette className="h-5 w-5" />,
+        isActive: (pathname: string) =>
+          pathname.startsWith('/dashboard/client-page-design'),
+        group: 'private',
+        badge: 'new',
       },
       {
         href: '/dashboard/usage-packages',

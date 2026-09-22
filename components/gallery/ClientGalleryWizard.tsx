@@ -14,14 +14,16 @@ import {
   Download,
   Send,
   CreditCard,
+  Image as ImageIcon,
 } from 'lucide-react'
 import { createClientRecord } from '@/lib/actions/client.actions'
 import { createClientGallery } from '@/lib/actions/gallery.actions'
-import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
+import { uploadClientGalleryCover } from '@/lib/client-cover-upload'
 import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import type { Client } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { ClientGalleryCoverPicker } from '@/components/gallery/ClientGalleryCoverPicker'
 import { DisableWatermarkDialog } from '@/components/gallery/DisableWatermarkDialog'
 
 const WIZARD_STEPS = ['בחירת לקוח', 'פרטי הגלריה', 'מגבלות והרשאות']
@@ -143,7 +145,7 @@ export function ClientGalleryWizard({
     setStep((prev) => Math.max(prev - 1, 1))
   }
 
-  function buildGalleryInput(clientId: string, coverImageUrl: string | undefined) {
+  function buildGalleryInput(clientId: string) {
     return {
       title: state.title,
       clientId,
@@ -162,7 +164,6 @@ export function ClientGalleryWizard({
       allowDownloadOriginal: downloadPermissionsEnabled ? state.allowDownloadOriginal : false,
       watermarkText: state.watermarkText || undefined,
       autoApplyWatermark: state.autoApplyWatermark,
-      coverImage: coverImageUrl,
       passCreditId: creationMode === 'tier' ? undefined : creationMode,
     }
   }
@@ -198,20 +199,22 @@ export function ClientGalleryWizard({
           throw new Error('יש לבחור או ליצור לקוח')
         }
 
-        let coverImageUrl: string | undefined
+        const gallery = await createClientGallery(buildGalleryInput(clientId))
+
+        // The cover lives inside the gallery's own gated storage prefix, so it can
+        // only be uploaded once the gallery has an id. A failed upload must not
+        // undo the gallery — it can be added later from the gallery settings.
         if (state.coverImageFile) {
-          try {
-            coverImageUrl = await uploadGalleryCoverFile(state.coverImageFile)
-          } catch (error) {
-            console.error('Error uploading cover image:', error)
-            toast.error(error instanceof Error ? error.message : 'העלאת תמונת השער נכשלה')
+          const cover = await uploadClientGalleryCover(gallery.id, state.coverImageFile)
+          if (!cover.ok) {
+            toast.warning(
+              `הגלריה נוצרה, אבל תמונת הכיסוי לא הועלתה (${cover.error}). אפשר להוסיף אותה בהגדרות הגלריה.`
+            )
+            router.push(`/dashboard/galleries/${gallery.id}/photos`)
             return
           }
         }
 
-        const input = buildGalleryInput(clientId, coverImageUrl)
-
-        const gallery = await createClientGallery(input)
         toast.success('הגלריה נוצרה — כעת העלי תמונות')
         router.push(`/dashboard/galleries/${gallery.id}/photos`)
       } catch (error) {
@@ -448,6 +451,27 @@ export function ClientGalleryWizard({
               type="text"
               value={state.title}
               onChange={(e) => updateState('title', e.target.value)}
+            />
+          </section>
+
+          <hr className="border-[#c9c5cd]" />
+
+          <section className="space-y-4">
+            <div className="flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-[#7D3A52]" />
+              <h2 className="text-base font-semibold text-[#100d1f]">
+                תמונת כיסוי (אופציונלי)
+              </h2>
+            </div>
+            <p className="text-sm text-[#48464c]/70">
+              תוצג בגדול בראש הדף שהלקוח רואה. התמונה נפרדת מתמונות הגלריה ולא מקבלת
+              סימן מים — כדאי לבחור תמונה שנוח לך שתוצג כמו שהיא.
+            </p>
+            <ClientGalleryCoverPicker
+              inputId="wizard-cover-image"
+              file={state.coverImageFile}
+              onFileChange={(file) => updateState('coverImageFile', file)}
+              disabled={isPending}
             />
           </section>
 

@@ -19,6 +19,8 @@ import {
 
 const MAX_NOTE_LENGTH = 2000
 
+const DIALOG_PRIMARY_CLASS = 'bg-[#100d1f] text-white hover:bg-[#252235]'
+
 const noteDraftKey = (galleryId: string) => `gallery-note-${galleryId}`
 
 type SelectionBarProps = {
@@ -106,7 +108,7 @@ export function SelectionBar({
 
   return (
     <>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[--border] bg-white px-4 py-1.5">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white px-4 py-1.5">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3">
           <div className="flex items-center gap-3 text-xs sm:text-sm">
             {showAlbum ? (
@@ -124,7 +126,12 @@ export function SelectionBar({
               </span>
             ) : null}
           </div>
-          <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={isPending}>
+          <Button
+            size="sm"
+            onClick={() => setConfirmOpen(true)}
+            disabled={isPending}
+            className="bg-accent text-accent-fg hover:brightness-110"
+          >
             <Check className="h-3.5 w-3.5" />
             סיימתי לבחור ✓
           </Button>
@@ -176,16 +183,28 @@ export function SelectionBar({
               variant="outline"
               onClick={() => setConfirmOpen(false)}
               disabled={isPending}
+              className="border-[#c9c5cd] text-[#100d1f] hover:bg-[#f7f2f4]"
             >
               חזרה
             </Button>
+            {/* The dialog is portalled outside the gallery root, so it can't read the
+                studio's --client-accent — its primary action uses the neutral dark. */}
             {sessionExpired ? (
-              <Button type="button" onClick={() => window.location.reload()}>
+              <Button
+                type="button"
+                onClick={() => window.location.reload()}
+                className={DIALOG_PRIMARY_CLASS}
+              >
                 <RefreshCw className="h-4 w-4" />
                 התחברות מחדש
               </Button>
             ) : (
-              <Button type="button" onClick={handleComplete} disabled={isPending}>
+              <Button
+                type="button"
+                onClick={handleComplete}
+                disabled={isPending}
+                className={DIALOG_PRIMARY_CLASS}
+              >
                 <Check className="h-4 w-4" />
                 {isPending ? 'שולח...' : 'שליחת הבחירה'}
               </Button>

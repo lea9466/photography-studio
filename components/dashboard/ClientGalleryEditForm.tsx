@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { removeClientGalleryCover } from '@/lib/actions/client-gallery-cover.actions'
 import { updateGallerySettings } from '@/lib/actions/gallery.actions'
+import { uploadClientGalleryCover } from '@/lib/client-cover-upload'
+import { ClientGalleryCoverPicker } from '@/components/gallery/ClientGalleryCoverPicker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,21 +38,29 @@ type ClientGalleryEditFormProps = {
   } | null
   /** Per-account override, computed server-side — see isMvpBypassUser. */
   downloadPermissionsEnabled?: boolean
+  /** The saved cover, already resolved for the owner's dashboard view. */
+  coverUrl?: string | null
 }
 
 /**
  * Edit form for a private client gallery — the full client-delivery settings.
- * No cover image (that is a public showcase concept).
+ * The cover image is part of the same save, but not of the settings payload: it
+ * is a gated file upload (see lib/client-cover-upload.ts) applied after the
+ * settings are saved, and it stays editable after the gallery is sent.
  */
 export function ClientGalleryEditForm({
   gallery,
   locked = false,
   settings,
   downloadPermissionsEnabled: downloadPermissionsEnabledProp,
+  coverUrl = null,
 }: ClientGalleryEditFormProps) {
+  const router = useRouter()
   const downloadPermissionsEnabled =
     downloadPermissionsEnabledProp ?? DOWNLOAD_PERMISSIONS_ENABLED
   const [isPending, startTransition] = useTransition()
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [removeCover, setRemoveCover] = useState(false)
   const [title, setTitle] = useState(gallery.title)
   const [expiresAt, setExpiresAt] = useState(
     gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
@@ -100,6 +113,22 @@ export function ClientGalleryEditForm({
           allowDownloadPreview: downloadPermissionsEnabled ? allowDownloadPreview : false,
           allowDownloadOriginal: downloadPermissionsEnabled ? allowDownloadOriginal : false,
         })
+
+        // The cover is applied after the settings so a failed upload can't lose
+        // them — and the message says which part went through.
+        if (removeCover || coverFile) {
+          const cover = removeCover
+            ? await removeClientGalleryCover(gallery.id)
+            : await uploadClientGalleryCover(gallery.id, coverFile as File)
+          if (!cover.ok) {
+            toast.error(`ההגדרות נשמרו, אבל תמונת הכיסוי לא נשמרה: ${cover.error}`)
+            return
+          }
+          setCoverFile(null)
+          setRemoveCover(false)
+          router.refresh()
+        }
+
         toast.success('הגדרות הגלריה נשמרו בהצלחה')
       } catch (error) {
         console.error('Error saving gallery settings:', error)
@@ -111,6 +140,50 @@ export function ClientGalleryEditForm({
   return (
     <>
       <div className="grid gap-6 sm:grid-cols-2">
+        <div className="space-y-3 sm:col-span-2">
+          <div className="space-y-1">
+            <Label className="text-[#100d1f]">תמונת כיסוי</Label>
+            <p className="text-xs leading-relaxed text-[#48464c]">
+              מוצגת בגדול בראש הדף שהלקוח רואה, אחרי שנכנס עם קוד הכניסה. התמונה נפרדת
+              מתמונות הגלריה, לא מקבלת סימן מים, ונשמרת ברזולוציה שמתאימה לתצוגה בלבד. את
+              הלוגו והצבע קובעים בעמוד{' '}
+              <Link
+                href="/dashboard/client-page-design"
+                className="font-semibold text-[#7D3A52] underline"
+              >
+                עיצוב גלריה פרטית
+              </Link>
+              .
+            </p>
+          </div>
+          <ClientGalleryCoverPicker
+            inputId={`cover-${gallery.id}`}
+            currentUrl={removeCover ? null : coverUrl}
+            file={coverFile}
+            onFileChange={(file) => {
+              setCoverFile(file)
+              if (file) setRemoveCover(false)
+            }}
+            disabled={isPending}
+          />
+          {coverUrl && !coverFile ? (
+            <button
+              type="button"
+              onClick={() => setRemoveCover((prev) => !prev)}
+              disabled={isPending}
+              className="rounded-xl px-3 py-2 text-sm font-medium text-[#48464c] hover:bg-[#f7f2f4] disabled:opacity-50"
+            >
+              {removeCover ? 'ביטול הסרה' : 'הסרת הכיסוי'}
+            </button>
+          ) : null}
+          {removeCover ? (
+            <p className="text-xs text-[#7D3A52]">הכיסוי יוסר כשתלחצי על &quot;שמור הגדרות&quot;.</p>
+          ) : coverFile ? (
+            <p className="text-xs text-[#7D3A52]">
+              התמונה החדשה תישמר כשתלחצי על &quot;שמור הגדרות&quot;.
+            </p>
+          ) : null}
+        </div>
         <div className="space-y-2">
           <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
           <Input

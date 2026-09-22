@@ -17,6 +17,8 @@
   --foreground: #171717;
   --accent: #171717;
   --client-accent: #7c3aed;
+  /* Text colour that reads on --client-accent; the client gallery sets both from the studio's brand. */
+  --client-accent-fg: #ffffff;
   --muted: #737373;
   --border: #e5e5e5;
 }
@@ -26,6 +28,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--client-accent);
+  --color-accent-fg: var(--client-accent-fg);
   --color-muted: var(--muted);
   --color-border: var(--border);
 }

@@ -33,8 +33,9 @@ import {
   isMvpBypassUser,
 } from '@/lib/types/app.types'
 import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
-import { galleryKindColumns } from '@/lib/gallery-kind'
+import { galleryKind, galleryKindColumns } from '@/lib/gallery-kind'
 import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
+import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { buildPrivateGalleryCountLimitError } from '@/lib/private-galleries/entitlements'
 import {
@@ -84,18 +85,24 @@ async function resolvePhotographerGalleryLimit(context: DashboardAuthContext): P
 const DELETE_BATCH_SIZE = 50
 
 async function deleteGalleryMedia(supabase: DashboardAuthContext['supabase'], galleryId: string) {
-  const [photosResult, editedResult, jobsResult] = await Promise.all([
+  const [photosResult, editedResult, jobsResult, galleryResult] = await Promise.all([
     supabase
       .from('photos')
       .select('original_url, preview_url, watermarked_preview_url')
       .eq('gallery_id', galleryId),
     supabase.from('edited_photos').select('final_url').eq('gallery_id', galleryId),
     supabase.from('download_jobs').select('file_url').eq('gallery_id', galleryId),
+    supabase
+      .from('galleries')
+      .select('user_id, gallery_type, cover_image')
+      .eq('id', galleryId)
+      .maybeSingle(),
   ])
 
   if (photosResult.error) throw new Error(photosResult.error.message)
   if (editedResult.error) throw new Error(editedResult.error.message)
   if (jobsResult.error) throw new Error(jobsResult.error.message)
+  if (galleryResult.error) throw new Error(galleryResult.error.message)
 
   type PhotoRow = {
     original_url: string | null
@@ -130,6 +137,21 @@ async function deleteGalleryMedia(supabase: DashboardAuthContext['supabase'], ga
     if (row.file_url) {
       storageDeletes.push({ bucket: 'zips', path: row.file_url })
     }
+  }
+
+  // A client gallery's cover is a standalone file in the gallery's previews
+  // prefix — no photo row points at it, so it has to be removed explicitly.
+  const galleryRow = galleryResult.data as {
+    user_id: string
+    gallery_type: string | null
+    cover_image: string | null
+  } | null
+  if (
+    galleryRow &&
+    galleryKind(galleryRow) === 'client' &&
+    isClientCoverPath(galleryRow.cover_image, galleryRow.user_id, galleryId)
+  ) {
+    storageDeletes.push({ bucket: 'previews', path: galleryRow.cover_image })
   }
 
   for (let offset = 0; offset < storageDeletes.length; offset += DELETE_BATCH_SIZE) {
