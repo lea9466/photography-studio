@@ -1169,6 +1169,110 @@ export async function sendPrivateGalleriesAnnouncementEmail(input: { name: strin
 }
 
 /**
+ * Pure builder for the client-page-design feature announcement — the design
+ * tab (logo/accent/hero-style/background, plus a per-gallery cover image)
+ * added on top of the existing private-galleries feature. Shorter than
+ * buildPrivateGalleriesAnnouncementEmail (a settings addition, not a new
+ * workflow): a benefit checklist, one CTA to /dashboard/client-page-design,
+ * and a reassurance callout that doing nothing changes nothing. Rollout
+ * script: scripts/send-client-page-design-announcement.ts.
+ */
+export function buildClientPageDesignAnnouncementEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const subject = 'עיצוב אישי לדף שהלקוחה שלך פותחת — חדש ב-STG'
+  const designUrl = appUrl('/dashboard/client-page-design')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const h1 = `margin: 0 0 8px; font-family: ${LUXE.serif}; font-size: 27px; line-height: 1.3; font-weight: 400; color: ${LUXE.ink};`
+  const subhead = `margin: 0 0 22px; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.6; color: ${LUXE.muted};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STG</td>
+      </tr>
+    </table>
+    <h1 style="${h1}">הדף שהלקוחה שלך רואה — מעכשיו מעוצב על ידך</h1>
+    <p style="${subhead}">לוגו, צבע, תמונת כיסוי וסגנון — נשמר מיד עם הבחירה</p>
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">כשאת שולחת גלריה פרטית ללקוחה, היא נכנסת לדף שיכול עכשיו להיראות כמו שלך — לא כמו תבנית גנרית. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו.</p>
+
+    ${luxeCheckList([
+      ['תמונת כיסוי לכל גלריה', 'נבחרת ביצירת הגלריה, או בכל שלב אחר כך בהגדרות שלה'],
+      ['לוגו וצבע אחידים לכל הגלריות', 'יש לך אתר? הם נלקחים ממנו אוטומטית. אפשר גם להגדיר ערכים אחרים רק לדפי הלקוחות'],
+      ['שלושה סגנונות לראש הדף', 'עם תצוגה מקדימה חיה, בדיוק כמו שהלקוחה תראה — עם הלוגו והצבע שלך'],
+      ['רקע בהיר או כהה לכל הדף', 'בחירה אחת שחלה על כל דפי הלקוח'],
+    ])}
+
+    ${luxeButton(designUrl, 'לעיצוב גלריה פרטית שלי')}
+
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: '#0d9488',
+      bg: '#e3f6f2',
+      border: '#c4ebe2',
+      title: 'לא חובה לגעת בזה',
+      body: 'לא נכנסת לעמוד? שום דבר לא משתנה — הגלריות שלך ימשיכו להיראות בדיוק כמו היום.',
+    })}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה, או רעיון לעיצוב שהיית רוצה שיהיה אפשרי? אני כאן — דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
+
+  return {
+    subject,
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'כשאת שולחת גלריה פרטית ללקוחה, היא נכנסת לדף שיכול עכשיו להיראות כמו שלך — לא כמו תבנית גנרית. הכול מוגדר במקום אחד וחל אוטומטית על כל גלריות הלקוח שלך, כולל כאלה שכבר נשלחו:',
+      '',
+      '- תמונת כיסוי לכל גלריה — נבחרת ביצירת הגלריה, או בכל שלב אחר כך בהגדרות שלה',
+      '- לוגו וצבע אחידים לכל הגלריות — נלקחים אוטומטית מהאתר שלך אם יש לך, או שאפשר להגדיר ערכים אחרים רק לדפי הלקוחות',
+      '- שלושה סגנונות לראש הדף, עם תצוגה מקדימה חיה',
+      '- רקע בהיר או כהה לכל הדף',
+      '',
+      `לעיצוב גלריה פרטית שלי: ${designUrl}`,
+      '',
+      'לא נכנסת לעמוד? שום דבר לא משתנה — הגלריות שלך ימשיכו להיראות בדיוק כמו היום.',
+      '',
+      `שאלה או רעיון? טאב יצירת הקשר במערכת: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader:
+        'לוגו, צבע, תמונת כיסוי וסגנון לדף שהלקוחה שלך פותחת — נשמר מיד, חל על כל הגלריות שלך.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendClientPageDesignAnnouncementEmail(input: { name: string; email: string }) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'client-page-design-announcement',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildClientPageDesignAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
  * Pure builder for the "launch price ending soon" re-engagement email — a
  * one-off nudge to studios whose free trial already lapsed without
  * converting to a paid Pro subscription. Same preview/snapshot-testable
