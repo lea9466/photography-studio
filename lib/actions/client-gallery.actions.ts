@@ -135,9 +135,8 @@ type BrandingUserRow = {
  * Logo + accent + hero layout for a client-facing page. The studio's
  * client-page override wins; without one it inherits the public-site brand
  * (hero layout has no site equivalent — it's client-page-only). Only the
- * studio's own public brand — the gallery's cover image is deliberately not
- * part of this, because it is behind the gallery session and is not shown
- * before it.
+ * studio's own public brand — the gallery's cover image is resolved
+ * separately, see resolveClientGalleryCoverUrl.
  */
 async function resolveClientPageBrand(
   user: BrandingUserRow | null | undefined
@@ -166,12 +165,31 @@ async function resolveClientPageBrand(
   }
 }
 
+/**
+ * The gallery's standalone cover, resolved for display before the client has
+ * a session — the password gate. A signed, time-limited edge URL rather than
+ * the usual session-gated proxy (see resolveMediaUrl), since there is no
+ * session yet to gate on; the same signing scheme a public gallery's previews
+ * already use. Safe to expose pre-session: the cover is a separate upload the
+ * photographer chose specifically to represent the gallery from outside (see
+ * lib/private-galleries/client-cover.ts), never one of the client's actual
+ * proof photos.
+ */
+async function resolveClientGalleryCoverUrl(
+  coverImage: string | null | undefined,
+  userId: string | null | undefined,
+  galleryId: string
+): Promise<string | null> {
+  if (!userId || !isClientCoverPath(coverImage, userId, galleryId)) return null
+  return resolveMediaUrl('previews', coverImage, galleryId, false)
+}
+
 export async function getClientGalleryPublicMeta(galleryId: string) {
   const admin = createAdminClient()
   const { data } = await admin
     .from('galleries')
     .select(
-      'id, title, status, gallery_type, is_public, expires_at, suspended_at, users!galleries_user_id_fkey(' + CLIENT_PAGE_BRAND_USER_COLUMNS + '), clients(email)'
+      'id, title, status, gallery_type, is_public, expires_at, suspended_at, user_id, cover_image, users!galleries_user_id_fkey(' + CLIENT_PAGE_BRAND_USER_COLUMNS + '), clients(email)'
     )
     .eq('id', galleryId)
     .single()
@@ -184,6 +202,8 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     is_public: boolean
     expires_at: string | null
     suspended_at: string | null
+    user_id: string
+    cover_image: string | null
     users: BrandingUserRow | BrandingUserRow[] | null
     clients: { email: string | null } | { email: string | null }[] | null
   }
@@ -212,6 +232,7 @@ export async function getClientGalleryPublicMeta(galleryId: string) {
     suspended: !gallery.is_public && gallery.suspended_at != null,
     studio_name: user?.studio_name ?? null,
     brand: await resolveClientPageBrand(user),
+    cover_image_url: await resolveClientGalleryCoverUrl(gallery.cover_image, gallery.user_id, galleryId),
     maskedEmail,
   }
 }

@@ -27,9 +27,12 @@ type PasswordGateProps = {
   studioName?: string | null
   maskedEmail?: string | null
   /**
-   * The studio's logo + accent. The gallery's cover is deliberately absent:
-   * it is behind the gallery session and is not shown before the client is in.
+   * The gallery's standalone cover photo (see resolveClientGalleryCoverUrl),
+   * shown as the face of the card when set. Falls back to the studio's logo
+   * (below) when there's none.
    */
+  coverImageUrl?: string | null
+  /** The studio's logo + accent — the fallback face of the card when there's no cover. */
   brand?: Pick<ClientPageBrand, 'logo_image_url' | 'accent_color' | 'accent_foreground' | 'background'>
 }
 
@@ -46,6 +49,7 @@ export function PasswordGate({
   galleryTitle,
   studioName,
   maskedEmail,
+  coverImageUrl,
   brand,
 }: PasswordGateProps) {
   const [step, setStep] = useState<'request' | 'enter-code'>('request')
@@ -106,9 +110,21 @@ export function PasswordGate({
     >
       {/* bg/text/border overrides: Card's own [--var] classes don't compile in this
           Tailwind v4 setup (see the same fix elsewhere in this file's siblings). */}
-      <Card className="w-full max-w-md animate-fade-in border-border border-t-4 border-t-accent bg-background text-foreground">
+      <Card className="w-full max-w-md animate-fade-in overflow-hidden border-border border-t-4 border-t-accent bg-background text-foreground">
+        {coverImageUrl ? (
+          <div className="relative h-40 w-full sm:h-48">
+            <Image
+              src={coverImageUrl}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 640px) 100vw, 448px"
+              className="object-cover"
+            />
+          </div>
+        ) : null}
         <CardHeader className="text-center">
-          {brand?.logo_image_url ? (
+          {!coverImageUrl && brand?.logo_image_url ? (
             <Image
               src={brand.logo_image_url}
               alt=""

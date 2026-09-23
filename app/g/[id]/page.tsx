@@ -129,6 +129,7 @@ export default async function ClientGalleryPage({
         galleryTitle={meta.title}
         studioName={meta.studio_name}
         maskedEmail={meta.maskedEmail}
+        coverImageUrl={meta.cover_image_url}
         brand={meta.brand}
       />
     )
