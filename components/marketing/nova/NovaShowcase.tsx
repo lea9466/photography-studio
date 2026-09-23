@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useInView } from './useInView'
 import styles from './nova.module.css'
 
@@ -7,10 +8,16 @@ const EXAMPLE_PATH = '/lea-studio'
 
 export function NovaShowcase() {
   const [showcaseRef, showcaseInView] = useInView()
+  // Tracks each iframe's own load event — an <iframe> shows a blank white
+  // canvas of its own until the framed document has actually painted, no
+  // matter what background the parent page sets on the <iframe> tag itself.
+  // A dark overlay that fades out on load hides that flash instead.
+  const [computerLoaded, setComputerLoaded] = useState(false)
+  const [phoneLoaded, setPhoneLoaded] = useState(false)
 
   return (
     <section className={styles.showcase} ref={showcaseRef}>
-      <div className={`${styles['showcase-inner']} ${styles.container}`}>
+      <div className={styles['showcase-inner']}>
         <div
           className={`${styles['showcase-header']} ${styles.reveal} ${styles['delay-1']} ${showcaseInView ? styles['in-view'] : ''}`}
         >
@@ -39,12 +46,19 @@ export function NovaShowcase() {
                 <div className={styles['browser-url']}>studio-galleries.com{EXAMPLE_PATH}</div>
               </div>
 
-              <iframe
-                className={styles['device-iframe']}
-                src={EXAMPLE_PATH}
-                title="תצוגת מחשב של אתר שנבנה במערכת"
-                loading="lazy"
-              />
+              <div className={styles['device-screen']}>
+                <iframe
+                  className={styles['device-iframe']}
+                  src={EXAMPLE_PATH}
+                  title="תצוגת מחשב של אתר שנבנה במערכת"
+                  loading="lazy"
+                  onLoad={() => setComputerLoaded(true)}
+                />
+                <div
+                  className={`${styles['device-loading']} ${computerLoaded ? styles['device-loaded'] : ''}`}
+                  aria-hidden="true"
+                />
+              </div>
             </div>
           </div>
 
@@ -67,6 +81,11 @@ export function NovaShowcase() {
                   src={EXAMPLE_PATH}
                   title="תצוגת טלפון של אתר שנבנה במערכת"
                   loading="lazy"
+                  onLoad={() => setPhoneLoaded(true)}
+                />
+                <div
+                  className={`${styles['device-loading']} ${phoneLoaded ? styles['device-loaded'] : ''}`}
+                  aria-hidden="true"
                 />
               </div>
             </div>

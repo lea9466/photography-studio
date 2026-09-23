@@ -321,24 +321,33 @@
   margin: 0;
 }
 
+/* This section's own wrapper — wider than the shared .container (1140px)
+   so the computer panel has real room; the header text above it stays
+   readable regardless since .showcase-header caps itself at 640px. */
+.showcase-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
 /* Device row — flat computer + phone panels side by side, each labeled,
    showing the actual site content (not skeleton placeholder bars) */
 .device-row {
   display: flex;
   align-items: flex-start;
   gap: 44px;
-  max-width: 1140px;
+  max-width: 1300px;
   margin: 0 auto;
 }
 
 .device-col-computer {
-  flex: 2.8;
+  flex: 4;
   min-width: 0;
 }
 
 .device-col-phone {
   flex: 1;
-  max-width: 280px;
+  max-width: 240px;
 }
 
 .device-caption {
@@ -394,11 +403,29 @@
 }
 
 .device-screen {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
   overflow: hidden;
   border-radius: 22px;
+}
+
+/* An <iframe> shows a blank white canvas of its own the instant it's
+   inserted, until the framed document has actually painted — the parent
+   page's `background` on the <iframe> tag doesn't prevent that first white
+   flash. This sits on top instead and fades out once the load event fires. */
+.device-loading {
+  position: absolute;
+  inset: 0;
+  background: var(--charcoal-soft);
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.device-loaded {
+  opacity: 0;
 }
 
 .browser-bar {
