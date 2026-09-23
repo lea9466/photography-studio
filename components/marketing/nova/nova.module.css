@@ -341,13 +341,13 @@
 }
 
 .device-col-computer {
-  flex: 4;
+  flex: 3;
   min-width: 0;
 }
 
 .device-col-phone {
   flex: 1;
-  max-width: 240px;
+  max-width: 320px;
 }
 
 .device-caption {
