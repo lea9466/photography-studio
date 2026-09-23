@@ -1021,6 +1021,8 @@
   background: radial-gradient(circle closest-side, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 50%, transparent 100%);
   filter: blur(70px);
   pointer-events: none;
+  /* hidden until the section scrolls into view — see the entrance block below */
+  opacity: 0;
 }
 
 
@@ -1055,6 +1057,7 @@
 }
 
 .closing-btn {
+  position: relative;
   display: inline-block;
   background: var(--accent);
   color: var(--charcoal);
@@ -1070,6 +1073,178 @@
 .closing-btn:hover {
   background: var(--accent-light);
   transform: translateY(-2px);
+}
+
+/* Closing CTA entrance — plays once when .closing gets .in-view (useInView).
+   Beats, in order: the glow blooms, the eyebrow settles, the headline lands
+   word by word (delays set inline from NovaClosingCta), then the paragraph,
+   then the button pops in and gives a couple of soft halo pulses.
+   Only longhand animation-* properties, and fill-mode `backwards` (not
+   `forwards`) on the button: a held transform would override its :hover
+   lift, so it must fall back to its normal styles once the entrance ends. */
+.closing-item,
+.closing-word {
+  opacity: 0;
+}
+
+.closing-word {
+  display: inline-block;
+}
+
+.closing.in-view .closing-glow {
+  opacity: 1;
+  animation-name: closingGlowBloom;
+  animation-duration: 2s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
+}
+
+.closing.in-view .closing-item {
+  opacity: 1;
+  animation-name: closingRise;
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
+}
+
+.closing.in-view .closing-word {
+  opacity: 1;
+  animation-name: closingWord;
+  animation-duration: 0.9s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  animation-fill-mode: backwards;
+}
+
+.closing.in-view .closing-eyebrow {
+  animation-name: closingEyebrow;
+  animation-duration: 1.1s;
+  animation-delay: 0.1s;
+}
+
+.closing-delay-text {
+  animation-delay: 1.1s;
+}
+
+.closing.in-view .closing-btn {
+  animation-name: closingBtnPop;
+  animation-duration: 0.8s;
+  animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.closing-delay-btn {
+  animation-delay: 1.35s;
+}
+
+/* one-off attention ring around the button, right after it lands */
+.closing-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.closing.in-view .closing-btn::after {
+  animation-name: closingBtnHalo;
+  animation-duration: 1.4s;
+  animation-delay: 2.2s;
+  animation-timing-function: ease-out;
+  animation-iteration-count: 2;
+}
+
+@keyframes closingGlowBloom {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes closingRise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* words rise out of a soft blur rather than just fading */
+@keyframes closingWord {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes closingEyebrow {
+  from {
+    opacity: 0;
+    letter-spacing: 0.75em;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    letter-spacing: 0.3em;
+    transform: translateY(0);
+  }
+}
+
+@keyframes closingBtnPop {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes closingBtnHalo {
+  from {
+    opacity: 0.8;
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.5);
+  }
+  to {
+    opacity: 0;
+    box-shadow: 0 0 0 22px rgba(var(--accent-rgb), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .closing .closing-item,
+  .closing .closing-word,
+  .closing.in-view .closing-item,
+  .closing.in-view .closing-word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+
+  .closing .closing-btn::after {
+    display: none;
+  }
+
+  /* keeps its translateX(-50%) centring — only the bloom is dropped */
+  .closing .closing-glow,
+  .closing.in-view .closing-glow {
+    animation: none;
+    opacity: 1;
+  }
 }
 
 /* Entrance animation */
