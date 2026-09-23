@@ -1318,6 +1318,13 @@
     flex-direction: column;
   }
 
+  /* the laptop sits ~7.7% right of the source image's own centre (fine
+     beside the text on desktop) — once stacked and centred on its own it
+     reads as off-centre, so pull it back by exactly that much */
+  .private-laptop-shot {
+    transform: translateX(-7.7%) scale(1.18);
+  }
+
   .site-hero {
     flex-direction: column;
   }
