@@ -7,6 +7,7 @@ import { runOneTimePaymentExpiredNotifications } from '@/lib/subscriptions/one-t
 import { suspendCustomDomainsWithLapsedEntitlement } from '@/lib/domains/custom-domain-suspension'
 import { runClientGalleryLifecycle } from '@/lib/private-galleries/client-gallery-lifecycle'
 import { suspendClientGalleriesWithLapsedSubscription } from '@/lib/private-galleries/gallery-suspension'
+import { reconcileSumitSubscriptionPeriods } from '@/lib/payments/sumit-period-reconciliation'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -157,6 +158,28 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Period-end reconciliation for real SUMIT recurring subscriptions — SUMIT
+  // renews these on its own (`Date_NextBilling`) with no webhook to tell us,
+  // so without this sweep `current_period_end` stays frozen at the value
+  // computed when the subscription was first created and a genuinely-renewed
+  // customer would eventually read as lapsed. See
+  // lib/payments/sumit-period-reconciliation.ts.
+  let sumitPeriodReconciliation: Record<string, unknown> = { error: 'did not run' }
+
+  try {
+    const result = await reconcileSumitSubscriptionPeriods()
+    sumitPeriodReconciliation = {
+      checked: result.checked,
+      updated: result.updated,
+      failed: result.failed,
+    }
+  } catch (error) {
+    hadFailure = true
+    console.error('[sumit-period-reconciliation] cron failed', {
+      reason: error instanceof Error ? error.name : 'unknown',
+    })
+  }
+
   const body = {
     ok: !hadFailure,
     reminders,
@@ -166,6 +189,7 @@ export async function GET(request: NextRequest) {
     customDomainSuspension,
     clientGalleryLifecycle,
     clientGallerySuspension,
+    sumitPeriodReconciliation,
   }
   console.info('[trial-ending-reminders] cron response', body)
   return cronJson(body, hadFailure ? 500 : 200)
