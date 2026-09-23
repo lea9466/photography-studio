@@ -1366,6 +1366,10 @@
    smaller phone). Dropped here rather than faked; the phone panel stays,
    bigger since it's alone now, plus a plain link to the real site. */
 @media (max-width: 640px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
   .device-col-computer {
     display: none;
   }
