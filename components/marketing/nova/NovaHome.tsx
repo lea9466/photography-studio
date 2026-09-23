@@ -1,3 +1,4 @@
+import { getMarketingStats } from '@/lib/marketing/marketing-stats'
 import { NovaClosingCta } from './NovaClosingCta'
 import { NovaFooter } from './NovaFooter'
 import { NovaHeader } from './NovaHeader'
@@ -5,6 +6,7 @@ import { NovaHero } from './NovaHero'
 import { NovaHowItWorks } from './NovaHowItWorks'
 import { NovaPrivateGalleries } from './NovaPrivateGalleries'
 import { NovaShowcase } from './NovaShowcase'
+import { NovaStats } from './NovaStats'
 import styles from './nova.module.css'
 
 /**
@@ -15,8 +17,14 @@ import styles from './nova.module.css'
  * (colours, base font, background) that the source project set on `:root`/
  * `body`; scoped here instead so it can't leak onto the rest of the app —
  * see the comment at the top of nova.module.css for why.
+ *
+ * NovaStats is the one addition beyond the source design: real platform
+ * counts (studios, galleries), carried over from the earlier homepage this
+ * replaced. Placed last, right before the footer's own CTA button.
  */
-export function NovaHome() {
+export async function NovaHome() {
+  const stats = await getMarketingStats()
+
   return (
     <div className={styles.novaRoot}>
       <NovaHeader />
@@ -26,6 +34,7 @@ export function NovaHome() {
         <NovaHowItWorks />
         <NovaClosingCta />
         <NovaPrivateGalleries />
+        <NovaStats stats={stats} />
       </main>
       <NovaFooter />
     </div>
