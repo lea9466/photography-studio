@@ -364,6 +364,12 @@
   height: 16px;
 }
 
+/* Only shown on narrow phones (see the max-width: 640px block at the end of
+   this file) — hidden everywhere else, where both panels are visible. */
+.showcase-mobile-link {
+  display: none;
+}
+
 .device-panel {
   /* explicit, not left to shrink-to-fit: since the iframe inside is
      position:absolute (see .device-iframe), it no longer contributes to
@@ -1353,3 +1359,40 @@
   }
 }
 
+
+/* Narrow phones — below this the "computer" panel is too narrow for the
+   framed site to switch to its own desktop layout, so it would just show
+   the site's mobile layout inside a browser-shaped box (reads as a second,
+   smaller phone). Dropped here rather than faked; the phone panel stays,
+   bigger since it's alone now, plus a plain link to the real site. */
+@media (max-width: 640px) {
+  .device-col-computer {
+    display: none;
+  }
+
+  .device-col-phone {
+    width: 300px;
+    max-width: 300px;
+  }
+
+  .showcase-mobile-link {
+    display: block;
+    margin: 36px auto 0;
+    text-align: center;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration: none;
+    padding: 12px 22px;
+    border: 1px solid rgba(245, 243, 240, 0.22);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    width: fit-content;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .showcase-mobile-link:hover {
+    border-color: var(--accent-light);
+    background: rgba(var(--accent-rgb), 0.08);
+  }
+}

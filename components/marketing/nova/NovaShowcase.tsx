@@ -27,6 +27,11 @@ export function NovaShowcase() {
         </div>
 
         <div className={styles['device-row']}>
+          {/* Hidden below 640px (see nova.module.css): the iframe reflows to
+              the framed site's own mobile layout once this panel is that
+              narrow, so "the computer view" ends up looking like a second,
+              smaller phone instead of a desktop screen. Simplest honest fix
+              is to just not show it there rather than fake a desktop. */}
           <div
             className={`${styles['device-col']} ${styles['device-col-computer']} ${styles.reveal} ${styles['delay-2']} ${showcaseInView ? styles['in-view'] : ''}`}
           >
@@ -91,6 +96,12 @@ export function NovaShowcase() {
             </div>
           </div>
         </div>
+
+        {/* Only shown below 640px, alongside the phone panel — see the
+            comment above the computer column. */}
+        <a href={EXAMPLE_PATH} target="_blank" rel="noopener noreferrer" className={styles['showcase-mobile-link']}>
+          לצפייה באתר המלא שנבנה במערכת ←
+        </a>
       </div>
     </section>
   )
