@@ -5,13 +5,24 @@ import { useInView } from './useInView'
 import styles from './nova.module.css'
 
 export function NovaPrivateGalleries() {
-  const [privateRef, privateInView] = useInView()
+  // Each half is watched on its own element, not the <section>: the section
+  // carries 150px/180px of empty padding, so watching it counted as "in view"
+  // while only that padding was on screen — the ~1.6s entrance played before
+  // any content was visible (measured: heading at 1.15x the viewport height,
+  // i.e. fully below the fold, when it fired). The bottom rootMargin holds it
+  // until the content is properly up on screen. Text and laptop get separate
+  // triggers because they stack on narrow screens, with the laptop a full
+  // screen below the text — one shared trigger left its sweep-in playing off
+  // screen there. The threshold stays low on purpose: these blocks get very
+  // tall once stacked, and a high ratio could become unreachable.
+  const [textRef, textInView] = useInView(0.2, '0px 0px -18% 0px')
+  const [visualRef, visualInView] = useInView(0.2, '0px 0px -18% 0px')
 
   return (
-    <section className={styles.private} id="private" ref={privateRef}>
+    <section className={styles.private} id="private">
       <div className={styles['private-split']}>
-        <div className={styles['private-text']}>
-          <div className={`${styles['reveal-strong']} ${styles['delay-1']} ${privateInView ? styles['in-view'] : ''}`}>
+        <div className={styles['private-text']} ref={textRef}>
+          <div className={`${styles['reveal-strong']} ${styles['delay-1']} ${textInView ? styles['in-view'] : ''}`}>
             <span className={styles['hero-eyebrow']}>✦ גלריות פרטיות</span>
             <h2>מרחב אישי ומאובטח לכל לקוחה</h2>
             <p>
@@ -22,7 +33,7 @@ export function NovaPrivateGalleries() {
 
           <div className={styles['private-features']}>
             <div
-              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-1']} ${privateInView ? styles['in-view'] : ''}`}
+              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-1']} ${textInView ? styles['in-view'] : ''}`}
             >
               <span className={styles['private-caption-icon']}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -34,7 +45,7 @@ export function NovaPrivateGalleries() {
             </div>
 
             <div
-              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-2']} ${privateInView ? styles['in-view'] : ''}`}
+              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-2']} ${textInView ? styles['in-view'] : ''}`}
             >
               <span className={styles['private-caption-icon']}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -46,7 +57,7 @@ export function NovaPrivateGalleries() {
             </div>
 
             <div
-              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-3']} ${privateInView ? styles['in-view'] : ''}`}
+              className={`${styles['private-feature']} ${styles['reveal-strong']} ${styles['feature-delay-3']} ${textInView ? styles['in-view'] : ''}`}
             >
               <span className={styles['private-caption-icon']}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -60,7 +71,8 @@ export function NovaPrivateGalleries() {
         </div>
 
         <div
-          className={`${styles['private-visual']} ${styles['reveal-strong-visual']} ${styles['delay-2']} ${privateInView ? styles['in-view'] : ''}`}
+          className={`${styles['private-visual']} ${styles['reveal-strong-visual']} ${styles['delay-2']} ${visualInView ? styles['in-view'] : ''}`}
+          ref={visualRef}
         >
           <div className={styles['hero-glow']} aria-hidden="true" />
           <Image
