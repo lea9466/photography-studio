@@ -365,6 +365,12 @@
 }
 
 .device-panel {
+  /* explicit, not left to shrink-to-fit: since the iframe inside is
+     position:absolute (see .device-iframe), it no longer contributes to
+     this panel's natural content width — without this, the panel had
+     nothing else sizeable in normal flow and collapsed to near nothing
+     wherever its column isn't itself stretched (see .device-row below) */
+  width: 100%;
   height: 620px;
   display: flex;
   flex-direction: column;
@@ -1312,10 +1318,22 @@
 
   .device-row {
     flex-direction: column;
+    /* the row's own align-items: flex-start (desktop: top-aligns the two
+       side-by-side panels) means "shrink to content width" once stacked in
+       a column instead — stretch makes each column actually fill the row's
+       width the way a stacked layout needs */
+    align-items: stretch;
   }
 
   .device-col-phone {
+    /* an explicit width, not align-self:center — "center" on its own would
+       drop the stretch behaviour and go back to shrink-to-content (the
+       exact collapse this whole fix is for); an explicit width keeps it a
+       definite size, and auto inline margins centre that fixed-width box
+       within the stretched row instead */
+    width: 260px;
     max-width: 260px;
+    margin-inline: auto;
   }
 
   .steps {
