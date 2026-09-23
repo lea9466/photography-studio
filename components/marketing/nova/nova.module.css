@@ -455,12 +455,25 @@
 /* Real, scrollable site — same-origin only. This renders once the page is
    served from studio-galleries.com itself (frame-ancestors 'self' allows
    that); on localhost or any other origin the browser blocks the frame,
-   which is the site's own clickjacking protection working as intended. */
+   which is the site's own clickjacking protection working as intended.
+
+   Absolutely positioned (not flex-sized) so the width trick below actually
+   takes effect: with `flex: 1`, an item's flex-basis defaults to 0% and
+   wins over any `width` set on it, so the extra width was being silently
+   discarded. The framed page is RTL and far taller than this preview, so it
+   carries its own vertical scrollbar on its *left* edge — the parent page
+   can't reach into another document to restyle that scrollbar (even
+   same-origin), so instead the iframe is made wider than its box and
+   shifted left by the same amount: the real content still lines up with
+   the visible window exactly as before, but the scrollbar now renders in
+   the strip that .device-screen's overflow:hidden clips away. */
 .device-iframe {
   display: block;
-  width: 100%;
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
+  left: -20px;
+  width: calc(100% + 20px);
+  height: 100%;
   border: none;
   background: var(--charcoal-soft);
 }
