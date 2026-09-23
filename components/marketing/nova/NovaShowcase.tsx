@@ -6,6 +6,29 @@ import styles from './nova.module.css'
 
 const EXAMPLE_PATH = '/lea-studio'
 
+/**
+ * Width of the framed page's own vertical scrollbar: 0 for the overlay
+ * scrollbars phones (and macOS) use, ~4–17px for a classic one, depending on
+ * the framed theme. .device-iframe is widened by exactly this much so the
+ * scrollbar lands in the clipped strip — a fixed guess cut off the site's left
+ * edge wherever the scrollbar takes no room. Read-only: it needs the page to
+ * overflow at load, which the (far taller than the preview) example site does.
+ */
+function measureScrollbarWidth(frame: HTMLIFrameElement): number {
+  try {
+    const win = frame.contentWindow
+    const root = frame.contentDocument?.documentElement
+    if (!win || !root) return 0
+    return Math.max(0, win.innerWidth - root.clientWidth)
+  } catch {
+    return 0
+  }
+}
+
+function scrollbarStyle(px: number) {
+  return { '--scrollbar': `${px}px` } as React.CSSProperties
+}
+
 export function NovaShowcase() {
   const [showcaseRef, showcaseInView] = useInView()
   // Tracks each iframe's own load event — an <iframe> shows a blank white
@@ -14,6 +37,8 @@ export function NovaShowcase() {
   // A dark overlay that fades out on load hides that flash instead.
   const [computerLoaded, setComputerLoaded] = useState(false)
   const [phoneLoaded, setPhoneLoaded] = useState(false)
+  const [computerScrollbar, setComputerScrollbar] = useState(0)
+  const [phoneScrollbar, setPhoneScrollbar] = useState(0)
 
   return (
     <section className={styles.showcase} ref={showcaseRef}>
@@ -57,7 +82,11 @@ export function NovaShowcase() {
                   src={EXAMPLE_PATH}
                   title="תצוגת מחשב של אתר שנבנה במערכת"
                   loading="lazy"
-                  onLoad={() => setComputerLoaded(true)}
+                  style={scrollbarStyle(computerScrollbar)}
+                  onLoad={(e) => {
+                    setComputerScrollbar(measureScrollbarWidth(e.currentTarget))
+                    setComputerLoaded(true)
+                  }}
                 />
                 <div
                   className={`${styles['device-loading']} ${computerLoaded ? styles['device-loaded'] : ''}`}
@@ -86,7 +115,11 @@ export function NovaShowcase() {
                   src={EXAMPLE_PATH}
                   title="תצוגת טלפון של אתר שנבנה במערכת"
                   loading="lazy"
-                  onLoad={() => setPhoneLoaded(true)}
+                  style={scrollbarStyle(phoneScrollbar)}
+                  onLoad={(e) => {
+                    setPhoneScrollbar(measureScrollbarWidth(e.currentTarget))
+                    setPhoneLoaded(true)
+                  }}
                 />
                 <div
                   className={`${styles['device-loading']} ${phoneLoaded ? styles['device-loaded'] : ''}`}

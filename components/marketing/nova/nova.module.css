@@ -478,13 +478,17 @@
    same-origin), so instead the iframe is made wider than its box and
    shifted left by the same amount: the real content still lines up with
    the visible window exactly as before, but the scrollbar now renders in
-   the strip that .device-screen's overflow:hidden clips away. */
+   the strip that .device-screen's overflow:hidden clips away.
+
+   --scrollbar is the framed page's *measured* scrollbar width (set from
+   NovaShowcase on load): 0 on phones/overlay scrollbars, where a fixed extra
+   width just clipped that much of the site's left edge off. */
 .device-iframe {
   display: block;
   position: absolute;
   inset: 0;
-  left: -20px;
-  width: calc(100% + 20px);
+  left: calc(var(--scrollbar, 0px) * -1);
+  width: calc(100% + var(--scrollbar, 0px));
   height: 100%;
   border: none;
   background: var(--charcoal-soft);
