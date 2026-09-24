@@ -990,6 +990,20 @@
   color: var(--accent-light);
 }
 
+.site-footer-inner a:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.site-footer-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 24px;
+}
+
 /* Closing CTA — bold white banner, the page's final action moment */
 /* the flash glow is baked directly into this gradient, ending on the exact
    same flat color the neighboring sections use — a separate glow div
@@ -1584,5 +1598,16 @@
   .showcase-mobile-link:hover {
     border-color: var(--accent-light);
     background: rgba(var(--accent-rgb), 0.08);
+  }
+
+  /* three items no longer fit one row — stack them centered, legal links first */
+  .site-footer-inner {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .site-footer-legal {
+    order: -1;
   }
 }

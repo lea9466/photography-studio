@@ -3,6 +3,12 @@ import styles from './nova.module.css'
 
 const BRAND_NAME = 'STG'
 
+const LEGAL_LINKS = [
+  { href: '/accessibility', label: 'הצהרת נגישות' },
+  { href: '/privacy', label: 'מדיניות פרטיות' },
+  { href: '/terms', label: 'תקנון ותנאי שימוש' },
+]
+
 export function NovaFooter() {
   return (
     <footer className={styles['site-footer']}>
@@ -16,6 +22,13 @@ export function NovaFooter() {
         <span>
           © {new Date().getFullYear()} {BRAND_NAME}
         </span>
+        <nav aria-label="קישורים משפטיים" className={styles['site-footer-legal']}>
+          {LEGAL_LINKS.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
         <a href="https://leatech.dev/" target="_blank" rel="noopener noreferrer">
           נבנה ע״י leatech.dev
         </a>
