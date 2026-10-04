@@ -12,6 +12,10 @@ export type ClassicPageChromeProps = {
   headerProps: ClassicSiteHeaderProps
   footerProps: ClassicSiteFooterProps
   children: ReactNode
+  /** One-off slot for StudioAttributionBanner — see its own doc comment.
+   * Plain `position: absolute`, not fixed, so it scrolls away with the page
+   * instead of staying pinned — the nav needs no adjustment for it. */
+  banner?: ReactNode
 }
 
 /**
@@ -22,7 +26,7 @@ export type ClassicPageChromeProps = {
  * once fonts/header/footer/dir-fix needed to be shared by portfolio, blog
  * list, blog post, and before-after in addition to the homepage.
  */
-export function ClassicPageChrome({ language, headerProps, footerProps, children }: ClassicPageChromeProps) {
+export function ClassicPageChrome({ language, headerProps, footerProps, children, banner }: ClassicPageChromeProps) {
   useEffect(() => {
     const ltr = isSiteLtr(language)
     document.documentElement.lang = ltr ? 'en' : 'he'
@@ -37,7 +41,7 @@ export function ClassicPageChrome({ language, headerProps, footerProps, children
   const brandFontCss = buildBrandFontVarsCss(headerProps.headingFont, headerProps.aboutTitleFont, '.theme-classic')
 
   return (
-    <div className="theme-classic">
+    <div className="theme-classic relative">
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&family=Great+Vibes&display=swap"
@@ -49,6 +53,7 @@ export function ClassicPageChrome({ language, headerProps, footerProps, children
       />
       <style>{`html { scroll-behavior: smooth; } .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; } ${brandFontCss}`}</style>
 
+      {banner}
       <ClassicSiteHeader {...headerProps} />
       {children}
       <ClassicSiteFooter {...footerProps} />

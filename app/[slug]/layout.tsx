@@ -20,6 +20,7 @@ import {
   toClassicSiteHeaderProps,
 } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicPageChrome } from '@/components/photographer/react-site/ClassicPageChrome'
+import { StudioAttributionBanner } from '@/components/photographer/site-chrome/StudioAttributionBanner'
 import {
   toDarkSiteFooterProps,
   toDarkSiteHeaderProps,
@@ -191,11 +192,18 @@ export default async function PhotographerSiteLayout({
     )
   }
 
+  // One-off disclosure for a single demo studio — see
+  // StudioAttributionBanner.tsx's doc comment. Only wired into the classic
+  // chrome because that's this studio's current theme; porting it to the
+  // other three chromes isn't needed unless that changes.
+  const showAttributionBanner = typed.slug === 'lea-studio'
+
   return (
     <ClassicPageChrome
       language={chromeViewModel.language}
       headerProps={toClassicSiteHeaderProps(chromeViewModel)}
       footerProps={toClassicSiteFooterProps(chromeViewModel)}
+      banner={showAttributionBanner ? <StudioAttributionBanner /> : undefined}
     >
       {children}
     </ClassicPageChrome>
