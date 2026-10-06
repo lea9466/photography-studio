@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useTransition } from 'react'
+import { useDeferredValue, useEffect, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
@@ -80,6 +80,16 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
   const [logoUploading, setLogoUploading] = useState(false)
   const [aiPending, setAiPending] = useState(false)
 
+  // The picker fires on every drag step; the heavy theme preview follows a beat
+  // behind so the picker itself stays responsive.
+  const deferredAccent = useDeferredValue(accent)
+  const [hexDraft, setHexDraft] = useState(accent)
+  useEffect(() => setHexDraft(accent), [accent])
+  function handleHexChange(value: string) {
+    const normalized = value.startsWith('#') ? value : `#${value}`
+    setHexDraft(normalized)
+    if (/^#[0-9a-fA-F]{6}$/.test(normalized)) setAccent(normalized)
+  }
   const isCustomAccent = !ACCENT_SWATCHES.some((c) => c.toLowerCase() === accent.toLowerCase())
   const slugLocked = Boolean(initial.slug)
   const nameValid = studioName.trim().length >= MIN_NAME_LENGTH
@@ -412,6 +422,18 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                     {isCustomAccent ? <Check className="h-4 w-4 text-white" /> : null}
                   </label>
                 </div>
+                <div dir="ltr" className="flex items-center gap-2">
+                  <span className="text-xs text-black/50">HEX</span>
+                  <Input
+                    value={hexDraft}
+                    onChange={(e) => handleHexChange(e.target.value)}
+                    placeholder="#7D3A52"
+                    maxLength={7}
+                    spellCheck={false}
+                    className="h-8 w-28 font-mono text-xs"
+                    aria-label="קוד צבע HEX"
+                  />
+                </div>
                 <ChangeLaterHint>אפשר לשנות צבע בכל רגע</ChangeLaterHint>
               </div>
 
@@ -475,7 +497,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                 studioName={studioName.trim()}
                 slug={slug}
                 theme={theme}
-                accentColor={accent}
+                accentColor={deferredAccent}
                 aboutText={aboutText}
                 heroUrl={heroUrl}
                 logoUrl={logoUrl}
