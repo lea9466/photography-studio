@@ -53,12 +53,12 @@ function readPrefs(): Prefs {
   }
 }
 
-// The preferences have to reach <html> (rem-based font size + page-wide CSS
-// hooks in globals.css). That is the one place this component touches DOM
+// The preferences have to reach <html> (page zoom — rem-only font scaling
+// missed px-sized text — plus page-wide CSS hooks in globals.css). That is the one place this component touches DOM
 // outside its own tree — through the root element's dataset/style only.
 function applyPrefs(prefs: Prefs) {
   const root = document.documentElement
-  root.style.fontSize = prefs.size > 0 ? `${SIZE_STEPS[prefs.size]}%` : ''
+  root.style.setProperty('zoom', prefs.size > 0 ? String(SIZE_STEPS[prefs.size] / 100) : '')
   for (const { key } of TOGGLES) {
     if (prefs[key]) root.setAttribute(`data-a11y-${key}`, '')
     else root.removeAttribute(`data-a11y-${key}`)
@@ -118,7 +118,7 @@ export function AccessibilityWidget() {
   const isDefault = JSON.stringify(prefs) === JSON.stringify(DEFAULTS)
 
   return (
-    <div data-a11y-ui dir="rtl">
+    <div data-a11y-ui dir="rtl" style={{ zoom: 100 / SIZE_STEPS[prefs.size] }}>
       <button
         ref={triggerRef}
         type="button"
