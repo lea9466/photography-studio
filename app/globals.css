@@ -172,14 +172,16 @@ html:has([data-client-gallery-root]) {
   --border: #44403c;
 }
 
-/* Enable accessibility widget — moved to the left edge, vertically centred
-   shrunk, and recoloured to match the site. */
-#enable-toolbar {
-  right: auto !important;
+/* Enable accessibility widget — pinned to the left edge, vertically centred,
+   shrunk and recoloured. Positioned via the trigger button (not the
+   #enable-toolbar wrapper): a transform on the wrapper made the widget
+   vanish a few seconds after load. */
+#enable-toolbar-trigger {
+  position: fixed !important;
   left: 16px !important;
+  right: auto !important;
   bottom: auto !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
+  top: calc(50vh - 26px) !important;
 }
 
 #enable-toolbar-trigger-svg {
