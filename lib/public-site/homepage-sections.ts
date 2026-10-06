@@ -1,3 +1,5 @@
+import type { ProFeature } from '@/lib/subscriptions/types'
+
 /**
  * Photographer-controlled order + visibility of the movable homepage
  * sections. Hero (always first) and contact (always last) are fixed and
@@ -61,4 +63,16 @@ export function normalizeHomepageSectionLayout(raw: unknown): HomepageSectionLay
   }
 
   return result
+}
+
+/**
+ * Sections whose content is a PRO feature. On the Basic (free) plan they are
+ * not rendered on the public site at all, so the order editor shows them
+ * greyed out with an upgrade prompt instead of letting them be arranged.
+ */
+export const HOMEPAGE_SECTION_PRO_FEATURE: Partial<Record<HomepageSectionId, ProFeature>> = {
+  posts: 'posts',
+  packages: 'packages',
+  testimonials: 'testimonials',
+  faq: 'faq',
 }

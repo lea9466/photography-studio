@@ -1368,6 +1368,109 @@ export async function sendClientPageDesignAnnouncementEmail(input: { name: strin
 }
 
 /**
+ * Pure builder for the homepage-section-order feature announcement — the
+ * "סדר דף הבית" dashboard tab (drag to reorder, hide/show, reset to default;
+ * see app/dashboard/homepage-layout/page.tsx). A settings addition like the
+ * client-page-design email, so same short shape: benefit checklist, one CTA,
+ * and a reassurance callout that doing nothing changes nothing. Rollout
+ * script: scripts/send-homepage-sections-announcement.ts.
+ */
+export function buildHomepageSectionsAnnouncementEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const subject = 'חדש: גוררים ומסדרים את הסקשנים בדף הבית של האתר שלך'
+  const layoutUrl = appUrl('/dashboard/homepage-layout')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const h1 = `margin: 0 0 8px; font-family: ${LUXE.serif}; font-size: 27px; line-height: 1.3; font-weight: 400; color: ${LUXE.ink};`
+  const subhead = `margin: 0 0 22px; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.6; color: ${LUXE.muted};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STG</td>
+      </tr>
+    </table>
+    <h1 style="${h1}">את מחליטה מה רואים קודם באתר שלך</h1>
+    <p style="${subhead}">גוררים סקשן למקום אחר, מסתירים מה שלא מתאים, והאתר מתעדכן מיד</p>
+
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">עד היום דף הבית של האתר תמיד הוצג באותו סדר קבוע. מעכשיו זה בידיים שלך: נוסף טאב חדש, "סדר דף הבית", שבו את בוחרת איך הדף בנוי — למשל להעלות את החבילות והמחירים ממש למעלה, או להוריד סקשן שעדיין לא מוכן.</p>
+
+    ${luxeCheckList([
+      ['גוררים וזהו', 'אודות, גלריות, תמונות אחרונות, בלוג, חבילות, המלצות ושאלות נפוצות — כל אחד למקום שבא לך'],
+      ['מסתירים בלחיצה', 'סקשן שהסתרת לא מוצג באתר, אבל התוכן שלו נשמר, ואפשר להחזיר אותו בכל רגע'],
+      ['רואים מה זז לאן', 'לכל סקשן יש תצוגה קטנה, עם התמונות שלך, כדי שיהיה ברור מי זה'],
+      ['איפוס בלחיצה אחת', 'התחרטת? כפתור אחד מחזיר את הסדר המקורי ומציג מחדש את כל הסקשנים'],
+    ])}
+
+    ${luxeButton(layoutUrl, 'לסדר את דף הבית שלי')}
+
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: '#0d9488',
+      bg: '#e3f6f2',
+      border: '#c4ebe2',
+      title: 'לא חובה לגעת בזה',
+      body: 'לא נכנסת לטאב? שום דבר לא משתנה — האתר שלך ימשיך להיראות בדיוק כמו היום. הסקשן הראשי בראש הדף ו"צור קשר" בסופו נשארים תמיד במקומם, בכל ארבעת העיצובים.',
+    })}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה, או רעיון למשהו נוסף שהיית רוצה לשנות באתר? אני כאן — דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
+
+  return {
+    subject,
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'עד היום דף הבית של האתר תמיד הוצג באותו סדר קבוע. מעכשיו זה בידיים שלך: נוסף טאב חדש, "סדר דף הבית", שבו את בוחרת איך הדף בנוי:',
+      '',
+      '- גוררים וזהו — אודות, גלריות, תמונות אחרונות, בלוג, חבילות, המלצות ושאלות נפוצות, כל אחד למקום שבא לך',
+      '- מסתירים בלחיצה — סקשן מוסתר לא מוצג באתר, אבל התוכן שלו נשמר ואפשר להחזיר אותו בכל רגע',
+      '- רואים מה זז לאן — לכל סקשן יש תצוגה קטנה עם התמונות שלך',
+      '- איפוס בלחיצה אחת — מחזיר את הסדר המקורי',
+      '',
+      `לסדר את דף הבית שלי: ${layoutUrl}`,
+      '',
+      'לא נכנסת לטאב? שום דבר לא משתנה — האתר שלך ימשיך להיראות בדיוק כמו היום. הסקשן הראשי בראש הדף ו"צור קשר" בסופו נשארים תמיד במקומם.',
+      '',
+      `שאלה או רעיון? טאב יצירת הקשר במערכת: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader: 'גוררים סקשנים, מסתירים מה שלא מתאים ומחזירים בלחיצה — האתר מתעדכן מיד.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendHomepageSectionsAnnouncementEmail(input: { name: string; email: string }) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'homepage-sections-announcement',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildHomepageSectionsAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
  * Pure builder for the "launch price ending soon" re-engagement email — a
  * one-off nudge to studios whose free trial already lapsed without
  * converting to a paid Pro subscription. Same preview/snapshot-testable

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { Eye, EyeOff, GripVertical, Lock, LayoutList, RotateCcw } from 'lucide-react'
 import {
   DndContext,
@@ -50,17 +51,19 @@ function FixedRow({ label }: { label: string }) {
 function SortableRow({
   entry,
   disabled,
+  locked,
   preview,
   onToggle,
 }: {
   entry: HomepageSectionEntry
   disabled: boolean
+  locked: boolean
   preview?: SectionPreviewData
   onToggle: (id: HomepageSectionId) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: entry.id,
-    disabled,
+    disabled: disabled || locked,
   })
   const hint = SECTION_HINTS[entry.id]
 
@@ -70,31 +73,53 @@ function SortableRow({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
         'flex items-center gap-3 rounded-xl border bg-white px-3 py-3 sm:px-4',
-        entry.visible ? 'border-[--border]/80' : 'border-[--border]/60 bg-white/50',
+        locked
+          ? 'border-[--border]/60 bg-neutral-50'
+          : entry.visible
+            ? 'border-[--border]/80'
+            : 'border-[--border]/60 bg-white/50',
         isDragging && 'relative z-10 shadow-lg'
       )}
     >
       <button
         type="button"
         aria-label={`גרירה של הסקשן ${HOMEPAGE_SECTION_LABELS[entry.id]}`}
-        className="shrink-0 cursor-grab touch-none rounded-md p-1 text-[--muted] hover:bg-[#7D3A52]/[0.06] active:cursor-grabbing"
+        disabled={locked}
+        className={cn(
+          'shrink-0 rounded-md p-1 text-[--muted]',
+          locked
+            ? 'cursor-not-allowed opacity-30'
+            : 'cursor-grab touch-none hover:bg-[#7D3A52]/[0.06] active:cursor-grabbing'
+        )}
         {...attributes}
         {...listeners}
       >
         <GripVertical className="h-5 w-5" />
       </button>
 
-      <div className={cn('shrink-0', !entry.visible && 'opacity-40 grayscale')}>
+      <div className={cn('shrink-0', (locked || !entry.visible) && 'opacity-40 grayscale')}>
         <HomepageSectionThumbnail id={entry.id} preview={preview} />
       </div>
 
-      <div className={cn('min-w-0 flex-1', !entry.visible && 'opacity-50')}>
+      <div className={cn('min-w-0 flex-1', (locked || !entry.visible) && 'opacity-60')}>
         <p className="text-sm font-semibold text-[--foreground]">
           {HOMEPAGE_SECTION_LABELS[entry.id]}
         </p>
-        {hint ? <p className="text-xs text-[--muted]">{hint}</p> : null}
+        {locked ? (
+          <p className="text-xs text-[--muted]">זמין במסלול PRO בלבד</p>
+        ) : hint ? (
+          <p className="text-xs text-[--muted]">{hint}</p>
+        ) : null}
       </div>
 
+      {locked ? (
+        <Link
+          href="/dashboard/subscription"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-200"
+        >
+          <Lock className="h-3.5 w-3.5" /> שדרוג ל-PRO
+        </Link>
+      ) : (
       <button
         type="button"
         onClick={() => onToggle(entry.id)}
@@ -117,6 +142,7 @@ function SortableRow({
           </>
         )}
       </button>
+      )}
     </div>
   )
 }
@@ -124,9 +150,11 @@ function SortableRow({
 export function HomepageSectionsOrderSetting({
   initialLayout,
   preview,
+  lockedSections = [],
 }: {
   initialLayout: HomepageSectionLayout
   preview?: SectionPreviewData
+  lockedSections?: HomepageSectionId[]
 }) {
   const [layout, setLayout] = useState<HomepageSectionLayout>(initialLayout)
   const [isPending, startTransition] = useTransition()
@@ -204,6 +232,7 @@ export function HomepageSectionsOrderSetting({
                   key={entry.id}
                   entry={entry}
                   disabled={isPending}
+                  locked={lockedSections.includes(entry.id)}
                   preview={preview}
                   onToggle={handleToggle}
                 />

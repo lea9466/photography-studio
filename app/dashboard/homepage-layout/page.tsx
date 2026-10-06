@@ -3,6 +3,12 @@ import { ArrowUpDown, EyeOff, LayoutList, Lock, MousePointerClick } from 'lucide
 
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { fetchHomepageSections } from '@/lib/actions/site-settings.actions'
+import { getStudioEntitlements } from '@/lib/subscriptions/loader'
+import { canUseFeature } from '@/lib/subscriptions/entitlements'
+import {
+  HOMEPAGE_SECTION_PRO_FEATURE,
+  type HomepageSectionId,
+} from '@/lib/public-site/homepage-sections'
 import { loadSectionPreviewData } from '@/lib/public-site/homepage-section-previews'
 import { HomepageSectionsOrderSetting } from '@/components/dashboard/HomepageSectionsOrderSetting'
 
@@ -27,6 +33,7 @@ const STEPS = [
 const GOOD_TO_KNOW = [
   'הסידור חל על דף הבית בלבד. דף הבלוג, תיק העבודות ולפני/אחרי נשארים כמו שהם.',
   'סקשן מוסתר נעלם גם מתפריט הניווט העליון. אם הסתרת את "שאלות נפוצות", לא יופיע קישור אליהן.',
+  'במסלול Basic, סקשנים שהם תכונת PRO (בלוג, חבילות, המלצות ושאלות נפוצות) מופיעים באפור ולא מוצגים באתר. אחרי שדרוג ל-PRO הם נפתחים, ואפשר לסדר ולהציג אותם.',
   'סקשן ריק לא מוצג בכל מקרה, גם כשהוא מסומן "מוצג". למשל חבילות כשלא הוגדרה אף חבילה, או שאלות נפוצות בלי שאלות.',
   'הסקשן הראשי (התמונה הגדולה בראש הדף) וצור קשר (בסוף) נעולים במקומם, כדי שהאתר תמיד יפתח ויסתיים נכון.',
   'מי שלא שינתה כלום רואה את הסדר הרגיל: אודות, גלריות, תמונות אחרונות, בלוג, חבילות, המלצות ושאלות נפוצות.',
@@ -40,10 +47,17 @@ export default async function HomepageLayoutPage() {
     redirect('/login')
   }
 
-  const [layout, preview] = await Promise.all([
+  const [layout, preview, entitlements] = await Promise.all([
     fetchHomepageSections(),
     loadSectionPreviewData(context.supabase, context.userId),
+    getStudioEntitlements(context.userId),
   ])
+
+  const lockedSections = (
+    Object.entries(HOMEPAGE_SECTION_PRO_FEATURE) as [HomepageSectionId, NonNullable<(typeof HOMEPAGE_SECTION_PRO_FEATURE)[HomepageSectionId]>][]
+  )
+    .filter(([, feature]) => !canUseFeature(entitlements, feature))
+    .map(([id]) => id)
 
   return (
     <div className="animate-fade-in">
@@ -87,6 +101,7 @@ export default async function HomepageLayoutPage() {
           key={layout.map((section) => section.id + ':' + section.visible).join(',')}
           initialLayout={layout}
           preview={preview}
+          lockedSections={lockedSections}
         />
 
         <section className="space-y-4 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
