@@ -171,3 +171,42 @@ html:has([data-client-gallery-root]) {
   --foreground: #fafafa;
   --border: #44403c;
 }
+
+/* Accessibility widget (components/shared/AccessibilityWidget.tsx) — the widget
+   sets data-a11y-* attributes on <html>; its own UI ([data-a11y-ui]) is exempt. */
+html[data-a11y-contrast] body *:not([data-a11y-ui], [data-a11y-ui] *, img, video, canvas, svg, svg *) {
+  background-color: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: #fff !important;
+  text-shadow: none !important;
+}
+
+html[data-a11y-contrast] a:not([data-a11y-ui] *) {
+  color: #ffeb3b !important;
+}
+
+html[data-a11y-links] a:not([data-a11y-ui] *) {
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+  background-color: #fff3a3 !important;
+  color: #000 !important;
+}
+
+html[data-a11y-font] body *:not([data-a11y-ui], [data-a11y-ui] *) {
+  font-family: Arial, 'Segoe UI', sans-serif !important;
+}
+
+html[data-a11y-spacing] body *:not([data-a11y-ui], [data-a11y-ui] *) {
+  line-height: 1.8 !important;
+  letter-spacing: 0.04em !important;
+  word-spacing: 0.12em !important;
+}
+
+html[data-a11y-motion] *,
+html[data-a11y-motion] *::before,
+html[data-a11y-motion] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
