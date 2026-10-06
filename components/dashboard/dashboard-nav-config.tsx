@@ -71,6 +71,21 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     frozen: PUBLIC_ONLY_MVP,
   },
   {
+    href: '/dashboard/settings',
+    label: 'הגדרות אתר',
+    icon: <Settings className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
+    group: 'public',
+  },
+  {
+    href: '/dashboard/homepage-layout',
+    label: 'סדר דף הבית',
+    icon: <LayoutList className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/homepage-layout'),
+    group: 'public',
+    badge: 'new',
+  },
+  {
     href: '/dashboard/galleries',
     label: 'גלריות',
     icon: <ImageIcon className="h-5 w-5" />,
@@ -121,21 +136,6 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     group: 'public',
     proFeature: 'faq',
     lockedTooltip: 'שאלות נפוצות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג סקשן שאלות נפוצות בדף הבית הציבורי שלך',
-  },
-  {
-    href: '/dashboard/homepage-layout',
-    label: 'סדר דף הבית',
-    icon: <LayoutList className="h-5 w-5" />,
-    isActive: (pathname) => pathname.startsWith('/dashboard/homepage-layout'),
-    group: 'public',
-    badge: 'new',
-  },
-  {
-    href: '/dashboard/settings',
-    label: 'הגדרות אתר',
-    icon: <Settings className="h-5 w-5" />,
-    isActive: (pathname) => pathname.startsWith('/dashboard/settings'),
-    group: 'public',
   },
   {
     href: '/dashboard/custom-domain',
