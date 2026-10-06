@@ -8,6 +8,7 @@ export type SiteOnboardingState = {
   slug: string | null
   accentColor: string | null
   aboutText: string
+  selectedTheme: string
   logoUrl: string | null
   /** Resolved (signed) URL of the existing first hero image, if any. */
   heroPreviewUrl: string | null
@@ -18,6 +19,7 @@ type OnboardingRow = {
   slug: string | null
   accent_color: string | null
   about_text: string | null
+  selected_theme: string | null
   logo_url: string | null
   hero_desktop_url: string | null
   hero_desktop_urls: string[] | null
@@ -26,7 +28,7 @@ type OnboardingRow = {
 }
 
 const BASE_COLUMNS =
-  'studio_name, slug, accent_color, about_text, logo_url, hero_desktop_url, hero_desktop_urls, show_welcome_popup'
+  'studio_name, slug, accent_color, about_text, selected_theme, logo_url, hero_desktop_url, hero_desktop_urls, show_welcome_popup'
 
 /**
  * Opens on the very first entry, and then on every entry while the studio
@@ -72,6 +74,7 @@ export async function getSiteOnboardingState(): Promise<SiteOnboardingState | nu
     slug,
     accentColor: row.accent_color,
     aboutText: row.about_text ?? '',
+    selectedTheme: row.selected_theme || 'classic',
     logoUrl,
     heroPreviewUrl,
   }

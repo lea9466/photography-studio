@@ -4,12 +4,30 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Globe } from 'lucide-react'
 import { ClassicHomePage } from '@/components/photographer/themes/classic/ClassicHomePage'
+import { ModernHomePage } from '@/components/photographer/themes/modern/ModernHomePage'
+import { ElegantHomePage } from '@/components/photographer/themes/elegant/ElegantHomePage'
+import { DarkHomePage } from '@/components/photographer/themes/dark/DarkHomePage'
 import { ClassicSiteHeader } from '@/components/photographer/site-chrome/ClassicSiteHeader'
+import { ModernSiteHeader } from '@/components/photographer/site-chrome/ModernSiteHeader'
+import { ElegantSiteHeader } from '@/components/photographer/site-chrome/ElegantSiteHeader'
+import { DarkSiteHeader } from '@/components/photographer/site-chrome/DarkSiteHeader'
 import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
 import {
   toClassicHomePageProps,
   toClassicSiteHeaderProps,
 } from '@/lib/public-site/adapters/theme-props/classic'
+import {
+  toModernHomePageProps,
+  toModernSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/modern'
+import {
+  toElegantHomePageProps,
+  toElegantSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/elegant'
+import {
+  toDarkHomePageProps,
+  toDarkSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/dark'
 
 // The site is rendered at a desktop width and scaled down to fit the pane.
 const DESIGN_WIDTH = 1280
@@ -18,6 +36,8 @@ type OnboardingLivePreviewProps = {
   studioName: string
   /** Undefined until a studio name produced a slug — the site "appears" then. */
   slug: string | null
+  /** A THEME_OPTIONS id: classic | modern | elegant | bold. */
+  theme: string
   accentColor: string
   aboutText: string
   heroUrl: string | null
@@ -25,13 +45,14 @@ type OnboardingLivePreviewProps = {
 }
 
 /**
- * The studio's real public homepage (Classic theme — the default for every new
- * studio), driven by the modal's local draft state so every field shows up as
- * she fills it in. Non-interactive; nothing here touches the server.
+ * The studio's real public homepage in the chosen theme, driven by the modal's
+ * local draft state so every field shows up as she fills it in.
+ * Non-interactive; nothing here touches the server.
  */
 export function OnboardingLivePreview({
   studioName,
   slug,
+  theme,
   accentColor,
   aboutText,
   heroUrl,
@@ -64,7 +85,7 @@ export function OnboardingLivePreview({
     return () => observer.disconnect()
   }, [slug])
 
-  const { homePageProps, headerProps } = useMemo(() => {
+  const siteElement = useMemo(() => {
     const viewModel = buildHomepageViewModel({
       photographer: {
         id: 'onboarding-preview',
@@ -129,11 +150,39 @@ export function OnboardingLivePreview({
       postCount: 0,
       photoEditComparisonsCount: 0,
     })
-    return {
-      homePageProps: toClassicHomePageProps(viewModel),
-      headerProps: toClassicSiteHeaderProps(viewModel),
+    // Same mapping the real public page uses ('bold' is rendered by the Dark theme).
+    switch (theme) {
+      case 'modern':
+        return (
+          <>
+            <ModernSiteHeader {...toModernSiteHeaderProps(viewModel)} />
+            <ModernHomePage {...toModernHomePageProps(viewModel)} />
+          </>
+        )
+      case 'elegant':
+        return (
+          <>
+            <ElegantSiteHeader {...toElegantSiteHeaderProps(viewModel)} />
+            <ElegantHomePage {...toElegantHomePageProps(viewModel)} />
+          </>
+        )
+      case 'bold':
+      case 'dark':
+        return (
+          <>
+            <DarkSiteHeader {...toDarkSiteHeaderProps(viewModel)} />
+            <DarkHomePage {...toDarkHomePageProps(viewModel)} />
+          </>
+        )
+      default:
+        return (
+          <>
+            <ClassicSiteHeader {...toClassicSiteHeaderProps(viewModel)} />
+            <ClassicHomePage {...toClassicHomePageProps(viewModel)} />
+          </>
+        )
     }
-  }, [studioName, slug, accentColor, aboutText, heroUrl, logoUrl, pathname])
+  }, [theme, studioName, slug, accentColor, aboutText, heroUrl, logoUrl, pathname])
 
   const address = slug
     ? `${typeof window !== 'undefined' ? window.location.host : ''}/${slug}`
@@ -169,8 +218,7 @@ export function OnboardingLivePreview({
                   transformOrigin: 'top left',
                 }}
               >
-                <ClassicSiteHeader {...headerProps} />
-                <ClassicHomePage {...homePageProps} />
+                {siteElement}
               </div>
             </div>
           </div>

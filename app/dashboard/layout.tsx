@@ -33,6 +33,7 @@ export default async function DashboardLayout({
         slug: onboardingState.slug,
         accentColor: onboardingState.accentColor,
         aboutText: onboardingState.aboutText,
+        selectedTheme: onboardingState.selectedTheme,
         logoUrl: onboardingState.logoUrl,
         heroPreviewUrl: onboardingState.heroPreviewUrl,
       }

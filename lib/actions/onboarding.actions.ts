@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { slugifyStudioName } from '@/lib/onboarding/slugify'
 import { checkPersistentRateLimit } from '@/lib/rate-limit/persistent'
 import { getAssistantProvider } from '@/lib/assistant/provider'
+import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
 
 export async function dismissWelcomePopup() {
   const { userId, supabase } = await requireDashboardContext()
@@ -79,6 +80,7 @@ export type SaveSiteOnboardingInput = {
   studioName: string
   aboutText?: string
   accentColor?: string | null
+  selectedTheme?: string
 }
 
 /**
@@ -101,6 +103,11 @@ export async function saveSiteOnboarding(
       return { ok: false, error: 'צבע לא תקין' }
     }
 
+    const selectedTheme = input.selectedTheme?.trim()
+    if (selectedTheme && !(THEME_IDS as readonly string[]).includes(selectedTheme)) {
+      return { ok: false, error: 'עיצוב לא תקין' }
+    }
+
     const admin = createAdminClient()
     const { data: current, error: readError } = await admin
       .from('users')
@@ -121,6 +128,7 @@ export async function saveSiteOnboarding(
     }
     if (aboutText !== undefined) update.about_text = aboutText || null
     if (accentColor) update.accent_color = accentColor
+    if (selectedTheme) update.selected_theme = selectedTheme
 
     const { error } = await admin
       .from('users')

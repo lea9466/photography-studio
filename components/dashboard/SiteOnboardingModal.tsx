@@ -18,6 +18,7 @@ import {
   skipSiteOnboarding,
 } from '@/lib/actions/onboarding.actions'
 import { finalizeBrandingUpload, prepareBrandingUpload } from '@/lib/actions/branding.actions'
+import { THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
 import { compressBrandingFile } from '@/lib/branding-upload-client'
 import { putToPresignedUrl } from '@/lib/r2/upload-client'
 
@@ -33,6 +34,7 @@ export type SiteOnboardingInitial = {
   slug: string | null
   accentColor: string | null
   aboutText: string
+  selectedTheme: string
   logoUrl: string | null
   heroPreviewUrl: string | null
 }
@@ -69,6 +71,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
   const [slug, setSlug] = useState<string | null>(initial.slug)
   const [slugError, setSlugError] = useState('')
   const [aboutText, setAboutText] = useState(initial.aboutText)
+  const [theme, setTheme] = useState(initial.selectedTheme)
   const [accent, setAccent] = useState(initial.accentColor || DEFAULT_ONBOARDING_ACCENT)
 
   const [heroUrl, setHeroUrl] = useState<string | null>(initial.heroPreviewUrl)
@@ -168,7 +171,12 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
 
   function handleFinish() {
     startTransition(async () => {
-      const result = await saveSiteOnboarding({ studioName, aboutText, accentColor: accent })
+      const result = await saveSiteOnboarding({
+        studioName,
+        aboutText,
+        accentColor: accent,
+        selectedTheme: theme,
+      })
       if (!result.ok) {
         toast.error(result.error)
         return
@@ -291,6 +299,39 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                   </span>
                 </label>
                 <ChangeLaterHint>אפשר להחליף או להוסיף תמונות הירו בדשבורד</ChangeLaterHint>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-sm font-medium">עיצוב האתר</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {THEME_OPTIONS.map((option) => {
+                    const selected = theme === option.id
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        onClick={() => setTheme(option.id)}
+                        aria-pressed={selected}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-xl border p-2.5 text-start text-sm transition',
+                          selected
+                            ? 'border-black/70 bg-black/[0.03] ring-1 ring-black/60'
+                            : 'border-black/10 hover:border-black/30'
+                        )}
+                      >
+                        <span
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/10"
+                          style={{ background: option.color1 }}
+                        >
+                          <span className="h-3 w-3 rounded-full" style={{ background: option.color2 }} />
+                        </span>
+                        <span className="min-w-0 flex-1 font-medium">{option.name}</span>
+                        {selected ? <Check className="h-4 w-4 shrink-0" /> : null}
+                      </button>
+                    )
+                  })}
+                </div>
+                <ChangeLaterHint>אפשר להחליף עיצוב בכל רגע, התוכן נשאר</ChangeLaterHint>
               </div>
 
               <div className="space-y-1.5">
@@ -433,6 +474,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
               <OnboardingLivePreview
                 studioName={studioName.trim()}
                 slug={slug}
+                theme={theme}
                 accentColor={accent}
                 aboutText={aboutText}
                 heroUrl={heroUrl}
