@@ -103,7 +103,9 @@ export function OnboardingLivePreview({
         hero_mobile_urls: heroUrl ? [heroUrl] : [],
         hero_video_url: null,
         about_text: aboutText || null,
-        about_title: null,
+        // Modern's hero headline is the about title (no studio name otherwise), so the
+        // preview — and the save below — use the studio name for it.
+        about_title: theme === 'modern' ? studioName || null : null,
         about_subtitle: null,
         about_description: null,
         about_image_url: null,

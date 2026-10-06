@@ -111,12 +111,13 @@ export async function saveSiteOnboarding(
     const admin = createAdminClient()
     const { data: current, error: readError } = await admin
       .from('users')
-      .select('slug')
+      .select('slug, about_title')
       .eq('id', userId)
       .maybeSingle()
     if (readError) return { ok: false, error: 'שגיאה בשמירה, נסי שוב' }
 
-    let slug = (current as { slug: string | null } | null)?.slug?.trim() || null
+    const currentRow = current as { slug: string | null; about_title: string | null } | null
+    let slug = currentRow?.slug?.trim() || null
     const update: Record<string, unknown> = {
       studio_name: studioName,
       show_welcome_popup: false,
@@ -129,6 +130,11 @@ export async function saveSiteOnboarding(
     if (aboutText !== undefined) update.about_text = aboutText || null
     if (accentColor) update.accent_color = accentColor
     if (selectedTheme) update.selected_theme = selectedTheme
+    // Modern's hero headline is the about title and otherwise falls back to
+    // generic copy, so seed it with the studio name (never overwriting hers).
+    if (selectedTheme === 'modern' && !currentRow?.about_title?.trim()) {
+      update.about_title = studioName
+    }
 
     const { error } = await admin
       .from('users')
