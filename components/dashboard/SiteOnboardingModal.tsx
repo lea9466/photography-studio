@@ -46,7 +46,7 @@ type SiteOnboardingModalProps = {
 
 const ACCENT_SWATCHES = [
   '#7D3A52', '#B5816A', '#C2410C', '#B45309', '#4D7C0F', '#0F766E',
-  '#1D4ED8', '#6D28D9', '#BE185D', '#1F2937',
+  '#1D4ED8', '#7C3AED', '#BE185D', '#1F2937',
 ]
 
 const DEFAULT_ONBOARDING_ACCENT = '#7D3A52'
@@ -83,13 +83,6 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
   // The picker fires on every drag step; the heavy theme preview follows a beat
   // behind so the picker itself stays responsive.
   const deferredAccent = useDeferredValue(accent)
-  const [hexDraft, setHexDraft] = useState(accent)
-  useEffect(() => setHexDraft(accent), [accent])
-  function handleHexChange(value: string) {
-    const normalized = value.startsWith('#') ? value : `#${value}`
-    setHexDraft(normalized)
-    if (/^#[0-9a-fA-F]{6}$/.test(normalized)) setAccent(normalized)
-  }
   const isCustomAccent = !ACCENT_SWATCHES.some((c) => c.toLowerCase() === accent.toLowerCase())
   const slugLocked = Boolean(initial.slug)
   const nameValid = studioName.trim().length >= MIN_NAME_LENGTH
@@ -405,11 +398,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                       'relative flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded-full ring-offset-2 transition',
                       isCustomAccent && 'ring-2 ring-black/70'
                     )}
-                    style={{
-                      background: isCustomAccent
-                        ? accent
-                        : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
-                    }}
+                    style={{ background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
                     title="בחירת צבע חופשית"
                   >
                     <input
@@ -419,20 +408,16 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                       className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                       aria-label="בחירת צבע חופשית"
                     />
-                    {isCustomAccent ? <Check className="h-4 w-4 text-white" /> : null}
+                    {/* Stays a rainbow wheel; a chosen custom color shows as its center dot. */}
+                    {isCustomAccent ? (
+                      <span
+                        className="flex h-5 w-5 items-center justify-center rounded-full border border-white"
+                        style={{ background: accent }}
+                      >
+                        <Check className="h-3 w-3 text-white" />
+                      </span>
+                    ) : null}
                   </label>
-                </div>
-                <div dir="ltr" className="flex items-center gap-2">
-                  <span className="text-xs text-black/50">HEX</span>
-                  <Input
-                    value={hexDraft}
-                    onChange={(e) => handleHexChange(e.target.value)}
-                    placeholder="#7D3A52"
-                    maxLength={7}
-                    spellCheck={false}
-                    className="h-8 w-28 font-mono text-xs"
-                    aria-label="קוד צבע HEX"
-                  />
                 </div>
                 <ChangeLaterHint>אפשר לשנות צבע בכל רגע</ChangeLaterHint>
               </div>
