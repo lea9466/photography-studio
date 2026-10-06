@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { DarkHero } from './DarkHero'
@@ -15,6 +16,8 @@ import { DarkContactSection } from './DarkContactSection'
 import type { DarkContactFormValues } from './DarkContactForm'
 import type { GalleryGridItem } from '../shared/GalleryGrid'
 import type { RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
+import { OrderedHomepageSections } from '../shared/OrderedHomepageSections'
+import type { HomepageSectionId, HomepageSectionLayout } from '@/lib/public-site/homepage-sections'
 import { ScrollToInitialSection } from '../shared/ScrollToInitialSection'
 import './dark-theme.css'
 
@@ -58,6 +61,8 @@ export type DarkHomePageProps = {
   testimonials: DarkTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
   testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  /** Order + visibility of the movable sections (hero/contact are fixed). */
+  sectionLayout?: HomepageSectionLayout
 
   faqItems: unknown
 
@@ -135,6 +140,7 @@ export function DarkHomePage(props: DarkHomePageProps) {
     testimonialsTitle,
     testimonials,
     testimonialLayoutType,
+    sectionLayout,
     faqItems,
     phone,
     email,
@@ -154,6 +160,92 @@ export function DarkHomePage(props: DarkHomePageProps) {
   const heroGalleryAnchor = isPortfolioMode ? '#recent-photos' : '#gallery'
   const portfolioHref = isPortfolioMode ? (portfolioPath ?? null) : null
 
+  const sections: Record<HomepageSectionId, ReactNode> = {
+    about: (
+      <>
+      <DarkAbout
+        title={aboutTitle}
+        subtitle={aboutSubtitle}
+        description={aboutDescription}
+        accentColor={accentColor}
+        photographerName={photographerName}
+        imageUrl={aboutImageUrl}
+        statsClients={statsClients}
+        statsProjects={statsProjects}
+        statsYears={statsYears}
+        language={language}
+      />
+      </>
+    ),
+    galleries: (
+      <>
+      {!isPortfolioMode ? (
+        <DarkGalleriesSection
+          title={galleriesTitle}
+          galleries={galleries}
+          accentColor={accentColor}
+          language={language}
+          hrefForGallery={hrefForGallery}
+        />
+      ) : null}
+      </>
+    ),
+    recent_photos: (
+      <>
+      <DarkRecentPhotosSection
+        title={recentPhotosTitle}
+        galleries={recentPhotosGalleries}
+        accentColor={accentColor}
+        language={language}
+        portfolioHref={portfolioHref}
+      />
+      </>
+    ),
+    posts: (
+      <>
+      <DarkPostsSection
+        title={postsTitle}
+        displayStyle={postsDisplayStyle}
+        posts={posts}
+        accentColor={accentColor}
+        blogHref={blogPath ?? '#'}
+        language={language}
+        hrefForPost={hrefForPost}
+      />
+      </>
+    ),
+    packages: (
+      <>
+      {packages.length > 0 ? (
+        <DarkPackagesSection
+          title={packagesTitle}
+          subtitle={packagesSubtitle}
+          packages={packages}
+          accentColor={accentColor}
+          language={language}
+        />
+      ) : null}
+      </>
+    ),
+    testimonials: (
+      <>
+      <DarkTestimonialsSection
+        title={testimonialsTitle}
+        testimonials={testimonials}
+        accentColor={accentColor}
+        logoUrl={logoUrl}
+        language={language}
+        layoutType={testimonialLayoutType}
+      />
+      </>
+    ),
+    faq: (
+      <>
+      <DarkFaqSection faqItems={faqItems} accentColor={accentColor} language={language} />
+      </>
+    ),
+  }
+
   return (
     <>
       <ScrollToInitialSection />
@@ -169,69 +261,9 @@ export function DarkHomePage(props: DarkHomePageProps) {
         language={language}
       />
 
-      <DarkAbout
-        title={aboutTitle}
-        subtitle={aboutSubtitle}
-        description={aboutDescription}
-        accentColor={accentColor}
-        photographerName={photographerName}
-        imageUrl={aboutImageUrl}
-        statsClients={statsClients}
-        statsProjects={statsProjects}
-        statsYears={statsYears}
-        language={language}
-      />
+        <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 
-      {!isPortfolioMode ? (
-        <DarkGalleriesSection
-          title={galleriesTitle}
-          galleries={galleries}
-          accentColor={accentColor}
-          language={language}
-          hrefForGallery={hrefForGallery}
-        />
-      ) : null}
-
-      <DarkRecentPhotosSection
-        title={recentPhotosTitle}
-        galleries={recentPhotosGalleries}
-        accentColor={accentColor}
-        language={language}
-        portfolioHref={portfolioHref}
-      />
-
-      <DarkPostsSection
-        title={postsTitle}
-        displayStyle={postsDisplayStyle}
-        posts={posts}
-        accentColor={accentColor}
-        blogHref={blogPath ?? '#'}
-        language={language}
-        hrefForPost={hrefForPost}
-      />
-
-      {packages.length > 0 ? (
-        <DarkPackagesSection
-          title={packagesTitle}
-          subtitle={packagesSubtitle}
-          packages={packages}
-          accentColor={accentColor}
-          language={language}
-        />
-      ) : null}
-
-      <DarkTestimonialsSection
-        title={testimonialsTitle}
-        testimonials={testimonials}
-        accentColor={accentColor}
-        logoUrl={logoUrl}
-        language={language}
-        layoutType={testimonialLayoutType}
-      />
-
-      <DarkFaqSection faqItems={faqItems} accentColor={accentColor} language={language} />
-
-      <DarkMarqueeStrip studioName={studioName} />
+        <DarkMarqueeStrip studioName={studioName} />
 
       <DarkContactSection
         title={contactTitle}

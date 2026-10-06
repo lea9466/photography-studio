@@ -17,6 +17,7 @@ import {
   Globe,
   Layers,
   Palette,
+  LayoutList,
 } from 'lucide-react'
 
 import type { ProFeature } from '@/lib/subscriptions/types'
@@ -120,6 +121,14 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     group: 'public',
     proFeature: 'faq',
     lockedTooltip: 'שאלות נפוצות חסומות בגרסה החינמית — שדרגי לפרו כדי להציג סקשן שאלות נפוצות בדף הבית הציבורי שלך',
+  },
+  {
+    href: '/dashboard/homepage-layout',
+    label: 'סדר דף הבית',
+    icon: <LayoutList className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/homepage-layout'),
+    group: 'public',
+    badge: 'new',
   },
   {
     href: '/dashboard/settings',

@@ -90,6 +90,7 @@ export function toModernHomePageProps(
     testimonialsTitle: resolveTestimonialsSectionTitle(THEME, vm.testimonialsTitle, vm.language),
     testimonials: vm.testimonials,
     testimonialLayoutType: vm.testimonialLayoutType,
+    sectionLayout: vm.sectionLayout,
 
     // ModernHomePageProps has no faqSectionImageUrl either — same reasoning
     // as Dark's shaper.

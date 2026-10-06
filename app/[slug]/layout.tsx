@@ -1,3 +1,4 @@
+import { normalizeHomepageSectionLayout } from '@/lib/public-site/homepage-sections'
 import type { ReactNode } from 'react'
 import { headers } from 'next/headers'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
@@ -130,6 +131,10 @@ export default async function PhotographerSiteLayout({
     : (getPublicSitePath(typed.slug, typed.studio_name) ?? `/${decodedSlug}`)
   const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(typed.slug, typed.studio_name)
 
+  const sectionVisibility = new Map(
+    normalizeHomepageSectionLayout(typed.homepage_sections).map((section) => [section.id, section.visible])
+  )
+
   const chromeViewModel = {
     studioName: typed.studio_name || typed.name || '',
     logoUrl: await resolveBrandingPath(typed.logo_url),
@@ -139,8 +144,10 @@ export default async function PhotographerSiteLayout({
     aboutTitleFont: typed.about_title_font,
     language: resolveSiteLanguage(typed.site_language),
     homepagePath,
-    hasFaq: canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0,
-    hasPackages: canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0,
+    hasFaq: canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0 &&
+      sectionVisibility.get('faq') !== false,
+    hasPackages: canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0 &&
+      sectionVisibility.get('packages') !== false,
     hasBlog: canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0,
     blogPath: `${canonicalPath}/blog`,
     hasPhotoEditComparisons:

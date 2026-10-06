@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ElegantHero } from './ElegantHero'
@@ -14,6 +15,8 @@ import { ElegantContactSection } from './ElegantContactSection'
 import type { ElegantContactFormValues } from './ElegantContactForm'
 import type { GalleryGridItem } from '../shared/GalleryGrid'
 import type { RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
+import { OrderedHomepageSections } from '../shared/OrderedHomepageSections'
+import type { HomepageSectionId, HomepageSectionLayout } from '@/lib/public-site/homepage-sections'
 import { ScrollToInitialSection } from '../shared/ScrollToInitialSection'
 import './elegant-theme.css'
 
@@ -63,6 +66,8 @@ export type ElegantHomePageProps = {
   testimonials: ElegantTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
   testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  /** Order + visibility of the movable sections (hero/contact are fixed). */
+  sectionLayout?: HomepageSectionLayout
 
   faqItems: unknown
   faqSectionImageUrl: string | null
@@ -134,6 +139,7 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
     testimonialsTitle,
     testimonials,
     testimonialLayoutType,
+    sectionLayout,
     faqItems,
     faqSectionImageUrl,
     phone,
@@ -152,6 +158,97 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
   const heroGalleryAnchor = isPortfolioMode ? '#recent-photos' : '#gallery'
   const portfolioHref = isPortfolioMode ? (portfolioPath ?? null) : null
 
+  const sections: Record<HomepageSectionId, ReactNode> = {
+    about: (
+      <>
+      <ElegantAbout
+        title={aboutTitle}
+        subtitle={aboutSubtitle}
+        description={aboutDescription}
+        accentColor={accentColor}
+        imageUrl={aboutImageUrl}
+        statsClients={statsClients}
+        statsProjects={statsProjects}
+        statsYears={statsYears}
+        galleryAnchorHref={heroGalleryAnchor}
+        language={language}
+      />
+      </>
+    ),
+    galleries: (
+      <>
+      {!isPortfolioMode ? (
+        <ElegantGalleriesSection
+          title={galleriesTitle}
+          galleries={galleries}
+          accentColor={accentColor}
+          language={language}
+          hrefForGallery={hrefForGallery}
+        />
+      ) : null}
+      </>
+    ),
+    recent_photos: (
+      <>
+      <ElegantRecentPhotosSection
+        title={recentPhotosTitle}
+        galleries={recentPhotosGalleries}
+        accentColor={accentColor}
+        language={language}
+        portfolioHref={portfolioHref}
+      />
+      </>
+    ),
+    posts: (
+      <>
+      <ElegantPostsSection
+        title={postsTitle}
+        displayStyle={postsDisplayStyle}
+        posts={posts}
+        accentColor={accentColor}
+        blogHref={blogPath ?? '#'}
+        language={language}
+        hrefForPost={hrefForPost}
+      />
+      </>
+    ),
+    packages: (
+      <>
+      {packages.length > 0 ? (
+        <ElegantPackagesSection
+          title={packagesTitle}
+          subtitle={packagesSubtitle}
+          packages={packages}
+          accentColor={accentColor}
+          language={language}
+        />
+      ) : null}
+      </>
+    ),
+    testimonials: (
+      <>
+      <ElegantTestimonialsSection
+        title={testimonialsTitle}
+        testimonials={testimonials}
+        accentColor={accentColor}
+        logoUrl={logoUrl}
+        language={language}
+        layoutType={testimonialLayoutType}
+      />
+      </>
+    ),
+    faq: (
+      <>
+      <ElegantFaqSection
+        faqItems={faqItems}
+        faqSectionImageUrl={faqSectionImageUrl}
+        accentColor={accentColor}
+        language={language}
+      />
+      </>
+    ),
+  }
+
   return (
     <>
       <ScrollToInitialSection />
@@ -167,72 +264,7 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
           language={language}
         />
 
-        <ElegantAbout
-          title={aboutTitle}
-          subtitle={aboutSubtitle}
-          description={aboutDescription}
-          accentColor={accentColor}
-          imageUrl={aboutImageUrl}
-          statsClients={statsClients}
-          statsProjects={statsProjects}
-          statsYears={statsYears}
-          galleryAnchorHref={heroGalleryAnchor}
-          language={language}
-        />
-
-        {!isPortfolioMode ? (
-          <ElegantGalleriesSection
-            title={galleriesTitle}
-            galleries={galleries}
-            accentColor={accentColor}
-            language={language}
-            hrefForGallery={hrefForGallery}
-          />
-        ) : null}
-
-        <ElegantRecentPhotosSection
-          title={recentPhotosTitle}
-          galleries={recentPhotosGalleries}
-          accentColor={accentColor}
-          language={language}
-          portfolioHref={portfolioHref}
-        />
-
-        <ElegantPostsSection
-          title={postsTitle}
-          displayStyle={postsDisplayStyle}
-          posts={posts}
-          accentColor={accentColor}
-          blogHref={blogPath ?? '#'}
-          language={language}
-          hrefForPost={hrefForPost}
-        />
-
-        {packages.length > 0 ? (
-          <ElegantPackagesSection
-            title={packagesTitle}
-            subtitle={packagesSubtitle}
-            packages={packages}
-            accentColor={accentColor}
-            language={language}
-          />
-        ) : null}
-
-        <ElegantTestimonialsSection
-          title={testimonialsTitle}
-          testimonials={testimonials}
-          accentColor={accentColor}
-          logoUrl={logoUrl}
-          language={language}
-          layoutType={testimonialLayoutType}
-        />
-
-        <ElegantFaqSection
-          faqItems={faqItems}
-          faqSectionImageUrl={faqSectionImageUrl}
-          accentColor={accentColor}
-          language={language}
-        />
+        <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 
         <ElegantContactSection
           title={contactTitle}

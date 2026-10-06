@@ -88,6 +88,7 @@ export function toDarkHomePageProps(
     testimonialsTitle: resolveTestimonialsSectionTitle(THEME, vm.testimonialsTitle, vm.language),
     testimonials: vm.testimonials,
     testimonialLayoutType: vm.testimonialLayoutType,
+    sectionLayout: vm.sectionLayout,
 
     // Dark's FAQ is an inline accordion, not classic's magazine-grid-with-image
     // layout — no faqSectionImageUrl prop exists on DarkHomePageProps at all.

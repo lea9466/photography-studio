@@ -3,6 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { getDashboardContext, requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import {
+  defaultHomepageSectionLayout,
+  normalizeHomepageSectionLayout,
+  type HomepageSectionLayout,
+} from '@/lib/public-site/homepage-sections'
 
 function isMissingSiteLanguageColumn(error: { code?: string; message?: string }) {
   const message = error.message?.toLowerCase() ?? ''
@@ -132,4 +137,49 @@ export async function updateSiteUnderConstruction(underConstruction: boolean) {
       (data as { is_under_construction?: boolean } | null)?.is_under_construction
     ),
   }
+}
+
+export async function fetchHomepageSections(): Promise<HomepageSectionLayout> {
+  const context = await getDashboardContext()
+  if (!context) return defaultHomepageSectionLayout()
+
+  const { data, error } = await context.supabase
+    .from('users')
+    .select('homepage_sections')
+    .eq('id', context.userId)
+    .single()
+
+  // Column not migrated yet -> behave as "default order, all visible".
+  if (error) return defaultHomepageSectionLayout()
+
+  return normalizeHomepageSectionLayout(
+    (data as { homepage_sections: unknown } | null)?.homepage_sections
+  )
+}
+
+export async function updateHomepageSections(
+  layout: HomepageSectionLayout
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  // Reject anything that isn't a clean permutation of the known sections, so a
+  // buggy/stale client can't silently drop a section from the saved layout.
+  const normalized = normalizeHomepageSectionLayout(layout)
+  if (!Array.isArray(layout) || layout.length !== normalized.length) {
+    return { ok: false, error: 'סידור הסקשנים לא תקין, נסי לרענן את הדף' }
+  }
+
+  const { userId, supabase } = await requireDashboardContext()
+
+  const { error } = await supabase
+    .from('users')
+    .update({ homepage_sections: normalized } as never)
+    .eq('id', userId)
+
+  if (error) {
+    return { ok: false, error: 'שמירת הסידור נכשלה, נסי שוב' }
+  }
+
+  await revalidatePublicSitePaths(supabase, userId)
+  revalidatePath('/dashboard/homepage-layout')
+
+  return { ok: true }
 }

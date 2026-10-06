@@ -46,6 +46,7 @@ export type PublicPhotographer = Pick<
   | 'recent_photos_title'
   | 'posts_page_title'
   | 'posts_display_style'
+  | 'homepage_sections'
   | 'testimonial_layout_type'
   | 'gallery_layout_mode'
   | 'email'
@@ -98,6 +99,7 @@ export const PHOTOGRAPHER_PUBLIC_FIELDS = `
   recent_photos_title,
   posts_page_title,
   posts_display_style,
+  homepage_sections,
   testimonial_layout_type,
   gallery_layout_mode,
   email,
@@ -153,6 +155,7 @@ function isMissingColumnError(error: { message?: string; code?: string }) {
     message.includes('site_language') ||
     message.includes('before_after_display_style') ||
     message.includes('posts_display_style') ||
+    message.includes('homepage_sections') ||
     message.includes('heading_font') ||
     message.includes('about_title_font')
     || message.includes('hero_type')
@@ -166,6 +169,7 @@ function stripPortfolioLayoutFields(fields: string) {
     'site_language',
     'before_after_display_style',
     'posts_display_style',
+    'homepage_sections',
     'heading_font',
     'about_title_font',
     'hero_type',
@@ -191,6 +195,7 @@ function withDefaultGalleryLayoutMode(
     | 'about_title_font'
     | 'before_after_display_style'
     | 'posts_display_style'
+    | 'homepage_sections'
     | 'hero_type'
     | 'hero_video_url'
   > & {
@@ -200,6 +205,7 @@ function withDefaultGalleryLayoutMode(
     about_title_font?: PublicPhotographer['about_title_font']
     before_after_display_style?: PublicPhotographer['before_after_display_style']
     posts_display_style?: PublicPhotographer['posts_display_style']
+    homepage_sections?: PublicPhotographer['homepage_sections']
     hero_type?: PublicPhotographer['hero_type']
     hero_video_url?: PublicPhotographer['hero_video_url']
   }
@@ -214,6 +220,7 @@ function withDefaultGalleryLayoutMode(
       photographer.before_after_display_style
     ),
     posts_display_style: normalizePostsDisplayStyle(photographer.posts_display_style),
+    homepage_sections: photographer.homepage_sections ?? null,
     hero_type: photographer.hero_type === 'video' ? 'video' : 'images',
     hero_video_url: photographer.hero_video_url ?? null,
   }

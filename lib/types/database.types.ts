@@ -91,6 +91,7 @@ export type Database = {
           recent_photos_title: string | null
           posts_page_title: string | null
           posts_display_style: PostsDisplayStyle
+          homepage_sections: Json | null
           should_color_logo: boolean
           faq_items: Json
           faq_section_image_url: string | null
@@ -166,6 +167,7 @@ export type Database = {
           recent_photos_title?: string | null
           posts_page_title?: string | null
           posts_display_style?: PostsDisplayStyle
+          homepage_sections?: Json | null
           should_color_logo?: boolean
           faq_items?: Json
           faq_section_image_url?: string | null
@@ -241,6 +243,7 @@ export type Database = {
           recent_photos_title?: string | null
           posts_page_title?: string | null
           posts_display_style?: PostsDisplayStyle
+          homepage_sections?: Json | null
           should_color_logo?: boolean
           faq_items?: Json
           faq_section_image_url?: string | null

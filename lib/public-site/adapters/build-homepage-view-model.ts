@@ -1,4 +1,8 @@
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
+import {
+  normalizeHomepageSectionLayout,
+  type HomepageSectionLayout,
+} from '@/lib/public-site/homepage-sections'
 import { normalizePostsDisplayStyle, type PostsDisplayStyle } from '@/lib/types/posts-display-style'
 
 /**
@@ -40,6 +44,7 @@ export type HomepageViewModelInput = {
     recent_photos_title: string | null
     posts_page_title: string | null
     posts_display_style: string | null
+    homepage_sections?: unknown
     packages_title: string | null
     packages_subtitle: string | null
     testimonials_title: string | null
@@ -109,6 +114,8 @@ export type HomepageViewModel = {
   portfolioPath: string
   beforeAfterPath: string
   galleryLayoutMode: 'separated' | 'portfolio'
+
+  sectionLayout: HomepageSectionLayout
 
   hasFaq: boolean
   hasPackages: boolean
@@ -197,6 +204,8 @@ export function buildHomepageViewModel(input: HomepageViewModelInput): HomepageV
     portfolioPath: input.portfolioPath,
     beforeAfterPath: input.beforeAfterPath,
     galleryLayoutMode: p.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated',
+
+    sectionLayout: normalizeHomepageSectionLayout(p.homepage_sections),
 
     hasFaq: input.hasFaq,
     hasPackages: input.packages.length > 0,

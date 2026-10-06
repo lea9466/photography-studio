@@ -88,6 +88,7 @@ export function toElegantHomePageProps(
     testimonialsTitle: resolveTestimonialsSectionTitle(THEME, vm.testimonialsTitle, vm.language),
     testimonials: vm.testimonials,
     testimonialLayoutType: vm.testimonialLayoutType,
+    sectionLayout: vm.sectionLayout,
 
     faqItems: vm.faqItems,
     faqSectionImageUrl: vm.faqSectionImageUrl,

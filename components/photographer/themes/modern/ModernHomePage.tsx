@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ModernHero } from './ModernHero'
@@ -15,6 +16,8 @@ import { ModernContactSection } from './ModernContactSection'
 import type { ModernContactFormValues } from './ModernContactForm'
 import type { GalleryGridItem } from '../shared/GalleryGrid'
 import type { RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
+import { OrderedHomepageSections } from '../shared/OrderedHomepageSections'
+import type { HomepageSectionId, HomepageSectionLayout } from '@/lib/public-site/homepage-sections'
 import { ScrollToInitialSection } from '../shared/ScrollToInitialSection'
 import './modern-theme.css'
 
@@ -77,6 +80,8 @@ export type ModernHomePageProps = {
   testimonials: ModernTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
   testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  /** Order + visibility of the movable sections (hero/contact are fixed). */
+  sectionLayout?: HomepageSectionLayout
 
   faqItems: unknown
 
@@ -146,6 +151,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
     testimonialsTitle,
     testimonials,
     testimonialLayoutType,
+    sectionLayout,
     faqItems,
     phone,
     email,
@@ -167,6 +173,94 @@ export function ModernHomePage(props: ModernHomePageProps) {
   const heroGalleryAnchor = isPortfolioMode ? '#recent-photos' : '#portfolio'
   const portfolioHref = isPortfolioMode ? (portfolioPath ?? null) : null
 
+  const sections: Record<HomepageSectionId, ReactNode> = {
+    about: (
+      <>
+      <ModernAbout
+        accentColor={accentColor}
+        statsClients={statsClients}
+        statsProjects={statsProjects}
+        statsYears={statsYears}
+        language={language}
+      />
+
+      <ModernAboutStatement
+        text={aboutDescription}
+        imageUrl={aboutImageUrl}
+        accentColor={accentColor}
+        language={language}
+      />
+      </>
+    ),
+    galleries: (
+      <>
+      {!isPortfolioMode ? (
+        <ModernGalleriesSection
+          title={galleriesTitle}
+          galleries={galleries}
+          accentColor={accentColor}
+          language={language}
+          hrefForGallery={hrefForGallery}
+        />
+      ) : null}
+      </>
+    ),
+    recent_photos: (
+      <>
+      <ModernRecentPhotosSection
+        title={recentPhotosTitle}
+        galleries={recentPhotosGalleries}
+        accentColor={accentColor}
+        language={language}
+        portfolioHref={portfolioHref}
+      />
+      </>
+    ),
+    posts: (
+      <>
+      <ModernPostsSection
+        title={postsTitle}
+        displayStyle={postsDisplayStyle}
+        posts={posts}
+        accentColor={accentColor}
+        blogHref={blogPath ?? '#'}
+        language={language}
+        hrefForPost={hrefForPost}
+      />
+      </>
+    ),
+    packages: (
+      <>
+      {packages.length > 0 ? (
+        <ModernPackagesSection
+          title={packagesTitle}
+          subtitle={packagesSubtitle}
+          packages={packages}
+          accentColor={accentColor}
+          language={language}
+        />
+      ) : null}
+      </>
+    ),
+    testimonials: (
+      <>
+      <ModernTestimonialsSection
+        title={testimonialsTitle}
+        testimonials={testimonials}
+        accentColor={accentColor}
+        logoUrl={logoUrl}
+        language={language}
+        layoutType={testimonialLayoutType}
+      />
+      </>
+    ),
+    faq: (
+      <>
+      <ModernFaqSection faqItems={faqItems} accentColor={accentColor} language={language} />
+      </>
+    ),
+  }
+
   return (
     <>
       <ScrollToInitialSection />
@@ -187,69 +281,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
           language={language}
         />
 
-        <ModernAbout
-          accentColor={accentColor}
-          statsClients={statsClients}
-          statsProjects={statsProjects}
-          statsYears={statsYears}
-          language={language}
-        />
-
-        <ModernAboutStatement
-          text={aboutDescription}
-          imageUrl={aboutImageUrl}
-          accentColor={accentColor}
-          language={language}
-        />
-
-        {!isPortfolioMode ? (
-          <ModernGalleriesSection
-            title={galleriesTitle}
-            galleries={galleries}
-            accentColor={accentColor}
-            language={language}
-            hrefForGallery={hrefForGallery}
-          />
-        ) : null}
-
-        <ModernRecentPhotosSection
-          title={recentPhotosTitle}
-          galleries={recentPhotosGalleries}
-          accentColor={accentColor}
-          language={language}
-          portfolioHref={portfolioHref}
-        />
-
-        <ModernPostsSection
-          title={postsTitle}
-          displayStyle={postsDisplayStyle}
-          posts={posts}
-          accentColor={accentColor}
-          blogHref={blogPath ?? '#'}
-          language={language}
-          hrefForPost={hrefForPost}
-        />
-
-        {packages.length > 0 ? (
-          <ModernPackagesSection
-            title={packagesTitle}
-            subtitle={packagesSubtitle}
-            packages={packages}
-            accentColor={accentColor}
-            language={language}
-          />
-        ) : null}
-
-        <ModernTestimonialsSection
-          title={testimonialsTitle}
-          testimonials={testimonials}
-          accentColor={accentColor}
-          logoUrl={logoUrl}
-          language={language}
-          layoutType={testimonialLayoutType}
-        />
-
-        <ModernFaqSection faqItems={faqItems} accentColor={accentColor} language={language} />
+        <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 
         <ModernContactSection
           title={contactTitle}
