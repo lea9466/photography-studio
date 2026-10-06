@@ -328,6 +328,8 @@ export async function updateProfile(input: UpdateProfileInput) {
 
   revalidatePath('/dashboard')
   revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard/site-hero')
+  revalidatePath('/dashboard/site-about')
   revalidatePath('/g/[id]', 'page')
   revalidatePath('/portfolio/[slug]', 'page')
   revalidatePath('/[slug]', 'page')

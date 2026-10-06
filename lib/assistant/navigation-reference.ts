@@ -14,6 +14,8 @@ const DASHBOARD_TABS = [
   { label: 'תגובות (המלצות לקוחות)', href: '/dashboard/reviews' },
   { label: 'לפני ואחרי עיבוד', href: '/dashboard/photo-edits' },
   { label: 'שאלות נפוצות', href: '/dashboard/faq' },
+  { label: 'סקשן ראשי (תמונות/וידאו בראש דף הבית)', href: '/dashboard/site-hero' },
+  { label: 'סקשן אודות (תמונה, כותרות, טקסט ונתונים)', href: '/dashboard/site-about' },
   { label: 'הגדרות אתר', href: '/dashboard/settings' },
   { label: 'מינוי', href: '/dashboard/subscription' },
   { label: 'יצירת קשר (פניות שהתקבלו)', href: '/dashboard/contact' },

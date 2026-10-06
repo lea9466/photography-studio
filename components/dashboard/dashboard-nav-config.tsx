@@ -18,6 +18,8 @@ import {
   Layers,
   Palette,
   LayoutList,
+  Sparkles,
+  User,
 } from 'lucide-react'
 
 import type { ProFeature } from '@/lib/subscriptions/types'
@@ -84,6 +86,20 @@ export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
     isActive: (pathname) => pathname.startsWith('/dashboard/homepage-layout'),
     group: 'public',
     badge: 'new',
+  },
+  {
+    href: '/dashboard/site-hero',
+    label: 'סקשן ראשי',
+    icon: <Sparkles className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/site-hero'),
+    group: 'public',
+  },
+  {
+    href: '/dashboard/site-about',
+    label: 'סקשן אודות',
+    icon: <User className="h-5 w-5" />,
+    isActive: (pathname) => pathname.startsWith('/dashboard/site-about'),
+    group: 'public',
   },
   {
     href: '/dashboard/galleries',

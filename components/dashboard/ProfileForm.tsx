@@ -38,7 +38,7 @@ import {
   DEFAULT_HEADING_FONT,
   resolveAllowedFont,
 } from '@/constants/fonts'
-import { Building2, ExternalLink, Globe, Loader2, MessageCircle, Palette, Trash2, Upload, User } from 'lucide-react'
+import { Building2, ExternalLink, Globe, Loader2, MessageCircle, Palette, Sparkles, Trash2, Upload, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const HERO_SLOT_COUNT = 3
@@ -83,7 +83,11 @@ function initHeroSlots(urls: string[] | null | undefined, fallback: string | nul
   return slots
 }
 
+export type ProfileFormView = 'settings' | 'hero' | 'about'
+
 type ProfileFormProps = {
+  /** Which slice of the site profile to render; every view saves the full profile. */
+  view?: ProfileFormView
   profile: {
     name: string | null
     studio_name: string | null
@@ -226,7 +230,7 @@ function SettingsFieldGroup({
   )
 }
 
-export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
+export function ProfileForm({ profile, isPro = true, view = 'settings' }: ProfileFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(profile?.name ?? '')
@@ -504,7 +508,8 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
 
   return (
     <div className="space-y-8 pb-12 md:space-y-10 md:pb-28">
-      {/* Section 1: Business Details */}
+      {view === 'settings' && (
+        <>
       <SettingsSection>
         <SectionHeader
           index={1}
@@ -626,198 +631,15 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
           </div>
         </SettingsFieldGroup>
       </SettingsSection>
-
-      {/* Section 2: Website Content */}
       <SettingsSection>
         <SectionHeader
           index={2}
-          icon={Globe}
-          title="תוכן האתר"
-          help={SITE_SETTINGS_HELP.sections.content.content}
-          where={SITE_SETTINGS_HELP.sections.content.where}
+          icon={MessageCircle}
+          title="יצירת קשר בדף הבית"
+          help="הרקע והכותרות של סקשן יצירת הקשר בתחתית דף הבית."
+          where="סקשן יצירת קשר בדף הבית הציבורי."
         />
         <div className="space-y-10">
-          <SettingsSubPanel>
-            <ProFeatureGate
-              isPro={isPro}
-              title="וידאו רקע (Hero) זמין בגרסת PRO"
-              description="שדרגי כדי להציג סרטון רקע בעמוד הבית במקום תמונות."
-            >
-              <HeroVideoSettings
-                heroType={heroType}
-                videoUrl={heroVideoUrl}
-                hasPoster={Boolean(heroDesktopUrls[0] || heroMobileUrls[0])}
-                onTypeChange={setHeroType}
-                onVideoUrlChange={setHeroVideoUrl}
-                onUploadingChange={setHeroVideoBusy}
-              />
-            </ProFeatureGate>
-          </SettingsSubPanel>
-
-          <SettingsSubPanel>
-            <div className="space-y-2">
-              <LabelWithHelp
-                help={SITE_SETTINGS_HELP.fields.heroDesktop.content}
-                where={SITE_SETTINGS_HELP.fields.heroDesktop.where}
-              >
-                תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
-              </LabelWithHelp>
-              <p className="text-sm leading-relaxed text-[--muted]">
-                התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade. מומלץ להעלות תמונות לרוחב (שוכבות).
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {heroDesktopUrls.map((url, slot) => {
-                const targetKey = uploadTargetKey('hero_desktop', slot)
-                const previewSrc = brandingPreviewSrc(targetKey, url)
-                return (
-                <div key={`hero-desktop-${slot}`} className="space-y-2">
-                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
-                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
-                    {previewSrc ? (
-                      <BrandingPreviewImage
-                        src={previewSrc}
-                        cacheKey={previewVersions[targetKey]}
-                        alt={`Hero desktop ${slot + 1}`}
-                        className="object-cover pointer-events-none"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                        <Upload className="h-8 w-8" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
-                    </div>
-                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
-                    {previewSrc && url ? (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveHeroSlot('desktop', slot)}
-                        disabled={uploadingTargets.has(targetKey)}
-                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                        aria-label="הסר תמונה"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    ) : null}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => handleFileUpload(e, 'hero_desktop', slot)}
-                      disabled={uploadingTargets.has(targetKey)}
-                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-              )})}
-            </div>
-          </SettingsSubPanel>
-
-          <SettingsSubPanel>
-            <LabelWithHelp
-              help={SITE_SETTINGS_HELP.fields.heroMobile.content}
-              where={SITE_SETTINGS_HELP.fields.heroMobile.where}
-            >
-              תמונות הירו (מובייל) — עד 3 תמונות מתחלפות
-            </LabelWithHelp>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {heroMobileUrls.map((url, slot) => {
-                const targetKey = uploadTargetKey('hero_mobile', slot)
-                const previewSrc = brandingPreviewSrc(targetKey, url)
-                return (
-                <div key={`hero-mobile-${slot}`} className="space-y-2">
-                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
-                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-[9/16] max-w-[180px]')}>
-                    {previewSrc ? (
-                      <BrandingPreviewImage
-                        src={previewSrc}
-                        cacheKey={previewVersions[targetKey]}
-                        alt={`Hero mobile ${slot + 1}`}
-                        className="object-cover pointer-events-none"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                        <Upload className="h-8 w-8" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
-                    </div>
-                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
-                    {previewSrc && url ? (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveHeroSlot('mobile', slot)}
-                        disabled={uploadingTargets.has(targetKey)}
-                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                        aria-label="הסר תמונה"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    ) : null}
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={(e) => handleFileUpload(e, 'hero_mobile', slot)}
-                      disabled={uploadingTargets.has(targetKey)}
-                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
-                    />
-                  </div>
-                </div>
-              )})}
-            </div>
-          </SettingsSubPanel>
-
-          <SettingsSubPanel className="max-w-sm">
-            <div className="space-y-3">
-            <LabelWithHelp
-              htmlFor="about-image"
-              help={SITE_SETTINGS_HELP.fields.aboutImage.content}
-              where={SITE_SETTINGS_HELP.fields.aboutImage.where}
-            >
-              תמונת אודות
-            </LabelWithHelp>
-            <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-square')}>
-              {brandingPreviewSrc('about', aboutImageUrl) ? (
-                <BrandingPreviewImage
-                  src={brandingPreviewSrc('about', aboutImageUrl)}
-                  cacheKey={previewVersions.about}
-                  alt="About image preview"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-[--muted]">
-                  <Upload className="h-8 w-8" />
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white text-sm font-medium">החלף תמונה</span>
-              </div>
-              <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('about'))} />
-              {aboutImageUrl ? (
-                <button
-                  type="button"
-                  onClick={() => handleRemoveBrandingImage('about')}
-                  disabled={uploadingTargets.has(uploadTargetKey('about'))}
-                  className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
-                  aria-label="הסר תמונה"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              ) : null}
-              <input
-                id="about-image"
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={(e) => handleFileUpload(e, 'about')}
-                disabled={uploadingTargets.has(uploadTargetKey('about'))}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-            </div>
-            </div>
-          </SettingsSubPanel>
-        <div className="space-y-3 border-t border-[#7D3A52]/10 pt-6">
           <SettingsSubPanel>
             <div className="flex items-start gap-1.5">
               <div>
@@ -969,27 +791,7 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
             </div>
           </SettingsSubPanel>
         </div>
-        <div className="space-y-2 pt-4">
-          <LabelWithHelp
-            htmlFor="about-text"
-            help={SITE_SETTINGS_HELP.fields.aboutText.content}
-            where={SITE_SETTINGS_HELP.fields.aboutText.where}
-          >
-            טקסט אודות העסק
-          </LabelWithHelp>
-          <Textarea
-            id="about-text"
-            value={aboutText}
-            onChange={(e) => setAboutText(e.target.value)}
-            rows={4}
-            className={cn(INPUT_CLASS, 'resize-none')}
-            placeholder="ספרי על עצמך ועל הסטודיו שלך..."
-          />
-        </div>
-        </div>
       </SettingsSection>
-
-      {/* Section 3: Branding & Design */}
       <SettingsSection>
         <SectionHeader
           index={3}
@@ -1140,37 +942,6 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
                   כך נראות הכותרות שלך
                 </p>
               </div>
-              <div className="space-y-2">
-                <LabelWithHelp
-                  htmlFor="about-title-font"
-                  help={SITE_SETTINGS_HELP.fields.aboutTitleFont.content}
-                  where={SITE_SETTINGS_HELP.fields.aboutTitleFont.where}
-                >
-                  פונט כותרת אודות
-                </LabelWithHelp>
-                <Select value={aboutTitleFont} onValueChange={setAboutTitleFont}>
-                  <SelectTrigger id="about-title-font" className={INPUT_CLASS}>
-                    <SelectValue placeholder="בחרי פונט" />
-                  </SelectTrigger>
-                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
-                    {ALLOWED_FONTS.map((font) => (
-                      <SelectItem
-                        key={font.value}
-                        value={font.value}
-                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
-                      >
-                        <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p
-                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
-                  style={{ fontFamily: `'${aboutTitleFont}', sans-serif` }}
-                >
-                  כך נראית כותרת האודות
-                </p>
-              </div>
             </div>
           </div>
           <div className="space-y-2">
@@ -1239,16 +1010,273 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
           />
         </SettingsSubPanel>
       </SettingsSection>
-
-      {/* Section 4: About Me Settings */}
       <SettingsSection>
         <SectionHeader
           index={4}
-          icon={User}
-          title="הגדרות אודותי"
-          help={SITE_SETTINGS_HELP.sections.about.content}
-          where={SITE_SETTINGS_HELP.sections.about.where}
+          icon={MessageCircle}
+          title="הגדרות כרטיס יצירת קשר בגלריה"
+          help={SITE_SETTINGS_HELP.sections.contactCard.content}
+          where={SITE_SETTINGS_HELP.sections.contactCard.where}
         />
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <LabelWithHelp
+              htmlFor="contact-card-title"
+              help={SITE_SETTINGS_HELP.fields.contactCardTitle.content}
+              where={SITE_SETTINGS_HELP.fields.contactCardTitle.where}
+            >
+              כותרת כרטיס
+            </LabelWithHelp>
+            <Input
+              id="contact-card-title"
+              value={contactCardTitle}
+              onChange={(e) => setContactCardTitle(e.target.value)}
+              className={INPUT_CLASS}
+              placeholder="לדוגמה: תיאום צילום"
+            />
+          </div>
+          <div className="space-y-2">
+            <LabelWithHelp
+              htmlFor="contact-card-description"
+              help={SITE_SETTINGS_HELP.fields.contactCardDescription.content}
+              where={SITE_SETTINGS_HELP.fields.contactCardDescription.where}
+            >
+              תיאור כרטיס
+            </LabelWithHelp>
+            <Textarea
+              id="contact-card-description"
+              value={contactCardDescription}
+              onChange={(e) => setContactCardDescription(e.target.value)}
+              rows={4}
+              className={cn(INPUT_CLASS, 'resize-y')}
+              placeholder="לדוגמה: לתיאום צילום או שאלות, צרו קשר..."
+            />
+          </div>
+        </div>
+      </SettingsSection>
+        </>
+      )}
+
+      {view === 'hero' && (
+        <SettingsSection>
+          <SectionHeader
+            icon={Sparkles}
+            title="סקשן ראשי"
+            help="התמונות או הסרטון שמופיעים בראש דף הבית. אפשר עד 3 תמונות מתחלפות, בנפרד לדסקטופ ולמובייל."
+            where="הסקשן העליון בדף הבית הציבורי — הדבר הראשון שהמבקרים רואים."
+          />
+          <div className="space-y-10">
+          <SettingsSubPanel>
+            <ProFeatureGate
+              isPro={isPro}
+              title="וידאו רקע (Hero) זמין בגרסת PRO"
+              description="שדרגי כדי להציג סרטון רקע בעמוד הבית במקום תמונות."
+            >
+              <HeroVideoSettings
+                heroType={heroType}
+                videoUrl={heroVideoUrl}
+                hasPoster={Boolean(heroDesktopUrls[0] || heroMobileUrls[0])}
+                onTypeChange={setHeroType}
+                onVideoUrlChange={setHeroVideoUrl}
+                onUploadingChange={setHeroVideoBusy}
+              />
+            </ProFeatureGate>
+          </SettingsSubPanel>
+
+          <SettingsSubPanel>
+            <div className="space-y-2">
+              <LabelWithHelp
+                help={SITE_SETTINGS_HELP.fields.heroDesktop.content}
+                where={SITE_SETTINGS_HELP.fields.heroDesktop.where}
+              >
+                תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
+              </LabelWithHelp>
+              <p className="text-sm leading-relaxed text-[--muted]">
+                התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade. מומלץ להעלות תמונות לרוחב (שוכבות).
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {heroDesktopUrls.map((url, slot) => {
+                const targetKey = uploadTargetKey('hero_desktop', slot)
+                const previewSrc = brandingPreviewSrc(targetKey, url)
+                return (
+                <div key={`hero-desktop-${slot}`} className="space-y-2">
+                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
+                    {previewSrc ? (
+                      <BrandingPreviewImage
+                        src={previewSrc}
+                        cacheKey={previewVersions[targetKey]}
+                        alt={`Hero desktop ${slot + 1}`}
+                        className="object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
+                    </div>
+                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
+                    {previewSrc && url ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroSlot('desktop', slot)}
+                        disabled={uploadingTargets.has(targetKey)}
+                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                        aria-label="הסר תמונה"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'hero_desktop', slot)}
+                      disabled={uploadingTargets.has(targetKey)}
+                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )})}
+            </div>
+          </SettingsSubPanel>
+
+          <SettingsSubPanel>
+            <LabelWithHelp
+              help={SITE_SETTINGS_HELP.fields.heroMobile.content}
+              where={SITE_SETTINGS_HELP.fields.heroMobile.where}
+            >
+              תמונות הירו (מובייל) — עד 3 תמונות מתחלפות
+            </LabelWithHelp>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              {heroMobileUrls.map((url, slot) => {
+                const targetKey = uploadTargetKey('hero_mobile', slot)
+                const previewSrc = brandingPreviewSrc(targetKey, url)
+                return (
+                <div key={`hero-mobile-${slot}`} className="space-y-2">
+                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-[9/16] max-w-[180px]')}>
+                    {previewSrc ? (
+                      <BrandingPreviewImage
+                        src={previewSrc}
+                        cacheKey={previewVersions[targetKey]}
+                        alt={`Hero mobile ${slot + 1}`}
+                        className="object-cover pointer-events-none"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                        <Upload className="h-8 w-8" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <span className="text-white text-sm font-medium">{previewSrc ? 'החלף' : 'העלה'}</span>
+                    </div>
+                    <UploadSpinnerOverlay show={uploadingTargets.has(targetKey)} />
+                    {previewSrc && url ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveHeroSlot('mobile', slot)}
+                        disabled={uploadingTargets.has(targetKey)}
+                        className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                        aria-label="הסר תמונה"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'hero_mobile', slot)}
+                      disabled={uploadingTargets.has(targetKey)}
+                      className="absolute inset-0 z-10 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+              )})}
+            </div>
+          </SettingsSubPanel>
+          <SettingsSubPanel>
+        <div className="space-y-2">
+          <LabelWithHelp
+            htmlFor="about-text"
+            help={SITE_SETTINGS_HELP.fields.aboutText.content}
+            where={SITE_SETTINGS_HELP.fields.aboutText.where}
+          >
+            טקסט אודות העסק
+          </LabelWithHelp>
+          <Textarea
+            id="about-text"
+            value={aboutText}
+            onChange={(e) => setAboutText(e.target.value)}
+            rows={4}
+            className={cn(INPUT_CLASS, 'resize-none')}
+            placeholder="ספרי על עצמך ועל הסטודיו שלך..."
+          />
+        </div>
+          </SettingsSubPanel>
+          </div>
+        </SettingsSection>
+      )}
+
+      {view === 'about' && (
+        <SettingsSection>
+          <SectionHeader
+            icon={User}
+            title="סקשן אודות"
+            help={SITE_SETTINGS_HELP.sections.about.content}
+            where={SITE_SETTINGS_HELP.sections.about.where}
+          />
+          <div className="space-y-10">
+          <SettingsSubPanel className="max-w-sm">
+            <div className="space-y-3">
+            <LabelWithHelp
+              htmlFor="about-image"
+              help={SITE_SETTINGS_HELP.fields.aboutImage.content}
+              where={SITE_SETTINGS_HELP.fields.aboutImage.where}
+            >
+              תמונת אודות
+            </LabelWithHelp>
+            <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-square')}>
+              {brandingPreviewSrc('about', aboutImageUrl) ? (
+                <BrandingPreviewImage
+                  src={brandingPreviewSrc('about', aboutImageUrl)}
+                  cacheKey={previewVersions.about}
+                  alt="About image preview"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <Upload className="h-8 w-8" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-white text-sm font-medium">החלף תמונה</span>
+              </div>
+              <UploadSpinnerOverlay show={uploadingTargets.has(uploadTargetKey('about'))} />
+              {aboutImageUrl ? (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveBrandingImage('about')}
+                  disabled={uploadingTargets.has(uploadTargetKey('about'))}
+                  className="absolute top-2 left-2 z-20 rounded-full bg-black/60 p-1.5 text-white hover:bg-black/80"
+                  aria-label="הסר תמונה"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
+              <input
+                id="about-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(e) => handleFileUpload(e, 'about')}
+                disabled={uploadingTargets.has(uploadTargetKey('about'))}
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              />
+            </div>
+            </div>
+          </SettingsSubPanel>
         <div className="space-y-6">
           <div className="space-y-2">
             <LabelWithHelp
@@ -1363,53 +1391,43 @@ export function ProfileForm({ profile, isPro = true }: ProfileFormProps) {
             </div>
           </SettingsSubPanel>
         </div>
-      </SettingsSection>
+          <div className="max-w-sm">
+              <div className="space-y-2">
+                <LabelWithHelp
+                  htmlFor="about-title-font"
+                  help={SITE_SETTINGS_HELP.fields.aboutTitleFont.content}
+                  where={SITE_SETTINGS_HELP.fields.aboutTitleFont.where}
+                >
+                  פונט כותרת אודות
+                </LabelWithHelp>
+                <Select value={aboutTitleFont} onValueChange={setAboutTitleFont}>
+                  <SelectTrigger id="about-title-font" className={INPUT_CLASS}>
+                    <SelectValue placeholder="בחרי פונט" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
+                    {ALLOWED_FONTS.map((font) => (
+                      <SelectItem
+                        key={font.value}
+                        value={font.value}
+                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
+                      >
+                        <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p
+                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
+                  style={{ fontFamily: `'${aboutTitleFont}', sans-serif` }}
+                >
+                  כך נראית כותרת האודות
+                </p>
+              </div>
+          </div>
+          </div>
+        </SettingsSection>
+      )}
 
-      {/* Section 5: Gallery Contact Card Settings */}
-      <SettingsSection>
-        <SectionHeader
-          index={5}
-          icon={MessageCircle}
-          title="הגדרות כרטיס יצירת קשר בגלריה"
-          help={SITE_SETTINGS_HELP.sections.contactCard.content}
-          where={SITE_SETTINGS_HELP.sections.contactCard.where}
-        />
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <LabelWithHelp
-              htmlFor="contact-card-title"
-              help={SITE_SETTINGS_HELP.fields.contactCardTitle.content}
-              where={SITE_SETTINGS_HELP.fields.contactCardTitle.where}
-            >
-              כותרת כרטיס
-            </LabelWithHelp>
-            <Input
-              id="contact-card-title"
-              value={contactCardTitle}
-              onChange={(e) => setContactCardTitle(e.target.value)}
-              className={INPUT_CLASS}
-              placeholder="לדוגמה: תיאום צילום"
-            />
-          </div>
-          <div className="space-y-2">
-            <LabelWithHelp
-              htmlFor="contact-card-description"
-              help={SITE_SETTINGS_HELP.fields.contactCardDescription.content}
-              where={SITE_SETTINGS_HELP.fields.contactCardDescription.where}
-            >
-              תיאור כרטיס
-            </LabelWithHelp>
-            <Textarea
-              id="contact-card-description"
-              value={contactCardDescription}
-              onChange={(e) => setContactCardDescription(e.target.value)}
-              rows={4}
-              className={cn(INPUT_CLASS, 'resize-y')}
-              placeholder="לדוגמה: לתיאום צילום או שאלות, צרו קשר..."
-            />
-          </div>
-        </div>
-      </SettingsSection>
 
       <div className="fixed bottom-6 left-4 z-50 md:bottom-8 md:left-8">
         <div className="rounded-2xl border border-[#7D3A52]/15 bg-white/95 p-1.5 shadow-xl shadow-[#7D3A52]/10 backdrop-blur-md">

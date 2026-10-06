@@ -376,6 +376,8 @@ export async function updateHeroType(heroType: HeroType) {
   if (!updated) throw new Error('הבחירה לא נשמרה — נסי להתחבר מחדש')
 
   revalidatePath('/dashboard/settings')
+  revalidatePath('/dashboard/site-hero')
+  revalidatePath('/dashboard/site-about')
   revalidatePath('/[slug]', 'page')
   return { success: true }
 }
