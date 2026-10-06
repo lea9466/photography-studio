@@ -11,6 +11,7 @@ export type PaymentErrorCode =
   | 'billing_not_initialized'
   | 'subscription_not_active'
   | 'internal_error'
+  | 'rate_limited'
 
 const SAFE_MESSAGES: Record<PaymentErrorCode, string> = {
   authentication_required: 'יש להתחבר מחדש.',
@@ -25,6 +26,7 @@ const SAFE_MESSAGES: Record<PaymentErrorCode, string> = {
   billing_not_initialized: 'תשתית החיוב טרם הופעלה.',
   subscription_not_active: 'המנוי עדיין לא פעיל. השלימי תשלום תחילה כדי לעדכן או לבטל.',
   internal_error: 'לא הצלחנו להשלים את הפעולה.',
+  rate_limited: 'בוצעו יותר מדי ניסיונות תשלום. נסי שוב בעוד זמן מה.',
 }
 
 export class PaymentError extends Error {
@@ -57,6 +59,7 @@ function defaultStatus(code: PaymentErrorCode) {
   }
   if (code === 'provider_not_configured' || code === 'billing_not_initialized') return 503
   if (code === 'subscription_not_active') return 409
+  if (code === 'rate_limited') return 429
   if (code === 'provider_unavailable') return 422
   return 500
 }
