@@ -62,8 +62,11 @@ export function DashboardLayoutWrapper({
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantHidden, setAssistantHidden] = useState(false)
 
+  // Closing Noa only hides her for the current visit — on every new entry the
+  // launcher and its greeting bubble show up again. Clear the old persisted
+  // flag so users who dismissed her before this change see her again.
   useEffect(() => {
-    setAssistantHidden(localStorage.getItem('assistant-widget-hidden') === '1')
+    localStorage.removeItem('assistant-widget-hidden')
   }, [])
 
   function closeMobileMenu() {
@@ -73,12 +76,10 @@ export function DashboardLayoutWrapper({
   function dismissAssistant() {
     setAssistantOpen(false)
     setAssistantHidden(true)
-    localStorage.setItem('assistant-widget-hidden', '1')
   }
 
   function openAssistant() {
     setAssistantHidden(false)
-    localStorage.removeItem('assistant-widget-hidden')
     setAssistantOpen(true)
   }
 

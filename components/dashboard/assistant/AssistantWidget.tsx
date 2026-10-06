@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { Sparkles, X, Send, Paperclip, ImageOff, ImagePlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -205,6 +205,14 @@ export function AssistantWidget({
     onOpenChange ? onOpenChange(next) : setInternalOpen(next)
   }
   const [slugNudgeDismissed, setSlugNudgeDismissed] = useState(false)
+  // Greeting bubble next to the launcher: pops up shortly after every entry
+  // to the dashboard (the widget mounts once per visit, in the layout) and
+  // stays until she closes it with the X (or opens the chat).
+  const [teaserVisible, setTeaserVisible] = useState(false)
+  useEffect(() => {
+    const showTimer = setTimeout(() => setTeaserVisible(true), 1200)
+    return () => clearTimeout(showTimer)
+  }, [])
   const [history, setHistory] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [attachedImage, setAttachedImage] = useState<AttachedImage | null>(null)
@@ -717,17 +725,50 @@ export function AssistantWidget({
         </div>
       ) : null}
 
-      <Button
-        size="icon"
-        onClick={() => setOpen(!open)}
-        className="relative h-12 w-12 rounded-full shadow-lg"
-        aria-label="נועה, עוזרת האתר"
-      >
-        <Sparkles className="h-5 w-5" />
-        {hasMissingContent && !open ? (
-          <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[var(--dashboard-background)]" />
+      <div className="flex items-center gap-3">
+        <Button
+          size="icon"
+          onClick={() => setOpen(!open)}
+          className="relative h-12 w-12 shrink-0 rounded-full shadow-lg"
+          aria-label="נועה, עוזרת האתר"
+        >
+          <Sparkles className="h-5 w-5" />
+          {hasMissingContent && !open ? (
+            <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[var(--dashboard-background)]" />
+          ) : null}
+        </Button>
+
+        {!open ? (
+          <div
+            dir="rtl"
+            role="status"
+            aria-hidden={!teaserVisible}
+            className={`relative flex max-w-[16rem] items-center gap-1 rounded-2xl py-2 pe-2 ps-3 text-sm font-medium shadow-lg transition-all duration-300 ${ASSISTANT_BUBBLE_CLASSES} ${
+              teaserVisible ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-3 opacity-0'
+            }`}
+          >
+            <button type="button" tabIndex={teaserVisible ? 0 : -1} onClick={() => setOpen(true)} className="text-start">
+              {missingSlug
+                ? 'היי, שמתי לב שחסר משהו באתר — אפשר לעזור?'
+                : 'היי, אני נועה! אני יכולה לעזור לך למלא תוכן לאתר, להסביר על המערכת ועוד 😊'}
+            </button>
+            <button
+              type="button"
+              tabIndex={teaserVisible ? 0 : -1}
+              onClick={() => setTeaserVisible(false)}
+              aria-label="סגירת הבועה"
+              className="rounded-full p-0.5 opacity-60 hover:opacity-100"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <span
+              aria-hidden
+              className={`absolute -left-1 top-1/2 h-3 w-3 -translate-y-1/2 ${ASSISTANT_TINT_BG}`}
+              style={{ clipPath: 'polygon(100% 0%, 100% 100%, 0% 50%)' }}
+            />
+          </div>
         ) : null}
-      </Button>
+      </div>
     </div>
   )
 }
