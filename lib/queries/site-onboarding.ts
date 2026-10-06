@@ -32,7 +32,7 @@ const BASE_COLUMNS =
 
 /**
  * Opens on the very first entry, and then on every entry while the studio
- * still has no slug or no hero image — unless she chose "galleries only".
+ * still has no slug — unless she chose "galleries only".
  * `site_onboarding_skipped` may not exist yet (migration pending), so the
  * query falls back to the base columns instead of failing the whole layout.
  */
@@ -61,7 +61,8 @@ export async function getSiteOnboardingState(): Promise<SiteOnboardingState | nu
   const slug = row.slug?.trim() || null
   const skipped = Boolean(row.site_onboarding_skipped)
   const firstEntry = Boolean(row.show_welcome_popup)
-  const missingBasics = !slug || !heroPath
+  // The hero image is optional, so only a missing slug keeps re-opening the modal.
+  const missingBasics = !slug
 
   const [heroPreviewUrl, logoUrl] = await Promise.all([
     heroPath ? resolveBrandingPath(heroPath) : Promise.resolve(null),

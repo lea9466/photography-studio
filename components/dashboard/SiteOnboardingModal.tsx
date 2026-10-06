@@ -86,7 +86,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
   const isCustomAccent = !ACCENT_SWATCHES.some((c) => c.toLowerCase() === accent.toLowerCase())
   const slugLocked = Boolean(initial.slug)
   const nameValid = studioName.trim().length >= MIN_NAME_LENGTH
-  const canFinish = nameValid && Boolean(slug) && Boolean(heroUrl) && !heroUploading && !pending
+  const canFinish = nameValid && Boolean(slug) && !heroUploading && !logoUploading && !pending
 
   useEffect(() => {
     setVisible(open)
@@ -202,7 +202,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
     })
   }
 
-  // X only dismisses the first-entry flag. While slug/hero are still missing the
+  // X only dismisses the first-entry flag. While the slug is still missing the
   // modal comes back on the next entry, which is the intended nudge.
   function handleClose() {
     setVisible(false)
@@ -273,7 +273,9 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-sm font-medium">תמונת הירו</span>
+                <span className="text-sm font-medium">
+                  תמונת הירו <span className="font-normal text-black/40">(אופציונלי)</span>
+                </span>
                 <label
                   className={cn(
                     'flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-black/20 p-3 transition hover:border-black/40 hover:bg-black/[0.02]',
@@ -305,7 +307,9 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-medium">עיצוב האתר</span>
+                <span className="text-sm font-medium">
+                  עיצוב האתר <span className="font-normal text-black/40">(אופציונלי, ברירת מחדל: קלאסי)</span>
+                </span>
                 <div className="grid grid-cols-2 gap-2">
                   {THEME_OPTIONS.map((option) => {
                     const selected = theme === option.id
@@ -455,7 +459,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                 </Button>
                 {!canFinish && !pending ? (
                   <p className="text-center text-xs text-black/45">
-                    נדרשים שם עסק ותמונת הירו כדי לסיים.
+                    נדרש שם עסק כדי לסיים.
                   </p>
                 ) : (
                   <p className="text-center text-xs font-medium text-emerald-700">
