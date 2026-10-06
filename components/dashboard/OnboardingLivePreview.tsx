@@ -1,10 +1,15 @@
 'use client'
 
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Globe } from 'lucide-react'
 import { ClassicHomePage } from '@/components/photographer/themes/classic/ClassicHomePage'
+import { ClassicSiteHeader } from '@/components/photographer/site-chrome/ClassicSiteHeader'
 import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
-import { toClassicHomePageProps } from '@/lib/public-site/adapters/theme-props/classic'
+import {
+  toClassicHomePageProps,
+  toClassicSiteHeaderProps,
+} from '@/lib/public-site/adapters/theme-props/classic'
 
 // The site is rendered at a desktop width and scaled down to fit the pane.
 const DESIGN_WIDTH = 1280
@@ -32,6 +37,9 @@ export function OnboardingLivePreview({
   heroUrl,
   logoUrl,
 }: OnboardingLivePreviewProps) {
+  // The header treats "current path === homepage path" as its transparent-over-hero
+  // state, so the preview claims the dashboard path as its homepage.
+  const pathname = usePathname() ?? '/'
   const frameRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.45)
@@ -56,7 +64,7 @@ export function OnboardingLivePreview({
     return () => observer.disconnect()
   }, [slug])
 
-  const homePageProps = useMemo(() => {
+  const { homePageProps, headerProps } = useMemo(() => {
     const viewModel = buildHomepageViewModel({
       photographer: {
         id: 'onboarding-preview',
@@ -113,7 +121,7 @@ export function OnboardingLivePreview({
       packages: [],
       testimonials: [],
       posts: [],
-      homepagePath: '#',
+      homepagePath: pathname,
       blogPath: '#',
       portfolioPath: '#',
       beforeAfterPath: '#',
@@ -121,8 +129,11 @@ export function OnboardingLivePreview({
       postCount: 0,
       photoEditComparisonsCount: 0,
     })
-    return toClassicHomePageProps(viewModel)
-  }, [studioName, slug, accentColor, aboutText, heroUrl, logoUrl])
+    return {
+      homePageProps: toClassicHomePageProps(viewModel),
+      headerProps: toClassicSiteHeaderProps(viewModel),
+    }
+  }, [studioName, slug, accentColor, aboutText, heroUrl, logoUrl, pathname])
 
   const address = slug
     ? `${typeof window !== 'undefined' ? window.location.host : ''}/${slug}`
@@ -158,6 +169,7 @@ export function OnboardingLivePreview({
                   transformOrigin: 'top left',
                 }}
               >
+                <ClassicSiteHeader {...headerProps} />
                 <ClassicHomePage {...homePageProps} />
               </div>
             </div>

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { toast } from 'sonner'
-import { Camera, Check, ImagePlus, Loader2, Sparkles, X } from 'lucide-react'
+import { Camera, Check, ImagePlus, Loader2, RefreshCw, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -48,6 +48,15 @@ const ACCENT_SWATCHES = [
 ]
 
 const DEFAULT_ONBOARDING_ACCENT = '#7D3A52'
+
+function ChangeLaterHint({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-1 text-xs font-medium text-emerald-700">
+      <RefreshCw className="h-3 w-3 shrink-0" />
+      {children}
+    </p>
+  )
+}
 const MIN_NAME_LENGTH = 2
 const SLUG_DEBOUNCE_MS = 400
 
@@ -68,6 +77,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
   const [logoUploading, setLogoUploading] = useState(false)
   const [aiPending, setAiPending] = useState(false)
 
+  const isCustomAccent = !ACCENT_SWATCHES.some((c) => c.toLowerCase() === accent.toLowerCase())
   const slugLocked = Boolean(initial.slug)
   const nameValid = studioName.trim().length >= MIN_NAME_LENGTH
   const canFinish = nameValid && Boolean(slug) && Boolean(heroUrl) && !heroUploading && !pending
@@ -218,6 +228,14 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                 </DialogPrimitive.Description>
               </header>
 
+              <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-900">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                <p>
+                  <span className="font-semibold">שום דבר כאן לא סופי.</span> כל מה שתבחרי, כולל
+                  הכתובת, אפשר לשנות בכל רגע מהדשבורד. אין סיבה להתלבט או לחשוש.
+                </p>
+              </div>
+
               <div className="space-y-1.5">
                 <label htmlFor="onboarding-name" className="text-sm font-medium">
                   שם העסק
@@ -240,6 +258,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                     </span>
                   ) : null}
                 </div>
+                <ChangeLaterHint>השם והכתובת ניתנים לשינוי בהגדרות האתר</ChangeLaterHint>
               </div>
 
               <div className="space-y-1.5">
@@ -271,6 +290,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                     )}
                   </span>
                 </label>
+                <ChangeLaterHint>אפשר להחליף או להוסיף תמונות הירו בדשבורד</ChangeLaterHint>
               </div>
 
               <div className="space-y-1.5">
@@ -302,6 +322,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                   maxLength={400}
                   placeholder="כמה משפטים על הצילום שלך"
                 />
+                <ChangeLaterHint>אפשר לערוך את הטקסט בכל עת</ChangeLaterHint>
               </div>
 
               <div className="space-y-2">
@@ -327,7 +348,30 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                       ) : null}
                     </button>
                   ))}
+                  {/* Free choice: the native picker, shown as a rainbow swatch. */}
+                  <label
+                    className={cn(
+                      'relative flex h-8 w-8 cursor-pointer items-center justify-center overflow-hidden rounded-full ring-offset-2 transition',
+                      isCustomAccent && 'ring-2 ring-black/70'
+                    )}
+                    style={{
+                      background: isCustomAccent
+                        ? accent
+                        : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)',
+                    }}
+                    title="בחירת צבע חופשית"
+                  >
+                    <input
+                      type="color"
+                      value={accent}
+                      onChange={(e) => setAccent(e.target.value)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      aria-label="בחירת צבע חופשית"
+                    />
+                    {isCustomAccent ? <Check className="h-4 w-4 text-white" /> : null}
+                  </label>
                 </div>
+                <ChangeLaterHint>אפשר לשנות צבע בכל רגע</ChangeLaterHint>
               </div>
 
               <div className="space-y-1.5">
@@ -354,6 +398,7 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                     'העלאת לוגו'
                   )}
                 </label>
+                <ChangeLaterHint>אפשר להוסיף או להחליף לוגו מאוחר יותר</ChangeLaterHint>
               </div>
 
               <div className="mt-auto space-y-3 pt-2">
@@ -364,7 +409,11 @@ export function SiteOnboardingModal({ open, initial }: SiteOnboardingModalProps)
                   <p className="text-center text-xs text-black/45">
                     נדרשים שם עסק ותמונת הירו כדי לסיים.
                   </p>
-                ) : null}
+                ) : (
+                  <p className="text-center text-xs font-medium text-emerald-700">
+                    אפשר לשנות הכול אחר כך מהדשבורד.
+                  </p>
+                )}
                 <div className="rounded-xl bg-violet-50 px-4 py-3 text-sm text-violet-900">
                   <p className="mb-1.5">רוצה רק גלריות פרטיות ללקוחות, בלי אתר?</p>
                   <button
