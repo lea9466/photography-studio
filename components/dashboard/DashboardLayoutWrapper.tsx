@@ -7,7 +7,7 @@ import { MobileHeader } from './MobileHeader'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { AnnouncementBanner } from './AnnouncementBanner'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
-import { WelcomeModal } from './WelcomeModal'
+import { SiteOnboardingModal, type SiteOnboardingInitial } from './SiteOnboardingModal'
 import { AssistantWidget } from './assistant/AssistantWidget'
 import type { Announcement } from '@/lib/announcements/types'
 
@@ -17,8 +17,8 @@ type DashboardLayoutWrapperProps = {
   logoUrl?: string | null
   portfolioSlug?: string | null
   showReferralPopup?: boolean
-  showWelcomePopup?: boolean
-  welcomePreviewUrl?: string | null
+  /** Site-setup onboarding modal; omitted/null = not shown. */
+  siteOnboarding?: SiteOnboardingInitial | null
   onSignOut?: () => void
   children: React.ReactNode
   accentColor?: string
@@ -41,8 +41,7 @@ export function DashboardLayoutWrapper({
   logoUrl,
   portfolioSlug,
   showReferralPopup = false,
-  showWelcomePopup = false,
-  welcomePreviewUrl = null,
+  siteOnboarding = null,
   onSignOut,
   children,
   accentColor,
@@ -86,7 +85,7 @@ export function DashboardLayoutWrapper({
   return (
     <div className="min-h-screen">
       {isImpersonating ? <ImpersonationBanner studioName={studioName} /> : null}
-      <WelcomeModal open={showWelcomePopup} previewUrl={welcomePreviewUrl} />
+      {siteOnboarding ? <SiteOnboardingModal open initial={siteOnboarding} /> : null}
       <ReferralSuccessModal open={showReferralPopup} />
       <SidebarNav
         userName={userName}

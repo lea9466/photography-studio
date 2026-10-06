@@ -3,6 +3,7 @@ import { getDashboardContext } from '@/lib/auth/dashboard-context'
 import { DashboardLayoutWrapper } from '@/components/dashboard/DashboardLayoutWrapper'
 import { getDashboardProfile } from '@/lib/queries/dashboard-profile'
 import { getActiveAnnouncement } from '@/lib/queries/announcement'
+import { getSiteOnboardingState } from '@/lib/queries/site-onboarding'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { getAssistantMissingFlags, hasAnyMissingContent } from '@/lib/assistant/studio-context'
 import { CLIENT_GALLERIES_ENABLED } from '@/lib/types/app.types'
@@ -21,10 +22,21 @@ export default async function DashboardLayout({
   ])
   const entitlements = context ? await getStudioEntitlements(context.userId) : null
   const portfolioSlug = profile?.slug?.trim() || null
-  const welcomePreviewUrl = portfolioSlug ? `/${portfolioSlug}` : null
   const isImpersonating = context?.isImpersonating ?? false
   const siteUnavailableLocked =
     !isImpersonating && Boolean(profile?.is_site_unavailable)
+  const onboardingState =
+    isImpersonating || siteUnavailableLocked ? null : await getSiteOnboardingState()
+  const siteOnboarding = onboardingState?.shouldShow
+    ? {
+        studioName: onboardingState.studioName,
+        slug: onboardingState.slug,
+        accentColor: onboardingState.accentColor,
+        aboutText: onboardingState.aboutText,
+        logoUrl: onboardingState.logoUrl,
+        heroPreviewUrl: onboardingState.heroPreviewUrl,
+      }
+    : null
   const assistantMissing = context
     ? await getAssistantMissingFlags(context.userId, context.supabase)
     : null
@@ -41,12 +53,7 @@ export default async function DashboardLayout({
           ? false
           : (profile?.show_referral_popup ?? false)
       }
-      showWelcomePopup={
-        isImpersonating || siteUnavailableLocked
-          ? false
-          : (profile?.show_welcome_popup ?? false)
-      }
-      welcomePreviewUrl={welcomePreviewUrl}
+      siteOnboarding={siteOnboarding}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
