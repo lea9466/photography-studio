@@ -50,7 +50,7 @@ export function ClassicSiteFooter({ studioName, logoUrl, primaryColor, language 
             {copy.footer.accessibility}
           </Link>
         </div>
-        <div className="text-[16px] leading-[1.6] text-[#2d2825]/60">{rightsLine}</div>
+        <div className="text-[16px] leading-[1.6] text-[#2d2825]/75">{rightsLine}</div>
         <div className="inline-flex shrink-0 flex-row items-center gap-2">
           <span className="whitespace-nowrap text-[11px] text-[#5a504a]">{copy.footer.studioSignupQuestion}</span>
           <Link
