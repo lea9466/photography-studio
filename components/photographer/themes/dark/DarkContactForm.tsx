@@ -60,6 +60,7 @@ export function DarkContactForm({ accentColor, language, onSubmit }: DarkContact
       <div className={styles.field}>
         <input
           name="name"
+          aria-label={copy.contactForm.fullName}
           type="text"
           required
           placeholder={copy.contactForm.fullName}
@@ -69,6 +70,7 @@ export function DarkContactForm({ accentColor, language, onSubmit }: DarkContact
       <div className={styles.field}>
         <input
           name="email"
+          aria-label={copy.contactForm.emailAddress}
           type="email"
           required
           dir="ltr"
@@ -79,6 +81,7 @@ export function DarkContactForm({ accentColor, language, onSubmit }: DarkContact
       <div className={styles.field}>
         <input
           name="phone"
+          aria-label={copy.contactForm.phone}
           type="tel"
           dir="ltr"
           placeholder={copy.contactForm.placeholders.phone}
@@ -88,6 +91,7 @@ export function DarkContactForm({ accentColor, language, onSubmit }: DarkContact
       <div className={styles.field}>
         <input
           name="subject"
+          aria-label={copy.contactForm.subject}
           type="text"
           placeholder={copy.contactForm.placeholders.subject}
           className={`${styles.input} ${contactAlign}`}
@@ -97,6 +101,7 @@ export function DarkContactForm({ accentColor, language, onSubmit }: DarkContact
       <div className={`${styles.field} md:col-span-2`}>
         <textarea
           name="message"
+          aria-label={copy.contactForm.message}
           required
           placeholder={copy.contactForm.yourMessage}
           className={`${styles.input} ${styles.textarea} ${contactAlign}`}

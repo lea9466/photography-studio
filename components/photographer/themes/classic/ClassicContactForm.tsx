@@ -53,48 +53,52 @@ export function ClassicContactForm({ accentColor, hasContactBg, language, onSubm
     >
       <div className={`${styles.row} mb-6`}>
         <div className={styles.field}>
-          <label className={`block ${contactAlign}`}>{copy.contactForm.fullName}</label>
+          <label htmlFor="classic-contact-name" className={`block ${contactAlign}`}>{copy.contactForm.fullName}</label>
           <input
+            id="classic-contact-name"
             name="name"
             type="text"
             required
             placeholder={copy.contactForm.placeholders.nameExample}
-            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0`}
+            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a504a]`}
           />
         </div>
         <div className={styles.field}>
-          <label className={`block ${contactAlign}`}>{copy.contactForm.phoneContact}</label>
+          <label htmlFor="classic-contact-phone" className={`block ${contactAlign}`}>{copy.contactForm.phoneContact}</label>
           <input
+            id="classic-contact-phone"
             name="phone"
             type="tel"
             dir={contactLtrDir}
             placeholder={copy.contactForm.placeholders.phone}
-            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactLtrAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0`}
+            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactLtrAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a504a]`}
           />
         </div>
       </div>
 
       <div className={`${styles.field} mb-6`}>
-        <label className={`block ${contactAlign}`}>{copy.contactForm.emailAddress}</label>
+        <label htmlFor="classic-contact-email" className={`block ${contactAlign}`}>{copy.contactForm.emailAddress}</label>
         <input
+          id="classic-contact-email"
           name="email"
           type="email"
           required
           dir={contactLtrDir}
           placeholder={copy.contactForm.placeholders.email}
-          className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactLtrAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0`}
+          className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactLtrAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a504a]`}
         />
       </div>
 
       <div className={styles.messageBlock}>
         <div className={styles.field}>
-          <label className={`block ${contactAlign}`}>{copy.contactForm.tellAboutEvent}</label>
+          <label htmlFor="classic-contact-message" className={`block ${contactAlign}`}>{copy.contactForm.tellAboutEvent}</label>
           <textarea
+            id="classic-contact-message"
             name="message"
             required
             rows={4}
             placeholder={copy.contactForm.placeholders.messageEvent}
-            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full resize-none border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0`}
+            className={`${hasContactBg ? 'bg-transparent' : 'bg-[#FAF7F4]'} w-full resize-none border-x-0 border-t-0 border-b border-[#d1c6b4]/40 px-0 py-4 ${contactAlign} placeholder:text-[#5a504a]/30 transition-all focus:ring-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a504a]`}
           />
         </div>
       </div>

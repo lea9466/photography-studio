@@ -65,7 +65,21 @@ function GridCell({
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt={alt} loading="lazy" decoding="async" onClick={onClick} />
+      <img
+        src={url}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onClick={onClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onClick()
+          }
+        }}
+      />
     </div>
   )
 }

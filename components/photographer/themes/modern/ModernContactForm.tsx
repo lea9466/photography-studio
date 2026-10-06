@@ -63,6 +63,7 @@ export function ModernContactForm({ accentColor, language, onSubmit }: ModernCon
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <input
           name="name"
+          aria-label={copy.contactForm.fullName}
           type="text"
           required
           placeholder={copy.contactForm.fullName}
@@ -70,6 +71,7 @@ export function ModernContactForm({ accentColor, language, onSubmit }: ModernCon
         />
         <input
           name="email"
+          aria-label={copy.contactForm.emailAddress}
           type="email"
           required
           dir="ltr"
@@ -80,6 +82,7 @@ export function ModernContactForm({ accentColor, language, onSubmit }: ModernCon
 
       <input
         name="phone"
+        aria-label={copy.contactForm.phone}
         type="tel"
         dir="ltr"
         placeholder={copy.contactForm.placeholders.phone}
@@ -88,6 +91,7 @@ export function ModernContactForm({ accentColor, language, onSubmit }: ModernCon
 
       <textarea
         name="message"
+        aria-label={copy.contactForm.message}
         required
         rows={3}
         placeholder={copy.contactForm.placeholders.message}

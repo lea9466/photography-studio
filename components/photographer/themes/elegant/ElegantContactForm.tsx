@@ -61,8 +61,9 @@ export function ElegantContactForm({ accentColor, language, onSubmit }: ElegantC
       style={{ '--elegant-contact-accent': accentColor } as CSSProperties}
     >
       <div className={styles.field}>
-        <label className={styles.label}>{copy.contactForm.fullName}</label>
+        <label htmlFor="elegant-contact-name" className={styles.label}>{copy.contactForm.fullName}</label>
         <input
+          id="elegant-contact-name"
           name="name"
           required
           type="text"
@@ -72,8 +73,9 @@ export function ElegantContactForm({ accentColor, language, onSubmit }: ElegantC
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>{copy.contactForm.email}</label>
+        <label htmlFor="elegant-contact-email" className={styles.label}>{copy.contactForm.email}</label>
         <input
+          id="elegant-contact-email"
           name="email"
           required
           type="email"
@@ -84,8 +86,9 @@ export function ElegantContactForm({ accentColor, language, onSubmit }: ElegantC
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>{copy.contactForm.phone}</label>
+        <label htmlFor="elegant-contact-phone" className={styles.label}>{copy.contactForm.phone}</label>
         <input
+          id="elegant-contact-phone"
           name="phone"
           type="tel"
           dir="ltr"
@@ -95,8 +98,9 @@ export function ElegantContactForm({ accentColor, language, onSubmit }: ElegantC
       </div>
 
       <div className={styles.field}>
-        <label className={styles.label}>{copy.contactForm.subject}</label>
+        <label htmlFor="elegant-contact-subject" className={styles.label}>{copy.contactForm.subject}</label>
         <input
+          id="elegant-contact-subject"
           name="subject"
           type="text"
           placeholder={copy.contactForm.placeholders.subject}
@@ -105,8 +109,9 @@ export function ElegantContactForm({ accentColor, language, onSubmit }: ElegantC
       </div>
 
       <div className={`${styles.field} md:col-span-2`}>
-        <label className={styles.label}>{copy.contactForm.message}</label>
+        <label htmlFor="elegant-contact-message" className={styles.label}>{copy.contactForm.message}</label>
         <textarea
+          id="elegant-contact-message"
           name="message"
           required
           placeholder={copy.contactForm.placeholders.messageHelp}
