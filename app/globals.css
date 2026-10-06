@@ -172,11 +172,11 @@ html:has([data-client-gallery-root]) {
   --border: #44403c;
 }
 
-/* Enable accessibility widget — moved to the right edge, vertically centred (bottom-left clashes
-   with the assistant bubble), shrunk, and recoloured to match the site. */
+/* Enable accessibility widget — moved to the left edge, vertically centred
+   shrunk, and recoloured to match the site. */
 #enable-toolbar {
-  left: auto !important;
-  right: 16px !important;
+  right: auto !important;
+  left: 16px !important;
   bottom: auto !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
