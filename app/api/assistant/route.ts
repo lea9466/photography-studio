@@ -4,6 +4,7 @@ import { getAssistantStudioContext } from '@/lib/assistant/studio-context'
 import { buildAssistantSystemPrompt } from '@/lib/assistant/system-prompt'
 import { getAllowedAssistantTools } from '@/lib/assistant/entitled-tools'
 import { ALL_ASSISTANT_TOOLS, buildPreviewForTool } from '@/lib/assistant/tools'
+import { LOOKUP_KNOWLEDGE_TOOL, lookupKnowledge } from '@/lib/assistant/knowledge'
 import { checkAssistantChatRateLimit } from '@/lib/assistant/rate-limiter'
 import { isAssistantConfigured } from '@/lib/assistant/config'
 import { getAssistantProvider } from '@/lib/assistant/provider'
@@ -11,6 +12,8 @@ import { AssistantProviderError } from '@/lib/assistant/provider/types'
 import type { AssistantContentBlock, AssistantMessage } from '@/lib/assistant/provider/types'
 
 export const runtime = 'nodejs'
+
+const MAX_KNOWLEDGE_ROUNDS = 4
 
 type IncomingMessage = {
   role: 'user' | 'assistant'
@@ -54,7 +57,10 @@ export async function POST(request: Request) {
 
   const entitlements = await getStudioEntitlements(userId)
   const allowedTools = new Set(getAllowedAssistantTools(entitlements))
-  const tools = ALL_ASSISTANT_TOOLS.filter((tool) => allowedTools.has(tool.name as never))
+  const tools = [
+    ...ALL_ASSISTANT_TOOLS.filter((tool) => allowedTools.has(tool.name as never)),
+    LOOKUP_KNOWLEDGE_TOOL,
+  ]
 
   const context = await getAssistantStudioContext(userId, supabase)
   const systemPrompt = buildAssistantSystemPrompt(context)
@@ -72,13 +78,43 @@ export async function POST(request: Request) {
         let finalContent: AssistantContentBlock[] = []
         let stopReason: string = 'other'
 
-        for await (const event of provider.streamChat({ system: systemPrompt, tools, messages })) {
-          if (event.type === 'text_delta') {
-            controller.enqueue(encodeEvent({ type: 'text_delta', text: event.text }))
-          } else if (event.type === 'message_end') {
-            finalContent = event.content
-            stopReason = event.stopReason
+        // Knowledge lookups are resolved server-side and never reach the
+        // client: run the model, answer any lookup_knowledge calls, and go
+        // again (bounded) until it produces a final turn.
+        for (let round = 0; round < MAX_KNOWLEDGE_ROUNDS; round++) {
+          for await (const event of provider.streamChat({ system: systemPrompt, tools, messages })) {
+            if (event.type === 'text_delta') {
+              controller.enqueue(encodeEvent({ type: 'text_delta', text: event.text }))
+            } else if (event.type === 'message_end') {
+              finalContent = event.content
+              stopReason = event.stopReason
+            }
           }
+
+          const lookups = finalContent.filter(
+            (block): block is Extract<AssistantContentBlock, { type: 'tool_use' }> =>
+              block.type === 'tool_use' && block.name === LOOKUP_KNOWLEDGE_TOOL.name
+          )
+          if (lookups.length === 0 || round === MAX_KNOWLEDGE_ROUNDS - 1) break
+
+          const results: AssistantContentBlock[] = []
+          for (const block of finalContent) {
+            if (block.type !== 'tool_use') continue
+            if (block.name === LOOKUP_KNOWLEDGE_TOOL.name) {
+              const topic = (block.input as { topic?: string } | null)?.topic ?? ''
+              results.push({ type: 'tool_result', tool_use_id: block.id, content: await lookupKnowledge(topic) })
+            } else {
+              // An action tool issued in the same turn as a lookup: it is not
+              // executed; the model re-proposes it after reading the knowledge.
+              results.push({
+                type: 'tool_result',
+                tool_use_id: block.id,
+                content: 'לא בוצע. קראי קודם לידע ואז הציעי שוב את הפעולה.',
+              })
+            }
+          }
+          messages.push({ role: 'assistant', content: finalContent }, { role: 'user', content: results })
+          controller.enqueue(encodeEvent({ type: 'text_delta', text: '\n\n' }))
         }
 
         if (stopReason === 'refusal') {
@@ -94,7 +130,7 @@ export async function POST(request: Request) {
         }
 
         for (const block of finalContent) {
-          if (block.type !== 'tool_use') continue
+          if (block.type !== 'tool_use' || block.name === LOOKUP_KNOWLEDGE_TOOL.name) continue
           try {
             const { preview, payload } = buildPreviewForTool(block.name, block.input, context)
             controller.enqueue(

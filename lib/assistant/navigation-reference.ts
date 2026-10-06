@@ -8,7 +8,12 @@ import { SITE_SETTINGS_HELP } from '@/lib/dashboard/site-settings-help'
 const DASHBOARD_TABS = [
   { label: 'לוח בקרה', href: '/dashboard' },
   { label: 'לקוחות', href: '/dashboard/clients' },
-  { label: 'גלריות', href: '/dashboard/galleries' },
+  { label: 'גלריות פרטיות', href: '/dashboard/private-galleries' },
+  { label: 'עיצוב גלריה פרטית', href: '/dashboard/client-page-design' },
+  { label: 'חבילות שימוש (מסלולי גלריות פרטיות ופאס)', href: '/dashboard/usage-packages' },
+  { label: 'גלריות ציבוריות (באתר)', href: '/dashboard/galleries' },
+  { label: 'סדר דף הבית', href: '/dashboard/homepage-layout' },
+  { label: 'דומיין אישי', href: '/dashboard/custom-domain' },
   { label: 'פוסטים', href: '/dashboard/posts' },
   { label: 'חבילות צילום', href: '/dashboard/packages' },
   { label: 'תגובות (המלצות לקוחות)', href: '/dashboard/reviews' },
