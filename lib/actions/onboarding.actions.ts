@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { slugifyStudioName } from '@/lib/onboarding/slugify'
+import { findAvailableSlug } from '@/lib/onboarding/available-slug'
 import { checkPersistentRateLimit } from '@/lib/rate-limit/persistent'
 import { getAssistantProvider } from '@/lib/assistant/provider'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
@@ -25,39 +25,6 @@ const MIN_NAME_LENGTH = 2
 const MAX_NAME_LENGTH = 80
 const MAX_ABOUT_LENGTH = 400
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
-
-// Mirrors the top-level routes the slug would otherwise shadow.
-const RESERVED_SLUGS = new Set([
-  'dashboard', 'login', 'register', 'forgot-password', 'reset-password', 'auth',
-  'api', 'g', 'portfolio', 'public-gallery', 'manage', 'admin', 'blog',
-])
-
-async function isSlugFree(
-  admin: ReturnType<typeof createAdminClient>,
-  slug: string,
-  userId: string
-): Promise<boolean> {
-  if (RESERVED_SLUGS.has(slug)) return false
-
-  const [{ data: owner }, { data: redirect }] = await Promise.all([
-    admin.from('users').select('id').ilike('slug', slug).neq('id', userId).limit(1),
-    admin.from('slug_redirects').select('old_slug').eq('old_slug', slug).limit(1),
-  ])
-  return !(owner && owner.length > 0) && !(redirect && redirect.length > 0)
-}
-
-async function findAvailableSlug(
-  admin: ReturnType<typeof createAdminClient>,
-  studioName: string,
-  userId: string
-): Promise<string | null> {
-  const base = slugifyStudioName(studioName) || 'studio'
-  for (let attempt = 1; attempt <= 50; attempt++) {
-    const candidate = attempt === 1 ? base : `${base}-${attempt}`
-    if (await isSlugFree(admin, candidate, userId)) return candidate
-  }
-  return null
-}
 
 /** Live-preview helper: the slug this studio name would get right now. */
 export async function previewOnboardingSlug(

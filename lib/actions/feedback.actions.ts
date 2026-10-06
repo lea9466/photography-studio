@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { assertFeatureAllowed } from '@/lib/subscriptions/guard'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { findAvailableSlug } from '@/lib/onboarding/available-slug'
 import { recordSlugRedirect } from '@/lib/referral/slug-redirect'
 import { sendFeedbackEmail } from '@/lib/email/resend'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
@@ -283,6 +284,26 @@ export async function updateProfile(input: UpdateProfileInput) {
 
   const updateData = buildProfileUpdateData(userId, input)
   if (Object.keys(updateData).length === 0) return
+
+  // An empty slug is not an error: keep the one she has, or derive it from the
+  // studio name (same rule as the onboarding modal).
+  if (input.slug !== undefined && !input.slug.trim()) {
+    const { data: current } = await supabase
+      .from('users')
+      .select('slug, studio_name')
+      .eq('id', userId)
+      .maybeSingle()
+    const row = current as { slug: string | null; studio_name: string | null } | null
+
+    delete updateData.slug
+    if (!row?.slug?.trim()) {
+      const name = (input.studio_name ?? row?.studio_name ?? '').trim()
+      if (name.length >= 2) {
+        const derived = await findAvailableSlug(createAdminClient(), name, userId)
+        if (derived) updateData.slug = derived
+      }
+    }
+  }
 
   if (input.slug !== undefined) {
     const { data: current } = await supabase

@@ -290,9 +290,8 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
   }
 
   function validateSlug(value: string): string {
-    if (!value.trim()) {
-      return 'כתובת האתר היא שדה חובה'
-    }
+    // Empty is fine: the server derives it from the business name.
+    if (!value.trim()) return ''
     // Check for spaces
     if (/\s/.test(value)) {
       return 'אסור להשתמש ברווחים בכתובת האתר'
