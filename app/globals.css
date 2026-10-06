@@ -171,3 +171,20 @@ html:has([data-client-gallery-root]) {
   --foreground: #fafafa;
   --border: #44403c;
 }
+
+/* Enable accessibility widget — moved to the bottom-right (bottom-left clashes
+   with the assistant bubble), shrunk, and recoloured to match the site. */
+#enable-toolbar {
+  left: auto !important;
+  right: 16px !important;
+  bottom: 16px !important;
+}
+
+#enable-toolbar-trigger-svg {
+  width: 52px !important;
+  height: 52px !important;
+}
+
+#enable-toolbar-trigger-svg .enable-trigger-circle {
+  fill: #2b2623 !important;
+}
