@@ -9,7 +9,7 @@ export const metadata: Metadata = buildMarketingMetadata({
   canonicalPath: '/accessibility',
 })
 
-const LAST_UPDATED = '8 ביולי 2026'
+const LAST_UPDATED = '6 באוקטובר 2026'
 
 const sections = [
   {
@@ -53,6 +53,7 @@ const sections = [
         <li>טקסט חלופי (alt) לתמונות משמעותיות</li>
         <li>ניגודיות צבעים בהתאם לדרישות רמת AA</li>
         <li>תמיכה בהגדלת טקסט דרך הגדרות הדפדפן</li>
+        <li>תפריט נגישות באתר: הגדלת טקסט, ניגודיות גבוהה, הדגשת קישורים, גופן קריא, ריווח ועצירת אנימציות</li>
         <li>תוויות ברורות לשדות טפסים ולכפתורים</li>
         <li>התאמה לצפייה במכשירים ניידים ושולחניים</li>
         <li>שימוש בגופן קריא ותמיכה בעברית מימין לשמאל (RTL)</li>
@@ -100,27 +101,16 @@ const sections = [
           <dl className="space-y-3 text-sm sm:text-base">
             <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
               <dt className="min-w-28 font-semibold text-[--foreground]">שם:</dt>
-              <dd className="text-[--muted]">[שם רכז/ת הנגישות]</dd>
+              <dd className="text-[--muted]">לאה</dd>
             </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
-              <dt className="min-w-28 font-semibold text-[--foreground]">טלפון:</dt>
-              <dd>
-                <a
-                  href="tel:[מספר-טלפון]"
-                  className="text-[--primary] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--accent]"
-                >
-                  [מספר טלפון]
-                </a>
-              </dd>
-            </div>
-            <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
+<div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
               <dt className="min-w-28 font-semibold text-[--foreground]">דוא״ל:</dt>
               <dd>
                 <a
-                  href="mailto:[כתובת-דואל]"
+                  href="mailto:lea0556769466@gmail.com"
                   className="text-[--primary] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--accent]"
                 >
-                  [כתובת דוא״ל]
+                  lea0556769466@gmail.com
                 </a>
               </dd>
             </div>
@@ -193,7 +183,7 @@ export default function AccessibilityPage() {
               לצלמים וללקוחותיהם, בהתאם לתקן WCAG 2.1 ברמת AA.
             </p>
             <p className="mt-2 text-sm text-[--muted]">
-              עודכן לאחרונה: <time dateTime="2026-07-08">{LAST_UPDATED}</time>
+              עודכן לאחרונה: <time dateTime="2026-10-06">{LAST_UPDATED}</time>
             </p>
           </header>
 
