@@ -7,6 +7,7 @@ import { MobileHeader } from './MobileHeader'
 import { ImpersonationBanner } from './ImpersonationBanner'
 import { AnnouncementBanner } from './AnnouncementBanner'
 import { ReferralSuccessModal } from './ReferralSuccessModal'
+import { SiteSetupBanner } from './SiteSetupBanner'
 import { SiteOnboardingModal, type SiteOnboardingInitial } from './SiteOnboardingModal'
 import { AssistantWidget } from './assistant/AssistantWidget'
 import type { Announcement } from '@/lib/announcements/types'
@@ -19,6 +20,8 @@ type DashboardLayoutWrapperProps = {
   showReferralPopup?: boolean
   /** Site-setup onboarding modal; omitted/null = not shown. */
   siteOnboarding?: SiteOnboardingInitial | null
+  /** "Your site isn't live yet" banner (no slug); omitted/null = not shown. */
+  siteSetupBanner?: SiteOnboardingInitial | null
   onSignOut?: () => void
   children: React.ReactNode
   accentColor?: string
@@ -42,6 +45,7 @@ export function DashboardLayoutWrapper({
   portfolioSlug,
   showReferralPopup = false,
   siteOnboarding = null,
+  siteSetupBanner = null,
   onSignOut,
   children,
   accentColor,
@@ -123,6 +127,7 @@ export function DashboardLayoutWrapper({
         isImpersonating ? 'pt-28 md:pt-16' : 'pt-20 md:pt-10',
         isSidebarCollapsed ? 'md:mr-16' : 'md:mr-72'
       )}>
+        {siteSetupBanner ? <SiteSetupBanner initial={siteSetupBanner} /> : null}
         <AnnouncementBanner
           announcement={announcement}
           accentColor={accentColor}

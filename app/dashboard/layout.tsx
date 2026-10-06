@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     !isImpersonating && Boolean(profile?.is_site_unavailable)
   const onboardingState =
     isImpersonating || siteUnavailableLocked ? null : await getSiteOnboardingState()
-  const siteOnboarding = onboardingState?.shouldShow
+  const onboardingInitial = onboardingState
     ? {
         studioName: onboardingState.studioName,
         slug: onboardingState.slug,
@@ -38,6 +38,11 @@ export default async function DashboardLayout({
         heroPreviewUrl: onboardingState.heroPreviewUrl,
       }
     : null
+  const siteOnboarding = onboardingState?.shouldShow ? onboardingInitial : null
+
+  // No slug = no public site, so everyone without one gets the setup banner.
+  const siteSetupBanner = onboardingState && !onboardingState.slug ? onboardingInitial : null
+
   const assistantMissing = context
     ? await getAssistantMissingFlags(context.userId, context.supabase)
     : null
@@ -55,6 +60,7 @@ export default async function DashboardLayout({
           : (profile?.show_referral_popup ?? false)
       }
       siteOnboarding={siteOnboarding}
+      siteSetupBanner={siteSetupBanner}
       accentColor={profile?.accent_color || undefined}
       shouldColorLogo={profile?.should_color_logo || false}
       isImpersonating={isImpersonating}
