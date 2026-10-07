@@ -1,11 +1,14 @@
 import { getMarketingStats } from '@/lib/marketing/marketing-stats'
+import { getMarketingProPricing, getMarketingPrivateGalleryPricing } from '@/lib/payments/marketing-pricing'
 import { NovaClosingCta } from './NovaClosingCta'
 import { NovaFooter } from './NovaFooter'
+import { NovaGalleryPricing } from './NovaGalleryPricing'
 import { NovaHeader } from './NovaHeader'
 import { NovaHero } from './NovaHero'
 import { NovaHowItWorks } from './NovaHowItWorks'
 import { NovaPrivateGalleries } from './NovaPrivateGalleries'
 import { NovaShowcase } from './NovaShowcase'
+import { NovaSitePricing } from './NovaSitePricing'
 import { NovaStats } from './NovaStats'
 import styles from './nova.module.css'
 
@@ -21,9 +24,18 @@ import styles from './nova.module.css'
  * NovaStats is the one addition beyond the source design: real platform
  * counts (studios, galleries), carried over from the earlier homepage this
  * replaced. Placed last, right before the footer's own CTA button.
+ *
+ * NovaSitePricing/NovaGalleryPricing are the other addition: a packages
+ * panel right after each product's own description section, prices fetched
+ * here (DB-backed, see lib/payments/marketing-pricing.ts) and passed down —
+ * same pass-a-prop pattern as stats, not fetched inside the section itself.
  */
 export async function NovaHome() {
-  const stats = await getMarketingStats()
+  const [stats, sitePricing, galleryPricing] = await Promise.all([
+    getMarketingStats(),
+    getMarketingProPricing(),
+    getMarketingPrivateGalleryPricing(),
+  ])
 
   return (
     <div className={styles.novaRoot}>
@@ -32,8 +44,10 @@ export async function NovaHome() {
         <NovaHero />
         <NovaShowcase />
         <NovaHowItWorks />
+        <NovaSitePricing pricing={sitePricing} />
         <NovaClosingCta />
         <NovaPrivateGalleries />
+        <NovaGalleryPricing pricing={galleryPricing} />
         <NovaStats stats={stats} />
       </main>
       <NovaFooter />

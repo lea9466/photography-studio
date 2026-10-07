@@ -101,6 +101,28 @@
   transform: translateY(-1px);
 }
 
+/* Groups the login link with the primary cta so .topbar-inner's
+   space-between still reads as 3 columns (logo / nav / actions), not 4 —
+   and so both fade in together as one unit, matching .hero-buttons. */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.login-link {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.login-link:hover {
+  color: var(--accent-light);
+}
+
 /* Hero — charcoal, black & white cinematic lighting */
 .hero {
   position: relative;
@@ -751,6 +773,194 @@
   mask-composite: intersect;
 }
 
+/* Pricing — one packages panel per product, placed right after that
+   product's own description section. Reuses .step-card's premium dark-card
+   look (same grain texture, same flat black border) instead of inventing a
+   second card style, and .primary-btn/.secondary-btn for its CTAs. */
+.pricing {
+  position: relative;
+  background: #050506;
+  padding: 100px 0 130px;
+}
+
+.pricing-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.pricing-header {
+  max-width: 640px;
+  margin: 0 auto 56px;
+  text-align: center;
+}
+
+.pricing-header h2 {
+  font-family: "Rubik", "Heebo", sans-serif;
+  font-weight: 800;
+  font-size: 36px;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.pricing-header p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  align-items: stretch;
+}
+
+.pricing-grid-galleries {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 28px;
+  border-radius: 16px;
+  background: #070608;
+  border: 3px solid #000;
+  /* every package gets the glow (used to be the "highlighted" plan's own
+     look) — Lea's call: all of them read as worth having, not just one
+     singled out as the "best" pick */
+  box-shadow:
+    0 0 0 1px rgba(var(--accent-light-rgb), 0.5),
+    0 0 40px -12px rgba(var(--accent-rgb), 0.55),
+    0 30px 60px -25px rgba(0, 0, 0, 0.85);
+}
+
+/* same grain texture as .step-card::before — kept as a literal copy (not a
+   shared class) since CSS Modules scope classes per file already and this
+   is the only other place that needs it */
+.pricing-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='1' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.pricing-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-name {
+  font-family: "Rubik", "Heebo", sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.pricing-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--charcoal);
+  background: var(--accent-light);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.pricing-subtitle {
+  position: relative;
+  z-index: 1;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  margin: 6px 0 0;
+}
+
+.pricing-amount {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 20px 0 0;
+  font-family: "Rubik", "Heebo", sans-serif;
+  font-weight: 800;
+  font-size: 32px;
+  color: var(--ink);
+}
+
+.pricing-amount-unit {
+  font-family: "Heebo", sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.pricing-compare {
+  font-family: "Heebo", sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.pricing-yearly-note {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin: 4px 0 0;
+}
+
+.pricing-features {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 22px 0 0;
+  padding: 0;
+}
+
+.pricing-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.pricing-check {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  color: var(--accent-light);
+}
+
+.pricing-btn {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+  margin-top: 26px;
+}
+
 /* Stats — real, DB-backed numbers, the page's closing proof point right
    before the final CTA. Sits on the same flat #050506 its neighbours use,
    so no section-to-section seam shows. */
@@ -1316,10 +1526,14 @@
    deliberately using longhand animation-* properties here (not the
    `animation` shorthand) so those rules don't get silently reset back to
    a 0s delay by a more-specific selector further down */
+/* Only used by the hero and header (nothing else shares this class — the
+   sections below the fold use .reveal/.reveal-strong instead, each with
+   their own duration), so slowing it down here is isolated to those two:
+   Lea's call, the 0.9s original read as basically instant. */
 .fade-in-up {
   opacity: 0;
   animation-name: fadeInUp;
-  animation-duration: 0.9s;
+  animation-duration: 1.6s;
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   animation-fill-mode: forwards;
 }
@@ -1554,6 +1768,10 @@
     grid-template-columns: 1fr 1fr;
   }
 
+  .pricing-grid-galleries {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .nav {
     display: none;
   }
@@ -1567,6 +1785,10 @@
    bigger since it's alone now, plus a plain link to the real site. */
 @media (max-width: 640px) {
   .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-grid {
     grid-template-columns: 1fr;
   }
 

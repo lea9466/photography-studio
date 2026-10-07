@@ -16,19 +16,24 @@ export function NovaHeader() {
   return (
     <header className={styles.topbar}>
       <div className={`${styles.container} ${styles['topbar-inner']}`}>
-        <Link href="/" className={styles.logo}>
+        <Link href="/" className={`${styles.logo} ${styles['fade-in-up']} ${styles['delay-1']}`}>
           {BRAND_NAME}
         </Link>
 
-        <nav className={styles.nav}>
+        <nav className={`${styles.nav} ${styles['fade-in-up']} ${styles['delay-2']}`}>
           <Link href="/">בית</Link>
           <Link href="#how">איך זה עובד</Link>
           <Link href="#private">גלריות פרטיות</Link>
         </nav>
 
-        <Link href="/register" className={styles.cta}>
-          התחל עכשיו
-        </Link>
+        <div className={`${styles['header-actions']} ${styles['fade-in-up']} ${styles['delay-3']}`}>
+          <Link href="/login" className={styles['login-link']}>
+            כניסה
+          </Link>
+          <Link href="/register" className={styles.cta}>
+            התחל עכשיו
+          </Link>
+        </div>
       </div>
     </header>
   )

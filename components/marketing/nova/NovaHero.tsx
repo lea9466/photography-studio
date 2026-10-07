@@ -21,7 +21,7 @@ export function NovaHero() {
 
           <p className={`${styles['fade-in-up']} ${styles['delay-3']}`}>
             בונים לך אתר צילום שמרשים כבר במבט ראשון, וגלריות פרטיות אלגנטיות ללקוחות — הכל במקום
-            אחד, בלי להתפשר על העיצוב.
+            אחד, בלי קוד ובלי להתפשר על העיצוב, ממש תוך כמה דקות.
           </p>
 
           <div className={`${styles['hero-buttons']} ${styles['fade-in-up']} ${styles['delay-4']}`}>
