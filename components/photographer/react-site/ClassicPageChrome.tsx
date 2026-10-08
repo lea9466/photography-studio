@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 import { isSiteLtr, type SiteLanguage } from '@/lib/site-language'
 import { ClassicSiteHeader, type ClassicSiteHeaderProps } from '@/components/photographer/site-chrome/ClassicSiteHeader'
 import { ClassicSiteFooter, type ClassicSiteFooterProps } from '@/components/photographer/site-chrome/ClassicSiteFooter'
+import { useDocumentAccentColor } from '@/lib/hooks/use-document-accent-color'
 import { getGoogleFontUrl, buildBrandFontVarsCss } from '@/lib/fonts'
 import '@/components/photographer/themes/classic/classic-theme.css'
 
@@ -36,6 +37,8 @@ export function ClassicPageChrome({ language, headerProps, footerProps, children
       document.documentElement.dir = 'rtl'
     }
   }, [language])
+
+  useDocumentAccentColor(headerProps.primaryColor)
 
   const brandFontUrl = getGoogleFontUrl(headerProps.headingFont, headerProps.aboutTitleFont)
   const brandFontCss = buildBrandFontVarsCss(headerProps.headingFont, headerProps.aboutTitleFont, '.theme-classic')

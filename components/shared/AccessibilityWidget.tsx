@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { A11Y_ACCENT_CSS_VAR } from '@/lib/hooks/use-document-accent-color'
 
 const STORAGE_KEY = 'stg_a11y'
 const SIZE_STEPS = [100, 112, 125, 150]
@@ -126,7 +127,15 @@ export function AccessibilityWidget() {
         aria-label="תפריט נגישות"
         aria-expanded={open}
         aria-controls="a11y-panel"
-        className="fixed left-3 top-1/2 z-[9998] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-[#7c3aed] text-white shadow-lg transition hover:bg-[#6d28d9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7c3aed]"
+        // Brand color on a public photographer site (see useDocumentAccentColor,
+        // called from each theme's *PageChrome) — the var is only ever set
+        // there, so everywhere else (dashboard included) this fallback is
+        // what keeps the circle exactly as it was.
+        style={{
+          backgroundColor: `var(${A11Y_ACCENT_CSS_VAR}, #7c3aed)`,
+          outlineColor: `var(${A11Y_ACCENT_CSS_VAR}, #7c3aed)`,
+        }}
+        className="fixed left-3 top-1/2 z-[9998] flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-white shadow-lg transition hover:brightness-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
       >
         <AccessibilityIcon />
       </button>

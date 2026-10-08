@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 import { isSiteLtr, type SiteLanguage } from '@/lib/site-language'
 import { DarkSiteHeader, type DarkSiteHeaderProps } from '@/components/photographer/site-chrome/DarkSiteHeader'
 import { DarkSiteFooter, type DarkSiteFooterProps } from '@/components/photographer/site-chrome/DarkSiteFooter'
+import { useDocumentAccentColor } from '@/lib/hooks/use-document-accent-color'
 import { getGoogleFontUrl, buildBrandFontVarsCss } from '@/lib/fonts'
 import '@/components/photographer/themes/dark/dark-theme.css'
 
@@ -27,6 +28,8 @@ export function DarkPageChrome({ language, headerProps, footerProps, children }:
       document.documentElement.dir = 'rtl'
     }
   }, [language])
+
+  useDocumentAccentColor(headerProps.primaryColor)
 
   const brandFontUrl = getGoogleFontUrl(headerProps.headingFont, headerProps.aboutTitleFont)
   const brandFontCss = buildBrandFontVarsCss(headerProps.headingFont, headerProps.aboutTitleFont, '.theme-dark')

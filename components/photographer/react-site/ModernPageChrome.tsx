@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 import { isSiteLtr, type SiteLanguage } from '@/lib/site-language'
 import { ModernSiteHeader, type ModernSiteHeaderProps } from '@/components/photographer/site-chrome/ModernSiteHeader'
 import { ModernSiteFooter, type ModernSiteFooterProps } from '@/components/photographer/site-chrome/ModernSiteFooter'
+import { useDocumentAccentColor } from '@/lib/hooks/use-document-accent-color'
 import { getGoogleFontUrl, buildBrandFontVarsCss } from '@/lib/fonts'
 import '@/components/photographer/themes/modern/modern-theme.css'
 
@@ -28,6 +29,8 @@ export function ModernPageChrome({ language, headerProps, footerProps, children 
       document.documentElement.dir = 'rtl'
     }
   }, [language])
+
+  useDocumentAccentColor(headerProps.primaryColor)
 
   const brandFontUrl = getGoogleFontUrl(headerProps.headingFont, headerProps.aboutTitleFont)
   const brandFontCss = buildBrandFontVarsCss(headerProps.headingFont, headerProps.aboutTitleFont, '.theme-modern')
