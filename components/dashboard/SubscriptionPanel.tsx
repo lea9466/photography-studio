@@ -23,7 +23,7 @@ function SubscriptionSection({
   return (
     <section
       className={cn(
-        'relative space-y-6 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-6 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -46,7 +46,7 @@ function SubscriptionSubPanel({
   return (
     <div
       className={cn(
-        'rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -79,10 +79,10 @@ function SubscriptionSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -131,19 +131,19 @@ export function SubscriptionPanel({
               <Sparkles className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-sm text-[--muted]">ימים שנשארו</p>
-              <p className="mt-1 text-4xl font-bold text-[--foreground]">
+              <p className="text-sm text-(--muted)">ימים שנשארו</p>
+              <p className="mt-1 text-4xl font-bold text-(--foreground)">
                 {daysLeft}
-                <span className="mr-2 text-lg font-semibold text-[--muted]">ימים</span>
+                <span className="mr-2 text-lg font-semibold text-(--muted)">ימים</span>
               </p>
-              <p className="mt-3 text-sm text-[--muted]">
+              <p className="mt-3 text-sm text-(--muted)">
                 תאריך סיום:{' '}
-                <span className="font-medium text-[--foreground]">
+                <span className="font-medium text-(--foreground)">
                   {formatTrialEndDate(trialEndDate)}
                 </span>
               </p>
               {daysLeft === 0 ? (
-                <p className="mt-2 text-sm text-[--foreground]">
+                <p className="mt-2 text-sm text-(--foreground)">
                   כרגע מערכת התשלומים נמצאת בשלבי סיום. הגישה שלך נשארת פתוחה עד
                   לפתיחת התשלומים.
                 </p>
@@ -163,19 +163,19 @@ export function SubscriptionPanel({
           />
 
           <SubscriptionSubPanel className="space-y-5">
-            <p className="text-sm leading-relaxed text-[--muted]">
+            <p className="text-sm leading-relaxed text-(--muted)">
               כשחברה נרשמת דרך הקישור שלך ויוצרת את הגלריה השנייה שלה — תקבלי{' '}
-              <strong className="text-[--foreground]">שבוע נוסף</strong> לתקופת הניסיון.
+              <strong className="text-(--foreground)">שבוע נוסף</strong> לתקופת הניסיון.
             </p>
 
             <div className="rounded-xl border border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] p-4 md:p-5">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-[--foreground]">
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-(--foreground)">
                 {shareText}
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="break-all text-xs text-[--muted]">{referralLink}</p>
+              <p className="break-all text-xs text-(--muted)">{referralLink}</p>
               <Button type="button" onClick={handleCopy} className={cn(ACCENT_BUTTON_CLASS, 'shrink-0 gap-2')}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'הועתק!' : 'העתיקי את ההודעה והקישור'}

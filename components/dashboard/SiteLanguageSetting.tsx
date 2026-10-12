@@ -64,7 +64,7 @@ export function SiteLanguageSetting({ initialLanguage }: SiteLanguageSettingProp
   }
 
   return (
-    <section className="relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+    <section className="relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
       <div
         className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
         aria-hidden
@@ -76,13 +76,13 @@ export function SiteLanguageSetting({ initialLanguage }: SiteLanguageSettingProp
           </div>
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold text-[--foreground]">שפת האתר הציבורי</h2>
+              <h2 className="text-lg font-semibold text-(--foreground)">שפת האתר הציבורי</h2>
               <HelpTooltip
                 content={SITE_SETTINGS_HELP.fields.siteLanguage.content}
                 where={SITE_SETTINGS_HELP.fields.siteLanguage.where}
               />
             </div>
-            <p className="text-xs leading-relaxed text-[--muted]">
+            <p className="text-xs leading-relaxed text-(--muted)">
               {SITE_SETTINGS_HELP.fields.siteLanguage.where}
             </p>
           </div>
@@ -103,7 +103,7 @@ export function SiteLanguageSetting({ initialLanguage }: SiteLanguageSettingProp
                 'rounded-xl border-2 p-4 text-right transition-all',
                 selected
                   ? 'border-[#7D3A52] bg-[#7D3A52]/5 shadow-sm'
-                  : 'border-[--border]/80 bg-white/80 hover:border-[#7D3A52]/35',
+                  : 'border-(--border)/80 bg-white/80 hover:border-[#7D3A52]/35',
                 isPending && 'cursor-wait opacity-60'
               )}
             >
@@ -120,10 +120,10 @@ export function SiteLanguageSetting({ initialLanguage }: SiteLanguageSettingProp
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-[--foreground]">{option.title}</p>
-                    <span className="text-xs text-[--muted]">{option.subtitle}</span>
+                    <p className="font-semibold text-(--foreground)">{option.title}</p>
+                    <span className="text-xs text-(--muted)">{option.subtitle}</span>
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-[--muted]">
+                  <p className="mt-1 text-sm leading-relaxed text-(--muted)">
                     {option.description}
                   </p>
                 </div>

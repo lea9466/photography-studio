@@ -45,7 +45,7 @@ const HERO_SLOT_COUNT = 3
 const INPUT_CLASS =
   'border-[#7D3A52]/10 bg-[#7D3A52]/[0.04] shadow-sm transition-[border-color,box-shadow,background-color] focus-visible:border-[#7D3A52]/25 focus-visible:bg-[#7D3A52]/[0.07] focus-visible:ring-2 focus-visible:ring-[#7D3A52]/10'
 const UPLOAD_ZONE_CLASS =
-  'relative cursor-pointer overflow-hidden rounded-xl border border-[--border]/80 bg-white/50 transition-all hover:border-[#7D3A52]/35 hover:shadow-sm hover:shadow-[#7D3A52]/5'
+  'relative cursor-pointer overflow-hidden rounded-xl border border-(--border)/80 bg-white/50 transition-all hover:border-[#7D3A52]/35 hover:shadow-sm hover:shadow-[#7D3A52]/5'
 
 type BrandingUploadType =
   | 'logo'
@@ -162,11 +162,11 @@ function SectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
             <HelpTooltip content={help} where={where} />
           </div>
           {where ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{where}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{where}</p>
           ) : null}
         </div>
       </div>
@@ -184,7 +184,7 @@ function SettingsSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -207,7 +207,7 @@ function SettingsSubPanel({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -548,7 +548,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                 slugError ? 'border-red-400' : 'focus-within:border-[#7D3A52]/25 focus-within:bg-[#7D3A52]/[0.07] focus-within:ring-2 focus-within:ring-[#7D3A52]/10'
               )}
             >
-              <span className="border-l border-[--border]/60 bg-[#7D3A52]/[0.04] px-3 py-3 text-sm text-[--muted]">
+              <span className="border-l border-(--border)/60 bg-[#7D3A52]/[0.04] px-3 py-3 text-sm text-(--muted)">
                 gallery.studio/
               </span>
               <Input
@@ -642,8 +642,8 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
           <SettingsSubPanel>
             <div className="flex items-start gap-1.5">
               <div>
-                <h3 className="text-sm font-semibold text-[--foreground]">רקע יצירת קשר (דף הבית)</h3>
-                <p className="text-xs text-[--muted] mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
+                <h3 className="text-sm font-semibold text-(--foreground)">רקע יצירת קשר (דף הבית)</h3>
+                <p className="text-xs text-(--muted) mt-1">תמונת רקע רק לסקשן יצירת הקשר · במובייל התמונה תהיה בהירה ותתמזג ברקע</p>
               </div>
               <HelpTooltip
                 content={SITE_SETTINGS_HELP.fields.contactBgDesktop.content}
@@ -669,7 +669,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                     className="object-cover pointer-events-none"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <div className="w-full h-full flex items-center justify-center text-(--muted)">
                     <Upload className="h-8 w-8" />
                   </div>
                 )}
@@ -715,7 +715,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                     className="object-cover pointer-events-none"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                  <div className="w-full h-full flex items-center justify-center text-(--muted)">
                     <Upload className="h-8 w-8" />
                   </div>
                 )}
@@ -748,8 +748,8 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
           </SettingsSubPanel>
           <SettingsSubPanel>
             <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-[--foreground]">כותרות טופס יצירת קשר (דף הבית)</h3>
-              <p className="text-xs text-[--muted]">
+              <h3 className="text-sm font-semibold text-(--foreground)">כותרות טופס יצירת קשר (דף הבית)</h3>
+              <p className="text-xs text-(--muted)">
                 חלה על כל ערכות הנושא. שדה ריק יציג את הכותרת/הטקסט המוגדרים כברירת מחדל לערכת הנושא הנבחרת.
               </p>
             </div>
@@ -866,7 +866,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                       className={`relative rounded-xl border-2 p-4 text-right transition-all cursor-pointer ${
                         isSelected
                           ? 'border-[#7D3A52] bg-[#7D3A52]/5'
-                          : 'border-[--border] hover:border-[#7D3A52]/50'
+                          : 'border-(--border) hover:border-[#7D3A52]/50'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -877,7 +877,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                               style={{ backgroundColor: theme.color1 }}
                               title={theme.color1Label}
                             />
-                            <span className="text-[10px] text-[--muted] leading-none">{theme.color1Label}</span>
+                            <span className="text-[10px] text-(--muted) leading-none">{theme.color1Label}</span>
                           </div>
                           <div className="flex flex-col items-center gap-1">
                             <span
@@ -885,7 +885,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                               style={{ backgroundColor: theme.color2 }}
                               title={theme.color2Label}
                             />
-                            <span className="text-[10px] text-[--muted] leading-none">{theme.color2Label}</span>
+                            <span className="text-[10px] text-(--muted) leading-none">{theme.color2Label}</span>
                           </div>
                           <div className="flex flex-col items-center gap-1">
                             <span
@@ -893,7 +893,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                               style={{ backgroundColor: accentColor }}
                               title="צבע המותג שלך"
                             />
-                            <span className="text-[10px] text-[--muted] leading-none">מותג</span>
+                            <span className="text-[10px] text-(--muted) leading-none">מותג</span>
                           </div>
                         </div>
                         <HelpTooltip
@@ -902,8 +902,8 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                           side="bottom"
                         />
                       </div>
-                      <div className="mt-2 font-medium text-[--foreground]">{theme.name}</div>
-                      <div className="text-xs text-[--muted] mt-0.5">{help.tagline}</div>
+                      <div className="mt-2 font-medium text-(--foreground)">{theme.name}</div>
+                      <div className="text-xs text-(--muted) mt-0.5">{help.tagline}</div>
                     </div>
                   )
                 })}
@@ -922,12 +922,12 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   <SelectTrigger id="heading-font" className={INPUT_CLASS}>
                     <SelectValue placeholder="בחרי פונט" />
                   </SelectTrigger>
-                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
+                  <SelectContent className="border border-(--border) bg-white text-(--foreground) shadow-lg">
                     {ALLOWED_FONTS.map((font) => (
                       <SelectItem
                         key={font.value}
                         value={font.value}
-                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
+                        className="focus:bg-[#7D3A52]/10 focus:text-(--foreground)"
                       >
                         <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
                       </SelectItem>
@@ -935,7 +935,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   </SelectContent>
                 </Select>
                 <p
-                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
+                  className="rounded-lg border border-(--border)/70 bg-white/60 px-3 py-2 text-lg text-(--foreground)"
                   style={{ fontFamily: `'${headingFont}', sans-serif` }}
                 >
                   כך נראות הכותרות שלך
@@ -964,9 +964,9 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   </div>
                 ) : (
                   <>
-                    <Upload className="h-10 w-10 text-[--muted] group-hover:text-[--foreground] mb-2 transition-colors mx-auto" />
-                    <p className="text-sm text-[--muted]">גרור לוגו או לחץ להעלאה</p>
-                    <p className="text-xs text-[--muted] mt-1">PNG, SVG (רקע שקוף מומלץ)</p>
+                    <Upload className="h-10 w-10 text-(--muted) group-hover:text-(--foreground) mb-2 transition-colors mx-auto" />
+                    <p className="text-sm text-(--muted)">גרור לוגו או לחץ להעלאה</p>
+                    <p className="text-xs text-(--muted) mt-1">PNG, SVG (רקע שקוף מומלץ)</p>
                   </>
                 )}
               </div>
@@ -1090,7 +1090,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
               >
                 תמונות הירו (דסקטופ) — עד 3 תמונות מתחלפות
               </LabelWithHelp>
-              <p className="text-sm leading-relaxed text-[--muted]">
+              <p className="text-sm leading-relaxed text-(--muted)">
                 התמונות יתחלפו ברקע כל 2 שניות עם אנימציית fade. מומלץ להעלות תמונות לרוחב (שוכבות).
               </p>
             </div>
@@ -1100,7 +1100,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                 const previewSrc = brandingPreviewSrc(targetKey, url)
                 return (
                 <div key={`hero-desktop-${slot}`} className="space-y-2">
-                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <span className="text-xs text-(--muted)">תמונה {slot + 1}</span>
                   <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-video')}>
                     {previewSrc ? (
                       <BrandingPreviewImage
@@ -1110,7 +1110,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                         className="object-cover pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                      <div className="w-full h-full flex items-center justify-center text-(--muted)">
                         <Upload className="h-8 w-8" />
                       </div>
                     )}
@@ -1155,7 +1155,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                 const previewSrc = brandingPreviewSrc(targetKey, url)
                 return (
                 <div key={`hero-mobile-${slot}`} className="space-y-2">
-                  <span className="text-xs text-[--muted]">תמונה {slot + 1}</span>
+                  <span className="text-xs text-(--muted)">תמונה {slot + 1}</span>
                   <div className={cn(UPLOAD_ZONE_CLASS, 'group aspect-[9/16] max-w-[180px]')}>
                     {previewSrc ? (
                       <BrandingPreviewImage
@@ -1165,7 +1165,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                         className="object-cover pointer-events-none"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                      <div className="w-full h-full flex items-center justify-center text-(--muted)">
                         <Upload className="h-8 w-8" />
                       </div>
                     )}
@@ -1246,7 +1246,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                <div className="w-full h-full flex items-center justify-center text-(--muted)">
                   <Upload className="h-8 w-8" />
                 </div>
               )}
@@ -1403,12 +1403,12 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   <SelectTrigger id="about-title-font" className={INPUT_CLASS}>
                     <SelectValue placeholder="בחרי פונט" />
                   </SelectTrigger>
-                  <SelectContent className="border border-[--border] bg-white text-[--foreground] shadow-lg">
+                  <SelectContent className="border border-(--border) bg-white text-(--foreground) shadow-lg">
                     {ALLOWED_FONTS.map((font) => (
                       <SelectItem
                         key={font.value}
                         value={font.value}
-                        className="focus:bg-[#7D3A52]/10 focus:text-[--foreground]"
+                        className="focus:bg-[#7D3A52]/10 focus:text-(--foreground)"
                       >
                         <span style={{ fontFamily: `'${font.value}', sans-serif` }}>{font.name}</span>
                       </SelectItem>
@@ -1416,7 +1416,7 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
                   </SelectContent>
                 </Select>
                 <p
-                  className="rounded-lg border border-[--border]/70 bg-white/60 px-3 py-2 text-lg text-[--foreground]"
+                  className="rounded-lg border border-(--border)/70 bg-white/60 px-3 py-2 text-lg text-(--foreground)"
                   style={{ fontFamily: `'${aboutTitleFont}', sans-serif` }}
                 >
                   כך נראית כותרת האודות

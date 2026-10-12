@@ -177,12 +177,12 @@ export function SubscriptionBillingPanel({
 
   if (!status.configured) {
     return (
-      <section className="rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+      <section className="rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
         <div className="flex items-start gap-4">
           <CreditCard className="mt-0.5 h-5 w-5 text-[#7D3A52]" />
           <div>
-            <h2 className="font-semibold text-[--foreground]">המנוי שלי</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[--muted]">
+            <h2 className="font-semibold text-(--foreground)">המנוי שלי</h2>
+            <p className="mt-2 text-sm leading-relaxed text-(--muted)">
               התשלום ייפתח בימים הקרובים. תקופת הניסיון שלך ממשיכה לפעול כרגיל
               ואינה נפגעת.
             </p>
@@ -199,12 +199,12 @@ export function SubscriptionBillingPanel({
 
   if (status.maintenance) {
     return (
-      <section className="rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+      <section className="rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
         <div className="flex items-start gap-4">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#7D3A52]" />
           <div>
-            <h2 className="font-semibold text-[--foreground]">המנוי שלי</h2>
-            <p className="mt-2 text-sm leading-relaxed text-[--muted]">
+            <h2 className="font-semibold text-(--foreground)">המנוי שלי</h2>
+            <p className="mt-2 text-sm leading-relaxed text-(--muted)">
               אי אפשר לשלם כרגע עקב תקלה טכנית. אנא בדקו שוב בשעות הקרובות.
               <br />
               תקופת הניסיון שלך ממשיכה לפעול כרגיל ואינה נפגעת.
@@ -252,7 +252,7 @@ export function SubscriptionBillingPanel({
     subscription?.status === 'payment_failed' || subscription?.status === 'past_due'
 
   return (
-    <section className="space-y-6 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+    <section className="space-y-6 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
       {checkoutSuccess && subscription?.status === 'active' ? (
         <div className="flex gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
@@ -273,26 +273,26 @@ export function SubscriptionBillingPanel({
           <CreditCard className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[--foreground]">המנוי שלי</h2>
-          <p className="mt-1 text-sm text-[--muted]">
+          <h2 className="text-lg font-semibold text-(--foreground)">המנוי שלי</h2>
+          <p className="mt-1 text-sm text-(--muted)">
             ניהול מסלול החיוב ואמצעי התשלום
           </p>
         </div>
       </div>
 
       {subscription?.status === 'active' && activePlan ? (
-        <div className="grid gap-4 rounded-xl border border-[--border]/60 bg-white/80 p-5 sm:grid-cols-3">
+        <div className="grid gap-4 rounded-xl border border-(--border)/60 bg-white/80 p-5 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-[--muted]">מסלול</p>
-            <p className="mt-1 font-semibold text-[--foreground]">
+            <p className="text-xs text-(--muted)">מסלול</p>
+            <p className="mt-1 font-semibold text-(--foreground)">
               {subscription.paymentType === 'one_time'
                 ? 'תשלום חד-פעמי'
                 : activePlan.name}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[--muted]">מחיר</p>
-            <p className="mt-1 font-semibold text-[--foreground]">
+            <p className="text-xs text-(--muted)">מחיר</p>
+            <p className="mt-1 font-semibold text-(--foreground)">
               {formatPrice(activePlan.amountAgorot, activePlan.currency)}
               {subscription.paymentType === 'one_time'
                 ? ''
@@ -300,8 +300,8 @@ export function SubscriptionBillingPanel({
             </p>
           </div>
           <div>
-            <p className="text-xs text-[--muted]">סטטוס</p>
-            <p className="mt-1 font-semibold text-[--foreground]">
+            <p className="text-xs text-(--muted)">סטטוס</p>
+            <p className="mt-1 font-semibold text-(--foreground)">
               {subscription.cancelAtPeriodEnd
                 ? `פעיל עד ${computeActiveUntil(subscription)}`
                 : STATUS_LABELS[subscription.status] ?? subscription.status}
@@ -309,18 +309,18 @@ export function SubscriptionBillingPanel({
           </div>
           {subscription ? (
             <div className="sm:col-span-3">
-              <p className="text-xs text-[--muted]">
+              <p className="text-xs text-(--muted)">
                 {subscription.paymentType === 'one_time'
                   ? 'המנוי פעיל עד'
                   : subscription.cancelAtPeriodEnd
                     ? 'הגישה פעילה עד'
                     : 'החיוב הבא'}
               </p>
-              <p className="mt-1 text-sm text-[--foreground]">
+              <p className="mt-1 text-sm text-(--foreground)">
                 {computeActiveUntil(subscription)}
               </p>
               {subscription.paymentType === 'one_time' ? (
-                <p className="mt-1 text-xs text-[--muted]">
+                <p className="mt-1 text-xs text-(--muted)">
                   תשלום חד-פעמי — לא יתבצע חיוב אוטומטי בתום התקופה
                 </p>
               ) : null}
@@ -329,7 +329,7 @@ export function SubscriptionBillingPanel({
         </div>
       ) : availablePlans.length > 0 ? (
         <div className="space-y-3">
-          <p className="text-sm text-[--muted]">בחרי מסלול מינוי:</p>
+          <p className="text-sm text-(--muted)">בחרי מסלול מינוי:</p>
           <div className="grid gap-3 sm:grid-cols-2">
               {smokeTestPlans.map((plan) => {
                 const selected = selectedPlan?.code === plan.code
@@ -349,7 +349,7 @@ export function SubscriptionBillingPanel({
                       ? 'border-[#7D3A52] bg-[#7D3A52]/5 ring-1 ring-[#7D3A52]/30'
                       : plan.isHighlighted
                         ? 'border-[#7D3A52]/40 bg-[#7D3A52]/5'
-                        : 'border-[--border]/60 bg-white/80'
+                        : 'border-(--border)/60 bg-white/80'
                     }`}
                 >
                   <button
@@ -360,22 +360,22 @@ export function SubscriptionBillingPanel({
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-[--foreground]">
+                        <p className="font-semibold text-(--foreground)">
                           {plan.name}
                         </p>
-                        <p className="mt-2 flex flex-wrap items-baseline gap-2 text-lg font-bold text-[--foreground]">
+                        <p className="mt-2 flex flex-wrap items-baseline gap-2 text-lg font-bold text-(--foreground)">
                           {plan.compareAtAgorot && plan.compareAtAgorot > plan.amountAgorot ? (
-                            <span className="text-sm font-medium text-[--muted] line-through decoration-1">
+                            <span className="text-sm font-medium text-(--muted) line-through decoration-1">
                               {formatPrice(plan.compareAtAgorot, plan.currency)}
                             </span>
                           ) : null}
                           <span>{formatPrice(plan.amountAgorot, plan.currency)}</span>
-                          <span className="text-sm font-medium text-[--muted]">
+                          <span className="text-sm font-medium text-(--muted)">
                             {formatInterval(plan)}
                           </span>
                         </p>
                         {plan.billingInterval === 'year' ? (
-                          <p className="mt-1 text-xs text-[--muted]">
+                          <p className="mt-1 text-xs text-(--muted)">
                             יוצא{' '}
                             {formatPrice(
                               Math.round(plan.amountAgorot / 12),
@@ -385,7 +385,7 @@ export function SubscriptionBillingPanel({
                           </p>
                         ) : null}
                         {yearlySavings != null ? (
-                          <p className="mt-2 text-xs leading-relaxed text-[--muted]">
+                          <p className="mt-2 text-xs leading-relaxed text-(--muted)">
                             חיסכון של {formatPrice(yearlySavings, plan.currency)} בשנה
                             לעומת המסלול החודשי
                           </p>
@@ -433,7 +433,7 @@ export function SubscriptionBillingPanel({
                     {!status.paymentsFormEnabled &&
                     status.oneTimePaymentEnabled &&
                     cardFormPlanCode !== plan.code ? (
-                      <p className="mt-2 text-xs text-[--muted]">
+                      <p className="mt-2 text-xs text-(--muted)">
                         תשלום חד-פעמי לתקופה — לא מתחדש אוטומטית, תישלח תזכורת
                         לחידוש.
                       </p>
@@ -444,16 +444,16 @@ export function SubscriptionBillingPanel({
             })}
           </div>
           {checkoutEnabled && status.oneTimePaymentEnabled && monthlyPlan ? (
-            <div className="space-y-4 rounded-2xl border border-[--border]/60 bg-gradient-to-br from-[#7D3A52]/[0.06] to-transparent p-5 md:p-6">
+            <div className="space-y-4 rounded-2xl border border-(--border)/60 bg-gradient-to-br from-[#7D3A52]/[0.06] to-transparent p-5 md:p-6">
               <div className="flex items-start gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#7D3A52]/10 text-[#7D3A52]">
                   <Wallet className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="font-semibold text-[--foreground]">
+                  <p className="font-semibold text-(--foreground)">
                     הכרטיס לא עבר? אפשר לשלם מראש
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-[--muted]">
+                  <p className="mt-1 text-sm leading-relaxed text-(--muted)">
                     אם החיוב למעלה נכשל (למשל כרטיס דיירקט שלא תומך בחיוב
                     חוזר), אפשר לשלם כאן מראש לכמה חודשים — תשלום חד-פעמי,
                     בלי חידוש אוטומטי.
@@ -476,7 +476,7 @@ export function SubscriptionBillingPanel({
                       onClick={() => setOneTimeMonths(count)}
                       className={`relative flex cursor-pointer flex-col items-center gap-0.5 rounded-xl border px-4 py-2 transition-all ${isSelected
                           ? 'border-[#7D3A52] bg-[#7D3A52] text-white shadow-sm'
-                          : 'border-[--border]/60 bg-white/70 text-[--foreground] hover:border-[#7D3A52]/40 hover:bg-[#7D3A52]/5'
+                          : 'border-(--border)/60 bg-white/70 text-(--foreground) hover:border-[#7D3A52]/40 hover:bg-[#7D3A52]/5'
                         }`}
                     >
                       {isRecommended ? (
@@ -491,14 +491,14 @@ export function SubscriptionBillingPanel({
                         {count === 1 ? 'חודש' : count === 12 ? 'שנה' : `${count} חודשים`}
                       </span>
                       <span
-                        className={`text-xs ${isSelected ? 'text-white/80' : 'text-[--muted]'}`}
+                        className={`text-xs ${isSelected ? 'text-white/80' : 'text-(--muted)'}`}
                       >
                         {formatPrice(price, monthlyPlan.currency)}
                       </span>
                     </button>
                   )
                 })}
-                <label className="flex items-center gap-2 rounded-full border border-dashed border-[--border]/60 bg-white/50 py-1 pe-3.5 ps-1 text-sm text-[--muted]">
+                <label className="flex items-center gap-2 rounded-full border border-dashed border-(--border)/60 bg-white/50 py-1 pe-3.5 ps-1 text-sm text-(--muted)">
                   <input
                     type="number"
                     min={1}
@@ -510,19 +510,19 @@ export function SubscriptionBillingPanel({
                         setOneTimeMonths(Math.min(24, Math.max(1, value)))
                       }
                     }}
-                    className="w-12 rounded-full bg-transparent text-center font-medium text-[--foreground] outline-none"
+                    className="w-12 rounded-full bg-transparent text-center font-medium text-(--foreground) outline-none"
                   />
                   מספר חודשים מותאם
                 </label>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[--border]/50 bg-white/80 px-4 py-3.5 md:px-5">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-(--border)/50 bg-white/80 px-4 py-3.5 md:px-5">
                 <div>
-                  <p className="text-xs text-[--muted]">סה&quot;כ לתשלום</p>
-                  <p className="mt-0.5 text-2xl font-bold text-[--foreground]">
+                  <p className="text-xs text-(--muted)">סה&quot;כ לתשלום</p>
+                  <p className="mt-0.5 text-2xl font-bold text-(--foreground)">
                     {formatPrice(oneTimeAmountAgorot, monthlyPlan.currency)}
                   </p>
-                  <p className="mt-0.5 text-xs text-[--muted]">
+                  <p className="mt-0.5 text-xs text-(--muted)">
                     עבור{' '}
                     {oneTimeMonths === 1
                       ? 'חודש אחד'
@@ -559,7 +559,7 @@ export function SubscriptionBillingPanel({
           ) : null}
         </div>
       ) : (
-        <p className="text-sm text-[--muted]">אין כרגע מסלול פעיל להצטרפות.</p>
+        <p className="text-sm text-(--muted)">אין כרגע מסלול פעיל להצטרפות.</p>
       )}
 
       {failed ? (
@@ -573,7 +573,7 @@ export function SubscriptionBillingPanel({
       ) : null}
 
       {showComingSoon ? (
-        <p className="text-sm leading-relaxed text-[--muted]">
+        <p className="text-sm leading-relaxed text-(--muted)">
           התשלום ייפתח בימים הקרובים.
           <br />
           תקופת הניסיון שלך ממשיכה לפעול כרגיל ואינה נפגעת.
@@ -581,13 +581,13 @@ export function SubscriptionBillingPanel({
       ) : null}
 
       {checkoutEnabled && !subscription && smokeTestPlans.length > 0 ? (
-        <p className="text-sm leading-relaxed text-[--muted]">
+        <p className="text-sm leading-relaxed text-(--muted)">
           לא יתבצע חיוב אוטומטי ללא בחירתך והזנת אמצעי תשלום.
         </p>
       ) : null}
 
       {isActive ? (
-        <p className="text-sm leading-relaxed text-[--muted]">
+        <p className="text-sm leading-relaxed text-(--muted)">
           המנוי שלך פעיל. אין צורך להצטרף מחדש.
         </p>
       ) : null}
@@ -602,7 +602,7 @@ export function SubscriptionBillingPanel({
         </div>
       ) : null}
 
-      {message ? <p className="text-sm text-[--muted]">{message}</p> : null}
+      {message ? <p className="text-sm text-(--muted)">{message}</p> : null}
 
       <div className="flex flex-wrap gap-3">
         {checkoutEnabled && isActive && subscription.paymentType !== 'one_time' ? (
@@ -635,7 +635,7 @@ export function SubscriptionBillingPanel({
       </div>
 
       {isImpersonating ? (
-        <p className="text-xs text-[--muted]">
+        <p className="text-xs text-(--muted)">
           פעולות חיוב מושבתות בזמן צפייה כמנהלת.
         </p>
       ) : null}

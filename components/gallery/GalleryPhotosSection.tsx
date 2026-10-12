@@ -476,25 +476,22 @@ export function GalleryPhotosSection({
         }`}
       >
         <div className="space-y-6 sm:space-y-8">
-          {storeOriginalPhotos ? (
-            <div className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800">
-              <span className="font-semibold">💡 מומלץ:</span> העלי את התמונות באיכות
-              מלאה — אין צורך לדחוס או להקטין. כך אפשר לאפשר ללקוח הורדת מקור באיכות
-              מלאה (כשההורדה מאושרת), והורדת תמונות הבחירה תהיה באיכות גבוהה ומוכנה
-              לעריכה.
-            </div>
+          {/* One compact notices block instead of a stack of coloured banners. */}
+          {albumLocked && activeTab === 'regular' ? (
+            <p className="flex items-start gap-2 rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/[0.05] px-4 py-3 text-sm text-[#48464c]">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
+              <span>
+                <span className="font-semibold text-[#100d1f]">האלבום נעול.</span> הגלריה
+                נשלחה ללקוח — אי אפשר להוסיף או למחוק תמונות באלבום. תמונות מעובדות
+                מעלים בטאב &quot;מעובדות&quot;.
+              </span>
+            </p>
           ) : null}
           {/* Drag & Drop Zone — hidden on the "רגילות" tab once the album is
               frozen (client gallery sent). The "מעובדות" tab still uploads. */}
-          {albumLocked && activeTab === 'regular' ? (
-            <div className="rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-6 text-center text-sm text-[#48464c]">
-              <span className="font-semibold text-[#100d1f]">האלבום נעול.</span> הגלריה
-              נשלחה ללקוח — לא ניתן להוסיף או למחוק תמונות באלבום. ניתן להעלות תמונות
-              מעובדות בטאב &quot;מעובדות&quot;.
-            </div>
-          ) : (
+          {albumLocked && activeTab === 'regular' ? null : (
           <div
-            className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-6 sm:p-10 md:p-16 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
+            className={`border-2 border-dashed border-[#c9c5cd] bg-white rounded-xl p-5 sm:p-6 md:p-8 flex flex-col items-center justify-center text-center transition-all duration-300 group ${
               atPhotoLimit || isUploading
                 ? 'opacity-50 cursor-not-allowed'
                 : 'cursor-pointer hover:bg-[#f7f2f4]'
@@ -523,6 +520,11 @@ export function GalleryPhotosSection({
             <p className="text-[#48464c] text-sm sm:text-base max-w-sm px-2">
               {photoLimitHint}
             </p>
+            {storeOriginalPhotos ? (
+              <p className="mt-1 max-w-sm px-2 text-xs text-[#7D3A52]">
+                מומלץ להעלות באיכות מלאה, בלי לדחוס — כך תוכלי להוריד את תמונות הבחירה של הלקוח באיכות מלאה, מוכנות לעריכה.
+              </p>
+            ) : null}
             <button
               className="mt-4 sm:mt-6 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border border-[#100d1f] text-[#100d1f] rounded-xl font-semibold hover:bg-[#100d1f] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={(e) => {
@@ -556,13 +558,12 @@ export function GalleryPhotosSection({
 
           {/* Upload Grid */}
           <div className="space-y-4">
-            {activeTab === 'regular' && !publicOnlyMvp && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                <span className="font-semibold">⚠️ לתשומת לב:</span>{' '}
+            {activeTab === 'regular' && !publicOnlyMvp && !albumLocked && (
+              <p className="text-xs leading-relaxed text-[#48464c]">
                 {lockProcessedTab
-                  ? 'טאב "מעובדות" ייפתח אחרי שהלקוח ילחץ על "סיימתי לבחור". אז אפשר יהיה להעלות אליו את התמונות המעובדות.'
-                  : 'כדי להעלות תמונות מעובדות, עבר/י לטאב "מעובדות" למטה'}
-              </div>
+                  ? 'טאב "מעובדות" ייפתח אחרי שהלקוח ילחץ על "סיימתי לבחור".'
+                  : 'להעלאת תמונות מעובדות עברי לטאב "מעובדות".'}
+              </p>
             )}
 
             <div className="space-y-3">

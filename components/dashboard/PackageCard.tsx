@@ -26,7 +26,7 @@ export function PackageCard({
   return (
     <Card
       className={cn(
-        'relative flex h-full flex-col overflow-hidden border-[--border]/80 bg-white/90 shadow-sm transition-all hover:border-[#7D3A52]/20 hover:shadow-md',
+        'relative flex h-full flex-col overflow-hidden border-(--border)/80 bg-white/90 shadow-sm transition-all hover:border-[#7D3A52]/20 hover:shadow-md',
         pkg.is_featured && 'border-2 border-[#7D3A52]/40 ring-1 ring-[#7D3A52]/10',
         !pkg.is_active && 'opacity-60',
         className
@@ -65,7 +65,7 @@ export function PackageCard({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-9 w-9 cursor-pointer rounded-lg border-[#7D3A52]/15 bg-[#7D3A52]/[0.04] text-[--muted] shadow-sm transition-colors hover:border-[#7D3A52]/30 hover:bg-[#7D3A52]/10 hover:text-[#7D3A52]"
+                className="h-9 w-9 cursor-pointer rounded-lg border-[#7D3A52]/15 bg-[#7D3A52]/[0.04] text-(--muted) shadow-sm transition-colors hover:border-[#7D3A52]/30 hover:bg-[#7D3A52]/10 hover:text-[#7D3A52]"
                 onClick={onEdit}
                 disabled={actionsDisabled}
                 aria-label="עריכת חבילה"
@@ -100,7 +100,7 @@ export function PackageCard({
         {pkg.includes.length > 0 ? (
           <ul className="mt-5 flex-1 space-y-2.5 border-t border-[#7D3A52]/10 pt-4">
             {pkg.includes.map((item) => (
-              <li key={item} className="flex items-start gap-2.5 text-sm text-[--muted]">
+              <li key={item} className="flex items-start gap-2.5 text-sm text-(--muted)">
                 <Check
                   aria-hidden
                   className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]"
@@ -111,7 +111,7 @@ export function PackageCard({
             ))}
           </ul>
         ) : (
-          <p className="mt-4 text-sm text-[--muted]">אין פריטים ברשימת &quot;מה כלול&quot;</p>
+          <p className="mt-4 text-sm text-(--muted)">אין פריטים ברשימת &quot;מה כלול&quot;</p>
         )}
       </div>
     </Card>

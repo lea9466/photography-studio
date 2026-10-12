@@ -45,7 +45,7 @@ function PostsSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -68,7 +68,7 @@ function PostsSubPanel({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -101,10 +101,10 @@ function PostsSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -373,7 +373,7 @@ export function PostsManager({
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52]">
               <FileText className="h-7 w-7" />
             </div>
-            <p className="text-sm text-[--muted]">עדיין אין פוסטים. צרי את הפוסט הראשון שלך.</p>
+            <p className="text-sm text-(--muted)">עדיין אין פוסטים. צרי את הפוסט הראשון שלך.</p>
             <Button type="button" onClick={openCreateDialog} className={ACCENT_BUTTON_CLASS}>
               <Plus className="h-4 w-4 ml-1" />
               פוסט חדש
@@ -385,14 +385,14 @@ export function PostsManager({
               <PostsSubPanel key={post.id} className="transition-colors hover:border-[#7D3A52]/20">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1 space-y-2">
-                    <h3 className="font-semibold text-[--foreground]">{post.title}</h3>
+                    <h3 className="font-semibold text-(--foreground)">{post.title}</h3>
                     {post.subtitle ? (
-                      <p className="text-sm text-[--muted]">{post.subtitle}</p>
+                      <p className="text-sm text-(--muted)">{post.subtitle}</p>
                     ) : null}
-                    <p className="line-clamp-2 text-sm leading-relaxed text-[--foreground]/80">
+                    <p className="line-clamp-2 text-sm leading-relaxed text-(--foreground)/80">
                       {post.content}
                     </p>
-                    <p className="text-xs text-[--muted]">
+                    <p className="text-xs text-(--muted)">
                       {formatDate(post.created_at)} · {post.post_photos.length} תמונות
                     </p>
                   </div>
@@ -427,7 +427,7 @@ export function PostsManager({
       </PostsSection>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-[--border]/80">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-(--border)/80">
           <DialogHeader>
             <DialogTitle>{editingId ? 'עריכת פוסט' : 'פוסט חדש'}</DialogTitle>
             <DialogDescription>
@@ -476,7 +476,7 @@ export function PostsManager({
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Label>הטבע סימן מים על תמונות</Label>
-                  <p className="mt-1 text-xs text-[--muted]">
+                  <p className="mt-1 text-xs text-(--muted)">
                     בעת העלאת תמונות לפוסט, הטקסט יוחל על גרסת התצוגה
                   </p>
                 </div>
@@ -503,7 +503,7 @@ export function PostsManager({
                     }
                     className={INPUT_CLASS}
                   />
-                  <p className="text-xs text-[--muted]">
+                  <p className="text-xs text-(--muted)">
                     אם השדה ריק, יוצג שם הסטודיו שלך
                   </p>
                 </div>

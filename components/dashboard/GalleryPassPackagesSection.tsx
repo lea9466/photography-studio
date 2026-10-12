@@ -51,16 +51,16 @@ export function GalleryPassPackagesSection({
   }
 
   return (
-    <section className="rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+    <section className="rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
       <div className="mb-4 flex items-start gap-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
           <Ticket className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[--foreground]">גלריה בודדת — תשלום חד-פעמי</h2>
-          <p className="mt-1 text-sm text-[--muted]">
+          <h2 className="text-lg font-semibold text-(--foreground)">גלריה בודדת — תשלום חד-פעמי</h2>
+          <p className="mt-1 text-sm text-(--muted)">
             הדרך הפשוטה להתחיל: בלי מנוי, פאס לגלריית לקוח אחת, משלמת רק כשיש עבודה.
-            המכסה סופרת <strong className="text-[--foreground]">תמונות רגילות ומעובדות יחד</strong>.
+            המכסה סופרת <strong className="text-(--foreground)">תמונות רגילות ומעובדות יחד</strong>.
           </p>
         </div>
       </div>
@@ -83,10 +83,10 @@ export function GalleryPassPackagesSection({
               className={`flex items-center justify-between rounded-xl border-2 px-4 py-3 text-right transition-all ${
                 active
                   ? 'border-[#7D3A52] bg-[#7D3A52]/5'
-                  : 'border-[--border] hover:border-[#7D3A52]/40'
+                  : 'border-(--border) hover:border-[#7D3A52]/40'
               }`}
             >
-              <span className="text-sm font-semibold text-[--foreground]">{bundle.name}</span>
+              <span className="text-sm font-semibold text-(--foreground)">{bundle.name}</span>
               <span className="text-sm font-bold text-[#7D3A52]">
                 ₪{(bundle.amountAgorot / 100).toLocaleString('he-IL')}
               </span>
@@ -95,7 +95,7 @@ export function GalleryPassPackagesSection({
         })}
       </div>
 
-      <div className="mt-2 text-xs text-[--muted]">
+      <div className="mt-2 text-xs text-(--muted)">
         {selected
           ? `תוקף ${selected.validityDays} ימים ללקוח, מרגע השליחה.`
           : ''}{' '}

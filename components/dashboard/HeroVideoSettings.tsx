@@ -348,12 +348,12 @@ export function HeroVideoSettings({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-base font-semibold text-[--foreground]">סוג ההירו</h3>
+        <h3 className="text-base font-semibold text-(--foreground)">סוג ההירו</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="סוג ההירו">
           <label
             className={cn(
               'cursor-pointer rounded-xl border p-4 transition-colors',
-              heroType === 'images' ? 'border-[#7D3A52] bg-[#7D3A52]/5' : 'border-[--border]'
+              heroType === 'images' ? 'border-[#7D3A52] bg-[#7D3A52]/5' : 'border-(--border)'
             )}
           >
             <span className="flex items-start gap-3">
@@ -367,7 +367,7 @@ export function HeroVideoSettings({
               />
               <span>
                 <span className="block font-medium">תמונות מתחלפות</span>
-                <span className="mt-1 block text-sm text-[--muted]">
+                <span className="mt-1 block text-sm text-(--muted)">
                   שלוש תמונות שמתחלפות במעבר עדין.
                 </span>
               </span>
@@ -378,7 +378,7 @@ export function HeroVideoSettings({
               'rounded-xl border p-4 transition-colors',
               !hasPoster && 'cursor-not-allowed opacity-60',
               hasPoster && 'cursor-pointer',
-              heroType === 'video' ? 'border-[#7D3A52] bg-[#7D3A52]/5' : 'border-[--border]'
+              heroType === 'video' ? 'border-[#7D3A52] bg-[#7D3A52]/5' : 'border-(--border)'
             )}
           >
             <span className="flex items-start gap-3">
@@ -393,7 +393,7 @@ export function HeroVideoSettings({
               />
               <span>
                 <span className="block font-medium">סרטון</span>
-                <span className="mt-1 block text-sm text-[--muted]">
+                <span className="mt-1 block text-sm text-(--muted)">
                   סרטון קצר שמתנגן אוטומטית ברקע ההירו.
                 </span>
               </span>
@@ -408,7 +408,7 @@ export function HeroVideoSettings({
       </div>
 
       {heroType === 'video' ? (
-        <div className="rounded-xl border border-[--border]/70 bg-white/80 p-4">
+        <div className="rounded-xl border border-(--border)/70 bg-white/80 p-4">
           <div className="flex items-center gap-2">
             <h4 className="font-medium">סרטון Hero</h4>
             <HelpTooltip
@@ -429,7 +429,7 @@ export function HeroVideoSettings({
                     <li>מומלץ להימנע מטקסט חשוב בתוך הסרטון</li>
                     <li>תמונת ההירו הראשונה תשמש כתמונת fallback בזמן הטעינה</li>
                   </ul>
-                  <p className="mt-3 border-t border-[--border] pt-2 text-[--muted]">
+                  <p className="mt-3 border-t border-(--border) pt-2 text-(--muted)">
                     סרטון קצר וקל ייטען מהר יותר וייתן חוויה טובה יותר באתר.
                   </p>
                 </>
@@ -451,7 +451,7 @@ export function HeroVideoSettings({
               type="button"
               disabled={busy}
               onClick={() => inputRef.current?.click()}
-              className="mt-4 flex aspect-video w-full max-w-2xl items-center justify-center rounded-lg border border-dashed border-[--border] text-[--muted] hover:border-[#7D3A52]/50"
+              className="mt-4 flex aspect-video w-full max-w-2xl items-center justify-center rounded-lg border border-dashed border-(--border) text-(--muted) hover:border-[#7D3A52]/50"
             >
               <span className="flex flex-col items-center gap-2">
                 <Upload className="h-8 w-8" />
@@ -463,7 +463,7 @@ export function HeroVideoSettings({
           {selected ? (
             <div className="mt-3 text-sm">
               <p className="font-medium">סרטון נבחר</p>
-              <p className="text-[--muted]" dir="ltr">
+              <p className="text-(--muted)" dir="ltr">
                 {selected.name} · {formatBytes(selected.size)} · {formatDuration(selected.duration)} שניות ·{' '}
                 {selected.width}×{selected.height}
               </p>
@@ -492,14 +492,14 @@ export function HeroVideoSettings({
 
           {previewUrl && !uploading ? (
             <div
-              className="mt-4 space-y-3 rounded-xl border border-[--border]/70 bg-[--dashboard-surface] p-4"
+              className="mt-4 space-y-3 rounded-xl border border-(--border)/70 bg-(--dashboard-surface) p-4"
               aria-live="polite"
             >
-              <h5 className="font-semibold text-[--foreground]">זמינות הסרטון ברשת</h5>
+              <h5 className="font-semibold text-(--foreground)">זמינות הסרטון ברשת</h5>
 
               {availabilityStatus === 'idle' ? (
                 <div className="space-y-3">
-                  <p className="text-sm text-[--muted]">
+                  <p className="text-sm text-(--muted)">
                     ניתן לבדוק אם כתובת הסרטון נפתחת במחשב וברשת שבהם את משתמשת כרגע.
                   </p>
                   <Button type="button" size="sm" variant="outline" onClick={() => void checkVideoAvailability()}>
@@ -509,7 +509,7 @@ export function HeroVideoSettings({
               ) : null}
 
               {availabilityStatus === 'checking' ? (
-                <div className="flex items-center gap-2 text-sm text-[--muted]" role="status">
+                <div className="flex items-center gap-2 text-sm text-(--muted)" role="status">
                   <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   <span>בודקת אם הסרטון נגיש ברשת הנוכחית...</span>
                 </div>
@@ -521,7 +521,7 @@ export function HeroVideoSettings({
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-emerald-600" aria-hidden />
                     <div>
                       <p className="font-medium text-emerald-800">הסרטון נפתח ברשת הנוכחית</p>
-                      <p className="text-sm text-[--muted]">
+                      <p className="text-sm text-(--muted)">
                         הבדיקה הצליחה במחשב וברשת שבהם את משתמשת כרגע.
                       </p>
                     </div>
@@ -541,7 +541,7 @@ export function HeroVideoSettings({
                       <p className="font-medium text-amber-900">
                         הסרטון כנראה חסום ברשת הנוכחית
                       </p>
-                      <p className="text-sm text-[--muted]">
+                      <p className="text-sm text-(--muted)">
                         הקובץ הועלה בהצלחה, אך חברת הסינון או הרשת הנוכחית מונעת את טעינתו.
                       </p>
                     </div>
@@ -550,7 +550,7 @@ export function HeroVideoSettings({
                     readOnly
                     value={previewUrl}
                     aria-label="כתובת הסרטון הציבורית"
-                    className="w-full rounded-lg border border-[--border] bg-white px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-(--border) bg-white px-3 py-2 text-sm"
                     dir="ltr"
                   />
                   <div className="flex flex-wrap gap-2">
@@ -579,7 +579,7 @@ export function HeroVideoSettings({
                     </Button>
                   </div>
                   {showFilterRequest ? (
-                    <div className="space-y-2 rounded-lg border border-[--border] bg-white p-3">
+                    <div className="space-y-2 rounded-lg border border-(--border) bg-white p-3">
                       <label htmlFor="hero-video-filter-request" className="text-sm font-medium">
                         נוסח מוכן לפנייה
                       </label>
@@ -588,7 +588,7 @@ export function HeroVideoSettings({
                         readOnly
                         value={FILTER_REQUEST_TEXT(previewUrl)}
                         rows={9}
-                        className="w-full resize-none rounded-lg border border-[--border] p-3 text-sm"
+                        className="w-full resize-none rounded-lg border border-(--border) p-3 text-sm"
                       />
                       <Button type="button" size="sm" onClick={() => void copyFilterRequest()}>
                         <Copy className="me-2 h-4 w-4" aria-hidden />
@@ -596,7 +596,7 @@ export function HeroVideoSettings({
                       </Button>
                     </div>
                   ) : null}
-                  <p className="text-sm text-[--muted]">
+                  <p className="text-sm text-(--muted)">
                     במקרה שהסרטון חסום, האתר יציג אוטומטית את תמונות ההירו במקום הסרטון,
                     כך שלא יישאר אזור ריק.
                   </p>
@@ -608,10 +608,10 @@ export function HeroVideoSettings({
                   <div className="flex items-start gap-2">
                     <CircleHelp className="mt-0.5 h-5 w-5 text-sky-600" aria-hidden />
                     <div>
-                      <p className="font-medium text-[--foreground]">
+                      <p className="font-medium text-(--foreground)">
                         לא הצלחנו לבדוק את הסרטון אוטומטית
                       </p>
-                      <p className="text-sm text-[--muted]">
+                      <p className="text-sm text-(--muted)">
                         לא הצלחנו לאמת את זמינות הסרטון אוטומטית. אפשר לפתוח אותו לבדיקה
                         בכרטיסייה חדשה.
                       </p>
@@ -621,7 +621,7 @@ export function HeroVideoSettings({
                     readOnly
                     value={previewUrl}
                     aria-label="כתובת הסרטון הציבורית"
-                    className="w-full rounded-lg border border-[--border] bg-white px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-(--border) bg-white px-3 py-2 text-sm"
                     dir="ltr"
                   />
                   <div className="flex flex-wrap gap-2">
@@ -643,7 +643,7 @@ export function HeroVideoSettings({
                 </div>
               ) : null}
 
-              <div className="space-y-1 border-t border-[--border] pt-3 text-xs text-[--muted]">
+              <div className="space-y-1 border-t border-(--border) pt-3 text-xs text-(--muted)">
                 <p>הבדיקה מתייחסת לרשת ולחברת הסינון שבהן את משתמשת כרגע.</p>
                 <p>
                   הזמינות נבדקה רק ברשת הנוכחית. ייתכן שהסרטון ייחסם אצל גולשים המשתמשים

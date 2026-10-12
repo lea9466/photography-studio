@@ -26,7 +26,7 @@ function GalleriesSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -74,7 +74,7 @@ export function RecentPhotosSectionTitleSetting({
               <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#7D3A52]/10 px-1.5 text-[10px] font-semibold text-[#7D3A52]">
                 3
               </span>
-              <h2 className="text-lg font-semibold text-[--foreground]">כותרת סקשן תמונות אחרונות</h2>
+              <h2 className="text-lg font-semibold text-(--foreground)">כותרת סקשן תמונות אחרונות</h2>
             </div>
           </div>
         </div>

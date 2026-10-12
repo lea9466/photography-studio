@@ -24,11 +24,11 @@ function AssistantCircleButton({
       aria-label="נועה, עוזרת האתר"
       className={`relative h-10 w-10 shrink-0 rounded-full bg-gradient-to-br ${ASSISTANT_GRADIENT_STOPS} p-[2px] transition-transform duration-200 hover:scale-105`}
     >
-      <span className="flex h-full w-full items-center justify-center rounded-full bg-[--dashboard-background]">
+      <span className="flex h-full w-full items-center justify-center rounded-full bg-transparent">
         <Sparkles className="h-4 w-4 text-amber-500" />
       </span>
       {hasMissingContent ? (
-        <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-[--dashboard-background]" />
+        <span className="absolute -left-0.5 -top-0.5 h-3 w-3 rounded-full bg-amber-500 ring-2 ring-(--dashboard-background)" />
       ) : null}
     </button>
   )
@@ -104,7 +104,7 @@ export function SidebarNav({
   return (
     <aside
       className={cn(
-        'fixed right-0 z-50 flex flex-col border-l border-[--dashboard-border] transition-all duration-300 ease-in-out bg-[--dashboard-background]',
+        'fixed right-0 z-50 flex flex-col border-l border-(--dashboard-border) transition-all duration-300 ease-in-out bg-(--dashboard-background)',
         'top-[65px] h-[calc(100vh-65px)] w-72 max-w-[85vw] shadow-xl',
         'max-md:top-0 max-md:h-dvh max-md:w-full max-md:max-w-none max-md:bg-white max-md:pt-[65px] max-md:border-none max-md:shadow-none',
         'md:top-0 md:h-full md:shadow-none md:z-40',
@@ -117,15 +117,15 @@ export function SidebarNav({
       <button
         onClick={onToggleCollapse}
         className={cn(
-          'absolute p-2 rounded-lg bg-[--dashboard-surface] border border-[--dashboard-border] shadow-md hover:bg-[--dashboard-accent]/10 transition-all duration-200 items-center justify-center hidden md:flex',
+          'absolute p-2 rounded-lg bg-(--dashboard-surface) border border-(--dashboard-border) shadow-md hover:bg-(--dashboard-accent)/10 transition-all duration-200 items-center justify-center hidden md:flex',
           isCollapsed ? 'right-2 top-4' : 'left-4 top-4'
         )}
         aria-label={isCollapsed ? 'פתח תפריט' : 'סגור תפריט'}
       >
         {isCollapsed ? (
-          <Menu className="h-5 w-5 text-[--dashboard-foreground]" />
+          <Menu className="h-5 w-5 text-(--dashboard-foreground)" />
         ) : (
-          <X className="h-5 w-5 text-[--dashboard-foreground]" />
+          <X className="h-5 w-5 text-(--dashboard-foreground)" />
         )}
       </button>
 
@@ -135,7 +135,7 @@ export function SidebarNav({
           showExpanded ? 'opacity-100' : 'opacity-0 w-0 overflow-hidden p-0'
         )}
       >
-        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-[--dashboard-border] bg-[--dashboard-foreground] text-white">
+        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-(--dashboard-border) bg-transparent text-white">
           <Logo
             logoUrl={logoUrl}
             accentColor={accentColor}
@@ -143,10 +143,10 @@ export function SidebarNav({
           />
         </div>
         <div>
-          <h2 className="font-semibold text-lg text-[--dashboard-foreground]">
+          <h2 className="font-semibold text-lg text-(--dashboard-foreground)">
             {studioName || 'סטודיו לצילום'}
           </h2>
-          <p className="text-sm text-[--dashboard-muted]">ניהול מערכת</p>
+          <p className="text-sm text-(--dashboard-muted)">ניהול מערכת</p>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export function SidebarNav({
 
       <div
         className={cn(
-          'mt-auto border-t border-[--dashboard-border] transition-all duration-300 space-y-3 max-md:bg-white',
+          'mt-auto border-t border-(--dashboard-border) transition-all duration-300 space-y-3 max-md:bg-white',
           showExpanded ? 'p-4' : 'p-2 flex flex-col items-center gap-2'
         )}
       >
@@ -179,7 +179,7 @@ export function SidebarNav({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={onMobileClose}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border border-[--dashboard-accent]/20 hover:bg-[--dashboard-accent]/20 transition-all duration-200"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-(--dashboard-accent)/10 text-(--dashboard-accent) font-semibold border border-(--dashboard-accent)/20 hover:bg-(--dashboard-accent)/20 transition-all duration-200"
               >
                 <ExternalLink className="h-5 w-5" />
                 <span className="text-sm">צפי באתר שלי</span>
@@ -195,7 +195,7 @@ export function SidebarNav({
                     'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-right transition-all duration-200',
                     underConstruction
                       ? 'border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100'
-                      : 'border-[--dashboard-border] bg-[--dashboard-surface] text-[--dashboard-muted] hover:text-[--dashboard-foreground] hover:bg-[--dashboard-surface]'
+                      : 'border-(--dashboard-border) bg-(--dashboard-surface) text-(--dashboard-muted) hover:text-(--dashboard-foreground) hover:bg-(--dashboard-surface)'
                   )}
                 >
                   {underConstruction ? (
@@ -223,7 +223,7 @@ export function SidebarNav({
 
         {!showExpanded ? (
           <>
-            <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
+            <div className="w-10 h-10 rounded-full bg-(--dashboard-accent)/10 flex items-center justify-center text-(--dashboard-accent) font-semibold border border-(--dashboard-border)">
               {userName?.charAt(0) || 'U'}
             </div>
             {onOpenAssistant ? (
@@ -239,7 +239,7 @@ export function SidebarNav({
         ) : (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-[--dashboard-accent]/10 flex items-center justify-center text-[--dashboard-accent] font-semibold border border-[--dashboard-border]">
+              <div className="w-10 h-10 rounded-full bg-(--dashboard-accent)/10 flex items-center justify-center text-(--dashboard-accent) font-semibold border border-(--dashboard-border)">
                 {userName?.charAt(0) || 'U'}
               </div>
               {onOpenAssistant ? (
@@ -253,10 +253,10 @@ export function SidebarNav({
               ) : null}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[--dashboard-foreground] truncate">
+              <p className="text-sm font-semibold text-(--dashboard-foreground) truncate">
                 {userName || 'משתמש'}
               </p>
-              <p className="text-xs text-[--dashboard-accent] font-medium">מחובר</p>
+              <p className="text-xs text-(--dashboard-accent) font-medium">מחובר</p>
             </div>
             {onSignOut && (
               <button
@@ -265,7 +265,7 @@ export function SidebarNav({
                   onMobileClose?.()
                   onSignOut()
                 }}
-                className="p-2 rounded-lg hover:bg-red-50 text-[--dashboard-muted] hover:text-red-600 transition-colors"
+                className="p-2 rounded-lg hover:bg-red-50 text-(--dashboard-muted) hover:text-red-600 transition-colors"
                 aria-label="התנתקות"
               >
                 <LogOut className="h-5 w-5" />

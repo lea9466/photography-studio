@@ -23,7 +23,7 @@ export default async function PhotoEditsPage() {
       <div className="animate-fade-in mx-auto max-w-5xl space-y-6 p-6 md:p-10">
         <div>
           <h1 className="text-2xl font-semibold">לפני ואחרי עיבוד</h1>
-          <p className="mt-1 text-sm text-[--muted]">
+          <p className="mt-1 text-sm text-(--muted)">
             הציגי ללקוחות את ההבדל בין התמונה המקורית לבין התוצאה המעובדת.
           </p>
         </div>
@@ -74,7 +74,7 @@ export default async function PhotoEditsPage() {
     <div className="animate-fade-in mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <div>
         <h1 className="text-2xl font-semibold">לפני ואחרי עיבוד</h1>
-        <p className="mt-1 text-sm text-[--muted]">
+        <p className="mt-1 text-sm text-(--muted)">
           הציגי ללקוחות את ההבדל בין התמונה המקורית לבין התוצאה המעובדת.
         </p>
       </div>

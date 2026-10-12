@@ -123,7 +123,8 @@ export function DashboardLayoutWrapper({
 
       {/* Main Content */}
       <main className={cn(
-        'p-4 md:p-10 min-h-screen transition-all duration-300 ease-in-out bg-white',
+        // Secondary text reads darker in the dashboard than the public-site --muted.
+        '[--muted:#48464c] p-4 md:p-10 min-h-screen transition-all duration-300 ease-in-out bg-white',
         isImpersonating ? 'pt-28 md:pt-16' : 'pt-20 md:pt-10',
         isSidebarCollapsed ? 'md:mr-16' : 'md:mr-72'
       )}>

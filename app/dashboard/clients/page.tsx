@@ -19,7 +19,7 @@ export default async function ClientsPage() {
     <div className="animate-fade-in space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">לקוחות</h1>
-        <p className="mt-1 text-sm text-[--muted]">
+        <p className="mt-1 text-sm text-(--muted)">
           נהל את רשימת הלקוחות שלך
         </p>
       </div>

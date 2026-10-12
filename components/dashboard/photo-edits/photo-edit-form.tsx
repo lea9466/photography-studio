@@ -228,7 +228,7 @@ export function PhotoEditForm({
 
   return (
     <div className="space-y-5">
-      <div className="space-y-4 rounded-xl border border-[--border] px-4 py-3">
+      <div className="space-y-4 rounded-xl border border-(--border) px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <Label>הטבע סימן מים על תמונות</Label>
@@ -255,7 +255,7 @@ export function PhotoEditForm({
                 studioName ? `ברירת מחדל: ${studioName}` : 'למשל: © שם הסטודיו'
               }
             />
-            <p className="text-xs text-[--muted]">אם השדה ריק, יוצג שם הסטודיו שלך</p>
+            <p className="text-xs text-(--muted)">אם השדה ריק, יוצג שם הסטודיו שלך</p>
           </div>
         ) : null}
       </div>
@@ -263,9 +263,9 @@ export function PhotoEditForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="photo-edit-original">התמונה המקורית</Label>
-          <p className="text-xs text-[--muted]">העלי את התמונה לפני העיבוד.</p>
-          <div className="overflow-hidden rounded-lg border border-[--border] bg-[--dashboard-surface]">
-            <div className="relative aspect-[4/3] bg-[--muted]/10">
+          <p className="text-xs text-(--muted)">העלי את התמונה לפני העיבוד.</p>
+          <div className="overflow-hidden rounded-lg border border-(--border) bg-(--dashboard-surface)">
+            <div className="relative aspect-[4/3] bg-(--muted)/10">
               {form.originalPreviewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -274,13 +274,13 @@ export function PhotoEditForm({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[--muted]">
+                <div className="flex h-full items-center justify-center text-sm text-(--muted)">
                   אין תמונה
                 </div>
               )}
             </div>
             <div className="p-3">
-              <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-[--foreground]">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-(--foreground)">
                 <Upload className="h-4 w-4" />
                 {uploadingOriginal ? 'מעלה...' : form.originalImageUrl ? 'החלפת תמונה' : 'העלאת תמונה'}
                 <input
@@ -298,9 +298,9 @@ export function PhotoEditForm({
 
         <div className="space-y-2">
           <Label htmlFor="photo-edit-edited">התמונה המעובדת</Label>
-          <p className="text-xs text-[--muted]">העלי את התוצאה הסופית לאחר העיבוד.</p>
-          <div className="overflow-hidden rounded-lg border border-[--border] bg-[--dashboard-surface]">
-            <div className="relative aspect-[4/3] bg-[--muted]/10">
+          <p className="text-xs text-(--muted)">העלי את התוצאה הסופית לאחר העיבוד.</p>
+          <div className="overflow-hidden rounded-lg border border-(--border) bg-(--dashboard-surface)">
+            <div className="relative aspect-[4/3] bg-(--muted)/10">
               {form.editedPreviewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -309,13 +309,13 @@ export function PhotoEditForm({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[--muted]">
+                <div className="flex h-full items-center justify-center text-sm text-(--muted)">
                   אין תמונה
                 </div>
               )}
             </div>
             <div className="p-3">
-              <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-[--foreground]">
+              <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-(--foreground)">
                 <Upload className="h-4 w-4" />
                 {uploadingEdited ? 'מעלה...' : form.editedImageUrl ? 'החלפת תמונה' : 'העלאת תמונה'}
                 <input
@@ -351,7 +351,7 @@ export function PhotoEditForm({
           disabled={busy}
           onChange={(e) => setForm((current) => ({ ...current, title: e.target.value }))}
         />
-        <p className="text-xs text-[--muted]">{form.title.length}/80</p>
+        <p className="text-xs text-(--muted)">{form.title.length}/80</p>
       </div>
 
       <div className="space-y-2">
@@ -365,14 +365,14 @@ export function PhotoEditForm({
           disabled={busy}
           onChange={(e) => setForm((current) => ({ ...current, description: e.target.value }))}
         />
-        <p className="text-xs text-[--muted]">{form.description.length}/180</p>
+        <p className="text-xs text-(--muted)">{form.description.length}/180</p>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-[--border] px-4 py-3">
+      <div className="space-y-4 rounded-xl border border-(--border) px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <Label>הציגי את הזוג באתר</Label>
-            <p className="mt-1 text-xs text-[--muted]">
+            <p className="mt-1 text-xs text-(--muted)">
               כאשר כבוי, הזוג יישאר שמור אך מוסתר מהאתר הציבורי.
             </p>
           </div>

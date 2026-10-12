@@ -74,7 +74,7 @@ export function PostsDisplayStyleSetting({
                 'rounded-xl border-2 p-4 text-right transition-all',
                 selected
                   ? 'border-[#7D3A52] bg-[#7D3A52]/5 shadow-sm'
-                  : 'border-[--border]/80 bg-white/80 hover:border-[#7D3A52]/35',
+                  : 'border-(--border)/80 bg-white/80 hover:border-[#7D3A52]/35',
                 isPending && 'cursor-wait opacity-60'
               )}
             >
@@ -95,18 +95,18 @@ export function PostsDisplayStyleSetting({
                           'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
                           selected
                             ? 'border-[#7D3A52] bg-[#7D3A52] text-white'
-                            : 'border-[--border] text-transparent'
+                            : 'border-(--border) text-transparent'
                         )}
                       >
                         <Check className="h-3 w-3" />
                       </span>
-                      <p className="font-semibold text-[--foreground]">{option.title}</p>
+                      <p className="font-semibold text-(--foreground)">{option.title}</p>
                     </div>
                     {option.isNew ? (
                       <Badge className="shrink-0 bg-[#7D3A52]">חדש!</Badge>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-[--muted]">
+                  <p className="mt-1 text-sm leading-relaxed text-(--muted)">
                     {option.description}
                   </p>
                 </div>

@@ -1,4 +1,12 @@
-import { Zap, Info, Settings, Image as ImageIcon, Upload, Link as LinkIcon, Lock } from 'lucide-react'
+import {
+  Zap,
+  Info,
+  Settings,
+  Image as ImageIcon,
+  Upload,
+  Link as LinkIcon,
+  Lock,
+} from 'lucide-react'
 import { fetchGallerySelections, fetchGalleryPhotos } from '@/lib/actions/photo.actions'
 import { resolveWatermarkText } from '@/lib/images/process'
 import { resolvePrivateGalleryPaths } from '@/lib/storage'
@@ -6,7 +14,11 @@ import { getPrivateGalleryBaseUrl } from '@/lib/private-gallery-url'
 import { isPhotoLimitTestUser } from '@/lib/gallery-photo-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
-import { DOWNLOAD_PERMISSIONS_ENABLED, isClientSelectionComplete } from '@/lib/types/app.types'
+import {
+  DOWNLOAD_PERMISSIONS_ENABLED,
+  GALLERY_STATUS_LABELS,
+  isClientSelectionComplete,
+} from '@/lib/types/app.types'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
 import {
   Card,
@@ -21,6 +33,7 @@ import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
 import { ClientGalleryEditForm } from '@/components/dashboard/ClientGalleryEditForm'
 import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
+import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
 
 type ClientGalleryDetailProps = {
   gallery: Gallery
@@ -32,10 +45,19 @@ type ClientGalleryDetailProps = {
 
 const SECTION_CLASS = 'relative space-y-6 rounded-xl border border-[#c9c5cd] p-6'
 
+/** What the photographer should do next, per gallery status. Display only. */
+const NEXT_STEP: Partial<Record<Gallery['status'], string>> = {
+  draft: 'העלי תמונות ושלחי ללקוח',
+  selection: 'ממתינה שהלקוח יסיים לבחור תמונות',
+  editing: 'הלקוח סיים לבחור — העלי את התמונות המעובדות',
+  delivery_ready: 'הגלריה נמסרה — אין צעד נוסף',
+}
+
 /**
  * Manage view for a private client gallery — the full client-delivery surface:
- * actions (send / status / delivery), client details + access link, settings,
- * the client's selections, photo upload (originals included).
+ * status + next step, actions (send / delivery), the client's selections, photo
+ * upload (originals included), and — folded away, since they're set-and-forget —
+ * client details + access link and gallery settings.
  */
 export async function ClientGalleryDetail({
   gallery,
@@ -101,19 +123,25 @@ export async function ClientGalleryDetail({
     ? ((await resolvePrivateGalleryPaths('previews', [coverPath]))[coverPath] ?? null)
     : null
 
+  const selectionsCount = albumPhotos.length + editPhotos.length
+  const nextStep = NEXT_STEP[gallery.status]
+
   return (
-    <div className="animate-fade-in space-y-8 sm:space-y-12">
-      {/* Deep-link from the "client finished selecting" email (?section=selections). */}
+    <div className="animate-fade-in space-y-6 sm:space-y-8">
+      {/* Deep-link from the "client finished selecting" email (?section=selections).
+          The selections CollapsibleSection opens itself for that same param. */}
       <ScrollToSection />
 
-      <section className={SECTION_CLASS}>
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-xl font-semibold text-[#100d1f]">
-            <Zap className="h-5 w-5" />
-            פעולות
-          </h2>
-          <p className="text-sm text-[#48464c]">שליחה ללקוח, תצוגה מקדימה וניהול סטטוס</p>
-        </div>
+      {/* Every topic is the same folded card: title, one-line digest, details on
+          open. Photos come last — they are the bulk of the page. */}
+      <CollapsibleSection
+        id="actions"
+        tone="burgundy"
+        icon={<Zap className="h-5 w-5" />}
+        title="פעולות"
+        summary={`${GALLERY_STATUS_LABELS[gallery.status] ?? gallery.status}${nextStep ? ` · ${nextStep}` : ''}`}
+        defaultOpen
+      >
         <GalleryActions
           galleryId={gallery.id}
           galleryTitle={gallery.title}
@@ -122,17 +150,36 @@ export async function ClientGalleryDetail({
           clientLink={clientLink}
           publicOnlyMvp={false}
         />
-      </section>
+      </CollapsibleSection>
 
-      <section className={SECTION_CLASS}>
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-xl font-semibold text-[#100d1f]">
-            <Info className="h-5 w-5" />
-            פרטים
-          </h2>
-          <p className="text-sm text-[#48464c]">פרטי לקוח, לינק גישה והגדרות בחירה</p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2">
+      <CollapsibleSection
+        id="selections"
+        tone="burgundy"
+        icon={<ImageIcon className="h-5 w-5" />}
+        title="בחירות הלקוח"
+        summary={`אלבום ${albumPhotos.length} · לעיבוד ${editPhotos.length}`}
+        defaultOpen={selectionsCount > 0}
+      >
+        <SelectionsView
+          galleryId={gallery.id}
+          clientName={client?.name?.trim() || 'לקוח'}
+          albumPhotos={albumPhotos}
+          editPhotos={editPhotos}
+        />
+      </CollapsibleSection>
+
+      <div className="grid items-start gap-4 md:grid-cols-2">
+      <CollapsibleSection
+        tone="violet"
+        icon={<Info className="h-5 w-5" />}
+        title="לקוח וקישור גישה"
+        summary={
+          client
+            ? [client.name, client.email].filter(Boolean).join(' · ')
+            : 'לא משויך לקוח'
+        }
+      >
+        <div className="space-y-4">
           {client ? (
             <ClientEditForm client={client} galleryId={gallery.id} />
           ) : (
@@ -151,7 +198,7 @@ export async function ClientGalleryDetail({
               <CardTitle className="text-[#100d1f]">גישה</CardTitle>
               <CardDescription className="text-[#48464c]">לינק ללקוח</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-[#48464c]">
                   <LinkIcon className="h-4 w-4" />
@@ -164,97 +211,53 @@ export async function ClientGalleryDetail({
                   </p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-[#48464c]">
-                  <Lock className="h-4 w-4" />
-                  קוד כניסה
-                </div>
-                <p className="rounded-lg border border-[#c9c5cd] bg-[#f7f2f4] p-3 text-sm leading-relaxed text-[#48464c]">
-                  הלקוח מבקש קוד חד-פעמי שנשלח למייל שלו, והקוד פג לאחר שימוש. אין
-                  סיסמה קבועה.
-                </p>
-              </div>
-              {settings?.max_album_selection != null && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-medium text-[#48464c]">
-                    <ImageIcon className="h-4 w-4" />
-                    מקסימום אלבום
-                  </div>
-                  <div className="rounded-lg border border-[#c9c5cd] bg-[#f7f2f4] p-3">
-                    <p className="text-sm font-medium text-[#100d1f]">
-                      {settings.max_album_selection}
-                    </p>
-                  </div>
-                </div>
-              )}
+              <p className="flex items-start gap-2 text-xs leading-relaxed text-[#48464c]">
+                <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                הלקוח מקבל קוד חד-פעמי למייל בכל כניסה. אין סיסמה קבועה.
+              </p>
             </CardContent>
           </Card>
         </div>
-      </section>
+      </CollapsibleSection>
 
-      <section className="space-y-4 sm:space-y-6">
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
-            <Settings className="h-5 w-5" />
-            הגדרות
-          </h2>
-          <p className="text-sm text-[#48464c]">
-            תמונת כיסוי, שם, תפוגה, מגבלות בחירה, הרשאות הורדה וסימן מים
-          </p>
-        </div>
-        <Card className="border-[#c9c5cd] shadow-sm">
-          <CardHeader className="px-4 sm:px-6">
-            <CardTitle className="text-[#100d1f]">עריכת הגדרות</CardTitle>
-            <CardDescription className="text-[#48464c]">
-              שינויים נשמרים בלחיצה על &quot;שמור הגדרות&quot;
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6">
-            <ClientGalleryEditForm
-              gallery={{
-                id: gallery.id,
-                title: gallery.title,
-                expires_at: gallery.expires_at,
-              }}
-              locked={albumLocked}
-              settings={settings}
-              downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED}
-              coverUrl={coverUrl}
-            />
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* id + scroll-mt: the "selection done" email links straight here (#selections),
-          the margin keeps the heading clear of the fixed mobile header. */}
-      <section id="selections" className={`${SECTION_CLASS} scroll-mt-24 md:scroll-mt-8`}>
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-xl font-semibold text-[#100d1f]">
-            <ImageIcon className="h-5 w-5" />
-            בחירות
-          </h2>
-          <p className="text-sm text-[#48464c]">בחירות הלקוח ותמונות מעובדות</p>
-        </div>
-        <SelectionsView
-          galleryId={gallery.id}
-          clientName={client?.name?.trim() || 'לקוח'}
-          albumPhotos={albumPhotos}
-          editPhotos={editPhotos}
+      <CollapsibleSection
+        tone="violet"
+        icon={<Settings className="h-5 w-5" />}
+        title="הגדרות הגלריה"
+        summary={[
+          gallery.title,
+          gallery.expires_at
+            ? `תפוגה ${new Date(gallery.expires_at).toLocaleDateString('he-IL')}`
+            : 'ללא תפוגה',
+          settings?.auto_apply_watermark === false ? 'ללא סימן מים' : 'סימן מים פעיל',
+        ].join(' · ')}
+      >
+        <ClientGalleryEditForm
+          gallery={{
+            id: gallery.id,
+            title: gallery.title,
+            expires_at: gallery.expires_at,
+          }}
+          locked={albumLocked}
+          settings={settings}
+          downloadPermissionsEnabled={DOWNLOAD_PERMISSIONS_ENABLED}
+          coverUrl={coverUrl}
         />
-      </section>
+      </CollapsibleSection>
+      </div>
 
-      <section className="space-y-4 sm:space-y-6">
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#100d1f] sm:text-xl">
-            <Upload className="h-5 w-5" />
-            העלאה וניהול
-          </h2>
-          <p className="text-sm text-[#48464c]">
-            {albumLocked
-              ? 'הגלריה נשלחה ללקוח — אלבום המקור נעול. ניתן להעלות תמונות מעובדות בלבד.'
-              : 'העלאת תמונות חדשות — בגלריית לקוח נשמרות גם תמונות המקור'}
-          </p>
-        </div>
+      <CollapsibleSection
+        id="photos"
+        tone="burgundy"
+        icon={<Upload className="h-5 w-5" />}
+        title="תמונות"
+        summary={
+          albumLocked
+            ? `${photos.length} תמונות · אלבום המקור נעול`
+            : `${photos.length} תמונות`
+        }
+        defaultOpen
+      >
         <GalleryPhotosSection
           galleryId={gallery.id}
           userId={userId}
@@ -275,7 +278,7 @@ export async function ClientGalleryDetail({
           watermarkPlacement="center"
           albumLocked={albumLocked}
         />
-      </section>
+      </CollapsibleSection>
     </div>
   )
 }

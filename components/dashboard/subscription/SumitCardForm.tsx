@@ -208,10 +208,10 @@ export function SumitCardForm({
 
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="font-semibold text-[--foreground]">{planName}</p>
-          <p className="text-sm text-[--muted]">{priceLabel} — חידוש אוטומטי</p>
+          <p className="font-semibold text-(--foreground)">{planName}</p>
+          <p className="text-sm text-(--muted)">{priceLabel} — חידוש אוטומטי</p>
         </div>
-        <span className="flex items-center gap-1 text-xs text-[--muted]">
+        <span className="flex items-center gap-1 text-xs text-(--muted)">
           <Lock className="h-3.5 w-3.5" />
           תשלום מאובטח דרך SUMIT
         </span>
@@ -229,56 +229,56 @@ export function SumitCardForm({
           className="space-y-3"
         >
           <label className="block text-sm">
-            <span className="text-[--muted]">מספר כרטיס</span>
+            <span className="text-(--muted)">מספר כרטיס</span>
             <input
               data-og="cardnumber"
               inputMode="numeric"
               autoComplete="cc-number"
               placeholder="0000 0000 0000 0000"
-              className="mt-1 w-full rounded-lg border border-[--border]/70 bg-white px-3 py-2 text-right outline-none focus:border-[#7D3A52]"
+              className="mt-1 w-full rounded-lg border border-(--border)/70 bg-white px-3 py-2 text-right outline-none focus:border-[#7D3A52]"
             />
           </label>
 
           <div className="grid grid-cols-3 gap-3">
             <label className="block text-sm">
-              <span className="text-[--muted]">חודש</span>
+              <span className="text-(--muted)">חודש</span>
               <input
                 data-og="expirationmonth"
                 inputMode="numeric"
                 autoComplete="cc-exp-month"
                 placeholder="MM"
-                className="mt-1 w-full rounded-lg border border-[--border]/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
+                className="mt-1 w-full rounded-lg border border-(--border)/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-[--muted]">שנה</span>
+              <span className="text-(--muted)">שנה</span>
               <input
                 data-og="expirationyear"
                 inputMode="numeric"
                 autoComplete="cc-exp-year"
                 placeholder="YYYY"
-                className="mt-1 w-full rounded-lg border border-[--border]/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
+                className="mt-1 w-full rounded-lg border border-(--border)/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
               />
             </label>
             <label className="block text-sm">
-              <span className="text-[--muted]">CVV</span>
+              <span className="text-(--muted)">CVV</span>
               <input
                 data-og="cvv"
                 inputMode="numeric"
                 autoComplete="cc-csc"
                 placeholder="123"
-                className="mt-1 w-full rounded-lg border border-[--border]/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
+                className="mt-1 w-full rounded-lg border border-(--border)/70 bg-white px-3 py-2 text-center outline-none focus:border-[#7D3A52]"
               />
             </label>
           </div>
 
           <label className="block text-sm">
-            <span className="text-[--muted]">תעודת זהות של בעל/ת הכרטיס</span>
+            <span className="text-(--muted)">תעודת זהות של בעל/ת הכרטיס</span>
             <input
               data-og="citizenid"
               inputMode="numeric"
               placeholder="000000000"
-              className="mt-1 w-full rounded-lg border border-[--border]/70 bg-white px-3 py-2 text-right outline-none focus:border-[#7D3A52]"
+              className="mt-1 w-full rounded-lg border border-(--border)/70 bg-white px-3 py-2 text-right outline-none focus:border-[#7D3A52]"
             />
           </label>
 
@@ -294,7 +294,7 @@ export function SumitCardForm({
               ביטול
             </Button>
           </div>
-          <p className="text-xs text-[--muted]">
+          <p className="text-xs text-(--muted)">
             המנוי מתחדש אוטומטית בסוף כל תקופה. אפשר לבטל בכל עת מהעמוד הזה.
           </p>
         </form>

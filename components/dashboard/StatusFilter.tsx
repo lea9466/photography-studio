@@ -19,7 +19,7 @@ type StatusFilterProps = {
 export function StatusFilter({ current }: StatusFilterProps) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-[--muted]">סינון לפי סטטוס</p>
+      <p className="text-sm font-medium text-(--muted)">סינון לפי סטטוס</p>
       <div className="flex flex-wrap gap-2">
         {FILTER_OPTIONS.map((option) => (
           <Button

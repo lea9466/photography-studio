@@ -32,7 +32,7 @@ function FaqSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -55,7 +55,7 @@ function FaqSubPanel({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -88,10 +88,10 @@ function FaqSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -100,7 +100,7 @@ function FaqSectionHeader({
 }
 
 const UPLOAD_ZONE_CLASS =
-  'relative cursor-pointer overflow-hidden rounded-xl border border-[--border]/80 bg-[#7D3A52]/[0.03] transition-all hover:border-[#7D3A52]/25'
+  'relative cursor-pointer overflow-hidden rounded-xl border border-(--border)/80 bg-[#7D3A52]/[0.03] transition-all hover:border-[#7D3A52]/25'
 
 function UploadSpinnerOverlay({ show }: { show: boolean }) {
   if (!show) return null
@@ -267,7 +267,7 @@ export function FaqItemsForm({
                   className="object-cover pointer-events-none"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-[--muted]">
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-(--muted)">
                   <Upload className="h-8 w-8" />
                   <span className="text-xs">העלאת תמונה</span>
                 </div>
@@ -310,7 +310,7 @@ export function FaqItemsForm({
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[--muted]">
+          <p className="text-sm text-(--muted)">
             {savedItems.length === 0
               ? 'עדיין אין שאלות — הוסיפי את הראשונה'
               : `${savedItems.length} שאלות פעילות באתר`}
@@ -326,8 +326,8 @@ export function FaqItemsForm({
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52]">
               <HelpCircle className="h-7 w-7" />
             </div>
-            <p className="text-sm text-[--muted]">עדיין אין שאלות נפוצות — בינתיים הסקשן לא יופיע בדף הבית.</p>
-            <p className="text-xs text-[--muted]">
+            <p className="text-sm text-(--muted)">עדיין אין שאלות נפוצות — בינתיים הסקשן לא יופיע בדף הבית.</p>
+            <p className="text-xs text-(--muted)">
               לדוגמה: &quot;כמה זמן לוקח לקבל את התמונות?&quot; — &quot;עד 3 שבועות מיום הצילום&quot;
             </p>
             <Button type="button" onClick={addItem} disabled={isPending} className={ACCENT_BUTTON_CLASS}>
@@ -364,16 +364,16 @@ export function FaqItemsForm({
                           }
                           className="flex w-full items-start justify-between gap-3 text-right"
                         >
-                          <span className="font-semibold text-[--foreground]">{item.question}</span>
+                          <span className="font-semibold text-(--foreground)">{item.question}</span>
                           <ChevronDown
                             className={cn(
-                              'mt-1 h-4 w-4 shrink-0 text-[--muted] transition-transform',
+                              'mt-1 h-4 w-4 shrink-0 text-(--muted) transition-transform',
                               isExpanded && 'rotate-180'
                             )}
                           />
                         </button>
                         {isExpanded ? (
-                          <p className="whitespace-pre-line border-t border-[#7D3A52]/10 pt-3 text-sm leading-relaxed text-[--muted]">
+                          <p className="whitespace-pre-line border-t border-[#7D3A52]/10 pt-3 text-sm leading-relaxed text-(--muted)">
                             {item.answer}
                           </p>
                         ) : null}
@@ -411,7 +411,7 @@ export function FaqItemsForm({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-[--foreground]">
+                        <span className="text-sm font-medium text-(--foreground)">
                           {complete ? `עריכת שאלה ${index + 1}` : `שאלה חדשה ${index + 1}`}
                         </span>
                         {!complete ? <Badge variant="muted">טיוטה</Badge> : null}

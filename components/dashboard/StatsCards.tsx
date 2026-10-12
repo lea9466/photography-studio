@@ -73,7 +73,8 @@ function StatCard({ title, value, subtitle, icon, tone, emphasis = false, isActi
         // Base styles
         'border rounded-xl hover:shadow-sm transition-all cursor-pointer relative',
         styles.card,
-        isActive && 'ring-2 ring-[--accent] ring-offset-2',
+        isActive && 'ring-2 ring-[#7D3A52] ring-offset-2',
+        value === 0 && !isActive && 'opacity-60',
 
         // Mobile layout
         'flex flex-row items-center justify-between p-4 min-h-0',
@@ -91,10 +92,10 @@ function StatCard({ title, value, subtitle, icon, tone, emphasis = false, isActi
 
         {/* Content stacked neatly and aligned to the right */}
         <div className="pr-2"> {/* Optional right padding to match design */}
-          <span className="text-sm text-[--muted] block">{title}</span>
+          <span className="text-sm text-(--muted) block">{title}</span>
 
           <div className="mt-4">
-            <p className="text-[32px] font-bold text-[--foreground] leading-none mb-1">{value}</p>
+            <p className="text-[32px] font-bold text-(--foreground) leading-none mb-1">{value}</p>
             <p className={cn('text-[12px]', styles.subtitle, emphasis && 'font-medium')}>
               {subtitle}
             </p>
@@ -106,8 +107,8 @@ function StatCard({ title, value, subtitle, icon, tone, emphasis = false, isActi
       <div dir="rtl" className="flex md:hidden items-center justify-between w-full">
         {/* Right side: Text, Number, Badge */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-[--muted]">{title}</span>
-          <span className="text-xl font-bold text-[--foreground] leading-none">{value}</span>
+          <span className="text-xs text-(--muted)">{title}</span>
+          <span className="text-xl font-bold text-(--foreground) leading-none">{value}</span>
           {badge && (
             <span className={cn('px-1.5 py-0.5 rounded text-[9px] font-bold', styles.badge)}>
               {badge}

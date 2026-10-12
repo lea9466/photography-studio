@@ -35,9 +35,9 @@ export function ProFeatureGate({
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#7D3A52]/10 text-[#7D3A52]">
             <Lock className="h-5 w-5" />
           </div>
-          <h3 className="text-base font-semibold text-[--foreground]">{title}</h3>
+          <h3 className="text-base font-semibold text-(--foreground)">{title}</h3>
           {description ? (
-            <p className="text-sm leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-sm leading-relaxed text-(--muted)">{description}</p>
           ) : null}
           <Button asChild className="mt-1 bg-[#7D3A52] text-white shadow-md shadow-[#7D3A52]/25 hover:bg-[#6a2f44]">
             <Link href="/dashboard/subscription">שדרוג ל-PRO</Link>

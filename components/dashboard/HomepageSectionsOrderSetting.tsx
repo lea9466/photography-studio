@@ -41,7 +41,7 @@ const SECTION_HINTS: Partial<Record<HomepageSectionId, string>> = {
 
 function FixedRow({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-dashed border-[--border]/80 bg-white/50 px-4 py-3 text-[--muted]">
+    <div className="flex items-center gap-3 rounded-xl border border-dashed border-(--border)/80 bg-white/50 px-4 py-3 text-(--muted)">
       <Lock className="h-4 w-4 shrink-0" />
       <span className="text-sm font-medium">{label}</span>
     </div>
@@ -74,10 +74,10 @@ function SortableRow({
       className={cn(
         'flex items-center gap-3 rounded-xl border bg-white px-3 py-3 sm:px-4',
         locked
-          ? 'border-[--border]/60 bg-neutral-50'
+          ? 'border-(--border)/60 bg-neutral-50'
           : entry.visible
-            ? 'border-[--border]/80'
-            : 'border-[--border]/60 bg-white/50',
+            ? 'border-(--border)/80'
+            : 'border-(--border)/60 bg-white/50',
         isDragging && 'relative z-10 shadow-lg'
       )}
     >
@@ -86,7 +86,7 @@ function SortableRow({
         aria-label={`גרירה של הסקשן ${HOMEPAGE_SECTION_LABELS[entry.id]}`}
         disabled={locked}
         className={cn(
-          'shrink-0 rounded-md p-1 text-[--muted]',
+          'shrink-0 rounded-md p-1 text-(--muted)',
           locked
             ? 'cursor-not-allowed opacity-30'
             : 'cursor-grab touch-none hover:bg-[#7D3A52]/[0.06] active:cursor-grabbing'
@@ -102,13 +102,13 @@ function SortableRow({
       </div>
 
       <div className={cn('min-w-0 flex-1', (locked || !entry.visible) && 'opacity-60')}>
-        <p className="text-sm font-semibold text-[--foreground]">
+        <p className="text-sm font-semibold text-(--foreground)">
           {HOMEPAGE_SECTION_LABELS[entry.id]}
         </p>
         {locked ? (
-          <p className="text-xs text-[--muted]">זמין במסלול PRO בלבד</p>
+          <p className="text-xs text-(--muted)">זמין במסלול PRO בלבד</p>
         ) : hint ? (
-          <p className="text-xs text-[--muted]">{hint}</p>
+          <p className="text-xs text-(--muted)">{hint}</p>
         ) : null}
       </div>
 
@@ -199,7 +199,7 @@ export function HomepageSectionsOrderSetting({
   }
 
   return (
-    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
       <div
         className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
         aria-hidden
@@ -210,8 +210,8 @@ export function HomepageSectionsOrderSetting({
             <LayoutList className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-lg font-semibold text-[--foreground]">הסדר בדף הבית שלך</h2>
-            <p className="text-xs leading-relaxed text-[--muted]">
+            <h2 className="text-lg font-semibold text-(--foreground)">הסדר בדף הבית שלך</h2>
+            <p className="text-xs leading-relaxed text-(--muted)">
               מלמעלה למטה, בדיוק כמו שהמבקרים יראו את הדף.
             </p>
           </div>
@@ -249,7 +249,7 @@ export function HomepageSectionsOrderSetting({
           type="button"
           onClick={handleReset}
           disabled={isPending || isDefault}
-          className="inline-flex items-center gap-2 rounded-lg border border-[--border]/80 bg-white px-3.5 py-2 text-sm font-medium text-[--foreground] transition-colors hover:border-[#7D3A52]/40 hover:text-[#7D3A52] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-(--border)/80 bg-white px-3.5 py-2 text-sm font-medium text-(--foreground) transition-colors hover:border-[#7D3A52]/40 hover:text-[#7D3A52] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <RotateCcw className="h-4 w-4" />
           איפוס לסדר ברירת המחדל

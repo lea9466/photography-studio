@@ -12,8 +12,7 @@ import {
   Trash2,
   Copy,
   Check,
-  Globe,
-  Lock
+  Globe
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -35,7 +34,7 @@ import { toast } from 'sonner'
 import { deleteGallery, updateGallerySettings } from '@/lib/actions/gallery.actions'
 import { resolvePortfolioPublicPath } from '@/lib/queries/portfolio-gallery-page'
 import { getDisplayGalleryStatus, PUBLIC_ONLY_MVP } from '@/lib/types/app.types'
-import { galleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
+import { galleryKind } from '@/lib/gallery-kind'
 import type { Gallery, Client, GalleryStatus } from '@/lib/types/database.types'
 
 export type GalleryWithDetails = Gallery & {
@@ -58,6 +57,8 @@ type GalleryRowProps = {
    * owner's private-gallery tier, so the count reads "120 / 400". Omitted on
    * the showcase list, where the photo quota is account-wide, not per-gallery. */
   perGalleryPhotoLimit?: number
+  /** Show the "shown on site" column — only meaningful for showcase galleries. */
+  showSiteColumn: boolean
 }
 
 function getStatusBadge(status: string, galleryType?: string | null) {
@@ -80,7 +81,7 @@ function getStatusBadge(status: string, galleryType?: string | null) {
   )
 }
 
-function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLimit }: GalleryRowProps) {
+function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLimit, showSiteColumn }: GalleryRowProps) {
   const [copied, setCopied] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -197,15 +198,15 @@ function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLi
                   onError={handleImageError}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-[--muted]">
+                <div className="w-full h-full flex items-center justify-center text-(--muted)">
                   <span className="text-2xl">📷</span>
                 </div>
               )}
             </div>
-            <span className="font-semibold text-[--foreground]">{gallery.title}</span>
+            <span className="font-semibold text-(--foreground)">{gallery.title}</span>
           </div>
         </td>
-        <td className="px-6 py-4 text-sm text-[--muted]">{gallery.client?.name || 'ללא לקוח'}</td>
+        <td className="px-6 py-4 text-sm text-(--muted)">{gallery.client?.name || 'ללא לקוח'}</td>
         <td className="px-6 py-4">
           {getStatusBadge(gallery.status, gallery.gallery_type)}
         </td>
@@ -213,19 +214,20 @@ function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLi
           {perGalleryPhotoLimit != null ? (
             <span className={(gallery.photo_count || 0) >= perGalleryPhotoLimit ? 'font-semibold text-[#7D3A52]' : undefined}>
               {gallery.photo_count || 0}
-              <span className="text-[--muted]"> / {perGalleryPhotoLimit}</span>
+              <span className="text-(--muted)"> / {perGalleryPhotoLimit}</span>
             </span>
           ) : (
             gallery.photo_count || 0
           )}
         </td>
+        {showSiteColumn ? (
         <td className="px-6 py-4">
           {kind === 'showcase' ? (
             <div
               className="flex items-center justify-center gap-2"
               title="הצג באתר — כרטיס עם תמונת שער; תמונות בסקשן תמונות אחרונות"
             >
-              <Globe className="h-4 w-4 text-[--muted]" />
+              <Globe className="h-4 w-4 text-(--muted)" />
               <Switch
                 checked={shownOnSite}
                 onCheckedChange={handleToggleShownOnSite}
@@ -233,27 +235,24 @@ function GalleryRow({ gallery, selected, onSelect, studioPath, perGalleryPhotoLi
                 className="scale-75"
               />
             </div>
-          ) : (
-            <div className="flex items-center justify-center gap-1.5 text-xs font-medium text-[--muted]">
-              <Lock className="h-4 w-4" />
-              <span>{GALLERY_KIND_LABELS.client}</span>
-            </div>
-          )}
+          ) : null}
         </td>
+        ) : null}
         <td className="px-6 py-4">
           <div className="flex items-center justify-end gap-3">
             <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+            <Button size="sm" className="h-8 bg-[#7D3A52] px-3 text-white hover:bg-[#6a2f44]" asChild>
               <Link href={`/dashboard/galleries/${gallery.id}`}>
-                <Edit className="h-4 w-4" />
+                <Edit className="ml-1.5 h-3.5 w-3.5" />
+                פתיחה
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleShare}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleShare} title="העתקת קישור לגלריה" aria-label="העתקת קישור לגלריה">
               {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="עוד פעולות">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -344,7 +343,7 @@ function GalleriesSection({
   return (
     <section
       className={cn(
-        'relative space-y-6 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-6 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -374,10 +373,10 @@ function GalleriesSectionHeader({
             {index}
           </span>
         ) : null}
-        <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+        <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
       </div>
       {description ? (
-        <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+        <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
       ) : null}
     </div>
   )
@@ -396,6 +395,7 @@ export function RecentGalleriesTable({
 }: RecentGalleriesTableProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
+  const showSiteColumn = galleries.some((gallery) => galleryKind(gallery) === 'showcase')
 
   const filteredGalleries = filter && filter !== 'all'
     ? galleries.filter(gallery => {
@@ -455,14 +455,14 @@ export function RecentGalleriesTable({
   }
   const tableContent = (
     <div className={cn(
-      'overflow-hidden rounded-xl border border-[--border]/60 bg-white/80 shadow-sm shadow-[#7D3A52]/[0.03]',
-      variant === 'default' && 'mb-6 border border-[--border] bg-white dark:bg-zinc-900'
+      'overflow-hidden rounded-xl border border-(--border)/60 bg-white/80 shadow-sm shadow-[#7D3A52]/[0.03]',
+      variant === 'default' && 'mb-6 border border-(--border) bg-white dark:bg-zinc-900'
     )}>
       <div className={cn(
         'flex items-center justify-between border-b border-[#7D3A52]/10 p-6',
-        variant === 'default' && 'border-[--border]'
+        variant === 'default' && 'border-(--border)'
       )}>
-        <h3 className="text-lg font-semibold text-[--foreground]">{title}</h3>
+        <h3 className="text-lg font-semibold text-(--foreground)">{title}</h3>
         {selectedIds.size > 0 && (
           <Button
             variant="destructive"
@@ -478,7 +478,7 @@ export function RecentGalleriesTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-right">
           <thead>
-            <tr className="bg-[#7D3A52]/[0.03] text-[--muted]">
+            <tr className="bg-[#7D3A52]/[0.03] text-(--muted)">
               <th className="w-10 px-6 py-3 text-sm font-medium">
                 <input
                   type="checkbox"
@@ -491,7 +491,9 @@ export function RecentGalleriesTable({
               <th className="px-6 py-3 text-sm font-medium">לקוח</th>
               <th className="px-6 py-3 text-sm font-medium">סטטוס</th>
               <th className="px-6 py-3 text-center text-sm font-medium">תמונות</th>
-              <th className="px-6 py-3 text-center text-sm font-medium">הצגה באתר</th>
+              {showSiteColumn ? (
+                <th className="px-6 py-3 text-center text-sm font-medium">הצגה באתר</th>
+              ) : null}
               <th className="px-6 py-3 text-left text-sm font-medium">פעולות</th>
             </tr>
           </thead>
@@ -505,11 +507,12 @@ export function RecentGalleriesTable({
                   onSelect={toggleSelect}
                   studioPath={studioPath}
                   perGalleryPhotoLimit={perGalleryPhotoLimit}
+                  showSiteColumn={showSiteColumn}
                 />
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="px-6 py-12 text-center text-[--muted]">
+                <td colSpan={showSiteColumn ? 7 : 6} className="px-6 py-12 text-center text-(--muted)">
                   {emptyLabel}
                 </td>
               </tr>

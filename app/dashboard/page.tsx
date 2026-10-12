@@ -77,7 +77,7 @@ export default function DashboardPage() {
     return (
       <div className="animate-fade-in space-y-8">
         <div className="flex items-center justify-center py-12">
-          <div className="text-[--muted]">טוען...</div>
+          <div className="text-(--muted)">טוען...</div>
         </div>
       </div>
     )
@@ -87,10 +87,10 @@ export default function DashboardPage() {
     <div className="animate-fade-in space-y-8">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[--foreground]">
+          <h1 className="text-2xl font-semibold text-(--foreground)">
             שלום {userName} 👋
           </h1>
-          <p className="text-sm text-[--muted]">
+          <p className="text-sm text-(--muted)">
             הנה מה שקורה בסטודיו שלך היום
           </p>
         </div>

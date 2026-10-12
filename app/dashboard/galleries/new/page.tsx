@@ -168,7 +168,7 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
             גלריה חדשה · {GALLERY_KIND_LABELS[kind]}
           </h1>
           {kind === 'showcase' ? (
-            <p className="mt-1 text-sm text-[--muted]">
+            <p className="mt-1 text-sm text-(--muted)">
               {blockedByQuota
                 ? `הגעת למקסימום ${maxGalleries} גלריות`
                 : `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · ${photoCount}/${maxPhotos} תמונות`}

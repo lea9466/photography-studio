@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { ChevronDown } from 'lucide-react'
 import { removeClientGalleryCover } from '@/lib/actions/client-gallery-cover.actions'
 import { updateGallerySettings } from '@/lib/actions/gallery.actions'
 import { uploadClientGalleryCover } from '@/lib/client-cover-upload'
@@ -42,11 +43,15 @@ type ClientGalleryEditFormProps = {
   coverUrl?: string | null
 }
 
+const GROUP_TITLE = 'text-sm font-bold text-[#100d1f]'
+const GROUP_BOX = 'space-y-4 border-t border-[#ebe7e9] pt-6 first:border-t-0 first:pt-0'
+
 /**
- * Edit form for a private client gallery — the full client-delivery settings.
- * The cover image is part of the same save, but not of the settings payload: it
- * is a gated file upload (see lib/client-cover-upload.ts) applied after the
- * settings are saved, and it stays editable after the gallery is sent.
+ * Edit form for a private client gallery — the full client-delivery settings,
+ * grouped by topic. The cover image is part of the same save, but not of the
+ * settings payload: it is a gated file upload (see lib/client-cover-upload.ts)
+ * applied after the settings are saved, and it stays editable after the
+ * gallery is sent.
  */
 export function ClientGalleryEditForm({
   gallery,
@@ -62,9 +67,8 @@ export function ClientGalleryEditForm({
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [removeCover, setRemoveCover] = useState(false)
   const [title, setTitle] = useState(gallery.title)
-  const [expiresAt, setExpiresAt] = useState(
-    gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
-  )
+  const initialExpiresAt = gallery.expires_at ? gallery.expires_at.slice(0, 10) : ''
+  const [expiresAt, setExpiresAt] = useState(initialExpiresAt)
   const expiresAtLabel = gallery.expires_at
     ? new Date(gallery.expires_at).toLocaleDateString('he-IL', {
         day: 'numeric',
@@ -91,6 +95,22 @@ export function ClientGalleryEditForm({
   const [allowDownloadOriginal, setAllowDownloadOriginal] = useState(
     settings?.allow_download_original ?? false
   )
+
+  // Display only: the save button shows up once something differs from what
+  // the server last gave us (props refresh after router.refresh()).
+  const dirty =
+    Boolean(coverFile) ||
+    removeCover ||
+    title !== gallery.title ||
+    (!locked && expiresAt !== initialExpiresAt) ||
+    watermark !== (settings?.watermark_text ?? '') ||
+    autoApplyWatermark !== (settings?.auto_apply_watermark ?? true) ||
+    maxAlbum !== (settings?.max_album_selection?.toString() ?? '') ||
+    maxEdit !== (settings?.max_edit_selection?.toString() ?? '') ||
+    albumSelectionEnabled !== (settings?.album_selection_enabled ?? true) ||
+    editSelectionEnabled !== (settings?.edit_selection_enabled ?? true) ||
+    allowDownloadPreview !== (settings?.allow_download_preview ?? false) ||
+    allowDownloadOriginal !== (settings?.allow_download_original ?? false)
 
   function handleSave() {
     if (!albumSelectionEnabled && !editSelectionEnabled) {
@@ -126,10 +146,10 @@ export function ClientGalleryEditForm({
           }
           setCoverFile(null)
           setRemoveCover(false)
-          router.refresh()
         }
 
         toast.success('הגדרות הגלריה נשמרו בהצלחה')
+        router.refresh()
       } catch (error) {
         console.error('Error saving gallery settings:', error)
         toast.error(error instanceof Error ? error.message : 'שגיאה בשמירה')
@@ -139,72 +159,177 @@ export function ClientGalleryEditForm({
 
   return (
     <>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div className="space-y-3 sm:col-span-2">
-          <div className="space-y-1">
-            <Label className="text-[#100d1f]">תמונת כיסוי</Label>
-            <p className="text-xs leading-relaxed text-[#48464c]">
-              מוצגת בגדול בראש הדף שהלקוח רואה, אחרי שנכנס עם קוד הכניסה. התמונה נפרדת
-              מתמונות הגלריה, לא מקבלת סימן מים, ונשמרת ברזולוציה שמתאימה לתצוגה בלבד. את
-              הלוגו והצבע קובעים בעמוד{' '}
-              <Link
-                href="/dashboard/client-page-design"
-                className="font-semibold text-[#7D3A52] underline"
-              >
-                עיצוב גלריה פרטית
-              </Link>
-              .
-            </p>
+      <div className="space-y-6 pb-24 sm:pb-0">
+        {/* Basics */}
+        <div className={GROUP_BOX}>
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="למשל: חתונה של דנה ואבי"
+              className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+            />
           </div>
-          <ClientGalleryCoverPicker
-            inputId={`cover-${gallery.id}`}
-            currentUrl={removeCover ? null : coverUrl}
-            file={coverFile}
-            onFileChange={(file) => {
-              setCoverFile(file)
-              if (file) setRemoveCover(false)
-            }}
-            disabled={isPending}
-          />
-          {coverUrl && !coverFile ? (
-            <button
-              type="button"
-              onClick={() => setRemoveCover((prev) => !prev)}
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label className="text-[#100d1f]">תמונת כיסוי</Label>
+              <p className="text-xs leading-relaxed text-[#48464c]">
+                מוצגת בראש הדף שהלקוח רואה, ללא סימן מים. לוגו וצבע נקבעים ב
+                <Link
+                  href="/dashboard/client-page-design"
+                  className="font-semibold text-[#7D3A52] underline"
+                >
+                  עיצוב גלריה פרטית
+                </Link>
+                .
+              </p>
+            </div>
+            <ClientGalleryCoverPicker
+              inputId={`cover-${gallery.id}`}
+              currentUrl={removeCover ? null : coverUrl}
+              file={coverFile}
+              onFileChange={(file) => {
+                setCoverFile(file)
+                if (file) setRemoveCover(false)
+              }}
               disabled={isPending}
-              className="rounded-xl px-3 py-2 text-sm font-medium text-[#48464c] hover:bg-[#f7f2f4] disabled:opacity-50"
-            >
-              {removeCover ? 'ביטול הסרה' : 'הסרת הכיסוי'}
-            </button>
-          ) : null}
-          {removeCover ? (
-            <p className="text-xs text-[#7D3A52]">הכיסוי יוסר כשתלחצי על &quot;שמור הגדרות&quot;.</p>
-          ) : coverFile ? (
-            <p className="text-xs text-[#7D3A52]">
-              התמונה החדשה תישמר כשתלחצי על &quot;שמור הגדרות&quot;.
-            </p>
-          ) : null}
+            />
+            {coverUrl && !coverFile ? (
+              <button
+                type="button"
+                onClick={() => setRemoveCover((prev) => !prev)}
+                disabled={isPending}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-[#48464c] hover:bg-[#f7f2f4] disabled:opacity-50"
+              >
+                {removeCover ? 'ביטול הסרה' : 'הסרת הכיסוי'}
+              </button>
+            ) : null}
+            {removeCover ? (
+              <p className="text-xs text-[#7D3A52]">הכיסוי יוסר כשתלחצי על &quot;שמור הגדרות&quot;.</p>
+            ) : coverFile ? (
+              <p className="text-xs text-[#7D3A52]">
+                התמונה החדשה תישמר כשתלחצי על &quot;שמור הגדרות&quot;.
+              </p>
+            ) : null}
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="title" className="text-[#100d1f]">שם הגלריה</Label>
-          <Input
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="למשל: חתונה של דנה ואבי"
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-          />
+
+        {/* Client selection */}
+        <div className={GROUP_BOX}>
+          <h3 className={GROUP_TITLE}>בחירת תמונות על ידי הלקוח</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <Label className="text-[#100d1f]">לאלבום</Label>
+                  <p className="mt-1 text-xs text-[#48464c]">
+                    הלקוח מסמן אילו תמונות ייכנסו לאלבום
+                  </p>
+                </div>
+                <Switch
+                  checked={albumSelectionEnabled}
+                  onCheckedChange={setAlbumSelectionEnabled}
+                />
+              </div>
+              {albumSelectionEnabled ? (
+                <div className="space-y-2">
+                  <Label htmlFor="max-album" className="text-xs text-[#48464c]">
+                    מקסימום (ריק = ללא הגבלה)
+                  </Label>
+                  <Input
+                    id="max-album"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    value={maxAlbum}
+                    onChange={(e) => setMaxAlbum(e.target.value.replace(/\D/g, ''))}
+                    placeholder="למשל: 50"
+                    className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <Label className="text-[#100d1f]">לעיבוד</Label>
+                  <p className="mt-1 text-xs text-[#48464c]">
+                    הלקוח מסמן אילו תמונות לשלוח לעיבוד
+                  </p>
+                </div>
+                <Switch
+                  checked={editSelectionEnabled}
+                  onCheckedChange={setEditSelectionEnabled}
+                />
+              </div>
+              {editSelectionEnabled ? (
+                <div className="space-y-2">
+                  <Label htmlFor="max-edit" className="text-xs text-[#48464c]">
+                    מקסימום (ריק = ללא הגבלה)
+                  </Label>
+                  <Input
+                    id="max-edit"
+                    type="number"
+                    min={1}
+                    inputMode="numeric"
+                    value={maxEdit}
+                    onChange={(e) => setMaxEdit(e.target.value.replace(/\D/g, ''))}
+                    placeholder="למשל: 30"
+                    className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+                  />
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="watermark" className="text-[#100d1f]">סימן מים</Label>
-          <Input
-            id="watermark"
-            value={watermark}
-            onChange={(e) => setWatermark(e.target.value)}
-            placeholder="למשל: © שם הסטודיו"
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-          />
+
+        {/* Expiry */}
+        <div className={GROUP_BOX}>
+          <h3 className={GROUP_TITLE}>תפוגה</h3>
+          <div className="space-y-2">
+            <Label htmlFor="expires" className="text-[#100d1f]">תאריך תפוגה</Label>
+            <Input
+              id="expires"
+              type="date"
+              value={expiresAt}
+              disabled={locked}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] disabled:opacity-60 sm:max-w-xs"
+            />
+            <details className="group">
+              <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-xs font-medium text-[#7D3A52] [&::-webkit-details-marker]:hidden">
+                <ChevronDown
+                  className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+                {locked ? 'התאריך נעול — פרטים' : 'מה קורה בתפוגה?'}
+              </summary>
+              <p className="mt-2 text-xs leading-relaxed text-[#48464c]">
+                {locked
+                  ? expiresAtLabel
+                    ? `הגלריה נשלחה ללקוח — התאריך נעול. בתאריך ${expiresAtLabel} הגישה של הלקוח תסתיים והגלריה (כולל כל התמונות) תימחק. במקרים חריגים ניתן לפנות אלינו.`
+                    : 'הגלריה נשלחה ללקוח, ושמורה אצלך כל עוד המנוי שלך בתוקף — היא לא נמחקת אוטומטית. אם המנוי ייפול ולא יחודש, הגישה תושעה ולאחר מכן (בסה״כ 30 יום מנפילת המנוי) תימחק.'
+                  : 'לאחר תאריך זה הגישה לגלריה תיחסם, והגלריה תימחק אוטומטית. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל — אין סיסמה קבועה להגדרה.'}
+              </p>
+            </details>
+          </div>
         </div>
-        <div className="space-y-2 sm:col-span-2">
+
+        {/* Watermark */}
+        <div className={GROUP_BOX}>
+          <h3 className={GROUP_TITLE}>סימן מים</h3>
+          <div className="space-y-2">
+            <Label htmlFor="watermark" className="text-[#100d1f]">טקסט</Label>
+            <Input
+              id="watermark"
+              value={watermark}
+              onChange={(e) => setWatermark(e.target.value)}
+              placeholder="למשל: © שם הסטודיו"
+              className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
+            />
+          </div>
           <div className="flex flex-col gap-3 rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <Label className="text-[#100d1f]">החל סימן מים אוטומטי</Label>
@@ -224,125 +349,43 @@ export function ClientGalleryEditForm({
             />
           </div>
         </div>
-        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <Label className="text-[#100d1f]">בחירת תמונות לאלבום</Label>
-              <p className="mt-1 text-xs text-[#48464c]">
-                הלקוח מסמן אילו תמונות ייכנסו לאלבום
-              </p>
+
+        {/* Downloads */}
+        <div className={GROUP_BOX}>
+          <h3 className={GROUP_TITLE}>הרשאות הורדה</h3>
+          {downloadPermissionsEnabled ? (
+            <div className="space-y-4 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Label className="text-[#100d1f]">הורדת preview</Label>
+                <Switch checked={allowDownloadPreview} onCheckedChange={setAllowDownloadPreview} />
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <Label className="text-[#100d1f]">הורדת מקור</Label>
+                <Switch checked={allowDownloadOriginal} onCheckedChange={setAllowDownloadOriginal} />
+              </div>
             </div>
-            <Switch
-              checked={albumSelectionEnabled}
-              onCheckedChange={setAlbumSelectionEnabled}
-            />
-          </div>
-          {albumSelectionEnabled ? (
-            <div className="space-y-2">
-              <Label htmlFor="max-album" className="text-xs text-[#48464c]">
-                מקסימום תמונות לאלבום (ריק = ללא הגבלה)
-              </Label>
-              <Input
-                id="max-album"
-                type="number"
-                min={1}
-                inputMode="numeric"
-                value={maxAlbum}
-                onChange={(e) => setMaxAlbum(e.target.value.replace(/\D/g, ''))}
-                placeholder="למשל: 50"
-                className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-              />
-            </div>
-          ) : null}
-        </div>
-        <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <Label className="text-[#100d1f]">בחירת תמונות לעיבוד</Label>
-              <p className="mt-1 text-xs text-[#48464c]">
-                הלקוח מסמן אילו תמונות לשלוח לעיבוד
-              </p>
-            </div>
-            <Switch
-              checked={editSelectionEnabled}
-              onCheckedChange={setEditSelectionEnabled}
-            />
-          </div>
-          {editSelectionEnabled ? (
-            <div className="space-y-2">
-              <Label htmlFor="max-edit" className="text-xs text-[#48464c]">
-                מקסימום תמונות לעיבוד (ריק = ללא הגבלה)
-              </Label>
-              <Input
-                id="max-edit"
-                type="number"
-                min={1}
-                inputMode="numeric"
-                value={maxEdit}
-                onChange={(e) => setMaxEdit(e.target.value.replace(/\D/g, ''))}
-                placeholder="למשל: 30"
-                className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]"
-              />
-            </div>
-          ) : null}
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="expires" className="text-[#100d1f]">תאריך תפוגה</Label>
-          <Input
-            id="expires"
-            type="date"
-            value={expiresAt}
-            disabled={locked}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className="h-12 border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43] disabled:opacity-60 sm:max-w-xs"
-          />
-          <p className="text-xs text-[#48464c]">
-            {locked
-              ? expiresAtLabel
-                ? `הגלריה נשלחה ללקוח — התאריך נעול. בתאריך ${expiresAtLabel} הגישה של הלקוח תסתיים והגלריה (כולל כל התמונות) תימחק. במקרים חריגים ניתן לפנות אלינו.`
-                : 'הגלריה נשלחה ללקוח, ושמורה אצלך כל עוד המנוי שלך בתוקף — היא לא נמחקת אוטומטית. אם המנוי ייפול ולא יחודש, הגישה תושעה ולאחר מכן (בסה״כ 30 יום מנפילת המנוי) תימחק.'
-              : 'לאחר תאריך זה הגישה לגלריה תיחסם, והגלריה תימחק אוטומטית. הלקוח נכנס עם קוד חד-פעמי שנשלח למייל — אין סיסמה קבועה להגדרה.'}
-          </p>
+          ) : (
+            <p className="flex items-center gap-2 rounded-xl bg-[#f7f2f4] px-4 py-3 text-sm text-[#48464c]">
+              <span className="rounded-full bg-[#100d1f] px-2.5 py-0.5 text-xs font-semibold text-white">
+                בקרוב
+              </span>
+              הורדת תמונות על ידי הלקוח עדיין לא זמינה.
+            </p>
+          )}
         </div>
       </div>
 
-      <div
-        className={`relative mt-6 mb-24 space-y-4 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] p-4 sm:mb-0 sm:p-6 ${
-          downloadPermissionsEnabled ? '' : 'pointer-events-none select-none opacity-35'
-        }`}
-      >
-        {!downloadPermissionsEnabled ? (
-          <span className="absolute left-4 top-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
-            לא זמין כרגע
-          </span>
-        ) : null}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Label className="text-[#100d1f]">הורדת preview</Label>
-          <Switch
-            checked={allowDownloadPreview}
-            disabled={!downloadPermissionsEnabled}
-            onCheckedChange={setAllowDownloadPreview}
-          />
+      {dirty ? (
+        <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-8 sm:right-auto">
+          <Button
+            onClick={handleSave}
+            disabled={isPending}
+            className="w-full rounded-xl bg-[#6b2d43] px-8 py-3 text-base font-bold text-white shadow-lg transition-all hover:bg-[#5a2538] active:scale-[0.98] sm:w-auto sm:px-12 sm:text-lg"
+          >
+            {isPending ? 'שומר...' : 'שמור הגדרות'}
+          </Button>
         </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Label className="text-[#100d1f]">הורדת מקור</Label>
-          <Switch
-            checked={allowDownloadOriginal}
-            disabled={!downloadPermissionsEnabled}
-            onCheckedChange={setAllowDownloadOriginal}
-          />
-        </div>
-      </div>
-
-      <div className="fixed bottom-4 left-4 right-4 z-50 sm:left-8 sm:right-auto">
-        <Button
-          onClick={handleSave}
-          disabled={isPending}
-          className="w-full rounded-xl bg-[#6b2d43] px-8 py-3 text-base font-bold text-white transition-all hover:bg-[#5a2538] active:scale-[0.98] sm:w-auto sm:px-12 sm:text-lg"
-        >
-          {isPending ? 'שומר...' : 'שמור הגדרות'}
-        </Button>
-      </div>
+      ) : null}
 
       <DisableWatermarkDialog
         open={disableWatermarkOpen}

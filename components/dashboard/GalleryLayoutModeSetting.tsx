@@ -52,7 +52,7 @@ function GalleriesSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -89,10 +89,10 @@ function GalleriesSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -169,7 +169,7 @@ export function GalleryLayoutModeSetting({
                 'rounded-xl border-2 p-4 text-right transition-all',
                 selected
                   ? 'border-[#7D3A52] bg-[#7D3A52]/5 shadow-sm'
-                  : 'border-[--border]/80 bg-white/80 hover:border-[#7D3A52]/35',
+                  : 'border-(--border)/80 bg-white/80 hover:border-[#7D3A52]/35',
                 isPending && 'cursor-wait opacity-60'
               )}
             >
@@ -184,12 +184,12 @@ export function GalleryLayoutModeSetting({
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-[--foreground]">{option.title}</p>
+                    <p className="font-semibold text-(--foreground)">{option.title}</p>
                     {option.isNew ? (
                       <Badge className="shrink-0 bg-[#7D3A52]">חדש!</Badge>
                     ) : null}
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-[--muted]">
+                  <p className="mt-1 text-sm leading-relaxed text-(--muted)">
                     {option.description}
                   </p>
                 </div>

@@ -21,27 +21,27 @@ const BENEFITS = [
 function GoogleResultPreview() {
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      <div className="space-y-2 rounded-xl border border-[--border]/70 bg-white p-4">
-        <p className="text-xs font-medium text-[--muted]">היום — כתובת ה-slug</p>
+      <div className="space-y-2 rounded-xl border border-(--border)/70 bg-white p-4">
+        <p className="text-xs font-medium text-(--muted)">היום — כתובת ה-slug</p>
         <div className="flex items-center gap-2">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-300 text-[10px] font-bold text-white">
             S
           </span>
-          <span dir="ltr" className="truncate text-xs text-[--muted]">studio-galleries.com/your-slug</span>
+          <span dir="ltr" className="truncate text-xs text-(--muted)">studio-galleries.com/your-slug</span>
         </div>
         <p className="text-sm font-medium text-blue-700">שם הסטודיו שלך</p>
-        <p className="text-xs text-[--muted]">אותו עיגול אפור בדיוק כמו אצל כל צלמת אחרת בפלטפורמה.</p>
+        <p className="text-xs text-(--muted)">אותו עיגול אפור בדיוק כמו אצל כל צלמת אחרת בפלטפורמה.</p>
       </div>
       <div className="space-y-2 rounded-xl border border-[#7D3A52]/30 bg-white p-4">
-        <p className="text-xs font-medium text-[--muted]">עם דומיין אישי</p>
+        <p className="text-xs font-medium text-(--muted)">עם דומיין אישי</p>
         <div className="flex items-center gap-2">
           <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#7D3A52] text-[10px] font-bold text-white">
             ✦
           </span>
-          <span dir="ltr" className="truncate text-xs text-[--muted]">your-own-domain.com</span>
+          <span dir="ltr" className="truncate text-xs text-(--muted)">your-own-domain.com</span>
         </div>
         <p className="text-sm font-medium text-blue-700">שם הסטודיו שלך</p>
-        <p className="text-xs text-[--muted]">עיגול ייחודי עם הלוגו שלך — לא של הפלטפורמה.</p>
+        <p className="text-xs text-(--muted)">עיגול ייחודי עם הלוגו שלך — לא של הפלטפורמה.</p>
       </div>
     </div>
   )
@@ -49,22 +49,22 @@ function GoogleResultPreview() {
 
 function DnsRecordPreview() {
   return (
-    <div className="mt-3 overflow-hidden rounded-xl border border-[--border]/70">
-      <div className="flex items-center gap-1.5 border-b border-[--border]/70 bg-[--dashboard-surface] px-4 py-2.5">
+    <div className="mt-3 overflow-hidden rounded-xl border border-(--border)/70">
+      <div className="flex items-center gap-1.5 border-b border-(--border)/70 bg-(--dashboard-surface) px-4 py-2.5">
         <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-        <span className="mr-2 text-xs text-[--muted]">כך בערך תיראה טבלת ה-DNS אצל ספק הדומיין</span>
+        <span className="mr-2 text-xs text-(--muted)">כך בערך תיראה טבלת ה-DNS אצל ספק הדומיין</span>
       </div>
-      <div className="grid grid-cols-3 bg-white/80 text-xs font-semibold text-[--muted]">
-        <div className="border-b border-[--border]/60 px-4 py-2">Type</div>
-        <div className="border-b border-[--border]/60 px-4 py-2">Name / Host</div>
-        <div className="border-b border-[--border]/60 px-4 py-2">Value</div>
+      <div className="grid grid-cols-3 bg-white/80 text-xs font-semibold text-(--muted)">
+        <div className="border-b border-(--border)/60 px-4 py-2">Type</div>
+        <div className="border-b border-(--border)/60 px-4 py-2">Name / Host</div>
+        <div className="border-b border-(--border)/60 px-4 py-2">Value</div>
       </div>
-      <div dir="ltr" className="grid grid-cols-3 bg-white text-sm text-[--foreground]">
-        <div className="border-b border-[--border]/40 px-4 py-2.5 font-mono">CNAME</div>
-        <div className="border-b border-[--border]/40 px-4 py-2.5 font-mono">www</div>
-        <div className="border-b border-[--border]/40 px-4 py-2.5 font-mono truncate">cname.vercel-dns.com</div>
+      <div dir="ltr" className="grid grid-cols-3 bg-white text-sm text-(--foreground)">
+        <div className="border-b border-(--border)/40 px-4 py-2.5 font-mono">CNAME</div>
+        <div className="border-b border-(--border)/40 px-4 py-2.5 font-mono">www</div>
+        <div className="border-b border-(--border)/40 px-4 py-2.5 font-mono truncate">cname.vercel-dns.com</div>
         <div className="px-4 py-2.5 font-mono">A</div>
         <div className="px-4 py-2.5 font-mono">@</div>
         <div className="px-4 py-2.5 font-mono">76.76.21.21</div>
@@ -100,37 +100,37 @@ const STEPS = [
 export function CustomDomainExplainer() {
   return (
     <div className="space-y-6">
-      <p className="text-sm leading-relaxed text-[--muted]">
-        <span className="font-semibold text-[--foreground]">מה זה בכלל דומיין?</span> זו הכתובת הייחודית של אתר
+      <p className="text-sm leading-relaxed text-(--muted)">
+        <span className="font-semibold text-(--foreground)">מה זה בכלל דומיין?</span> זו הכתובת הייחודית של אתר
         באינטרנט — למשל <span dir="ltr">google.com</span> או <span dir="ltr">nike.com</span>. זו הכתובת שמקלידים
         בדפדפן כדי להגיע לאתר, וזו הכתובת שמופיעה בתוצאות חיפוש בגוגל. כרגע האתר שלך יושב תחת כתובת של הפלטפורמה
         (<span dir="ltr">studio-galleries.com/{'{'}slug{'}'}</span>) — דומיין אישי נותן לך כתובת עצמאית משלך, כמו
         לכל עסק אמיתי.
       </p>
 
-      <section className="relative space-y-5 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
-        <h2 className="text-lg font-semibold text-[--foreground]">למה כדאי לחבר דומיין אישי?</h2>
+      <section className="relative space-y-5 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+        <h2 className="text-lg font-semibold text-(--foreground)">למה כדאי לחבר דומיין אישי?</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {BENEFITS.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="space-y-2.5 rounded-xl border border-[--border]/60 bg-white/70 p-4">
+            <div key={title} className="space-y-2.5 rounded-xl border border-(--border)/60 bg-white/70 p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7D3A52]/[0.08] text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
                 <Icon className="h-5 w-5" />
               </div>
-              <p className="text-sm font-semibold text-[--foreground]">{title}</p>
-              <p className="text-sm leading-relaxed text-[--muted]">{text}</p>
+              <p className="text-sm font-semibold text-(--foreground)">{title}</p>
+              <p className="text-sm leading-relaxed text-(--muted)">{text}</p>
             </div>
           ))}
         </div>
         <GoogleResultPreview />
       </section>
 
-      <section className="relative space-y-6 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
-        <h2 className="text-xl font-semibold text-[--foreground]">איך זה עובד — 4 שלבים</h2>
+      <section className="relative space-y-6 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+        <h2 className="text-xl font-semibold text-(--foreground)">איך זה עובד — 4 שלבים</h2>
         <ol className="space-y-6">
           {STEPS.map(({ icon: Icon, title, text, extra }, index) => (
             <li
               key={title}
-              className="flex gap-5 rounded-xl border border-[--border]/60 bg-white/70 p-5 md:p-6"
+              className="flex gap-5 rounded-xl border border-(--border)/60 bg-white/70 p-5 md:p-6"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#7D3A52] text-base font-bold text-white">
                 {index + 1}
@@ -138,9 +138,9 @@ export function CustomDomainExplainer() {
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-center gap-2">
                   <Icon className="h-5 w-5 shrink-0 text-[#7D3A52]" aria-hidden />
-                  <p className="text-base font-semibold text-[--foreground]">{title}</p>
+                  <p className="text-base font-semibold text-(--foreground)">{title}</p>
                 </div>
-                <p className="text-base leading-relaxed text-[--muted]">{text}</p>
+                <p className="text-base leading-relaxed text-(--muted)">{text}</p>
                 {extra}
               </div>
             </li>
@@ -172,15 +172,15 @@ export function CustomDomainExplainer() {
             <MessageCircle className="h-5 w-5" />
           </div>
           <div className="space-y-2.5">
-            <h3 className="text-sm font-semibold text-[--foreground]">לא בטוחה שתסתדרי לבד עם ההגדרות הטכניות?</h3>
-            <p className="text-sm leading-relaxed text-[--muted]">
+            <h3 className="text-sm font-semibold text-(--foreground)">לא בטוחה שתסתדרי לבד עם ההגדרות הטכניות?</h3>
+            <p className="text-sm leading-relaxed text-(--muted)">
               קודם כול — כדאי לנסות לבד עם עזרה מ-AI: מצלמות מסך (screenshot) של עמוד ה-DNS אצל ספק הדומיין,
               מדביקות אותו בצ׳אט עם ג׳מיני או ChatGPT ומבקשות שיעזרו לך למלא את הרשומה הנכונה. ברוב המקרים זה
               עובד מצוין.
             </p>
-            <p className="text-sm leading-relaxed text-[--muted]">
+            <p className="text-sm leading-relaxed text-(--muted)">
               עדיין תקועה? אני כאן — אני יכולה ללוות אותך אישית בכל התהליך, מהקנייה ועד שהאתר עולה, בעלות
-              חד-פעמית של <span className="font-semibold text-[--foreground]">₪89</span>.
+              חד-פעמית של <span className="font-semibold text-(--foreground)">₪89</span>.
             </p>
             <a
               href="/dashboard/contact"

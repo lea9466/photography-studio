@@ -1,12 +1,8 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
+import { User } from 'lucide-react'
 import { fetchGalleryDetail } from '@/lib/actions/gallery.actions'
-import { getGalleryStatusLabel } from '@/lib/types/app.types'
-import { galleryKind, GALLERY_KIND_LABELS } from '@/lib/gallery-kind'
+import { galleryKind } from '@/lib/gallery-kind'
 import { GalleryBreadcrumb } from '@/components/dashboard/GalleryBreadcrumb'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import type { Gallery, Client, GallerySettings } from '@/lib/types/database.types'
 
 const LIST_BY_KIND = {
@@ -52,26 +48,17 @@ export default async function GalleryLayout({
           backLabel={list.label}
         />
 
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">{gallery.title}</h1>
-            <p className="mt-1 text-sm text-[--muted]">{clientName}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Badge variant="muted">
-                {getGalleryStatusLabel(gallery.status, gallery.gallery_type)}
-              </Badge>
-              <Badge variant="outline">
-                {GALLERY_KIND_LABELS[kind]}
-              </Badge>
-            </div>
-          </div>
-
-          <Button variant="outline" size="sm" asChild className="shrink-0">
-            <Link href={list.href}>
-              <ChevronRight className="h-4 w-4" />
-              חזרה לרשימה
-            </Link>
-          </Button>
+        <div className="relative overflow-hidden rounded-2xl border border-[#7D3A52]/15 bg-gradient-to-l from-[#7D3A52]/[0.10] via-[#7c3aed]/[0.04] to-white px-6 py-5">
+          <span className="absolute inset-y-0 right-0 w-1.5 bg-gradient-to-b from-[#7D3A52] to-[#7c3aed]" aria-hidden />
+          <h1 className="text-2xl font-bold tracking-tight text-[#100d1f] sm:text-3xl">
+            {gallery.title}
+          </h1>
+          {kind === 'client' ? (
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-[#7D3A52]">
+              <User className="h-4 w-4" aria-hidden />
+              {clientName}
+            </p>
+          ) : null}
         </div>
       </div>
 

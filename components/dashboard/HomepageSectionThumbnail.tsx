@@ -155,7 +155,7 @@ export function HomepageSectionThumbnail({
   return (
     <svg
       viewBox="0 0 96 60"
-      className="h-[100px] w-40 shrink-0 rounded-lg border border-[--border]/70"
+      className="h-[100px] w-40 shrink-0 rounded-lg border border-(--border)/70"
       style={{
         color: dark ? '#E8E2D8' : (preview?.accentColor ?? '#7D3A52'),
         backgroundColor: dark ? '#17171C' : '#FAF6F7',

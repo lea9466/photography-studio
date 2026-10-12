@@ -43,7 +43,7 @@ export function DashboardNav({ publicSitePath }: DashboardNavProps) {
   const pathname = usePathname()
 
   return (
-    <nav className="flex flex-wrap items-center gap-1 rounded-lg border border-[--border] bg-[--background] p-1">
+    <nav className="flex flex-wrap items-center gap-1 rounded-lg border border-(--border) bg-(--background) p-1">
       {NAV_ITEMS.map((item) => {
         const active = item.isActive(pathname)
         return (
@@ -54,8 +54,8 @@ export function DashboardNav({ publicSitePath }: DashboardNavProps) {
             className={cn(
               'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               active
-                ? 'bg-[--accent] text-[--background]'
-                : 'text-[--muted] hover:text-[--foreground]'
+                ? 'bg-[--accent] text-(--background)'
+                : 'text-(--muted) hover:text-(--foreground)'
             )}
           >
             {item.label}
@@ -66,7 +66,7 @@ export function DashboardNav({ publicSitePath }: DashboardNavProps) {
         <Link
           href={publicSitePath}
           target="_blank"
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-[--muted] transition-colors hover:text-[--foreground]"
+          className="rounded-md px-3 py-1.5 text-sm font-medium text-(--muted) transition-colors hover:text-(--foreground)"
         >
           דף ציבורי
         </Link>

@@ -21,12 +21,12 @@ type PhotoEditCardProps = {
 
 function Thumb({ src, label }: { src: string | null; label: string }) {
   return (
-    <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-[--border] bg-[--dashboard-surface]">
+    <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-(--border) bg-(--dashboard-surface)">
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-[10px] text-[--muted]">
+        <div className="flex h-full w-full items-center justify-center text-[10px] text-(--muted)">
           אין תמונה
         </div>
       )}
@@ -83,7 +83,7 @@ export function PhotoEditCard({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
         <button
           type="button"
-          className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-[--muted] hover:bg-[--muted]/15 hover:text-[--foreground] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--ring] disabled:opacity-50"
+          className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-(--muted) hover:bg-(--muted)/15 hover:text-(--foreground) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--ring] disabled:opacity-50"
           aria-label="שינוי סדר"
           disabled={disabled}
           {...attributes}
@@ -100,19 +100,19 @@ export function PhotoEditCard({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             {item.title ? (
-              <h3 className="font-semibold text-[--foreground]">{item.title}</h3>
+              <h3 className="font-semibold text-(--foreground)">{item.title}</h3>
             ) : (
-              <h3 className="font-medium text-[--muted]">ללא כותרת</h3>
+              <h3 className="font-medium text-(--muted)">ללא כותרת</h3>
             )}
             <Badge variant={item.isActive ? 'default' : 'outline'}>
               {item.isActive ? 'פעיל' : 'מוסתר'}
             </Badge>
           </div>
           {descriptionPreview ? (
-            <p className="text-sm leading-relaxed text-[--muted]">{descriptionPreview}</p>
+            <p className="text-sm leading-relaxed text-(--muted)">{descriptionPreview}</p>
           ) : null}
           <div className="flex items-center justify-between gap-3 pt-1">
-            <span className="text-sm text-[--muted]">
+            <span className="text-sm text-(--muted)">
               {item.isActive ? 'מוצג באתר' : 'מוסתר מהאתר'}
             </span>
             <Switch

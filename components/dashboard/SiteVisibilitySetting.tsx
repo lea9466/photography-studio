@@ -35,7 +35,7 @@ export function SiteVisibilitySetting({
   }
 
   return (
-    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
       <div
         className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
         aria-hidden
@@ -50,10 +50,10 @@ export function SiteVisibilitySetting({
             )}
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-lg font-semibold text-[--foreground]">
+            <h2 className="text-lg font-semibold text-(--foreground)">
               זמינות האתר לצפייה
             </h2>
-            <p className="text-xs leading-relaxed text-[--muted]">
+            <p className="text-xs leading-relaxed text-(--muted)">
               כשהאתר מוסתר — מבקרים רואים מסך &quot;האתר בבניה&quot;. אצלך, כל עוד את
               מחוברת בדפדפן הזה, האתר נשאר פתוח לצפייה. בדפדפן אחר או בלי
               התחברות — הוא יהיה חסום.
@@ -67,16 +67,16 @@ export function SiteVisibilitySetting({
           'flex flex-col gap-4 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between',
           underConstruction
             ? 'border-orange-200 bg-orange-50/70'
-            : 'border-[--border]/80 bg-white/80'
+            : 'border-(--border)/80 bg-white/80'
         )}
       >
         <div className="space-y-1">
-          <p className="text-sm font-semibold text-[--foreground]">
+          <p className="text-sm font-semibold text-(--foreground)">
             {underConstruction
               ? 'האתר מוסתר מצפייה ציבורית'
               : 'האתר פתוח לצפייה ציבורית'}
           </p>
-          <p className="text-xs leading-relaxed text-[--muted]">
+          <p className="text-xs leading-relaxed text-(--muted)">
             {underConstruction
               ? 'אצלך בדפדפן הזה (מחוברת) האתר פתוח. בדפדפן אחר או אצל אורחים — חסום עם מסך בבניה.'
               : 'כל מי שנכנס לקישור שלך רואה את האתר המלא.'}

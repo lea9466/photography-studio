@@ -37,17 +37,17 @@ export function AboutHero({
   artwork?: ReactNode
 }) {
   return (
-    <header className="relative overflow-hidden rounded-3xl border border-[--border] bg-gradient-to-bl from-[#7D3A52]/10 via-white to-sky-50/60 px-7 py-8 md:px-10 md:py-11">
+    <header className="relative overflow-hidden rounded-3xl border border-(--border) bg-gradient-to-bl from-[#7D3A52]/10 via-white to-sky-50/60 px-7 py-8 md:px-10 md:py-11">
       <div className="flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
         <div className="space-y-3">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white/75 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#7D3A52] ring-1 ring-[#7D3A52]/15">
             {eyebrowIcon}
             {eyebrow}
           </span>
-          <h1 className="text-2xl font-bold tracking-tight text-[--foreground] md:text-[1.9rem]">
+          <h1 className="text-2xl font-bold tracking-tight text-(--foreground) md:text-[1.9rem]">
             {title}
           </h1>
-          <p className="max-w-lg text-sm leading-relaxed text-[--muted] md:text-[0.95rem]">
+          <p className="max-w-lg text-sm leading-relaxed text-(--muted) md:text-[0.95rem]">
             {lead}
           </p>
         </div>
@@ -71,12 +71,12 @@ export function AboutSection({
   return (
     <section className="space-y-5">
       <div className="space-y-1.5">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-[--foreground] md:text-xl">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-(--foreground) md:text-xl">
           {icon ? <span className="text-[#7D3A52]">{icon}</span> : null}
           {title}
         </h2>
         {subtitle ? (
-          <p className="text-sm leading-relaxed text-[--muted]">{subtitle}</p>
+          <p className="text-sm leading-relaxed text-(--muted)">{subtitle}</p>
         ) : null}
       </div>
       {children}
@@ -111,9 +111,9 @@ export function ConceptCard({
         {icon}
       </div>
       <div className="space-y-1">
-        <p className="font-semibold text-[--foreground]">{title}</p>
+        <p className="font-semibold text-(--foreground)">{title}</p>
         {children ? (
-          <p className="text-sm leading-relaxed text-[--muted]">{children}</p>
+          <p className="text-sm leading-relaxed text-(--muted)">{children}</p>
         ) : null}
       </div>
     </div>
@@ -143,8 +143,8 @@ export function Callout({
         {icon}
       </div>
       <div className="space-y-1">
-        <p className="font-semibold text-[--foreground]">{title}</p>
-        <div className="text-sm leading-relaxed text-[--muted]">{children}</div>
+        <p className="font-semibold text-(--foreground)">{title}</p>
+        <div className="text-sm leading-relaxed text-(--muted)">{children}</div>
       </div>
     </div>
   )
@@ -160,7 +160,7 @@ export function ChipRow({
       {items.map((item) => (
         <span
           key={item.label}
-          className="inline-flex items-center gap-2 rounded-xl border border-[--border] bg-white px-3.5 py-2 text-sm font-medium text-[--foreground]"
+          className="inline-flex items-center gap-2 rounded-xl border border-(--border) bg-white px-3.5 py-2 text-sm font-medium text-(--foreground)"
         >
           <span className="text-[#7D3A52]">{item.icon}</span>
           {item.label}

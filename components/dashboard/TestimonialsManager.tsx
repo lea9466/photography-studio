@@ -297,10 +297,10 @@ export function TestimonialsManager({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
+      <div className="rounded-xl border border-(--border) bg-(--dashboard-surface) p-4 space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-[--foreground]">כותרת סקשן התגובות</h2>
-          <p className="mt-1 text-sm text-[--muted]">
+          <h2 className="text-base font-semibold text-(--foreground)">כותרת סקשן התגובות</h2>
+          <p className="mt-1 text-sm text-(--muted)">
             הטקסט מוצג בדף הבית הציבורי. אם השדה ריק, יוצג ברירת המחדל של ערכת העיצוב הנוכחית.
           </p>
         </div>
@@ -324,10 +324,10 @@ export function TestimonialsManager({
           </Button>
         </div>
       </div>
-      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] p-4 space-y-4">
+      <div className="rounded-xl border border-(--border) bg-(--dashboard-surface) p-4 space-y-4">
         <div>
-          <h2 className="text-base font-semibold text-[--foreground]">סוג תצוגת תגובות</h2>
-          <p className="mt-1 text-sm text-[--muted]">
+          <h2 className="text-base font-semibold text-(--foreground)">סוג תצוגת תגובות</h2>
+          <p className="mt-1 text-sm text-(--muted)">
             בחר איך התגובות יוצגו בדף הבית הציבורי
           </p>
         </div>
@@ -356,7 +356,7 @@ export function TestimonialsManager({
                   className={`relative cursor-pointer rounded-xl border-2 p-4 text-right transition-all ${
                     selected
                       ? 'border-[#7D3A52] bg-[#7D3A52]/5'
-                      : 'border-[--border] bg-[--dashboard-surface] hover:border-[#7D3A52]/50'
+                      : 'border-(--border) bg-(--dashboard-surface) hover:border-[#7D3A52]/50'
                   } ${isLayoutPending ? 'pointer-events-none opacity-60' : ''}`}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -366,9 +366,9 @@ export function TestimonialsManager({
                           <Check className="h-3 w-3" />
                         </span>
                       ) : (
-                        <span className="h-5 w-5 rounded-full border-2 border-[--border]" />
+                        <span className="h-5 w-5 rounded-full border-2 border-(--border)" />
                       )}
-                      <span className="font-medium text-[--foreground]">{option.label}</span>
+                      <span className="font-medium text-(--foreground)">{option.label}</span>
                     </div>
                     {option.isNew ? (
                       <Badge variant="default" className="shrink-0">
@@ -376,22 +376,22 @@ export function TestimonialsManager({
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="mt-2 text-xs text-[--muted] pr-7">{option.description}</p>
+                  <p className="mt-2 text-xs text-(--muted) pr-7">{option.description}</p>
                 </div>
               )
             })}
           </div>
           {isLayoutPending ? (
-            <p className="text-xs text-[--muted]">שומר...</p>
+            <p className="text-xs text-(--muted)">שומר...</p>
           ) : null}
         </div>
       </div>
-      <div className="rounded-xl border border-[--border] bg-[--dashboard-surface] px-4 py-3 text-sm text-[--muted]">
+      <div className="rounded-xl border border-(--border) bg-(--dashboard-surface) px-4 py-3 text-sm text-(--muted)">
         סקשן התגובות מוצג בדף הבית הציבורי רק כשיש לפחות תגובה אחת. לכל תגובה אפשר לבחור תמונה
         מהאלבום — אם לא נבחרה תמונה, יוצג הלוגו שלך.
       </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-[--muted]">
+        <p className="text-sm text-(--muted)">
           {testimonials.length === 0
             ? 'עדיין אין תגובות — הוסיפי את הראשונה'
             : `${testimonials.length} תגובות`}
@@ -403,7 +403,7 @@ export function TestimonialsManager({
       </div>
 
       {testimonials.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[--border] px-6 py-12 text-center text-sm text-[--muted]">
+        <div className="rounded-xl border border-dashed border-(--border) px-6 py-12 text-center text-sm text-(--muted)">
           <p>עדיין אין תגובות — בינתיים סקשן התגובות לא יופיע בדף הבית.</p>
           <p className="mt-2">לדוגמה: &quot;הצילומים יצאו פשוט מדהימים! ממליצה בחום&quot; — דנה, חתונה</p>
         </div>
@@ -419,7 +419,7 @@ export function TestimonialsManager({
               <Card key={testimonial.id} className="p-6">
                 <div className="flex items-start justify-between gap-4">
                   {thumbSrc ? (
-                    <div className="h-16 w-16 shrink-0 overflow-hidden border border-[--border] bg-[--dashboard-surface]">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden border border-(--border) bg-(--dashboard-surface)">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={thumbSrc}
@@ -428,7 +428,7 @@ export function TestimonialsManager({
                       />
                     </div>
                   ) : (
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-dashed border-[--border] bg-[--dashboard-surface] text-[--muted]">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-dashed border-(--border) bg-(--dashboard-surface) text-(--muted)">
                       <ImageIcon className="h-5 w-5" />
                     </div>
                   )}
@@ -444,7 +444,7 @@ export function TestimonialsManager({
                       {testimonial.shoot_type && (
                         <Badge variant="outline">{testimonial.shoot_type}</Badge>
                       )}
-                      <span className="text-xs text-[--muted]">
+                      <span className="text-xs text-(--muted)">
                         {formatDate(testimonial.review_date ?? testimonial.created_at)}
                       </span>
                     </div>
@@ -538,11 +538,11 @@ export function TestimonialsManager({
               />
             </div>
 
-            <div className="space-y-3 rounded-lg border border-[--border] p-4">
+            <div className="space-y-3 rounded-lg border border-(--border) p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <Label>תמונה לתגובה</Label>
-                  <p className="text-xs text-[--muted]">
+                  <p className="text-xs text-(--muted)">
                     תמונה קטנה משמאל למטה. בלי תמונה — יוצג הלוגו.
                   </p>
                 </div>
@@ -560,7 +560,7 @@ export function TestimonialsManager({
               </div>
 
               <div className="flex items-end gap-4">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-[--border] bg-[--dashboard-surface]">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-(--border) bg-(--dashboard-surface)">
                   {formPreviewSrc ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -569,7 +569,7 @@ export function TestimonialsManager({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-[--muted]">
+                    <div className="flex h-full w-full items-center justify-center text-(--muted)">
                       <ImageIcon className="h-6 w-6" />
                     </div>
                   )}
@@ -602,10 +602,10 @@ export function TestimonialsManager({
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-[--border] px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-(--border) px-4 py-3">
               <div>
                 <Label htmlFor="testimonial-featured">מומלצת</Label>
-                <p className="text-xs text-[--muted]">
+                <p className="text-xs text-(--muted)">
                   תגובות מומלצות יופיעו ראשונות בדף הציבורי
                 </p>
               </div>
@@ -642,9 +642,9 @@ export function TestimonialsManager({
           </DialogHeader>
 
           {loadingPhotos ? (
-            <p className="py-8 text-center text-sm text-[--muted]">טוען תמונות...</p>
+            <p className="py-8 text-center text-sm text-(--muted)">טוען תמונות...</p>
           ) : photoOptions.length === 0 ? (
-            <p className="py-8 text-center text-sm text-[--muted]">
+            <p className="py-8 text-center text-sm text-(--muted)">
               אין תמונות בגלריות. אפשר להעלות תמונה מהמחשב בטופס התגובה.
             </p>
           ) : (
@@ -656,7 +656,7 @@ export function TestimonialsManager({
                   className={`group relative aspect-square overflow-hidden border-2 transition ${
                     form.imageUrl === photo.storageRef
                       ? 'border-[--primary]'
-                      : 'border-transparent hover:border-[--border]'
+                      : 'border-transparent hover:border-(--border)'
                   }`}
                   onClick={() => {
                     setForm((current) => ({ ...current, imageUrl: photo.storageRef }))

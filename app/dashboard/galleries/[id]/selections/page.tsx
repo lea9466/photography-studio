@@ -39,7 +39,7 @@ export default async function GallerySelectionsPage({
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-medium">בחירות הלקוח</h2>
-          <p className="text-sm text-[--muted]">
+          <p className="text-sm text-(--muted)">
             תמונות שנבחרו לאלבום ולעיבוד
           </p>
         </div>
@@ -55,7 +55,7 @@ export default async function GallerySelectionsPage({
         <section className="space-y-3">
           <div>
             <h2 className="text-lg font-medium">העלאת תמונות מעובדות</h2>
-            <p className="text-sm text-[--muted]">
+            <p className="text-sm text-(--muted)">
               גררי את כל התמונות המעובדות — הן ישויכו לבחירות הלקוח
             </p>
           </div>

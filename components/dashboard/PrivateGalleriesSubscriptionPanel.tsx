@@ -107,43 +107,43 @@ export function PrivateGalleriesSubscriptionPanel({
   }
 
   return (
-    <section className="space-y-6 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+    <section className="space-y-6 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
       <div className="flex items-start gap-4">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52]">
           <Images className="h-5 w-5" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-[--foreground]">גלריות פרטיות</h2>
-          <p className="mt-1 text-sm text-[--muted]">
+          <h2 className="text-lg font-semibold text-(--foreground)">גלריות פרטיות</h2>
+          <p className="mt-1 text-sm text-(--muted)">
             מסלול נפרד לגמרי מהמנוי לאתר הציבורי — קובע כמה גלריות לקוח אפשר לנהל ובאיזה גודל.
           </p>
         </div>
       </div>
 
       {quota ? (
-        <div className="grid gap-4 rounded-xl border border-[--border]/60 bg-white/80 p-5 sm:grid-cols-3">
+        <div className="grid gap-4 rounded-xl border border-(--border)/60 bg-white/80 p-5 sm:grid-cols-3">
           <div>
-            <p className="text-xs text-[--muted]">מסלול נוכחי</p>
-            <p className="mt-1 font-semibold text-[--foreground]">{TIER_LABELS[tier]}</p>
+            <p className="text-xs text-(--muted)">מסלול נוכחי</p>
+            <p className="mt-1 font-semibold text-(--foreground)">{TIER_LABELS[tier]}</p>
           </div>
           <div>
-            <p className="text-xs text-[--muted]">
+            <p className="text-xs text-(--muted)">
               {quota.isLifetime ? 'גלריות (לכל החיים)' : 'גלריות פעילות'}
             </p>
-            <p className="mt-1 font-semibold text-[--foreground]">
+            <p className="mt-1 font-semibold text-(--foreground)">
               {quota.galleryCount} מתוך {quota.maxGalleries}
             </p>
           </div>
           <div>
-            <p className="text-xs text-[--muted]">תמונות לגלריה</p>
-            <p className="mt-1 font-semibold text-[--foreground]">עד {quota.maxPhotosPerGallery}</p>
+            <p className="text-xs text-(--muted)">תמונות לגלריה</p>
+            <p className="mt-1 font-semibold text-(--foreground)">עד {quota.maxPhotosPerGallery}</p>
           </div>
           {isActive && subscription ? (
             <div className="sm:col-span-3">
-              <p className="text-xs text-[--muted]">
+              <p className="text-xs text-(--muted)">
                 {subscription.cancelAtPeriodEnd ? 'פעיל עד' : 'החיוב הבא'}
               </p>
-              <p className="mt-1 text-sm text-[--foreground]">
+              <p className="mt-1 text-sm text-(--foreground)">
                 {formatDate(subscription.cancelAtPeriodEnd ? subscription.currentPeriodEnd : subscription.nextPaymentAt)}
               </p>
             </div>
@@ -152,8 +152,8 @@ export function PrivateGalleriesSubscriptionPanel({
       ) : null}
 
       {isActive && subscription?.plan ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[--border]/50 bg-white/70 px-4 py-3.5">
-          <p className="text-sm text-[--foreground]">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-(--border)/50 bg-white/70 px-4 py-3.5">
+          <p className="text-sm text-(--foreground)">
             {subscription.plan.name} · {formatPrice(subscription.plan.amountAgorot, subscription.plan.currency)} לחודש
           </p>
           <Button
@@ -168,21 +168,21 @@ export function PrivateGalleriesSubscriptionPanel({
         </div>
       ) : plans.length > 0 ? (
         <div className="space-y-3">
-          <p className="text-sm text-[--muted]">מסלולים בתשלום:</p>
+          <p className="text-sm text-(--muted)">מסלולים בתשלום:</p>
           <div className="grid gap-3 sm:grid-cols-3">
             {plans.map((plan) => {
               const canCheckoutThisPlan = checkoutEnabled && status.paymentsFormEnabled
               const planTier = PRIVATE_GALLERY_PLAN_CODE_TO_TIER[plan.code]
               const limits = tierLimits.find((row) => row.tier === planTier)
               return (
-                <div key={plan.code} className="rounded-xl border border-[--border]/60 bg-white/80 p-5 text-right">
-                  <p className="font-semibold text-[--foreground]">{plan.name}</p>
-                  <p className="mt-2 text-lg font-bold text-[--foreground]">
+                <div key={plan.code} className="rounded-xl border border-(--border)/60 bg-white/80 p-5 text-right">
+                  <p className="font-semibold text-(--foreground)">{plan.name}</p>
+                  <p className="mt-2 text-lg font-bold text-(--foreground)">
                     {formatPrice(plan.amountAgorot, plan.currency)}{' '}
-                    <span className="text-sm font-medium text-[--muted]">לחודש</span>
+                    <span className="text-sm font-medium text-(--muted)">לחודש</span>
                   </p>
                   {limits ? (
-                    <ul className="mt-3 space-y-1 text-sm text-[--muted]">
+                    <ul className="mt-3 space-y-1 text-sm text-(--muted)">
                       <li>עד {limits.max_galleries} גלריות פרטיות במקביל</li>
                       <li>עד {limits.max_photos_per_gallery} תמונות לגלריה</li>
                     </ul>
@@ -216,7 +216,7 @@ export function PrivateGalleriesSubscriptionPanel({
             })}
           </div>
           {!checkoutEnabled || !status.paymentsFormEnabled ? (
-            <p className="text-xs text-[--muted]">
+            <p className="text-xs text-(--muted)">
               התשלום בפועל עוד לא פעיל — המסלולים כאן להצגה בלבד בשלב זה.
             </p>
           ) : null}
@@ -224,7 +224,7 @@ export function PrivateGalleriesSubscriptionPanel({
       ) : null}
 
       {message ? (
-        <div className="flex gap-3 rounded-xl border border-[--border]/60 bg-white/70 p-4 text-sm text-[--foreground]">
+        <div className="flex gap-3 rounded-xl border border-(--border)/60 bg-white/70 p-4 text-sm text-(--foreground)">
           {message.includes('הצליח') ? (
             <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
           ) : (
@@ -234,10 +234,10 @@ export function PrivateGalleriesSubscriptionPanel({
         </div>
       ) : null}
 
-      {busy ? <Loader2 className="h-4 w-4 animate-spin text-[--muted]" /> : null}
+      {busy ? <Loader2 className="h-4 w-4 animate-spin text-(--muted)" /> : null}
 
       {isImpersonating ? (
-        <p className="text-xs text-[--muted]">פעולות חיוב מושבתות בזמן צפייה כמנהלת.</p>
+        <p className="text-xs text-(--muted)">פעולות חיוב מושבתות בזמן צפייה כמנהלת.</p>
       ) : null}
     </section>
   )

@@ -16,18 +16,18 @@ function QuickAction({ title, description, icon, href, iconBgColor, iconColor }:
   return (
     <Link
       href={href}
-      className="p-6 bg-white dark:bg-zinc-900 border border-[--border] rounded-xl flex items-center justify-between group cursor-pointer hover:bg-[--background] transition-all"
+      className="p-6 bg-white dark:bg-zinc-900 border border-(--border) rounded-xl flex items-center justify-between group cursor-pointer hover:bg-(--background) transition-all"
     >
       <div className="flex items-center gap-4">
         <div className={`w-14 h-14 rounded-full ${iconBgColor} flex items-center justify-center ${iconColor}`}>
           {icon}
         </div>
         <div>
-          <h4 className="font-semibold text-[--foreground]">{title}</h4>
-          <p className="text-sm text-[--muted]">{description}</p>
+          <h4 className="font-semibold text-(--foreground)">{title}</h4>
+          <p className="text-sm text-(--muted)">{description}</p>
         </div>
       </div>
-      <ArrowRight className="h-5 w-5 text-[--muted] group-hover:translate-x-[-8px] transition-transform" />
+      <ArrowRight className="h-5 w-5 text-(--muted) group-hover:translate-x-[-8px] transition-transform" />
     </Link>
   )
 }
@@ -52,8 +52,8 @@ export function QuickAccessActions({ upcomingMeetings = 0 }: QuickAccessActionsP
         description={upcomingMeetings > 0 ? `יש לך ${upcomingMeetings} פגישות מחר` : 'אין פגישות קרובות'}
         icon={<Calendar className="h-7 w-7" />}
         href="/dashboard/calendar"
-        iconBgColor="bg-[--foreground]/10"
-        iconColor="text-[--foreground]"
+        iconBgColor="bg-(--foreground)/10"
+        iconColor="text-(--foreground)"
       />
     </section>
   )

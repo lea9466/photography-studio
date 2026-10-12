@@ -50,7 +50,7 @@ export function DeleteGalleryButton({
       {variant === 'menu-item' ? (
         <DropdownMenuItem
           disabled={isPending}
-          className="text-[--foreground] focus:text-[--foreground]"
+          className="text-(--foreground) focus:text-(--foreground)"
           onSelect={(event) => {
             event.preventDefault()
             setOpen(true)
@@ -62,10 +62,11 @@ export function DeleteGalleryButton({
       ) : (
         <Button
           type="button"
-          variant="destructive"
+          variant="outline"
           size="sm"
           disabled={isPending}
           onClick={() => setOpen(true)}
+          className="border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
         >
           <Trash2 className="h-4 w-4" />
           מחק גלריה
@@ -93,6 +94,7 @@ export function DeleteGalleryButton({
               variant="destructive"
               disabled={isPending}
               onClick={handleDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
             >
               {isPending ? 'מוחק...' : 'מחק'}
             </Button>

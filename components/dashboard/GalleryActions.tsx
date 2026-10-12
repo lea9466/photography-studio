@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { ExternalLink, Mail, Send, Truck, Trash2 } from 'lucide-react'
+import { ChevronDown, ExternalLink, Mail, Send, Truck } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   resendGalleryEmail,
@@ -26,10 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card'
 
 type GalleryActionsProps = {
   galleryId: string
@@ -88,11 +84,12 @@ export function GalleryActions({
   }
 
   return (
-    <Card className="border-[#c9c5cd] shadow-sm">
-      <CardContent className="p-6 space-y-6">
+    <div className="space-y-6">
+      <div className="grid items-start gap-6 md:grid-cols-2">
+        <div className="space-y-6">
         {/* Section: Client Communication */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#48464c]">תקשורת עם לקוח</h3>
+          <h3 className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#7D3A52]"><span className="h-1.5 w-1.5 rounded-full bg-[#7D3A52]" aria-hidden />תקשורת עם לקוח</h3>
           <div className="flex flex-wrap gap-2">
             {canSendToClient ? (
               publicOnlyMvp ? (
@@ -142,7 +139,7 @@ export function GalleryActions({
                     resendSuccessMessage(status)
                   )
                 }
-                className="border-[#c9c5cd] hover:bg-[#f7f2f4]"
+                className="border-[#7D3A52]/30 bg-[#7D3A52]/[0.05] text-[#7D3A52] hover:bg-[#7D3A52]/10"
               >
                 <Mail className="h-4 w-4" />
                 {resendLabel}
@@ -153,9 +150,9 @@ export function GalleryActions({
 
         {/* Section: View Actions */}
         <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#48464c]">תצוגה</h3>
+          <h3 className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#7D3A52]"><span className="h-1.5 w-1.5 rounded-full bg-[#7D3A52]" aria-hidden />תצוגה</h3>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" asChild className="border-[#c9c5cd] hover:bg-[#f7f2f4]">
+            <Button size="sm" asChild className="bg-[#7D3A52] text-white shadow-sm hover:bg-[#6a2f44]">
               <Link href={clientLink} target="_blank">
                 <ExternalLink className="h-4 w-4" />
                 {clientLink.startsWith('/portfolio') ? 'תצוגה ציבורית' : 'תצוגת לקוח'}
@@ -164,48 +161,59 @@ export function GalleryActions({
           </div>
         </div>
 
-        {/* Section: Status Management */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#48464c]">ניהול סטטוס</h3>
-          <Select
-            dir="rtl"
-            value={status}
-            disabled={isPending}
-            onValueChange={(value) => {
-              const nextStatus = value as GalleryStatus
-              if (nextStatus === status) return
-              run(
-                () => updateGalleryStatus(galleryId, nextStatus),
-                `הסטטוס עודכן ל־${GALLERY_STATUS_LABELS[nextStatus]}`
-              )
-            }}
-          >
-            <SelectTrigger className="h-10 w-full bg-white border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]">
-              <SelectValue placeholder="סטטוס" />
-            </SelectTrigger>
-            <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
-              {statusOptions.map((value) => (
-                <SelectItem
-                  key={value}
-                  value={value}
-                  className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
-                >
-                  {GALLERY_STATUS_LABELS[value]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
-        {/* Section: Dangerous Actions */}
-        <div className="space-y-3 pt-4 border-t border-[#c9c5cd]">
-          <h3 className="text-sm font-semibold text-[#48464c]">פעולות מסוכנות</h3>
-          <DeleteGalleryButton
-            galleryId={galleryId}
-            galleryTitle={galleryTitle}
-          />
-        </div>
-      </CardContent>
+        {/* Rarely needed — kept folded, but parallel to the primary actions. */}
+        <details className="group rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/[0.03] p-4">
+          <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-[#7D3A52] [&::-webkit-details-marker]:hidden">
+            <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
+            עוד אפשרויות
+          </summary>
+          <div className="mt-4 space-y-6">
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#7D3A52]"><span className="h-1.5 w-1.5 rounded-full bg-[#7D3A52]" aria-hidden />ניהול סטטוס</h3>
+              <Select
+                dir="rtl"
+                value={status}
+                disabled={isPending}
+                onValueChange={(value) => {
+                  const nextStatus = value as GalleryStatus
+                  if (nextStatus === status) return
+                  run(
+                    () => updateGalleryStatus(galleryId, nextStatus),
+                    `הסטטוס עודכן ל־${GALLERY_STATUS_LABELS[nextStatus]}`
+                  )
+                }}
+              >
+                <SelectTrigger className="h-10 w-full bg-white border-[#c9c5cd] focus:border-[#6b2d43] focus:ring-[#6b2d43]">
+                  <SelectValue placeholder="סטטוס" />
+                </SelectTrigger>
+                <SelectContent className="border border-[#c9c5cd] bg-white text-[#100d1f] shadow-lg">
+                  {statusOptions.map((value) => (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                      className="focus:bg-[#f7f2f4] focus:text-[#100d1f]"
+                    >
+                      {GALLERY_STATUS_LABELS[value]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
+            <div className="space-y-3 border-t border-[#c9c5cd] pt-4">
+              <h3 className="flex items-center gap-2 text-xs font-bold tracking-wide text-[#7D3A52]"><span className="h-1.5 w-1.5 rounded-full bg-[#7D3A52]" aria-hidden />פעולות מסוכנות</h3>
+              <DeleteGalleryButton
+                galleryId={galleryId}
+                galleryTitle={galleryTitle}
+              />
+            </div>
+
+          </div>
+        </details>
+      </div>
 
       <SendGalleryConfirmDialog
         open={sendConfirmOpen}
@@ -216,6 +224,6 @@ export function GalleryActions({
           run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
         }}
       />
-    </Card>
+    </div>
   )
 }

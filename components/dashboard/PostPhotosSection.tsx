@@ -152,27 +152,27 @@ export function PostPhotosSection({
   }
 
   return (
-    <div className="space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03]">
+    <div className="space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#7D3A52]/10 pb-4">
         <div>
           <h3 className="text-sm font-semibold">תמונות לפוסט</h3>
-          <p className="text-xs text-[--muted]">
+          <p className="text-xs text-(--muted)">
             עד {MAX_POST_PHOTOS} תמונות · נותרו {remainingSlots}
           </p>
-          <p className="mt-1.5 text-xs text-[--muted]">
+          <p className="mt-1.5 text-xs text-(--muted)">
             <Star className="mb-0.5 inline h-3 w-3 text-[--primary]" />{' '}
             {photos.length > 0 ? (
               <>
                 לחצי על הכוכב לסימון{' '}
-                <span className="font-medium text-[--foreground]">תמונת השער</span> — התמונה שתוצג
+                <span className="font-medium text-(--foreground)">תמונת השער</span> — התמונה שתוצג
                 בכרטיס הפוסט בדף הבית ובבלוג. מומלץ לבחור{' '}
-                <span className="font-medium text-[--foreground]">תמונה רחבה</span> (לרוחב).
+                <span className="font-medium text-(--foreground)">תמונה רחבה</span> (לרוחב).
               </>
             ) : (
               <>
                 אחרי העלאה, סמני בכוכב את{' '}
-                <span className="font-medium text-[--foreground]">תמונת השער</span> לכרטיס הפוסט.
-                מומלץ <span className="font-medium text-[--foreground]">תמונה רחבה</span> (לרוחב).
+                <span className="font-medium text-(--foreground)">תמונת השער</span> לכרטיס הפוסט.
+                מומלץ <span className="font-medium text-(--foreground)">תמונה רחבה</span> (לרוחב).
               </>
             )}
           </p>
@@ -211,7 +211,7 @@ export function PostPhotosSection({
                   ? 'border-[#7D3A52] ring-2 ring-[#7D3A52]/20'
                   : isCover
                     ? 'border-[#7D3A52]/50'
-                    : 'border-[--border]/80 hover:border-[#7D3A52]/30'
+                    : 'border-(--border)/80 hover:border-[#7D3A52]/30'
               }`}
             >
               <button
@@ -224,7 +224,7 @@ export function PostPhotosSection({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previewUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full items-center justify-center text-[--muted]">
+                  <div className="flex h-full items-center justify-center text-(--muted)">
                     <ImageIcon className="h-8 w-8" />
                   </div>
                 )}
@@ -257,7 +257,7 @@ export function PostPhotosSection({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#7D3A52]/15 bg-[#7D3A52]/[0.03] text-[--muted] transition hover:border-[#7D3A52]/35 hover:bg-[#7D3A52]/[0.06] hover:text-[#7D3A52]"
+            className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#7D3A52]/15 bg-[#7D3A52]/[0.03] text-(--muted) transition hover:border-[#7D3A52]/35 hover:bg-[#7D3A52]/[0.06] hover:text-[#7D3A52]"
           >
             {isUploading ? (
               <Loader2 className="h-6 w-6 animate-spin" />

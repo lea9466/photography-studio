@@ -12,7 +12,7 @@ import { SITE_SETTINGS_HELP } from '@/lib/dashboard/site-settings-help'
 import { cn } from '@/lib/utils'
 
 const UPLOAD_ZONE_CLASS =
-  'relative overflow-hidden rounded-xl border border-[--border]/80 bg-[#7D3A52]/[0.03] transition-all'
+  'relative overflow-hidden rounded-xl border border-(--border)/80 bg-[#7D3A52]/[0.03] transition-all'
 
 const PACKAGES_BACKGROUND_UPLOAD_ENABLED = false
 
@@ -144,7 +144,7 @@ export function PackagesSectionBackground({
                 className="object-cover pointer-events-none"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[--muted]">
+              <div className="w-full h-full flex items-center justify-center text-(--muted)">
                 <Upload className="h-8 w-8" />
               </div>
             )}
@@ -204,7 +204,7 @@ export function PackagesSectionBackground({
                 className="object-cover pointer-events-none"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-[--muted]">
+              <div className="w-full h-full flex items-center justify-center text-(--muted)">
                 <Upload className="h-8 w-8" />
               </div>
             )}

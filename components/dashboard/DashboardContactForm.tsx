@@ -46,7 +46,7 @@ function ContactSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -69,7 +69,7 @@ function ContactSubPanel({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -102,10 +102,10 @@ function ContactSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -187,8 +187,8 @@ export function DashboardContactForm({
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52]">
             <Mail className="h-7 w-7" />
           </div>
-          <p className="text-lg font-semibold text-[--foreground]">תודה על הפנייה!</p>
-          <p className="text-sm text-[--muted]">
+          <p className="text-lg font-semibold text-(--foreground)">תודה על הפנייה!</p>
+          <p className="text-sm text-(--muted)">
             ההודעה נשלחה אלינו. נחזור אליך בהקדם האפשר.
           </p>
           <Button
@@ -220,7 +220,7 @@ export function DashboardContactForm({
             <SelectTrigger className={cn(INPUT_CLASS, 'flex-row-reverse justify-between text-right shadow-none')}>
               <SelectValue placeholder="בחרי סוג פנייה" />
             </SelectTrigger>
-            <SelectContent className="border-[--border] bg-white shadow-lg">
+            <SelectContent className="border-(--border) bg-white shadow-lg">
               {TYPES.map((item) => (
                 <SelectItem
                   key={item.value}
@@ -233,7 +233,7 @@ export function DashboardContactForm({
             </SelectContent>
           </Select>
           {selectedType ? (
-            <p className="text-xs text-[--muted]">{selectedType.description}</p>
+            <p className="text-xs text-(--muted)">{selectedType.description}</p>
           ) : null}
         </div>
 
@@ -288,7 +288,7 @@ export function DashboardContactForm({
           <div className="flex items-start justify-between gap-3">
             <div>
               <Label>תמונה מצורפת (אופציונלי)</Label>
-              <p className="mt-1 text-xs text-[--muted]">
+              <p className="mt-1 text-xs text-(--muted)">
                 שימושי לצילום מסך של באג או להמחשת הבקשה
               </p>
             </div>
@@ -317,7 +317,7 @@ export function DashboardContactForm({
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-[--muted]">
+                <div className="flex h-full w-full items-center justify-center text-(--muted)">
                   <ImageIcon className="h-6 w-6" />
                 </div>
               )}
@@ -353,7 +353,7 @@ export function DashboardContactForm({
           >
             {isPending ? 'שולח...' : 'שליחת הודעה'}
           </Button>
-          <div className="flex flex-wrap gap-4 text-xs text-[--muted]">
+          <div className="flex flex-wrap gap-4 text-xs text-(--muted)">
             <span className="inline-flex items-center gap-1">
               <Bug className="h-3.5 w-3.5" />
               באגים

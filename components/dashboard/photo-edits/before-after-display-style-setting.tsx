@@ -50,10 +50,10 @@ export function BeforeAfterDisplayStyleSetting({
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-[--border] bg-[--dashboard-surface] p-5">
+    <section className="space-y-4 rounded-xl border border-(--border) bg-(--dashboard-surface) p-5">
       <div>
-        <h2 className="text-lg font-semibold text-[--foreground]">סגנון תצוגה באתר</h2>
-        <p className="mt-1 text-sm text-[--muted]">
+        <h2 className="text-lg font-semibold text-(--foreground)">סגנון תצוגה באתר</h2>
+        <p className="mt-1 text-sm text-(--muted)">
           בחרי כיצד יוצגו כל זוגות התמונות בעמוד לפני ואחרי.
         </p>
       </div>
@@ -74,7 +74,7 @@ export function BeforeAfterDisplayStyleSetting({
                 'cursor-pointer rounded-xl border-2 p-4 text-right transition-all',
                 selected
                   ? 'border-[#7D3A52] bg-[#7D3A52]/5'
-                  : 'border-[--border] hover:border-[#7D3A52]/50',
+                  : 'border-(--border) hover:border-[#7D3A52]/50',
                 isPending && 'cursor-wait opacity-60'
               )}
             >
@@ -84,14 +84,14 @@ export function BeforeAfterDisplayStyleSetting({
                     'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
                     selected
                       ? 'border-[#7D3A52] bg-[#7D3A52] text-white'
-                      : 'border-[--border] text-transparent'
+                      : 'border-(--border) text-transparent'
                   )}
                 >
                   <Check className="h-3 w-3" />
                 </span>
-                <span className="font-medium text-[--foreground]">{option.title}</span>
+                <span className="font-medium text-(--foreground)">{option.title}</span>
               </div>
-              <p className="mt-2 pr-7 text-xs leading-relaxed text-[--muted]">
+              <p className="mt-2 pr-7 text-xs leading-relaxed text-(--muted)">
                 {option.description}
               </p>
             </button>
@@ -99,7 +99,7 @@ export function BeforeAfterDisplayStyleSetting({
         })}
       </div>
 
-      <p className="text-xs text-[--muted]">
+      <p className="text-xs text-(--muted)">
         הסגנון שתבחרי יחול על כל זוגות התמונות בעמוד.
       </p>
       {isPending ? (

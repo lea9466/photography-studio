@@ -151,7 +151,7 @@ function SelectionColumn({
       </CardHeader>
       <CardContent>
         {photos.length === 0 ? (
-          <p className="text-sm text-[--muted]">אין בחירות עדיין</p>
+          <p className="text-sm text-(--muted)">אין בחירות עדיין</p>
         ) : (
           <div className="relative">
             <div
@@ -163,7 +163,7 @@ function SelectionColumn({
                 {photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="relative aspect-square overflow-hidden rounded-lg border border-[--border]"
+                    className="relative aspect-square overflow-hidden rounded-lg border border-(--border)"
                   >
                     {photo.preview_signed_url ? (
                       <Image

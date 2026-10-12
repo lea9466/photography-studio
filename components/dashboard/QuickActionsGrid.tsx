@@ -32,9 +32,9 @@ export function QuickActionsGrid() {
           href={action.href}
           className={cn(
             'flex flex-col items-center justify-center gap-2',
-            'bg-[--background] border border-[--border]',
+            'bg-(--background) border border-(--border)',
             'p-4 rounded-xl',
-            'shadow-sm transition-all active:scale-95 active:bg-[--border]/20 group',
+            'shadow-sm transition-all active:scale-95 active:bg-(--border)/20 group',
             'hover:shadow-md hover:border-[#7D3A52]/30'
           )}
           style={{ animationDelay: `${index * 0.1}s` }}
@@ -42,7 +42,7 @@ export function QuickActionsGrid() {
           <div className="text-[#7D3A52] group-hover:scale-110 transition-transform">
             {action.icon}
           </div>
-          <span className="text-xs font-medium text-[--foreground]">
+          <span className="text-xs font-medium text-(--foreground)">
             {action.label}
           </span>
         </Link>

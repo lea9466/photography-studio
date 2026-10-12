@@ -178,7 +178,7 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <p className="text-sm text-[--muted]">
+          <p className="text-sm text-(--muted)">
             {clients.length === 0
               ? 'עדיין אין לקוחות — הוסיפי את הראשון'
               : `${clients.length} לקוחות`}
@@ -215,23 +215,23 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
 
       {clients.length > 0 && (
         <div className="relative w-full sm:max-w-sm">
-          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[--muted]" />
+          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-(--muted)" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="חיפוש לקוח לפי שם או אימייל..."
-            className="w-full rounded-xl border border-[--border] bg-white py-2.5 pr-10 pl-3 text-sm outline-none transition-colors focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/15"
+            className="w-full rounded-xl border border-(--border) bg-white py-2.5 pr-10 pl-3 text-sm outline-none transition-colors focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/15"
           />
         </div>
       )}
 
       {clients.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[--border] px-6 py-12 text-center text-sm text-[--muted]">
+        <div className="rounded-xl border border-dashed border-(--border) px-6 py-12 text-center text-sm text-(--muted)">
           לדוגמה: ישראל ישראלי, israel@example.com, 050-1234567
         </div>
       ) : visibleClients.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-[--border] px-6 py-10 text-center text-sm text-[--muted]">
+        <p className="rounded-xl border border-dashed border-(--border) px-6 py-10 text-center text-sm text-(--muted)">
           לא נמצאו לקוחות שמתאימים לחיפוש
         </p>
       ) : (
@@ -245,7 +245,7 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
                   'relative flex flex-col rounded-xl border bg-white p-5 transition-all hover:shadow-sm',
                   selected
                     ? 'border-[#7D3A52] bg-[#f1edef]'
-                    : 'border-[--border] hover:border-[#7D3A52]/40'
+                    : 'border-(--border) hover:border-[#7D3A52]/40'
                 )}
               >
                 <div className="flex items-start gap-4">
@@ -253,24 +253,24 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
                     {clientInitials(client.name)}
                   </div>
                   <div className="min-w-0 flex-grow">
-                    <h3 className="truncate text-base font-semibold text-[--foreground]">
+                    <h3 className="truncate text-base font-semibold text-(--foreground)">
                       {client.name}
                     </h3>
                     {client.email ? (
                       <a
                         href={`mailto:${client.email}`}
-                        className="mt-1 flex items-center gap-1.5 text-sm text-[--muted] transition-colors hover:text-[#7D3A52]"
+                        className="mt-1 flex items-center gap-1.5 text-sm text-(--muted) transition-colors hover:text-[#7D3A52]"
                       >
                         <Mail className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate">{client.email}</span>
                       </a>
                     ) : (
-                      <p className="mt-1 text-sm text-[--muted]/60">אין אימייל</p>
+                      <p className="mt-1 text-sm text-(--muted)/60">אין אימייל</p>
                     )}
                     {client.phone ? (
                       <a
                         href={`tel:${client.phone}`}
-                        className="mt-1 flex items-center gap-1.5 text-sm text-[--muted] transition-colors hover:text-[#7D3A52]"
+                        className="mt-1 flex items-center gap-1.5 text-sm text-(--muted) transition-colors hover:text-[#7D3A52]"
                       >
                         <Phone className="h-3.5 w-3.5 shrink-0" />
                         <span className="truncate" dir="ltr">
@@ -289,7 +289,7 @@ export function ClientsManager({ initialClients }: ClientsManagerProps) {
                   </label>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end gap-1 border-t border-[--border] pt-3">
+                <div className="mt-4 flex items-center justify-end gap-1 border-t border-(--border) pt-3">
                   <Button
                     type="button"
                     variant="ghost"

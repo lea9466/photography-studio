@@ -43,7 +43,7 @@ function PackagesSection({
   return (
     <section
       className={cn(
-        'relative space-y-7 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
+        'relative space-y-7 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8',
         className
       )}
     >
@@ -66,7 +66,7 @@ function PackagesSubPanel({
   return (
     <div
       className={cn(
-        'space-y-5 rounded-xl border border-[--border]/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
+        'space-y-5 rounded-xl border border-(--border)/60 bg-white/80 p-5 shadow-sm shadow-[#7D3A52]/[0.03] md:p-6',
         className
       )}
     >
@@ -99,10 +99,10 @@ function PackagesSectionHeader({
                 {index}
               </span>
             ) : null}
-            <h2 className="text-lg font-semibold text-[--foreground]">{title}</h2>
+            <h2 className="text-lg font-semibold text-(--foreground)">{title}</h2>
           </div>
           {description ? (
-            <p className="text-xs leading-relaxed text-[--muted]">{description}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">{description}</p>
           ) : null}
         </div>
       </div>
@@ -313,9 +313,9 @@ export function PackagesManager({
           description="צרי וערכי חבילות צילום עם מחיר, משך ורשימת מה כלול."
         />
 
-        <PackagesSubPanel className="space-y-2 text-sm text-[--muted]">
+        <PackagesSubPanel className="space-y-2 text-sm text-(--muted)">
           <p>סקשן החבילות מוצג בדף הבית הציבורי רק כשיש לפחות חבילה פעילה אחת. חבילות מוסתרות לא נספרות.</p>
-          <p className="text-[--foreground]">
+          <p className="text-(--foreground)">
             <span className="font-medium">מומלץ:</span> להגדיר בדיוק 3 חבילות פעילות — כך הן מוצגות בצורה מסודרת ומאוזנת בכל ערכות העיצוב.
           </p>
           {activeCount > 0 && activeCount !== 3 ? (
@@ -326,7 +326,7 @@ export function PackagesManager({
         </PackagesSubPanel>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[--muted]">
+          <p className="text-sm text-(--muted)">
             {packages.length === 0
               ? 'עדיין אין חבילות — הוסיפי את הראשונה'
               : `${packages.length} חבילות`}
@@ -342,8 +342,8 @@ export function PackagesManager({
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7D3A52]/[0.08] text-[#7D3A52]">
               <Camera className="h-7 w-7" />
             </div>
-            <p className="text-sm text-[--muted]">עדיין אין חבילות — בינתיים סקשן החבילות לא יופיע בדף הבית.</p>
-            <p className="text-xs text-[--muted]">לדוגמה: חבילת פרימיום, ₪2,400, שעתיים צילום, ורשימת &quot;מה כלול&quot;</p>
+            <p className="text-sm text-(--muted)">עדיין אין חבילות — בינתיים סקשן החבילות לא יופיע בדף הבית.</p>
+            <p className="text-xs text-(--muted)">לדוגמה: חבילת פרימיום, ₪2,400, שעתיים צילום, ורשימת &quot;מה כלול&quot;</p>
             <Button type="button" onClick={openCreateDialog} className={ACCENT_BUTTON_CLASS}>
               <Plus className="h-4 w-4" />
               חבילה חדשה
@@ -373,7 +373,7 @@ export function PackagesManager({
       </PackagesSection>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-[--border]/80 bg-white">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-(--border)/80 bg-white">
           <DialogHeader>
             <DialogTitle>
               {editingId ? 'עריכת חבילה' : 'חבילה חדשה'}
@@ -452,7 +452,7 @@ export function PackagesManager({
             <PackagesSubPanel className="flex flex-row items-center justify-between gap-4 space-y-0">
               <div>
                 <Label>מוצגת ללקוחות</Label>
-                <p className="mt-1 text-xs text-[--muted]">
+                <p className="mt-1 text-xs text-(--muted)">
                   חבילות מוסתרות לא יופיעו בדף הציבורי
                 </p>
               </div>
@@ -467,7 +467,7 @@ export function PackagesManager({
             <PackagesSubPanel className="flex flex-row items-center justify-between gap-4 space-y-0">
               <div>
                 <Label>מומלצת</Label>
-                <p className="mt-1 text-xs text-[--muted]">
+                <p className="mt-1 text-xs text-(--muted)">
                   חבילות מומלצות יופיעו עם מסגרת מודגשת בדף הציבורי
                 </p>
               </div>

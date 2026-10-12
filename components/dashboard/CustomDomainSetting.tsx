@@ -47,14 +47,14 @@ function CopyableValue({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-[--border]/80 bg-white/80 px-3 py-2">
-      <code className="min-w-0 flex-1 truncate text-xs text-[--foreground]" dir="ltr">
+    <div className="flex items-center gap-2 rounded-lg border border-(--border)/80 bg-white/80 px-3 py-2">
+      <code className="min-w-0 flex-1 truncate text-xs text-(--foreground)" dir="ltr">
         {value}
       </code>
       <button
         type="button"
         onClick={handleCopy}
-        className="shrink-0 text-[--muted] hover:text-[--foreground]"
+        className="shrink-0 text-(--muted) hover:text-(--foreground)"
         aria-label="העתקה"
       >
         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -171,7 +171,7 @@ export function CustomDomainSetting({
   const verificationChallenge = (domain?.vercel_verification as VercelVerificationChallenge[] | null)?.[0] ?? null
 
   return (
-    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
+    <section className="relative space-y-5 overflow-hidden rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 shadow-[0_2px_10px_rgba(125,58,82,0.04)] md:p-8">
       <div
         className="pointer-events-none absolute inset-y-5 right-0 w-0.5 rounded-full bg-gradient-to-b from-[#7D3A52]/30 via-[#7D3A52]/10 to-transparent"
         aria-hidden
@@ -182,8 +182,8 @@ export function CustomDomainSetting({
             <Globe className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1 space-y-1">
-            <h2 className="text-lg font-semibold text-[--foreground]">דומיין אישי</h2>
-            <p className="text-xs leading-relaxed text-[--muted]">
+            <h2 className="text-lg font-semibold text-(--foreground)">דומיין אישי</h2>
+            <p className="text-xs leading-relaxed text-(--muted)">
               חברי דומיין משלך — דומיין ראשי (השם-שלך.com) או תת-דומיין (www.השם-שלך.com) — כדי שהאתר יופיע בכתובת שלך במקום ב-slug.
             </p>
           </div>
@@ -217,13 +217,13 @@ export function CustomDomainSetting({
           <p className="text-sm font-semibold text-amber-900">
             נדרש אימות בעלות נוסף — {domain.hostname}
           </p>
-          <p className="text-xs leading-relaxed text-[--muted]">
+          <p className="text-xs leading-relaxed text-(--muted)">
             הדומיין הזה כבר מוכר ל-Vercel מחשבון אחר. כדי להוכיח שהוא שלך, הוסיפי את רשומת ה-TXT הבאה
             אצל ספק הדומיין שלך:
           </p>
           {verificationChallenge && (
-            <div className="space-y-1 text-xs text-[--muted]">
-              <p className="font-medium text-[--foreground]">
+            <div className="space-y-1 text-xs text-(--muted)">
+              <p className="font-medium text-(--foreground)">
                 שם: <span dir="ltr">{verificationChallenge.domain}</span>
               </p>
               <CopyableValue value={verificationChallenge.value} />
@@ -276,22 +276,22 @@ export function CustomDomainSetting({
               עדיין ממתינה לרשומת ה-DNS — {domain.hostname}
             </p>
           </div>
-          <p className="text-xs leading-relaxed text-[--muted]">
+          <p className="text-xs leading-relaxed text-(--muted)">
             הדומיין רשום אצלנו, אבל עדיין לא זיהינו את רשומת ה-DNS אצל ספק הדומיין שלך. האתר לא יעלה עד שהרשומה
             הבאה תתווסף שם:
           </p>
           {isApexHostname(domain.hostname) ? (
-            <div className="space-y-1 text-xs text-[--muted]">
-              <p className="font-medium text-[--foreground]">רשומת A (שדה Host ריק/@):</p>
+            <div className="space-y-1 text-xs text-(--muted)">
+              <p className="font-medium text-(--foreground)">רשומת A (שדה Host ריק/@):</p>
               <CopyableValue value={apexARecord} />
             </div>
           ) : (
-            <div className="space-y-1 text-xs text-[--muted]">
-              <p className="font-medium text-[--foreground]">רשומת CNAME (שדה Host: www):</p>
+            <div className="space-y-1 text-xs text-(--muted)">
+              <p className="font-medium text-(--foreground)">רשומת CNAME (שדה Host: www):</p>
               <CopyableValue value={cnameTarget} />
             </div>
           )}
-          <p className="text-xs leading-relaxed text-[--muted]">
+          <p className="text-xs leading-relaxed text-(--muted)">
             אחרי שהוספת את הרשומה אצל ספק הדומיין — זה יכול לקחת עד כמה שעות עד שהיא נכנסת לתוקף בכל העולם. אפשר
             ללחוץ "בדקי סטטוס" מדי פעם כדי לראות אם זה כבר עבד.
           </p>

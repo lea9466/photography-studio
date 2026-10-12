@@ -159,7 +159,7 @@ export const ClientEditForm = forwardRef<ClientEditFormRef, ClientEditFormProps>
               </div>
               <div className="flex-grow min-w-0">
                 <h4 className="font-semibold text-lg text-[#100d1f] truncate">{client.name}</h4>
-                <div className="flex items-center gap-4 mt-1">
+                <div className="mt-1 flex min-w-0 flex-col gap-1">
                   {client.email && (
                     <div className="flex items-center gap-1.5 text-sm text-[#48464c]">
                       <Mail className="w-4 h-4 flex-shrink-0" />

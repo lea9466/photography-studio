@@ -54,7 +54,7 @@ export function DashboardNavMenu({
           className={cn(
             'relative flex items-center gap-3 px-4 py-3 rounded-xl border',
             'opacity-45 cursor-not-allowed select-none pointer-events-none',
-            'text-[--dashboard-muted] pr-4',
+            'text-(--dashboard-muted) pr-4',
             lockedByUnavailable
               ? 'border-rose-200/80 bg-rose-50/40'
               : 'border-[#c9c5cd]'
@@ -82,8 +82,8 @@ export function DashboardNavMenu({
         className={cn(
           'group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200',
           active
-            ? 'bg-[--dashboard-accent]/10 text-[--dashboard-accent] font-semibold border-r-4 border-[--dashboard-accent] pr-3'
-            : 'text-[--dashboard-muted] hover:text-[--dashboard-foreground] hover:bg-[--dashboard-surface] pr-4'
+            ? 'bg-(--dashboard-accent)/10 text-(--dashboard-accent) font-semibold border-r-4 border-(--dashboard-accent) pr-3'
+            : 'text-(--dashboard-muted) hover:text-(--dashboard-foreground) hover:bg-(--dashboard-surface) pr-4'
         )}
       >
         {item.icon}

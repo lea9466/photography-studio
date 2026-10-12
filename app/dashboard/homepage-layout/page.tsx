@@ -62,16 +62,16 @@ export default async function HomepageLayoutPage() {
   return (
     <div className="animate-fade-in">
       <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
-        <div className="relative overflow-hidden rounded-2xl border border-[--border] bg-[--dashboard-surface] px-7 py-6 md:px-9 md:py-7">
+        <div className="relative overflow-hidden rounded-2xl border border-(--border) bg-(--dashboard-surface) px-7 py-6 md:px-9 md:py-7">
           <div className="relative flex items-start gap-5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/10">
               <LayoutList className="h-5 w-5" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight text-[--foreground] md:text-[1.65rem]">
+              <h1 className="text-2xl font-bold tracking-tight text-(--foreground) md:text-[1.65rem]">
                 סדר דף הבית
               </h1>
-              <p className="max-w-xl text-sm leading-relaxed text-[--muted]">
+              <p className="max-w-xl text-sm leading-relaxed text-(--muted)">
                 דף הבית של האתר בנוי מסקשנים, כמו אודות, גלריות והמלצות. כאן את בוחרת באיזה סדר
                 הם יופיעים ואילו מהם יוצגו בכלל.
               </p>
@@ -83,7 +83,7 @@ export default async function HomepageLayoutPage() {
           {STEPS.map(({ icon: Icon, title, body }, index) => (
             <div
               key={title}
-              className="space-y-3 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-5"
+              className="space-y-3 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-5"
             >
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#7D3A52]/[0.08] text-[#7D3A52]">
@@ -91,8 +91,8 @@ export default async function HomepageLayoutPage() {
                 </span>
                 <span className="text-xs font-semibold text-[#7D3A52]">שלב {index + 1}</span>
               </div>
-              <h2 className="text-base font-semibold text-[--foreground]">{title}</h2>
-              <p className="text-sm leading-relaxed text-[--muted]">{body}</p>
+              <h2 className="text-base font-semibold text-(--foreground)">{title}</h2>
+              <p className="text-sm leading-relaxed text-(--muted)">{body}</p>
             </div>
           ))}
         </div>
@@ -104,12 +104,12 @@ export default async function HomepageLayoutPage() {
           lockedSections={lockedSections}
         />
 
-        <section className="space-y-4 rounded-2xl border border-[--border]/80 bg-[--dashboard-surface] p-6 md:p-8">
+        <section className="space-y-4 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-6 md:p-8">
           <div className="flex items-center gap-2.5">
             <Lock className="h-4 w-4 text-[#7D3A52]" />
-            <h2 className="text-base font-semibold text-[--foreground]">טוב לדעת</h2>
+            <h2 className="text-base font-semibold text-(--foreground)">טוב לדעת</h2>
           </div>
-          <ul className="space-y-2.5 text-sm leading-relaxed text-[--muted]">
+          <ul className="space-y-2.5 text-sm leading-relaxed text-(--muted)">
             {GOOD_TO_KNOW.map((line) => (
               <li key={line} className="flex gap-2.5">
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#7D3A52]/50" aria-hidden />

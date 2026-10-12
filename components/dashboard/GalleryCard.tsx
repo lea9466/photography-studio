@@ -72,7 +72,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           <CardTitle className="truncate text-lg">
             <Link
               href={`/dashboard/galleries/${gallery.id}`}
-              className="transition-colors hover:text-[--muted]"
+              className="transition-colors hover:text-(--muted)"
             >
               {gallery.title}
             </Link>
@@ -147,7 +147,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
             {GALLERY_TYPE_LABELS[gallery.gallery_type]}
           </Badge>
         </div>
-        <div className="flex items-center justify-between text-sm text-[--muted]">
+        <div className="flex items-center justify-between text-sm text-(--muted)">
           <span>{gallery.photo_count} תמונות</span>
           <span>{formatDate(gallery.created_at)}</span>
         </div>
