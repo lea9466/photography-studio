@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { A11Y_ACCENT_CSS_VAR } from '@/lib/hooks/use-document-accent-color'
 
 const STORAGE_KEY = 'stg_a11y'
@@ -76,6 +77,7 @@ function AccessibilityIcon() {
 }
 
 export function AccessibilityWidget() {
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS)
   const [ready, setReady] = useState(false)
@@ -114,7 +116,9 @@ export function AccessibilityWidget() {
     return () => window.removeEventListener('keydown', onKey)
   }, [open, close])
 
-  if (!ready) return null
+  // Private client galleries (/g/[id]) carry no floating button — saved
+  // preferences are still applied above, only the trigger is hidden.
+  if (!ready || pathname?.startsWith('/g/')) return null
 
   const isDefault = JSON.stringify(prefs) === JSON.stringify(DEFAULTS)
 
