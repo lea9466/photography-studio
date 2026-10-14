@@ -16,6 +16,11 @@ export function galleryUploadPercent(progress: GalleryUploadProgress) {
   return Math.round((processed / progress.total) * 100)
 }
 
+/** Everything was saved — the "don't close the page" notice no longer applies. */
+export function isGalleryUploadFinished(progress: GalleryUploadProgress) {
+  return progress.phase === 'registering' && progress.total > 0 && progress.completed >= progress.total
+}
+
 type GalleryUploadProgressBarProps = {
   progress: GalleryUploadProgress
 }
@@ -36,17 +41,17 @@ export function GalleryUploadProgressBar({
         : `הועלו ${formatGalleryUploadCount(processedCount)} מתוך ${formatGalleryUploadCount(progress.total)}`
 
   return (
-    <div className="rounded-xl border border-[--border] bg-[--background] p-4 shadow-sm">
+    <div className="rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/[0.04] p-4 shadow-sm">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-sm font-semibold">{label}</p>
-        <span className="text-2xl font-semibold tabular-nums text-[--foreground]">
+        <span className="text-2xl font-semibold tabular-nums text-[#7D3A52]">
           {progress.phase === 'preparing' ? '…' : `${percent}%`}
         </span>
       </div>
       <Progress value={percent} className="mt-3 h-3" />
-      <p className="mt-2 text-xs text-[--muted]">
+      <p className="mt-2 text-xs text-[#48464c]">
         {progress.phase === 'registering'
-          ? 'רישום מרוכז ל-Supabase · '
+          ? 'שומר את התמונות בגלריה · '
           : progress.staged > 0 && progress.completed < progress.total
             ? `${formatGalleryUploadCount(progress.staged)} בתור · `
             : null}

@@ -23,10 +23,14 @@ import { DOWNLOAD_PERMISSIONS_ENABLED } from '@/lib/types/app.types'
 import type { Client } from '@/lib/types/database.types'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
+import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
 import { ClientGalleryCoverPicker } from '@/components/gallery/ClientGalleryCoverPicker'
 import { DisableWatermarkDialog } from '@/components/gallery/DisableWatermarkDialog'
 
 const WIZARD_STEPS = ['בחירת לקוח', 'פרטי הגלריה', 'מגבלות והרשאות']
+
+const INPUT_CLASS =
+  'w-full rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20'
 
 type ClientMode = 'existing' | 'new'
 
@@ -225,22 +229,48 @@ export function ClientGalleryWizard({
 
   const showModeSelector = availableCredits.length > 0 || tierBlocked
 
+  // One-line digests for the folded cards.
+  const selectionSummary = [
+    state.albumSelectionEnabled
+      ? `אלבום${state.maxAlbumSelection ? ` עד ${state.maxAlbumSelection}` : ''}`
+      : null,
+    state.editSelectionEnabled
+      ? `עיבוד${state.maxEditSelection ? ` עד ${state.maxEditSelection}` : ''}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(' + ')
+  const watermarkSummary = state.autoApplyWatermark
+    ? state.watermarkText
+      ? `פעיל · ${state.watermarkText}`
+      : 'פעיל'
+    : 'כבוי'
+  const downloadSummary = !downloadPermissionsEnabled
+    ? 'לא זמין כרגע'
+    : [
+        state.allowDownloadPreview ? 'תצוגה מקדימה' : null,
+        state.allowDownloadOriginal ? 'קבצי מקור' : null,
+      ]
+        .filter(Boolean)
+        .join(' + ') || 'ללא הורדה'
+
   return (
     <div className="w-full space-y-8">
-      {!showModeSelector && buyMoreHref ? (
-        <p className="rounded-xl border border-[#7D3A52]/20 bg-[#7D3A52]/5 px-4 py-3 text-xs text-[#48464c]">
-          צריכה גלריה גדולה מהמכסה שלך, או גלריה נוספת?{' '}
+      {buyMoreHref ? (
+        <p className="text-xs text-[#48464c]">
+          {tierBlocked && availableCredits.length === 0
+            ? 'אין לך מנוי פעיל — '
+            : 'צריכה גלריה גדולה או נוספת? '}
           <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
             רכשי פאס לגלריה בודדת
-          </a>{' '}
-          — ואז תוכלי לבחור אותו כאן.
+          </a>
         </p>
       ) : null}
 
       {showModeSelector ? (
-        <div className="rounded-xl border-2 border-[#7D3A52]/30 bg-[#7D3A52]/5 p-4">
+        <div className="rounded-2xl border border-[#7c3aed]/25 bg-[#7c3aed]/[0.04] p-4">
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#100d1f]">
-            <CreditCard className="h-4 w-4 text-[#7D3A52]" aria-hidden />
+            <CreditCard className="h-4 w-4 text-[#6d28d9]" aria-hidden />
             איך ליצור את הגלריה הזו?
           </div>
           <div className="space-y-2">
@@ -277,123 +307,132 @@ export function ClientGalleryWizard({
               </label>
             ))}
           </div>
-          {buyMoreHref ? (
-            <p className="mt-3 text-xs text-[#48464c]/70">
-              {tierBlocked && availableCredits.length === 0
-                ? 'אין לך מנוי פעיל — '
-                : 'צריכה גלריה גדולה יותר? '}
-              <a href={buyMoreHref} className="font-semibold text-[#7D3A52] underline">
-                רכשי פאס לגלריה בודדת
-              </a>
-            </p>
-          ) : null}
         </div>
       ) : null}
 
-      {/* Stepper */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:gap-4">
+      {/* Stepper — done steps are filled with a check, the current one is
+          ringed, upcoming ones are hollow. */}
+      <ol className="flex items-center gap-2" aria-label="שלבי יצירת הגלריה">
         {WIZARD_STEPS.map((label, index) => {
           const n = index + 1
+          const done = step > n
+          const current = step === n
           return (
-            <div key={label} className="flex shrink-0 items-center gap-2">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                  step === n ? 'bg-[#100d1f] text-white' : 'bg-[#252235] text-[#8d89a0]'
-                }`}
-              >
-                {n}
-              </div>
+            <li key={label} className="flex flex-1 items-center gap-2 last:flex-none">
               <span
-                className={`whitespace-nowrap text-sm font-medium sm:text-base ${
-                  step === n ? 'font-bold text-[#100d1f]' : 'text-[#48464c]'
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition-all ${
+                  done
+                    ? 'bg-[#7D3A52] text-white'
+                    : current
+                      ? 'bg-[#7D3A52] text-white ring-4 ring-[#7D3A52]/20'
+                      : 'border-2 border-[#c9c5cd] bg-white text-[#79767d]'
+                }`}
+                aria-current={current ? 'step' : undefined}
+              >
+                {done ? <Check className="h-4 w-4" /> : n}
+              </span>
+              <span
+                className={`whitespace-nowrap text-sm ${
+                  current ? 'font-bold text-[#100d1f]' : 'hidden text-[#79767d] sm:inline'
                 }`}
               >
                 {label}
               </span>
-              {n < WIZARD_STEPS.length && <div className="h-px w-8 bg-[#c9c5cd] sm:w-16" />}
-            </div>
+              {n < WIZARD_STEPS.length ? (
+                <span
+                  className={`h-0.5 flex-1 rounded-full ${done ? 'bg-[#7D3A52]' : 'bg-[#e5e1e3]'}`}
+                  aria-hidden
+                />
+              ) : null}
+            </li>
           )
         })}
-      </div>
+      </ol>
 
       {/* Step 1 — client */}
       {step === 1 && (
-        <div className="space-y-6">
-          <div className="text-right">
-            <h3 className="mb-2 text-xl font-semibold text-[#1c1b1d]">מי הלקוח של הגלריה?</h3>
-            <p className="text-base text-[#48464c]">גלריית לקוח תמיד משויכת ללקוח אחד.</p>
+        <div className="space-y-5">
+          <div>
+            <h3 className="text-xl font-semibold text-[#100d1f]">מי הלקוח של הגלריה?</h3>
+            <p className="mt-1 text-sm text-[#48464c]">גלריית לקוח תמיד משויכת ללקוח אחד.</p>
           </div>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#79767d]" />
-              <input
-                className="w-full rounded-xl border border-[#c9c5cd] bg-white py-3 pr-11 text-base outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                placeholder="חיפוש לקוח לפי שם או אימייל..."
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          {state.clientMode === 'existing' && clients.length > 0 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <Search className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#79767d]" />
+                <input
+                  className={`${INPUT_CLASS} pr-11`}
+                  placeholder="חיפוש לקוח לפי שם או אימייל..."
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-[#7D3A52] transition-colors hover:bg-[#7D3A52]/10"
+                onClick={() => updateState('clientMode', 'new')}
+              >
+                <UserPlus className="h-4 w-4" />
+                לקוח חדש
+              </button>
             </div>
-            <button
-              type="button"
-              className="flex items-center gap-2 rounded-xl border border-[#100d1f] bg-white px-6 py-3 font-semibold text-[#100d1f] transition-colors hover:bg-[#f7f2f4] active:scale-95"
-              onClick={() => updateState('clientMode', 'new')}
-            >
-              <UserPlus className="h-5 w-5" />
-              <span className="text-base">הוספת לקוח חדש</span>
-            </button>
-          </div>
+          ) : null}
 
           {state.clientMode === 'new' ? (
-            <div className="mx-auto max-w-md space-y-4 rounded-xl border border-[#c9c5cd] bg-white p-6">
-              <h4 className="text-lg font-semibold text-[#100d1f]">יצירת לקוח חדש</h4>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#48464c]">שם הלקוח</label>
-                <input
-                  className="w-full rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="שם מלא"
-                  type="text"
-                  value={state.newClientName}
-                  onChange={(e) => updateState('newClientName', e.target.value)}
-                />
+            <div className="space-y-4 rounded-2xl border border-[#7D3A52]/20 bg-[#7D3A52]/[0.03] p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h4 className="font-semibold text-[#100d1f]">לקוח חדש</h4>
+                {clients.length > 0 && (
+                  <button
+                    type="button"
+                    className="text-sm font-semibold text-[#7D3A52] hover:underline"
+                    onClick={() => updateState('clientMode', 'existing')}
+                  >
+                    בחירת לקוח קיים
+                  </button>
+                )}
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#48464c]">אימייל</label>
-                <input
-                  className="w-full rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="email@example.com"
-                  type="email"
-                  value={state.newClientEmail}
-                  onChange={(e) => updateState('newClientEmail', e.target.value)}
-                />
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#48464c]">שם</label>
+                  <input
+                    className={INPUT_CLASS}
+                    placeholder="שם מלא"
+                    type="text"
+                    value={state.newClientName}
+                    onChange={(e) => updateState('newClientName', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#48464c]">אימייל</label>
+                  <input
+                    className={INPUT_CLASS}
+                    placeholder="email@example.com"
+                    type="email"
+                    value={state.newClientEmail}
+                    onChange={(e) => updateState('newClientEmail', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-[#48464c]">טלפון</label>
+                  <input
+                    className={INPUT_CLASS}
+                    placeholder="050-0000000"
+                    type="tel"
+                    value={state.newClientPhone}
+                    onChange={(e) => updateState('newClientPhone', e.target.value)}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-[#48464c]">טלפון</label>
-                <input
-                  className="w-full rounded-xl border border-[#c9c5cd] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                  placeholder="050-0000000"
-                  type="tel"
-                  value={state.newClientPhone}
-                  onChange={(e) => updateState('newClientPhone', e.target.value)}
-                />
-              </div>
-              {clients.length > 0 && (
-                <button
-                  type="button"
-                  className="w-full rounded-xl bg-[#7D3A52] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#6a2f44]"
-                  onClick={() => updateState('clientMode', 'existing')}
-                >
-                  בחרי לקוח קיים במקום
-                </button>
-              )}
             </div>
           ) : clients.length === 0 ? (
             <p className="rounded-xl border-2 border-dashed border-[#e5e1e3] bg-[#fdf8fa] py-8 text-center text-sm text-[#48464c]">
               אין לקוחות עדיין — הוסיפי לקוח חדש
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {filteredClients.map((client) => {
                 const selected = state.clientId === client.id
                 return (
@@ -407,23 +446,23 @@ export function ClientGalleryWizard({
                       className="sr-only"
                     />
                     <div
-                      className={`flex h-full items-center gap-4 rounded-xl border bg-white p-6 transition-all hover:border-[#7D3A52] hover:shadow-sm ${
-                        selected ? 'border-[#7D3A52] bg-[#f1edef]' : 'border-[#c9c5cd]'
+                      className={`flex h-full items-center gap-3 rounded-xl border p-4 transition-all hover:border-[#7D3A52] hover:shadow-sm ${
+                        selected
+                          ? 'border-[#7D3A52] bg-[#7D3A52]/[0.06] ring-1 ring-[#7D3A52]/30'
+                          : 'border-[#c9c5cd] bg-white'
                       }`}
                     >
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e5dff9] text-lg font-bold text-[#100d1f]">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#e5dff9] text-base font-bold text-[#100d1f]">
                         {client.name.slice(0, 2)}
                       </div>
-                      <div className="flex-grow overflow-hidden">
-                        <h4 className="truncate text-base font-semibold text-[#100d1f]">
-                          {client.name}
-                        </h4>
+                      <div className="min-w-0 flex-grow">
+                        <h4 className="truncate font-semibold text-[#100d1f]">{client.name}</h4>
                         <p className="truncate text-sm text-[#48464c]">
                           {client.email || 'אין אימייל'}
                         </p>
                       </div>
                       {selected && (
-                        <div className="absolute left-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#7D3A52] text-white">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#7D3A52] text-white">
                           <Check className="h-4 w-4" />
                         </div>
                       )}
@@ -438,109 +477,110 @@ export function ClientGalleryWizard({
 
       {/* Step 2 — gallery details */}
       {step === 2 && (
-        <div className="max-w-2xl space-y-8">
-          <section className="space-y-3">
-            <label className="text-base font-semibold text-[#48464c]" htmlFor="gallery-name">
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-xl font-semibold text-[#100d1f]" htmlFor="gallery-name">
               שם הגלריה
             </label>
-            <p className="text-sm text-[#48464c]/70">השם שיופיע ללקוח בראש הדף ובקישור.</p>
+            <p className="text-sm text-[#48464c]">השם שיופיע ללקוח בראש הדף ובקישור.</p>
             <input
-              className="w-full rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-6 py-4 text-lg outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+              className={`${INPUT_CLASS} bg-[#f7f2f4] px-5 py-4 text-lg`}
               id="gallery-name"
               placeholder="למשל: ניו בורן / צילומי חוץ"
               type="text"
               value={state.title}
               onChange={(e) => updateState('title', e.target.value)}
             />
-          </section>
+          </div>
 
-          <hr className="border-[#c9c5cd]" />
+          <p className="text-sm text-[#48464c]">
+            שאר ההגדרות אופציונליות — אפשר לדלג, ולשנות אותן אחר כך בהגדרות הגלריה.
+          </p>
 
-          <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">
-                תמונת כיסוי (אופציונלי)
-              </h2>
-            </div>
-            <p className="text-sm text-[#48464c]/70">
-              תוצג בגדול בראש הדף שהלקוח רואה. התמונה נפרדת מתמונות הגלריה ולא מקבלת
-              סימן מים — כדאי לבחור תמונה שנוח לך שתוצג כמו שהיא.
-            </p>
-            <ClientGalleryCoverPicker
-              inputId="wizard-cover-image"
-              file={state.coverImageFile}
-              onFileChange={(file) => updateState('coverImageFile', file)}
-              disabled={isPending}
-            />
-          </section>
-
-          <hr className="border-[#c9c5cd]" />
-
-          <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">תפוגת גישה</h2>
-            </div>
-            <div className="flex items-start gap-2.5 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-4 py-3 text-sm leading-relaxed text-[#48464c]">
-              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
-              <p>
-                אין צורך להגדיר סיסמה — הלקוח מקבל קוד כניסה חד-פעמי במייל בכל
-                כניסה, והקוד פג אוטומטית לאחר שימוש.
+          <CollapsibleSection
+            tone="violet"
+            icon={<ImageIcon className="h-5 w-5" />}
+            title="תמונת כיסוי"
+            summary={state.coverImageFile ? state.coverImageFile.name : 'ללא'}
+          >
+            <div className="space-y-3">
+              <p className="text-sm text-[#48464c]">
+                תוצג בראש הדף שהלקוח רואה. נפרדת מתמונות הגלריה ולא מקבלת סימן מים.
               </p>
-            </div>
-            <div className="max-w-xs">
-              <label className="mb-2 block text-xs font-semibold text-[#48464c]" htmlFor="gallery-expires">
-                תאריך תפוגה (אופציונלי)
-              </label>
-              <input
-                id="gallery-expires"
-                className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
-                type="date"
-                value={state.expiresAt}
-                onChange={(e) => updateState('expiresAt', e.target.value)}
+              <ClientGalleryCoverPicker
+                inputId="wizard-cover-image"
+                file={state.coverImageFile}
+                onFileChange={(file) => updateState('coverImageFile', file)}
+                disabled={isPending}
               />
-              <p className="mt-2 text-sm italic text-[#48464c]">
-                לאחר תאריך זה הגישה לגלריה תיחסם אוטומטית.
-              </p>
             </div>
-          </section>
+          </CollapsibleSection>
+
+          <CollapsibleSection
+            tone="violet"
+            icon={<Calendar className="h-5 w-5" />}
+            title="תפוגת גישה"
+            summary={state.expiresAt ? state.expiresAt : 'ללא תפוגה'}
+          >
+            <div className="space-y-3">
+              <p className="flex items-start gap-2 text-sm text-[#48464c]">
+                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-[#6d28d9]" aria-hidden />
+                אין צורך בסיסמה — הלקוח מקבל קוד כניסה חד-פעמי במייל בכל כניסה.
+              </p>
+              <div className="max-w-xs">
+                <label className="mb-1.5 block text-xs font-semibold text-[#48464c]" htmlFor="gallery-expires">
+                  תאריך תפוגה
+                </label>
+                <input
+                  id="gallery-expires"
+                  className={INPUT_CLASS}
+                  type="date"
+                  value={state.expiresAt}
+                  onChange={(e) => updateState('expiresAt', e.target.value)}
+                />
+                <p className="mt-2 text-xs text-[#48464c]">
+                  לאחר תאריך זה הגישה לגלריה תיחסם אוטומטית.
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
         </div>
       )}
 
       {/* Step 3 — limits & permissions */}
       {step === 3 && (
-        <div className="max-w-3xl space-y-6">
-          <section className="rounded-xl border border-[#ebebe8] bg-white p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">מסלולי בחירה</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div className="space-y-3 rounded-xl border border-[#ebebe8] p-4">
+        <div className="space-y-4">
+          <p className="text-sm text-[#48464c]">
+            ברירות המחדל מתאימות לרוב הגלריות — אפשר לשמור כמו שזה, או לפתוח כרטיס ולשנות.
+          </p>
+
+          <CollapsibleSection
+            tone="burgundy"
+            icon={<Zap className="h-5 w-5" />}
+            title="מסלולי בחירה"
+            summary={selectionSummary || 'לא נבחר מסלול'}
+          >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#100d1f]">
-                      בחירת תמונות לאלבום
-                    </p>
-                    <p className="mt-1 text-xs text-[#48464c]/80">
+                    <p className="text-sm font-semibold text-[#100d1f]">לאלבום</p>
+                    <p className="mt-1 text-xs text-[#48464c]">
                       הלקוח מסמן אילו תמונות ייכנסו לאלבום
                     </p>
                   </div>
                   <Switch
                     checked={state.albumSelectionEnabled}
-                    onCheckedChange={(checked) =>
-                      updateState('albumSelectionEnabled', checked)
-                    }
+                    onCheckedChange={(checked) => updateState('albumSelectionEnabled', checked)}
                   />
                 </div>
                 {state.albumSelectionEnabled && (
                   <div>
-                    <label className="mb-2 block text-xs font-semibold text-[#48464c]">
-                      מקסימום תמונות לאלבום
+                    <label className="mb-1.5 block text-xs font-semibold text-[#48464c]">
+                      מקסימום תמונות
                     </label>
                     <input
-                      className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+                      className={INPUT_CLASS}
                       placeholder="ללא הגבלה"
                       type="number"
                       min={1}
@@ -553,30 +593,26 @@ export function ClientGalleryWizard({
                   </div>
                 )}
               </div>
-              <div className="space-y-3 rounded-xl border border-[#ebebe8] p-4">
+              <div className="space-y-3 rounded-xl border border-[#c9c5cd] bg-white p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-[#100d1f]">
-                      בחירת תמונות לעיבוד
-                    </p>
-                    <p className="mt-1 text-xs text-[#48464c]/80">
+                    <p className="text-sm font-semibold text-[#100d1f]">לעיבוד</p>
+                    <p className="mt-1 text-xs text-[#48464c]">
                       הלקוח מסמן אילו תמונות לשלוח לעיבוד
                     </p>
                   </div>
                   <Switch
                     checked={state.editSelectionEnabled}
-                    onCheckedChange={(checked) =>
-                      updateState('editSelectionEnabled', checked)
-                    }
+                    onCheckedChange={(checked) => updateState('editSelectionEnabled', checked)}
                   />
                 </div>
                 {state.editSelectionEnabled && (
                   <div>
-                    <label className="mb-2 block text-xs font-semibold text-[#48464c]">
-                      מקסימום תמונות לעיבוד
+                    <label className="mb-1.5 block text-xs font-semibold text-[#48464c]">
+                      מקסימום תמונות
                     </label>
                     <input
-                      className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+                      className={INPUT_CLASS}
                       placeholder="ללא הגבלה"
                       type="number"
                       min={1}
@@ -590,18 +626,19 @@ export function ClientGalleryWizard({
                 )}
               </div>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <section className="rounded-xl border border-[#ebebe8] bg-white p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-2">
-              <Droplets className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">סימן מים</h2>
-            </div>
-            <div className="space-y-6">
+          <CollapsibleSection
+            tone="burgundy"
+            icon={<Droplets className="h-5 w-5" />}
+            title="סימן מים"
+            summary={watermarkSummary}
+          >
+            <div className="space-y-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-[#48464c]">החל סימן מים אוטומטי</p>
-                  <p className="mt-1 text-xs text-[#48464c]/80">
+                  <p className="text-sm font-semibold text-[#100d1f]">החל סימן מים אוטומטי</p>
+                  <p className="mt-1 text-xs text-[#48464c]">
                     בעת העלאת תמונות, הטקסט יוחל על גרסת התצוגה
                   </p>
                 </div>
@@ -617,9 +654,11 @@ export function ClientGalleryWizard({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold text-[#48464c]">טקסט לסימן מים</label>
+                <label className="mb-1.5 block text-xs font-semibold text-[#48464c]">
+                  טקסט לסימן מים
+                </label>
                 <input
-                  className="w-full rounded-xl border border-[#ebebe8] bg-white px-4 py-3 outline-none transition-all focus:border-[#7D3A52] focus:ring-2 focus:ring-[#7D3A52]/20"
+                  className={INPUT_CLASS}
                   placeholder="טקסט למיתוג..."
                   type="text"
                   value={state.watermarkText}
@@ -627,75 +666,65 @@ export function ClientGalleryWizard({
                 />
               </div>
             </div>
-          </section>
+          </CollapsibleSection>
 
-          <section
-            className={`relative rounded-xl border border-[#ebebe8] bg-white p-6 sm:p-8 ${
-              downloadPermissionsEnabled ? '' : 'pointer-events-none select-none opacity-35'
-            }`}
+          <CollapsibleSection
+            tone="burgundy"
+            icon={<Download className="h-5 w-5" />}
+            title="הרשאות הורדה"
+            summary={downloadSummary}
           >
-            {!downloadPermissionsEnabled && (
-              <span className="absolute left-4 top-4 z-10 rounded-full bg-[#100d1f] px-3 py-1 text-xs font-semibold text-white">
-                לא זמין כרגע
-              </span>
+            {downloadPermissionsEnabled ? (
+              <div className="space-y-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#100d1f]">הורדת תצוגה מקדימה</p>
+                    <p className="text-xs text-[#48464c]">תמונות ברזולוציה נמוכה עם סימן מים</p>
+                  </div>
+                  <Switch
+                    checked={state.allowDownloadPreview}
+                    onCheckedChange={(checked) => updateState('allowDownloadPreview', checked)}
+                  />
+                </div>
+                <div className="h-px w-full bg-[#c9c5cd] opacity-50" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#100d1f]">הורדת קבצי מקור</p>
+                    <p className="text-xs text-[#48464c]">קבצי Full HD ללא סימן מים</p>
+                  </div>
+                  <Switch
+                    checked={state.allowDownloadOriginal}
+                    onCheckedChange={(checked) => updateState('allowDownloadOriginal', checked)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="flex items-center gap-2 text-sm text-[#48464c]">
+                <span className="rounded-full bg-[#100d1f] px-2.5 py-0.5 text-xs font-semibold text-white">
+                  בקרוב
+                </span>
+                הורדת תמונות על ידי הלקוח עדיין לא זמינה.
+              </p>
             )}
-            <div className="mb-6 flex items-center gap-2">
-              <Download className="h-5 w-5 text-[#7D3A52]" />
-              <h2 className="text-base font-semibold text-[#100d1f]">הרשאות הורדה</h2>
-            </div>
-            <div className="space-y-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <h4 className="text-sm font-semibold text-[#100d1f] sm:text-base">
-                    אפשר הורדת תצוגה מקדימה
-                  </h4>
-                  <p className="text-sm text-[#48464c]">תמונות ברזולוציה נמוכה עם סימן מים</p>
-                </div>
-                <Switch
-                  checked={state.allowDownloadPreview}
-                  disabled={!downloadPermissionsEnabled}
-                  onCheckedChange={(checked) => updateState('allowDownloadPreview', checked)}
-                />
-              </div>
-              <div className="h-px w-full bg-[#c9c5cd] opacity-50" />
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <h4 className="text-sm font-semibold text-[#100d1f] sm:text-base">
-                    אפשר הורדת קבצי מקור
-                  </h4>
-                  <p className="text-sm text-[#48464c]">קבצי Full HD ללא סימן מים</p>
-                </div>
-                <Switch
-                  checked={state.allowDownloadOriginal}
-                  disabled={!downloadPermissionsEnabled}
-                  onCheckedChange={(checked) => updateState('allowDownloadOriginal', checked)}
-                />
-              </div>
-            </div>
-          </section>
+          </CollapsibleSection>
 
-          <div className="flex items-start gap-2.5 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-4 py-3 text-sm leading-relaxed text-[#48464c]">
-            <Send className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
-            <p>
-              המייל ללקוח נשלח בשלב הבא — לאחר שתעלי את התמונות, מתוך מסך העלאת
-              התמונות.
-            </p>
-          </div>
+          <p className="flex items-start gap-2 text-xs leading-relaxed text-[#48464c]">
+            <Send className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#7D3A52]" aria-hidden />
+            המייל ללקוח נשלח בשלב הבא — אחרי שתעלי את התמונות.
+          </p>
         </div>
       )}
 
       {/* Nav */}
-      <div className="flex flex-col-reverse items-stretch justify-between gap-3 pt-4 sm:flex-row sm:items-center">
-        <Button
+      <div className="flex flex-col-reverse items-stretch justify-between gap-3 border-t border-[#ebe7e9] pt-5 sm:flex-row sm:items-center">
+        <button
           type="button"
-          variant="outline"
-          size="lg"
           onClick={handleBack}
           disabled={step === 1 || isPending}
-          className="h-12 border-2 px-8 hover:bg-[#fdf8fa] sm:w-auto"
+          className="rounded-xl px-6 py-3 font-semibold text-[#48464c] transition-colors hover:bg-[#f7f2f4] disabled:invisible"
         >
           חזרה
-        </Button>
+        </button>
 
         {step < WIZARD_STEPS.length ? (
           <Button
@@ -703,7 +732,7 @@ export function ClientGalleryWizard({
             size="lg"
             onClick={handleNext}
             disabled={isPending || !canContinue()}
-            className="h-12 bg-[#7D3A52] px-8 text-white shadow-lg hover:bg-[#6a2f44] sm:w-auto"
+            className="h-12 bg-[#7D3A52] px-10 text-white shadow-lg hover:bg-[#6a2f44] sm:w-auto"
           >
             הבא
           </Button>

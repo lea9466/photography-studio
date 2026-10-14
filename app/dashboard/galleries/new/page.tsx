@@ -155,29 +155,33 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-5xl space-y-6">
       <GalleryBreadcrumb
         galleryTitle="גלריה חדשה"
         backHref={meta.list.href}
         backLabel={meta.list.label}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold sm:text-2xl">
-            גלריה חדשה · {GALLERY_KIND_LABELS[kind]}
-          </h1>
-          {kind === 'showcase' ? (
-            <p className="mt-1 text-sm text-(--muted)">
-              {blockedByQuota
-                ? `הגעת למקסימום ${maxGalleries} גלריות`
-                : `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · ${photoCount}/${maxPhotos} תמונות`}
-            </p>
-          ) : null}
-        </div>
-        <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-          <Link href={meta.list.href}>ביטול</Link>
-        </Button>
+      {/* Title, notices and the form share one card. */}
+      <div className="space-y-6 rounded-2xl border border-[#e8d9df] bg-white p-5 shadow-[0_2px_14px_rgba(125,58,82,0.06)] sm:p-8">
+      <div>
+        <h1 className="text-xl font-semibold sm:text-2xl">
+          גלריה חדשה · {GALLERY_KIND_LABELS[kind]}
+        </h1>
+        {kind === 'showcase' ? (
+          <p className="mt-1 text-sm text-(--muted)">
+            {blockedByQuota
+              ? `הגעת למקסימום ${maxGalleries} גלריות`
+              : `${quota?.galleryCount ?? 0} מתוך ${maxGalleries} גלריות · ${photoCount}/${maxPhotos} תמונות`}
+          </p>
+        ) : null}
+        <details className="group mt-2">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-[#7D3A52] [&::-webkit-details-marker]:hidden">
+            <Info className="h-4 w-4" aria-hidden />
+            מה ההבדל בין גלריה פרטית לציבורית?
+          </summary>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#48464c]">{meta.note}</p>
+        </details>
       </div>
 
       {justPurchased && isClient && availableCredits.length > 0 ? (
@@ -186,12 +190,8 @@ export default async function NewGalleryPage({ searchParams }: NewGalleryPagePro
         </div>
       ) : null}
 
-      <div className="flex items-start gap-2.5 rounded-xl border border-[#c9c5cd] bg-[#f7f2f4] px-4 py-3 text-sm leading-relaxed text-[#48464c]">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#7D3A52]" aria-hidden />
-        <p>{meta.note}</p>
-      </div>
-
       {body}
+      </div>
     </div>
   )
 }

@@ -29,7 +29,7 @@ import {
   getRemainingPrivateGalleryPhotoSlots,
 } from '@/lib/private-galleries/entitlements'
 import { isRawPhotoFilename } from '@/lib/media-upload-limits'
-import { GalleryUploadProgressBar } from '@/components/gallery/GalleryUploadProgressBar'
+import { GalleryUploadProgressBar, isGalleryUploadFinished } from '@/components/gallery/GalleryUploadProgressBar'
 import {
   GalleryGrid,
   type PendingGalleryPhoto,
@@ -552,7 +552,7 @@ export function GalleryPhotosSection({
           )}
 
           {/* Upload Progress Bar */}
-          {isUploading && uploadProgress ? (
+          {isUploading && uploadProgress && !isGalleryUploadFinished(uploadProgress) ? (
             <GalleryUploadProgressBar progress={uploadProgress} />
           ) : null}
 
