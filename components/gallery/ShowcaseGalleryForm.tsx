@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Send, Image as ImageIcon, X } from 'lucide-react'
+import { Send, Image as ImageIcon, Droplets, X } from 'lucide-react'
 import { createShowcaseGallery } from '@/lib/actions/gallery.actions'
 import { uploadGalleryCoverFile } from '@/lib/cover-upload-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { CollapsibleSection } from '@/components/dashboard/CollapsibleSection'
 
 type ShowcaseGalleryFormProps = {
   defaultWatermarkText?: string
@@ -27,6 +28,17 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
   const [autoApplyWatermark, setAutoApplyWatermark] = useState(true)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
+  // One object URL per picked file, revoked when it changes.
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null)
+      return
+    }
+    const url = URL.createObjectURL(coverFile)
+    setCoverPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [coverFile])
 
   function handleSubmit() {
     if (!title.trim()) {
@@ -63,9 +75,9 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-8 rounded-2xl border border-[#c9c5cd] bg-white p-6 sm:p-8">
+    <div className="w-full space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="showcase-title" className="text-[#100d1f]">
+        <Label htmlFor="showcase-title" className="text-lg font-semibold text-[#100d1f]">
           שם הגלריה
         </Label>
         <p className="text-sm text-[#48464c]/70">השם שיופיע בכרטיס הגלריה באתר התדמית.</p>
@@ -78,9 +90,18 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
         />
       </div>
 
+      <p className="text-sm text-[#48464c]">
+        שאר ההגדרות אופציונליות — אפשר לדלג, ולשנות אותן אחר כך בהגדרות הגלריה.
+      </p>
+
+      <CollapsibleSection
+        tone="violet"
+        icon={<ImageIcon className="h-5 w-5" />}
+        title="תמונת שער"
+        summary={coverFile ? coverFile.name : 'התמונה הראשונה בגלריה'}
+      >
       <div className="space-y-2">
-        <Label className="text-[#100d1f]">תמונת שער</Label>
-        <p className="text-sm text-[#48464c]/70">
+        <p className="text-sm text-[#48464c]">
           מוצגת בכרטיס הגלריה בדף הבית. אם לא תוזן — תוצג התמונה הראשונה מהגלריה.
         </p>
         {coverFile ? (
@@ -88,7 +109,7 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
             <div className="relative aspect-video overflow-hidden rounded-lg border border-[#c9c5cd]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={URL.createObjectURL(coverFile)}
+                src={coverPreview ?? undefined}
                 alt="תמונת שער"
                 className="h-full w-full object-cover"
               />
@@ -127,7 +148,14 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
           </div>
         )}
       </div>
+      </CollapsibleSection>
 
+      <CollapsibleSection
+        tone="violet"
+        icon={<Droplets className="h-5 w-5" />}
+        title="סימן מים"
+        summary={autoApplyWatermark ? (watermarkText.trim() ? `פעיל · ${watermarkText.trim()}` : 'פעיל') : 'כבוי'}
+      >
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="showcase-watermark" className="text-[#100d1f]">
@@ -151,11 +179,12 @@ export function ShowcaseGalleryForm({ defaultWatermarkText = '' }: ShowcaseGalle
           <Switch checked={autoApplyWatermark} onCheckedChange={setAutoApplyWatermark} />
         </div>
       </div>
+      </CollapsibleSection>
 
       <Button
         onClick={handleSubmit}
         disabled={isPending}
-        className="h-12 w-full bg-[#6b2d43] text-base font-bold text-white hover:bg-[#5a2538] sm:w-auto sm:px-10"
+        className="h-12 w-full bg-[#7D3A52] text-base font-bold text-white shadow-lg hover:bg-[#6a2f44] sm:w-auto sm:px-10"
       >
         {isPending ? (
           'שומר גלריה...'
