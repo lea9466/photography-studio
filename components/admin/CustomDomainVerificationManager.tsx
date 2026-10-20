@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   active: 'מחובר',
   pending: 'ממתין',
   pending_dns: 'ממתין לאימות בעלות',
+  suspended_billing: 'מושעה (אין מנוי)',
   error: 'שגיאה',
 }
 

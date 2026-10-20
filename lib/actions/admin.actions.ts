@@ -33,6 +33,7 @@ import {
 } from '@/lib/admin/session'
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
 import { REACT_PUBLIC_SITE_CACHE_TAG } from '@/lib/public-site/react-rollout'
@@ -561,6 +562,13 @@ export async function updateAdminStudioSubscriptionOverride(
     // badge shown here doesn't need domain-addon precision.
     hasCustomDomainAddon: false,
   })
+
+  // A forced-PRO override grants custom_domain just like a purchase does, so
+  // lift any billing suspension now — otherwise the domain stays redirected
+  // to the slug even though the studio is entitled again.
+  if (entitlements.features.custom_domain) {
+    await reactivateSuspendedCustomDomains(row.id)
+  }
 
   return {
     id: row.id,

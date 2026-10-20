@@ -41,29 +41,55 @@ export async function reactivateSuspendedCustomDomains(userId: string): Promise<
  * logic here — the domain-serving decision must never drift from what the
  * dashboard itself shows as that studio's current plan.
  *
- * Only ever touches 'active' rows — 'pending'/'pending_dns'/'error'/'deleted'
- * are untouched (nothing to suspend), and an already-'suspended_billing' row
- * is left alone too (no entitlement-regained check here; that's
- * reactivateSuspendedCustomDomains's job, triggered by an actual purchase).
+ * Touches only 'active' and 'suspended_billing' rows — 'pending'/'pending_dns'/
+ * 'error'/'deleted' have nothing to suspend. A 'suspended_billing' row whose
+ * owner is entitled again is flipped back to 'active' here too: purchases
+ * reactivate synchronously, but entitlement can also come back with no
+ * purchase at all (an admin forced-PRO override set before this fix, a
+ * trial/plan rule change), and without this pass such a domain stayed
+ * redirected to the slug forever (seen on 13/10–20/10).
  */
 export async function suspendCustomDomainsWithLapsedEntitlement(): Promise<{
   checked: number
   suspended: number
+  reactivated: number
 }> {
   const admin = createAdminClient()
 
   const { data, error } = await admin
     .from('custom_domains')
-    .select('id, user_id')
-    .eq('status', 'active')
+    .select('id, user_id, status')
+    .in('status', ['active', 'suspended_billing'])
 
   if (error) throw new Error(`failed to list active custom domains: ${error.message}`)
 
-  const rows = (data ?? []) as { id: string; user_id: string }[]
+  const rows = (data ?? []) as { id: string; user_id: string; status: string }[]
   let suspended = 0
+  let reactivated = 0
 
   for (const row of rows) {
     const entitlements = await getStudioEntitlements(row.user_id)
+
+    if (row.status === 'suspended_billing') {
+      if (!entitlements.features.custom_domain) continue
+      const { error: reactivateError } = await admin
+        .from('custom_domains')
+        .update({ status: 'active', updated_at: new Date().toISOString() } as never)
+        .eq('id', row.id)
+        .eq('status', 'suspended_billing')
+
+      if (reactivateError) {
+        console.error('[custom-domain-suspension] reactivate failed', {
+          domainId: row.id,
+          userId: row.user_id,
+          message: reactivateError.message,
+        })
+        continue
+      }
+      reactivated += 1
+      continue
+    }
+
     if (entitlements.features.custom_domain) continue
 
     const { error: updateError } = await admin
@@ -83,5 +109,5 @@ export async function suspendCustomDomainsWithLapsedEntitlement(): Promise<{
     suspended += 1
   }
 
-  return { checked: rows.length, suspended }
+  return { checked: rows.length, suspended, reactivated }
 }

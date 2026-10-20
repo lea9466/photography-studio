@@ -118,7 +118,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await suspendCustomDomainsWithLapsedEntitlement()
-    customDomainSuspension = { checked: result.checked, suspended: result.suspended }
+    customDomainSuspension = {
+      checked: result.checked,
+      suspended: result.suspended,
+      reactivated: result.reactivated,
+    }
   } catch (error) {
     hadFailure = true
     console.error('[custom-domain-suspension] cron failed', {

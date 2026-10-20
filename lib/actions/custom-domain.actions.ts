@@ -239,7 +239,11 @@ export async function checkCustomDomainStatus(domainId: string) {
   try {
     const vercelDomain = await getProjectDomain(row.hostname)
     if (vercelDomain) {
-      patch.status = statusFromVerification(vercelDomain)
+      // A billing suspension is owned by lib/domains/custom-domain-suspension.ts
+      // — a Vercel re-check must not quietly lift it back to 'active'.
+      if (row.status !== 'suspended_billing') {
+        patch.status = statusFromVerification(vercelDomain)
+      }
       patch.vercel_verification = vercelDomain.verification ?? null
       patch.last_error = null
 

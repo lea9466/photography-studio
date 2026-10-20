@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { Check, Copy, Globe, Loader2 } from 'lucide-react'
@@ -298,6 +299,33 @@ export function CustomDomainSetting({
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={handleCheckStatus} disabled={isPending}>
               {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : 'בדקי סטטוס'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleDisconnect}
+              disabled={isPending}
+              className="border-red-300 bg-red-50 text-red-800 hover:bg-red-100"
+            >
+              נתקי דומיין
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {domain && domain.status === 'suspended_billing' && (
+        <div className="space-y-4 rounded-xl border border-amber-200 bg-amber-50/70 p-4">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-amber-900">הדומיין מושעה — {domain.hostname}</p>
+            <p className="text-xs leading-relaxed text-(--muted)">
+              הדומיין עדיין מחובר, אבל כרגע אין מנוי פעיל שכולל דומיין אישי — ולכן מי שנכנס לכתובת הזו מועבר
+              לכתובת ה-slug של האתר. ברגע שהמנוי יחודש (או שתירכש התוספת החד-פעמית) הדומיין יחזור לעבוד מעצמו, בלי
+              צורך לחבר אותו מחדש.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href="/dashboard/subscription">חידוש מנוי</Link>
             </Button>
             <Button
               type="button"
