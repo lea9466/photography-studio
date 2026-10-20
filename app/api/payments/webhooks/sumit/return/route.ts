@@ -235,6 +235,10 @@ async function handleOneTimeCheckout(
     providerSubscriptionId: subscription.id,
   })
 
+  // Only reached on the first run (the row is no longer 'pending' afterward),
+  // so a refreshed return URL doesn't email the receipt twice.
+  await provider.emailPaymentDocument(Number(subscription.metadata?.document_id ?? 0))
+
   const oneTimePaymentId = subscription.metadata?.payment_id
   await repository
     .upsertTransaction({
@@ -316,14 +320,17 @@ async function handleCustomDomainAddonCheckout(
   // successful run is a harmless no-op rather than re-stamping the purchase
   // date. The DB write is a single atomic UPDATE ... WHERE ... IS NULL, not
   // read-then-write, so a genuine race between two callbacks can't double-set.
-  const { error: userUpdateError } = await admin
+  const { data: purchasedRows, error: userUpdateError } = await admin
     .from('users')
     .update({ custom_domain_addon_purchased_at: now } as never)
     .eq('id', userId)
     .is('custom_domain_addon_purchased_at', null)
+    .select('id')
   if (userUpdateError) {
     throw new Error(`failed to record custom-domain addon purchase: ${userUpdateError.message}`)
   }
+  // Same first-run-only guard: a replay updates no row and sends nothing.
+  if (purchasedRows?.length) await provider.emailPaymentDocument(verified.documentId)
 
   await reactivateSuspendedCustomDomains(userId)
 
@@ -412,14 +419,17 @@ async function handleGalleryPassCheckout(
 
   // Atomic + idempotent: only a still-pending credit is promoted, so a replayed
   // return URL (back button, refresh) is a harmless no-op.
-  const { error: updateError } = await admin
+  const { data: paidRows, error: updateError } = await admin
     .from('gallery_pass_credits')
     .update({ status: 'paid', purchased_at: now } as never)
     .eq('id', creditId)
     .eq('status', 'pending')
+    .select('id')
   if (updateError) {
     throw new Error(`failed to record gallery-pass credit purchase: ${updateError.message}`)
   }
+  // Same first-run-only guard: a replay updates no row and sends nothing.
+  if (paidRows?.length) await provider.emailPaymentDocument(verified.documentId)
 
   await repository
     .upsertTransaction({

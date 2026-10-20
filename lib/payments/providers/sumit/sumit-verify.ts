@@ -9,6 +9,8 @@ export type VerifiedSumitPayment = {
   token: string
   expirationMonth: number
   expirationYear: number
+  /** SUMIT's receipt for this payment; 0 when none was reported. */
+  documentId: number
 }
 
 /**
@@ -62,6 +64,7 @@ export async function verifySumitPayment(
     token: token ?? '',
     expirationMonth: expirationMonth ?? 0,
     expirationYear: expirationYear ?? 0,
+    documentId: payment.DocumentID ?? 0,
   }
 }
 

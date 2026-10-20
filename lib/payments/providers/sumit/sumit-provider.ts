@@ -322,6 +322,7 @@ export class SumitProvider implements PaymentProvider {
       paymentId: verified.paymentId,
       customerId: verified.customerId,
       amount: verified.amount,
+      documentId: verified.documentId,
     })
   }
 
@@ -404,6 +405,39 @@ export class SumitProvider implements PaymentProvider {
     }
 
     return verified
+  }
+
+  /**
+   * Emails SUMIT's receipt for a completed payment to the customer's address on
+   * file. Needed only for the `beginredirect` one-time flows (one-time
+   * subscription + add-ons): unlike `/billing/recurring/charge/`, which takes
+   * `SendDocumentByEmail` directly, `beginredirect` issues the receipt but has
+   * no field to email it, so those customers never got one (found 2026-10-20).
+   * Best-effort — the payment is already captured and credited by the time
+   * this runs, so a failure here is logged, never thrown.
+   */
+  async emailPaymentDocument(documentId: number): Promise<void> {
+    if (!documentId) {
+      console.warn('[payments][sumit] no receipt document to email')
+      return
+    }
+    try {
+      const response = await this.client().postJson<{ Status?: number; UserErrorMessage?: string }>(
+        '/accounting/documents/send/',
+        { DocumentID: documentId }
+      )
+      if ((response.Status ?? 1) !== 0) {
+        console.error('[payments][sumit] receipt email failed', {
+          documentId,
+          message: response.UserErrorMessage,
+        })
+      }
+    } catch (error) {
+      console.error('[payments][sumit] receipt email failed', {
+        documentId,
+        message: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 
   /**

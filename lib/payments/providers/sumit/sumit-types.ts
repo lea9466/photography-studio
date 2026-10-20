@@ -158,6 +158,12 @@ export type SumitPaymentRecord = {
    * Each id matches `RecurringItem.ID` from /billing/recurring/listforcustomer/.
    */
   RecurringCustomerItemIDs?: number[]
+  /**
+   * The receipt SUMIT issued for this payment. Confirmed live (2026-10-20):
+   * `/billing/payments/get/` returns the real id, while `/billing/payments/list/`
+   * reports 0 for the same payments — never read it from the list endpoint.
+   */
+  DocumentID?: number
   /** Present on a completed payment — confirmed by a live /billing/payments/get/ call. */
   PaymentMethod?: {
     CreditCard_LastDigits?: string

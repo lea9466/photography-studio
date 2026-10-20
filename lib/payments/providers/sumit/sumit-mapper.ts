@@ -140,6 +140,7 @@ export function mapSumitOneTimeCharge(input: {
   paymentId: number
   customerId: number
   amount: number
+  documentId: number
 }): PaymentSubscription {
   return {
     id: `onetime_${input.paymentId}`,
@@ -156,6 +157,7 @@ export function mapSumitOneTimeCharge(input: {
       payment_id: input.paymentId,
       amount: input.amount,
       payment_type: 'one_time',
+      document_id: input.documentId,
     },
   }
 }
