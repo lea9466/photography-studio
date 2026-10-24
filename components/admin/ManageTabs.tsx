@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import {
   Building2,
   CreditCard,
+  LayoutTemplate,
   LogOut,
   Mail,
   Megaphone,
@@ -24,6 +25,7 @@ import { AdminGalleryOriginalsCleanup } from '@/components/admin/AdminGalleryOri
 import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
 import { PrivateGalleryTiersManager } from '@/components/admin/PrivateGalleryTiersManager'
 import { GalleryPassBundlesManager } from '@/components/admin/GalleryPassBundlesManager'
+import { HeroOptionTiersManager } from '@/components/admin/HeroOptionTiersManager'
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 
@@ -40,6 +42,7 @@ const TABS = [
   { id: 'broadcast', label: 'דיוור במייל', icon: Mail },
   { id: 'maintenance', label: 'תחזוקת מדיה', icon: Wrench },
   { id: 'pricing', label: 'מסלולים ותמחור', icon: CreditCard },
+  { id: 'hero', label: 'עיצוב הירו', icon: LayoutTemplate },
   { id: 'system', label: 'הגדרות מערכת', icon: Settings2 },
 ] as const
 
@@ -160,6 +163,13 @@ export function ManageTabs({
         <GalleryPassBundlesManager />
         <PlanPricingManager />
         <PrivateGalleryTiersManager />
+      </div>
+
+      <div
+        role="tabpanel"
+        className={activeTab === 'hero' ? 'flex flex-col gap-6' : 'hidden'}
+      >
+        <HeroOptionTiersManager />
       </div>
 
       <div
