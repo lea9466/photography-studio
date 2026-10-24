@@ -106,7 +106,7 @@ export function HeroDesignEditor({ initialSettings, tiers, isPro, themeName, sit
         </p>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="flex flex-col gap-5 rounded-xl border border-(--border) bg-white p-4">
           <ThemeHeroBox settings={settings} themeName={themeName} onBackToTheme={() => setSettings(null)} />
 
@@ -114,51 +114,66 @@ export function HeroDesignEditor({ initialSettings, tiers, isPro, themeName, sit
             <h3 className="text-xs font-semibold tracking-wide text-(--muted)">פריסה</h3>
             <HeroLayoutPicker selected={settings?.layout ?? null} tiers={tiers} onSelect={pickLayout} />
           </div>
+        </div>
 
-          {settings ? <HeroOptionsPanel settings={settings} tiers={tiers} onChange={changeOptions} /> : null}
+        {/* Preview + the chosen layout's own settings + save stay in view while
+            scrolling through the layout picker. */}
+        <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-4">
+          {sitePath ? (
+            <HeroLivePreview sitePath={sitePath} settings={settings} />
+          ) : (
+            <p className="rounded-xl border border-dashed border-(--border) p-6 text-sm text-(--muted)">
+              התצוגה החיה תופיע אחרי שלאתר תהיה כתובת. אפשר להגדיר אותה בהגדרות האתר.
+            </p>
+          )}
 
-          <div className="flex flex-col gap-3 border-t border-(--border) pt-4">
-            {blocked && settings ? (
-              <div className="space-y-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-[13px] leading-relaxed text-amber-900">
-                <p>
-                  <b>בחרת אפשרויות של מנוי פרו:</b> {proUsed.map(heroOptionLabel).join(', ')}. אפשר לראות ולנסות
-                  אותן בתצוגה, ולשמור רק במנוי פרו.
-                </p>
-                <button
-                  type="button"
-                  className="text-[13px] font-medium text-[#7D3A52] underline"
-                  onClick={() => setSettings(withoutProHeroOptions(settings, tiers))}
-                >
-                  חזרה לאפשרויות החינמיות
-                </button>
+          <div className="flex flex-col gap-4 rounded-xl border border-(--border) bg-white p-4">
+            {settings ? (
+              <>
+                <h3 className="text-sm font-semibold text-(--foreground)">
+                  הגדרות לפריסת {HERO_LAYOUT_LABELS[settings.layout].name}
+                </h3>
+                <HeroOptionsPanel settings={settings} tiers={tiers} onChange={changeOptions} />
+              </>
+            ) : (
+              <p className="text-sm text-(--muted)">בחרי פריסה כדי לראות את ההגדרות שלה.</p>
+            )}
+
+            <div className="flex flex-col gap-3 border-t border-(--border) pt-4">
+              {blocked && settings ? (
+                <div className="space-y-1.5 rounded-lg bg-amber-50 px-3 py-2.5 text-[13px] leading-relaxed text-amber-900">
+                  <p>
+                    <b>בחרת אפשרויות של מנוי פרו:</b> {proUsed.map(heroOptionLabel).join(', ')}. אפשר לראות ולנסות
+                    אותן בתצוגה, ולשמור רק במנוי פרו.
+                  </p>
+                  <button
+                    type="button"
+                    className="text-[13px] font-medium text-[#7D3A52] underline"
+                    onClick={() => setSettings(withoutProHeroOptions(settings, tiers))}
+                  >
+                    חזרה לאפשרויות החינמיות
+                  </button>
+                </div>
+              ) : null}
+  
+              <div className="flex items-center gap-2">
+                {blocked ? (
+                  <Button asChild className="flex-1 bg-amber-600 text-white hover:bg-amber-700">
+                    <Link href="/dashboard/subscription">שדרגי לפרו כדי לשמור</Link>
+                  </Button>
+                ) : (
+                  <Button type="button" className="flex-1" disabled={!dirty || saving} onClick={save}>
+                    {saving ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : null}
+                    {dirty ? 'שמירה' : 'אין שינויים לשמור'}
+                  </Button>
+                )}
+                <Button type="button" variant="outline" disabled={!dirty || saving} onClick={() => setSettings(saved)}>
+                  ביטול שינויים
+                </Button>
               </div>
-            ) : null}
-
-            <div className="flex items-center gap-2">
-              {blocked ? (
-                <Button asChild className="flex-1 bg-amber-600 text-white hover:bg-amber-700">
-                  <Link href="/dashboard/subscription">שדרגי לפרו כדי לשמור</Link>
-                </Button>
-              ) : (
-                <Button type="button" className="flex-1" disabled={!dirty || saving} onClick={save}>
-                  {saving ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : null}
-                  {dirty ? 'שמירה' : 'אין שינויים לשמור'}
-                </Button>
-              )}
-              <Button type="button" variant="outline" disabled={!dirty || saving} onClick={() => setSettings(saved)}>
-                ביטול שינויים
-              </Button>
             </div>
           </div>
         </div>
-
-        {sitePath ? (
-          <HeroLivePreview sitePath={sitePath} settings={settings} />
-        ) : (
-          <p className="rounded-xl border border-dashed border-(--border) p-6 text-sm text-(--muted)">
-            התצוגה החיה תופיע אחרי שלאתר תהיה כתובת. אפשר להגדיר אותה בהגדרות האתר.
-          </p>
-        )}
       </div>
     </section>
   )
