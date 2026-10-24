@@ -8,6 +8,7 @@ import {
   normalizeHomepageSectionLayout,
   type HomepageSectionLayout,
 } from '@/lib/public-site/homepage-sections'
+import { isMissingHideFromSearchColumn } from '@/lib/seo/search-visibility'
 
 function isMissingSiteLanguageColumn(error: { code?: string; message?: string }) {
   const message = error.message?.toLowerCase() ?? ''
@@ -135,6 +136,42 @@ export async function updateSiteUnderConstruction(underConstruction: boolean) {
     success: true as const,
     is_under_construction: Boolean(
       (data as { is_under_construction?: boolean } | null)?.is_under_construction
+    ),
+  }
+}
+
+export async function updateHideFromSearch(
+  hidden: boolean
+): Promise<{ ok: true; hide_from_search: boolean } | { ok: false; error: string }> {
+  if (typeof hidden !== 'boolean') {
+    return { ok: false, error: 'ערך לא תקין' }
+  }
+
+  const { userId, supabase } = await requireDashboardContext()
+
+  const { data, error } = await supabase
+    .from('users')
+    .update({ hide_from_search: hidden } as never)
+    .eq('id', userId)
+    .select('hide_from_search')
+    .maybeSingle()
+
+  if (error) {
+    return {
+      ok: false,
+      error: isMissingHideFromSearchColumn(error)
+        ? 'יש להריץ את מיגרציית add_hide_from_search ב-Supabase'
+        : 'העדכון נכשל, נסי שוב',
+    }
+  }
+
+  await revalidatePublicSitePaths(supabase, userId)
+  revalidatePath('/sitemap.xml')
+
+  return {
+    ok: true,
+    hide_from_search: Boolean(
+      (data as { hide_from_search?: boolean } | null)?.hide_from_search
     ),
   }
 }

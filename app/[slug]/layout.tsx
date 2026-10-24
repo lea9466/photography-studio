@@ -1,5 +1,6 @@
 import { normalizeHomepageSectionLayout } from '@/lib/public-site/homepage-sections'
 import type { ReactNode } from 'react'
+import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { SiteGateScreen } from '@/components/site-gate/SiteGateScreen'
 import {
@@ -13,6 +14,7 @@ import { resolveBrandingPath } from '@/lib/branding-urls'
 import { resolveSiteLanguage } from '@/lib/site-language'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { HIDDEN_FROM_SEARCH_ROBOTS, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
@@ -69,6 +71,23 @@ type PhotographerSiteLayoutProps = {
  * complete fallback logic (redirects, free-tier gating, 404s) that must run
  * unaffected either way.
  */
+/**
+ * Search opt-out (users.hide_from_search) for every page under the slug —
+ * nested pages don't set `robots` themselves (seo-map does, but it's noindex
+ * already), so Next's metadata merge carries this down to all of them,
+ * custom-domain requests included (they're rewritten into this segment).
+ */
+export async function generateMetadata({ params }: PhotographerSiteLayoutProps): Promise<Metadata> {
+  const { slug } = await params
+  const photographer = await findPhotographerBySlug(decodeURIComponent(slug))
+  if (!photographer) return {}
+
+  const userId = (photographer as { id?: string }).id
+  if (!userId || !(await isHiddenFromSearch(userId))) return {}
+
+  return { robots: HIDDEN_FROM_SEARCH_ROBOTS }
+}
+
 export default async function PhotographerSiteLayout({
   children,
   params,

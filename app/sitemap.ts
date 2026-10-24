@@ -13,6 +13,7 @@ import {
   type PhotographerDiscoveryRecord,
 } from '@/lib/seo/photographer-discovery'
 import { validateStudioPathLive } from '@/lib/seo/sitemap-validation'
+import { fetchSearchHiddenUserIds, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 
 // Revalidate the sitemap once per hour so newly published studios get discovered.
 export const revalidate = 3600
@@ -49,7 +50,7 @@ async function buildCustomDomainSitemap(host: string): Promise<MetadataRoute.Sit
     .maybeSingle()
 
   const userId = (domainRow as { user_id: string } | null)?.user_id
-  if (!userId) return []
+  if (!userId || (await isHiddenFromSearch(userId))) return []
 
   const { data: photographerRow } = await admin
     .from('users')
@@ -118,14 +119,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const admin = createAdminClient()
 
-    const [{ data: photographers, error }, allGalleries, allPosts] = await Promise.all([
-      admin
-        .from('users')
-        .select('id, slug, studio_name, gallery_layout_mode, created_at')
-        .order('created_at', { ascending: false }),
-      fetchAllDiscoveryGalleries(),
-      fetchAllDiscoveryPosts(),
-    ])
+    const [{ data: photographers, error }, allGalleries, allPosts, searchHiddenIds] =
+      await Promise.all([
+        admin
+          .from('users')
+          .select('id, slug, studio_name, gallery_layout_mode, created_at')
+          .order('created_at', { ascending: false }),
+        fetchAllDiscoveryGalleries(),
+        fetchAllDiscoveryPosts(),
+        fetchSearchHiddenUserIds(),
+      ])
 
     if (error) {
       console.error('[sitemap] failed to load photographers:', error.message)
@@ -137,6 +140,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const validatedPhotographers = await Promise.all(
       (photographers ?? []).map(async (photographer) => {
+        if (searchHiddenIds.has(photographer.id)) return null
         const studioPath = await validateStudioPathLive(photographer)
         return studioPath ? { photographer, studioPath } : null
       })

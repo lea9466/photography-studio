@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { HIDDEN_FROM_SEARCH_ROBOTS, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { fetchPublicPackages } from '@/lib/actions/package.actions'
 import { signStoragePaths } from '@/lib/storage'
@@ -324,9 +325,12 @@ export async function generateMetadata({ params }: PortfolioPageProps) {
     (coverRow as { cover_image: string | null } | null)?.cover_image ?? null
   )
 
+  const hiddenFromSearch = await isHiddenFromSearch(gallery.user_id)
+
   return {
     title,
     description,
+    ...(hiddenFromSearch ? { robots: HIDDEN_FROM_SEARCH_ROBOTS } : {}),
     alternates: {
       canonical: buildCanonicalUrl(canonicalPath),
     },

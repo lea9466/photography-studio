@@ -122,6 +122,7 @@ export type Database = {
           client_page_hero_style: string | null
           client_page_background: string | null
           client_page_show_site_link: boolean
+          hide_from_search: boolean
         }
         Insert: {
           id: string
@@ -199,6 +200,7 @@ export type Database = {
           client_page_hero_style?: string | null
           client_page_background?: string | null
           client_page_show_site_link?: boolean
+          hide_from_search?: boolean
         }
         Update: {
           id?: string
@@ -276,6 +278,7 @@ export type Database = {
           client_page_hero_style?: string | null
           client_page_background?: string | null
           client_page_show_site_link?: boolean
+          hide_from_search?: boolean
         }
         Relationships: []
       }

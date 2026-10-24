@@ -9,6 +9,7 @@ import {
   CalendarPlus,
   Clock3,
   Construction,
+  SearchX,
   ExternalLink,
   Filter,
   Gift,
@@ -31,6 +32,7 @@ import type { AdminStudioRow } from '@/lib/admin/queries'
 import {
   deleteAdminStudio,
   updateAdminStudioSiteAccess,
+  updateAdminStudioSearchVisibility,
   updateAdminStudioSubscriptionOverride,
 } from '@/lib/actions/admin.actions'
 import { resolveTierBadge } from '@/lib/subscriptions/entitlements'
@@ -407,6 +409,26 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
     }
   }
 
+  async function handleSearchVisibilityToggle(studio: AdminStudioRow) {
+    const nextValue = !studio.hide_from_search
+    setAccessPendingId(studio.id)
+    try {
+      const result = await updateAdminStudioSearchVisibility(studio.id, nextValue)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setRows((current) =>
+        current.map((row) =>
+          row.id === studio.id ? { ...row, hide_from_search: result.hide_from_search } : row
+        )
+      )
+      toast.success(nextValue ? 'האתר הוסר מחיפוש גוגל' : 'האתר הוחזר לחיפוש גוגל')
+    } finally {
+      setAccessPendingId(null)
+    }
+  }
+
   async function handleOverrideChange(
     studio: AdminStudioRow,
     override: 'auto' | 'pro' | 'free'
@@ -774,7 +796,9 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                                 /{studio.slug}
                               </div>
                             ) : null}
-                            {(studio.is_under_construction || studio.is_site_unavailable) && (
+                            {(studio.is_under_construction ||
+                              studio.is_site_unavailable ||
+                              studio.hide_from_search) && (
                               <div className="mt-1.5 flex flex-wrap gap-1">
                                 {studio.is_under_construction ? (
                                   <span className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-800">
@@ -786,6 +810,12 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                                   <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800">
                                     <ShieldOff className="h-3 w-3" />
                                     לא זמין
+                                  </span>
+                                ) : null}
+                                {studio.hide_from_search ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
+                                    <SearchX className="h-3 w-3" />
+                                    מחוץ לגוגל
                                   </span>
                                 ) : null}
                               </div>
@@ -940,6 +970,21 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                           >
                             <ShieldOff className="h-3 w-3" />
                             {studio.is_site_unavailable ? 'לא זמין ✓' : 'לא זמין'}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            disabled={accessPendingId === studio.id}
+                            onClick={() => handleSearchVisibilityToggle(studio)}
+                            className={`h-8 px-2 text-[11px] ${
+                              studio.hide_from_search
+                                ? 'border-slate-400 bg-slate-600 text-white hover:bg-slate-700'
+                                : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <SearchX className="h-3 w-3" />
+                            {studio.hide_from_search ? 'מחוץ לגוגל ✓' : 'מחוץ לגוגל'}
                           </Button>
                         </div>
                       </td>

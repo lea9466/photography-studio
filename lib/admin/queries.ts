@@ -15,6 +15,7 @@ import type {
 } from '@/lib/subscriptions/types'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import { fetchSearchHiddenUserIds } from '@/lib/seo/search-visibility'
 
 export type { AdminBroadcastRecipientFilters }
 
@@ -30,6 +31,7 @@ export type AdminStudioRow = {
   dashboard_visit_count: number
   is_under_construction: boolean
   is_site_unavailable: boolean
+  hide_from_search: boolean
   has_hero_video: boolean
   has_client_gallery: boolean
   has_showcase_gallery: boolean
@@ -332,9 +334,10 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
   }
 
   const rows = (data ?? []) as AdminStudioQueryRow[]
-  const [activeSubscriptions, galleryKindIds] = await Promise.all([
+  const [activeSubscriptions, galleryKindIds, searchHiddenIds] = await Promise.all([
     fetchActiveSubscriptionByIds(rows.map((studio) => studio.id)),
     fetchGalleryKindUserIds(),
+    fetchSearchHiddenUserIds(),
   ])
   const paymentsCheckoutEnabled = isPaymentsCheckoutEnabled()
 
@@ -364,6 +367,7 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
       dashboard_visit_count: studio.dashboard_visit_count ?? 0,
       is_under_construction: Boolean(studio.is_under_construction),
       is_site_unavailable: Boolean(studio.is_site_unavailable),
+      hide_from_search: searchHiddenIds.has(studio.id),
       has_hero_video: Boolean(studio.hero_video_url?.trim()),
       has_client_gallery: galleryKindIds.clientIds.has(studio.id),
       has_showcase_gallery: galleryKindIds.showcaseIds.has(studio.id),

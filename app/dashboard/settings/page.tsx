@@ -7,6 +7,8 @@ import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
 import { SiteLanguageSetting } from '@/components/dashboard/SiteLanguageSetting'
 import { SiteVisibilitySetting } from '@/components/dashboard/SiteVisibilitySetting'
+import { SearchVisibilitySetting } from '@/components/dashboard/SearchVisibilitySetting'
+import { isHiddenFromSearch } from '@/lib/seo/search-visibility'
 import { resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { loadSiteProfile } from '@/lib/queries/site-profile'
@@ -22,9 +24,10 @@ export default async function SettingsPage() {
 
   const { userId, supabase } = context
 
-  const [entitlements, profile] = await Promise.all([
+  const [entitlements, profile, hiddenFromSearch] = await Promise.all([
     getStudioEntitlements(userId),
     loadSiteProfile(supabase, userId),
+    isHiddenFromSearch(userId),
   ])
 
   const siteLanguage: SiteLanguage = resolveSiteLanguage(profile?.site_language)
@@ -56,6 +59,11 @@ export default async function SettingsPage() {
         <SiteVisibilitySetting
           key={Boolean(profile?.is_under_construction) ? 'hidden' : 'public'}
           initialUnderConstruction={Boolean(profile?.is_under_construction)}
+        />
+
+        <SearchVisibilitySetting
+          key={hiddenFromSearch ? 'hidden' : 'indexed'}
+          initialHidden={hiddenFromSearch}
         />
       </div>
     </div>

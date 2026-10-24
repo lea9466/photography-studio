@@ -44,6 +44,7 @@ import {
 import type { SubscriptionTierOverride } from '@/lib/subscriptions/types'
 import { validatePrimaryImageFile } from '@/lib/media-upload-limits'
 import { isR2Configured } from '@/lib/r2/config'
+import { isHiddenFromSearch, isMissingHideFromSearchColumn } from '@/lib/seo/search-visibility'
 import { createPresignedUploadUrl } from '@/lib/r2/storage'
 import { formatTestimonialImageRef } from '@/lib/testimonial-image-url'
 import {
@@ -309,6 +310,7 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
       dashboard_visit_count: row.dashboard_visit_count ?? 0,
       is_under_construction: Boolean(row.is_under_construction),
       is_site_unavailable: Boolean(row.is_site_unavailable),
+      hide_from_search: await isHiddenFromSearch(row.id),
       has_hero_video: Boolean(row.hero_video_url?.trim()),
       has_client_gallery: [...galleryTypes].some((t) => t !== 'portfolio'),
       has_showcase_gallery: galleryTypes.has('portfolio'),
@@ -415,6 +417,44 @@ export async function updateAdminStudioSiteAccess(
     is_under_construction: Boolean(row.is_under_construction),
     is_site_unavailable: Boolean(row.is_site_unavailable),
   }
+}
+
+export async function updateAdminStudioSearchVisibility(
+  userId: string,
+  hidden: boolean
+): Promise<{ ok: true; hide_from_search: boolean } | { ok: false; error: string }> {
+  await requireAdmin()
+
+  const trimmedId = userId.trim()
+  if (!trimmedId || typeof hidden !== 'boolean') {
+    return { ok: false, error: 'נתונים לא תקינים' }
+  }
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('users')
+    .update({ hide_from_search: hidden } as never)
+    .eq('id', trimmedId)
+    .select('slug, studio_name, hide_from_search')
+    .maybeSingle()
+
+  if (error) {
+    return {
+      ok: false,
+      error: isMissingHideFromSearchColumn(error)
+        ? 'יש להריץ את המיגרציה add_hide_from_search ב-Supabase'
+        : error.message,
+    }
+  }
+  if (!data) return { ok: false, error: 'הסטודיו לא נמצא' }
+
+  const row = data as { slug: string | null; studio_name: string | null; hide_from_search: boolean }
+  const sitePath = getPublicSitePath(row.slug, row.studio_name)
+  revalidatePath('/manage')
+  revalidatePath('/sitemap.xml')
+  if (sitePath) revalidatePath(sitePath, 'layout')
+
+  return { ok: true, hide_from_search: Boolean(row.hide_from_search) }
 }
 
 /**
