@@ -1,0 +1,51 @@
+.photo {
+  position: relative;
+  overflow: hidden;
+  background: var(--hl-bg2);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Pinned: the box becomes a window (clip-path clips its fixed child) onto a
+   viewport-fixed photo layer — the photo stays still while the page, this
+   box included, scrolls over it. No JS, nothing outside the hero touched. An
+   ancestor with a transform would turn `fixed` back into normal scrolling,
+   which is a harmless fallback. */
+.pinned {
+  clip-path: inset(0);
+}
+.pinned .layer {
+  position: fixed;
+}
+
+.mobileOnly { display: block; }
+.desktopOnly { display: none; }
+
+@media (min-width: 768px) {
+  .mobileOnly { display: none; }
+  .desktopOnly { display: block; }
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--hl-muted);
+}

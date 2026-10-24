@@ -36,6 +36,8 @@ type ClassicChromeViewModel = {
   aboutTitleFont: string | null
   language: SiteLanguage
   homepagePath: string
+  /** Only the layout's chrome view model sets this (see app/[slug]/layout.tsx). */
+  homeHeroBehindNav?: boolean
   hasFaq: boolean
   hasPackages: boolean
   hasBlog: boolean
@@ -71,6 +73,7 @@ export function toClassicHomePageProps(
     heroDesktopImages: vm.heroDesktopImages,
     heroMobileImages: vm.heroMobileImages,
     heroVideoUrl: vm.heroVideoUrl,
+    heroSettings: vm.heroSettings,
 
     aboutText: vm.aboutText,
     aboutTitle: vm.aboutTitle,
@@ -121,6 +124,7 @@ export function toClassicSiteHeaderProps(vm: ClassicChromeViewModel): ClassicSit
     headingFont: vm.headingFont,
     aboutTitleFont: vm.aboutTitleFont,
     homepagePath: vm.homepagePath,
+    homeHeroBehindNav: vm.homeHeroBehindNav,
     hasFaq: vm.hasFaq,
     hasPackages: vm.hasPackages,
     hasBlog: vm.hasBlog,

@@ -4,6 +4,7 @@ import {
   type HomepageSectionLayout,
 } from '@/lib/public-site/homepage-sections'
 import { normalizePostsDisplayStyle, type PostsDisplayStyle } from '@/lib/types/posts-display-style'
+import type { HeroSettings } from '@/lib/public-site/hero-settings'
 
 /**
  * Everything `app/[slug]/page.tsx` already computes today (real Supabase
@@ -97,6 +98,8 @@ export type HomepageViewModelInput = {
   hasFaq: boolean
   postCount: number
   photoEditComparisonsCount: number
+  /** From resolveHeroSettingsForRender — the caller applies the free/PRO gate. */
+  heroSettings?: HeroSettings | null
 }
 
 export type HomepageViewModel = {
@@ -125,6 +128,9 @@ export type HomepageViewModel = {
   heroDesktopImages: string[]
   heroMobileImages: string[]
   heroVideoUrl: string | null
+  /** Shared hero layout to render instead of the theme's own hero — already
+   * resolved against the studio's entitlements (null = theme hero). */
+  heroSettings: HeroSettings | null
 
   /** Short hero-tagline text (Classic/Dark/Elegant's hero blurb) — a
    * distinct DB field from aboutDescription (the fuller About-section body),
@@ -215,6 +221,7 @@ export function buildHomepageViewModel(input: HomepageViewModelInput): HomepageV
     heroDesktopImages: p.hero_desktop_urls ?? [],
     heroMobileImages: p.hero_mobile_urls ?? [],
     heroVideoUrl: p.hero_video_url,
+    heroSettings: input.heroSettings ?? null,
 
     aboutText: p.about_text,
     aboutTitle: p.about_title,

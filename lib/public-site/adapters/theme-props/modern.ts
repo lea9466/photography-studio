@@ -33,6 +33,8 @@ type ModernChromeViewModel = {
   aboutTitleFont: string | null
   language: SiteLanguage
   homepagePath: string
+  /** Only the layout's chrome view model sets this (see app/[slug]/layout.tsx). */
+  homeHeroBehindNav?: boolean
   hasFaq: boolean
   hasPackages: boolean
   hasBlog: boolean
@@ -51,6 +53,7 @@ export function toModernHomePageProps(
 
   return {
     photographerName: vm.photographerName,
+    studioName: vm.studioName,
     logoUrl: vm.logoUrl,
     accentColor: vm.accentColor,
     language: vm.language,
@@ -61,6 +64,7 @@ export function toModernHomePageProps(
     heroDesktopImages: vm.heroDesktopImages,
     heroMobileImages: vm.heroMobileImages,
     heroVideoUrl: vm.heroVideoUrl,
+    heroSettings: vm.heroSettings,
 
     // ModernHomePageProps has no aboutImageUrl at all — modern's about section
     // never shows a background image (confirmed by reading the type), unlike
@@ -115,6 +119,7 @@ export function toModernSiteHeaderProps(vm: ModernChromeViewModel): ModernSiteHe
     headingFont: vm.headingFont,
     aboutTitleFont: vm.aboutTitleFont,
     homepagePath: vm.homepagePath,
+    homeHeroBehindNav: vm.homeHeroBehindNav,
     hasFaq: vm.hasFaq,
     hasPackages: vm.hasPackages,
     hasBlog: vm.hasBlog,

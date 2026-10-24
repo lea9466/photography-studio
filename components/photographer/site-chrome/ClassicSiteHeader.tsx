@@ -26,6 +26,10 @@ export type ClassicSiteHeaderProps = {
   headingFont: string | null
   aboutTitleFont: string | null
   homepagePath: string
+  /** False when the homepage hero doesn't start with a photo behind the nav
+   * (a shared hero layout on the theme background) — white nav text would be
+   * unreadable there, so the homepage starts solid too. Defaults to true. */
+  homeHeroBehindNav?: boolean
   hasFaq: boolean
   hasPackages: boolean
   hasBlog: boolean
@@ -121,6 +125,7 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
     shouldColorLogo,
     primaryColor,
     homepagePath,
+    homeHeroBehindNav = true,
     hasFaq,
     hasPackages,
     hasBlog,
@@ -141,7 +146,7 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   // instead of every route needing to tell it which mode to render in.
   const pathname = usePathname()
   const isBlogPostPage = Boolean(blogPath) && pathname?.startsWith(`${blogPath}/`) && pathname !== `${blogPath}/`
-  const transparentAtTop = pathname === homepagePath || isBlogPostPage
+  const transparentAtTop = (pathname === homepagePath && homeHeroBehindNav) || isBlogPostPage
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(!transparentAtTop)

@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { DarkHero } from './DarkHero'
+import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { DarkAbout } from './DarkAbout'
 import { DarkGalleriesSection } from './DarkGalleriesSection'
 import { DarkRecentPhotosSection } from './DarkRecentPhotosSection'
@@ -34,6 +36,8 @@ export type DarkHomePageProps = {
   heroDesktopImages: string[]
   heroMobileImages: string[]
   heroVideoUrl?: string | null
+  /** Shared hero layout picked in the dashboard (already entitlement-checked); null = this theme's own hero. */
+  heroSettings?: HeroSettings | null
 
   aboutText: string | null
   aboutTitle: string | null
@@ -119,6 +123,7 @@ export function DarkHomePage(props: DarkHomePageProps) {
     heroDesktopImages,
     heroMobileImages,
     heroVideoUrl,
+    heroSettings,
     aboutText,
     aboutTitle,
     aboutSubtitle,
@@ -250,16 +255,32 @@ export function DarkHomePage(props: DarkHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        <DarkHero
-        studioName={studioName}
-        aboutText={aboutText}
-        accentColor={accentColor}
-        desktopImages={heroDesktopImages}
-        mobileImages={heroMobileImages}
-        heroVideoUrl={heroVideoUrl}
-        galleryAnchorHref={heroGalleryAnchor}
-        language={language}
-      />
+        {heroSettings ? (
+          <HeroLayout
+            settings={heroSettings}
+            theme="dark"
+            studioName={props.studioName}
+            photographerName={props.photographerName}
+            aboutText={aboutText}
+            accentColor={accentColor}
+            desktopImages={heroDesktopImages}
+            mobileImages={heroMobileImages}
+            heroVideoUrl={heroVideoUrl}
+            galleryAnchorHref={heroGalleryAnchor}
+            language={language}
+          />
+        ) : (
+          <DarkHero
+          studioName={studioName}
+          aboutText={aboutText}
+          accentColor={accentColor}
+          desktopImages={heroDesktopImages}
+          mobileImages={heroMobileImages}
+          heroVideoUrl={heroVideoUrl}
+          galleryAnchorHref={heroGalleryAnchor}
+          language={language}
+        />
+        )}
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 

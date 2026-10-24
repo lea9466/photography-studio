@@ -16,6 +16,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
+import { heroHasPhotoBehindNav, resolveHeroSettingsForRender } from '@/lib/public-site/hero-settings'
+import { fetchHeroOptionTiers } from '@/lib/public-site/hero-option-tiers'
 import {
   toClassicSiteFooterProps,
   toClassicSiteHeaderProps,
@@ -106,9 +108,13 @@ export default async function PhotographerSiteLayout({
     site_language: string | null
     gallery_layout_mode: string | null
     faq_items: unknown
+    hero_settings?: unknown
   }
 
-  const entitlements = await getStudioEntitlements(typed.id)
+  const [entitlements, heroOptionTiers] = await Promise.all([
+    getStudioEntitlements(typed.id),
+    fetchHeroOptionTiers(),
+  ])
   const admin = createAdminClient()
   const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
     await Promise.all([
@@ -144,6 +150,11 @@ export default async function PhotographerSiteLayout({
     aboutTitleFont: typed.about_title_font,
     language: resolveSiteLanguage(typed.site_language),
     homepagePath,
+    // Same resolution as the homepage itself (app/[slug]/page.tsx), so the
+    // nav and the hero always agree on which hero is actually showing.
+    homeHeroBehindNav: heroHasPhotoBehindNav(
+      resolveHeroSettingsForRender(typed.hero_settings, heroOptionTiers, entitlements.isPro)
+    ),
     hasFaq: canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0 &&
       sectionVisibility.get('faq') !== false,
     hasPackages: canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0 &&

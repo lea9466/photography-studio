@@ -1,0 +1,84 @@
+.film {
+  display: grid;
+  min-height: 100svh;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  padding-top: clamp(6.5rem, 12vh, 8.5rem);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+
+.title {
+  font-size: calc(clamp(2.5rem, 5vw, 4.4rem) * var(--hl-ts));
+}
+
+.lead {
+  max-width: 52ch;
+}
+
+.ctas {
+  justify-content: center;
+}
+
+.strip {
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  direction: ltr;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  gap: 1.4rem;
+  padding: 1.5rem 0;
+  animation: heroFilmStrip var(--hl-film-duration, 48s) linear infinite;
+}
+
+.card {
+  width: clamp(9.5rem, 18vw, 16rem);
+  flex: 0 0 auto;
+  aspect-ratio: 5 / 6;
+  border-radius: var(--hl-img-radius);
+}
+
+.card:nth-child(odd) {
+  transform: translateY(18px) rotate(-1.5deg);
+}
+
+.card:nth-child(even) {
+  transform: translateY(-6px) rotate(1.5deg);
+}
+
+.card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes heroFilmStrip {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .track {
+    gap: 0.75rem;
+  }
+}

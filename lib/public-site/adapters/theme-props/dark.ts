@@ -62,6 +62,7 @@ export function toDarkHomePageProps(
     heroDesktopImages: vm.heroDesktopImages,
     heroMobileImages: vm.heroMobileImages,
     heroVideoUrl: vm.heroVideoUrl,
+    heroSettings: vm.heroSettings,
 
     aboutText: vm.aboutText,
     aboutTitle: vm.aboutTitle,

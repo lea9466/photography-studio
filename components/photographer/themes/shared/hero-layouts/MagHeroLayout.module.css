@@ -1,0 +1,41 @@
+.mag {
+  display: grid;
+  min-height: 100svh;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  padding: clamp(6rem, 11vh, 7.5rem) clamp(1.25rem, 4vw, 3rem) 2rem;
+}
+
+/* Oversized name; the photo rises underneath and touches the letters */
+.mag .title {
+  position: relative;
+  z-index: 2;
+  font-size: calc(clamp(3.4rem, 11.5vw, 10rem) * var(--hl-ts));
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.photo {
+  min-height: 38svh;
+  margin-top: -1.75rem;
+  border-radius: var(--hl-img-radius);
+}
+
+.bottom {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2.5rem;
+  padding-top: 1.4rem;
+}
+
+@media (max-width: 767px) {
+  .photo {
+    margin-top: -0.75rem;
+  }
+
+  .bottom {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

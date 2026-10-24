@@ -101,6 +101,15 @@ export function normalizeHeroSettings(raw: unknown): HeroSettings | null {
   }
 }
 
+/**
+ * Whether the homepage hero starts with a photo right behind the site nav —
+ * true for every theme's own hero and for the full-bleed cinema layout. The
+ * other layouts open on the theme background, so the nav must start solid.
+ */
+export function heroHasPhotoBehindNav(settings: HeroSettings | null): boolean {
+  return !settings || settings.layout === 'cinema'
+}
+
 /* ---------- Free / PRO gating ---------- */
 
 export const HERO_FEATURE_KEYS = [

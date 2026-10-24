@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ModernHero } from './ModernHero'
+import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { ModernAboutStatement } from './ModernAboutStatement'
 import { ModernAbout } from './ModernAbout'
 import { ModernGalleriesSection } from './ModernGalleriesSection'
@@ -25,8 +27,11 @@ export type ModernHomePageProps = {
   /** Accepted for parity with ClassicHomePage's prop shape (a real page.tsx
    * passes the same photographer row to whichever theme is active) — unused
    * in modern's own markup, since ModernHero/ModernAbout never render the
-   * photographer's name (unlike classic's ClassicHero/ClassicAbout). */
+   * photographer's name (unlike classic's ClassicHero/ClassicAbout). Used
+   * by a shared hero layout (heroSettings), which does show it. */
   photographerName: string
+  /** Only used by a shared hero layout (heroSettings) — ModernHero shows aboutTitle instead. */
+  studioName?: string
   /** Still used within this page's own content (ModernTestimonialsSection's
    * thumb-photo fallback) — only studioName/shouldColorLogo/homepagePath/
    * beforeAfterPath were header/footer-only and moved to the shared
@@ -42,6 +47,8 @@ export type ModernHomePageProps = {
   heroDesktopImages: string[]
   heroMobileImages: string[]
   heroVideoUrl?: string | null
+  /** Shared hero layout picked in the dashboard (already entitlement-checked); null = this theme's own hero. */
+  heroSettings?: HeroSettings | null
 
   /** Feeds the new ModernAboutStatement section (see that file's doc comment)
    * — not part of the old renderer's modern branch, unlike every other
@@ -131,6 +138,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
     heroDesktopImages,
     heroMobileImages,
     heroVideoUrl,
+    heroSettings,
     aboutText,
     aboutImageUrl,
     aboutTitle,
@@ -176,6 +184,9 @@ export function ModernHomePage(props: ModernHomePageProps) {
   const sections: Record<HomepageSectionId, ReactNode> = {
     about: (
       <>
+      {/* ModernHero doubles as the #about target; a shared hero layout
+          replaces it, so keep the anchor (?section=about deep links) here. */}
+      {heroSettings ? <div id="about" aria-hidden="true" /> : null}
       <ModernAbout
         accentColor={accentColor}
         statsClients={statsClients}
@@ -265,21 +276,37 @@ export function ModernHomePage(props: ModernHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        <ModernHero
-          title={aboutTitle}
-          // Only the dedicated about_text blurb — the About-section subtitle
-          // (about_subtitle) is intentionally NOT pulled in here, so an empty
-          // about_text leaves the hero without a paragraph instead of falling
-          // back to About-section copy. aboutDescription lives in
-          // ModernAboutStatement below, same as the other themes' About sections.
-          description={aboutText}
-          accentColor={accentColor}
-          desktopImages={heroDesktopImages}
-          mobileImages={heroMobileImages}
-          heroVideoUrl={heroVideoUrl}
-          galleryAnchorHref={heroGalleryAnchor}
-          language={language}
-        />
+        {heroSettings ? (
+          <HeroLayout
+            settings={heroSettings}
+            theme="modern"
+            studioName={props.studioName ?? props.photographerName}
+            photographerName={props.photographerName}
+            aboutText={aboutText}
+            accentColor={accentColor}
+            desktopImages={heroDesktopImages}
+            mobileImages={heroMobileImages}
+            heroVideoUrl={heroVideoUrl}
+            galleryAnchorHref={heroGalleryAnchor}
+            language={language}
+          />
+        ) : (
+          <ModernHero
+            title={aboutTitle}
+            // Only the dedicated about_text blurb — the About-section subtitle
+            // (about_subtitle) is intentionally NOT pulled in here, so an empty
+            // about_text leaves the hero without a paragraph instead of falling
+            // back to About-section copy. aboutDescription lives in
+            // ModernAboutStatement below, same as the other themes' About sections.
+            description={aboutText}
+            accentColor={accentColor}
+            desktopImages={heroDesktopImages}
+            mobileImages={heroMobileImages}
+            heroVideoUrl={heroVideoUrl}
+            galleryAnchorHref={heroGalleryAnchor}
+            language={language}
+          />
+        )}
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 

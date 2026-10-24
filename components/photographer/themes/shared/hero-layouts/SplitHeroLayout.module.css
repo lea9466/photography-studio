@@ -1,0 +1,38 @@
+.split {
+  display: grid;
+  min-height: 100svh;
+  grid-template-columns: 42fr 58fr;
+}
+
+.text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.4rem;
+  padding: 8rem clamp(1.5rem, 4vw, 4rem) 4rem;
+}
+
+.title {
+  font-size: calc(clamp(2.4rem, 4.6vw, 4.2rem) * var(--hl-ts));
+}
+
+.photo {
+  min-height: 100%;
+}
+
+@media (max-width: 767px) {
+  .split {
+    grid-template-columns: 1fr;
+    grid-template-rows: 58svh auto;
+  }
+
+  .photo {
+    order: -1;
+  }
+
+  .text {
+    gap: 1rem;
+    padding: 2rem 1.25rem 2.75rem;
+  }
+}

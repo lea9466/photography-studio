@@ -28,6 +28,10 @@ export type ModernSiteHeaderProps = {
   headingFont: string | null
   aboutTitleFont: string | null
   homepagePath: string
+  /** False when the homepage hero doesn't start with a photo behind the nav
+   * (a shared hero layout on the theme background) — white nav text would be
+   * unreadable there, so the homepage starts solid too. Defaults to true. */
+  homeHeroBehindNav?: boolean
   hasFaq: boolean
   hasPackages: boolean
   hasBlog: boolean
@@ -126,6 +130,7 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
     shouldColorLogo,
     primaryColor,
     homepagePath,
+    homeHeroBehindNav = true,
     hasFaq,
     hasPackages,
     hasBlog,
@@ -139,7 +144,7 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
 
   const pathname = usePathname()
   const isBlogPostPage = Boolean(blogPath) && pathname?.startsWith(`${blogPath}/`) && pathname !== `${blogPath}/`
-  const transparentAtTop = pathname === homepagePath || isBlogPostPage
+  const transparentAtTop = (pathname === homepagePath && homeHeroBehindNav) || isBlogPostPage
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(!transparentAtTop)

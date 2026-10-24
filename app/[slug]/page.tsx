@@ -45,6 +45,8 @@ import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
 import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
+import { resolveHeroSettingsForRender } from '@/lib/public-site/hero-settings'
+import { fetchHeroOptionTiers } from '@/lib/public-site/hero-option-tiers'
 import { toClassicHomePageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicHomepageShell } from '@/components/photographer/react-site/ClassicHomepageShell'
 import { toDarkHomePageProps } from '@/lib/public-site/adapters/theme-props/dark'
@@ -549,6 +551,13 @@ export default async function PhotographerPage({ params }: PageProps) {
         hasFaq,
         postCount: postCount ?? 0,
         photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
+        // A free studio whose saved hero uses a PRO layout/option gets her
+        // theme's own hero back (same render-time gate as hero_video).
+        heroSettings: resolveHeroSettingsForRender(
+          typedPhotographer.hero_settings,
+          await fetchHeroOptionTiers(),
+          entitlements.isPro
+        ),
       })
 
       if (typedPhotographer.selected_theme === 'dark' || typedPhotographer.selected_theme === 'bold') {

@@ -1,0 +1,136 @@
+/* Shared tokens + text pieces for every hero layout. Each theme maps its own
+   palette/fonts onto the --hl-* tokens, so one layout looks native in all four. */
+
+:where(.root) {
+  --hl-ts: 1;
+  position: relative;
+  width: 100%;
+  background: var(--hl-bg);
+  color: var(--hl-fg);
+  font-family: var(--hl-body);
+}
+
+.classic {
+  --hl-bg: #ffffff;
+  --hl-bg2: #f3efe9;
+  --hl-fg: #2d2825;
+  --hl-muted: #6f6259;
+  --hl-display: var(--headline-font, 'Frank Ruhl Libre', serif);
+  --hl-display-weight: 500;
+  --hl-track: 0;
+  --hl-body: 'Heebo', sans-serif;
+  --hl-btn-radius: 2px;
+  --hl-img-radius: 2px;
+}
+
+.elegant {
+  --hl-bg: #fafaf8;
+  --hl-bg2: #f1ece7;
+  --hl-fg: #0f0f0d;
+  --hl-muted: #6b6660;
+  --hl-display: 'Heebo', sans-serif;
+  --hl-display-weight: 300;
+  --hl-track: 0.04em;
+  --hl-body: 'Heebo', sans-serif;
+  --hl-btn-radius: 999px;
+  --hl-img-radius: 14px;
+}
+
+.modern {
+  --hl-bg: #f8fafc;
+  --hl-bg2: #eef1f5;
+  --hl-fg: #0f172a;
+  --hl-muted: #475569;
+  --hl-display: var(--about-title-font, 'Rubik', 'Heebo', sans-serif);
+  --hl-display-weight: 800;
+  --hl-track: -0.01em;
+  --hl-body: 'Heebo', sans-serif;
+  --hl-btn-radius: 0;
+  --hl-img-radius: 0;
+}
+
+.dark {
+  --hl-bg: var(--dark-bg, #121217);
+  --hl-bg2: var(--dark-surface, #1a1a22);
+  --hl-fg: var(--dark-on-surface, #f5f5f0);
+  --hl-muted: var(--dark-on-surface-variant, #b8b8c0);
+  --hl-display: 'Heebo', sans-serif;
+  --hl-display-weight: 800;
+  --hl-track: -0.02em;
+  --hl-body: 'Heebo', sans-serif;
+  --hl-btn-radius: 2px;
+  --hl-img-radius: 2px;
+}
+
+.titleSm { --hl-ts: 0.82; }
+.titleLg { --hl-ts: 1.2; }
+
+/* A plain class, not :where — Tailwind preflight's `h1 { font-weight: inherit }` would beat a zero-specificity rule. Layouts only add font-size, so nothing here collides. */
+.title {
+  margin: 0;
+  font-family: var(--hl-display);
+  font-weight: var(--hl-display-weight);
+  letter-spacing: var(--hl-track);
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.accent {
+  color: var(--hl-accent);
+}
+
+:where(.eyebrow) {
+  font-size: 0.8rem;
+  letter-spacing: 0.22em;
+  color: var(--hl-accent);
+}
+
+:where(.lead) {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--hl-muted);
+}
+
+:where(.ctas) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.85em 1.7em;
+  border-radius: var(--hl-btn-radius);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--hl-accent);
+  outline-offset: 3px;
+}
+
+.btnPrimary {
+  background: var(--hl-accent);
+  color: #fff;
+}
+
+.btnSecondary {
+  border: 1px solid currentColor;
+  color: inherit;
+}
+
+@media (max-width: 767px) {
+  :where(.lead) {
+    font-size: 0.95rem;
+  }
+}
