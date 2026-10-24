@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ModernHero } from './ModernHero'
-import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import { HomepageHero } from '../shared/hero-layouts/HomepageHero'
 import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { ModernAboutStatement } from './ModernAboutStatement'
 import { ModernAbout } from './ModernAbout'
@@ -276,37 +276,36 @@ export function ModernHomePage(props: ModernHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        {heroSettings ? (
-          <HeroLayout
-            settings={heroSettings}
-            theme="modern"
-            studioName={props.studioName ?? props.photographerName}
-            photographerName={props.photographerName}
-            aboutText={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        ) : (
-          <ModernHero
-            title={aboutTitle}
-            // Only the dedicated about_text blurb — the About-section subtitle
-            // (about_subtitle) is intentionally NOT pulled in here, so an empty
-            // about_text leaves the hero without a paragraph instead of falling
-            // back to About-section copy. aboutDescription lives in
-            // ModernAboutStatement below, same as the other themes' About sections.
-            description={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        )}
+        <HomepageHero
+          settings={heroSettings ?? null}
+          theme="modern"
+          studioName={props.studioName ?? props.photographerName}
+          photographerName={props.photographerName}
+          aboutText={aboutText}
+          accentColor={accentColor}
+          desktopImages={heroDesktopImages}
+          mobileImages={heroMobileImages}
+          heroVideoUrl={heroVideoUrl}
+          galleryAnchorHref={heroGalleryAnchor}
+          language={language}
+          themeHero={
+            <ModernHero
+              title={aboutTitle}
+              // Only the dedicated about_text blurb — the About-section subtitle
+              // (about_subtitle) is intentionally NOT pulled in here, so an empty
+              // about_text leaves the hero without a paragraph instead of falling
+              // back to About-section copy. aboutDescription lives in
+              // ModernAboutStatement below, same as the other themes' About sections.
+              description={aboutText}
+              accentColor={accentColor}
+              desktopImages={heroDesktopImages}
+              mobileImages={heroMobileImages}
+              heroVideoUrl={heroVideoUrl}
+              galleryAnchorHref={heroGalleryAnchor}
+              language={language}
+            />
+          }
+        />
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 

@@ -9,6 +9,7 @@ import {
   normalizeHeroSettings,
   proHeroOptionsInUse,
   resolveHeroSettingsForRender,
+  withoutProHeroOptions,
   type HeroSettings,
 } from '../lib/public-site/hero-settings.ts'
 
@@ -106,5 +107,22 @@ describe('resolveHeroSettingsForRender', () => {
     const flipped = { ...tiers, 'layout:split': 'pro' as const }
     assert.equal(resolveHeroSettingsForRender(saved, flipped, false), null)
     assert.deepEqual(proHeroOptionsInUse(saved, flipped), ['layout:split'])
+  })
+})
+
+describe('withoutProHeroOptions', () => {
+  const tiers = DEFAULT_HERO_OPTION_TIERS
+
+  it('swaps a PRO layout for the first free one and resets PRO options, keeping free ones', () => {
+    const result = withoutProHeroOptions(
+      settings({ layout: 'mag', transition: 'zoom', titleSize: 'lg', speedSeconds: 8, showSecondaryCta: false }),
+      tiers
+    )
+    assert.deepEqual(result, settings({ layout: 'cinema', speedSeconds: 8, showSecondaryCta: false }))
+    assert.deepEqual(proHeroOptionsInUse(result!, tiers), [])
+  })
+  it('no free layout at all = back to the theme hero', () => {
+    const allPro = Object.fromEntries(Object.keys(tiers).map((k) => [k, 'pro'])) as typeof tiers
+    assert.equal(withoutProHeroOptions(settings({ layout: 'split' }), allPro), null)
   })
 })

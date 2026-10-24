@@ -219,6 +219,36 @@ export function proHeroOptionsInUse(settings: HeroSettings, tiers: HeroOptionTie
   return heroOptionsInUse(settings).filter((key) => tiers[key] === 'pro')
 }
 
+const FEATURE_DEFAULTS: Record<HeroFeatureKey, Partial<HeroOptions>> = {
+  pin_on_scroll: { pinOnScroll: DEFAULT_HERO_OPTIONS.pinOnScroll },
+  transition: { transition: DEFAULT_HERO_OPTIONS.transition },
+  speed: { speedSeconds: DEFAULT_HERO_OPTIONS.speedSeconds },
+  title_size: { titleSize: DEFAULT_HERO_OPTIONS.titleSize },
+  shade: { shade: DEFAULT_HERO_OPTIONS.shade },
+  hide_eyebrow: { showEyebrow: DEFAULT_HERO_OPTIONS.showEyebrow },
+  hide_secondary_cta: { showSecondaryCta: DEFAULT_HERO_OPTIONS.showSecondaryCta },
+  hide_scroll_cue: { showScrollCue: DEFAULT_HERO_OPTIONS.showScrollCue },
+}
+
+/**
+ * The editor's "back to the free options": PRO options reset to their
+ * defaults, a PRO layout swapped for the first free one — or null (the
+ * theme's own hero) when no layout is free at all.
+ */
+export function withoutProHeroOptions(settings: HeroSettings, tiers: HeroOptionTiers): HeroSettings | null {
+  let layout = settings.layout
+  if (tiers[layoutOptionKey(layout)] === 'pro') {
+    const free = HERO_LAYOUT_IDS.find((id) => tiers[layoutOptionKey(id)] === 'free')
+    if (!free) return null
+    layout = free
+  }
+  const next: HeroSettings = { ...settings, layout }
+  for (const key of HERO_FEATURE_KEYS) {
+    if (tiers[key] === 'pro') Object.assign(next, FEATURE_DEFAULTS[key])
+  }
+  return next
+}
+
 /** Hebrew label of an option key, for "you picked PRO options: …" messages. */
 export function heroOptionLabel(key: HeroOptionKey): string {
   if (key.startsWith('layout:')) return `פריסת ${HERO_LAYOUT_LABELS[key.slice(7) as HeroLayoutId].name}`

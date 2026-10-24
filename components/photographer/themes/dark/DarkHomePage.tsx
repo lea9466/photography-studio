@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { DarkHero } from './DarkHero'
-import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import { HomepageHero } from '../shared/hero-layouts/HomepageHero'
 import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { DarkAbout } from './DarkAbout'
 import { DarkGalleriesSection } from './DarkGalleriesSection'
@@ -255,12 +255,21 @@ export function DarkHomePage(props: DarkHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        {heroSettings ? (
-          <HeroLayout
-            settings={heroSettings}
-            theme="dark"
-            studioName={props.studioName}
-            photographerName={props.photographerName}
+        <HomepageHero
+          settings={heroSettings ?? null}
+          theme="dark"
+          studioName={props.studioName}
+          photographerName={props.photographerName}
+          aboutText={aboutText}
+          accentColor={accentColor}
+          desktopImages={heroDesktopImages}
+          mobileImages={heroMobileImages}
+          heroVideoUrl={heroVideoUrl}
+          galleryAnchorHref={heroGalleryAnchor}
+          language={language}
+          themeHero={
+            <DarkHero
+            studioName={studioName}
             aboutText={aboutText}
             accentColor={accentColor}
             desktopImages={heroDesktopImages}
@@ -269,18 +278,8 @@ export function DarkHomePage(props: DarkHomePageProps) {
             galleryAnchorHref={heroGalleryAnchor}
             language={language}
           />
-        ) : (
-          <DarkHero
-          studioName={studioName}
-          aboutText={aboutText}
-          accentColor={accentColor}
-          desktopImages={heroDesktopImages}
-          mobileImages={heroMobileImages}
-          heroVideoUrl={heroVideoUrl}
-          galleryAnchorHref={heroGalleryAnchor}
-          language={language}
+          }
         />
-        )}
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 

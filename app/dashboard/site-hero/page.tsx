@@ -5,8 +5,13 @@ import { Sparkles } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 import { ProfileForm } from '@/components/dashboard/ProfileForm'
+import { HeroDesignEditor } from '@/components/dashboard/hero-design/HeroDesignEditor'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { loadSiteProfile } from '@/lib/queries/site-profile'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import { fetchHeroOptionTiers } from '@/lib/public-site/hero-option-tiers'
+import { normalizeHeroSettings } from '@/lib/public-site/hero-settings'
+import { THEME_OPTIONS } from '@/lib/dashboard/site-settings-help'
 
 export default async function SiteHeroSectionPage() {
   let context
@@ -19,10 +24,20 @@ export default async function SiteHeroSectionPage() {
 
   const { userId, supabase } = context
 
-  const [entitlements, profile] = await Promise.all([
+  const [entitlements, profile, heroOptionTiers, heroSettingsRow] = await Promise.all([
     getStudioEntitlements(userId),
     loadSiteProfile(supabase, userId),
+    fetchHeroOptionTiers(),
+    supabase.from('users').select('hero_settings').eq('id', userId).single(),
   ])
+
+  // Column not migrated yet -> behave as "theme hero".
+  const heroSettings = normalizeHeroSettings(
+    (heroSettingsRow.data as { hero_settings?: unknown } | null)?.hero_settings
+  )
+  const themeName =
+    THEME_OPTIONS.find((theme) => theme.id === (profile?.selected_theme === 'dark' ? 'bold' : profile?.selected_theme))
+      ?.name ?? 'הנוכחית'
 
   return (
     <div className="animate-fade-in">
@@ -44,6 +59,14 @@ export default async function SiteHeroSectionPage() {
         </div>
 
         <ProfileForm view="hero" profile={profile} isPro={entitlements.isPro} />
+
+        <HeroDesignEditor
+          initialSettings={heroSettings}
+          tiers={heroOptionTiers}
+          isPro={entitlements.isPro}
+          themeName={themeName}
+          sitePath={profile ? getPublicSitePath(profile.slug, profile.studio_name) : null}
+        />
       </div>
     </div>
   )

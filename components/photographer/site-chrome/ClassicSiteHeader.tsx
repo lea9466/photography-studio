@@ -7,6 +7,8 @@ import { Menu, X } from 'lucide-react'
 import { homepageSectionHref } from '@/lib/photographer-site-paths'
 import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import { getSiteChromeCopy, portfolioNavLabel, type SiteLanguage } from '@/lib/site-language'
+import { heroHasPhotoBehindNav } from '@/lib/public-site/hero-settings'
+import { useHeroPreviewOverride } from '@/components/photographer/themes/shared/hero-layouts/useHeroPreviewOverride'
 
 // Mirrors gallerySectionId('classic') in lib/photographer-site-chrome.ts —
 // not exported from there, and this header currently only covers the
@@ -146,7 +148,10 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   // instead of every route needing to tell it which mode to render in.
   const pathname = usePathname()
   const isBlogPostPage = Boolean(blogPath) && pathname?.startsWith(`${blogPath}/`) && pathname !== `${blogPath}/`
-  const transparentAtTop = (pathname === homepagePath && homeHeroBehindNav) || isBlogPostPage
+  // Inside the dashboard hero editor's live preview, follow the hero being tried out.
+  const heroPreview = useHeroPreviewOverride()
+  const heroBehindNav = heroPreview ? heroHasPhotoBehindNav(heroPreview.settings) : homeHeroBehindNav
+  const transparentAtTop = (pathname === homepagePath && heroBehindNav) || isBlogPostPage
 
   const [mobileOpen, setMobileOpen] = useState(false)
   const [scrolled, setScrolled] = useState(!transparentAtTop)

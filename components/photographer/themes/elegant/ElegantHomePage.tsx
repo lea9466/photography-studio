@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ElegantHero } from './ElegantHero'
-import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import { HomepageHero } from '../shared/hero-layouts/HomepageHero'
 import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { ElegantAbout } from './ElegantAbout'
 import { ElegantGalleriesSection } from './ElegantGalleriesSection'
@@ -258,32 +258,31 @@ export function ElegantHomePage(props: ElegantHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        {heroSettings ? (
-          <HeroLayout
-            settings={heroSettings}
-            theme="elegant"
-            studioName={props.studioName}
-            photographerName={props.photographerName}
-            aboutText={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        ) : (
-          <ElegantHero
-            studioName={studioName}
-            aboutText={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        )}
+        <HomepageHero
+          settings={heroSettings ?? null}
+          theme="elegant"
+          studioName={props.studioName}
+          photographerName={props.photographerName}
+          aboutText={aboutText}
+          accentColor={accentColor}
+          desktopImages={heroDesktopImages}
+          mobileImages={heroMobileImages}
+          heroVideoUrl={heroVideoUrl}
+          galleryAnchorHref={heroGalleryAnchor}
+          language={language}
+          themeHero={
+            <ElegantHero
+              studioName={studioName}
+              aboutText={aboutText}
+              accentColor={accentColor}
+              desktopImages={heroDesktopImages}
+              mobileImages={heroMobileImages}
+              heroVideoUrl={heroVideoUrl}
+              galleryAnchorHref={heroGalleryAnchor}
+              language={language}
+            />
+          }
+        />
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 

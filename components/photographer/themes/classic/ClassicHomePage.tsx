@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { SiteLanguage } from '@/lib/site-language'
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ClassicHero } from './ClassicHero'
-import { HeroLayout } from '../shared/hero-layouts/HeroLayout'
+import { HomepageHero } from '../shared/hero-layouts/HomepageHero'
 import type { HeroSettings } from '@/lib/public-site/hero-settings'
 import { ClassicAbout } from './ClassicAbout'
 import { ClassicGalleriesSection } from './ClassicGalleriesSection'
@@ -250,33 +250,32 @@ export function ClassicHomePage(props: ClassicHomePageProps) {
     <>
       <ScrollToInitialSection />
       <main>
-        {heroSettings ? (
-          <HeroLayout
-            settings={heroSettings}
-            theme="classic"
-            studioName={props.studioName}
-            photographerName={props.photographerName}
-            aboutText={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        ) : (
-          <ClassicHero
-            studioName={studioName}
-            photographerName={photographerName}
-            aboutText={aboutText}
-            accentColor={accentColor}
-            desktopImages={heroDesktopImages}
-            mobileImages={heroMobileImages}
-            heroVideoUrl={heroVideoUrl}
-            galleryAnchorHref={heroGalleryAnchor}
-            language={language}
-          />
-        )}
+        <HomepageHero
+          settings={heroSettings ?? null}
+          theme="classic"
+          studioName={props.studioName}
+          photographerName={props.photographerName}
+          aboutText={aboutText}
+          accentColor={accentColor}
+          desktopImages={heroDesktopImages}
+          mobileImages={heroMobileImages}
+          heroVideoUrl={heroVideoUrl}
+          galleryAnchorHref={heroGalleryAnchor}
+          language={language}
+          themeHero={
+            <ClassicHero
+              studioName={studioName}
+              photographerName={photographerName}
+              aboutText={aboutText}
+              accentColor={accentColor}
+              desktopImages={heroDesktopImages}
+              mobileImages={heroMobileImages}
+              heroVideoUrl={heroVideoUrl}
+              galleryAnchorHref={heroGalleryAnchor}
+              language={language}
+            />
+          }
+        />
 
         <OrderedHomepageSections layout={sectionLayout} sections={sections} />
 
