@@ -4,8 +4,7 @@ import { Sparkles } from 'lucide-react'
 
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
-import { ProfileForm } from '@/components/dashboard/ProfileForm'
-import { HeroDesignEditor } from '@/components/dashboard/hero-design/HeroDesignEditor'
+import { SiteHeroSections } from '@/components/dashboard/hero-design/SiteHeroSections'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { loadSiteProfile } from '@/lib/queries/site-profile'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
@@ -58,14 +57,15 @@ export default async function SiteHeroSectionPage() {
           </div>
         </div>
 
-        <ProfileForm view="hero" profile={profile} isPro={entitlements.isPro} />
-
-        <HeroDesignEditor
-          initialSettings={heroSettings}
-          tiers={heroOptionTiers}
-          isPro={entitlements.isPro}
-          themeName={themeName}
-          sitePath={profile ? getPublicSitePath(profile.slug, profile.studio_name) : null}
+        <SiteHeroSections
+          profileFormProps={{ profile, isPro: entitlements.isPro }}
+          heroEditorProps={{
+            initialSettings: heroSettings,
+            tiers: heroOptionTiers,
+            isPro: entitlements.isPro,
+            themeName,
+            sitePath: profile ? getPublicSitePath(profile.slug, profile.studio_name) : null,
+          }}
         />
       </div>
     </div>

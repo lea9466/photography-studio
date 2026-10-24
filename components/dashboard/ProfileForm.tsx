@@ -88,6 +88,9 @@ export type ProfileFormView = 'settings' | 'hero' | 'about'
 type ProfileFormProps = {
   /** Which slice of the site profile to render; every view saves the full profile. */
   view?: ProfileFormView
+  /** Slides the floating save button away — e.g. while another editor with
+   * its own save button is on screen, so the two aren't confused. */
+  hideFloatingSave?: boolean
   profile: {
     name: string | null
     studio_name: string | null
@@ -230,7 +233,7 @@ function SettingsFieldGroup({
   )
 }
 
-export function ProfileForm({ profile, isPro = true, view = 'settings' }: ProfileFormProps) {
+export function ProfileForm({ profile, isPro = true, view = 'settings', hideFloatingSave = false }: ProfileFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [name, setName] = useState(profile?.name ?? '')
@@ -1428,15 +1431,28 @@ export function ProfileForm({ profile, isPro = true, view = 'settings' }: Profil
       )}
 
 
-      <div className="fixed bottom-6 left-4 z-50 md:bottom-8 md:left-8">
+      <div
+        aria-hidden={hideFloatingSave || undefined}
+        className={cn(
+          'fixed bottom-6 left-4 z-50 transition-all duration-300 md:bottom-8 md:left-8',
+          hideFloatingSave && 'pointer-events-none translate-y-6 opacity-0'
+        )}
+      >
         <div className="rounded-2xl border border-[#7D3A52]/15 bg-white/95 p-1.5 shadow-xl shadow-[#7D3A52]/10 backdrop-blur-md">
           <Button
             onClick={handleSave}
             disabled={isPending || heroVideoBusy}
+            tabIndex={hideFloatingSave ? -1 : undefined}
             size="lg"
             className="min-w-[180px] bg-[#7D3A52] px-8 font-semibold text-white shadow-md shadow-[#7D3A52]/30 hover:bg-[#6a2f44] focus-visible:ring-[#7D3A52]/40"
           >
-            {heroVideoBusy ? 'מעלה סרטון...' : isPending ? 'שומר...' : 'שמור שינויים'}
+            {heroVideoBusy
+              ? 'מעלה סרטון...'
+              : isPending
+                ? 'שומר...'
+                : view === 'hero'
+                  ? 'שמירת התמונות'
+                  : 'שמור שינויים'}
           </Button>
         </div>
       </div>

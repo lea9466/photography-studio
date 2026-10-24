@@ -156,18 +156,31 @@ export function HeroDesignEditor({ initialSettings, tiers, isPro, themeName, sit
                 </div>
               ) : null}
   
+              {dirty && !blocked ? (
+                <p className="flex items-center gap-2 text-[13px] font-medium text-[#7D3A52]">
+                  <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#7D3A52]" aria-hidden />
+                  יש שינויים שלא נשמרו. הם מופיעים בתצוגה, אבל עוד לא באתר.
+                </p>
+              ) : null}
+
               <div className="flex items-center gap-2">
                 {blocked ? (
-                  <Button asChild className="flex-1 bg-amber-600 text-white hover:bg-amber-700">
+                  <Button asChild size="lg" className="flex-1 bg-amber-600 font-semibold text-white hover:bg-amber-700">
                     <Link href="/dashboard/subscription">שדרגי לפרו כדי לשמור</Link>
                   </Button>
                 ) : (
-                  <Button type="button" className="flex-1" disabled={!dirty || saving} onClick={save}>
+                  <Button
+                    type="button"
+                    size="lg"
+                    className="flex-1 bg-[#7D3A52] font-semibold text-white shadow-md shadow-[#7D3A52]/30 hover:bg-[#6a2f44] disabled:shadow-none"
+                    disabled={!dirty || saving}
+                    onClick={save}
+                  >
                     {saving ? <Loader2 className="ml-2 h-4 w-4 animate-spin" /> : null}
-                    {dirty ? 'שמירה' : 'אין שינויים לשמור'}
+                    {saving ? 'שומרת...' : dirty ? 'שמירת עיצוב ההירו' : 'עיצוב ההירו שמור'}
                   </Button>
                 )}
-                <Button type="button" variant="outline" disabled={!dirty || saving} onClick={() => setSettings(saved)}>
+                <Button type="button" variant="outline" size="lg" disabled={!dirty || saving} onClick={() => setSettings(saved)}>
                   ביטול שינויים
                 </Button>
               </div>
