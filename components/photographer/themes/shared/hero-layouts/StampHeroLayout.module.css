@@ -1,7 +1,7 @@
 .stamp {
   --stamp-radius: clamp(2.5rem, 7vw, 6.5rem);
   --stamp-seal: clamp(5.5rem, 8vw, 8.5rem);
-  padding: clamp(6rem, 11vh, 8rem) clamp(1rem, 5vw, 7rem) calc(var(--stamp-seal) * 0.5 + 1.5rem);
+  padding: clamp(6rem, 11vh, 8rem) var(--hl-gutter) calc(var(--stamp-seal) * 0.5 + 1.5rem);
 }
 
 /* Two opposite corners rounded big, the other two square — like a leaf */

@@ -4,7 +4,7 @@
   grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 2.5rem;
-  padding: clamp(6rem, 11vh, 8rem) clamp(1.25rem, 5vw, 5rem) 3rem;
+  padding: clamp(6rem, 11vh, 8rem) var(--hl-gutter) 3rem;
   background: var(--hl-bg2);
 }
 

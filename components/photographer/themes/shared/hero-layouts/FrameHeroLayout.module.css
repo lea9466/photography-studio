@@ -3,7 +3,7 @@
   min-height: 100svh;
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 2.25rem;
-  padding: clamp(6rem, 11vh, 8rem) clamp(1.25rem, 4vw, 3rem) 2.5rem;
+  padding: clamp(6rem, 11vh, 8rem) var(--hl-gutter) 2.5rem;
 }
 
 .box {

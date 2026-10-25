@@ -3,6 +3,15 @@
 
 :where(.root) {
   --hl-ts: 1;
+  /* The site header's content box: max-w-7xl (80rem) centered, px-6 (1.5rem)
+     — px-8 in the dark theme. --hl-gutter is the distance from the page edge
+     to the header's logo/links, so a layout padded by it lines its photo and
+     text up with the header on every screen width. Percent-based: use it only
+     in the padding of a full-width element (the section or a full-width
+     child), where 100% is the page width. */
+  --hl-nav-max: 80rem;
+  --hl-nav-pad: 1.5rem;
+  --hl-gutter: max(var(--hl-nav-pad), calc((100% - var(--hl-nav-max)) / 2 + var(--hl-nav-pad)));
   position: relative;
   width: 100%;
   background: var(--hl-bg);
@@ -50,6 +59,7 @@
 }
 
 .dark {
+  --hl-nav-pad: 2rem;
   --hl-bg: var(--dark-bg, #121217);
   --hl-bg2: var(--dark-surface, #1a1a22);
   --hl-fg: var(--dark-on-surface, #f5f5f0);

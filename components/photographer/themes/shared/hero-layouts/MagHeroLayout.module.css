@@ -2,7 +2,7 @@
   display: grid;
   min-height: 100svh;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  padding: clamp(6rem, 11vh, 7.5rem) clamp(1.25rem, 4vw, 3rem) 2rem;
+  padding: clamp(6rem, 11vh, 7.5rem) var(--hl-gutter) 2rem;
 }
 
 /* Oversized name; the photo rises underneath and touches the letters */

@@ -3,7 +3,7 @@
   min-height: 100svh;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 2.25rem;
-  padding: clamp(6.5rem, 12vh, 8.5rem) clamp(1rem, 3vw, 3rem) 0;
+  padding: clamp(6.5rem, 12vh, 8.5rem) var(--hl-gutter) 0;
   text-align: center;
 }
 

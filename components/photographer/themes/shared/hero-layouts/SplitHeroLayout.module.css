@@ -1,4 +1,7 @@
 .split {
+  /* The text column is a grid item, where % padding means its own column, so
+     its header-aligned edge is computed from the section width (cqw) instead. */
+  container-type: inline-size;
   display: grid;
   min-height: 100svh;
   grid-template-columns: 42fr 58fr;
@@ -11,6 +14,7 @@
   justify-content: center;
   gap: 1.4rem;
   padding: 8rem clamp(1.5rem, 4vw, 4rem) 4rem;
+  padding-inline-start: max(var(--hl-nav-pad), calc((100cqw - var(--hl-nav-max)) / 2 + var(--hl-nav-pad)));
 }
 
 .title {
