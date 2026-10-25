@@ -9,6 +9,7 @@ import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import { getSiteChromeCopy, portfolioNavLabel, type SiteLanguage } from '@/lib/site-language'
 import { heroHasPhotoBehindNav } from '@/lib/public-site/hero-settings'
 import { useHeroPreviewOverride } from '@/components/photographer/themes/shared/hero-layouts/useHeroPreviewOverride'
+import { SITE_NAV_GUTTER_CLASS } from './siteNavGutter'
 
 // Mirrors gallerySectionId('classic') in lib/photographer-site-chrome.ts —
 // not exported from there, and this header currently only covers the
@@ -240,7 +241,7 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
         }`}
         style={{ '--nav-accent': primaryColor } as React.CSSProperties}
       >
-        <div className="mx-auto flex w-full max-w-7xl flex-row items-center justify-between px-6 rtl:flex-row-reverse">
+        <div className={`flex w-full flex-row items-center justify-between rtl:flex-row-reverse ${SITE_NAV_GUTTER_CLASS}`}>
           <Link href={homepagePath} className="flex items-center gap-2">
             <ClassicLogo
               logoUrl={logoUrl}

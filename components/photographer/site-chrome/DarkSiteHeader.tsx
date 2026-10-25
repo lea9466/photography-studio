@@ -8,6 +8,7 @@ import { homepageSectionHref } from '@/lib/photographer-site-paths'
 import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import { getSiteChromeCopy, portfolioNavLabel, type SiteLanguage } from '@/lib/site-language'
 import { DarkBrandLastWord } from '../themes/dark/DarkBrandLastWord'
+import { SITE_NAV_GUTTER_CLASS } from './siteNavGutter'
 
 // Mirrors gallerySectionId('dark') in lib/photographer-site-chrome.ts — not
 // exported from there, and this header currently only covers the dark theme.
@@ -205,9 +206,7 @@ export function DarkSiteHeader(props: DarkSiteHeaderProps) {
         }`}
         style={{ '--nav-accent': primaryColor } as React.CSSProperties}
       >
-        {/* `px-8` (32px) matches `.site-nav-inner`'s `px-lg` (spacing.lg = 32px) —
-            was `px-6` (24px). */}
-        <div className="mx-auto flex w-full max-w-7xl flex-row items-center justify-between px-8 rtl:flex-row-reverse">
+        <div className={`flex w-full flex-row items-center justify-between rtl:flex-row-reverse ${SITE_NAV_GUTTER_CLASS}`}>
           <Link href={homepagePath} className="flex items-center gap-2">
             <DarkLogo
               logoUrl={logoUrl}

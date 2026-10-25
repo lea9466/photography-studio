@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react'
 import { homepageSectionHref } from '@/lib/photographer-site-paths'
 import { getBrandingPreviewUrl } from '@/lib/branding-preview-url'
 import { getSiteChromeCopy, portfolioNavLabel, type SiteLanguage } from '@/lib/site-language'
+import { SITE_NAV_GUTTER_CLASS } from './siteNavGutter'
 
 // Mirrors gallerySectionId('elegant') in lib/photographer-site-chrome.ts — not
 // exported from there, and this header currently only covers the elegant theme.
@@ -221,7 +222,7 @@ export function ElegantSiteHeader(props: ElegantSiteHeaderProps) {
         }`}
         style={{ '--nav-accent': primaryColor } as React.CSSProperties}
       >
-        <div className="mx-auto flex w-full max-w-7xl flex-row items-center justify-between px-6 py-4 rtl:flex-row-reverse">
+        <div className={`flex w-full flex-row items-center justify-between py-4 rtl:flex-row-reverse ${SITE_NAV_GUTTER_CLASS}`}>
           <Link href={homepagePath} className="flex items-center gap-2">
             <ElegantLogo
               logoUrl={logoUrl}
