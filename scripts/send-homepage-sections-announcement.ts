@@ -62,6 +62,7 @@ async function assignGroups() {
   const { data, error } = await admin
     .from('users')
     .select('id, email, created_at')
+    .is('marketing_emails_opted_out_at', null) // asked to be taken off the list
     .order('created_at', { ascending: true })
   if (error) throw error
 
@@ -112,6 +113,7 @@ async function sendGroup(group: 1 | 2 | 3, dryRun: boolean) {
   const { data, error } = await admin
     .from('users')
     .select('id, email, name, studio_name')
+    .is('marketing_emails_opted_out_at', null) // asked to be taken off the list
     .in('id', pendingIds)
   if (error) throw error
 

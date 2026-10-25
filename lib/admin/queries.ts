@@ -204,6 +204,7 @@ export async function getAdminBroadcastRecipients(
       'id, email, name, studio_name, hero_desktop_url, hero_mobile_url, hero_desktop_urls, hero_mobile_urls'
     )
     .not('email', 'is', null)
+    .is('marketing_emails_opted_out_at', null) // asked to be taken off the list
     .returns<BroadcastUserRow[]>()
 
   if (error) throw new Error(error.message)
