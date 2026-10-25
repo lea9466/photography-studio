@@ -13,6 +13,10 @@
 
 /* Public theme CSS variables - These can change based on photographer's theme */
 :root {
+  /* Side margin of every public-site header's logo/links. The shared hero
+     layouts and the four themes' own heroes read the same variable, so their
+     content lines up with the header on any screen width. */
+  --site-nav-gutter: clamp(1.5rem, 4.5vw, 5rem);
   --background: #fafafa;
   --foreground: #171717;
   --accent: #171717;

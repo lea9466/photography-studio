@@ -3,10 +3,9 @@
 
 :where(.root) {
   --hl-ts: 1;
-  /* Same side margin as the site header's logo/links (SITE_NAV_GUTTER_CLASS
-     in site-chrome/siteNavGutter.ts — change both together), so every
-     layout's photo and text line up with the header on any screen width. */
-  --hl-gutter: clamp(1.5rem, 4.5vw, 5rem);
+  /* Same side margin as the site header's logo/links (--site-nav-gutter,
+     app/globals.css), so every layout's photo and text line up with it. */
+  --hl-gutter: var(--site-nav-gutter, clamp(1.5rem, 4.5vw, 5rem));
   position: relative;
   width: 100%;
   background: var(--hl-bg);

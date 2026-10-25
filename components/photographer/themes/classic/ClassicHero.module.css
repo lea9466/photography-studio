@@ -176,7 +176,12 @@
     right: auto;
     transform: none;
     width: auto;
-    padding: 0 0 4rem 8rem;
+    /* The card's outer edge lines up with the header's links (--site-nav-gutter). */
+    padding: 0 0 4rem;
+    padding-inline: var(--site-nav-gutter) 8rem;
+  }
+  .heroGlassCard {
+    margin-inline-start: 0;
   }
   .heroGlassInner {
     flex-direction: column;

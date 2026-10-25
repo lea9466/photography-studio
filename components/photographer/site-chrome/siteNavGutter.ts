@@ -1,7 +1,7 @@
 /**
  * Side margin of the public-site header's content (logo ↔ links), shared by
- * all four themes. The shared hero layouts use the very same value
- * (--hl-gutter in hero-layouts/HeroBase.module.css), so the hero's photo and
- * text line up with the header on every screen width — change both together.
+ * all four themes. The value lives in --site-nav-gutter (app/globals.css),
+ * which the hero layouts and the themes' own heroes read too, so their
+ * content lines up with the header on every screen width.
  */
-export const SITE_NAV_GUTTER_CLASS = 'px-[clamp(1.5rem,4.5vw,5rem)]'
+export const SITE_NAV_GUTTER_CLASS = 'px-[var(--site-nav-gutter)]'

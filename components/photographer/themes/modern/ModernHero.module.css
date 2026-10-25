@@ -30,9 +30,8 @@
 
 .grid {
   width: 100%;
-  max-width: 80rem;
-  margin-inline: auto;
-  padding-inline: 1.5rem;
+  /* Full width, edges lined up with the header's logo/links (--site-nav-gutter). */
+  padding-inline: var(--site-nav-gutter);
   padding-block: 5rem;
   display: grid;
   grid-template-columns: 1fr;

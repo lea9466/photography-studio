@@ -57,7 +57,7 @@ export function ClassicHero(props: ClassicHeroProps) {
         />
       </div>
 
-      <div className="pointer-events-none absolute top-1/2 left-8 z-20 hidden -translate-y-1/2 lg:block">
+      <div className="pointer-events-none absolute top-1/2 left-[var(--site-nav-gutter)] z-20 hidden -translate-y-1/2 lg:block">
         <div className={`${styles.verticalTextLabel} whitespace-nowrap`}>
           {studioName} · {photographerName}
         </div>

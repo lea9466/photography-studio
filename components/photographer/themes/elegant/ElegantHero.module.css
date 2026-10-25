@@ -25,7 +25,8 @@
   z-index: 100;
   top: auto;
   bottom: 4.5rem;
-  left: 2rem;
+  /* Card edge lines up with the header's logo (--site-nav-gutter). */
+  left: var(--site-nav-gutter);
   transform: none;
   width: 100%;
   max-width: 28rem;
