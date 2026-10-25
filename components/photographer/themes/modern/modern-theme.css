@@ -16,7 +16,15 @@
   --headline-font: 'Rubik', 'Heebo', sans-serif;
   --about-title-font: 'Rubik', 'Heebo', sans-serif;
   font-family: 'Heebo', sans-serif;
-  background-color: #f8fafc;
+  /* Page + card surfaces. Clean white page (was a cold slate #f8fafc), warm
+     off-white for alternate sections, and cards lifted off the white by a
+     soft warm shadow + hairline border instead of a cold slate outline. */
+  --modern-bg: #ffffff;
+  --modern-bg-rgb: 255 255 255;
+  --modern-bg-alt: #f8f6f3;
+  --modern-card-border: #ebe6e0;
+  --modern-card-shadow: 0 1px 3px rgb(45 40 37 / 0.05), 0 14px 36px rgb(45 40 37 / 0.1);
+  background-color: var(--modern-bg);
   color: #0f172a;
   /* See classic-theme.css's identical note — modern's own source body also
    * never had this (unlike elegant/dark's), which lets the testimonials

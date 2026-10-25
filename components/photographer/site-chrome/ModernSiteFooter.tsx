@@ -26,7 +26,7 @@ export function ModernSiteFooter({ studioName, logoUrl, primaryColor, language }
 
   return (
     <footer
-      className="w-full border-t border-[#0f172a]/10 bg-[#F8FAFC] py-12 pb-[120px]"
+      className="w-full border-t border-[#0f172a]/10 bg-white py-12 pb-[120px]"
       style={{ '--footer-accent': primaryColor } as React.CSSProperties}
     >
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-6 md:flex-row rtl:md:flex-row-reverse">

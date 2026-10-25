@@ -31,12 +31,12 @@
 
 .section::before {
   top: 0;
-  background: linear-gradient(to bottom, #f8fafc 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+  background: linear-gradient(to bottom, var(--modern-bg) 0%, rgb(var(--modern-bg-rgb) / 0.76) 44%, transparent 100%);
 }
 
 .section::after {
   bottom: 0;
-  background: linear-gradient(to top, #f8fafc 0%, rgba(248, 250, 252, 0.76) 44%, transparent 100%);
+  background: linear-gradient(to top, var(--modern-bg) 0%, rgb(var(--modern-bg-rgb) / 0.76) 44%, transparent 100%);
 }
 
 .glow {

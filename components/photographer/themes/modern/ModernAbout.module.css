@@ -10,7 +10,7 @@
   width: 100%;
   padding-block: 3rem 3.5rem;
   padding-inline: 1rem;
-  background: #f1f5f9;
+  background: var(--modern-bg-alt);
 }
 
 .inner {

@@ -32,9 +32,9 @@
   top: 0;
   background: linear-gradient(
     to bottom,
-    #f8fafc 0%,
-    rgba(248, 250, 252, 0.82) 28%,
-    rgba(248, 250, 252, 0.34) 58%,
+    var(--modern-bg) 0%,
+    rgb(var(--modern-bg-rgb) / 0.82) 28%,
+    rgb(var(--modern-bg-rgb) / 0.34) 58%,
     transparent 100%
   );
 }
@@ -43,9 +43,9 @@
   bottom: 0;
   background: linear-gradient(
     to top,
-    #f8fafc 0%,
-    rgba(248, 250, 252, 0.82) 28%,
-    rgba(248, 250, 252, 0.34) 58%,
+    var(--modern-bg) 0%,
+    rgb(var(--modern-bg-rgb) / 0.82) 28%,
+    rgb(var(--modern-bg-rgb) / 0.34) 58%,
     transparent 100%
   );
 }

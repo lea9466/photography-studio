@@ -223,7 +223,7 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
           // screenshots show, so this is a deliberate size increase beyond
           // source rather than a restored "real" value.
           isSolid
-            ? 'border-b border-black/5 bg-[#F8FAFC]/90 py-6 shadow-sm backdrop-blur-md'
+            ? 'border-b border-black/5 bg-white/90 py-6 shadow-sm backdrop-blur-md'
             : blendAtTop
               ? // Already at the scrolled height, so only the background fades in on scroll — no height jump.
                 'border-b border-transparent bg-transparent py-6'
@@ -262,7 +262,7 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
         </div>
       </nav>
       {mobileOpen ? (
-        <div className="fixed top-16 right-0 left-0 z-40 border-b border-black/5 bg-[#F8FAFC]/95 backdrop-blur-md md:hidden">
+        <div className="fixed top-16 right-0 left-0 z-40 border-b border-black/5 bg-white/95 backdrop-blur-md md:hidden">
           <div className="flex flex-col gap-4 px-6 py-4">
             {items.map((item) => (
               <Link

@@ -40,8 +40,8 @@
 }
 
 .modern {
-  --hl-bg: #f8fafc;
-  --hl-bg2: #eef1f5;
+  --hl-bg: #ffffff;
+  --hl-bg2: #f8f6f3;
   --hl-fg: #0f172a;
   --hl-muted: #475569;
   --hl-display: var(--about-title-font, 'Rubik', 'Heebo', sans-serif);
