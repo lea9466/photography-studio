@@ -152,9 +152,14 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   const heroPreview = useHeroPreviewOverride()
   const heroBehindNav = heroPreview ? heroHasPhotoBehindNav(heroPreview.settings) : homeHeroBehindNav
   const transparentAtTop = (pathname === homepagePath && heroBehindNav) || isBlogPostPage
+  // A homepage hero layout that opens on the page background (not a photo):
+  // the nav starts see-through with dark text so it blends into the page,
+  // instead of a solid strip with a shadow, and turns solid once scrolled.
+  const blendAtTop = pathname === homepagePath && !heroBehindNav
+  const changesOnScroll = transparentAtTop || blendAtTop
 
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(!transparentAtTop)
+  const [scrolled, setScrolled] = useState(!changesOnScroll)
 
   // The header persists across navigation now instead of remounting fresh
   // per page, so a menu left open has to be closed explicitly on route
@@ -171,7 +176,7 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
     // studio landing mid-scroll on a solid-nav page and then navigating to
     // the transparent-nav homepage would keep the previous page's nav
     // color until the next scroll event fires.
-    if (!transparentAtTop) {
+    if (!changesOnScroll) {
       setScrolled(true)
       return
     }
@@ -181,7 +186,7 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [transparentAtTop])
+  }, [changesOnScroll])
 
   const copy = getSiteChromeCopy(language)
   const useHrefForGallery = galleryLayoutMode === 'portfolio' && Boolean(portfolioPath)
@@ -210,8 +215,10 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   }
   items.push({ key: 'contact', label: copy.nav.contact, href: homepageSectionHref(homepagePath, 'contact') })
 
-  const isSolid = !transparentAtTop || scrolled
-  const textColorClass = isSolid ? 'text-[#2d2825]' : 'text-white'
+  const isSolid = !changesOnScroll || scrolled
+  // White text only over a photo; blending into the page background keeps the dark text.
+  const lightText = transparentAtTop && !scrolled
+  const textColorClass = lightText ? 'text-white' : 'text-[#2d2825]'
 
   // Mirrors the real (desktop) vertical padding from lib/photographer-site-chrome.ts:
   // the nav's own py-md/py-sm (navInitialClasses/generateSiteNavScrollScript's

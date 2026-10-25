@@ -150,16 +150,21 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
   const heroPreview = useHeroPreviewOverride()
   const heroBehindNav = heroPreview ? heroHasPhotoBehindNav(heroPreview.settings) : homeHeroBehindNav
   const transparentAtTop = (pathname === homepagePath && heroBehindNav) || isBlogPostPage
+  // A homepage hero layout that opens on the page background (not a photo):
+  // the nav starts see-through with dark text so it blends into the page,
+  // instead of a solid strip with a shadow, and turns solid once scrolled.
+  const blendAtTop = pathname === homepagePath && !heroBehindNav
+  const changesOnScroll = transparentAtTop || blendAtTop
 
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [scrolled, setScrolled] = useState(!transparentAtTop)
+  const [scrolled, setScrolled] = useState(!changesOnScroll)
 
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
   useEffect(() => {
-    if (!transparentAtTop) {
+    if (!changesOnScroll) {
       setScrolled(true)
       return
     }
@@ -169,7 +174,7 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
-  }, [transparentAtTop])
+  }, [changesOnScroll])
 
   const copy = getSiteChromeCopy(language)
   const useHrefForGallery = galleryLayoutMode === 'portfolio' && Boolean(portfolioPath)
@@ -198,11 +203,13 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
   }
   items.push({ key: 'contact', label: copy.nav.contact, href: homepageSectionHref(homepagePath, 'contact') })
 
-  const isSolid = !transparentAtTop || scrolled
-  const brandColorClass = isSolid ? 'text-[#0f172a]' : 'text-white'
-  const linkColorClass = isSolid
-    ? 'text-[var(--nav-accent)] hover:opacity-80'
-    : 'text-white hover:text-white/75'
+  const isSolid = !changesOnScroll || scrolled
+  // White text only over a photo; blending into the page background keeps the dark text.
+  const lightText = transparentAtTop && !scrolled
+  const brandColorClass = lightText ? 'text-white' : 'text-[#0f172a]'
+  const linkColorClass = lightText
+    ? 'text-white hover:text-white/75'
+    : 'text-[var(--nav-accent)] hover:opacity-80'
 
   return (
     <>
