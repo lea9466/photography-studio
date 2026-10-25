@@ -36,7 +36,7 @@
   flex: 0 1 auto;
   display: flex;
   flex-direction: column;
-  padding: 2.15rem 1.5rem 2.15rem 5.25rem;
+  padding: 2.15rem 1.5rem 2.15rem 6.25rem;
   margin-top: 0.85rem;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.07);
@@ -60,7 +60,7 @@
     max-width: calc(50% - 0.75rem);
     width: calc(50% - 0.75rem);
     min-width: 0;
-    padding: 1.85rem 1.25rem 1.85rem 4.75rem;
+    padding: 1.85rem 1.25rem 1.85rem 5.75rem;
   }
 }
 
@@ -102,8 +102,8 @@
   position: absolute;
   left: -1.15rem;
   bottom: -0.85rem;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: 6rem;
+  height: 6rem;
   overflow: hidden;
   border: 3px solid #1c1c26;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
