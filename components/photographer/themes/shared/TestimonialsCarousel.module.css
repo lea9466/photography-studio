@@ -24,6 +24,11 @@
 
 .carousel {
   overflow: hidden;
+  /* Clip only sideways (where the cards slide); vertically the cards' soft
+     shadow must fade out on its own instead of being cut into a hard line.
+     Browsers without overflow: clip keep the plain `hidden` above. */
+  overflow-x: clip;
+  overflow-y: visible;
   width: 100%;
   padding-bottom: 1rem;
 }
