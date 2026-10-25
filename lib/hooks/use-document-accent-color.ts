@@ -16,12 +16,18 @@ export const A11Y_ACCENT_CSS_VAR = '--a11y-accent'
  * Only the public-site chromes call this; nothing sets the var anywhere
  * else (dashboard, marketing, auth), so the widget's own var(..., #7c3aed)
  * fallback is what keeps it unchanged there.
+ *
+ * Also marks <html> with data-public-site, which moves the widget's button
+ * to a smaller bottom-left spot on public sites only (see globals.css).
  */
 export function useDocumentAccentColor(color: string) {
   useEffect(() => {
-    document.documentElement.style.setProperty(A11Y_ACCENT_CSS_VAR, color)
+    const root = document.documentElement
+    root.style.setProperty(A11Y_ACCENT_CSS_VAR, color)
+    root.setAttribute('data-public-site', '')
     return () => {
-      document.documentElement.style.removeProperty(A11Y_ACCENT_CSS_VAR)
+      root.style.removeProperty(A11Y_ACCENT_CSS_VAR)
+      root.removeAttribute('data-public-site')
     }
   }, [color])
 }

@@ -203,6 +203,33 @@ html[data-a11y-spacing] body *:not([data-a11y-ui], [data-a11y-ui] *) {
   word-spacing: 0.12em !important;
 }
 
+/* On public photographer sites the trigger is smaller and sits bottom-left
+   (out of the way of the content), and the panel opens above it. The
+   data-public-site mark comes from useDocumentAccentColor. Unlayered, so it
+   beats the widget's Tailwind utilities. */
+html[data-public-site] [data-a11y-trigger] {
+  top: auto;
+  bottom: 1rem;
+  left: 1rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  transform: none;
+}
+
+html[data-public-site] [data-a11y-trigger] svg {
+  width: 20px;
+  height: 20px;
+}
+
+html[data-public-site] [data-a11y-panel] {
+  top: auto;
+  bottom: calc(1rem + 2.25rem + 0.5rem);
+  left: 1rem;
+  max-height: calc(100svh - 5.5rem);
+  overflow-y: auto;
+  transform: none;
+}
+
 html[data-a11y-motion] *,
 html[data-a11y-motion] *::before,
 html[data-a11y-motion] *::after {

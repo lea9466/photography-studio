@@ -131,6 +131,7 @@ export function AccessibilityWidget() {
         aria-label="תפריט נגישות"
         aria-expanded={open}
         aria-controls="a11y-panel"
+        data-a11y-trigger
         // Brand color on a public photographer site (see useDocumentAccentColor,
         // called from each theme's *PageChrome) — the var is only ever set
         // there, so everywhere else (dashboard included) this fallback is
@@ -151,6 +152,7 @@ export function AccessibilityWidget() {
           role="dialog"
           aria-label="הגדרות נגישות"
           tabIndex={-1}
+          data-a11y-panel
           className="fixed left-[68px] top-1/2 z-[9998] w-64 max-w-[calc(100vw-5rem)] -translate-y-1/2 rounded-2xl border border-[#e7e2dc] bg-white p-4 text-[#2b2623] shadow-2xl outline-none"
         >
           <div className="mb-3 flex items-center justify-between">
