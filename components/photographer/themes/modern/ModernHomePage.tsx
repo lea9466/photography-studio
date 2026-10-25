@@ -4,7 +4,6 @@ import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import { ModernHero } from './ModernHero'
 import { HomepageHero } from '../shared/hero-layouts/HomepageHero'
 import type { HeroSettings } from '@/lib/public-site/hero-settings'
-import { ModernAboutStatement } from './ModernAboutStatement'
 import { ModernAbout } from './ModernAbout'
 import { ModernGalleriesSection } from './ModernGalleriesSection'
 import { ModernRecentPhotosSection } from './ModernRecentPhotosSection'
@@ -50,11 +49,11 @@ export type ModernHomePageProps = {
   /** Shared hero layout picked in the dashboard (already entitlement-checked); null = this theme's own hero. */
   heroSettings?: HeroSettings | null
 
-  /** Feeds the new ModernAboutStatement section (see that file's doc comment)
+  /** Feeds the ModernAbout section (see that file's doc comment)
    * — not part of the old renderer's modern branch, unlike every other
    * aboutXxx field here. */
   aboutText: string | null
-  /** Also new — feeds ModernAboutStatement's portrait, alongside aboutText.
+  /** Also new — feeds ModernAbout's photo, alongside aboutDescription.
    * Modern never showed the about photo before (unlike classic/dark/elegant's
    * About sections). */
   aboutImageUrl: string | null
@@ -117,8 +116,8 @@ export type ModernHomePageProps = {
  * Unlike classic, modern has no separate "aboutImageUrl"/photographer-photo
  * prop — the old renderer merges hero+about into one full-screen section
  * (ModernHero.tsx) with a film-belt background instead of a portrait, and
- * ModernAbout.tsx is only the three stat cards below it (see that
- * component's doc comment). `faqSectionImageUrl` is likewise omitted —
+ * ModernAbout.tsx is the about_description + stats section below it (see
+ * that component's doc comment). `faqSectionImageUrl` is likewise omitted —
  * modern's FAQ never uses the "magazine" image layout (see
  * ModernFaqSection.tsx's doc comment).
  *
@@ -188,17 +187,12 @@ export function ModernHomePage(props: ModernHomePageProps) {
           replaces it, so keep the anchor (?section=about deep links) here. */}
       {heroSettings ? <div id="about" aria-hidden="true" /> : null}
       <ModernAbout
+        text={aboutDescription}
+        imageUrl={aboutImageUrl}
         accentColor={accentColor}
         statsClients={statsClients}
         statsProjects={statsProjects}
         statsYears={statsYears}
-        language={language}
-      />
-
-      <ModernAboutStatement
-        text={aboutDescription}
-        imageUrl={aboutImageUrl}
-        accentColor={accentColor}
         language={language}
       />
       </>
@@ -295,7 +289,7 @@ export function ModernHomePage(props: ModernHomePageProps) {
               // (about_subtitle) is intentionally NOT pulled in here, so an empty
               // about_text leaves the hero without a paragraph instead of falling
               // back to About-section copy. aboutDescription lives in
-              // ModernAboutStatement below, same as the other themes' About sections.
+              // ModernAbout below, same as the other themes' About sections.
               description={aboutText}
               accentColor={accentColor}
               desktopImages={heroDesktopImages}

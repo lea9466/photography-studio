@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Design options for the Modern theme About section (25/10/2026). Option C was chosen and lives in
+     components/photographer/themes/modern/ModernAbout.tsx. The others (A, B, D, E, F) are kept here as
+     candidates for a future dashboard picker, like the hero layouts editor. Open this file directly in a browser. -->
+<title>אודות מודרני: דוגמאות</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Rubik:wght@300;400;500;600;700&display=swap">
+</head><body>
+<style>
+/* Layout: a picker strip on top, then six full-width mockups of the Modern theme's about section, each in its own resizable stage */
+:root {
+  --bg: #eef1f5;
+  --fg: #0f172a;
+  --muted: #5b6475;
+  --panel: #ffffff;
+  --line: #d9dee7;
+  --chip: #e3e8ef;
+  --acc: #7c3aed;
+  --ui: 'Heebo', system-ui, sans-serif;
+  --display: 'Rubik', 'Heebo', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #12151b; --fg: #e8ebf1; --muted: #9aa3b2; --panel: #1b2029; --line: #2c3340; --chip: #262c37; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #12151b; --fg: #e8ebf1; --muted: #9aa3b2; --panel: #1b2029; --line: #2c3340; --chip: #262c37; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); direction: rtl; }
+.wrap { max-width: 1180px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 2.5rem 4rem; display: flex; flex-direction: column; gap: 3rem; }
+
+header.top { display: flex; flex-direction: column; gap: .75rem; }
+header.top h1 { margin: 0; font-family: var(--display); font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 600; text-wrap: balance; }
+header.top p { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.6; max-width: 62ch; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: center; padding: 1rem 1.25rem; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.ctl { display: flex; align-items: center; gap: .6rem; font-size: .9rem; color: var(--muted); }
+.swatches, .seg { display: flex; gap: .4rem; }
+.swatches input, .seg input { position: absolute; opacity: 0; pointer-events: none; }
+.swatches label { width: 28px; height: 28px; border-radius: 50%; background: var(--c); cursor: pointer; outline: 2px solid transparent; outline-offset: 2px; }
+.swatches input:checked + label { outline-color: var(--fg); }
+.swatches input:focus-visible + label, .seg input:focus-visible + label { box-shadow: 0 0 0 3px var(--muted); }
+.seg { background: var(--chip); padding: 3px; border-radius: 999px; }
+.seg label { padding: .35rem .9rem; border-radius: 999px; cursor: pointer; font-size: .85rem; color: var(--muted); }
+.seg input:checked + label { background: var(--panel); color: var(--fg); font-weight: 500; }
+
+.option { display: flex; flex-direction: column; gap: 1rem; }
+.option-head { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+.letter { font-family: var(--display); font-weight: 700; font-size: 1.1rem; width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center; background: var(--fg); color: var(--bg); flex-shrink: 0; align-self: center; }
+.option-head h2 { margin: 0; font-family: var(--display); font-size: 1.35rem; font-weight: 600; }
+.option-head p { margin: 0; color: var(--muted); font-size: .95rem; flex-basis: 100%; padding-inline-start: 3.2rem; line-height: 1.55; }
+
+.stage-outer { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: var(--panel); }
+.stage-bar { height: 30px; display: flex; align-items: center; gap: 6px; padding-inline: 12px; border-bottom: 1px solid var(--line); direction: ltr; }
+.stage-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.stage-scroll { overflow-x: auto; background: #f8fafc; }
+.stage { container: stage / inline-size; margin-inline: auto; width: 100%; transition: max-width .35s ease; }
+body.mobile .stage { max-width: 390px; border-inline: 1px solid #e2e8f0; }
+
+footer.pick { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem 1.5rem; line-height: 1.6; }
+footer.pick strong { font-family: var(--display); }
+
+/* ============ site mock: shared (Modern theme, always light like the real site) ============ */
+.site { --s-acc: var(--acc); font-family: 'Heebo', sans-serif; color: #0f172a; direction: rtl; }
+.site * { margin: 0; }
+.site img { display: block; width: 100%; height: 100%; object-fit: cover; max-width: 100%; }
+.eyebrow { font-family: 'Rubik', sans-serif; font-size: .72rem; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--s-acc); direction: ltr; }
+.s-title { font-family: 'Rubik', sans-serif; font-weight: 600; color: #0f172a; text-wrap: balance; line-height: 1.15; }
+.s-text { color: #475569; line-height: 1.8; font-size: 1.02rem; max-width: 56ch; }
+.num { font-family: 'Rubik', sans-serif; font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; }
+
+/* ---- A: split ---- */
+.va { display: grid; grid-template-columns: 1fr; background: #fff; }
+.va .ph { aspect-ratio: 4 / 5; max-height: 520px; width: 100%; }
+.va .body { padding: 2.5rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; justify-content: center; }
+.va .s-title { font-size: 2.2rem; }
+.va .stats { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid #e2e8f0; padding-top: 1.5rem; margin-top: .5rem; }
+.va .stat { display: flex; flex-direction: column; gap: .2rem; padding-inline: .75rem; border-inline-start: 1px solid #e2e8f0; }
+.va .stat:first-child { border-inline-start: none; padding-inline-start: 0; }
+.va .stat .num { font-size: 1.9rem; font-weight: 600; color: var(--s-acc); }
+.va .stat span { font-size: .85rem; color: #64748b; }
+@container stage (min-width: 760px) {
+  .va { grid-template-columns: 1fr 1fr; }
+  .va .ph { aspect-ratio: auto; max-height: none; min-height: 560px; }
+  .va .body { padding: 4rem 4.5rem; }
+  .va .s-title { font-size: 2.9rem; }
+}
+
+/* ---- B: opening line ---- */
+.vb { background: #fff; padding: 3.5rem 1.5rem; }
+.vb .in { max-width: 72rem; margin-inline: auto; display: flex; flex-direction: column; gap: 2.25rem; }
+.vb .lead { font-family: 'Rubik', sans-serif; font-weight: 400; font-size: 1.7rem; line-height: 1.35; color: #0f172a; text-wrap: balance; max-width: 26ch; }
+.vb .lead em { font-style: normal; color: var(--s-acc); }
+.vb .row { display: grid; grid-template-columns: 1fr; gap: 1.75rem; }
+.vb .sig { display: flex; align-items: center; gap: .9rem; }
+.vb .sig .av { width: 64px; height: 64px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+.vb .sig b { font-family: 'Rubik', sans-serif; font-weight: 600; display: block; }
+.vb .sig small { color: #64748b; font-size: .85rem; }
+.vb .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; border-top: 1px solid #0f172a; padding-top: 1.25rem; }
+.vb .stat .num { font-size: 2.6rem; font-weight: 300; line-height: 1; display: block; }
+.vb .stat span { font-size: .82rem; color: #64748b; }
+@container stage (min-width: 760px) {
+  .vb { padding: 6rem 4rem; }
+  .vb .lead { font-size: 3rem; }
+  .vb .row { grid-template-columns: 1fr 1.3fr; gap: 4rem; align-items: start; }
+  .vb .stat .num { font-size: 4rem; }
+}
+
+/* ---- C: overlapping card ---- */
+.vc { background: #f1f5f9; padding: 2.5rem 1rem 3rem; }
+.vc .in { max-width: 72rem; margin-inline: auto; display: grid; grid-template-columns: 1fr; }
+.vc .ph { aspect-ratio: 4 / 3; border-radius: 22px; overflow: hidden; }
+.vc .card { background: #fff; border-radius: 22px; padding: 2rem 1.5rem; margin: -3rem .75rem 0; position: relative; box-shadow: 0 20px 50px rgba(15, 23, 42, .1); display: flex; flex-direction: column; gap: 1rem; }
+.vc .s-title { font-size: 1.9rem; }
+.vc .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; margin-top: .5rem; }
+.vc .stat { background: color-mix(in srgb, var(--s-acc) 9%, white); border-radius: 14px; padding: .8rem .5rem; text-align: center; }
+.vc .stat .num { font-size: 1.5rem; font-weight: 600; color: var(--s-acc); display: block; }
+.vc .stat span { font-size: .75rem; color: #475569; }
+@container stage (min-width: 760px) {
+  .vc { padding: 5rem 3rem; }
+  .vc .in { grid-template-columns: 7fr 5fr; align-items: center; }
+  .vc .ph { aspect-ratio: 5 / 4; grid-column: 1 / 2; grid-row: 1; }
+  .vc .card { grid-column: 2 / 3; grid-row: 1; margin: 0; margin-inline-start: -7rem; padding: 3rem; }
+  .vc .s-title { font-size: 2.4rem; }
+}
+
+/* ---- D: dark band ---- */
+.vd { background: #0f172a; color: #e2e8f0; padding: 3rem 1.25rem; overflow: hidden; }
+.vd .in { max-width: 72rem; margin-inline: auto; display: flex; flex-direction: column; gap: 2.5rem; }
+.vd .big { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; border-bottom: 1px solid rgba(255, 255, 255, .12); padding-bottom: 2rem; }
+.vd .big .num { font-size: 2.8rem; font-weight: 700; line-height: 1; color: transparent; -webkit-text-stroke: 1.5px var(--s-acc); display: block; }
+.vd .big span { font-size: .8rem; color: #94a3b8; }
+.vd .row { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+.vd .ph { aspect-ratio: 1; border-radius: 18px; overflow: hidden; max-width: 340px; }
+.vd .ph img { filter: grayscale(.25); }
+.vd .s-title { color: #fff; font-size: 2rem; }
+.vd .s-text { color: #cbd5e1; }
+.vd .copy { display: flex; flex-direction: column; gap: 1.1rem; }
+@container stage (min-width: 760px) {
+  .vd { padding: 5.5rem 4rem; }
+  .vd .big .num { font-size: 6rem; -webkit-text-stroke-width: 2px; }
+  .vd .big span { font-size: .95rem; }
+  .vd .row { grid-template-columns: 340px 1fr; gap: 4rem; align-items: center; }
+  .vd .s-title { font-size: 2.6rem; }
+}
+
+/* ---- E: bento ---- */
+.ve { background: #f8fafc; padding: 2rem .75rem; }
+.ve .grid { max-width: 72rem; margin-inline: auto; display: grid; grid-template-columns: 1fr; gap: .75rem; }
+.ve .tile { border-radius: 22px; overflow: hidden; }
+.ve .ph { aspect-ratio: 4 / 5; }
+.ve .txt { background: #fff; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 4px 20px rgba(15, 23, 42, .05); }
+.ve .s-title { font-size: 1.9rem; }
+.ve .stats { background: var(--s-acc); color: #fff; display: grid; grid-template-columns: repeat(3, 1fr); padding: 1.6rem 1rem; }
+.ve .stat { text-align: center; display: flex; flex-direction: column; gap: .2rem; }
+.ve .stat + .stat { border-inline-start: 1px solid rgba(255, 255, 255, .3); }
+.ve .stat .num { font-size: 2rem; font-weight: 600; }
+.ve .stat span { font-size: .8rem; opacity: .85; }
+@container stage (min-width: 760px) {
+  .ve { padding: 4rem 2rem; }
+  .ve .grid { grid-template-columns: 5fr 7fr; grid-template-rows: 1fr auto; }
+  .ve .ph { grid-row: 1 / 3; aspect-ratio: auto; min-height: 520px; }
+  .ve .txt { padding: 3rem; justify-content: center; }
+  .ve .s-title { font-size: 2.5rem; }
+  .ve .stats { padding: 2.2rem 1.5rem; }
+  .ve .stat .num { font-size: 2.8rem; }
+}
+
+/* ---- F: centered minimal ---- */
+.vf { background: #fff; padding: 3.5rem 1.5rem; text-align: center; }
+.vf .in { max-width: 44rem; margin-inline: auto; display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
+.vf .av { width: 150px; height: 150px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 6px #fff, 0 0 0 8px var(--s-acc); margin-bottom: .75rem; }
+.vf .s-title { font-size: 2rem; }
+.vf .s-text { margin-inline: auto; }
+.vf .stats { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem 1.5rem; margin-top: .5rem; font-size: .95rem; color: #475569; }
+.vf .stats .num { font-weight: 600; color: var(--s-acc); font-size: 1.15rem; }
+.vf .dot { color: #cbd5e1; }
+@container stage (min-width: 760px) {
+  .vf { padding: 6rem 2rem; }
+  .vf .av { width: 190px; height: 190px; }
+  .vf .s-title { font-size: 2.6rem; }
+}
+
+@media (prefers-reduced-motion: reduce) { .stage { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>סקשן האודות בערכה המודרנית: שש דוגמאות</h1>
+    <p>כל הדוגמאות בנויות מאותם נתונים שכבר קיימים בדשבורד: תמונת האודות, הטקסט, והמספרים (לקוחות, תיקי עבודות, שנות ניסיון). אפשר להחליף צבע מבטא ולראות כל דוגמה גם בתצוגת נייד.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="אפשרויות תצוגה">
+    <div class="ctl">צבע מבטא
+      <div class="swatches">
+        <input type="radio" name="acc" id="acc1" value="#7c3aed" checked><label for="acc1" style="--c:#7c3aed" title="סגול"></label>
+        <input type="radio" name="acc" id="acc2" value="#b8953f"><label for="acc2" style="--c:#b8953f" title="זהב"></label>
+        <input type="radio" name="acc" id="acc3" value="#5f8a6e"><label for="acc3" style="--c:#5f8a6e" title="ירוק מרווה"></label>
+        <input type="radio" name="acc" id="acc4" value="#c0617a"><label for="acc4" style="--c:#c0617a" title="ורוד עתיק"></label>
+      </div>
+    </div>
+    <div class="ctl">תצוגה
+      <div class="seg">
+        <input type="radio" name="dev" id="dev1" value="desktop" checked><label for="dev1">מחשב</label>
+        <input type="radio" name="dev" id="dev2" value="mobile"><label for="dev2">נייד</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- A -->
+  <section class="option">
+    <div class="option-head"><span class="letter">A</span><h2>חצי־חצי</h2>
+      <p>התמונה ממלאת חצי מהרוחב עד הקצה, בלי מסגרת. הטקסט בצד השני והמספרים בשורה דקה מתחתיו. נקי ומודרני, והתמונה מקבלת הכי הרבה מקום.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site va">
+        <div class="ph"><img src="../../public/marketing/gallery/g1.webp" alt="תינוק ישן בסל נצרים"></div>
+        <div class="body">
+          <span class="eyebrow">Our story</span>
+          <h3 class="s-title">נעים להכיר, אני מיכל</h3>
+          <p class="s-text">אני מצלמת תינוקות וילדים כבר תשע שנים, מתוך הסטודיו הקטן שלי בבית שמש. כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות, כי תינוק רגוע הוא תינוק שמצטלם יפה.</p>
+          <div class="stats">
+            <div class="stat"><span class="num">450+</span><span>לקוחות מרוצים</span></div>
+            <div class="stat"><span class="num">120+</span><span>תיקי עבודות</span></div>
+            <div class="stat"><span class="num">9+</span><span>שנות ניסיון</span></div>
+          </div>
+        </div>
+      </div>
+    </div></div></div>
+  </section>
+
+  <!-- B -->
+  <section class="option">
+    <div class="option-head"><span class="letter">B</span><h2>משפט פתיחה</h2>
+      <p>המשפט הראשון של הטקסט מוגדל לכותרת ענקית, ומתחתיו שאר הטקסט עם תמונה עגולה קטנה כמו חתימה. המספרים גדולים ודקים. מתאים למי שהטקסט שלה חזק יותר מהתמונה.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site vb"><div class="in">
+        <span class="eyebrow">Our story</span>
+        <p class="lead">אני מצלמת תינוקות וילדים <em>כבר תשע שנים</em>, מתוך הסטודיו הקטן שלי בבית שמש.</p>
+        <div class="row">
+          <div class="sig">
+            <div class="av"><img src="../../public/marketing/gallery/g1.webp" alt="מיכל לוי"></div>
+            <div><b>מיכל לוי</b><small>צילומי ניו בורן וילדים</small></div>
+          </div>
+          <p class="s-text">כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות, כי תינוק רגוע הוא תינוק שמצטלם יפה. אני מאמינה שהתמונות הכי יפות הן אלה שנראות בדיוק כמו המשפחה שלכם, רק ברגע הכי רך שלה.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="num">450+</span><span>לקוחות מרוצים</span></div>
+          <div class="stat"><span class="num">120+</span><span>תיקי עבודות</span></div>
+          <div class="stat"><span class="num">9+</span><span>שנות ניסיון</span></div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </section>
+
+  <!-- C -->
+  <section class="option">
+    <div class="option-head"><span class="letter">C</span><h2>כרטיס חופף</h2>
+      <p>תמונה רחבה עם פינות מעוגלות, וכרטיס לבן שעולה עליה מהצד עם הטקסט. המספרים בתוך הכרטיס, על רקע בגוון של צבע המבטא.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site vc"><div class="in">
+        <div class="ph"><img src="../../public/marketing/gallery/g3.webp" alt="תאומים עטופים בבדים"></div>
+        <div class="card">
+          <span class="eyebrow">Our story</span>
+          <h3 class="s-title">נעים להכיר, אני מיכל</h3>
+          <p class="s-text">אני מצלמת תינוקות וילדים כבר תשע שנים, מתוך הסטודיו הקטן שלי בבית שמש. כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות.</p>
+          <div class="stats">
+            <div class="stat"><span class="num">450+</span><span>לקוחות</span></div>
+            <div class="stat"><span class="num">120+</span><span>תיקי עבודות</span></div>
+            <div class="stat"><span class="num">9+</span><span>שנות ניסיון</span></div>
+          </div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </section>
+
+  <!-- D -->
+  <section class="option">
+    <div class="option-head"><span class="letter">D</span><h2>פס כהה</h2>
+      <p>רקע כהה שנותן הפסקה בין החלקים הבהירים של הדף. המספרים ענקיים, בקו מתאר בצבע המבטא, ומתחתם תמונה ריבועית והטקסט.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site vd"><div class="in">
+        <div class="big">
+          <div><span class="num">450+</span><span>לקוחות מרוצים</span></div>
+          <div><span class="num">120+</span><span>תיקי עבודות</span></div>
+          <div><span class="num">9+</span><span>שנות ניסיון</span></div>
+        </div>
+        <div class="row">
+          <div class="ph"><img src="../../public/marketing/gallery/g5.webp" alt="תאומים בסל ליד חלון"></div>
+          <div class="copy">
+            <span class="eyebrow">Our story</span>
+            <h3 class="s-title">נעים להכיר, אני מיכל</h3>
+            <p class="s-text">אני מצלמת תינוקות וילדים כבר תשע שנים, מתוך הסטודיו הקטן שלי בבית שמש. כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות, כי תינוק רגוע הוא תינוק שמצטלם יפה.</p>
+          </div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </section>
+
+  <!-- E -->
+  <section class="option">
+    <div class="option-head"><span class="letter">E</span><h2>אריחים</h2>
+      <p>שלושה אריחים: תמונה גבוהה, אריח טקסט לבן, ופס מספרים מלא בצבע המבטא. ממשיך את שפת הכרטיסים המעוגלים שכבר יש בערכה.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site ve"><div class="grid">
+        <div class="tile ph"><img src="../../public/marketing/gallery/g1.webp" alt="תינוק ישן בסל נצרים"></div>
+        <div class="tile txt">
+          <span class="eyebrow">Our story</span>
+          <h3 class="s-title">נעים להכיר, אני מיכל</h3>
+          <p class="s-text">אני מצלמת תינוקות וילדים כבר תשע שנים, מתוך הסטודיו הקטן שלי בבית שמש. כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות, כי תינוק רגוע הוא תינוק שמצטלם יפה.</p>
+        </div>
+        <div class="tile stats">
+          <div class="stat"><span class="num">450+</span><span>לקוחות מרוצים</span></div>
+          <div class="stat"><span class="num">120+</span><span>תיקי עבודות</span></div>
+          <div class="stat"><span class="num">9+</span><span>שנות ניסיון</span></div>
+        </div>
+      </div></div>
+    </div></div></div>
+  </section>
+
+  <!-- F -->
+  <section class="option">
+    <div class="option-head"><span class="letter">F</span><h2>מינימלי במרכז</h2>
+      <p>תמונה עגולה עם טבעת בצבע המבטא, שם, טקסט קצר והמספרים בשורה אחת. הכי שקט מכולם, ותופס הכי מעט גובה.</p></div>
+    <div class="stage-outer"><div class="stage-bar"><i></i><i></i><i></i></div><div class="stage-scroll"><div class="stage">
+      <div class="site vf"><div class="in">
+        <div class="av"><img src="../../public/marketing/gallery/g1.webp" alt="מיכל לוי"></div>
+        <span class="eyebrow">Our story</span>
+        <h3 class="s-title">נעים להכיר, אני מיכל</h3>
+        <p class="s-text">אני מצלמת תינוקות וילדים כבר תשע שנים, מתוך הסטודיו הקטן שלי בבית שמש. כל צילום מתחיל בשיחה, בכוס תה ובהרבה סבלנות.</p>
+        <div class="stats">
+          <span><span class="num">450+</span> לקוחות מרוצים</span><span class="dot">•</span>
+          <span><span class="num">120+</span> תיקי עבודות</span><span class="dot">•</span>
+          <span><span class="num">9+</span> שנות ניסיון</span>
+        </div>
+      </div></div>
+    </div></div></div>
+  </section>
+
+  <footer class="pick"><strong>איך בוחרים:</strong> כתבי לי את האות (אפשר גם שילוב, למשל "C עם המספרים של D"). אפשר גם להשאיר את הקיימת ולהוסיף את החדשות כאפשרויות בחירה בדשבורד.</footer>
+</div>
+
+<script>
+document.querySelectorAll('input[name="acc"]').forEach(function (el) {
+  el.addEventListener('change', function () { document.documentElement.style.setProperty('--acc', el.value); });
+});
+document.querySelectorAll('input[name="dev"]').forEach(function (el) {
+  el.addEventListener('change', function () { document.body.classList.toggle('mobile', el.value === 'mobile' && el.checked); });
+});
+</script>
+
+</body>
+</html>

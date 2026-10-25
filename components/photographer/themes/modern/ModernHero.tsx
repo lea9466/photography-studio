@@ -30,7 +30,7 @@ export type ModernHeroProps = {
  * min-h-screen film-belt background behind a hollow-stroke title, the muted
  * about_text blurb, and the "get started"/"view gallery" CTAs. (The old
  * renderer also dropped the About-section subtitle/description into this
- * section; here those belong to ModernAboutStatement instead, so an empty
+ * section; here those belong to ModernAbout instead, so an empty
  * about_text just leaves the hero with no paragraph.) Ported here as
  * ModernHero; the separate stats-cards strip below it is
  * ModernAbout.tsx (modern has no photographer-portrait/quote card — those
