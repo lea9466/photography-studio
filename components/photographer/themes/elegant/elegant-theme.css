@@ -17,8 +17,9 @@
  */
 
 .theme-elegant {
-  --headline-font: 'Playfair Display', serif;
-  --about-title-font: 'Frank Ruhl Libre', serif;
+  /* Default for studios that never picked a font (dashboard: DEFAULT_HEADING_FONT). */
+  --headline-font: 'Rubik', 'Heebo', sans-serif;
+  --about-title-font: 'Rubik', 'Heebo', sans-serif;
   font-family: 'Heebo', sans-serif;
   background-color: #fafaf8;
   color: #0f0f0d;

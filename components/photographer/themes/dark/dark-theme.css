@@ -18,7 +18,8 @@
  */
 
 .theme-dark {
-  --headline-font: 'Space Grotesk', sans-serif;
+  /* Default for studios that never picked a font (dashboard: DEFAULT_HEADING_FONT). */
+  --headline-font: 'Rubik', 'Heebo', sans-serif;
   --about-title-font: 'Rubik', 'Heebo', sans-serif;
   --dark-bg: #121217;
   --dark-surface: #1a1a22;

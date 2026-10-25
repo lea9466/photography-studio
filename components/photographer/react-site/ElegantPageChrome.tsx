@@ -39,7 +39,7 @@ export function ElegantPageChrome({ language, headerProps, footerProps, children
     <div className="theme-elegant">
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Heebo:wght@300;400;500;700&family=Rubik:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap"
       />
       {brandFontUrl ? <link rel="stylesheet" href={brandFontUrl} /> : null}
       <link

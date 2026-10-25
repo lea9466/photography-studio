@@ -12,7 +12,8 @@
  */
 
 .theme-modern {
-  --headline-font: 'Space Grotesk', 'Heebo', sans-serif;
+  /* Default for studios that never picked a font (dashboard: DEFAULT_HEADING_FONT). */
+  --headline-font: 'Rubik', 'Heebo', sans-serif;
   --about-title-font: 'Rubik', 'Heebo', sans-serif;
   font-family: 'Heebo', sans-serif;
   background-color: #f8fafc;

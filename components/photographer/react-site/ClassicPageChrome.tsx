@@ -47,7 +47,7 @@ export function ClassicPageChrome({ language, headerProps, footerProps, children
     <div className="theme-classic relative">
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Frank+Ruhl+Libre:wght@400;700&family=Great+Vibes&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Rubik:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@400;700&family=Great+Vibes&display=swap"
       />
       {brandFontUrl ? <link rel="stylesheet" href={brandFontUrl} /> : null}
       <link

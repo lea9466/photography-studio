@@ -16,8 +16,9 @@
  */
 
 .theme-classic {
-  --headline-font: 'Frank Ruhl Libre', serif;
-  --about-title-font: 'Frank Ruhl Libre', serif;
+  /* Default for studios that never picked a font (dashboard: DEFAULT_HEADING_FONT). */
+  --headline-font: 'Rubik', 'Heebo', sans-serif;
+  --about-title-font: 'Rubik', 'Heebo', sans-serif;
   font-family: 'Heebo', sans-serif;
   /* Classic's own source body never had this (unlike elegant/dark's, which
    * do) — a real source inconsistency, not a deliberate design difference.

@@ -23,7 +23,7 @@ export const ALLOWED_FONTS: AllowedFont[] = [
   { name: 'System UI', value: 'system-ui', source: 'system' },
 ]
 
-export const DEFAULT_HEADING_FONT = 'Frank Ruhl Libre'
+export const DEFAULT_HEADING_FONT = 'Rubik'
 export const DEFAULT_ABOUT_TITLE_FONT = 'Rubik'
 
 /** Google Fonts stylesheet for dashboard previews (google sources only). */

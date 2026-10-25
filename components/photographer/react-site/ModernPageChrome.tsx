@@ -39,7 +39,7 @@ export function ModernPageChrome({ language, headerProps, footerProps, children 
     <div className="theme-modern">
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Space+Grotesk:wght@400;500;700&family=Rubik:wght@400;500;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=Space+Grotesk:wght@400;500;700&family=Rubik:wght@400;500;600;700&display=swap"
       />
       {brandFontUrl ? <link rel="stylesheet" href={brandFontUrl} /> : null}
       <link
