@@ -2,6 +2,7 @@ import { getFeedbackEmail } from '@/lib/feedback-email'
 import { getTestimonialImagePreviewUrl } from '@/lib/testimonial-image-url'
 import { CUSTOM_DOMAIN_ADDON_PRICE_ILS } from '@/lib/domains/custom-domain-addon'
 import { createEmailProvider } from '@/lib/email/provider-factory'
+import { HERO_LAYOUT_IDS, HERO_LAYOUT_LABELS } from '@/lib/public-site/hero-settings'
 import type { EmailProvider } from '@/lib/email/provider'
 import {
   buildEmailStubLog,
@@ -1459,6 +1460,143 @@ export async function sendHomepageSectionsAnnouncementEmail(input: { name: strin
   if (!provider) return
 
   const { subject, text, html } = buildHomepageSectionsAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
+ * The dashboard layout picker's thumbnails, one PNG per hero layout, uploaded
+ * once to the public `branding` bucket (same as the client-page-design
+ * screenshot). A layout added later needs its PNG uploaded under the same
+ * name before this email goes out, or its cell shows a broken image.
+ */
+const HERO_LAYOUT_THUMB_BASE_URL = 'https://albums.studio-galleries.com/branding/email-assets/hero-layouts'
+
+/** 3-up grid of every hero layout: thumbnail + name. Tables only, so it holds up in Gmail/Outlook. */
+function heroLayoutsGrid() {
+  const cell = (id: (typeof HERO_LAYOUT_IDS)[number]) => `
+        <td width="33%" valign="top" style="padding: 6px; text-align: center;">
+          <img src="${HERO_LAYOUT_THUMB_BASE_URL}/${id}.png" alt="${escapeHtml(HERO_LAYOUT_LABELS[id].name)}" width="160" style="display: block; width: 100%; max-width: 160px; height: auto; margin: 0 auto; border-radius: 8px; border: 1px solid ${LUXE.border};" />
+          <div style="margin-top: 7px; font-family: ${LUXE.sans}; font-size: 13px; font-weight: 700; color: ${LUXE.ink};">${escapeHtml(HERO_LAYOUT_LABELS[id].name)}</div>
+        </td>`
+  const rows: string[] = []
+  for (let i = 0; i < HERO_LAYOUT_IDS.length; i += 3) {
+    const ids = HERO_LAYOUT_IDS.slice(i, i + 3)
+    const pad = '<td width="33%"></td>'.repeat(3 - ids.length)
+    rows.push(`<tr>${ids.map(cell).join('')}${pad}</tr>`)
+  }
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" dir="rtl" style="margin: 4px 0 22px;">
+      ${rows.join('')}
+    </table>`
+}
+
+/**
+ * Pure builder for the hero-design announcement — the "עיצוב הסקשן הראשי"
+ * editor on /dashboard/site-hero (shared hero layouts picked independently
+ * of the theme, with a live preview of the real site). Same short shape as
+ * the homepage-sections email. Deliberately never says WHICH layouts/options
+ * are free: that's admin-editable in /manage (hero_option_tiers), and an
+ * announcement that promised more than the plan gives already cost us once
+ * (see the promo-price-ending email). Rollout script:
+ * scripts/send-hero-design-announcement.ts.
+ */
+export function buildHeroDesignAnnouncementEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const layoutCount = HERO_LAYOUT_IDS.length
+  const subject = `חדש: ${layoutCount} עיצובים לסקשן הראשי של האתר שלך`
+  const editorUrl = appUrl('/dashboard/site-hero?section=hero-design')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  const h1 = `margin: 0 0 8px; font-family: ${LUXE.sans}; font-size: 26px; line-height: 1.3; font-weight: 800; letter-spacing: -0.3px; color: ${LUXE.ink};`
+  const subhead = `margin: 0 0 22px; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.6; color: ${LUXE.muted};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff; text-transform: uppercase;">חדש ב-STG</td>
+      </tr>
+    </table>
+    <h1 style="${h1}">הדבר הראשון שרואים באתר שלך, בעיצוב שאת בוחרת</h1>
+    <p style="${subhead}">${layoutCount} פריסות חדשות לסקשן הראשי, בלי להחליף ערכת נושא</p>
+
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">עד היום הסקשן הראשי בראש דף הבית נראה תמיד כמו בערכת הנושא שבחרת. מעכשיו אפשר לבחור לו אחת מ-${layoutCount} פריסות:</p>
+
+    ${heroLayoutsGrid()}
+
+    <p style="${p}">הצבעים והגופנים נשארים של הערכה שלך, כך שהכל ממשיך להיראות אחיד.</p>
+
+    ${luxeCheckList([
+      ['רואים לפני ששומרים', 'תצוגה חיה של האתר האמיתי שלך, במחשב ובנייד, שמתעדכנת עם כל בחירה'],
+      ['בלי להעלות שום דבר', 'הפריסות משתמשות בתמונות של הסקשן הראשי שכבר העלית'],
+      ['מכוונים עד הפרט האחרון', 'מעבר בין תמונות, קצב ההחלפה, גודל הכותרת, הכהיית התמונה ותמונה שנשארת במקום בגלילה'],
+      ['חזרה בלחיצה', 'כפתור אחד מחזיר את הסקשן הראשי המקורי של הערכה'],
+    ])}
+
+    ${luxeButton(editorUrl, 'לבחור עיצוב לסקשן הראשי')}
+
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: '#0d9488',
+      bg: '#e3f6f2',
+      border: '#c4ebe2',
+      title: 'לא חובה לגעת בזה',
+      body: 'לא בחרת פריסה? שום דבר לא משתנה, והאתר שלך ימשיך להיראות בדיוק כמו היום. חלק מהפריסות פתוחות לכולן וחלקן במנוי פרו, ואת כולן אפשר לנסות בתצוגה החיה לפני שמחליטים.',
+    })}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה, או רעיון לעוד עיצוב שהיית רוצה לראות? אני כאן, דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
+
+  return {
+    subject,
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      `עד היום הסקשן הראשי בראש דף הבית נראה תמיד כמו בערכת הנושא שבחרת. מעכשיו אפשר לבחור לו אחת מ-${layoutCount} פריסות: ${HERO_LAYOUT_IDS.map((id) => HERO_LAYOUT_LABELS[id].name).join(', ')}. הצבעים והגופנים נשארים של הערכה שלך.`,
+      '',
+      '- רואים לפני ששומרים: תצוגה חיה של האתר האמיתי שלך, במחשב ובנייד',
+      '- בלי להעלות שום דבר: הפריסות משתמשות בתמונות של הסקשן הראשי שכבר העלית',
+      '- מכוונים עד הפרט האחרון: מעבר בין תמונות, קצב, גודל כותרת, הכהיה ותמונה קבועה בגלילה',
+      '- חזרה בלחיצה: כפתור אחד מחזיר את הסקשן הראשי המקורי של הערכה',
+      '',
+      `לבחור עיצוב לסקשן הראשי: ${editorUrl}`,
+      '',
+      'לא בחרת פריסה? שום דבר לא משתנה, והאתר שלך ימשיך להיראות בדיוק כמו היום. חלק מהפריסות פתוחות לכולן וחלקן במנוי פרו, ואת כולן אפשר לנסות בתצוגה החיה לפני שמחליטים.',
+      '',
+      `שאלה או רעיון? טאב יצירת הקשר במערכת: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader: 'פריסות חדשות לראש דף הבית, עם תצוגה חיה של האתר שלך לפני ששומרים.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendHeroDesignAnnouncementEmail(input: { name: string; email: string }) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'hero-design-announcement',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildHeroDesignAnnouncementEmail({ name: input.name })
 
   await provider.send({
     from: emailFrom(),
