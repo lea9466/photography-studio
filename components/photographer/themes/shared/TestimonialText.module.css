@@ -1,0 +1,123 @@
+/* The card text: font/color come from the theme's own text class on the wrapper. */
+.clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.more {
+  margin-top: 0.4rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.more:focus-visible,
+.close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* Dialog — rendered in a portal on <body>, so it carries its own look */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgb(15 12 10 / 0.45);
+  backdrop-filter: blur(2px);
+  animation: tt-fade 0.18s ease;
+}
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 9991;
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: min(80svh, 40rem);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  padding: 2rem 1.75rem 1.75rem;
+  border-radius: 1rem;
+  background: #fff;
+  color: #2b2623;
+  font-family: 'Heebo', sans-serif;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.25);
+  outline: none;
+  animation: tt-pop 0.2s ease;
+}
+
+.close {
+  position: absolute;
+  top: 0.9rem;
+  inset-inline-end: 0.9rem;
+  display: inline-flex;
+  padding: 0.35rem;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: #6f6259;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: #f3efea;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.1rem;
+  padding-inline-end: 2rem;
+}
+
+.thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.body {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.8;
+  white-space: pre-line;
+}
+
+@keyframes tt-fade {
+  from { opacity: 0; }
+}
+
+@keyframes tt-pop {
+  from { opacity: 0; transform: translate(-50%, -48%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .dialog {
+    animation: none;
+  }
+}

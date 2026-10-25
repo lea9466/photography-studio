@@ -1,5 +1,6 @@
 import type { SiteLanguage } from '@/lib/site-language'
 import styles from './DarkTestimonialCard.module.css'
+import { TestimonialText } from '../shared/TestimonialText'
 
 export type DarkTestimonial = {
   id: string
@@ -60,7 +61,15 @@ export function DarkTestimonialCard({ testimonial, accentColor, logoUrl, languag
 
       <div className={styles.content} dir={dir}>
         {testimonial.title ? <h4 className={styles.title}>{testimonial.title}</h4> : null}
-        <p className={styles.text}>{testimonial.content}</p>
+        <TestimonialText
+          text={testimonial.content}
+          className={styles.text}
+          title={testimonial.title}
+          meta={meta}
+          thumbSrc={thumbSrc}
+          accentColor={accentColor}
+          language={language}
+        />
         {meta ? (
           <div className={styles.footer} style={{ color: accentColor }}>
             {meta}

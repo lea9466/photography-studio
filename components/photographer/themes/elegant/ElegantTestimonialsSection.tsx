@@ -58,6 +58,7 @@ export function ElegantTestimonialsSection({
       accentColor={accentColor}
       logoUrl={logoUrl}
       index={isMarquee ? 0 : index}
+      language={language}
     />
   ))
 

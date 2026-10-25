@@ -1,3 +1,5 @@
+import type { SiteLanguage } from '@/lib/site-language'
+import { TestimonialText } from '../shared/TestimonialText'
 import styles from './ElegantTestimonialCard.module.css'
 
 export type ElegantTestimonial = {
@@ -20,6 +22,7 @@ export type ElegantTestimonialCardProps = {
    * mirrors generateThemeTestimonialCard()'s elegant branch
    * (`index > 0 ? transition-delay: ${index * 150}ms : ''`). */
   index: number
+  language: SiteLanguage
 }
 
 /** Formats the review date exactly like the old renderer's formatReviewDate():
@@ -41,7 +44,7 @@ function formatReviewDate(testimonial: ElegantTestimonial): string {
  * title-first layout. The quote-mark glyph and thumb photo are the same
  * `.testimonial-thumb-card__*` shared markup every theme uses.
  */
-export function ElegantTestimonialCard({ testimonial, accentColor, logoUrl, index }: ElegantTestimonialCardProps) {
+export function ElegantTestimonialCard({ testimonial, accentColor, logoUrl, index, language }: ElegantTestimonialCardProps) {
   const thumbSrc = testimonial.imageUrl || logoUrl || null
   const meta = [testimonial.shootType, formatReviewDate(testimonial)].filter(Boolean).join(' · ')
   const style = index > 0 ? { transitionDelay: `${index * 150}ms` } : undefined
@@ -68,7 +71,15 @@ export function ElegantTestimonialCard({ testimonial, accentColor, logoUrl, inde
             <span className="material-symbols-outlined">star</span>
             <span className="material-symbols-outlined">star</span>
           </div>
-          <p className={styles.text}>{testimonial.content}</p>
+          <TestimonialText
+            text={testimonial.content}
+            className={styles.text}
+            title={testimonial.title}
+            meta={meta}
+            thumbSrc={thumbSrc}
+            accentColor={accentColor}
+            language={language}
+          />
         </div>
         <div className={styles.footer}>
           <h4 className={styles.title}>{testimonial.title}</h4>

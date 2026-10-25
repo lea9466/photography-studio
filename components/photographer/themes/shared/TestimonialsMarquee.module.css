@@ -46,6 +46,8 @@
 .item {
   direction: rtl;
   flex: 0 0 auto;
+  /* The card stretches to the item, so every card in the row is the same height. */
+  display: flex;
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
