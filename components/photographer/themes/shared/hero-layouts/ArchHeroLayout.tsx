@@ -34,6 +34,7 @@ export function ArchHeroLayout(props: HeroLayoutProps) {
           transition={settings.transition}
           speedSeconds={settings.speedSeconds}
           alt={props.studioName}
+          pinned={settings.pinOnScroll}
         />
         <HeroStill
           className={styles.dot}

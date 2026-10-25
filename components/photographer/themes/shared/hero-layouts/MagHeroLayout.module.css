@@ -17,6 +17,7 @@
 
 .photo {
   min-height: 38svh;
+  --hl-pin-radius: var(--hl-img-radius);
   margin-top: -1.75rem;
   border-radius: var(--hl-img-radius);
 }

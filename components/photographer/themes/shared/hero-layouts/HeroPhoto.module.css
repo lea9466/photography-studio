@@ -15,7 +15,10 @@
    ancestor with a transform would turn `fixed` back into normal scrolling,
    which is a harmless fallback. */
 .pinned {
-  clip-path: inset(0);
+  /* A rounded photo (arch, rounded corners) sets --hl-pin-radius to its own
+     border-radius — a plain inset(0) would let the fixed photo leak past
+     the rounded edges, since border-radius doesn't clip a fixed child. */
+  clip-path: inset(0 round var(--hl-pin-radius, 0px));
 }
 .pinned .layer {
   position: fixed;

@@ -29,6 +29,7 @@ export function SplitHeroLayout(props: HeroLayoutProps) {
         transition={settings.transition}
         speedSeconds={settings.speedSeconds}
         alt={props.studioName}
+        pinned={settings.pinOnScroll}
       />
     </section>
   )

@@ -29,7 +29,7 @@ export const HERO_LAYOUT_LABELS: Record<HeroLayoutId, { name: string; descriptio
 }
 
 /** Layouts whose photo layer can stay still while the page scrolls over it. */
-export const PINNABLE_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema', 'pano'])
+export const PINNABLE_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema', 'split', 'frame', 'arch', 'mag', 'pano'])
 
 /** Layouts where the text sits on the photo (so the darkening + scroll cue apply). */
 export const TEXT_ON_PHOTO_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema'])

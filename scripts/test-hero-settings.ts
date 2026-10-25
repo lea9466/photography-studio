@@ -70,10 +70,10 @@ describe('heroOptionsInUse', () => {
     )
   })
   it('options that do nothing on this layout are not counted', () => {
-    // split can't pin, and has no text-on-photo darkening or scroll cue
+    // trio has no single photo to pin, and no text-on-photo darkening or scroll cue
     assert.deepEqual(
-      heroOptionsInUse(settings({ layout: 'split', pinOnScroll: true, shade: 80, showScrollCue: false })),
-      ['layout:split']
+      heroOptionsInUse(settings({ layout: 'trio', pinOnScroll: true, shade: 80, showScrollCue: false })),
+      ['layout:trio']
     )
   })
   it('pin counts on a pinnable layout', () => {

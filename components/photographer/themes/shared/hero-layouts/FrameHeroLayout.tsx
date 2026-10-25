@@ -19,6 +19,7 @@ export function FrameHeroLayout(props: HeroLayoutProps) {
           transition={settings.transition}
           speedSeconds={settings.speedSeconds}
           alt={props.studioName}
+          pinned={settings.pinOnScroll}
         />
         <div className={styles.label}>
           <HeroTitle text={props.studioName} className={styles.title} />

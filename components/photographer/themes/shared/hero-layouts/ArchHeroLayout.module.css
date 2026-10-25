@@ -29,10 +29,11 @@
 
 .windowPhoto,
 .line {
+  --hl-pin-radius: 999px 999px 0 0;
   height: 100%;
   max-width: 100%;
   aspect-ratio: 3 / 4;
-  border-radius: 999px 999px 0 0;
+  border-radius: var(--hl-pin-radius);
 }
 
 .line {

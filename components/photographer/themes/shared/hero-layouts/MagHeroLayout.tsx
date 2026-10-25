@@ -19,6 +19,7 @@ export function MagHeroLayout(props: HeroLayoutProps) {
         transition={settings.transition}
         speedSeconds={settings.speedSeconds}
         alt={props.studioName}
+        pinned={settings.pinOnScroll}
       />
       <div className={styles.bottom}>
         <HeroEyebrow text={props.photographerName} show={settings.showEyebrow} />
