@@ -9,7 +9,7 @@ import {
 } from '@/lib/public-site/hero-settings'
 import { cn } from '@/lib/utils'
 import { LayoutThumb } from './LayoutThumb'
-import { ProBadge } from './ProBadge'
+import { FreeBadge, ProBadge } from './ProBadge'
 
 type HeroLayoutPickerProps = {
   selected: HeroLayoutId | null
@@ -18,9 +18,13 @@ type HeroLayoutPickerProps = {
 }
 
 export function HeroLayoutPicker({ selected, tiers, onSelect }: HeroLayoutPickerProps) {
+  const isFree = (id: HeroLayoutId) => tiers[layoutOptionKey(id)] === 'free'
+  // Free layouts first; each group keeps its usual order.
+  const ordered = [...HERO_LAYOUT_IDS.filter(isFree), ...HERO_LAYOUT_IDS.filter((id) => !isFree(id))]
+
   return (
     <div className="grid grid-cols-2 gap-2.5">
-      {HERO_LAYOUT_IDS.map((id) => {
+      {ordered.map((id) => {
         const active = selected === id
         return (
           <button
@@ -39,7 +43,7 @@ export function HeroLayoutPicker({ selected, tiers, onSelect }: HeroLayoutPicker
             <LayoutThumb layout={id} />
             <span className="flex items-center justify-between gap-1 px-1 pb-0.5 text-[13px] font-semibold text-(--foreground)">
               {HERO_LAYOUT_LABELS[id].name}
-              {tiers[layoutOptionKey(id)] === 'pro' ? <ProBadge /> : null}
+              {isFree(id) ? <FreeBadge /> : <ProBadge />}
             </span>
           </button>
         )

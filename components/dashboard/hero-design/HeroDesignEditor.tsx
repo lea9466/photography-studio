@@ -97,7 +97,8 @@ export function HeroDesignEditor({ initialSettings, tiers, isPro, themeName, sit
   }
 
   return (
-    <section className="space-y-5 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-5 md:p-7">
+    // id: deep link target — /dashboard/site-hero?section=hero-design (see ScrollToSection)
+    <section id="hero-design" className="scroll-mt-6 space-y-5 rounded-2xl border border-(--border)/80 bg-(--dashboard-surface) p-5 md:p-7">
       <div className="space-y-1">
         <h2 className="text-lg font-semibold text-(--foreground)">עיצוב הסקשן הראשי</h2>
         <p className="max-w-2xl text-sm leading-relaxed text-(--muted)">
@@ -106,7 +107,7 @@ export function HeroDesignEditor({ initialSettings, tiers, isPro, themeName, sit
         </p>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+      <div className="grid items-start gap-6 lg:grid-cols-[340px_minmax(0,1fr)] xl:gap-8">
         <div className="flex flex-col gap-5 rounded-xl border border-(--border) bg-white p-4">
           <ThemeHeroBox settings={settings} themeName={themeName} onBackToTheme={() => setSettings(null)} />
 

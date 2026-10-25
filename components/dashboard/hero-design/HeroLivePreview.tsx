@@ -11,12 +11,21 @@ import {
 } from '@/lib/public-site/hero-preview'
 import { cn } from '@/lib/utils'
 
-const DEVICES = {
-  desktop: { width: 1280, height: 800 },
-  mobile: { width: 390, height: 780 },
-} as const
+type Size = { width: number; height: number }
+type Device = 'desktop' | 'mobile'
 
-type Device = keyof typeof DEVICES
+const MOBILE_SIZE: Size = { width: 390, height: 780 }
+const FALLBACK_DESKTOP_SIZE: Size = { width: 1280, height: 800 }
+const MIN_DESKTOP_WIDTH = 1024
+
+/**
+ * Desktop preview = this browser window's own size — the size she'd see her
+ * site at. The layouts respond to width, so a fixed 1280px frame looked
+ * different from the real site on a wider screen.
+ */
+function currentDesktopSize(): Size {
+  return { width: Math.max(MIN_DESKTOP_WIDTH, window.innerWidth), height: window.innerHeight }
+}
 
 type HeroLivePreviewProps = {
   /** The studio's public homepage path, e.g. "/my-studio". */
@@ -36,6 +45,7 @@ export function HeroLivePreview({ sitePath, settings }: HeroLivePreviewProps) {
   const settingsRef = useRef(settings)
   const [device, setDevice] = useState<Device>('desktop')
   const [availableWidth, setAvailableWidth] = useState(0)
+  const [desktopSize, setDesktopSize] = useState<Size>(FALLBACK_DESKTOP_SIZE)
 
   const post = (value: HeroSettings | null) => {
     const message: HeroPreviewSettingsMessage = { type: HERO_PREVIEW_SETTINGS_MESSAGE, settings: value }
@@ -67,7 +77,14 @@ export function HeroLivePreview({ sitePath, settings }: HeroLivePreviewProps) {
     return () => observer.disconnect()
   }, [])
 
-  const size = DEVICES[device]
+  useLayoutEffect(() => {
+    const update = () => setDesktopSize(currentDesktopSize())
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
+  const size = device === 'desktop' ? desktopSize : MOBILE_SIZE
   const scale = availableWidth ? Math.min(1, availableWidth / size.width, device === 'mobile' ? 0.9 : 1) : 0
 
   return (

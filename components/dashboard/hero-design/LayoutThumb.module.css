@@ -53,3 +53,6 @@
 .wide { top: 34%; bottom: 22%; left: 6%; right: 6%; }
 .band { top: 36%; bottom: 30%; left: 0; right: 0; }
 .card { top: 58%; width: 18%; height: 34%; border-radius: 3px; }
+.leaf { top: 14%; bottom: 14%; left: 6%; right: 6%; border-radius: 0 22% 0 22% / 0 34% 0 34%; }
+.leafShade { position: absolute; top: 14%; bottom: 14%; left: 6%; right: 6%; border-radius: 0 22% 0 22% / 0 34% 0 34%; background: linear-gradient(to top, rgb(0 0 0 / 0.35), transparent 70%); }
+.seal { position: absolute; left: 18%; bottom: 4%; width: 15%; aspect-ratio: 1; border-radius: 50%; border: 4px solid #e9b8c6; background: #f6f3f0; }

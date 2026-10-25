@@ -5,3 +5,11 @@ export function ProBadge() {
     </span>
   )
 }
+
+export function FreeBadge() {
+  return (
+    <span className="inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-800">
+      FREE
+    </span>
+  )
+}

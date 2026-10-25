@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 
 import { Sparkles } from 'lucide-react'
@@ -5,6 +6,7 @@ import { Sparkles } from 'lucide-react'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 
 import { SiteHeroSections } from '@/components/dashboard/hero-design/SiteHeroSections'
+import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { loadSiteProfile } from '@/lib/queries/site-profile'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
@@ -40,7 +42,10 @@ export default async function SiteHeroSectionPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mx-auto max-w-5xl space-y-10 px-6 py-8 md:px-10 md:py-12">
+      <Suspense fallback={null}>
+        <ScrollToSection />
+      </Suspense>
+      <div className="mx-auto max-w-[1440px] space-y-10 px-6 py-8 md:px-10 md:py-12">
         <div className="relative overflow-hidden rounded-2xl border border-(--border) bg-(--dashboard-surface) px-7 py-6 md:px-9 md:py-7">
           <div className="relative flex items-start gap-5">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#7D3A52]/10 text-[#7D3A52] ring-1 ring-[#7D3A52]/10">

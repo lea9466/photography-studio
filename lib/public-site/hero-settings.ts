@@ -13,7 +13,7 @@
  * and the tests all share the same rules.
  */
 
-export const HERO_LAYOUT_IDS = ['cinema', 'split', 'frame', 'arch', 'trio', 'mag', 'film', 'pano'] as const
+export const HERO_LAYOUT_IDS = ['cinema', 'split', 'frame', 'arch', 'trio', 'mag', 'film', 'pano', 'stamp'] as const
 
 export type HeroLayoutId = (typeof HERO_LAYOUT_IDS)[number]
 
@@ -26,13 +26,17 @@ export const HERO_LAYOUT_LABELS: Record<HeroLayoutId, { name: string; descriptio
   mag: { name: 'מגזין', description: 'שם ענק ותמונה רחבה מתחתיו' },
   film: { name: 'רצועת תמונות', description: 'שורת תמונות שזזה מתחת לכותרת' },
   pano: { name: 'פנורמה', description: 'פס תמונה רחב בין הכותרת לטקסט' },
+  stamp: { name: 'חותמת', description: 'תמונה בפינות מעוגלות, הכותרת עליה וחותמת מסתובבת' },
 }
 
 /** Layouts whose photo layer can stay still while the page scrolls over it. */
-export const PINNABLE_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema', 'split', 'frame', 'arch', 'mag', 'pano'])
+export const PINNABLE_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema', 'split', 'frame', 'arch', 'mag', 'pano', 'stamp'])
 
-/** Layouts where the text sits on the photo (so the darkening + scroll cue apply). */
-export const TEXT_ON_PHOTO_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema'])
+/** Layouts where the text sits on the photo (so the darkening applies). */
+export const TEXT_ON_PHOTO_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema', 'stamp'])
+
+/** Layouts that show the "scroll" cue at the bottom of the photo. */
+export const SCROLL_CUE_HERO_LAYOUTS: ReadonlySet<HeroLayoutId> = new Set(['cinema'])
 
 export const HERO_TRANSITIONS = ['fade', 'zoom', 'cut'] as const
 export type HeroTransition = (typeof HERO_TRANSITIONS)[number]
@@ -157,6 +161,7 @@ export const DEFAULT_HERO_OPTION_TIERS: HeroOptionTiers = {
   'layout:mag': 'pro',
   'layout:film': 'pro',
   'layout:pano': 'pro',
+  'layout:stamp': 'pro',
   pin_on_scroll: 'pro',
   transition: 'pro',
   speed: 'free',
@@ -189,7 +194,8 @@ export function normalizeHeroOptionTiers(
 /** Whether an option has any effect on the given layout. */
 export function heroFeatureApplies(key: HeroFeatureKey, layout: HeroLayoutId): boolean {
   if (key === 'pin_on_scroll') return PINNABLE_HERO_LAYOUTS.has(layout)
-  if (key === 'shade' || key === 'hide_scroll_cue') return TEXT_ON_PHOTO_HERO_LAYOUTS.has(layout)
+  if (key === 'shade') return TEXT_ON_PHOTO_HERO_LAYOUTS.has(layout)
+  if (key === 'hide_scroll_cue') return SCROLL_CUE_HERO_LAYOUTS.has(layout)
   return true
 }
 

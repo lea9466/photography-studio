@@ -97,6 +97,17 @@ function Pieces({ layout }: { layout: HeroLayoutId }) {
           <Chip style={{ bottom: '13%', left: '6%' }} />
         </>
       )
+    case 'stamp':
+      return (
+        <>
+          <Photo className={styles.leaf} />
+          <span className={styles.leafShade} />
+          <Bar light style={{ bottom: '38%', right: '12%', width: '38%', height: '8%' }} />
+          <Bar light thin style={{ bottom: '30%', right: '12%', width: '28%' }} />
+          <Chip style={{ bottom: '19%', right: '12%', borderRadius: '999px' }} />
+          <span className={styles.seal} />
+        </>
+      )
   }
 }
 

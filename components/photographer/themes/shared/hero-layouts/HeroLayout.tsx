@@ -7,6 +7,7 @@ import { FrameHeroLayout } from './FrameHeroLayout'
 import { MagHeroLayout } from './MagHeroLayout'
 import { PanoHeroLayout } from './PanoHeroLayout'
 import { SplitHeroLayout } from './SplitHeroLayout'
+import { StampHeroLayout } from './StampHeroLayout'
 import { TrioHeroLayout } from './TrioHeroLayout'
 import type { HeroLayoutProps } from './types'
 
@@ -19,6 +20,7 @@ const LAYOUTS: Record<HeroLayoutId, ComponentType<HeroLayoutProps>> = {
   mag: MagHeroLayout,
   film: FilmHeroLayout,
   pano: PanoHeroLayout,
+  stamp: StampHeroLayout,
 }
 
 /** The shared hero layout the photographer picked, styled by her theme's tokens. */

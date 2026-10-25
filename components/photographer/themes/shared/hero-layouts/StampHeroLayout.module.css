@@ -1,0 +1,147 @@
+.stamp {
+  --stamp-radius: clamp(2.5rem, 7vw, 6.5rem);
+  --stamp-seal: clamp(5.5rem, 8vw, 8.5rem);
+  padding: clamp(6rem, 11vh, 8rem) clamp(1rem, 5vw, 7rem) calc(var(--stamp-seal) * 0.5 + 1.5rem);
+}
+
+/* Two opposite corners rounded big, the other two square — like a leaf */
+.card {
+  position: relative;
+  min-height: min(76svh, 52rem);
+}
+
+.card .photo {
+  --hl-pin-radius: 0 var(--stamp-radius) 0 var(--stamp-radius);
+  position: absolute;
+  inset: 0;
+  border-radius: var(--hl-pin-radius);
+}
+
+.shade {
+  position: absolute;
+  inset: 0;
+  border-radius: 0 var(--stamp-radius) 0 var(--stamp-radius);
+  background: linear-gradient(
+    to top,
+    rgb(10 8 8 / calc(var(--hl-shade) * 1.2)),
+    rgb(10 8 8 / calc(var(--hl-shade) * 0.35)) 45%,
+    transparent 75%
+  );
+  pointer-events: none;
+}
+
+/* Text sits on the photo at the bottom, on the reading-start side */
+.content {
+  position: absolute;
+  inset-inline-start: clamp(1.5rem, 5vw, 5.5rem);
+  bottom: clamp(2rem, 6vh, 4.5rem);
+  z-index: 1;
+  display: flex;
+  max-width: min(42rem, 62%);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.1rem;
+  color: #fff;
+}
+
+.eyebrow {
+  color: inherit;
+  opacity: 0.85;
+}
+
+.title {
+  font-size: calc(clamp(2.4rem, 4.6vw, 4.4rem) * var(--hl-ts));
+  font-weight: max(var(--hl-display-weight), 700);
+  line-height: 1.08;
+  text-shadow: 0 2px 24px rgb(0 0 0 / 0.25);
+}
+
+.lead {
+  color: inherit;
+  opacity: 0.92;
+}
+
+.ctas {
+  margin-top: 0.4rem;
+}
+
+.ctas a {
+  border-radius: 999px;
+}
+
+/* The seal hangs half off the bottom edge, on the reading-end side */
+.seal {
+  position: absolute;
+  inset-inline-end: calc(var(--stamp-radius) + 3%);
+  bottom: calc(var(--stamp-seal) * -0.5);
+  z-index: 2;
+  width: var(--stamp-seal);
+  aspect-ratio: 1;
+}
+
+.sealSpin {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 50%;
+  animation: stamp-spin 22s linear infinite;
+}
+
+.sealRing {
+  fill: none;
+  stroke: var(--hl-accent);
+}
+
+/* Without an explicit LTR the site's RTL direction is inherited, and Chrome
+   then drops the whole text on a circular path. Hebrew still reads right to
+   left — the bidi algorithm reverses it within the LTR line. */
+.sealText {
+  direction: ltr;
+  fill: #fff;
+  font-family: var(--hl-body);
+  font-size: 15px;
+  /* Glyphs centered on the path, which runs down the middle of the ring */
+  dominant-baseline: central;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+@keyframes stamp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sealSpin {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .stamp {
+    --stamp-radius: 2.25rem;
+    --stamp-seal: 5.75rem;
+  }
+
+  .card {
+    min-height: 68svh;
+  }
+
+  .content {
+    inset-inline: 1.25rem;
+    /* Above the seal, which hangs off the bottom edge */
+    bottom: calc(var(--stamp-seal) * 0.5 + 1.25rem);
+    max-width: none;
+    gap: 0.8rem;
+  }
+
+  .title {
+    font-size: calc(clamp(2rem, 9vw, 2.6rem) * var(--hl-ts));
+  }
+
+  .seal {
+    inset-inline-end: 1.25rem;
+  }
+}

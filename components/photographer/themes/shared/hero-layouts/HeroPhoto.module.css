@@ -1,5 +1,9 @@
+/* isolation: the slides' and video's own z-indexes stay inside the photo, so
+   anything a layout places over it (arch's small circle, stamp's seal) isn't
+   painted underneath. */
 .photo {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   background: var(--hl-bg2);
 }
