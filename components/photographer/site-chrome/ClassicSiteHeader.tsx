@@ -237,7 +237,10 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
         className={`fixed top-0 z-50 w-full transition-all duration-700 ${
           isSolid
             ? 'border-b border-black/5 bg-[#FAFAF8]/90 py-4 shadow-sm backdrop-blur-md md:py-6'
-            : 'border-none bg-transparent py-4 md:py-8'
+            : blendAtTop
+              ? // Already at the scrolled height, so only the background fades in on scroll — no height jump.
+                'border-b border-transparent bg-transparent py-4 md:py-6'
+              : 'border-none bg-transparent py-4 md:py-8'
         }`}
         style={{ '--nav-accent': primaryColor } as React.CSSProperties}
       >

@@ -224,7 +224,10 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
           // source rather than a restored "real" value.
           isSolid
             ? 'border-b border-black/5 bg-[#F8FAFC]/90 py-6 shadow-sm backdrop-blur-md'
-            : 'border-none bg-transparent py-10'
+            : blendAtTop
+              ? // Already at the scrolled height, so only the background fades in on scroll — no height jump.
+                'border-b border-transparent bg-transparent py-6'
+              : 'border-none bg-transparent py-10'
         }`}
         style={{ '--nav-accent': primaryColor } as React.CSSProperties}
       >
