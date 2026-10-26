@@ -33,6 +33,7 @@ import {
 } from '@/lib/admin/session'
 import { sendAdminBroadcastEmail, sendAdminLoginCodeEmail } from '@/lib/email/resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { deliverContactInquiry } from '@/lib/contact/deliver-inquiry'
 import { reactivateSuspendedCustomDomains } from '@/lib/domains/custom-domain-suspension'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import { isPaymentsCheckoutEnabled } from '@/lib/payments/flags'
@@ -792,4 +793,102 @@ export async function generateMissingGalleryCoverCards(
 ): Promise<GenerateMissingGalleryCoverCardsResult> {
   await requireAdmin()
   return generateMissingGalleryCoverCardsBatch(offset)
+}
+
+export type AdminUnsentInquiry = {
+  id: string
+  createdAt: string
+  photographerName: string
+  photographerEmail: string | null
+  clientName: string
+  clientEmail: string
+  clientPhone: string | null
+  subject: string | null
+  message: string
+  emailError: string | null
+  emailAttempts: number
+}
+
+/**
+ * Contact-form inquiries whose notification email never reached the
+ * photographer (see the contact_inquiries migration). Empty list when the
+ * migration isn't applied yet, so the tab doesn't break /manage.
+ */
+export async function fetchUnsentContactInquiries(): Promise<AdminUnsentInquiry[]> {
+  await requireAdmin()
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('contact_inquiries')
+    .select(
+      'id, created_at, client_name, client_email, client_phone, subject, message, email_error, email_attempts, users!contact_inquiries_photographer_id_fkey(email, studio_name, name)'
+    )
+    .is('email_sent_at', null)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (error) {
+    console.error('[fetchUnsentContactInquiries]', error.message)
+    return []
+  }
+
+  return (data ?? []).map((row) => {
+    const owner = row.users as { email: string | null; studio_name: string | null; name: string } | null
+    return {
+      id: row.id,
+      createdAt: row.created_at,
+      photographerName: owner?.studio_name || owner?.name || '—',
+      photographerEmail: owner?.email ?? null,
+      clientName: row.client_name,
+      clientEmail: row.client_email,
+      clientPhone: row.client_phone,
+      subject: row.subject,
+      message: row.message,
+      emailError: row.email_error,
+      emailAttempts: row.email_attempts,
+    }
+  })
+}
+
+/** Retries one unsent inquiry's notification email. */
+export async function resendContactInquiry(
+  inquiryId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  await requireAdmin()
+
+  const admin = createAdminClient()
+  const { data: row } = await admin
+    .from('contact_inquiries')
+    .select('id, photographer_id, client_name, client_email, client_phone, subject, message, email_sent_at')
+    .eq('id', inquiryId)
+    .maybeSingle()
+  if (!row) return { ok: false, error: 'הפנייה לא נמצאה' }
+  if (row.email_sent_at) return { ok: true }
+
+  const { data: photographer } = await admin
+    .from('users')
+    .select('email, studio_name, name, slug')
+    .eq('id', row.photographer_id)
+    .maybeSingle()
+  if (!photographer) return { ok: false, error: 'הצלמת לא נמצאה' }
+
+  try {
+    await deliverContactInquiry(
+      {
+        photographerId: row.photographer_id,
+        name: row.client_name,
+        email: row.client_email,
+        phone: row.client_phone ?? undefined,
+        subject: row.subject ?? undefined,
+        message: row.message,
+      },
+      photographer,
+      row.id
+    )
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : 'השליחה נכשלה' }
+  }
+
+  revalidatePath('/manage')
+  return { ok: true }
 }

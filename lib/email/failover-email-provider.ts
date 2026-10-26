@@ -46,7 +46,11 @@ export class FailoverEmailProvider implements EmailProvider {
     const cooling = this.providers.filter((p) => (cooldownUntil.get(p.name) ?? 0) > now)
     const ordered = [...ready, ...cooling]
 
-    let lastError: unknown
+    // Every failed attempt, in order. When a cooled-down provider runs last
+    // (e.g. Resend parked on quota), its error is the least informative one —
+    // the real cause is usually an earlier provider's — so an exhausted chain
+    // throws all of them, not just the last.
+    const failures: Array<{ provider: string; error: unknown }> = []
     for (let i = 0; i < ordered.length; i++) {
       const provider = ordered[i]
       const isLast = i === ordered.length - 1
@@ -55,21 +59,28 @@ export class FailoverEmailProvider implements EmailProvider {
         cooldownUntil.delete(provider.name) // recovered
         return result
       } catch (error) {
-        lastError = error
+        failures.push({ provider: provider.name, error })
         if (error instanceof EmailSendError && error.quotaExceeded) {
           cooldownUntil.set(provider.name, Date.now() + this.cooldownMs)
         }
         const canFailover = error instanceof EmailSendError && error.failover
-        if (!canFailover || isLast) throw error
-        console.warn(
-          `[email] ${provider.name} failed over → next provider: ${
-            error instanceof Error ? error.message : 'unknown'
-          }`
-        )
+        const reason = error instanceof Error ? error.message : 'unknown'
+        if (!canFailover) {
+          console.error(`[email] ${provider.name} failed (not retryable elsewhere): ${reason}`)
+          throw error
+        }
+        if (isLast) break
+        console.warn(`[email] ${provider.name} failed over → next provider: ${reason}`)
       }
     }
 
-    // Unreachable (loop either returns or throws), but keeps types honest.
-    throw lastError
+    if (failures.length === 1) throw failures[0].error
+    const summary = failures
+      .map(({ provider, error }) => `${provider}: ${error instanceof Error ? error.message : 'unknown'}`)
+      .join(' | ')
+    console.error(`[email] every provider failed — ${summary}`)
+    throw new EmailSendError(`all email providers failed — ${summary}`, {
+      cause: failures.map((f) => f.error),
+    })
   }
 }

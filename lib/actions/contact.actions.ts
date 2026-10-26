@@ -1,8 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendContactInquiryEmail } from '@/lib/email/resend'
-import { getPublicSitePath } from '@/lib/queries/public-photographer'
+import { deliverContactInquiry } from '@/lib/contact/deliver-inquiry'
 import { isValidEmail } from '@/lib/validation'
 import { checkPersistentRateLimit, getClientIp } from '@/lib/rate-limit/persistent'
 
@@ -89,27 +88,49 @@ export async function submitContactInquiry(input: {
     throw new Error('לצלם אין כתובת אימייל במערכת')
   }
 
-  const sitePath = getPublicSitePath(photographer.slug, photographer.studio_name)
+  const fields = {
+    photographerId: input.photographerId,
+    name,
+    email,
+    phone,
+    subject,
+    message,
+  }
 
-  // The email *is* the deliverable here — there's no DB row to fall back on,
-  // so a provider rejection has to reach the sender, not vanish.
-  try {
-    await sendContactInquiryEmail({
-      photographerEmail: photographer.email,
-      photographerName: photographer.studio_name || photographer.name,
-      sitePath,
-      clientName: name,
-      clientEmail: email,
-      clientPhone: phone,
-      subject,
+  // Saved before sending, so a failed email no longer loses the lead — the row
+  // stays unsent and /manage lists it for a resend. A failed insert (e.g. the
+  // migration not applied yet) must not block the email, which still goes out.
+  const { data: saved, error: saveError } = await admin
+    .from('contact_inquiries')
+    .insert({
+      photographer_id: input.photographerId,
+      client_name: name,
+      client_email: email,
+      client_phone: phone ?? null,
+      subject: subject ?? null,
       message,
     })
+    .select('id')
+    .single()
+  if (saveError) {
+    console.error('[submitContactInquiry] saving inquiry failed', {
+      photographerId: input.photographerId,
+      message: saveError.message,
+    })
+  }
+  const inquiryId = saved?.id ?? null
+
+  try {
+    await deliverContactInquiry(fields, photographer, inquiryId)
   } catch (error) {
     console.error('[submitContactInquiry] email send failed', {
       photographerId: input.photographerId,
+      inquiryId,
       message: error instanceof Error ? error.message : 'unknown',
     })
-    throw new Error('שליחת הפנייה נכשלה כרגע. נסו שוב בעוד רגע.')
+    // Saved → the lead is safe and gets resent from /manage, so the visitor
+    // isn't told to retry. Not saved → the email was the only copy.
+    if (!inquiryId) throw new Error('שליחת הפנייה נכשלה כרגע. נסו שוב בעוד רגע.')
   }
 
   return { success: true }

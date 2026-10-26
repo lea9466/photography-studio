@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import {
   Building2,
   CreditCard,
+  Inbox,
   LayoutTemplate,
   LogOut,
   Mail,
@@ -28,6 +29,7 @@ import { GalleryPassBundlesManager } from '@/components/admin/GalleryPassBundles
 import { HeroOptionTiersManager } from '@/components/admin/HeroOptionTiersManager'
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
+import { UnsentInquiriesManager } from '@/components/admin/UnsentInquiriesManager'
 
 type ManageTabsProps = {
   studios: AdminStudioRow[]
@@ -40,6 +42,7 @@ const TABS = [
   { id: 'studios', label: 'סטודיואים', icon: Building2 },
   { id: 'announcement', label: 'הודעת דשבורד', icon: Megaphone },
   { id: 'broadcast', label: 'דיוור במייל', icon: Mail },
+  { id: 'inquiries', label: 'פניות שלא נשלחו', icon: Inbox },
   { id: 'maintenance', label: 'תחזוקת מדיה', icon: Wrench },
   { id: 'pricing', label: 'מסלולים ותמחור', icon: CreditCard },
   { id: 'hero', label: 'עיצוב הירו', icon: LayoutTemplate },
@@ -146,6 +149,13 @@ export function ManageTabs({
         className={activeTab === 'broadcast' ? 'flex flex-col gap-6' : 'hidden'}
       >
         <AdminBroadcastForm />
+      </div>
+
+      <div
+        role="tabpanel"
+        className={activeTab === 'inquiries' ? 'flex flex-col gap-6' : 'hidden'}
+      >
+        <UnsentInquiriesManager />
       </div>
 
       <div

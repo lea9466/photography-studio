@@ -147,6 +147,16 @@ describe('FailoverEmailProvider', () => {
     await assert.rejects(() => fo.send(MESSAGE), /5xx/)
   })
 
+  it('an exhausted chain reports every provider, so a parked primary does not mask the fallback error', async () => {
+    const primary = new FakeProvider('resend', [quota(), quota()])
+    const fallback = new FakeProvider('brevo', ['ok', new EmailSendError('unrecognised IP', { failover: true })])
+    const fo = new FailoverEmailProvider([primary, fallback])
+
+    await fo.send(MESSAGE) // resend quota → parked, brevo sends
+    // Now brevo runs first and resend (parked) last — the brevo error must survive.
+    await assert.rejects(() => fo.send(MESSAGE), /brevo: unrecognised IP.*resend: quota/)
+  })
+
   it('walks a 3-provider chain: Resend quota → Mailjet blocked → Brevo sends', async () => {
     const resend = new FakeProvider('resend', [quota()])
     const mailjet = new FakeProvider('mailjet', [

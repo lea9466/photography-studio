@@ -650,6 +650,56 @@ export type Database = {
           },
         ]
       }
+      contact_inquiries: {
+        Row: {
+          id: string
+          photographer_id: string
+          client_name: string
+          client_email: string
+          client_phone: string | null
+          subject: string | null
+          message: string
+          email_sent_at: string | null
+          email_error: string | null
+          email_attempts: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          photographer_id: string
+          client_name: string
+          client_email: string
+          client_phone?: string | null
+          subject?: string | null
+          message: string
+          email_sent_at?: string | null
+          email_error?: string | null
+          email_attempts?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          photographer_id?: string
+          client_name?: string
+          client_email?: string
+          client_phone?: string | null
+          subject?: string | null
+          message?: string
+          email_sent_at?: string | null
+          email_error?: string | null
+          email_attempts?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'contact_inquiries_photographer_id_fkey'
+            columns: ['photographer_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       gallery_pass_credits: {
         Row: {
           id: string
