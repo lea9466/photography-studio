@@ -40,6 +40,40 @@ export type AdminStudioRow = {
   tier: EntitlementTier
   tier_source: EntitlementSource
   entitlements: StudioEntitlements
+  pro_period: AdminProPeriod | null
+}
+
+/** When the studio's current PRO started and when it ends (null = no end date,
+ *  e.g. a forced-PRO override). Only set while the studio is actually PRO. */
+export type AdminProPeriod = {
+  since: string | null
+  until: string | null
+  renews: boolean
+}
+
+export type AdminSubscriptionLike = NonNullable<ActiveSubscriptionLike> & {
+  created_at?: string | null
+  cancel_at_period_end?: boolean | null
+}
+
+export function resolveAdminProPeriod(
+  entitlements: StudioEntitlements,
+  subscription: AdminSubscriptionLike | null,
+  studio: { created_at: string; trial_end_date: string }
+): AdminProPeriod | null {
+  if (!entitlements.isPro) return null
+  switch (entitlements.source) {
+    case 'subscription':
+      return {
+        since: subscription?.created_at ?? null,
+        until: subscription?.current_period_end ?? null,
+        renews: !subscription?.cancel_at_period_end,
+      }
+    case 'trial':
+      return { since: studio.created_at, until: studio.trial_end_date, renews: false }
+    default:
+      return { since: null, until: null, renews: false }
+  }
 }
 
 export type AdminBroadcastRecipient = {
@@ -270,18 +304,21 @@ type AdminStudioQueryRow = {
 
 export async function fetchActiveSubscriptionByIds(
   userIds: string[]
-): Promise<Map<string, ActiveSubscriptionLike>> {
+): Promise<Map<string, AdminSubscriptionLike>> {
   if (userIds.length === 0) return new Map()
   const admin = createAdminClient()
+  // Only the public-site product grants PRO — a private-galleries subscription
+  // must not make the studio look PRO here (mirrors getCurrentSubscription).
   const { data, error } = await admin
     .from('subscriptions')
-    .select('user_id, status, current_period_end, updated_at')
+    .select('user_id, status, current_period_end, updated_at, created_at, cancel_at_period_end')
     .in('user_id', userIds)
+    .eq('product', 'public_site')
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
 
-  const map = new Map<string, ActiveSubscriptionLike>()
+  const map = new Map<string, AdminSubscriptionLike>()
   for (const row of data ?? []) {
     const existing = map.get(row.user_id)
     if (!existing) map.set(row.user_id, row)
@@ -379,6 +416,11 @@ export async function getAdminStudios(): Promise<AdminStudioRow[]> {
       tier: entitlements.tier,
       tier_source: entitlements.source,
       entitlements,
+      pro_period: resolveAdminProPeriod(
+        entitlements,
+        activeSubscriptions.get(studio.id) ?? null,
+        studio
+      ),
     }
   })
 }

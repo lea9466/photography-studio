@@ -58,6 +58,7 @@ type AdminStudioListProps = {
 type SortKey = 'created' | 'last_visit' | 'visit_count'
 type FilterKey = 'all' | 'active_today' | 'never_visited' | 'new_this_month'
 type GalleryFilterKey = 'any' | 'has' | 'missing'
+type TierFilterKey = 'any' | 'pro' | 'free'
 
 const SORT_OPTIONS: {
   key: SortKey
@@ -138,6 +139,12 @@ const GALLERY_FILTER_OPTIONS: { key: GalleryFilterKey; label: string }[] = [
   { key: 'missing', label: 'אין' },
 ]
 
+const TIER_FILTER_OPTIONS: { key: TierFilterKey; label: string }[] = [
+  { key: 'any', label: 'הכל' },
+  { key: 'pro', label: 'PRO' },
+  { key: 'free', label: 'FREE' },
+]
+
 const ADMIN_TIMEZONE = 'Asia/Jerusalem'
 
 function toDateKey(date: Date): string {
@@ -188,6 +195,15 @@ function formatRelativeVisit(iso: string | null) {
   return formatDate(iso)
 }
 
+function formatDay(iso: string) {
+  return new Date(iso).toLocaleDateString('he-IL', {
+    timeZone: ADMIN_TIMEZONE,
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+}
+
 function isToday(iso: string) {
   return toDateKey(new Date(iso)) === toDateKey(new Date())
 }
@@ -199,6 +215,12 @@ function isThisMonth(iso: string) {
 function matchesGalleryFilter(hasGallery: boolean, filterKey: GalleryFilterKey) {
   if (filterKey === 'has') return hasGallery
   if (filterKey === 'missing') return !hasGallery
+  return true
+}
+
+function matchesTierFilter(row: AdminStudioRow, filterKey: TierFilterKey) {
+  if (filterKey === 'pro') return row.entitlements.isPro
+  if (filterKey === 'free') return !row.entitlements.isPro
   return true
 }
 
@@ -267,6 +289,25 @@ function getTierBadgeClass(badge: ReturnType<typeof resolveTierBadge>) {
   }
 }
 
+function ProPeriod({ studio }: { studio: AdminStudioRow }) {
+  const period = studio.pro_period
+  if (!period) return null
+  if (!period.since && !period.until) {
+    return <span className="text-[10px] text-slate-500">ללא תאריך סיום</span>
+  }
+  return (
+    <div className="flex flex-col text-[10px] leading-tight text-slate-600">
+      {period.since ? <span>מ-{formatDay(period.since)}</span> : null}
+      {period.until ? (
+        <span>
+          {period.renews ? 'מתחדש ב-' : 'עד '}
+          {formatDay(period.until)}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function TierBadge({ entitlements }: { entitlements: StudioEntitlements }) {
   const badge = resolveTierBadge(entitlements)
   const Icon =
@@ -297,6 +338,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
   const [filterKey, setFilterKey] = useState<FilterKey>('all')
   const [clientGalleryFilter, setClientGalleryFilter] = useState<GalleryFilterKey>('any')
   const [showcaseGalleryFilter, setShowcaseGalleryFilter] = useState<GalleryFilterKey>('any')
+  const [tierFilter, setTierFilter] = useState<TierFilterKey>('any')
   const [searchQuery, setSearchQuery] = useState('')
   const [highlightedStudioId, setHighlightedStudioId] = useState<string | null>(null)
 
@@ -309,6 +351,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
     ).length
     const neverVisited = rows.filter((row) => !row.last_dashboard_visit_at).length
     const totalVisits = rows.reduce((sum, row) => sum + row.dashboard_visit_count, 0)
+    const proCount = rows.filter((row) => row.entitlements.isPro).length
 
     return {
       total: rows.length,
@@ -318,6 +361,8 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
       visitedThisMonth,
       neverVisited,
       totalVisits,
+      proCount,
+      freeCount: rows.length - proCount,
     }
   }, [rows])
 
@@ -328,9 +373,10 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
           matchesFilter(row, filterKey) &&
           matchesSearch(row, searchQuery) &&
           matchesGalleryFilter(row.has_client_gallery, clientGalleryFilter) &&
-          matchesGalleryFilter(row.has_showcase_gallery, showcaseGalleryFilter)
+          matchesGalleryFilter(row.has_showcase_gallery, showcaseGalleryFilter) &&
+          matchesTierFilter(row, tierFilter)
       ),
-    [rows, filterKey, searchQuery, clientGalleryFilter, showcaseGalleryFilter]
+    [rows, filterKey, searchQuery, clientGalleryFilter, showcaseGalleryFilter, tierFilter]
   )
 
   const sortedRows = useMemo(() => {
@@ -448,6 +494,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                 tier: updated.tier,
                 tier_source: updated.tier_source,
                 entitlements: updated.entitlements,
+                pro_period: updated.pro_period,
               }
             : row
         )
@@ -686,6 +733,38 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                 })}
               </div>
             </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <Sparkles className="h-4 w-4 text-emerald-600" />
+                רמת מנוי
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {TIER_FILTER_OPTIONS.map((option) => {
+                  const isActive = tierFilter === option.key
+                  const count =
+                    option.key === 'pro'
+                      ? stats.proCount
+                      : option.key === 'free'
+                        ? stats.freeCount
+                        : stats.total
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setTierFilter(option.key)}
+                      className={`rounded-full border px-3.5 py-2 text-sm font-medium transition-all ${
+                        isActive
+                          ? 'border-emerald-300 bg-emerald-600 text-white shadow-sm'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-800 hover:border-emerald-300 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {option.label} ({count})
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -916,6 +995,7 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                       >
                         <div className="flex min-w-28 flex-col gap-1.5">
                           <TierBadge entitlements={studio.entitlements} />
+                          <ProPeriod studio={studio} />
                           <select
                             value={studio.subscription_tier_override}
                             disabled={overridePendingId === studio.id}

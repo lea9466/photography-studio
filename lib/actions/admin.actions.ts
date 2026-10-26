@@ -11,6 +11,7 @@ import {
   getAdminCustomDomains,
   getAdminStudios,
   getLatestAnnouncementForAdmin,
+  resolveAdminProPeriod,
   type AdminCustomDomainRow,
   type AdminStudioRow,
 } from '@/lib/admin/queries'
@@ -320,6 +321,11 @@ export async function checkStudioEmailExists(email: string): Promise<AdminEmailC
       tier: entitlements.tier,
       tier_source: entitlements.source,
       entitlements,
+      pro_period: resolveAdminProPeriod(
+        entitlements,
+        activeSubscriptions.get(row.id) ?? null,
+        row
+      ),
     },
   }
 }
@@ -555,7 +561,7 @@ export async function updateAdminStudioSubscriptionOverride(
     .from('users')
     .update({ subscription_tier_override: override })
     .eq('id', trimmedId)
-    .select('id, slug, studio_name, trial_end_date, subscription_tier_override')
+    .select('id, slug, studio_name, created_at, trial_end_date, subscription_tier_override')
     .maybeSingle()
 
   if (error) {
@@ -577,6 +583,7 @@ export async function updateAdminStudioSubscriptionOverride(
     id: string
     slug: string | null
     studio_name: string | null
+    created_at: string
     trial_end_date: string
     subscription_tier_override: SubscriptionTierOverride
   }
@@ -617,6 +624,11 @@ export async function updateAdminStudioSubscriptionOverride(
     tier: entitlements.tier,
     tier_source: entitlements.source,
     entitlements,
+    pro_period: resolveAdminProPeriod(
+      entitlements,
+      activeSubscriptions.get(row.id) ?? null,
+      row
+    ),
   }
 }
 
