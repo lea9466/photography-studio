@@ -103,12 +103,20 @@ export function sanitizeCustomDomainHostname(hostname: string): string | null {
  * any error or timeout, which callers treat as "no custom domain" — a stale
  * canonical during a DB hiccup is far better than a broken page.
  */
-export const getActiveCustomDomainHost = cache(async (userId: string): Promise<string | null> => {
+type ActiveCustomDomainRow = {
+  hostname: string
+  google_site_verification_token: string | null
+}
+
+// One read of the studio's active domain row, shared by
+// getActiveCustomDomainHost and getGoogleSiteVerificationToken below — they
+// used to query the same row separately on every page view.
+const fetchActiveCustomDomainRow = cache(async (userId: string): Promise<ActiveCustomDomainRow | null> => {
   try {
     const admin = createAdminClient()
     const query = admin
       .from('custom_domains')
-      .select('hostname')
+      .select('hostname, google_site_verification_token')
       .eq('user_id', userId)
       .eq('status', 'active')
       .maybeSingle()
@@ -117,17 +125,21 @@ export const getActiveCustomDomainHost = cache(async (userId: string): Promise<s
       typeof query
     >)
 
-    const hostname = (data as { hostname: string } | null)?.hostname
-    if (!hostname) return null
-
-    return sanitizeCustomDomainHostname(hostname)
+    return (data as ActiveCustomDomainRow | null) ?? null
   } catch (error) {
-    console.error('[custom-domain-lookup] getActiveCustomDomainHost failed, treating as none', {
+    console.error('[custom-domain-lookup] active custom domain lookup failed, treating as none', {
       userId,
       error: error instanceof Error ? error.message : error,
     })
     return null
   }
+})
+
+export const getActiveCustomDomainHost = cache(async (userId: string): Promise<string | null> => {
+  const hostname = (await fetchActiveCustomDomainRow(userId))?.hostname
+  if (!hostname) return null
+
+  return sanitizeCustomDomainHostname(hostname)
 })
 
 /**
@@ -143,27 +155,7 @@ export const getActiveCustomDomainHost = cache(async (userId: string): Promise<s
  * as getActiveCustomDomainHost, for the same reasons.
  */
 export const getGoogleSiteVerificationToken = cache(async (userId: string): Promise<string | null> => {
-  try {
-    const admin = createAdminClient()
-    const query = admin
-      .from('custom_domains')
-      .select('google_site_verification_token')
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .maybeSingle()
-
-    const { data } = await withTimeout(query, METADATA_LOOKUP_TIMEOUT_MS, { data: null, error: null } as Awaited<
-      typeof query
-    >)
-
-    return (data as { google_site_verification_token: string | null } | null)?.google_site_verification_token ?? null
-  } catch (error) {
-    console.error('[custom-domain-lookup] getGoogleSiteVerificationToken failed, treating as none', {
-      userId,
-      error: error instanceof Error ? error.message : error,
-    })
-    return null
-  }
+  return (await fetchActiveCustomDomainRow(userId))?.google_site_verification_token ?? null
 })
 
 /**

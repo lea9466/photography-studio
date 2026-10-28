@@ -1,4 +1,4 @@
-import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
+import { getPublicSitePath } from '@/lib/queries/public-photographer'
 
 /** Root segments that map to static app routes — not photographer homepages. */
 export const SITEMAP_RESERVED_PATH_SEGMENTS = new Set([
@@ -123,17 +123,27 @@ export function isPhotographerPathResolvable(
 }
 
 /**
- * Confirms the studio path resolves to this photographer via the same lookup
- * used by public pages (`findPhotographerBySlug`).
+ * Builds a validator that confirms a studio path resolves to this
+ * photographer, by the same rule public pages use (`findPhotographerBySlug`:
+ * exact slug match first, else the first studio_name match) — but in memory,
+ * against the full studio list the sitemap already loaded. It used to run
+ * findPhotographerBySlug once per studio on every sitemap request, ~180 DB
+ * queries per crawl and the single biggest Supabase log source.
  */
-export async function validateStudioPathLive(
-  photographer: ValidatablePhotographer
-): Promise<string | null> {
-  const path = resolveActiveStudioPath(photographer)
-  if (!path) return null
+export function createStudioPathValidator(roster: ValidatablePhotographer[]) {
+  const bySlug = new Map<string, string>()
+  const byStudioName = new Map<string, string>()
+  for (const row of roster) {
+    if (row.slug && !bySlug.has(row.slug)) bySlug.set(row.slug, row.id)
+    if (row.studio_name && !byStudioName.has(row.studio_name)) byStudioName.set(row.studio_name, row.id)
+  }
 
-  const found = await findPhotographerBySlug(getPathSegment(path))
-  if (!found || found.id !== photographer.id) return null
+  return (photographer: ValidatablePhotographer): string | null => {
+    const path = resolveActiveStudioPath(photographer)
+    if (!path) return null
 
-  return path
+    const segment = getPathSegment(path)
+    const ownerId = bySlug.get(segment) ?? byStudioName.get(segment)
+    return ownerId === photographer.id ? path : null
+  }
 }

@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import { unstable_cache } from 'next/cache'
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isKnownAppHost } from '@/lib/domains/custom-domain-lookup'
@@ -12,7 +13,7 @@ import {
   type DiscoveryPost,
   type PhotographerDiscoveryRecord,
 } from '@/lib/seo/photographer-discovery'
-import { validateStudioPathLive } from '@/lib/seo/sitemap-validation'
+import { createStudioPathValidator } from '@/lib/seo/sitemap-validation'
 import { fetchSearchHiddenUserIds, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 
 // Revalidate the sitemap once per hour so newly published studios get discovered.
@@ -83,10 +84,99 @@ async function buildCustomDomainSitemap(host: string): Promise<MetadataRoute.Sit
   }))
 }
 
+/** Every studio's entries for the main domain. Throws on a failed studio read
+ *  (rather than returning nothing) so the failure is never cached. */
+async function buildMainSitemapEntries(): Promise<MetadataRoute.Sitemap> {
+  const admin = createAdminClient()
+
+  const [{ data: photographers, error }, allGalleries, allPosts, searchHiddenIds] =
+    await Promise.all([
+      admin
+        .from('users')
+        .select('id, slug, studio_name, gallery_layout_mode, created_at')
+        .order('created_at', { ascending: false }),
+      fetchAllDiscoveryGalleries(),
+      fetchAllDiscoveryPosts(),
+      fetchSearchHiddenUserIds(),
+    ])
+
+  if (error) {
+    throw new Error(`failed to load photographers: ${error.message}`)
+  }
+
+  const galleriesByUser = groupByUserId(allGalleries)
+  const postsByUser = groupByUserId(allPosts)
+  const roster = photographers ?? []
+  const validateStudioPath = createStudioPathValidator(roster)
+
+  const photographerRoutes: MetadataRoute.Sitemap = roster.flatMap((photographer) => {
+    if (searchHiddenIds.has(photographer.id)) return []
+    if (!validateStudioPath(photographer)) return []
+
+    const userGalleries = (galleriesByUser.get(photographer.id) ?? []).map(
+      (gallery): DiscoveryGallery => ({
+        id: gallery.id,
+        title: gallery.title,
+        slug: gallery.slug,
+        gallery_type: gallery.gallery_type,
+        is_public: gallery.is_public,
+        created_at: gallery.created_at,
+      })
+    )
+
+    const userPosts = (postsByUser.get(photographer.id) ?? []).map(
+      (post): DiscoveryPost => ({
+        id: post.id,
+        title: '',
+        subtitle: null,
+        content: '',
+        created_at: post.created_at,
+      })
+    )
+
+    return buildPhotographerDiscoverySitemapEntries({
+      photographer: {
+        id: photographer.id,
+        slug: photographer.slug,
+        studio_name: photographer.studio_name,
+        gallery_layout_mode: photographer.gallery_layout_mode,
+        created_at: photographer.created_at,
+      },
+      galleries: userGalleries,
+      posts: userPosts,
+    }).map((entry) => ({
+      url: `${BASE_URL}${entry.path}`,
+      lastModified: entry.lastModified,
+      changeFrequency: entry.changeFrequency,
+      priority: entry.priority,
+    }))
+  })
+
+  const seenUrls = new Set<string>()
+  return photographerRoutes.filter((entry) => {
+    if (seenUrls.has(entry.url)) return false
+    seenUrls.add(entry.url)
+    return true
+  })
+}
+
+// Reading headers() (needed to tell a custom domain from the main one) makes
+// this route dynamic, so `revalidate` above never actually cached anything —
+// every crawler hit rebuilt the whole sitemap from the DB. The builders are
+// cached explicitly instead (per host for custom domains). A studio switching
+// on hide_from_search can take up to an hour to drop out of the sitemap; her
+// pages' noindex applies immediately regardless.
+const getCachedCustomDomainSitemap = unstable_cache(buildCustomDomainSitemap, ['custom-domain-sitemap'], {
+  revalidate: 3600,
+})
+const getCachedMainSitemapEntries = unstable_cache(buildMainSitemapEntries, ['main-sitemap'], {
+  revalidate: 3600,
+})
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const host = (await headers()).get('host')?.split(':')[0]?.toLowerCase() ?? null
   if (host && !isKnownAppHost(host)) {
-    return buildCustomDomainSitemap(host)
+    return getCachedCustomDomainSitemap(host)
   }
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -117,89 +207,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ]
 
   try {
-    const admin = createAdminClient()
-
-    const [{ data: photographers, error }, allGalleries, allPosts, searchHiddenIds] =
-      await Promise.all([
-        admin
-          .from('users')
-          .select('id, slug, studio_name, gallery_layout_mode, created_at')
-          .order('created_at', { ascending: false }),
-        fetchAllDiscoveryGalleries(),
-        fetchAllDiscoveryPosts(),
-        fetchSearchHiddenUserIds(),
-      ])
-
-    if (error) {
-      console.error('[sitemap] failed to load photographers:', error.message)
-      return staticRoutes
-    }
-
-    const galleriesByUser = groupByUserId(allGalleries)
-    const postsByUser = groupByUserId(allPosts)
-
-    const validatedPhotographers = await Promise.all(
-      (photographers ?? []).map(async (photographer) => {
-        if (searchHiddenIds.has(photographer.id)) return null
-        const studioPath = await validateStudioPathLive(photographer)
-        return studioPath ? { photographer, studioPath } : null
-      })
-    )
-
-    const photographerRoutes: MetadataRoute.Sitemap = validatedPhotographers.flatMap(
-      (entry) => {
-        if (!entry) return []
-
-        const { photographer } = entry
-
-        const userGalleries = (galleriesByUser.get(photographer.id) ?? []).map(
-          (gallery): DiscoveryGallery => ({
-            id: gallery.id,
-            title: gallery.title,
-            slug: gallery.slug,
-            gallery_type: gallery.gallery_type,
-            is_public: gallery.is_public,
-            created_at: gallery.created_at,
-          })
-        )
-
-        const userPosts = (postsByUser.get(photographer.id) ?? []).map(
-          (post): DiscoveryPost => ({
-            id: post.id,
-            title: '',
-            subtitle: null,
-            content: '',
-            created_at: post.created_at,
-          })
-        )
-
-        return buildPhotographerDiscoverySitemapEntries({
-          photographer: {
-            id: photographer.id,
-            slug: photographer.slug,
-            studio_name: photographer.studio_name,
-            gallery_layout_mode: photographer.gallery_layout_mode,
-            created_at: photographer.created_at,
-          },
-          galleries: userGalleries,
-          posts: userPosts,
-        }).map((entry) => ({
-          url: `${BASE_URL}${entry.path}`,
-          lastModified: entry.lastModified,
-          changeFrequency: entry.changeFrequency,
-          priority: entry.priority,
-        }))
-      }
-    )
-
-    const seenUrls = new Set<string>()
-    const dedupedPhotographerRoutes = photographerRoutes.filter((entry) => {
-      if (seenUrls.has(entry.url)) return false
-      seenUrls.add(entry.url)
-      return true
-    })
-
-    return [...staticRoutes, ...dedupedPhotographerRoutes]
+    return [...staticRoutes, ...(await getCachedMainSitemapEntries())]
   } catch (error) {
     console.error('[sitemap] unexpected error:', error)
     return staticRoutes

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { HERO_OPTION_TIERS_CACHE_TAG } from '@/lib/public-site/hero-option-tiers'
 import { requireAdmin } from '@/lib/admin/session'
 import {
   isHeroOptionKey,
@@ -63,6 +65,7 @@ export async function PUT(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+  revalidateTag(HERO_OPTION_TIERS_CACHE_TAG)
 
   const result = await readTiers()
   if ('error' in result) {

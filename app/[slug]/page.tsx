@@ -1,4 +1,4 @@
-import { notFound, permanentRedirect } from 'next/navigation'
+import { notFound, permanentRedirect, unstable_rethrow } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
@@ -629,6 +629,10 @@ export default async function PhotographerPage({ params }: PageProps) {
       </>
     )
   } catch (error) {
+    // Let Next's own control flow through — notably the old-slug
+    // permanentRedirect above, which is the ONLY slug-redirect path now that
+    // middleware no longer looks one up on every studio page view.
+    unstable_rethrow(error)
     console.error('Error loading photographer page:', error)
     if (
       process.env.NODE_ENV === 'development' &&

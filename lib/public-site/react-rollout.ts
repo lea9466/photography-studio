@@ -27,12 +27,14 @@ async function fetchReactPublicSiteEnabled(): Promise<boolean> {
 // Revalidated on every toggle via revalidateTag (see
 // updateReactPublicSiteEnabled in lib/actions/admin.actions.ts), so a flip
 // takes effect on the next request rather than waiting out the full window —
-// the 15s revalidate is just a ceiling for the rare case a request slips in
-// between the DB write and the revalidateTag call.
+// the 5-minute revalidate is just a ceiling for the rare case a request slips
+// in between the DB write and the revalidateTag call. (Was 15s — that alone
+// re-queried app_settings hundreds of times a day for a flag that changes
+// almost never.)
 const getCachedReactPublicSiteEnabled = unstable_cache(
   fetchReactPublicSiteEnabled,
   ['react-public-site-enabled'],
-  { revalidate: 15, tags: [REACT_PUBLIC_SITE_CACHE_TAG] }
+  { revalidate: 300, tags: [REACT_PUBLIC_SITE_CACHE_TAG] }
 )
 
 /**

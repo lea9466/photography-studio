@@ -10,10 +10,6 @@ import {
   isMvpBlockedDashboardRoute,
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
-import {
-  parseStudioSlugPath,
-  resolveSlugRedirect,
-} from '@/lib/referral/slug-redirect'
 import { withTimeout } from '@/lib/utils/with-timeout'
 import { resolveCustomDomainSlug, isKnownAppHost } from '@/lib/domains/custom-domain-lookup'
 import {
@@ -89,24 +85,9 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
     return NextResponse.next({ request })
   }
 
-  const studioSlug = parseStudioSlugPath(pathname)
-
-  if (studioSlug) {
-    try {
-      const newSlug = await withTimeout(
-        resolveSlugRedirect(studioSlug),
-        SUPABASE_MIDDLEWARE_TIMEOUT_MS,
-        null
-      )
-      if (newSlug) {
-        const url = request.nextUrl.clone()
-        url.pathname = `/${encodeURIComponent(newSlug)}`
-        return NextResponse.redirect(url, 301)
-      }
-    } catch {
-      // Continue to normal routing if redirect lookup fails
-    }
-  }
+  // Old-slug redirects (slug_redirects) are resolved by app/[slug]/page.tsx
+  // only when the slug isn't a live studio — looking one up here ran a DB
+  // query on every single studio page view just to find the rare old link.
 
   let supabaseResponse = NextResponse.next({ request })
 
