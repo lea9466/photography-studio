@@ -361,6 +361,20 @@ export async function sendGalleryPasswordEmail(input: {
   })
 }
 
+/**
+ * The optional personal note a photographer types in the send dialog — emailed
+ * only, never stored. Empty string when there's no note.
+ */
+function photographerNoteHtml(note: string | null | undefined, studioName?: string) {
+  const text = note?.trim()
+  if (!text) return ''
+  const label = studioName ? `הודעה מ${escapeHtml(studioName)}:` : 'הודעה אישית:'
+  return `<div style="margin: 16px 0; padding: 12px 16px; background: #f7f2f4; border-radius: 8px;">
+        <p style="margin: 0 0 6px; font-weight: 600;">${label}</p>
+        <p style="margin: 0; white-space: pre-wrap;">${escapeHtml(text).replace(/\n/g, '<br>')}</p>
+      </div>`
+}
+
 export async function sendGalleryInviteEmail(input: {
   galleryId: string
   galleryTitle: string
@@ -368,6 +382,8 @@ export async function sendGalleryInviteEmail(input: {
   clientName: string
   studioName: string
   expiresAt?: string | null
+  /** Optional personal note from the photographer, set in the send dialog. */
+  photographerNote?: string | null
 }) {
   const provider = requireEmailProviderOrSafeStub({
     template: 'gallery-invite',
@@ -380,6 +396,8 @@ export async function sendGalleryInviteEmail(input: {
     ? `<p>תוקף הגלריה: ${new Date(input.expiresAt).toLocaleDateString('he-IL')}</p>`
     : ''
 
+  const noteHtml = photographerNoteHtml(input.photographerNote, input.studioName)
+
   await provider.send({
     from: emailFrom(),
     to: input.clientEmail,
@@ -388,6 +406,7 @@ export async function sendGalleryInviteEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${escapeHtml(input.clientName)},</h2>
         <p>${escapeHtml(input.studioName)} שלחו לך גלריה חדשה: <strong>${escapeHtml(input.galleryTitle)}</strong></p>
+        ${noteHtml}
         <p>לכניסה לחצו על הקישור למטה ובקשו קוד כניסה — קוד חד-פעמי יישלח לכתובת המייל הזו, ויפוג לאחר שימוש.</p>
         ${expiry}
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
@@ -768,6 +787,8 @@ export async function sendDeliveryReadyEmail(input: {
   galleryTitle: string
   clientEmail: string
   clientName: string
+  /** Optional personal note from the photographer, typed in the send dialog. */
+  photographerNote?: string | null
 }) {
   const provider = requireEmailProviderOrSafeStub({
     template: 'delivery-ready',
@@ -784,6 +805,7 @@ export async function sendDeliveryReadyEmail(input: {
       <div dir="rtl" style="font-family: sans-serif;">
         <h2>שלום ${escapeHtml(input.clientName)},</h2>
         <p>התמונות המעובדות שלך בגלריה <strong>${escapeHtml(input.galleryTitle)}</strong> מוכנות!</p>
+        ${photographerNoteHtml(input.photographerNote)}
         <p><a href="${privateGalleryUrl(input.galleryId)}">כניסה לגלריה</a></p>
       </div>
     `,

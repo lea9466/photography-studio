@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { GalleryActions } from '@/components/dashboard/GalleryActions'
+import { SendGalleryToClientButton } from '@/components/dashboard/SendGalleryToClientButton'
 import { ClientEditForm } from '@/components/dashboard/ClientEditForm'
 import { SelectionsView } from '@/components/dashboard/SelectionsView'
 import { GalleryPhotosSection } from '@/components/gallery/GalleryPhotosSection'
@@ -279,6 +280,17 @@ export async function ClientGalleryDetail({
           albumLocked={albumLocked}
         />
       </CollapsibleSection>
+
+      {/* Once the client has finished choosing, the processed photos are
+          uploaded right above — keep "send processed photos" floating at the
+          bottom, same bar as on the upload screen. */}
+      {gallery.status === 'editing' && client?.email ? (
+        <div className="pointer-events-none sticky bottom-4 z-30 flex justify-start sm:bottom-6">
+          <div className="pointer-events-auto rounded-2xl border border-[#e5e1e3] bg-white/95 px-3 py-2 shadow-xl shadow-black/10 backdrop-blur">
+            <SendGalleryToClientButton galleryId={gallery.id} status={gallery.status} />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

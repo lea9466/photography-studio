@@ -32,6 +32,7 @@ import { isAllowedFont } from '@/constants/fonts'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
 import { buildCanonicalUrl } from '@/lib/seo/public-metadata'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
+import { normalizeClientNote } from '@/lib/private-galleries/client-note-limits'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import type { MediaBucket } from '@/lib/r2/types'
 import type { GalleryStatus } from '@/lib/types/database.types'
@@ -849,7 +850,8 @@ export async function completeClientSelection(
   return { ok: true }
 }
 
-export async function markDeliveryReady(galleryId: string) {
+/** `clientNote` — optional personal note from the send dialog, emailed only (never stored). */
+export async function markDeliveryReady(galleryId: string, clientNote?: string) {
   const { userId, supabase } = await requireDashboardContext()
 
   const { data: owned } = await supabase
@@ -895,6 +897,7 @@ export async function markDeliveryReady(galleryId: string) {
       galleryTitle: gallery.title,
       clientEmail: client.email,
       clientName: client.name,
+      photographerNote: normalizeClientNote(clientNote),
     })
   }
 

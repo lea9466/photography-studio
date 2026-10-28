@@ -36,6 +36,7 @@ import { getPhotographerPublicPhotoCount } from '@/lib/gallery-photo-limits'
 import { galleryKind, galleryKindColumns } from '@/lib/gallery-kind'
 import { assertSettingsInputAllowedForType } from '@/lib/gallery-settings-guard'
 import { isClientCoverPath } from '@/lib/private-galleries/client-cover'
+import { normalizeClientNote } from '@/lib/private-galleries/client-note-limits'
 import { getPrivateGalleryEntitlements } from '@/lib/private-galleries/loader'
 import {
   buildPrivateGalleryCountLimitError,
@@ -220,7 +221,7 @@ async function fetchOwnedGalleryForEmail(galleryId: string) {
   return gallery
 }
 
-async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
+async function sendInviteEmailForGallery(gallery: GalleryEmailRow, clientNote?: string) {
   const client = Array.isArray(gallery.clients)
     ? gallery.clients[0]
     : gallery.clients
@@ -238,10 +239,11 @@ async function sendInviteEmailForGallery(gallery: GalleryEmailRow) {
     clientName: client.name,
     studioName: profile?.studio_name ?? FALLBACK_STUDIO_NAME,
     expiresAt: gallery.expires_at,
+    photographerNote: normalizeClientNote(clientNote),
   })
 }
 
-async function sendDeliveryEmailForGallery(gallery: GalleryEmailRow) {
+async function sendDeliveryEmailForGallery(gallery: GalleryEmailRow, clientNote?: string) {
   const client = Array.isArray(gallery.clients)
     ? gallery.clients[0]
     : gallery.clients
@@ -253,10 +255,12 @@ async function sendDeliveryEmailForGallery(gallery: GalleryEmailRow) {
     galleryTitle: gallery.title,
     clientEmail: client.email,
     clientName: client.name,
+    photographerNote: normalizeClientNote(clientNote),
   })
 }
 
-export async function resendGalleryEmail(galleryId: string) {
+/** `clientNote` — optional personal note from the send dialog, emailed only (never stored). */
+export async function resendGalleryEmail(galleryId: string, clientNote?: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
   if (gallery.gallery_type === 'portfolio') {
@@ -267,13 +271,13 @@ export async function resendGalleryEmail(galleryId: string) {
   }
 
   if (['delivery_ready', 'locked'].includes(gallery.status)) {
-    await sendDeliveryEmailForGallery(gallery)
+    await sendDeliveryEmailForGallery(gallery, clientNote)
     revalidatePath(`/g/${galleryId}`)
     return
   }
 
   if (['selection', 'editing'].includes(gallery.status)) {
-    await sendInviteEmailForGallery(gallery)
+    await sendInviteEmailForGallery(gallery, clientNote)
     revalidatePath(`/g/${galleryId}`)
     return
   }
@@ -331,7 +335,8 @@ export async function updateGalleryStatus(
   revalidatePath(`/g/${galleryId}`)
 }
 
-export async function sendGallery(galleryId: string) {
+/** `clientNote` — optional personal note from the send dialog, emailed only (never stored). */
+export async function sendGallery(galleryId: string, clientNote?: string) {
   const gallery = await fetchOwnedGalleryForEmail(galleryId)
 
   // A pay-per-gallery pass must be paid before the gallery can go out.
@@ -390,7 +395,7 @@ export async function sendGallery(galleryId: string) {
   }
 
   await updateGalleryStatus(galleryId, 'selection')
-  await sendInviteEmailForGallery(gallery)
+  await sendInviteEmailForGallery(gallery, clientNote)
 }
 
 export async function archiveGallery(galleryId: string) {

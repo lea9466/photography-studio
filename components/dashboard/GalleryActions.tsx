@@ -13,6 +13,11 @@ import { markDeliveryReady } from '@/lib/actions/client-gallery.actions'
 import { DeleteGalleryButton } from '@/components/dashboard/DeleteGalleryButton'
 import { SendGalleryConfirmDialog } from '@/components/dashboard/SendGalleryConfirmDialog'
 import {
+  CLIENT_NOTE_HINT,
+  ClientEmailDialog,
+  ClientNoteIcon,
+} from '@/components/dashboard/ClientEmailDialog'
+import {
   CLIENT_GALLERY_STATUSES,
   GALLERY_STATUS_LABELS,
   PUBLIC_ONLY_MVP,
@@ -65,6 +70,9 @@ export function GalleryActions({
   const publicOnlyMvp = publicOnlyMvpProp ?? PUBLIC_ONLY_MVP
   const [isPending, startTransition] = useTransition()
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false)
+  // Every other client email (processed photos / resend) also opens a dialog,
+  // so the photographer can attach a personal note to it.
+  const [emailDialog, setEmailDialog] = useState<'delivery' | 'resend' | null>(null)
   const resendLabel = galleryType !== 'portfolio' ? resendEmailLabel(status) : null
   const canSendToClient = galleryType !== 'portfolio' && status === 'draft'
   // A client gallery moves through the delivery workflow and is never "public";
@@ -105,10 +113,12 @@ export function GalleryActions({
                   size="sm"
                   disabled={isPending}
                   onClick={() => setSendConfirmOpen(true)}
+                  title={CLIENT_NOTE_HINT}
                   className="bg-[#6b2d43] hover:bg-[#5a2538]"
                 >
                   <Send className="h-4 w-4" />
                   שלח ללקוח
+                  <ClientNoteIcon />
                 </Button>
               )
             ) : null}
@@ -118,13 +128,13 @@ export function GalleryActions({
               <Button
                 size="sm"
                 disabled={isPending}
-                onClick={() =>
-                  run(() => markDeliveryReady(galleryId), 'הגלריה מוכנה למסירה')
-                }
+                onClick={() => setEmailDialog('delivery')}
+                title={CLIENT_NOTE_HINT}
                 className="bg-[#6b2d43] hover:bg-[#5a2538]"
               >
                 <Truck className="h-4 w-4" />
                 שלח מייל ללקוח עם תמונות מעובדות
+                <ClientNoteIcon />
               </Button>
             ) : null}
 
@@ -133,19 +143,17 @@ export function GalleryActions({
                 variant="outline"
                 size="sm"
                 disabled={isPending}
-                onClick={() =>
-                  run(
-                    () => resendGalleryEmail(galleryId),
-                    resendSuccessMessage(status)
-                  )
-                }
+                onClick={() => setEmailDialog('resend')}
+                title={CLIENT_NOTE_HINT}
                 className="border-[#7D3A52]/30 bg-[#7D3A52]/[0.05] text-[#7D3A52] hover:bg-[#7D3A52]/10"
               >
                 <Mail className="h-4 w-4" />
                 {resendLabel}
+                <ClientNoteIcon />
               </Button>
             ) : null}
           </div>
+
         </div>
 
         {/* Section: View Actions */}
@@ -219,9 +227,32 @@ export function GalleryActions({
         open={sendConfirmOpen}
         onOpenChange={setSendConfirmOpen}
         pending={isPending}
-        onConfirm={() => {
+        onConfirm={(note) => {
           setSendConfirmOpen(false)
-          run(() => sendGallery(galleryId), 'הגלריה נשלחה ללקוח')
+          run(() => sendGallery(galleryId, note), 'הגלריה נשלחה ללקוח')
+        }}
+      />
+
+      <ClientEmailDialog
+        open={emailDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) setEmailDialog(null)
+        }}
+        pending={isPending}
+        title={
+          emailDialog === 'delivery'
+            ? 'לשלוח ללקוח את התמונות המעובדות?'
+            : `${resendLabel ?? 'לשלוח שוב את המייל ללקוח'}?`
+        }
+        confirmLabel="שלח"
+        onConfirm={(note) => {
+          const kind = emailDialog
+          setEmailDialog(null)
+          if (kind === 'delivery') {
+            run(() => markDeliveryReady(galleryId, note), 'הגלריה מוכנה למסירה')
+          } else {
+            run(() => resendGalleryEmail(galleryId, note), resendSuccessMessage(status))
+          }
         }}
       />
     </div>
