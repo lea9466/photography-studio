@@ -126,8 +126,10 @@ export function ClientGalleryEditForm({
           expiresAt: locked ? undefined : expiresAt || undefined,
           watermarkText: watermark || undefined,
           autoApplyWatermark,
-          maxAlbumSelection: maxAlbum ? parseInt(maxAlbum, 10) : undefined,
-          maxEditSelection: maxEdit ? parseInt(maxEdit, 10) : undefined,
+          // Empty field = no cap: send null so a cleared limit is actually
+          // removed (undefined would mean "leave unchanged" on the server).
+          maxAlbumSelection: maxAlbum ? parseInt(maxAlbum, 10) : null,
+          maxEditSelection: maxEdit ? parseInt(maxEdit, 10) : null,
           albumSelectionEnabled,
           editSelectionEnabled,
           allowDownloadPreview: downloadPermissionsEnabled ? allowDownloadPreview : false,
