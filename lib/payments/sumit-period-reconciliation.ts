@@ -21,6 +21,8 @@ import { SumitProvider } from './providers/sumit/sumit-provider'
  * `Status: 1` regardless of health); status stays driven by the existing
  * explicit paths (checkout completion, `cancelSubscription`).
  */
+const RECONCILE_LOOKAHEAD_MS = 2 * 24 * 60 * 60 * 1000
+
 export async function reconcileSumitSubscriptionPeriods(): Promise<{
   checked: number
   updated: number
@@ -30,12 +32,19 @@ export async function reconcileSumitSubscriptionPeriods(): Promise<{
   const repository = new SupabaseBillingRepository(admin)
   const provider = new SumitProvider()
 
+  // Only subscriptions whose stored billing date is close or already past —
+  // `Date_NextBilling` can't move before SUMIT actually bills, so polling every
+  // subscription nightly just burns the SUMIT API-call quota (≈210 calls/month
+  // at 7 subscriptions, flagged at 80% on 2026-10-30).
+  const dueBy = new Date(Date.now() + RECONCILE_LOOKAHEAD_MS).toISOString()
+
   const { data, error } = await admin
     .from('subscriptions')
     .select('id, provider_subscription_id, current_period_end')
     .eq('provider', 'sumit')
     .eq('payment_type', 'recurring')
     .eq('status', 'active')
+    .or(`current_period_end.is.null,current_period_end.lte.${dueBy}`)
 
   if (error) throw new Error(`failed to list active sumit subscriptions: ${error.message}`)
 
