@@ -424,7 +424,11 @@ export class SumitProvider implements PaymentProvider {
     try {
       const response = await this.client().postJson<{ Status?: number; UserErrorMessage?: string }>(
         '/accounting/documents/send/',
-        { DocumentID: documentId }
+        // SUMIT identifies the document by `EntityID` here (per its OpenAPI
+        // spec) — a `DocumentID` field is silently ignored and every call
+        // failed with "Document not found". `Original`: the customer's first
+        // copy of the receipt, not a "העתק".
+        { EntityID: documentId, Original: true }
       )
       if ((response.Status ?? 1) !== 0) {
         console.error('[payments][sumit] receipt email failed', {
