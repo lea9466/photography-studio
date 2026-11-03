@@ -27,6 +27,7 @@ import {
 import { AboutFlow } from './AboutFlow'
 import { ShieldPhotoArtwork } from './AboutArtwork'
 import { AboutDemoVideo } from './AboutDemoVideo'
+import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
 
 // Hosted on R2 (public branding/ prefix of the albums bucket), not in public/.
 const DEMO_VIDEO = {
@@ -86,7 +87,10 @@ export function PrivateGalleriesAboutContent() {
         title="איך זה עובד"
         subtitle="חמישה שלבים — מהיצירה ועד שהלקוח מוריד את התמונות המוכנות."
       >
+        {/* The dashboard announcement banner links here with ?section=demo-video. */}
+        <ScrollToSection />
         <AboutDemoVideo
+          id="demo-video"
           src={DEMO_VIDEO.src}
           poster={DEMO_VIDEO.poster}
           label="סרטון הדגמה: יצירת גלריה פרטית, בחירת הלקוח ומסירת התמונות המעובדות"
