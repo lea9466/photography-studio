@@ -27,7 +27,19 @@ function textAnswers(response: AdminMarketSurveyResponse) {
   })
 }
 
-/** Counts per question, plus who agreed to a call and any free-text answers. */
+/** One photographer's multiple-choice answers, as labels, in question order. */
+function choiceAnswers(response: AdminMarketSurveyResponse) {
+  return MARKET_SURVEY_SUMMARY.flatMap((question) => {
+    const answer = response.answers?.[question.key]
+    const picked = Array.isArray(answer) ? answer : answer ? [answer] : []
+    const labels = question.options
+      .filter((option) => picked.includes(option.value))
+      .map((option) => option.label)
+    return labels.length > 0 ? [{ label: question.title, text: labels.join(', ') }] : []
+  })
+}
+
+/** Counts per question, plus each photographer's own answers to a call and any free-text answers. */
 export function MarketSurveyResults() {
   const [rows, setRows] = useState<AdminMarketSurveyResponse[] | null>(null)
 
@@ -39,7 +51,6 @@ export function MarketSurveyResults() {
 
   const completed = rows?.filter((row) => row.completedAt) ?? []
   const subscribers = completed.filter((row) => row.wasSubscriber).length
-  const withDetails = completed.filter((row) => row.canContact || textAnswers(row).length > 0)
 
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
@@ -72,28 +83,41 @@ export function MarketSurveyResults() {
             </div>
           ) : null}
 
-          {withDetails.length > 0 ? (
-            <ul className="mt-4 flex flex-col gap-3">
-              {withDetails.map((row) => (
-                <li key={row.userId} className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-sm">
-                  <p className="font-semibold text-slate-900">
-                    {row.studioName}
-                    {row.canContact ? <span className="ms-2 text-xs text-emerald-700">אפשר לחזור אליה</span> : null}
-                  </p>
-                  {row.canContact ? (
-                    <p className="text-xs text-slate-500">
-                      {row.email ?? 'אין מייל'}
-                      {row.phone ? ` · ${row.phone}` : ''}
-                    </p>
-                  ) : null}
-                  {textAnswers(row).map((answer) => (
-                    <p key={answer.label} className="mt-1 whitespace-pre-line text-slate-700">
-                      {answer.label}: {answer.text}
-                    </p>
-                  ))}
-                </li>
-              ))}
-            </ul>
+          {completed.length > 0 ? (
+            <div className="mt-4">
+              <h3 className="text-sm font-semibold text-slate-900">תשובות לפי צלמת</h3>
+              <ul className="mt-2 flex flex-col gap-2">
+                {completed.map((row) => (
+                  <li key={row.userId}>
+                    <details className="group rounded-xl border border-slate-200 bg-slate-50/70 text-sm">
+                      <summary className="flex cursor-pointer flex-wrap items-center gap-x-2 gap-y-1 p-3 font-semibold text-slate-900">
+                        <span>{row.studioName}</span>
+                        {row.wasSubscriber ? <span className="text-xs font-normal text-violet-700">מנויה</span> : null}
+                        {row.canContact ? <span className="text-xs font-normal text-emerald-700">אפשר לחזור אליה</span> : null}
+                        {row.completedAt ? (
+                          <span className="ms-auto text-xs font-normal text-slate-500">
+                            {new Date(row.completedAt).toLocaleDateString('he-IL')}
+                          </span>
+                        ) : null}
+                      </summary>
+                      <div className="border-t border-slate-200 px-3 pb-3 pt-2">
+                        {row.canContact ? (
+                          <p className="text-xs text-slate-500">
+                            {row.email ?? 'אין מייל'}
+                            {row.phone ? ` · ${row.phone}` : ''}
+                          </p>
+                        ) : null}
+                        {[...choiceAnswers(row), ...textAnswers(row)].map((answer) => (
+                          <p key={answer.label} className="mt-1 whitespace-pre-line text-slate-700">
+                            <span className="text-slate-500">{answer.label}:</span> {answer.text}
+                          </p>
+                        ))}
+                      </div>
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </>
       )}
