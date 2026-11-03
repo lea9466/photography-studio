@@ -26,6 +26,13 @@ import {
 } from './AboutKit'
 import { AboutFlow } from './AboutFlow'
 import { ShieldPhotoArtwork } from './AboutArtwork'
+import { AboutDemoVideo } from './AboutDemoVideo'
+
+// Hosted on R2 (public branding/ prefix of the albums bucket), not in public/.
+const DEMO_VIDEO = {
+  src: 'https://albums.studio-galleries.com/branding/marketing/private-galleries-demo.mp4',
+  poster: 'https://albums.studio-galleries.com/branding/marketing/private-galleries-demo-poster.jpg',
+}
 
 export function PrivateGalleriesAboutContent() {
   return (
@@ -79,6 +86,11 @@ export function PrivateGalleriesAboutContent() {
         title="איך זה עובד"
         subtitle="חמישה שלבים — מהיצירה ועד שהלקוח מוריד את התמונות המוכנות."
       >
+        <AboutDemoVideo
+          src={DEMO_VIDEO.src}
+          poster={DEMO_VIDEO.poster}
+          label="סרטון הדגמה: יצירת גלריה פרטית, בחירת הלקוח ומסירת התמונות המעובדות"
+        />
         <AboutFlow
           steps={[
             {
