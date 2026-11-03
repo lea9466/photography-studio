@@ -125,6 +125,40 @@ async function serve(env, key) {
 }
 
 /**
+ * Byte-range variant of serve(), used ONLY for the public marketing files
+ * under branding/marketing/ (the private-galleries demo video). iPhone Safari
+ * refuses to play a video unless its Range requests get a 206 Partial Content
+ * answer; serve() always returns the whole object. Gallery media keeps using
+ * serve() untouched.
+ */
+async function serveRanged(request, env, key) {
+  let object
+  try {
+    object = await env.GALLERY_BUCKET.get(key, { range: request.headers })
+  } catch {
+    return new Response('Range Not Satisfiable', { status: 416 })
+  }
+  if (!object) return new Response('Not Found', { status: 404 })
+
+  const headers = new Headers()
+  object.writeHttpMetadata(headers)
+  headers.set('etag', object.httpEtag)
+  headers.set('Cache-Control', 'public, max-age=86400')
+  headers.set('Accept-Ranges', 'bytes')
+
+  const range = object.range
+  if (!request.headers.get('range') || !range) {
+    return new Response(object.body, { headers })
+  }
+
+  const offset = 'suffix' in range ? object.size - range.suffix : range.offset ?? 0
+  const length = 'suffix' in range ? range.suffix : range.length ?? object.size - offset
+  headers.set('Content-Range', `bytes ${offset}-${offset + length - 1}/${object.size}`)
+  headers.set('Content-Length', String(length))
+  return new Response(object.body, { status: 206, headers })
+}
+
+/**
  * Client-side code that builds a ZIP from several download URLs (see
  * lib/actions/download.actions.ts's comment about zipping client-side) uses
  * fetch() to read each file's bytes, and fetch() is cross-origin here (the
@@ -152,6 +186,10 @@ async function handleRequest(request, env) {
   // lib/r2/config.ts's privateMediaBaseUrl). Normalize both to the same
   // internal key so the rest of this logic doesn't need to care which one.
   if (key.startsWith('media/')) key = key.slice('media/'.length)
+
+  if (key.startsWith('branding/marketing/')) {
+    return serveRanged(request, env, key)
+  }
 
   if (key.startsWith('branding/') || key.startsWith('cover-images/')) {
     return serve(env, key)
