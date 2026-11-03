@@ -700,6 +700,47 @@ export type Database = {
           },
         ]
       }
+      market_survey_responses: {
+        Row: {
+          user_id: string
+          shows_count: number
+          last_shown_at: string | null
+          completed_at: string | null
+          was_subscriber: boolean | null
+          answers: Json | null
+          can_contact: boolean | null
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          shows_count?: number
+          last_shown_at?: string | null
+          completed_at?: string | null
+          was_subscriber?: boolean | null
+          answers?: Json | null
+          can_contact?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          shows_count?: number
+          last_shown_at?: string | null
+          completed_at?: string | null
+          was_subscriber?: boolean | null
+          answers?: Json | null
+          can_contact?: boolean | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'market_survey_responses_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: true
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       gallery_pass_credits: {
         Row: {
           id: string

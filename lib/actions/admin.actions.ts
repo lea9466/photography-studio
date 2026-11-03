@@ -862,6 +862,56 @@ export async function fetchUnsentContactInquiries(): Promise<AdminUnsentInquiry[
   })
 }
 
+export type AdminMarketSurveyResponse = {
+  userId: string
+  studioName: string
+  email: string | null
+  phone: string | null
+  showsCount: number
+  completedAt: string | null
+  wasSubscriber: boolean | null
+  canContact: boolean | null
+  answers: Record<string, unknown> | null
+}
+
+/** Everyone the dashboard survey was shown to. Empty until the migration is applied. */
+export async function fetchMarketSurveyResponses(): Promise<AdminMarketSurveyResponse[]> {
+  await requireAdmin()
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('market_survey_responses')
+    .select(
+      'user_id, shows_count, completed_at, was_subscriber, can_contact, answers, users!market_survey_responses_user_id_fkey(email, phone, studio_name, name)'
+    )
+    .order('completed_at', { ascending: false, nullsFirst: false })
+
+  if (error) {
+    console.error('[fetchMarketSurveyResponses]', error.message)
+    return []
+  }
+
+  return (data ?? []).map((row) => {
+    const owner = row.users as {
+      email: string | null
+      phone: string | null
+      studio_name: string | null
+      name: string
+    } | null
+    return {
+      userId: row.user_id,
+      studioName: owner?.studio_name || owner?.name || '—',
+      email: owner?.email ?? null,
+      phone: owner?.phone ?? null,
+      showsCount: row.shows_count,
+      completedAt: row.completed_at,
+      wasSubscriber: row.was_subscriber,
+      canContact: row.can_contact,
+      answers: row.answers as Record<string, unknown> | null,
+    }
+  })
+}
+
 /** Retries one unsent inquiry's notification email. */
 export async function resendContactInquiry(
   inquiryId: string

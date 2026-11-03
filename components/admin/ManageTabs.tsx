@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import {
   Building2,
+  ClipboardList,
   CreditCard,
   Inbox,
   LayoutTemplate,
@@ -30,6 +31,7 @@ import { HeroOptionTiersManager } from '@/components/admin/HeroOptionTiersManage
 import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 import { UnsentInquiriesManager } from '@/components/admin/UnsentInquiriesManager'
+import { MarketSurveyResults } from '@/components/admin/MarketSurveyResults'
 
 type ManageTabsProps = {
   studios: AdminStudioRow[]
@@ -43,6 +45,7 @@ const TABS = [
   { id: 'announcement', label: 'הודעת דשבורד', icon: Megaphone },
   { id: 'broadcast', label: 'דיוור במייל', icon: Mail },
   { id: 'inquiries', label: 'פניות שלא נשלחו', icon: Inbox },
+  { id: 'survey', label: 'סקר צלמות', icon: ClipboardList },
   { id: 'maintenance', label: 'תחזוקת מדיה', icon: Wrench },
   { id: 'pricing', label: 'מסלולים ותמחור', icon: CreditCard },
   { id: 'hero', label: 'עיצוב הירו', icon: LayoutTemplate },
@@ -156,6 +159,13 @@ export function ManageTabs({
         className={activeTab === 'inquiries' ? 'flex flex-col gap-6' : 'hidden'}
       >
         <UnsentInquiriesManager />
+      </div>
+
+      <div
+        role="tabpanel"
+        className={activeTab === 'survey' ? 'flex flex-col gap-6' : 'hidden'}
+      >
+        <MarketSurveyResults />
       </div>
 
       <div

@@ -10,6 +10,7 @@ import { ReferralSuccessModal } from './ReferralSuccessModal'
 import { SiteSetupBanner } from './SiteSetupBanner'
 import { SiteOnboardingModal, type SiteOnboardingInitial } from './SiteOnboardingModal'
 import { AssistantWidget } from './assistant/AssistantWidget'
+import { MarketSurveyPrompt } from './market-survey/MarketSurveyPrompt'
 import type { Announcement } from '@/lib/announcements/types'
 
 type DashboardLayoutWrapperProps = {
@@ -91,6 +92,9 @@ export function DashboardLayoutWrapper({
       {isImpersonating ? <ImpersonationBanner studioName={studioName} /> : null}
       {siteOnboarding ? <SiteOnboardingModal open initial={siteOnboarding} /> : null}
       <ReferralSuccessModal open={showReferralPopup} />
+      <MarketSurveyPrompt
+        enabled={!isImpersonating && !siteUnavailableLocked && !siteOnboarding && !showReferralPopup}
+      />
       <SidebarNav
         userName={userName}
         studioName={studioName}
