@@ -75,7 +75,8 @@ const LUXE = {
   border: '#e5e5e5', // --dashboard-border
   text: '#27272a',
   muted: '#71717a', //  ~ --dashboard-muted
-  serif: "Georgia, 'Times New Roman', serif",
+  // Wordmark face — same modern sans as the body (was Georgia, read as dated).
+  serif: "'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
   sans: "'Heebo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
 } as const
 
@@ -238,6 +239,7 @@ function renderLuxeEmail(input: { preheader: string; contentHtml: string }) {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light only" />
 <meta name="supported-color-schemes" content="light" />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 </head>
 <body style="margin: 0; padding: 0; background: ${LUXE.paper};">
   <div style="display: none; max-height: 0; overflow: hidden; opacity: 0; mso-hide: all;">${input.preheader}</div>
@@ -1619,6 +1621,133 @@ export async function sendHeroDesignAnnouncementEmail(input: { name: string; ema
   if (!provider) return
 
   const { subject, text, html } = buildHeroDesignAnnouncementEmail({ name: input.name })
+
+  await provider.send({
+    from: emailFrom(),
+    to: input.email,
+    replyTo: getFeedbackEmail(),
+    subject,
+    text,
+    html,
+  })
+}
+
+/**
+ * Hosted on R2's public branding/ prefix (albums bucket, opened in NetFree).
+ * The button links to the video file itself, not the dashboard "אודות" page:
+ * that page needs a login, and login doesn't return to the page it came from.
+ */
+const PRIVATE_GALLERIES_VIDEO_URL =
+  'https://albums.studio-galleries.com/branding/marketing/private-galleries-demo.mp4'
+const PRIVATE_GALLERIES_VIDEO_GIF_URL =
+  'https://albums.studio-galleries.com/branding/marketing/private-galleries-email-teaser.gif'
+
+/**
+ * Pure builder for the "how private galleries work" video email — sent to
+ * studios that haven't created a private gallery yet. An animated GIF of the
+ * client choosing photos (the only motion an email can carry) links to the
+ * full walkthrough video.
+ */
+export function buildPrivateGalleriesVideoEmail(input: { name: string }): {
+  subject: string
+  text: string
+  html: string
+} {
+  const name = escapeHtml(input.name.trim() || 'שלום')
+  const subject = 'תחסכי חצי שעה עד שעה על כל צילום — ככה זה עובד 🎬'
+  const createUrl = appUrl('/dashboard/galleries/new?kind=client')
+  const contactUrl = appUrl('/dashboard/contact')
+
+  // Same face and weight as the body text — the 800/negative-tracking heading read as a different font.
+  const h1 = `margin: 0 0 8px; font-family: ${LUXE.sans}; font-size: 24px; line-height: 1.35; font-weight: 700; color: ${LUXE.ink};`
+  const subhead = `margin: 0 0 22px; font-family: ${LUXE.sans}; font-size: 15px; line-height: 1.6; color: ${LUXE.muted};`
+  const p = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 16px; line-height: 1.75; color: ${LUXE.text};`
+  const pMuted = `margin: 0 0 16px; font-family: ${LUXE.sans}; font-size: 14px; line-height: 1.7; color: ${LUXE.muted};`
+  const link = `color: ${LUXE.brandDeep}; text-decoration: underline;`
+
+  const contentHtml = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 16px;">
+      <tr>
+        <td style="background: ${LUXE.brand}; border-radius: 999px; padding: 6px 15px; font-family: ${LUXE.sans}; font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #ffffff;">סרטון קצר</td>
+      </tr>
+    </table>
+    <h1 style="${h1}">ככה עובדות גלריות פרטיות</h1>
+    <p style="${subhead}">סרטון של דקה: מהעלאת התמונות ועד שהלקוח מוריד את המעובדות</p>
+    ${luxeCalloutCard({
+      badge: '⏱',
+      ink: '#6d28d9',
+      bg: '#f3edfe',
+      border: '#e4d6fb',
+      title: 'חצי שעה עד שעה פחות על כל צילום',
+      body: 'בלי רשימות, בלי מיילים חוזרים ובלי בלאגן. הלקוחות נהנים לבחור תמונות במקום להתייאש מזה, ואת מקבלת תיקיות מסודרות.',
+    })}
+    <div style="height: 14px;"></div>
+
+    <p style="${p}">שלום ${name},</p>
+    <p style="${p}">הכנו סרטון קצר שמראה בדיוק איך זה נראה אצלך ואצל הלקוח:</p>
+
+    <a href="${PRIVATE_GALLERIES_VIDEO_URL}" style="display: block; margin: 0 0 22px; text-decoration: none;">
+      <img src="${PRIVATE_GALLERIES_VIDEO_GIF_URL}" width="516" alt="הלקוח בוחר תמונות לאלבום ולעיבוד בגלריה הפרטית — לחצי לצפייה בסרטון המלא" style="display: block; width: 100%; max-width: 516px; height: auto; border: 0; border-radius: 12px;" />
+    </a>
+
+    ${luxeCheckList([
+      ['יוצרים גלריה ומעלים תמונות', 'בוחרים את הקבצים מהמחשב, וסימן מים נוסף אוטומטית לכל תמונה'],
+      ['הלקוח נהנה לבחור', 'גלריה יפה בעיצוב שלך, סימון לאלבום ולעיבוד בלחיצה על התמונה, גם מהטלפון. נכנס עם קוד חד-פעמי, ופתוח לגמרי בנטפרי'],
+      ['מורידים את הבחירה מסודרת', 'ZIP באיכות מלאה, בתיקייה עם שם הלקוח ובתוכה "אלבום" ו"עיבוד"'],
+      ['מוסרים את המעובדות', 'הלקוח מקבל מייל ומוריד את כולן בקליק'],
+    ])}
+
+    ${luxeButton(PRIVATE_GALLERIES_VIDEO_URL, '▶  לראות איך זה עובד (סרטון של דקה)')}
+    <p style="margin: -16px 0 24px; font-family: ${LUXE.sans}; font-size: 14px; font-weight: 600; line-height: 1.6; color: #0f766e;">✓ הסרטון פתוח לגמרי בנטפרי, לוחצים וצופים</p>
+
+    ${luxeCalloutCard({
+      badge: '✓',
+      ink: '#0d9488',
+      bg: '#e3f6f2',
+      border: '#c4ebe2',
+      title: 'הגלריה הראשונה עלינו',
+      body: `גלריה פרטית אחת פעילה, עד 400 תמונות, בחינם ובלי מנוי. <a href="${createUrl}" style="${link}">ליצור גלריה פרטית</a>`,
+    })}
+
+    <div style="border-top: 1px solid ${LUXE.border}; margin: 22px 0 18px;"></div>
+    <p style="${pMuted} margin-bottom: 0;">שאלה, או רוצה שנעבור על זה יחד? אני כאן, דרך <a href="${contactUrl}" style="${link}">טאב יצירת הקשר</a> במערכת. בהצלחה!</p>`
+
+  return {
+    subject,
+    text: [
+      `שלום ${input.name.trim() || ''},`.trim(),
+      '',
+      'חצי שעה עד שעה פחות על כל צילום: בלי רשימות, בלי מיילים חוזרים ובלי בלאגן. הלקוחות נהנים לבחור תמונות במקום להתייאש מזה, ואת מקבלת תיקיות מסודרות.',
+      '',
+      'הכנו סרטון קצר (דקה אחת) שמראה בדיוק איך עובדות גלריות פרטיות, אצלך ואצל הלקוח. הסרטון פתוח לגמרי בנטפרי:',
+      PRIVATE_GALLERIES_VIDEO_URL,
+      '',
+      '- יוצרים גלריה ומעלים תמונות: בוחרים את הקבצים מהמחשב, וסימן מים נוסף אוטומטית',
+      '- הלקוח נהנה לבחור: גלריה יפה בעיצוב שלך, סימון לאלבום ולעיבוד בלחיצה על התמונה, גם מהטלפון. קוד כניסה חד-פעמי, פתוח לגמרי בנטפרי',
+      '- מורידים את הבחירה מסודרת: ZIP באיכות מלאה, תיקייה עם שם הלקוח ובתוכה "אלבום" ו"עיבוד"',
+      '- מוסרים את המעובדות: הלקוח מקבל מייל ומוריד את כולן בקליק',
+      '',
+      `הגלריה הראשונה עלינו: גלריה פרטית אחת פעילה, עד 400 תמונות, בחינם. ליצור גלריה: ${createUrl}`,
+      '',
+      `שאלה? טאב יצירת הקשר במערכת: ${contactUrl}`,
+      '',
+      'בהצלחה!',
+    ].join('\n'),
+    html: renderLuxeEmail({
+      preheader: 'בלי רשימות, בלי מיילים חוזרים ובלי בלאגן: הלקוח בוחר בעצמו ואת מקבלת תיקיות מסודרות. סרטון של דקה, פתוח בנטפרי.',
+      contentHtml,
+    }),
+  }
+}
+
+export async function sendPrivateGalleriesVideoEmail(input: { name: string; email: string }) {
+  const provider = requireEmailProviderOrSafeStub({
+    template: 'private-galleries-video',
+    email: input.email,
+  })
+  if (!provider) return
+
+  const { subject, text, html } = buildPrivateGalleriesVideoEmail({ name: input.name })
 
   await provider.send({
     from: emailFrom(),
