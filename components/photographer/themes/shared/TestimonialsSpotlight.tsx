@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import type { SiteLanguage } from '@/lib/site-language'
 import { TestimonialText } from './TestimonialText'
 import styles from './TestimonialsSpotlight.module.css'
@@ -23,10 +23,10 @@ export type SpotlightVariant = 'classic' | 'elegant' | 'modern' | 'dark'
 export type TestimonialsSpotlightProps = {
   testimonials: SpotlightTestimonial[]
   accentColor: string
-  /** Falls back to the studio logo (as a small avatar) when a testimonial has no photo of its own. */
+  /** Falls back to the studio logo for the avatar when a testimonial has no photo of its own. */
   logoUrl?: string | null
   language: SiteLanguage
-  /** Which theme it sits in — the card frame, corners and shadow follow that theme's own cards. */
+  /** Which theme it sits in — the dark theme gets the dark card; the others share the light one. */
   variant: SpotlightVariant
 }
 
@@ -48,24 +48,29 @@ function formatReviewDate(testimonial: SpotlightTestimonial): string {
   return date.toLocaleDateString('he-IL', { year: 'numeric', month: 'long' })
 }
 
+/** First letter of the first two words — "מירי כהן" → "מכ". */
+function initials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0] ?? '')
+    .join('')
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-const pad = (n: number) => String(n).padStart(2, '0')
-
 /**
- * The `testimonial_layout_type === 'spotlight'` studio setting: one large
- * quote card at a time, crossfading to the next every few seconds, with
- * prev/next arrows, dots and a "02 / 05" counter when there's more than one.
+ * The `testimonial_layout_type === 'spotlight'` studio setting: one large,
+ * soft, rounded quote card at a time — quote icon, the testimonial in
+ * medium-weight type framed by accent quote marks, then a divider and the
+ * client's avatar (her photo, the studio logo, or her initials), name and
+ * shoot type — crossfading to the next every few seconds, with round prev/next
+ * arrows and dots when there's more than one.
  *
- * A testimonial with its own photo gets a split card — the photo in an offset
- * frame on one side, the quote on the other; without one the quote is
- * centered (with the studio logo as a small avatar, if there is one). The
- * card's frame/corners/shadow follow the theme (`variant`), like each
- * theme's own testimonial cards. Long quotes stop at QUOTE_LINES lines with
- * the shared "read more" dialog, so one long review can't blow the card up.
- *
+ * Long quotes stop at QUOTE_LINES lines with the shared "read more" dialog.
  * Every slide is stacked in the same grid cell, so the card always takes the
  * height of the tallest one and the page never jumps on a change. Inactive
  * slides are `inert`. Auto-advance pauses on hover/focus and is off entirely
@@ -102,7 +107,7 @@ export function TestimonialsSpotlight({
 
   return (
     <div
-      className={`${styles.wrap} ${styles[variant]}`}
+      className={`${styles.wrap} ${variant === 'dark' ? styles.dark : ''}`}
       style={{ '--spot-accent': accentColor } as React.CSSProperties}
       dir={isEn ? 'ltr' : 'rtl'}
       onMouseEnter={() => setPaused(true)}
@@ -113,8 +118,7 @@ export function TestimonialsSpotlight({
       <div className={styles.stage} aria-live="polite">
         {testimonials.map((testimonial, i) => {
           const isActive = i === active
-          const photo = testimonial.imageUrl
-          const avatar = photo ? null : logoUrl || null
+          const avatarSrc = testimonial.imageUrl || logoUrl || null
           const meta = [testimonial.shootType, formatReviewDate(testimonial)].filter(Boolean).join(' · ')
           return (
             <figure
@@ -123,46 +127,36 @@ export function TestimonialsSpotlight({
               aria-hidden={!isActive}
               inert={!isActive}
             >
-              <div className={`${styles.card} ${photo ? styles.withPhoto : ''}`}>
-                {photo ? (
-                  <div className={styles.photo}>
-                    <span aria-hidden="true" className={styles.photoFrame} />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img className={styles.photoImage} src={photo} alt="" loading="lazy" />
-                  </div>
-                ) : null}
+              <div className={styles.card}>
+                <Quote aria-hidden="true" className={styles.quoteIcon} strokeWidth={1.5} />
 
-                <div className={styles.body}>
-                  <span aria-hidden="true" className={styles.quote}>
-                    &rdquo;
-                  </span>
-                  <div className={styles.stars} aria-hidden="true">
-                    ★★★★★
-                  </div>
-                  <blockquote className={styles.textWrap}>
-                    <TestimonialText
-                      text={testimonial.content}
-                      className={styles.text}
-                      title={testimonial.title}
-                      meta={meta}
-                      thumbSrc={photo || avatar}
-                      accentColor={accentColor}
-                      language={language}
-                      lines={QUOTE_LINES}
-                    />
-                  </blockquote>
-                  <span aria-hidden="true" className={styles.rule} />
-                  <figcaption className={styles.caption}>
-                    {avatar ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className={styles.avatar} src={avatar} alt="" loading="lazy" />
-                    ) : null}
-                    <span>
-                      {testimonial.title ? <span className={styles.name}>{testimonial.title}</span> : null}
-                      {meta ? <span className={styles.meta}>{meta}</span> : null}
+                <blockquote className={styles.quote}>
+                  <TestimonialText
+                    text={testimonial.content}
+                    className={styles.text}
+                    title={testimonial.title}
+                    meta={meta}
+                    thumbSrc={avatarSrc}
+                    accentColor={accentColor}
+                    language={language}
+                    lines={QUOTE_LINES}
+                  />
+                </blockquote>
+
+                <figcaption className={styles.footer}>
+                  {avatarSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img className={styles.avatar} src={avatarSrc} alt="" loading="lazy" />
+                  ) : (
+                    <span aria-hidden="true" className={styles.avatar}>
+                      {initials(testimonial.title)}
                     </span>
-                  </figcaption>
-                </div>
+                  )}
+                  <span className={styles.meta}>
+                    {testimonial.title ? <span className={styles.name}>{testimonial.title}</span> : null}
+                    {meta ? <span className={styles.subtitle}>{meta}</span> : null}
+                  </span>
+                </figcaption>
               </div>
             </figure>
           )
@@ -170,9 +164,9 @@ export function TestimonialsSpotlight({
       </div>
 
       {count > 1 ? (
-        <div className={styles.nav}>
-          <button type="button" className={styles.arrow} aria-label={copy.prev} onClick={() => goTo(active - 1)}>
-            {isEn ? <ChevronLeft aria-hidden="true" size={18} /> : <ChevronRight aria-hidden="true" size={18} />}
+        <div className={styles.controls}>
+          <button type="button" className={styles.nav} aria-label={copy.prev} onClick={() => goTo(active - 1)}>
+            {isEn ? <ChevronLeft aria-hidden="true" size={20} /> : <ChevronRight aria-hidden="true" size={20} />}
           </button>
           <div className={styles.dots}>
             {testimonials.map((testimonial, i) => (
@@ -186,12 +180,9 @@ export function TestimonialsSpotlight({
               />
             ))}
           </div>
-          <button type="button" className={styles.arrow} aria-label={copy.next} onClick={() => goTo(active + 1)}>
-            {isEn ? <ChevronRight aria-hidden="true" size={18} /> : <ChevronLeft aria-hidden="true" size={18} />}
+          <button type="button" className={styles.nav} aria-label={copy.next} onClick={() => goTo(active + 1)}>
+            {isEn ? <ChevronRight aria-hidden="true" size={20} /> : <ChevronLeft aria-hidden="true" size={20} />}
           </button>
-          <span className={styles.counter} aria-hidden="true" dir="ltr">
-            {pad(active + 1)} / {pad(count)}
-          </span>
         </div>
       ) : null}
     </div>
