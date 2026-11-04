@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { SectionTitle } from '../shared/SectionTitle'
+import { CENTER_SECTION_HEADINGS } from '../shared/section-heading-align'
 import styles from './ElegantSectionHeading.module.css'
 
 export type ElegantSectionHeadingAlign =
@@ -50,10 +51,12 @@ export function ElegantSectionHeading({
   align = 'natural',
   onDark = false,
 }: ElegantSectionHeadingProps) {
+  // The site-wide switch turns the left-docked headings centered; 'natural' (About) is untouched.
+  const resolved = CENTER_SECTION_HEADINGS && align === 'start' ? 'center' : align
   const classes = [
     styles.heading,
-    align === 'center' ? styles.center : '',
-    align === 'start' ? styles.start : '',
+    resolved === 'center' ? styles.center : '',
+    resolved === 'start' ? styles.start : '',
     onDark ? styles.onDark : '',
   ]
     .filter(Boolean)

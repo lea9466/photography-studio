@@ -64,10 +64,10 @@ type TestimonialFormState = {
   imageUrl: string
 }
 
-type TestimonialLayoutType = 'carousel' | 'marquee' | 'flip-cards'
+type TestimonialLayoutType = 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 
 function normalizeLayoutType(value: string | null | undefined): TestimonialLayoutType {
-  return value === 'marquee' || value === 'flip-cards' ? value : 'carousel'
+  return value === 'marquee' || value === 'flip-cards' || value === 'spotlight' ? value : 'carousel'
 }
 
 const LAYOUT_OPTIONS: Array<{
@@ -82,6 +82,11 @@ const LAYOUT_OPTIONS: Array<{
     value: 'flip-cards',
     label: 'כרטיסים מתהפכים',
     description: 'כרטיסים רחבים — הרקע הוא התמונה בבהיר, ובמעבר עכבר הכרטיס מתהפך ומראה את התמונה המלאה',
+  },
+  {
+    value: 'spotlight',
+    label: 'ציטוט גדול',
+    description: 'תגובה אחת גדולה במרכז, עם כוכבים, שמתחלפת לאט — עם נקודות ניווט',
     isNew: true,
   },
 ]
@@ -334,7 +339,7 @@ export function TestimonialsManager({
         <div className="space-y-2">
           <Label>סוג תצוגה</Label>
           <div
-            className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
             role="radiogroup"
             aria-label="סוג תצוגת תגובות"
           >

@@ -4,6 +4,7 @@ import { RecentPhotosGrid, type RecentPhotosGridItem } from '../shared/RecentPho
 import { SectionTitle } from '../shared/SectionTitle'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import styles from './ClassicRecentPhotosSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ClassicRecentPhotosSectionProps = {
   title: string
@@ -36,7 +37,7 @@ export function ClassicRecentPhotosSection({
 
   return (
     <section id="recent-photos" className={styles.section}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={styles.headerInner}>
           <div className={styles.titles}>
             <ClassicSectionScript color={accentColor}>Latest</ClassicSectionScript>

@@ -6,9 +6,11 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
+import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernTestimonialCard, type ModernTestimonial } from './ModernTestimonialCard'
 import styles from './ModernTestimonialsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernTestimonialsSectionProps = {
   title: string
@@ -17,7 +19,7 @@ export type ModernTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 }
 
 /**
@@ -69,7 +71,7 @@ export function ModernTestimonialsSection({
       <div className={styles.inner}>
         <div
           ref={headerRef}
-          className={`${styles.header} stagger-reveal ${headerRevealed ? 'is-visible' : ''}`}
+          className={`${styles.header} stagger-reveal ${headerRevealed ? 'is-visible' : ''} ${sectionHeadingAlignClass()}`}
           style={{ '--modern-accent': accentColor } as React.CSSProperties}
         >
           <ModernSectionEyebrow align="center">RECOMMEND</ModernSectionEyebrow>
@@ -78,7 +80,15 @@ export function ModernTestimonialsSection({
           </SectionTitle>
         </div>
 
-        {layoutType === 'flip-cards' ? (
+        {layoutType === 'spotlight' ? (
+          <TestimonialsSpotlight
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+            variant="modern"
+          />
+        ) : layoutType === 'flip-cards' ? (
           <TestimonialsFlipGrid
             testimonials={testimonials}
             accentColor={accentColor}

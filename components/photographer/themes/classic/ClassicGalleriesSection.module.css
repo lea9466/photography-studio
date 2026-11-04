@@ -12,3 +12,10 @@
   overflow-x: clip;
   background: #f4ede6;
 }
+
+/* Same short accent line under the title as the recent-photos header. */
+.divider {
+  width: 56px;
+  height: 1px;
+  margin-top: 8px;
+}

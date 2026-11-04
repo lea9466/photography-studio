@@ -8,6 +8,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import { DarkFaqAccordionItem } from './DarkFaqAccordionItem'
 import styles from './DarkFaqSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkFaqSectionProps = {
   /** Raw photographer.faq_items — parsed/sanitized the same way the old
@@ -79,7 +80,7 @@ export function DarkFaqSection({ faqItems, accentColor, language }: DarkFaqSecti
       />
 
       <div className={`${styles.inner} relative z-10`}>
-        <div className={styles.header}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
           <DarkSectionEyebrow accentColor={accentColor}>FAQ</DarkSectionEyebrow>
           <h2 className={styles.title}>{copy.sections.faq}</h2>
         </div>

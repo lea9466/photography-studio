@@ -3,6 +3,7 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { RecentPhotosGrid, type RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import styles from './ElegantRecentPhotosSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantRecentPhotosSectionProps = {
   title: string
@@ -43,7 +44,7 @@ export function ElegantRecentPhotosSection({
 
   return (
     <section id="recent-photos" className={styles.section}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={`${styles.headerInner} ${portfolioHref ? styles.headerInnerWithCta : ''}`}>
           <ElegantSectionHeading title={title} watermark="LATEST" accentColor={accentColor} align="start" />
           {portfolioHref ? (

@@ -4,6 +4,7 @@ import { RecentPhotosGrid, type RecentPhotosGridItem } from '../shared/RecentPho
 import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import styles from './ModernRecentPhotosSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernRecentPhotosSectionProps = {
   title: string
@@ -31,7 +32,7 @@ export function ModernRecentPhotosSection({
 
   return (
     <section id="recent-photos" className={styles.section}>
-      <div className={styles.headerRow} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
+      <div className={`${styles.headerRow} ${sectionHeadingAlignClass()}`} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
         <div className={styles.titles}>
           <ModernSectionEyebrow>LATEST</ModernSectionEyebrow>
           <SectionTitle color="#0f172a" className={styles.title}>

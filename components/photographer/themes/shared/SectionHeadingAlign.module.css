@@ -1,0 +1,52 @@
+/*
+ * SectionHeadingAlign.module.css — applied to a homepage section's header
+ * wrapper only when CENTER_SECTION_HEADINGS is on (section-heading-align.ts).
+ *
+ * The doubled `.center.center` selector and the `!important`s are deliberate:
+ * they have to beat each theme's own left-docked header rules — some of them
+ * `!important` and nested two or three wrappers deep, some inside media
+ * queries (e.g. classic recent-photos' `.titles`) — without touching those
+ * files, so flipping the switch off restores every theme exactly. Only the
+ * header wrapper gets this class, so nothing outside the heading is affected.
+ */
+
+.center.center {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  direction: rtl !important;
+}
+
+/* Every wrapper inside the heading (title rows, title stacks, eyebrow wraps):
+ * stacked and centered — a "see all" link ends up under the title. */
+.center.center div {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  justify-items: center !important;
+  text-align: center !important;
+  margin-inline: auto !important;
+}
+
+/* Only a row that holds a "see all" link needs breathing room once stacked —
+ * the eyebrow/title stacks keep each theme's own spacing. */
+.center.center div:has(> a, > div > a) {
+  gap: 0.75rem;
+}
+
+/* Eyebrows, titles, subtitles, divider lines */
+.center.center h2,
+.center.center h3,
+.center.center p,
+.center.center span {
+  text-align: center !important;
+  justify-self: center !important;
+}
+
+.center.center h2,
+.center.center h3,
+.center.center p {
+  margin-inline: auto !important;
+}

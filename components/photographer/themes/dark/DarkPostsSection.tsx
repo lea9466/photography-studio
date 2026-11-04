@@ -11,6 +11,7 @@ import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 export type DarkHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './DarkPostsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkPostsSectionProps = {
   title: string
@@ -53,7 +54,7 @@ export function DarkPostsSection({
 
   return (
     <section ref={ref} className={`${styles.section} reveal ${revealed ? 'active' : ''}`}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={styles.headerTitles}>
           <DarkSectionEyebrow accentColor={accentColor}>BLOG</DarkSectionEyebrow>
           <h2 className={styles.title}>{title}</h2>

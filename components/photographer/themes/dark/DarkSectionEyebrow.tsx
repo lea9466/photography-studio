@@ -1,3 +1,4 @@
+import { CENTER_SECTION_HEADINGS } from '../shared/section-heading-align'
 import styles from './DarkSectionEyebrow.module.css'
 
 export type DarkSectionEyebrowAlign = 'left' | 'center' | 'right'
@@ -30,8 +31,10 @@ const ALIGN_CLASS: Record<DarkSectionEyebrowAlign, string> = {
  * `boldSectionEyebrow()`.
  */
 export function DarkSectionEyebrow({ children, accentColor, align = 'left' }: DarkSectionEyebrowProps) {
+  // The site-wide switch centers the default left eyebrows (section headings only — About/Contact pass their own align).
+  const resolved = CENTER_SECTION_HEADINGS && align === 'left' ? 'center' : align
   return (
-    <div className={`${styles.wrap} ${ALIGN_CLASS[align]}`}>
+    <div className={`${styles.wrap} ${ALIGN_CLASS[resolved]}`}>
       <span className={styles.eyebrow} aria-hidden="true" style={{ '--eyebrow-accent': accentColor } as React.CSSProperties}>
         {children}
       </span>

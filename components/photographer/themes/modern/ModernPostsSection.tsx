@@ -12,6 +12,7 @@ import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 export type ModernHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ModernPostsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernPostsSectionProps = {
   title: string
@@ -53,7 +54,7 @@ export function ModernPostsSection({
 
   return (
     <section ref={ref} className={`${styles.section} stagger-reveal ${revealed ? 'is-visible' : ''}`}>
-      <div className={styles.header} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
         <div className={styles.headerTitles}>
           <ModernSectionEyebrow>BLOG</ModernSectionEyebrow>
           <SectionTitle color="#0f172a" className={styles.title}>

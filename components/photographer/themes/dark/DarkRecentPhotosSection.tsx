@@ -3,6 +3,7 @@ import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/si
 import { RecentPhotosGrid, type RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import styles from './DarkRecentPhotosSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkRecentPhotosSectionProps = {
   title: string
@@ -43,7 +44,7 @@ export function DarkRecentPhotosSection({
 
   return (
     <section id="recent-photos" className={styles.section}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={`${styles.headerInner} ${portfolioHref ? styles.headerInnerWithCta : ''}`}>
           <div className={styles.titles}>
             <DarkSectionEyebrow accentColor={accentColor}>LATEST</DarkSectionEyebrow>

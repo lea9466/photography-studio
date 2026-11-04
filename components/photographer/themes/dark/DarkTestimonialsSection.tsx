@@ -5,9 +5,11 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
+import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import { DarkTestimonialCard, type DarkTestimonial } from './DarkTestimonialCard'
 import styles from './DarkTestimonialsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkTestimonialsSectionProps = {
   title: string
@@ -16,7 +18,7 @@ export type DarkTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 }
 
 /**
@@ -57,13 +59,21 @@ export function DarkTestimonialsSection({
       className={`reveal ${revealed ? 'active' : ''} ${styles.section} py-20`}
     >
       <div className={styles.inner}>
-        <div className={styles.header}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
           <DarkSectionEyebrow accentColor={accentColor}>RECOMMEND</DarkSectionEyebrow>
           <h2 className={styles.title}>{title}</h2>
           <div className={styles.divider} />
         </div>
 
-        {layoutType === 'flip-cards' ? (
+        {layoutType === 'spotlight' ? (
+          <TestimonialsSpotlight
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+            variant="dark"
+          />
+        ) : layoutType === 'flip-cards' ? (
           <TestimonialsFlipGrid
             testimonials={testimonials}
             accentColor={accentColor}

@@ -5,6 +5,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import { DarkPackageCard, type DarkPackage } from './DarkPackageCard'
 import styles from './DarkPackagesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkPackagesSectionProps = {
   title: string
@@ -63,7 +64,7 @@ export function DarkPackagesSection({
       />
 
       <div className={`${styles.inner} relative z-10`}>
-        <div className={styles.header}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
           <DarkSectionEyebrow accentColor={accentColor}>PACKAGES</DarkSectionEyebrow>
           <h2 className={styles.title}>{title}</h2>
           <div className={styles.divider} />

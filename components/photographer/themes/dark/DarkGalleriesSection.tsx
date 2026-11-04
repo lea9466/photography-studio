@@ -2,6 +2,7 @@ import type { SiteLanguage } from '@/lib/site-language'
 import { GalleryGrid, type GalleryGridItem } from '../shared/GalleryGrid'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'
 import styles from './DarkGalleriesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type DarkGalleriesSectionProps = {
   title: string
@@ -44,7 +45,7 @@ export function DarkGalleriesSection({
 
   return (
     <section id="gallery" className={styles.section}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={styles.headerInner}>
           <DarkSectionEyebrow accentColor={accentColor}>COLLECTIONS</DarkSectionEyebrow>
           <h2 className={styles.title}>{title}</h2>

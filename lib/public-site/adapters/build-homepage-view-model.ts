@@ -178,7 +178,7 @@ export type HomepageViewModel = {
     createdAt: string
     imageUrl: string | null
   }>
-  testimonialLayoutType: 'carousel' | 'marquee' | 'flip-cards'
+  testimonialLayoutType: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 
   faqItems: unknown
   faqSectionImageUrl: string | null
@@ -276,7 +276,9 @@ export function buildHomepageViewModel(input: HomepageViewModelInput): HomepageV
         ? 'marquee'
         : p.testimonial_layout_type === 'flip-cards'
           ? 'flip-cards'
-          : 'carousel',
+          : p.testimonial_layout_type === 'spotlight'
+            ? 'spotlight'
+            : 'carousel',
 
     faqItems: p.faq_items,
     faqSectionImageUrl: p.faq_section_image_url,

@@ -11,6 +11,7 @@ import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 export type ElegantHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ElegantPostsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantPostsSectionProps = {
   title: string
@@ -59,7 +60,7 @@ export function ElegantPostsSection({
 
   return (
     <section className={styles.section} id="posts">
-      <div ref={ref} className={`${styles.header} stagger-reveal ${revealed ? 'is-visible' : ''}`}>
+      <div ref={ref} className={`${styles.header} stagger-reveal ${revealed ? 'is-visible' : ''} ${sectionHeadingAlignClass()}`}>
         <div className={styles.headerTitles}>
           <ElegantSectionHeading title={title} watermark="BLOG" accentColor={accentColor} align="start" />
         </div>

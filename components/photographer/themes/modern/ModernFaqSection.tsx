@@ -8,6 +8,7 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernFaqItem } from './ModernFaqItem'
 import styles from './ModernFaqSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernFaqSectionProps = {
   /** Raw photographer.faq_items — parsed/sanitized the same way the old
@@ -55,7 +56,7 @@ export function ModernFaqSection({ faqItems, accentColor, language }: ModernFaqS
       <div aria-hidden="true" className={`${styles.glow} ${styles.glowRight}`} />
 
       <div className={styles.inner}>
-        <div className={styles.header}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
           <ModernSectionEyebrow align="center">FAQ</ModernSectionEyebrow>
           <SectionTitle color="#0f172a" style={{ textAlign: 'center' }}>
             {copy.sections.faq}

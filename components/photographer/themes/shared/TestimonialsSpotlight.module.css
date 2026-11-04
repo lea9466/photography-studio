@@ -1,0 +1,408 @@
+/*
+ * TestimonialsSpotlight.module.css — the `testimonial_layout_type ===
+ * 'spotlight'` layout: one large quote card that crossfades between
+ * testimonials. Shared by all four themes; the accent colour comes in as the
+ * `--spot-accent` inline variable, and the theme class (.classic / .elegant /
+ * .modern / .dark) sets the card's frame tokens to match that theme's own
+ * testimonial cards (*TestimonialCard.module.css).
+ */
+
+.wrap {
+  /* card frame — overridden per theme below */
+  --spot-bg: #ffffff;
+  --spot-border: 1px solid rgba(121, 116, 126, 0.25);
+  --spot-radius: 2px;
+  --spot-shadow: 0 18px 50px rgba(60, 35, 25, 0.09);
+  --spot-text: #2d2622;
+  --spot-muted: rgba(45, 38, 34, 0.55);
+  --spot-photo-radius: 2px;
+  --spot-quote-color: color-mix(in srgb, var(--spot-accent) 20%, transparent);
+  --spot-dot: color-mix(in srgb, var(--spot-accent) 28%, transparent);
+  --spot-glow: color-mix(in srgb, var(--spot-accent) 12%, transparent);
+  --spot-italic: normal;
+
+  position: relative;
+  width: 100%;
+  max-width: 62rem;
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 0.5rem;
+  box-sizing: border-box;
+  isolation: isolate;
+}
+
+/* Soft colour wash behind the card so the section isn't a white box on white */
+.wrap::before {
+  content: '';
+  position: absolute;
+  inset: -3rem -2rem 1rem;
+  z-index: -1;
+  /* closest-side keeps each ellipse fully inside the box — no visible edges */
+  background:
+    radial-gradient(closest-side at 72% 30%, var(--spot-glow), transparent) 0 0 / 60% 70% no-repeat,
+    radial-gradient(closest-side at 28% 70%, var(--spot-glow), transparent) 100% 100% / 55% 65% no-repeat;
+  pointer-events: none;
+}
+
+/* ── Per-theme frames ───────────────────────────────────────── */
+
+.elegant {
+  --spot-border: 1px solid rgba(121, 116, 126, 0.35);
+  --spot-radius: 0;
+  --spot-photo-radius: 0;
+}
+
+.classic {
+  --spot-border: 1px solid rgba(121, 116, 126, 0.2);
+  --spot-radius: 2px;
+  --spot-shadow: 0 1px 3px rgba(45, 40, 37, 0.08), 0 18px 44px rgba(45, 40, 37, 0.08);
+  --spot-italic: italic;
+}
+
+.modern {
+  --spot-border: 1px solid var(--modern-card-border, #ebe6e0);
+  --spot-radius: 1.25rem;
+  --spot-photo-radius: 0.9rem;
+  --spot-shadow: var(--modern-card-shadow, 0 1px 3px rgb(45 40 37 / 0.05), 0 14px 36px rgb(45 40 37 / 0.1));
+}
+
+.dark {
+  --spot-bg: #1c1c26;
+  --spot-border: 1px solid rgba(255, 255, 255, 0.07);
+  --spot-radius: 0;
+  --spot-photo-radius: 0;
+  --spot-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  --spot-text: rgba(255, 255, 255, 0.92);
+  --spot-muted: rgba(255, 255, 255, 0.5);
+  --spot-quote-color: color-mix(in srgb, var(--spot-accent) 40%, transparent);
+  --spot-dot: rgba(255, 255, 255, 0.22);
+  --spot-glow: color-mix(in srgb, var(--spot-accent) 18%, transparent);
+  --spot-italic: italic;
+}
+
+/* ── Slides ─────────────────────────────────────────────────── */
+
+/* Every slide shares one grid cell: the card is as tall as the tallest one. */
+.stage {
+  display: grid;
+}
+
+.slide {
+  grid-area: 1 / 1;
+  margin: 0;
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease,
+    visibility 0s linear 0.6s;
+}
+
+.active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease,
+    visibility 0s;
+}
+
+.card {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: stretch;
+  background: var(--spot-bg);
+  border: var(--spot-border);
+  border-radius: var(--spot-radius);
+  box-shadow: var(--spot-shadow);
+  color: var(--spot-text);
+  box-sizing: border-box;
+}
+
+/* Classic: a hairline inner frame, like a printed card */
+.classic .card::after {
+  content: '';
+  position: absolute;
+  inset: 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--spot-accent) 22%, transparent);
+  pointer-events: none;
+}
+
+/* Modern: an accent bar along the top edge */
+.modern .card::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  inset-inline: 2.5rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--spot-accent);
+}
+
+/* Elegant: an offset outline frame behind the card */
+.elegant .card::before {
+  content: '';
+  position: absolute;
+  inset: 0.9rem -0.9rem -0.9rem 0.9rem;
+  z-index: -1;
+  border: 1px solid color-mix(in srgb, var(--spot-accent) 45%, transparent);
+  pointer-events: none;
+}
+
+/* Dark: a faint accent glow at the top */
+.dark .card {
+  background:
+    radial-gradient(60% 80% at 50% 0%, color-mix(in srgb, var(--spot-accent) 10%, transparent), transparent 70%),
+    var(--spot-bg);
+}
+
+/* ── Photo side ─────────────────────────────────────────────── */
+
+.photo {
+  position: relative;
+  flex: 0 0 34%;
+  margin: 2rem;
+  margin-inline-end: 0;
+  min-height: 15rem;
+}
+
+.photoFrame {
+  position: absolute;
+  inset: 0.75rem -0.75rem -0.75rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--spot-accent) 55%, transparent);
+  border-radius: var(--spot-photo-radius);
+}
+
+.photoImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--spot-photo-radius);
+  display: block;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Quote side ─────────────────────────────────────────────── */
+
+.body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
+}
+
+.withPhoto .body {
+  align-items: flex-start;
+  text-align: start;
+  padding-inline: clamp(1.75rem, 4vw, 3.25rem);
+}
+
+.quote {
+  position: absolute;
+  top: 0.5rem;
+  inset-inline-start: 1.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(5rem, 11vw, 8rem);
+  line-height: 1;
+  color: var(--spot-quote-color);
+  pointer-events: none;
+  user-select: none;
+}
+
+.stars {
+  position: relative;
+  color: var(--spot-accent);
+  letter-spacing: 0.25em;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.textWrap {
+  position: relative;
+  margin: 1.25rem 0 0;
+  width: 100%;
+}
+
+.text {
+  font-size: clamp(1.15rem, 2.2vw, 1.5rem);
+  font-weight: 300;
+  font-style: var(--spot-italic);
+  line-height: 1.65;
+  overflow-wrap: break-word;
+}
+
+.rule {
+  display: block;
+  width: 2.75rem;
+  height: 1px;
+  margin: 1.5rem 0 1.1rem;
+  background: var(--spot-accent);
+  opacity: 0.6;
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 2px solid var(--spot-bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--spot-accent) 35%, transparent);
+}
+
+.name {
+  display: block;
+  font-family: var(--headline-font, inherit);
+  font-size: 1.2rem;
+  line-height: 1.3;
+  color: var(--spot-text);
+}
+
+.meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--spot-accent);
+}
+
+/* ── Navigation ─────────────────────────────────────────────── */
+
+.nav {
+  margin-top: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--spot-accent) 40%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--spot-accent);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.arrow:hover {
+  background: var(--spot-accent);
+  color: #fff;
+}
+
+.dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--spot-dot);
+  cursor: pointer;
+  transition:
+    width 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.dotActive {
+  width: 1.5rem;
+  background: var(--spot-accent);
+}
+
+.counter {
+  min-width: 3.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: var(--spot-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.arrow:focus-visible,
+.dot:focus-visible {
+  outline: 2px solid var(--spot-accent);
+  outline-offset: 3px;
+}
+
+/* ── Mobile: photo becomes a framed circle above the quote ─────── */
+
+@media (max-width: 767px) {
+  .wrap {
+    padding-inline: 0.75rem;
+  }
+
+  .card {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .photo {
+    flex: none;
+    width: 5.5rem;
+    height: 5.5rem;
+    min-height: 0;
+    margin: 2rem auto 0;
+  }
+
+  .photoFrame {
+    inset: -0.35rem;
+    border-radius: 999px;
+  }
+
+  .photoImage {
+    border-radius: 999px;
+  }
+
+  .withPhoto .body {
+    align-items: center;
+    text-align: center;
+    padding-top: 1.25rem;
+  }
+
+  .quote {
+    font-size: 4.5rem;
+  }
+
+  .elegant .card::before {
+    inset: 0.6rem -0.6rem -0.6rem 0.6rem;
+  }
+
+  .counter {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide,
+  .active,
+  .dot,
+  .arrow {
+    transition: none;
+  }
+}

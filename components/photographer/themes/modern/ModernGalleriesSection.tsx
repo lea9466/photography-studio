@@ -3,6 +3,7 @@ import { GalleryGrid, type GalleryGridItem } from '../shared/GalleryGrid'
 import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import styles from './ModernGalleriesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernGalleriesSectionProps = {
   title: string
@@ -25,7 +26,7 @@ export function ModernGalleriesSection({
 
   return (
     <section id="portfolio" className={styles.section}>
-      <div className={styles.header} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
         <ModernSectionEyebrow>COLLECTIONS</ModernSectionEyebrow>
         <SectionTitle color="#0f172a" className={styles.title}>
           {title}

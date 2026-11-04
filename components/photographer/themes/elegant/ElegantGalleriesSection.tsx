@@ -2,6 +2,7 @@ import type { SiteLanguage } from '@/lib/site-language'
 import { GalleryGrid, type GalleryGridItem } from '../shared/GalleryGrid'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import styles from './ElegantGalleriesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantGalleriesSectionProps = {
   title: string
@@ -36,7 +37,7 @@ export function ElegantGalleriesSection({
 
   return (
     <section id="gallery" className={`${styles.section} py-24 bg-white`}>
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <ElegantSectionHeading title={title} watermark="COLLECTIONS" accentColor={accentColor} align="start" />
       </div>
       <GalleryGrid galleries={galleries} theme="elegant" language={language} hrefForGallery={hrefForGallery} />

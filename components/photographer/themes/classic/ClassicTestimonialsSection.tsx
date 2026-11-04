@@ -5,10 +5,12 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
+import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { ClassicTestimonialCard, type ClassicTestimonial } from './ClassicTestimonialCard'
 import { SectionTitle } from '../shared/SectionTitle'
 import styles from './ClassicTestimonialsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ClassicTestimonialsSectionProps = {
   title: string
@@ -21,7 +23,7 @@ export type ClassicTestimonialsSectionProps = {
    * (the default) more than 3 testimonials get the sliding carousel and
    * 3-or-fewer get the plain static row; 'flip-cards' is the wide
    * flip-on-hover grid (shared/TestimonialsFlipGrid). */
-  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 }
 
 /**
@@ -68,13 +70,21 @@ export function ClassicTestimonialsSection({
       className={`reveal ${revealed ? 'active' : ''} ${styles.section} py-20`}
     >
       <div className={styles.inner}>
-        <div ref={headerRef} className={`${styles.header} ${headerRevealed ? styles.isVisible : ''}`}>
+        <div ref={headerRef} className={`${styles.header} ${headerRevealed ? styles.isVisible : ''} ${sectionHeadingAlignClass()}`}>
           <ClassicSectionScript color={accentColor}>Recommend</ClassicSectionScript>
           <SectionTitle color="#2d2825">{title}</SectionTitle>
           <div className={styles.divider} />
         </div>
 
-        {layoutType === 'flip-cards' ? (
+        {layoutType === 'spotlight' ? (
+          <TestimonialsSpotlight
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+            variant="classic"
+          />
+        ) : layoutType === 'flip-cards' ? (
           <TestimonialsFlipGrid
             testimonials={testimonials}
             accentColor={accentColor}

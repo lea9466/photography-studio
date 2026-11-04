@@ -5,9 +5,11 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
+import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantTestimonialCard, type ElegantTestimonial } from './ElegantTestimonialCard'
 import styles from './ElegantTestimonialsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantTestimonialsSectionProps = {
   title: string
@@ -16,7 +18,7 @@ export type ElegantTestimonialsSectionProps = {
   logoUrl?: string | null
   language: SiteLanguage
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  layoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  layoutType?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
 }
 
 /**
@@ -68,11 +70,19 @@ export function ElegantTestimonialsSection({
       id="testimonials"
       className={`${styles.section} reveal-on-scroll ${revealed ? 'active' : ''}`}
     >
-      <div ref={headerRef} className={`${styles.header} stagger-reveal ${headerRevealed ? 'is-visible' : ''}`}>
+      <div ref={headerRef} className={`${styles.header} stagger-reveal ${headerRevealed ? 'is-visible' : ''} ${sectionHeadingAlignClass()}`}>
         <ElegantSectionHeading title={title} watermark="RECOMMEND" accentColor={accentColor} align="start" />
       </div>
 
-      {layoutType === 'flip-cards' ? (
+      {layoutType === 'spotlight' ? (
+          <TestimonialsSpotlight
+            testimonials={testimonials}
+            accentColor={accentColor}
+            logoUrl={logoUrl}
+            language={language}
+            variant="elegant"
+          />
+        ) : layoutType === 'flip-cards' ? (
         <TestimonialsFlipGrid
           testimonials={testimonials}
           accentColor={accentColor}

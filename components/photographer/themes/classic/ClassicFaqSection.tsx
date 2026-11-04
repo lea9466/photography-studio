@@ -9,6 +9,7 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { ClassicFaqMagazineItem } from './ClassicFaqMagazineItem'
 import styles from './ClassicFaqSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ClassicFaqSectionProps = {
   /** Raw photographer.faq_items — parsed/sanitized the same way the old
@@ -43,7 +44,7 @@ export function ClassicFaqSection({ faqItems, faqSectionImageUrl, accentColor, l
       className={`reveal ${revealed ? 'active' : ''} ${styles.section} ${withImage ? styles.withImage : ''} py-20`}
       style={sectionStyle}
     >
-      <div ref={headerRef} className={`${styles.header} ${headerRevealed ? styles.headerVisible : ''}`}>
+      <div ref={headerRef} className={`${styles.header} ${headerRevealed ? styles.headerVisible : ''} ${sectionHeadingAlignClass()}`}>
         <ClassicSectionScript color={accentColor}>FAQ</ClassicSectionScript>
         <SectionTitle color="#2d2825">{copy.sections.faq}</SectionTitle>
         <div className="mt-4 mr-auto ml-0 h-px w-12 bg-[#d1c6b4]" />

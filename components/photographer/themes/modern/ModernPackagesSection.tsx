@@ -6,6 +6,7 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernPackageCard, type ModernPackage } from './ModernPackageCard'
 import styles from './ModernPackagesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ModernPackagesSectionProps = {
   title: string
@@ -56,7 +57,7 @@ export function ModernPackagesSection({
       <div aria-hidden="true" className={styles.glow} style={{ background: `linear-gradient(to right, ${accentColor}4d, transparent)` }} />
 
       <div className={styles.inner}>
-        <div className={styles.header} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`} style={{ '--modern-accent': accentColor } as React.CSSProperties}>
           <ModernSectionEyebrow align="center">PACKAGES</ModernSectionEyebrow>
           <SectionTitle color="#0f172a" style={{ textAlign: 'center' }}>
             {title}

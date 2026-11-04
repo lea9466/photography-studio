@@ -106,7 +106,7 @@ export type Database = {
           has_triggered_referral_bonus: boolean
           show_referral_popup: boolean
           show_welcome_popup: boolean
-          testimonial_layout_type: 'carousel' | 'marquee' | 'flip-cards'
+          testimonial_layout_type: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
           gallery_layout_mode: GalleryLayoutMode
           site_language: 'he' | 'en'
           before_after_display_style: BeforeAfterDisplayStyle
@@ -184,7 +184,7 @@ export type Database = {
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
-          testimonial_layout_type?: 'carousel' | 'marquee' | 'flip-cards'
+          testimonial_layout_type?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
           gallery_layout_mode?: GalleryLayoutMode
           site_language?: 'he' | 'en'
           before_after_display_style?: BeforeAfterDisplayStyle
@@ -262,7 +262,7 @@ export type Database = {
           has_triggered_referral_bonus?: boolean
           show_referral_popup?: boolean
           show_welcome_popup?: boolean
-          testimonial_layout_type?: 'carousel' | 'marquee' | 'flip-cards'
+          testimonial_layout_type?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
           gallery_layout_mode?: GalleryLayoutMode
           site_language?: 'he' | 'en'
           before_after_display_style?: BeforeAfterDisplayStyle

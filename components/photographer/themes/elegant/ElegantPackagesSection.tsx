@@ -5,6 +5,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantPackageCard, type ElegantPackage } from './ElegantPackageCard'
 import styles from './ElegantPackagesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantPackagesSectionProps = {
   title: string
@@ -63,7 +64,7 @@ export function ElegantPackagesSection({
       <div aria-hidden="true" className={styles.glow} style={{ background: `linear-gradient(to right, color-mix(in srgb, ${accentColor} 30%, transparent), transparent)` }} />
 
       <div className={`${styles.inner} relative z-10`}>
-        <div ref={ref} className={`${styles.header} stagger-reveal ${revealed ? 'is-visible' : ''}`}>
+        <div ref={ref} className={`${styles.header} stagger-reveal ${revealed ? 'is-visible' : ''} ${sectionHeadingAlignClass()}`}>
           <ElegantSectionHeading title={title} watermark="PACKAGES" accentColor={accentColor} align="center" />
           <p className={styles.subtitle}>{subtitle}</p>
         </div>

@@ -29,6 +29,7 @@ export function ClassicGalleriesSection({
       <GallerySectionHeader>
         <ClassicSectionScript color={accentColor}>Collections</ClassicSectionScript>
         <SectionTitle color="#2d2825">{title}</SectionTitle>
+        <div className={styles.divider} style={{ background: accentColor }} aria-hidden="true" />
       </GallerySectionHeader>
       <GalleryGrid galleries={galleries} theme="classic" language={language} hrefForGallery={hrefForGallery} />
     </section>

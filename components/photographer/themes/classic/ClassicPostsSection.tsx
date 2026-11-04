@@ -12,6 +12,7 @@ import { BlogCirclesGrid } from '../shared/BlogCirclesGrid'
 export type ClassicHomepagePost = HomepageBlogCardPost
 import type { PostsDisplayStyle } from '@/lib/types/posts-display-style'
 import styles from './ClassicPostsSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ClassicPostsSectionProps = {
   title: string
@@ -55,7 +56,7 @@ export function ClassicPostsSection({
       ref={ref}
       className={`${styles.section} reveal ${revealed ? 'active' : ''}`}
     >
-      <div className={styles.header}>
+      <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
         <div className={styles.headerTitles}>
           <ClassicSectionScript color={accentColor}>Blog</ClassicSectionScript>
           <SectionTitle color="#1c1917">{title}</SectionTitle>

@@ -23,6 +23,8 @@ type TestimonialTextProps = {
   thumbSrc?: string | null
   accentColor: string
   language: SiteLanguage
+  /** Lines shown before "read more" — defaults to CARD_LINES. */
+  lines?: number
 }
 
 /**
@@ -31,7 +33,16 @@ type TestimonialTextProps = {
  * "read more" link opens the whole testimonial in a small dialog — the row
  * itself never changes size.
  */
-export function TestimonialText({ text, className, title, meta, thumbSrc, accentColor, language }: TestimonialTextProps) {
+export function TestimonialText({
+  text,
+  className,
+  title,
+  meta,
+  thumbSrc,
+  accentColor,
+  language,
+  lines = CARD_LINES,
+}: TestimonialTextProps) {
   const textRef = useRef<HTMLParagraphElement>(null)
   const [overflowing, setOverflowing] = useState(false)
   const copy = language === 'en' ? COPY.en : COPY.he
@@ -50,7 +61,7 @@ export function TestimonialText({ text, className, title, meta, thumbSrc, accent
 
   return (
     <div className={className}>
-      <p ref={textRef} className={styles.clamped} style={{ WebkitLineClamp: CARD_LINES }}>
+      <p ref={textRef} className={styles.clamped} style={{ WebkitLineClamp: lines }}>
         {text}
       </p>
 

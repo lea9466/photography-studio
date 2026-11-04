@@ -8,6 +8,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantFaqMagazineItem } from './ElegantFaqMagazineItem'
 import styles from './ElegantFaqSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ElegantFaqSectionProps = {
   /** Raw photographer.faq_items — parsed/sanitized the same way the old
@@ -50,7 +51,7 @@ export function ElegantFaqSection({ faqItems, faqSectionImageUrl, accentColor, l
       className={`${styles.section} reveal-on-scroll ${revealed ? 'active' : ''} ${withImage ? styles.withImage : ''}`}
       style={sectionStyle}
     >
-      <div ref={headerRef} className={`${styles.header} reveal-on-scroll ${headerRevealed ? 'active' : ''}`}>
+      <div ref={headerRef} className={`${styles.header} reveal-on-scroll ${headerRevealed ? 'active' : ''} ${sectionHeadingAlignClass()}`}>
         <ElegantSectionHeading title={copy.sections.faq} watermark="FAQ" accentColor={accentColor} align="start" />
         <p className={styles.subtitle}>{copy.sections.faqSubtitle}</p>
       </div>

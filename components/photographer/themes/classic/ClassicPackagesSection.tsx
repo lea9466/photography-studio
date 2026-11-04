@@ -6,6 +6,7 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { ClassicPackageCard, type ClassicPackage } from './ClassicPackageCard'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import styles from './ClassicPackagesSection.module.css'
+import { sectionHeadingAlignClass } from '../shared/section-heading-align'
 
 export type ClassicPackagesSectionProps = {
   title: string
@@ -54,7 +55,7 @@ export function ClassicPackagesSection({
       />
 
       <div className={`${styles.inner} relative z-10`}>
-        <div className={styles.header}>
+        <div className={`${styles.header} ${sectionHeadingAlignClass()}`}>
           <ClassicSectionScript color={accentColor}>Packages</ClassicSectionScript>
           <SectionTitle color="#2d2825">{title}</SectionTitle>
           <div className={styles.divider} />

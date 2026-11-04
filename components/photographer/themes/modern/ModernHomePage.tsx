@@ -85,7 +85,7 @@ export type ModernHomePageProps = {
   testimonialsTitle: string
   testimonials: ModernTestimonial[]
   /** Mirrors `photographer.testimonial_layout_type` — see ClassicTestimonialsSection. */
-  testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards'
+  testimonialLayoutType?: 'carousel' | 'marquee' | 'flip-cards' | 'spotlight'
   /** Order + visibility of the movable sections (hero/contact are fixed). */
   sectionLayout?: HomepageSectionLayout
 
