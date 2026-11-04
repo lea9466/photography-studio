@@ -164,9 +164,9 @@
 .photo {
   position: relative;
   flex: 0 0 34%;
-  margin: 2rem;
+  margin: 2.75rem 2rem;
   margin-inline-end: 0;
-  min-height: 15rem;
+  min-height: 17rem;
 }
 
 .photoFrame {
@@ -198,7 +198,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: clamp(2.5rem, 5vw, 3.5rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(3.25rem, 6vw, 4.75rem) clamp(1.5rem, 5vw, 4rem);
 }
 
 .withPhoto .body {
