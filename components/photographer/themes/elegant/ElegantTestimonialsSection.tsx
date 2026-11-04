@@ -5,7 +5,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
-import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
+import { TestimonialsSpotlight, spotlightSectionProps } from '../shared/TestimonialsSpotlight'
 import { ElegantSectionHeading } from './ElegantSectionHeading'
 import { ElegantTestimonialCard, type ElegantTestimonial } from './ElegantTestimonialCard'
 import styles from './ElegantTestimonialsSection.module.css'
@@ -64,11 +64,14 @@ export function ElegantTestimonialsSection({
     />
   ))
 
+  const spotlight = layoutType === 'spotlight' ? spotlightSectionProps(accentColor, 'elegant') : null
+
   return (
     <section
       ref={ref}
       id="testimonials"
-      className={`${styles.section} reveal-on-scroll ${revealed ? 'active' : ''}`}
+      className={`${styles.section} reveal-on-scroll ${revealed ? 'active' : ''} ${spotlight?.className ?? ''}`}
+      style={spotlight?.style}
     >
       <div ref={headerRef} className={`${styles.header} stagger-reveal ${headerRevealed ? 'is-visible' : ''} ${sectionHeadingAlignClass()}`}>
         <ElegantSectionHeading title={title} watermark="RECOMMEND" accentColor={accentColor} align="start" />

@@ -23,12 +23,12 @@
 }
 
 .dark {
-  --spot-card-bg: #1c1c26;
-  --spot-text: rgba(255, 255, 255, 0.92);
-  --spot-muted: rgba(255, 255, 255, 0.55);
-  --spot-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
-  --spot-shadow-hover: 0 16px 36px rgba(0, 0, 0, 0.45);
-  --spot-line: rgba(255, 255, 255, 0.08);
+  --spot-card-bg: #15151b;
+  --spot-text: rgba(255, 255, 255, 0.94);
+  --spot-muted: rgba(255, 255, 255, 0.58);
+  --spot-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --spot-shadow-hover: 0 30px 70px rgba(0, 0, 0, 0.55);
+  --spot-line: color-mix(in srgb, var(--spot-accent) 14%, rgba(255, 255, 255, 0.06));
   --spot-dot: rgba(255, 255, 255, 0.22);
 }
 
@@ -82,8 +82,14 @@
     box-shadow 0.25s ease;
 }
 
+/* Dark: a calm matte card — the colour lives in the section gradient behind it */
 .dark .card {
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid color-mix(in srgb, var(--spot-accent) 12%, rgba(255, 255, 255, 0.06));
+  background: color-mix(in srgb, var(--spot-accent) 3%, #15151b);
+}
+
+.dark .card::before {
+  opacity: 0.45;
 }
 
 /* Soft accent glow in the corner */
@@ -296,4 +302,25 @@
   .nav:hover {
     transform: none;
   }
+}
+
+/* ── Section background (spotlightSectionProps) ───────────────── */
+/* Doubled class so it beats the theme section's own flat background. */
+
+.section.section {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--spot-accent) 1%, #fbf9f5) 0%,
+    color-mix(in srgb, var(--spot-accent) 5%, #f7f2eb) 45%,
+    color-mix(in srgb, var(--spot-accent) 2%, #f2f3ef) 100%
+  );
+}
+
+.sectionDark.sectionDark {
+  background: linear-gradient(
+    180deg,
+    #121218 0%,
+    color-mix(in srgb, var(--spot-accent) 6%, #121218) 50%,
+    #0e0e13 100%
+  );
 }

@@ -30,6 +30,19 @@ export type TestimonialsSpotlightProps = {
   variant: SpotlightVariant
 }
 
+/**
+ * Props for the theme's own <section> when the spotlight layout is on: the
+ * whole section gets a soft vertical gradient built from the studio's accent
+ * (the card itself stays a clean solid on top of it — the gradient behind it
+ * is what makes the layout feel finished).
+ */
+export function spotlightSectionProps(accentColor: string, variant: SpotlightVariant) {
+  return {
+    className: `${styles.section} ${variant === 'dark' ? styles.sectionDark : ''}`,
+    style: { '--spot-accent': accentColor } as React.CSSProperties,
+  }
+}
+
 const AUTO_ADVANCE_MS = 6000
 /** Lines of quote shown before "read more". */
 const QUOTE_LINES = 4

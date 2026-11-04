@@ -5,7 +5,7 @@ import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
-import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
+import { TestimonialsSpotlight, spotlightSectionProps } from '../shared/TestimonialsSpotlight'
 import { ClassicSectionScript } from './ClassicSectionScript'
 import { ClassicTestimonialCard, type ClassicTestimonial } from './ClassicTestimonialCard'
 import { SectionTitle } from '../shared/SectionTitle'
@@ -63,11 +63,14 @@ export function ClassicTestimonialsSection({
     />
   ))
 
+  const spotlight = layoutType === 'spotlight' ? spotlightSectionProps(accentColor, 'classic') : null
+
   return (
     <section
       ref={ref}
       id="testimonials"
-      className={`reveal ${revealed ? 'active' : ''} ${styles.section} py-20`}
+      className={`reveal ${revealed ? 'active' : ''} ${styles.section} py-20 ${spotlight?.className ?? ''}`}
+      style={spotlight?.style}
     >
       <div className={styles.inner}>
         <div ref={headerRef} className={`${styles.header} ${headerRevealed ? styles.isVisible : ''} ${sectionHeadingAlignClass()}`}>

@@ -6,7 +6,7 @@ import { SectionTitle } from '../shared/SectionTitle'
 import { TestimonialsMarquee } from '../shared/TestimonialsMarquee'
 import { TestimonialsCarousel } from '../shared/TestimonialsCarousel'
 import { TestimonialsFlipGrid } from '../shared/TestimonialsFlipGrid'
-import { TestimonialsSpotlight } from '../shared/TestimonialsSpotlight'
+import { TestimonialsSpotlight, spotlightSectionProps } from '../shared/TestimonialsSpotlight'
 import { ModernSectionEyebrow } from './ModernSectionEyebrow'
 import { ModernTestimonialCard, type ModernTestimonial } from './ModernTestimonialCard'
 import styles from './ModernTestimonialsSection.module.css'
@@ -62,11 +62,14 @@ export function ModernTestimonialsSection({
     />
   ))
 
+  const spotlight = layoutType === 'spotlight' ? spotlightSectionProps(accentColor, 'modern') : null
+
   return (
     <section
       ref={ref}
       id="testimonials"
-      className={`${styles.section} stagger-reveal ${revealed ? 'is-visible' : ''}`}
+      className={`${styles.section} stagger-reveal ${revealed ? 'is-visible' : ''} ${spotlight?.className ?? ''}`}
+      style={spotlight?.style}
     >
       <div className={styles.inner}>
         <div
