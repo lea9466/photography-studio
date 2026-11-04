@@ -143,8 +143,8 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   // Pages with a hero image directly behind the nav (home, a single blog
   // post) start transparent with white text, then turn solid+dark once
   // scrolled. Pages with no hero (portfolio, blog list, before/after) start
-  // solid+dark from the first frame — white text would be unreadable there.
-  // Determined from the current route rather than passed in, so the header
+  // see-through with dark text (white text would be unreadable there) and
+  // turn solid once scrolled — see blendAtTop. Determined from the current route rather than passed in, so the header
   // stays a single persistent instance across client-side navigation
   // instead of every route needing to tell it which mode to render in.
   const pathname = usePathname()
@@ -153,10 +153,11 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
   const heroPreview = useHeroPreviewOverride()
   const heroBehindNav = heroPreview ? heroHasPhotoBehindNav(heroPreview.settings) : homeHeroBehindNav
   const transparentAtTop = (pathname === homepagePath && heroBehindNav) || isBlogPostPage
-  // A homepage hero layout that opens on the page background (not a photo):
-  // the nav starts see-through with dark text so it blends into the page,
-  // instead of a solid strip with a shadow, and turns solid once scrolled.
-  const blendAtTop = pathname === homepagePath && !heroBehindNav
+  // Every page without a photo behind the nav (portfolio, blog list,
+  // before/after, gallery pages, or a homepage hero that opens on the page
+  // background): the nav starts see-through with dark text so it blends into
+  // the page, instead of a solid strip with a shadow, and turns solid once scrolled.
+  const blendAtTop = !transparentAtTop
   const changesOnScroll = transparentAtTop || blendAtTop
 
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -239,10 +240,18 @@ export function ClassicSiteHeader(props: ClassicSiteHeaderProps) {
             ? 'border-b border-black/5 bg-[#FAFAF8]/90 py-4 shadow-sm backdrop-blur-md md:py-6'
             : blendAtTop
               ? // Already at the scrolled height, so only the background fades in on scroll — no height jump.
-                'border-b border-transparent bg-transparent py-4 md:py-6'
+                'border-b bg-transparent py-4 md:py-6'
               : 'border-none bg-transparent py-4 md:py-8'
         }`}
-        style={{ '--nav-accent': primaryColor } as React.CSSProperties}
+        style={
+          {
+            '--nav-accent': primaryColor,
+            // Inline on purpose: a global border-color rule beats Tailwind's
+            // border-color utilities here, so the see-through state would
+            // otherwise keep a grey line under the nav.
+            borderBottomColor: !isSolid && blendAtTop ? 'transparent' : undefined,
+          } as React.CSSProperties
+        }
       >
         <div className={`flex w-full flex-row items-center justify-between rtl:flex-row-reverse ${SITE_NAV_GUTTER_CLASS}`}>
           <Link href={homepagePath} className="flex items-center gap-2">

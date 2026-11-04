@@ -151,10 +151,11 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
   const heroPreview = useHeroPreviewOverride()
   const heroBehindNav = heroPreview ? heroHasPhotoBehindNav(heroPreview.settings) : homeHeroBehindNav
   const transparentAtTop = (pathname === homepagePath && heroBehindNav) || isBlogPostPage
-  // A homepage hero layout that opens on the page background (not a photo):
-  // the nav starts see-through with dark text so it blends into the page,
-  // instead of a solid strip with a shadow, and turns solid once scrolled.
-  const blendAtTop = pathname === homepagePath && !heroBehindNav
+  // Every page without a photo behind the nav (portfolio, blog list,
+  // before/after, gallery pages, or a homepage hero that opens on the page
+  // background): the nav starts see-through with dark text so it blends into
+  // the page, instead of a solid strip with a shadow, and turns solid once scrolled.
+  const blendAtTop = !transparentAtTop
   const changesOnScroll = transparentAtTop || blendAtTop
 
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -226,10 +227,18 @@ export function ModernSiteHeader(props: ModernSiteHeaderProps) {
             ? 'border-b border-black/5 bg-white/90 py-6 shadow-sm backdrop-blur-md'
             : blendAtTop
               ? // Already at the scrolled height, so only the background fades in on scroll — no height jump.
-                'border-b border-transparent bg-transparent py-6'
+                'border-b bg-transparent py-6'
               : 'border-none bg-transparent py-10'
         }`}
-        style={{ '--nav-accent': primaryColor } as React.CSSProperties}
+        style={
+          {
+            '--nav-accent': primaryColor,
+            // Inline on purpose: a global border-color rule beats Tailwind's
+            // border-color utilities here, so the see-through state would
+            // otherwise keep a grey line under the nav.
+            borderBottomColor: !isSolid && blendAtTop ? 'transparent' : undefined,
+          } as React.CSSProperties
+        }
       >
         <div className={`flex w-full flex-row items-center justify-between rtl:flex-row-reverse ${SITE_NAV_GUTTER_CLASS}`}>
           <Link href={homepagePath} className={`flex items-center gap-2 ${brandColorClass}`}>
