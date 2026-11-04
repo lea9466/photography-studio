@@ -16,7 +16,7 @@ export function extractBrandingStoragePath(pathOrUrl: string): string | null {
  * ANOTHER user's already-uploaded branding asset.
  *
  * Deliberately NOT a blanket "must start with userId/" check: the dashboard
- * (BrandingEditForm.tsx) has a genuine, long-standing feature letting a
+ * (originally the since-removed BrandingEditForm.tsx) had a long-standing feature letting a
  * photographer paste an arbitrary external image URL (placeholder
  * "https://...") for hero/about images, not just their own uploads — that
  * must keep working unchanged. So:
