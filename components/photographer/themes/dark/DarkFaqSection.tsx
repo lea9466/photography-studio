@@ -2,7 +2,7 @@
 
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { getHomepageCopy } from '@/lib/homepage-copy'
-import { hexToRgb } from '@/lib/homepage-themes/text-helpers'
+import { hexToRgb } from '@/lib/color'
 import type { SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { DarkSectionEyebrow } from './DarkSectionEyebrow'

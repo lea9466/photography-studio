@@ -7,8 +7,6 @@ import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
-import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
-import { generatePublicBlogPageHTML } from '@/lib/public-blog-html'
 import { fetchPublicBlogPosts } from '@/lib/public-blog-posts'
 import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { resolvePostsPageTitle } from '@/lib/posts-section-copy'
@@ -17,7 +15,6 @@ import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metada
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBlogListViewModel } from '@/lib/public-site/adapters/build-blog-list-view-model'
 import { toClassicBlogListPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBlogListShell } from '@/components/photographer/react-site/ClassicBlogListShell'
@@ -54,9 +51,6 @@ export default async function BlogPage({ params }: BlogPageProps) {
     siteLanguage: typed.site_language,
   })
 
-  const siteTheme = normalizeSiteTheme(typed.selected_theme)
-  const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
   // See app/[slug]/page.tsx for why: on a photographer's connected custom
   // domain, nav links built from the real slug path would 404 there (only a
   // small fixed set of tenant-relative paths is recognized — see
@@ -85,77 +79,46 @@ export default async function BlogPage({ params }: BlogPageProps) {
       .eq('is_active', true),
   ])
 
-  const pageTitle = resolvePostsPageTitle(siteTheme, typed.posts_page_title)
   const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
   const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
-  const isPortfolioLayout = (typed.gallery_layout_mode ?? 'separated') === 'portfolio'
 
-  if (await isReactPublicSiteEnabled()) {
-    const viewModel = buildBlogListViewModel({
-      photographer: {
-        studio_name: typed.studio_name,
-        name: typed.name,
-        logo_url: logoUrl,
-        should_color_logo: typed.should_color_logo,
-        accent_color: typed.accent_color,
-        heading_font: typed.heading_font,
-        about_title_font: typed.about_title_font,
-        site_language: typed.site_language,
-        posts_page_title: typed.posts_page_title,
-        posts_display_style: typed.posts_display_style,
-        gallery_layout_mode: typed.gallery_layout_mode,
-      },
-      posts: blogPosts,
-      homepagePath,
-      blogPath,
-      portfolioPath: `${canonicalPath}/portfolio`,
-      beforeAfterPath: `${canonicalPath}/before-after`,
-      hasFaq,
-      hasPackages,
-      hasPhotoEditComparisons,
-    })
-
-    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return <DarkBlogListShell pageProps={toDarkBlogListPageProps(viewModel)} blogPath={blogPath} />
-    }
-
-    if (typed.selected_theme === 'elegant') {
-      return <ElegantBlogListShell pageProps={toElegantBlogListPageProps(viewModel)} blogPath={blogPath} />
-    }
-
-    if (typed.selected_theme === 'modern') {
-      return <ModernBlogListShell pageProps={toModernBlogListPageProps(viewModel)} blogPath={blogPath} />
-    }
-
-    return <ClassicBlogListShell pageProps={toClassicBlogListPageProps(viewModel)} blogPath={blogPath} />
-  }
-
-  const html = generatePublicBlogPageHTML({
-    theme: siteTheme,
-    studioName,
-    logoUrl,
+  const viewModel = buildBlogListViewModel({
+    photographer: {
+      studio_name: typed.studio_name,
+      name: typed.name,
+      logo_url: logoUrl,
+      should_color_logo: typed.should_color_logo,
+      accent_color: typed.accent_color,
+      heading_font: typed.heading_font,
+      about_title_font: typed.about_title_font,
+      site_language: typed.site_language,
+      posts_page_title: typed.posts_page_title,
+      posts_display_style: typed.posts_display_style,
+      gallery_layout_mode: typed.gallery_layout_mode,
+    },
+    posts: blogPosts,
     homepagePath,
     blogPath,
-    studioPath: canonicalPath || '/',
+    portfolioPath: `${canonicalPath}/portfolio`,
+    beforeAfterPath: `${canonicalPath}/before-after`,
     hasFaq,
     hasPackages,
     hasPhotoEditComparisons,
-    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
-    shouldColorLogo: typed.should_color_logo ?? false,
-    blog: {
-      pageTitle,
-      posts: blogPosts,
-      accentColor,
-    },
-    siteLanguage: typed.site_language,
-    displayStyle: typed.posts_display_style,
-    headingFont: typed.heading_font,
-    aboutTitleFont: typed.about_title_font,
-    galleryLayoutMode: isPortfolioLayout ? 'portfolio' : 'separated',
-    portfolioPath: isPortfolioLayout ? `${canonicalPath}/portfolio` : undefined,
   })
 
-  return <HtmlFramePage html={html} title={`${pageTitle} | ${studioName}`} />
+  if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+    return <DarkBlogListShell pageProps={toDarkBlogListPageProps(viewModel)} blogPath={blogPath} />
+  }
+
+  if (typed.selected_theme === 'elegant') {
+    return <ElegantBlogListShell pageProps={toElegantBlogListPageProps(viewModel)} blogPath={blogPath} />
+  }
+
+  if (typed.selected_theme === 'modern') {
+    return <ModernBlogListShell pageProps={toModernBlogListPageProps(viewModel)} blogPath={blogPath} />
+  }
+
+  return <ClassicBlogListShell pageProps={toClassicBlogListPageProps(viewModel)} blogPath={blogPath} />
 }
 
 export async function generateMetadata({ params }: BlogPageProps): Promise<Metadata> {

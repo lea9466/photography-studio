@@ -3,7 +3,6 @@ import { AdminLoginForm } from '@/components/admin/AdminLoginForm'
 import { ManageTabs } from '@/components/admin/ManageTabs'
 import { fetchAdminCustomDomains, fetchAdminStudios } from '@/lib/actions/admin.actions'
 import { isAdminAuthenticated } from '@/lib/admin/session'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 
 export const metadata: Metadata = {
   title: 'ניהול מערכת',
@@ -27,8 +26,6 @@ export default async function ManagePage() {
       </main>
     )
   }
-
-  const reactPublicSiteEnabled = await isReactPublicSiteEnabled()
 
   let studios
   let customDomains: Awaited<ReturnType<typeof fetchAdminCustomDomains>> = []
@@ -70,7 +67,6 @@ export default async function ManagePage() {
           studios={studios!}
           appBaseUrl={appBaseUrl}
           customDomains={customDomains}
-          reactPublicSiteEnabled={reactPublicSiteEnabled}
         />
       </div>
     </main>

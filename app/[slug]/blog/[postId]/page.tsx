@@ -8,13 +8,11 @@ import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
-import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
-import { generatePublicBlogPostPageHTML } from '@/lib/public-blog-html'
 import {
   fetchBlogPostNavigation,
   fetchPublicBlogPostById,
 } from '@/lib/public-blog-posts'
-import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import {
@@ -25,7 +23,6 @@ import {
 import { resolveActiveStudioPath } from '@/lib/seo/sitemap-validation'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBlogPostViewModel } from '@/lib/public-site/adapters/build-blog-post-view-model'
 import { toClassicBlogPostPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBlogPostShell } from '@/components/photographer/react-site/ClassicBlogPostShell'
@@ -82,9 +79,6 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
     photographer.site_language
   )
 
-  const siteTheme = normalizeSiteTheme(typed.selected_theme)
-  const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = photographer.studio_name ?? photographer.name ?? FALLBACK_STUDIO_NAME
   const homepagePath = isTenantDomain ? '/' : resolveHomepagePath(photographer.slug, photographer.studio_name)
   const canonicalPath = isTenantDomain
     ? ''
@@ -95,92 +89,60 @@ export default async function PhotographerPostPage({ params }: PostPageProps) {
   const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
 
   const admin = createAdminClient()
-  const [{ count: packageCount }, { count: postCount }, { count: photoEditCount }] =
-    await Promise.all([
-      admin
-        .from('photography_packages')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', typed.id)
-        .eq('is_active', true),
-      admin.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', typed.id),
-      admin
-        .from('photo_edit_comparisons')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', typed.id)
-        .eq('is_active', true),
-    ])
+  const [{ count: packageCount }, { count: photoEditCount }] = await Promise.all([
+    admin
+      .from('photography_packages')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typed.id)
+      .eq('is_active', true),
+    admin
+      .from('photo_edit_comparisons')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', typed.id)
+      .eq('is_active', true),
+  ])
 
   const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
-  const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
   const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
-  const isPortfolioLayout = (photographer.gallery_layout_mode ?? 'separated') === 'portfolio'
 
-  if (await isReactPublicSiteEnabled()) {
-    const viewModel = buildBlogPostViewModel({
-      photographer: {
-        studio_name: typed.studio_name,
-        name: typed.name,
-        logo_url: logoUrl,
-        should_color_logo: typed.should_color_logo,
-        accent_color: typed.accent_color,
-        heading_font: typed.heading_font,
-        about_title_font: typed.about_title_font,
-        site_language: typed.site_language,
-        gallery_layout_mode: typed.gallery_layout_mode,
-      },
-      post,
-      postPath,
-      prevPost: prev,
-      nextPost: next,
-      homepagePath,
-      blogPath,
-      portfolioPath: `${canonicalPath}/portfolio`,
-      beforeAfterPath: `${canonicalPath}/before-after`,
-      hasFaq,
-      hasPackages,
-      hasPhotoEditComparisons,
-    })
-
-    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return <DarkBlogPostShell pageProps={toDarkBlogPostPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'elegant') {
-      return <ElegantBlogPostShell pageProps={toElegantBlogPostPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'modern') {
-      return <ModernBlogPostShell pageProps={toModernBlogPostPageProps(viewModel)} />
-    }
-
-    return <ClassicBlogPostShell pageProps={toClassicBlogPostPageProps(viewModel)} />
-  }
-
-  const html = generatePublicBlogPostPageHTML({
-    theme: siteTheme,
-    studioName,
-    logoUrl,
-    homepagePath,
-    blogPath,
-    postPath,
+  const viewModel = buildBlogPostViewModel({
+    photographer: {
+      studio_name: typed.studio_name,
+      name: typed.name,
+      logo_url: logoUrl,
+      should_color_logo: typed.should_color_logo,
+      accent_color: typed.accent_color,
+      heading_font: typed.heading_font,
+      about_title_font: typed.about_title_font,
+      site_language: typed.site_language,
+      gallery_layout_mode: typed.gallery_layout_mode,
+    },
     post,
+    postPath,
     prevPost: prev,
     nextPost: next,
-    accentColor,
+    homepagePath,
+    blogPath,
+    portfolioPath: `${canonicalPath}/portfolio`,
+    beforeAfterPath: `${canonicalPath}/before-after`,
     hasFaq,
     hasPackages,
-    hasBlog,
     hasPhotoEditComparisons,
-    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
-    shouldColorLogo: typed.should_color_logo ?? false,
-    siteLanguage: photographer.site_language,
-    headingFont: typed.heading_font,
-    aboutTitleFont: typed.about_title_font,
-    galleryLayoutMode: isPortfolioLayout ? 'portfolio' : 'separated',
-    portfolioPath: isPortfolioLayout ? `${canonicalPath}/portfolio` : undefined,
   })
 
-  return <HtmlFramePage html={html} title={`${post.title} | ${studioName}`} />
+  if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+    return <DarkBlogPostShell pageProps={toDarkBlogPostPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'elegant') {
+    return <ElegantBlogPostShell pageProps={toElegantBlogPostPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'modern') {
+    return <ModernBlogPostShell pageProps={toModernBlogPostPageProps(viewModel)} />
+  }
+
+  return <ClassicBlogPostShell pageProps={toClassicBlogPostPageProps(viewModel)} />
 }
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {

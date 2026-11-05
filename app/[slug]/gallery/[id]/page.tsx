@@ -6,11 +6,9 @@ import {
   fetchGalleryForPublicPage,
   normalizeRouteParam,
 } from '@/lib/queries/public-gallery-page'
-import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
-import { generatePublicGalleryPageHTML } from '@/lib/public-gallery-html'
 import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
-import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { getPublicSitePath } from '@/lib/queries/public-photographer'
 import { resolveMediaUrl } from '@/lib/r2/storage'
 import {
@@ -21,7 +19,6 @@ import {
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildGalleryDetailViewModel } from '@/lib/public-site/adapters/build-gallery-detail-view-model'
 import { toClassicGalleryDetailPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicGalleryDetailShell } from '@/components/photographer/react-site/ClassicGalleryDetailShell'
@@ -129,15 +126,10 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
   const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
   const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
   const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
-  const accentColor = userData?.accent_color ?? '#7c3aed'
-  const siteTheme = normalizeSiteTheme(userData?.selected_theme)
-  const studioName = userData?.studio_name ?? FALLBACK_STUDIO_NAME
   const homepagePath = resolveHomepagePath(userData?.slug, userData?.studio_name)
   const canonicalPath = `/${decodedSlug}`
   const portfolioPath = `${canonicalPath}/portfolio`
   const blogPath = `${canonicalPath}/blog`
-  const galleryLayoutMode =
-    userData?.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
   const logoUrl = userData?.logo_url ? await resolveMediaUrl('branding', userData.logo_url) : null
 
   const photos = await fetchPublicGalleryDisplayPhotos(admin, galleryData.id, {
@@ -148,78 +140,48 @@ export default async function GalleryDetailPage({ params }: GalleryDetailPagePro
   const siteLanguage = resolveSiteLanguage(userData?.site_language)
   const galleryDate = formatSiteDate(galleryData.created_at, siteLanguage)
 
-  if (await isReactPublicSiteEnabled()) {
-    const viewModel = buildGalleryDetailViewModel({
-      photographer: {
-        studio_name: userData?.studio_name ?? null,
-        logo_url: logoUrl,
-        should_color_logo: userData?.should_color_logo ?? null,
-        accent_color: userData?.accent_color ?? null,
-        heading_font: userData?.heading_font ?? null,
-        about_title_font: userData?.about_title_font ?? null,
-        site_language: userData?.site_language ?? null,
-        gallery_layout_mode: userData?.gallery_layout_mode ?? null,
-        contact_card_title: userData?.contact_card_title ?? null,
-        contact_card_description: userData?.contact_card_description ?? null,
-      },
-      gallery: {
-        title: galleryData.title,
-        photoCount: photos.length,
-        galleryDate,
-        photos,
-      },
-      homepagePath,
-      blogPath,
-      portfolioPath,
-      beforeAfterPath: `${canonicalPath}/before-after`,
-      hasFaq,
-      hasPackages,
-      hasBlog,
-      hasPhotoEditComparisons,
-    })
-
-    if (userData?.selected_theme === 'dark' || userData?.selected_theme === 'bold') {
-      return <DarkGalleryDetailShell pageProps={toDarkGalleryDetailPageProps(viewModel)} />
-    }
-
-    if (userData?.selected_theme === 'elegant') {
-      return <ElegantGalleryDetailShell pageProps={toElegantGalleryDetailPageProps(viewModel)} />
-    }
-
-    if (userData?.selected_theme === 'modern') {
-      return <ModernGalleryDetailShell pageProps={toModernGalleryDetailPageProps(viewModel)} />
-    }
-
-    return <ClassicGalleryDetailShell pageProps={toClassicGalleryDetailPageProps(viewModel)} />
-  }
-
-  const html = generatePublicGalleryPageHTML({
-    theme: siteTheme,
-    studioName,
-    logoUrl,
-    homepagePath,
-    portfolioPath,
-    blogPath,
-    hasFaq,
-    hasPackages,
-    hasBlog,
-    hasPhotoEditComparisons,
-    beforeAfterPath: hasPhotoEditComparisons ? `${canonicalPath}/before-after` : undefined,
-    shouldColorLogo: userData?.should_color_logo ?? false,
-    galleryLayoutMode,
+  const viewModel = buildGalleryDetailViewModel({
+    photographer: {
+      studio_name: userData?.studio_name ?? null,
+      logo_url: logoUrl,
+      should_color_logo: userData?.should_color_logo ?? null,
+      accent_color: userData?.accent_color ?? null,
+      heading_font: userData?.heading_font ?? null,
+      about_title_font: userData?.about_title_font ?? null,
+      site_language: userData?.site_language ?? null,
+      gallery_layout_mode: userData?.gallery_layout_mode ?? null,
+      contact_card_title: userData?.contact_card_title ?? null,
+      contact_card_description: userData?.contact_card_description ?? null,
+    },
     gallery: {
       title: galleryData.title,
       photoCount: photos.length,
       galleryDate,
       photos,
-      accentColor,
-      contactCardTitle: userData?.contact_card_title ?? null,
-      contactCardDescription: userData?.contact_card_description ?? null,
     },
-    siteLanguage: userData?.site_language ?? 'he',
+    homepagePath,
+    blogPath,
+    portfolioPath,
+    beforeAfterPath: `${canonicalPath}/before-after`,
+    hasFaq,
+    hasPackages,
+    hasBlog,
+    hasPhotoEditComparisons,
   })
 
-  return <HtmlFramePage html={html} title={`${galleryData.title} | ${studioName}`} />
+  if (userData?.selected_theme === 'dark' || userData?.selected_theme === 'bold') {
+    return <DarkGalleryDetailShell pageProps={toDarkGalleryDetailPageProps(viewModel)} />
+  }
+
+  if (userData?.selected_theme === 'elegant') {
+    return <ElegantGalleryDetailShell pageProps={toElegantGalleryDetailPageProps(viewModel)} />
+  }
+
+  if (userData?.selected_theme === 'modern') {
+    return <ModernGalleryDetailShell pageProps={toModernGalleryDetailPageProps(viewModel)} />
+  }
+
+  return <ClassicGalleryDetailShell pageProps={toClassicGalleryDetailPageProps(viewModel)} />
 }
 
 export async function generateMetadata({ params }: GalleryDetailPageProps) {

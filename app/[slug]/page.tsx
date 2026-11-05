@@ -1,7 +1,6 @@
 import { notFound, permanentRedirect, unstable_rethrow } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import { PhotographerHomepage } from '@/components/photographer/PhotographerHomepage'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-photographer'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
@@ -34,7 +33,7 @@ import {
   type PhotoCandidate,
 } from '@/lib/homepage-photo-pool'
 import { PhotographerSemanticAnchors } from '@/components/seo/PhotographerSemanticAnchors'
-import type { PublicBlogPost } from '@/lib/public-blog-html'
+import type { PublicBlogPost } from '@/lib/public-blog-posts'
 import {
   fetchPhotographerDiscoveryGalleries,
   fetchPhotographerDiscoveryPosts,
@@ -43,7 +42,6 @@ import { formatSiteDate, resolveSiteLanguage } from '@/lib/site-language'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildHomepageViewModel } from '@/lib/public-site/adapters/build-homepage-view-model'
 import { resolveHeroSettingsForRender } from '@/lib/public-site/hero-settings'
 import { fetchHeroOptionTiers } from '@/lib/public-site/hero-option-tiers'
@@ -529,76 +527,63 @@ export default async function PhotographerPage({ params }: PageProps) {
       imageUrl: shareImage,
     })
 
-    // Full rollout of the React public-site pipeline (see the approved
-    // integration plan): gated by a single global DB flag (toggled from
-    // /manage), not per-slug/owner-only anymore — see
-    // lib/public-site/react-rollout.ts's doc comment.
-    if (await isReactPublicSiteEnabled()) {
-      const blogPath = `${canonicalPath}/blog`
-      const portfolioPath = `${canonicalPath}/portfolio`
-      const beforeAfterPath = `${canonicalPath}/before-after`
+    const blogPath = `${canonicalPath}/blog`
+    const portfolioPath = `${canonicalPath}/portfolio`
+    const beforeAfterPath = `${canonicalPath}/before-after`
 
-      const viewModel = buildHomepageViewModel({
-        photographer: photographerWithUrls,
-        galleries: galleriesWithPools,
-        packages: packages || [],
-        testimonials: testimonialsWithUrls,
-        posts: homepagePosts,
-        homepagePath: canonicalPath || '/',
-        blogPath,
-        portfolioPath,
-        beforeAfterPath,
-        hasFaq,
-        postCount: postCount ?? 0,
-        photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
-        // A free studio whose saved hero uses a PRO layout/option gets her
-        // theme's own hero back (same render-time gate as hero_video).
-        heroSettings: resolveHeroSettingsForRender(
-          typedPhotographer.hero_settings,
-          await fetchHeroOptionTiers(),
-          entitlements.isPro
-        ),
-      })
+    const viewModel = buildHomepageViewModel({
+      photographer: photographerWithUrls,
+      galleries: galleriesWithPools,
+      packages: packages || [],
+      testimonials: testimonialsWithUrls,
+      posts: homepagePosts,
+      homepagePath: canonicalPath || '/',
+      blogPath,
+      portfolioPath,
+      beforeAfterPath,
+      hasFaq,
+      postCount: postCount ?? 0,
+      photoEditComparisonsCount: photoEditComparisonsCount ?? 0,
+      // A free studio whose saved hero uses a PRO layout/option gets her
+      // theme's own hero back (same render-time gate as hero_video).
+      heroSettings: resolveHeroSettingsForRender(
+        typedPhotographer.hero_settings,
+        await fetchHeroOptionTiers(),
+        entitlements.isPro
+      ),
+    })
 
-      if (typedPhotographer.selected_theme === 'dark' || typedPhotographer.selected_theme === 'bold') {
-        return (
-          <DarkHomepageShell
-            photographerId={typedPhotographer.id}
-            homePageProps={toDarkHomePageProps(viewModel)}
-            hrefForGalleryBase={canonicalPath}
-          />
-        )
-      }
-
-      if (typedPhotographer.selected_theme === 'elegant') {
-        return (
-          <ElegantHomepageShell
-            photographerId={typedPhotographer.id}
-            homePageProps={toElegantHomePageProps(viewModel)}
-            hrefForGalleryBase={canonicalPath}
-          />
-        )
-      }
-
-      if (typedPhotographer.selected_theme === 'modern') {
-        return (
-          <ModernHomepageShell
-            photographerId={typedPhotographer.id}
-            homePageProps={toModernHomePageProps(viewModel)}
-            hrefForGalleryBase={canonicalPath}
-          />
-        )
-      }
-
-      return (
+    const theme = typedPhotographer.selected_theme
+    const shell =
+      theme === 'dark' || theme === 'bold' ? (
+        <DarkHomepageShell
+          photographerId={typedPhotographer.id}
+          homePageProps={toDarkHomePageProps(viewModel)}
+          hrefForGalleryBase={canonicalPath}
+        />
+      ) : theme === 'elegant' ? (
+        <ElegantHomepageShell
+          photographerId={typedPhotographer.id}
+          homePageProps={toElegantHomePageProps(viewModel)}
+          hrefForGalleryBase={canonicalPath}
+        />
+      ) : theme === 'modern' ? (
+        <ModernHomepageShell
+          photographerId={typedPhotographer.id}
+          homePageProps={toModernHomePageProps(viewModel)}
+          hrefForGalleryBase={canonicalPath}
+        />
+      ) : (
         <ClassicHomepageShell
           photographerId={typedPhotographer.id}
           homePageProps={toClassicHomePageProps(viewModel)}
           hrefForGalleryBase={canonicalPath}
         />
       )
-    }
 
+    // LocalBusiness JSON-LD + the sr-only crawl links to every public
+    // gallery/post. Both used to be rendered only by the old iframe branch,
+    // so the React rollout silently dropped them from every homepage.
     return (
       <>
         <Script
@@ -614,18 +599,7 @@ export default async function PhotographerPage({ params }: PageProps) {
           galleries={discoveryGalleries}
           posts={discoveryPosts}
         />
-        <PhotographerHomepage
-          photographer={photographerWithUrls}
-          galleries={galleriesWithPools}
-          packages={packages || []}
-          testimonials={testimonialsWithUrls}
-          postCount={postCount ?? 0}
-          photoEditComparisonsCount={photoEditComparisonsCount ?? 0}
-          blogPath={`${canonicalPath}/blog`}
-          portfolioPath={`${canonicalPath}/portfolio`}
-          studioPath={canonicalPath || '/'}
-          posts={homepagePosts}
-        />
+        {shell}
       </>
     )
   } catch (error) {

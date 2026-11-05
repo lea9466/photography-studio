@@ -9,19 +9,12 @@ import { findPhotographerBySlug, getPublicSitePath } from '@/lib/queries/public-
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
 import { fetchPublicGalleryDisplayPhotos } from '@/lib/queries/public-gallery-photos'
-import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
-import {
-  generatePublicPortfolioPageHTML,
-  type PortfolioPhoto,
-} from '@/lib/public-portfolio-html'
-import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
-import { resolvePortfolioGalleriesSectionTitle } from '@/lib/galleries-section-copy'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature, getGalleryPhotoLimit } from '@/lib/subscriptions/entitlements'
 import { pickFreeDisplayedGallery } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildPortfolioViewModel } from '@/lib/public-site/adapters/build-portfolio-view-model'
 import { toClassicPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicPortfolioShell } from '@/components/photographer/react-site/ClassicPortfolioShell'
@@ -31,6 +24,15 @@ import { toElegantPortfolioPageProps } from '@/lib/public-site/adapters/theme-pr
 import { ElegantPortfolioShell } from '@/components/photographer/react-site/ElegantPortfolioShell'
 import { toModernPortfolioPageProps } from '@/lib/public-site/adapters/theme-props/modern'
 import { ModernPortfolioShell } from '@/components/photographer/react-site/ModernPortfolioShell'
+
+type PortfolioPhoto = {
+  id: string
+  url: string
+  galleryId: string
+  galleryName: string
+  width?: number | null
+  height?: number | null
+}
 
 interface PortfolioPageProps {
   params: Promise<{ slug: string }>
@@ -180,9 +182,6 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
     a.localeCompare(b, 'he')
   )
 
-  const siteTheme = normalizeSiteTheme(typed.selected_theme)
-  const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
   // See app/[slug]/page.tsx for why: on a photographer's connected custom
   // domain, nav links built from the real slug path would 404 there (only a
   // small fixed set of tenant-relative paths is recognized — see
@@ -219,77 +218,46 @@ export default async function PhotographerPortfolioPage({ params }: PortfolioPag
   const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
   const hasPhotoEditComparisons = canUseFeature(entitlements, 'before_after') && (photoEditCount ?? 0) > 0
 
-  if (await isReactPublicSiteEnabled()) {
-    const viewModel = buildPortfolioViewModel({
-      photographer: {
-        studio_name: typed.studio_name,
-        name: typed.name,
-        logo_url: logoUrl,
-        should_color_logo: typed.should_color_logo,
-        accent_color: typed.accent_color,
-        heading_font: typed.heading_font,
-        about_title_font: typed.about_title_font,
-        site_language: typed.site_language,
-        galleries_title: typed.galleries_title,
-        contact_card_title: typed.contact_card_title,
-        contact_card_description: typed.contact_card_description,
-        gallery_layout_mode: typed.gallery_layout_mode,
-      },
-      photos: allPhotos,
-      galleryNames,
-      homepagePath,
-      portfolioPath,
-      blogPath,
-      beforeAfterPath: `${navBasePath}/before-after`,
-      hasFaq,
-      hasPackages,
-      hasBlog,
-      hasPhotoEditComparisons,
-    })
-
-    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return <DarkPortfolioShell pageProps={toDarkPortfolioPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'elegant') {
-      return <ElegantPortfolioShell pageProps={toElegantPortfolioPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'modern') {
-      return <ModernPortfolioShell pageProps={toModernPortfolioPageProps(viewModel)} />
-    }
-
-    return <ClassicPortfolioShell pageProps={toClassicPortfolioPageProps(viewModel)} />
-  }
-
-  const html = generatePublicPortfolioPageHTML({
-    theme: siteTheme,
-    studioName,
-    logoUrl,
+  const viewModel = buildPortfolioViewModel({
+    photographer: {
+      studio_name: typed.studio_name,
+      name: typed.name,
+      logo_url: logoUrl,
+      should_color_logo: typed.should_color_logo,
+      accent_color: typed.accent_color,
+      heading_font: typed.heading_font,
+      about_title_font: typed.about_title_font,
+      site_language: typed.site_language,
+      galleries_title: typed.galleries_title,
+      contact_card_title: typed.contact_card_title,
+      contact_card_description: typed.contact_card_description,
+      gallery_layout_mode: typed.gallery_layout_mode,
+    },
+    photos: allPhotos,
+    galleryNames,
     homepagePath,
     portfolioPath,
+    blogPath,
+    beforeAfterPath: `${navBasePath}/before-after`,
     hasFaq,
     hasPackages,
     hasBlog,
-    blogPath,
     hasPhotoEditComparisons,
-    beforeAfterPath: hasPhotoEditComparisons ? `${navBasePath}/before-after` : undefined,
-    shouldColorLogo: typed.should_color_logo ?? false,
-    portfolio: {
-      pageTitle: 'תיק עבודות',
-      sectionTitle: resolvePortfolioGalleriesSectionTitle(typed.galleries_title),
-      photos: allPhotos,
-      galleryNames,
-      accentColor,
-      contactCardTitle: typed.contact_card_title ?? null,
-      contactCardDescription: typed.contact_card_description ?? null,
-    },
-    siteLanguage: typed.site_language,
-    headingFont: typed.heading_font,
-    aboutTitleFont: typed.about_title_font,
   })
 
-  return <HtmlFramePage html={html} title={`תיק עבודות | ${studioName}`} />
+  if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+    return <DarkPortfolioShell pageProps={toDarkPortfolioPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'elegant') {
+    return <ElegantPortfolioShell pageProps={toElegantPortfolioPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'modern') {
+    return <ModernPortfolioShell pageProps={toModernPortfolioPageProps(viewModel)} />
+  }
+
+  return <ClassicPortfolioShell pageProps={toClassicPortfolioPageProps(viewModel)} />
 }
 
 export async function generateMetadata({ params }: PortfolioPageProps): Promise<Metadata> {

@@ -1,8 +1,24 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { signStoragePaths } from '@/lib/storage'
 import { formatSiteDate, resolveSiteLanguage, type SiteLanguage } from '@/lib/site-language'
-import type { PublicBlogPost, PublicBlogPostNavItem } from '@/lib/public-blog-html'
 import { buildPostCanonicalPath } from '@/lib/seo/photographer-discovery'
+
+export type PublicBlogPost = {
+  id: string
+  title: string
+  subtitle: string | null
+  content: string
+  date: string
+  coverUrl: string | null
+  images: string[]
+}
+
+export type PublicBlogPostNavItem = {
+  id: string
+  title: string
+  coverUrl: string | null
+  postPath: string
+}
 
 type PostPhotoRow = {
   id: string

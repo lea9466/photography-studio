@@ -28,7 +28,6 @@ import { PlanPricingManager } from '@/components/admin/PlanPricingManager'
 import { PrivateGalleryTiersManager } from '@/components/admin/PrivateGalleryTiersManager'
 import { GalleryPassBundlesManager } from '@/components/admin/GalleryPassBundlesManager'
 import { HeroOptionTiersManager } from '@/components/admin/HeroOptionTiersManager'
-import { ReactPublicSiteToggle } from '@/components/admin/ReactPublicSiteToggle'
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 import { UnsentInquiriesManager } from '@/components/admin/UnsentInquiriesManager'
 import { MarketSurveyResults } from '@/components/admin/MarketSurveyResults'
@@ -37,7 +36,6 @@ type ManageTabsProps = {
   studios: AdminStudioRow[]
   appBaseUrl: string
   customDomains: AdminCustomDomainRow[]
-  reactPublicSiteEnabled: boolean
 }
 
 const TABS = [
@@ -62,7 +60,6 @@ export function ManageTabs({
   studios,
   appBaseUrl,
   customDomains,
-  reactPublicSiteEnabled,
 }: ManageTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('studios')
   const [logoutPending, startLogout] = useTransition()
@@ -196,7 +193,6 @@ export function ManageTabs({
         role="tabpanel"
         className={activeTab === 'system' ? 'flex flex-col gap-6' : 'hidden'}
       >
-        <ReactPublicSiteToggle initialEnabled={reactPublicSiteEnabled} />
         <CustomDomainVerificationManager domains={customDomains} />
       </div>
     </div>

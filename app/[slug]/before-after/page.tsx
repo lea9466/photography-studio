@@ -8,18 +8,14 @@ import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'
 import { getCanonicalBaseUrl, getGoogleSiteVerificationToken } from '@/lib/domains/custom-domain-lookup'
 import { resolveBrandingPath } from '@/lib/branding-urls'
 import { getBrandingFaviconPublicUrl, getBrandingPublicMediaUrl } from '@/lib/branding-public-url'
-import { HtmlFramePage } from '@/components/photographer/HtmlFramePage'
-import { generatePublicBeforeAfterPageHTML } from '@/lib/public-before-after-html'
 import { resolvePhotoEditDisplayUrl } from '@/lib/photo-edit-image-url'
-import { normalizeSiteTheme, resolveHomepagePath } from '@/lib/photographer-site-paths'
+import { resolveHomepagePath } from '@/lib/photographer-site-paths'
 import { parseFaqItems, sanitizeFaqItems } from '@/lib/faq'
 import { buildCanonicalUrl, buildPublicOpenGraph } from '@/lib/seo/public-metadata'
 import { resolveSiteLanguage } from '@/lib/site-language'
 import type { PhotoEditComparisonRow as DbRow } from '@/lib/types/database.types'
-import { normalizeBeforeAfterDisplayStyle } from '@/lib/types/before-after-display-style'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { buildBeforeAfterViewModel } from '@/lib/public-site/adapters/build-before-after-view-model'
 import { toClassicBeforeAfterPageProps } from '@/lib/public-site/adapters/theme-props/classic'
 import { ClassicBeforeAfterShell } from '@/components/photographer/react-site/ClassicBeforeAfterShell'
@@ -95,9 +91,6 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const visibleItems = items.filter((item) => item.originalImageUrl && item.editedImageUrl)
   if (visibleItems.length === 0) notFound()
 
-  const siteTheme = normalizeSiteTheme(typed.selected_theme)
-  const accentColor = typed.accent_color ?? '#7c3aed'
-  const studioName = typed.studio_name ?? FALLBACK_STUDIO_NAME
   // See app/[slug]/page.tsx for why: on a photographer's connected custom
   // domain, nav links built from the real slug path would 404 there (only a
   // small fixed set of tenant-relative paths is recognized — see
@@ -114,17 +107,6 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
   const portfolioPath = `${navBasePath}/portfolio`
   const logoUrl = await resolveBrandingPath(typed.logo_url)
   const hasFaq = canUseFeature(entitlements, 'faq') && sanitizeFaqItems(parseFaqItems(typed.faq_items)).length > 0
-  const language = resolveSiteLanguage(typed.site_language)
-  const displayStyle = normalizeBeforeAfterDisplayStyle(typed.before_after_display_style)
-  const pageTitle = language === 'en' ? 'Before & After Editing' : 'לפני ואחרי עיבוד'
-  const intro =
-    language === 'en'
-      ? displayStyle === 'split_slider'
-        ? 'Drag the divider to compare the original image with the final result.'
-        : 'Move the lens and discover the path from the original image to the final result.'
-      : displayStyle === 'split_slider'
-        ? 'גררו את המחיצה והשוו בין התמונה המקורית לבין התוצאה הסופית.'
-        : 'הזיזו את העדשה וגלו את הדרך מהתמונה המקורית אל התוצאה הסופית.'
 
   const [{ count: packageCount }, { count: postCount }] = await Promise.all([
     admin
@@ -137,72 +119,42 @@ export default async function BeforeAfterPage({ params }: BeforeAfterPageProps) 
 
   const hasPackages = canUseFeature(entitlements, 'packages') && (packageCount ?? 0) > 0
   const hasBlog = canUseFeature(entitlements, 'posts') && (postCount ?? 0) > 0
-  const galleryLayoutMode =
-    typed.gallery_layout_mode === 'portfolio' ? 'portfolio' : 'separated'
-
-  if (await isReactPublicSiteEnabled()) {
-    const viewModel = buildBeforeAfterViewModel({
-      photographer: {
-        studio_name: typed.studio_name,
-        name: typed.name,
-        logo_url: logoUrl,
-        should_color_logo: typed.should_color_logo,
-        accent_color: typed.accent_color,
-        heading_font: typed.heading_font,
-        about_title_font: typed.about_title_font,
-        site_language: typed.site_language,
-        gallery_layout_mode: typed.gallery_layout_mode,
-        before_after_display_style: typed.before_after_display_style,
-      },
-      items: visibleItems,
-      homepagePath,
-      blogPath,
-      portfolioPath,
-      beforeAfterPath,
-      hasFaq,
-      hasPackages,
-      hasBlog,
-    })
-
-    if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
-      return <DarkBeforeAfterShell pageProps={toDarkBeforeAfterPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'elegant') {
-      return <ElegantBeforeAfterShell pageProps={toElegantBeforeAfterPageProps(viewModel)} />
-    }
-
-    if (typed.selected_theme === 'modern') {
-      return <ModernBeforeAfterShell pageProps={toModernBeforeAfterPageProps(viewModel)} />
-    }
-
-    return <ClassicBeforeAfterShell pageProps={toClassicBeforeAfterPageProps(viewModel)} />
-  }
-
-  const html = generatePublicBeforeAfterPageHTML({
-    theme: siteTheme,
-    studioName,
-    logoUrl,
+  const viewModel = buildBeforeAfterViewModel({
+    photographer: {
+      studio_name: typed.studio_name,
+      name: typed.name,
+      logo_url: logoUrl,
+      should_color_logo: typed.should_color_logo,
+      accent_color: typed.accent_color,
+      heading_font: typed.heading_font,
+      about_title_font: typed.about_title_font,
+      site_language: typed.site_language,
+      gallery_layout_mode: typed.gallery_layout_mode,
+      before_after_display_style: typed.before_after_display_style,
+    },
+    items: visibleItems,
     homepagePath,
-    beforeAfterPath,
     blogPath,
+    portfolioPath,
+    beforeAfterPath,
     hasFaq,
     hasPackages,
     hasBlog,
-    shouldColorLogo: typed.should_color_logo ?? false,
-    galleryLayoutMode,
-    portfolioPath: galleryLayoutMode === 'portfolio' ? portfolioPath : undefined,
-    displayStyle,
-    page: {
-      pageTitle,
-      intro,
-      accentColor,
-      items: visibleItems,
-    },
-    siteLanguage: typed.site_language,
   })
 
-  return <HtmlFramePage html={html} title={`${pageTitle} | ${studioName}`} />
+  if (typed.selected_theme === 'dark' || typed.selected_theme === 'bold') {
+    return <DarkBeforeAfterShell pageProps={toDarkBeforeAfterPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'elegant') {
+    return <ElegantBeforeAfterShell pageProps={toElegantBeforeAfterPageProps(viewModel)} />
+  }
+
+  if (typed.selected_theme === 'modern') {
+    return <ModernBeforeAfterShell pageProps={toModernBeforeAfterPageProps(viewModel)} />
+  }
+
+  return <ClassicBeforeAfterShell pageProps={toClassicBeforeAfterPageProps(viewModel)} />
 }
 
 export async function generateMetadata({ params }: BeforeAfterPageProps): Promise<Metadata> {

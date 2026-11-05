@@ -17,7 +17,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { HIDDEN_FROM_SEARCH_ROBOTS, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 import { getStudioEntitlements } from '@/lib/subscriptions/loader'
 import { canUseFeature } from '@/lib/subscriptions/entitlements'
-import { isReactPublicSiteEnabled } from '@/lib/public-site/react-rollout'
 import { heroHasPhotoBehindNav, resolveHeroSettingsForRender } from '@/lib/public-site/hero-settings'
 import { fetchHeroOptionTiers } from '@/lib/public-site/hero-option-tiers'
 import {
@@ -54,22 +53,18 @@ type PhotographerSiteLayoutProps = {
  * entitlement-gated nav flags) exactly ONCE per request here, instead of
  * each nested page.tsx recomputing its own copy — which is what let the
  * hasFaq/hasPackages/hasBlog/hasPhotoEditComparisons entitlement bug drift
- * out of sync across pages in the first place. Each nested page's own
- * isReactPublicSiteEnabled() branch now renders bare page content only (no
- * more per-page Shell/header/footer) — this layout supplies the chrome
- * around it.
+ * out of sync across pages in the first place. Each nested page renders
+ * bare page content only (no per-page Shell/header/footer) — this layout
+ * supplies the chrome around it.
  *
  * NOT shared with app/public-gallery/[id]/page.tsx — that route lives
  * outside the [slug] segment entirely, so Next.js can't nest it under this
  * same layout file. It keeps its own independent (but still
  * canUseFeature-gated, see the same fix applied there) computation.
  *
- * When the React rollout flag is off, or anything about resolving the
- * photographer/chrome fails, this renders `children` completely unwrapped —
- * the old iframe/string-HTML system already renders its own header/footer
- * inside its own markup, and every nested page.tsx still has its own
- * complete fallback logic (redirects, free-tier gating, 404s) that must run
- * unaffected either way.
+ * When anything about resolving the photographer/chrome fails, this renders
+ * `children` unwrapped — every nested page.tsx still has its own complete
+ * logic (redirects, free-tier gating, 404s) that must run unaffected.
  */
 /**
  * Search opt-out (users.hide_from_search) for every page under the slug —
@@ -106,10 +101,6 @@ export default async function PhotographerSiteLayout({
         siteLanguage={gate.siteLanguage}
       />
     )
-  }
-
-  if (!(await isReactPublicSiteEnabled())) {
-    return children
   }
 
   const photographer = await findPhotographerBySlug(decodedSlug)
