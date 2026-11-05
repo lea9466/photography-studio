@@ -26,15 +26,20 @@ export default async function RegisterPage({
   searchParams,
 }: {
   params: Promise<{ ref?: string[] }>
-  searchParams: Promise<{ ref?: string }>
+  searchParams: Promise<{ ref?: string; next?: string }>
 }) {
-  const [{ ref: refSegments }, { ref: legacyRef }] = await Promise.all([
+  const [{ ref: refSegments }, { ref: legacyRef, next: rawNext }] = await Promise.all([
     params,
     searchParams,
   ])
 
+  // Only an internal dashboard path is honoured (e.g. the galleries-only
+  // outreach link /register?next=/dashboard/private-galleries).
+  const next = rawNext?.startsWith('/dashboard') ? rawNext : undefined
+
   if (legacyRef?.trim() && !refSegments?.length) {
-    redirect(`/register/${encodeURIComponent(legacyRef.trim())}`)
+    const query = next ? `?next=${encodeURIComponent(next)}` : ''
+    redirect(`/register/${encodeURIComponent(legacyRef.trim())}${query}`)
   }
 
   const referralCode = parseReferralParam(refSegments)
@@ -74,6 +79,7 @@ export default async function RegisterPage({
                 mode="register"
                 action={registerAction}
                 referralCode={referralCode}
+                next={next}
               />
             </div>
           </div>

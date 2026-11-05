@@ -13,8 +13,11 @@ import {
 import {
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
+  PRIVATE_GALLERIES_PATH,
+  isGalleriesOnlySignup,
   resolveMvpDashboardPath,
 } from '@/lib/types/app.types'
+import { markGalleriesOnlyOnboarding } from '@/lib/onboarding/galleries-only'
 import { applyReferralOnSignup } from '@/lib/referral/referral'
 import { randomBytes } from 'node:crypto'
 
@@ -92,6 +95,7 @@ export async function signUp(
   const studioName = String(formData.get('studio_name') ?? '').trim()
   const email = String(formData.get('email') ?? '').trim()
   const password = String(formData.get('password') ?? '')
+  const galleriesOnly = isGalleriesOnlySignup(String(formData.get('next') ?? ''))
 
   if (!name || !email || !password) {
     return { error: 'נא למלא שם, אימייל וסיסמה' }
@@ -104,11 +108,15 @@ export async function signUp(
   const supabase = await createClient()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
+  const callbackUrl = galleriesOnly
+    ? `${appUrl}/auth/callback?next=${encodeURIComponent(PRIVATE_GALLERIES_PATH)}`
+    : `${appUrl}/auth/callback`
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${appUrl}/auth/callback`,
+      emailRedirectTo: callbackUrl,
       data: {
         name,
         studio_name: studioName || null,
@@ -181,8 +189,20 @@ export async function signUp(
     }
   }
 
+  // Galleries-only signup (outreach link): skip the site-setup modal and land
+  // in the private-galleries tab. If the skip fails she just gets the modal,
+  // which has its own "skip to galleries" button.
+  let destination = ONBOARDING_SETTINGS_PATH
+  if (galleriesOnly) {
+    try {
+      if (await markGalleriesOnlyOnboarding(user.id)) destination = PRIVATE_GALLERIES_PATH
+    } catch (skipError) {
+      console.error('[signUp] galleries-only onboarding skip failed', skipError)
+    }
+  }
+
   revalidatePath('/', 'layout')
-  redirect(ONBOARDING_SETTINGS_PATH)
+  redirect(destination)
 }
 
 export async function signOut() {

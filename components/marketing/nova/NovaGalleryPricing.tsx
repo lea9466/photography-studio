@@ -4,6 +4,11 @@ import Link from 'next/link'
 import { useInView } from './useInView'
 import styles from './nova.module.css'
 import type { MarketingGalleryPricing } from '@/lib/payments/marketing-pricing'
+import { PRIVATE_GALLERIES_PATH } from '@/lib/types/app.types'
+
+// Galleries-only signup: skips the site-setup modal and lands in the
+// private-galleries tab (see isGalleriesOnlySignup).
+const GALLERIES_SIGNUP_HREF = `/register?next=${encodeURIComponent(PRIVATE_GALLERIES_PATH)}`
 
 type NovaGalleryPricingProps = {
   pricing: MarketingGalleryPricing
@@ -56,7 +61,7 @@ export function NovaGalleryPricing({ pricing }: NovaGalleryPricingProps) {
                 עד {pricing.free.maxPhotosPerGallery} תמונות בגלריה
               </li>
             </ul>
-            <Link href="/register" className={`${styles['secondary-btn']} ${styles['pricing-btn']}`}>
+            <Link href={GALLERIES_SIGNUP_HREF} className={`${styles['secondary-btn']} ${styles['pricing-btn']}`}>
               התחילי בחינם
             </Link>
           </div>
@@ -86,7 +91,7 @@ export function NovaGalleryPricing({ pricing }: NovaGalleryPricingProps) {
                   עד {tier.maxPhotosPerGallery} תמונות לגלריה
                 </li>
               </ul>
-              <Link href="/register" className={`${styles['primary-btn']} ${styles['pricing-btn']}`}>
+              <Link href={GALLERIES_SIGNUP_HREF} className={`${styles['primary-btn']} ${styles['pricing-btn']}`}>
                 להתחיל עכשיו
               </Link>
             </div>

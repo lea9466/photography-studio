@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireDashboardContext } from '@/lib/auth/dashboard-context'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { findAvailableSlug } from '@/lib/onboarding/available-slug'
+import { markGalleriesOnlyOnboarding } from '@/lib/onboarding/galleries-only'
 import { checkPersistentRateLimit } from '@/lib/rate-limit/persistent'
 import { getAssistantProvider } from '@/lib/assistant/provider'
 import { THEME_IDS } from '@/lib/dashboard/site-settings-help'
@@ -125,20 +126,8 @@ export async function saveSiteOnboarding(
 export async function skipSiteOnboarding(): Promise<ActionResult> {
   try {
     const { userId } = await requireDashboardContext()
-    const admin = createAdminClient()
-
-    const { error } = await admin
-      .from('users')
-      .update({ show_welcome_popup: false, site_onboarding_skipped: true } as never)
-      .eq('id', userId)
-
-    if (error) {
-      // Migration not applied yet — still clear the first-entry flag.
-      const fallback = await admin
-        .from('users')
-        .update({ show_welcome_popup: false } as never)
-        .eq('id', userId)
-      if (fallback.error) return { ok: false, error: 'שגיאה, נסי שוב' }
+    if (!(await markGalleriesOnlyOnboarding(userId))) {
+      return { ok: false, error: 'שגיאה, נסי שוב' }
     }
 
     revalidatePath('/dashboard', 'layout')

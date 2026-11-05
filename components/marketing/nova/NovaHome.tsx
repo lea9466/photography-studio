@@ -1,3 +1,5 @@
+import { Suspense } from 'react'
+import { ScrollToSection } from '@/components/dashboard/ScrollToSection'
 import { getMarketingStats } from '@/lib/marketing/marketing-stats'
 import { getMarketingProPricing, getMarketingPrivateGalleryPricing } from '@/lib/payments/marketing-pricing'
 import { NovaClosingCta } from './NovaClosingCta'
@@ -39,6 +41,11 @@ export async function NovaHome() {
 
   return (
     <div className={styles.novaRoot}>
+      {/* Outreach emails link to /?section=private — lands on the
+          private-galleries zone (query param, not #hash: see ScrollToSection). */}
+      <Suspense fallback={null}>
+        <ScrollToSection />
+      </Suspense>
       <NovaHeader />
       <main>
         <NovaHero />

@@ -140,7 +140,7 @@ export function AuthForm({ mode, action, next, referralCode }: AuthFormProps) {
         <p className="mt-6 text-center text-sm text-[--muted]">
           {isLogin ? 'אין לך חשבון?' : 'כבר יש לך חשבון?'}{' '}
           <Link
-            href={isLogin ? '/register' : '/login'}
+            href={`${isLogin ? '/register' : '/login'}${next ? `?next=${encodeURIComponent(next)}` : ''}`}
             className="text-[--foreground] underline underline-offset-4 hover:text-[--accent]"
           >
             {isLogin ? 'הרשמה' : 'התחברות'}

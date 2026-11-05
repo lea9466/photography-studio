@@ -176,6 +176,18 @@ export const MVP_DEFAULT_DASHBOARD_PATH = '/dashboard/galleries'
 /** First-time studio setup — slug, theme, branding */
 export const ONBOARDING_SETTINGS_PATH = '/dashboard/settings'
 
+/** Private-galleries workspace — also the "galleries only" signup landing */
+export const PRIVATE_GALLERIES_PATH = '/dashboard/private-galleries'
+
+/**
+ * A signup that arrives with `next` pointing at the private-galleries
+ * workspace (e.g. an outreach email link) is a "galleries only" signup: skip
+ * the site-setup modal and land her straight in the galleries tab.
+ */
+export function isGalleriesOnlySignup(next: string | null | undefined): boolean {
+  return (next ?? '').split(/[?#]/)[0].replace(/\/+$/, '') === PRIVATE_GALLERIES_PATH
+}
+
 /**
  * Routes that used to be blocked during MVP (dashboard overview + clients CRM).
  * Now that the client-gallery workspace is open to everyone

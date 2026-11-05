@@ -201,7 +201,16 @@ export async function updateSession(request: NextRequest, event?: NextFetchEvent
 
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = await resolveAuthenticatedDashboardPath()
+    const fallback = await resolveAuthenticatedDashboardPath()
+    // Already signed in and following a deep link (e.g. an email's
+    // /login?next=/dashboard/private-galleries): honour an internal dashboard
+    // `next` unless a lock / first-entry setup takes precedence.
+    const requestedNext = request.nextUrl.searchParams.get('next') ?? ''
+    url.pathname =
+      fallback === MVP_DEFAULT_DASHBOARD_PATH && requestedNext.startsWith('/dashboard')
+        ? resolveMvpDashboardPath(requestedNext.split(/[?#]/)[0])
+        : fallback
+    url.search = ''
     return NextResponse.redirect(url)
   }
 

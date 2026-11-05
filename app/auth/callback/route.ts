@@ -8,9 +8,11 @@ import { NextResponse } from 'next/server'
 
 import {
   resolveMvpDashboardPath,
+  isGalleriesOnlySignup,
   MVP_DEFAULT_DASHBOARD_PATH,
   ONBOARDING_SETTINGS_PATH,
 } from '@/lib/types/app.types'
+import { markGalleriesOnlyOnboarding } from '@/lib/onboarding/galleries-only'
 
 const NEW_OAUTH_USER_WINDOW_MS = 15 * 60 * 1000
 
@@ -67,10 +69,20 @@ export async function GET(request: Request) {
         .eq('id', data.user.id)
         .maybeSingle()
 
-      const destination =
+      const needsOnboarding = Boolean(
         (profile as { show_welcome_popup?: boolean } | null)?.show_welcome_popup
-          ? ONBOARDING_SETTINGS_PATH
-          : next
+      )
+
+      let destination = needsOnboarding ? ONBOARDING_SETTINGS_PATH : next
+      // Galleries-only signup (outreach link): skip the site-setup modal and
+      // go straight to the private-galleries tab.
+      if (needsOnboarding && isGalleriesOnlySignup(next)) {
+        try {
+          if (await markGalleriesOnlyOnboarding(data.user.id)) destination = next
+        } catch (skipError) {
+          console.error('[auth/callback] galleries-only onboarding skip failed', skipError)
+        }
+      }
 
       return NextResponse.redirect(`${origin}${destination}`)
     }
