@@ -160,7 +160,6 @@ export function SumitCardForm({
         ResponseLanguage: 'he',
         ErrorsClass: `#${formId} .og-errors`,
         ResponseCallback: (response) => {
-          console.info('[sumit] CreateToken response', response)
           const token = response?.Data?.SingleUseToken
           if (response?.Status === 0 && token) {
             finish(() => void chargeWithToken(token))
@@ -176,7 +175,6 @@ export function SumitCardForm({
           })
         },
         Callback: (token) => {
-          console.info('[sumit] CreateToken Callback token=', token)
           if (token) {
             finish(() => void chargeWithToken(token))
             return

@@ -742,7 +742,9 @@ export function AssistantWidget({
           <div
             dir="rtl"
             role="status"
-            aria-hidden={!teaserVisible}
+            // inert (not aria-hidden): hiding the teaser while its close button
+            // still has focus would leave focus inside an aria-hidden subtree.
+            inert={!teaserVisible}
             className={`relative flex max-w-[16rem] items-center gap-1 rounded-2xl py-2 pe-2 ps-3 text-sm font-medium shadow-lg transition-all duration-300 ${ASSISTANT_BUBBLE_CLASSES} ${
               teaserVisible ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-3 opacity-0'
             }`}

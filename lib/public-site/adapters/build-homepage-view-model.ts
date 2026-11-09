@@ -218,8 +218,10 @@ export function buildHomepageViewModel(input: HomepageViewModelInput): HomepageV
     hasBlog: input.postCount > 0,
     hasPhotoEditComparisons: input.photoEditComparisonsCount > 0,
 
-    heroDesktopImages: p.hero_desktop_urls ?? [],
-    heroMobileImages: p.hero_mobile_urls ?? [],
+    // Stored arrays can contain empty slots (""); drop them so themes never
+    // render <img src=""> or collide on React keys.
+    heroDesktopImages: (p.hero_desktop_urls ?? []).filter((url) => url?.trim()),
+    heroMobileImages: (p.hero_mobile_urls ?? []).filter((url) => url?.trim()),
     heroVideoUrl: p.hero_video_url,
     heroSettings: input.heroSettings ?? null,
 
