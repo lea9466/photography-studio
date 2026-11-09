@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { HIDDEN_FROM_SEARCH_ROBOTS, isHiddenFromSearch } from '@/lib/seo/search-visibility'
 import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'

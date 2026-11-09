@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { findPhotographerBySlug } from '@/lib/queries/public-photographer'
 import { FALLBACK_STUDIO_NAME } from '@/lib/branding/studio-name-fallback'
 import { TENANT_HOST_HEADER } from '@/lib/domains/rewrite'

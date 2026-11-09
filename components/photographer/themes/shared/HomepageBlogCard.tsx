@@ -1,7 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { galleryCardArrow, type SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from './useRevealOnScroll'
 import styles from './HomepageBlogCard.module.css'

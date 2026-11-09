@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import { DarkBrandLastWord } from '../themes/dark/DarkBrandLastWord'
 

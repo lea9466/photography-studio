@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import Link from 'next/link'
 import { toast } from 'sonner'
 import {
   ArrowDownUp,
@@ -1081,10 +1080,13 @@ export function AdminStudioList({ studios, appBaseUrl }: AdminStudioListProps) {
                                 variant="outline"
                                 className="h-8 border-sky-200 bg-sky-50 px-2 text-[11px] text-sky-800 hover:bg-sky-100"
                               >
-                                <Link href={siteUrl} target="_blank" rel="noopener noreferrer">
+                                {/* Plain <a>, not next/link: it opens in a new tab anyway, and
+                                    <Link> would prefetch (= server-render) every studio site
+                                    visible in this list. */}
+                                <a href={siteUrl} target="_blank" rel="noopener noreferrer">
                                   <ExternalLink className="h-3 w-3" />
                                   לאתר
-                                </Link>
+                                </a>
                               </Button>
                             ) : (
                               <span className="self-center text-[11px] text-slate-400">אין אתר</span>

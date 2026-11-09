@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { homepageSectionHref } from '@/lib/photographer-site-paths'

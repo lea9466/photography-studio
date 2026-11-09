@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import type { SiteLanguage } from '@/lib/site-language'
 import { homepageSectionHref } from '@/lib/photographer-site-paths'
 import { getPublicGalleryContactLabel, getPublicGalleryDefaultCta } from '@/lib/public-gallery-copy'

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import { RecentPhotosGrid, type RecentPhotosGridItem } from '../shared/RecentPhotosGrid'
 import { ElegantSectionHeading } from './ElegantSectionHeading'

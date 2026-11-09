@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import styles from './ClassicBlogPostCard.module.css'
 

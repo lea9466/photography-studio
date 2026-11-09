@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { galleryCardArrow, getSiteChromeCopy, type SiteLanguage } from '@/lib/site-language'
 import { useRevealOnScroll } from '../shared/useRevealOnScroll'
 import { ClassicSectionScript } from './ClassicSectionScript'

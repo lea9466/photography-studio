@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import Link from '@/components/photographer/PublicLink'
 import { ElegantBlogShareLinks } from './ElegantBlogShareLinks'
 import type { SiteLanguage } from '@/lib/site-language'
 import { isSiteLtr } from '@/lib/site-language'
