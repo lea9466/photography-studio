@@ -42,14 +42,28 @@ export function generateAdminOtpCode() {
   return String(randomInt(100000, 999999))
 }
 
-function buildOtpToken(code: string, exp: number, attempts: number) {
-  const payload = `${code}:${exp}:${attempts}`
+// The pending-OTP cookie lives in the requester's OWN browser, so whatever is
+// stored in it is readable by whoever holds it (httpOnly only blocks
+// JavaScript, not someone opening DevTools). Store an HMAC of the code, never
+// the code itself — otherwise the 6-digit secret mailed to the admin also sits
+// in plaintext in the cookie, and anyone who knows the admin email can request
+// a code, read it straight back out of their own cookie, and log in without
+// ever seeing the email. The outer sign(payload) still protects exp/attempts
+// from tampering; this inner hash hides the code. verifyPendingAdminOtp
+// recomputes HMAC(submitted) and compares, so the secret never leaves the
+// server and the hash can't be reversed back into the code.
+function hashOtpCode(code: string) {
+  return sign(`otp-code:${code.trim()}`)
+}
+
+function buildOtpToken(codeHash: string, exp: number, attempts: number) {
+  const payload = `${codeHash}:${exp}:${attempts}`
   return `${payload}:${sign(payload)}`
 }
 
 export async function setPendingAdminOtp(code: string) {
   const exp = Date.now() + OTP_TTL_MS
-  const token = buildOtpToken(code, exp, 0)
+  const token = buildOtpToken(hashOtpCode(code), exp, 0)
   const cookieStore = await cookies()
   cookieStore.set(OTP_COOKIE, token, cookieOptions(Math.floor(OTP_TTL_MS / 1000)))
 }
@@ -69,7 +83,7 @@ export async function verifyPendingAdminOtp(code: string) {
   const parts = payload.split(':')
   if (parts.length !== 3) return false
 
-  const [storedCode, expRaw, attemptsRaw] = parts
+  const [storedCodeHash, expRaw, attemptsRaw] = parts
   const exp = Number(expRaw)
   const attempts = Number(attemptsRaw)
   if (!Number.isFinite(exp) || Date.now() > exp) return false
@@ -83,9 +97,12 @@ export async function verifyPendingAdminOtp(code: string) {
     return false
   }
 
-  if (!safeEqual(storedCode, code.trim())) {
+  // storedCodeHash is HMAC(code); hash the submitted code the same way and
+  // compare the two hashes. The plaintext code is never stored, so a cookie
+  // read reveals only the hash.
+  if (!safeEqual(storedCodeHash, hashOtpCode(code))) {
     const remainingTtlSec = Math.max(1, Math.ceil((exp - Date.now()) / 1000))
-    const nextToken = buildOtpToken(storedCode, exp, attempts + 1)
+    const nextToken = buildOtpToken(storedCodeHash, exp, attempts + 1)
     cookieStore.set(OTP_COOKIE, nextToken, cookieOptions(remainingTtlSec))
     return false
   }

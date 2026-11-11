@@ -260,5 +260,62 @@ check(
   })()
 )
 
+console.log('\n=== Admin OTP cookie ===\n')
+
+;(() => {
+  const { createHmac } = require('node:crypto')
+  const SECRET = 'test-admin-secret'
+  const sign = (v) => createHmac('sha256', SECRET).update(v).digest('hex')
+
+  // Mirrors lib/admin/session.ts: the cookie stores HMAC(code), not the code.
+  const hashOtpCode = (code) => sign(`otp-code:${String(code).trim()}`)
+  const buildOtpToken = (codeHash, exp, attempts) => {
+    const payload = `${codeHash}:${exp}:${attempts}`
+    return `${payload}:${sign(payload)}`
+  }
+  const verify = (cookie, submitted) => {
+    const lastColon = cookie.lastIndexOf(':')
+    if (lastColon <= 0) return false
+    const sig = cookie.slice(lastColon + 1)
+    const payload = cookie.slice(0, lastColon)
+    if (sign(payload) !== sig) return false
+    const parts = payload.split(':')
+    if (parts.length !== 3) return false
+    const [storedCodeHash, expRaw] = parts
+    if (!(Date.now() <= Number(expRaw))) return false
+    return storedCodeHash === hashOtpCode(submitted)
+  }
+
+  const code = '703150'
+  const token = buildOtpToken(hashOtpCode(code), Date.now() + 60_000, 0)
+
+  check('otp cookie does NOT contain the plaintext code', !token.includes(code))
+  check('correct code verifies', verify(token, code) === true)
+  check('wrong code rejected', verify(token, '000000') === false)
+  check(
+    'tampered cookie payload rejected (outer HMAC)',
+    (() => {
+      const lastColon = token.lastIndexOf(':')
+      const payload = token.slice(0, lastColon)
+      const sig = token.slice(lastColon + 1)
+      const tampered = payload.slice(0, -1) + (payload.slice(-1) === '0' ? '1' : '0')
+      return verify(`${tampered}:${sig}`, code) === false
+    })()
+  )
+})()
+
+check(
+  'session.ts stores HMAC of the code, never the raw code (source scan)',
+  (() => {
+    const fs = require('node:fs')
+    const src = fs.readFileSync(path.join(root, 'lib/admin/session.ts'), 'utf8')
+    return (
+      src.includes('function hashOtpCode(') &&
+      src.includes('buildOtpToken(hashOtpCode(code)') &&
+      /function buildOtpToken\(codeHash: string/.test(src)
+    )
+  })()
+)
+
 console.log(`\n${passed} passed, ${failed} failed`)
 if (failed > 0) process.exit(1)
