@@ -317,5 +317,26 @@ check(
   })()
 )
 
+console.log('\n=== Password reset ===\n')
+
+check(
+  'password reset is rate-limited (per IP and per email) and uses one generic reply (source scan)',
+  (() => {
+    const fs = require('node:fs')
+    const src = fs.readFileSync(path.join(root, 'lib/actions/auth.actions.ts'), 'utf8')
+    const start = src.indexOf('export async function requestPasswordReset')
+    const end = src.indexOf('export async function updatePassword')
+    const fn = src.slice(start, end > start ? end : undefined)
+    const genericReturns = (fn.match(/return genericReply/g) || []).length
+    return (
+      start >= 0 &&
+      fn.includes('password-reset:ip:') &&
+      fn.includes('password-reset:email:') &&
+      // both the not-found branch and the success branch return the SAME reply
+      genericReturns >= 2
+    )
+  })()
+)
+
 console.log(`\n${passed} passed, ${failed} failed`)
 if (failed > 0) process.exit(1)

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { escapeIlikePattern } from '@/lib/supabase/ilike'
 import { sendPhotographerPasswordResetEmail } from '@/lib/email/resend'
+import { checkPersistentRateLimit, getClientIp } from '@/lib/rate-limit/persistent'
 import {
   ensureUserProfile,
   maybeSendWelcomeEmailForCurrentUser,
@@ -230,6 +231,37 @@ export async function requestPasswordReset(
     return { error: 'כתובת אימייל לא תקינה' }
   }
 
+  // Identical reply whether or not the email is registered — otherwise the
+  // difference between the two messages tells an attacker which addresses have
+  // accounts (user enumeration).
+  const genericReply: AuthActionState = {
+    success:
+      'אם האימייל רשום במערכת, נשלח אליו סיסמה חדשה — בדקי את תיבת הדואר (גם בתיקיית הספאם)',
+  }
+
+  // This flow CHANGES the password immediately (not a click-to-confirm link),
+  // so an unlimited caller could repeatedly reset any known studio's password
+  // to lock them out and flood their inbox — and exhaust the shared email-send
+  // quota for everyone. Rate-limit per IP and per target email, persisted in
+  // Postgres so it holds across Vercel's separate instances. The per-email
+  // counter increments for any string, registered or not, so it never doubles
+  // as an enumeration oracle.
+  const ip = await getClientIp()
+  const ipRate = await checkPersistentRateLimit(`password-reset:ip:${ip}`, 5, 15 * 60)
+  if (!ipRate.allowed) {
+    const minutes = Math.max(1, Math.ceil(ipRate.retryAfterSeconds / 60))
+    return { error: `יותר מדי בקשות לאיפוס סיסמה. נסי שוב בעוד ${minutes} דקות.` }
+  }
+  const emailRate = await checkPersistentRateLimit(
+    `password-reset:email:${email.toLowerCase()}`,
+    3,
+    60 * 60
+  )
+  if (!emailRate.allowed) {
+    const minutes = Math.max(1, Math.ceil(emailRate.retryAfterSeconds / 60))
+    return { error: `יותר מדי בקשות לאיפוס סיסמה. נסי שוב בעוד ${minutes} דקות.` }
+  }
+
   try {
     const admin = createAdminClient()
 
@@ -242,10 +274,7 @@ export async function requestPasswordReset(
       .maybeSingle()
 
     if (!profile?.email) {
-      return {
-        success:
-          'אם האימייל רשום במערכת, נשלח אליו סיסמה חדשה — בדקי את תיבת הדואר (גם ספאם)',
-      }
+      return genericReply
     }
 
     const newPassword = createTemporaryPassword()
@@ -274,10 +303,7 @@ export async function requestPasswordReset(
     }
   }
 
-  return {
-    success:
-      'נשלח מייל עם סיסמה חדשה — בדקי את תיבת הדואר (גם בתיקיית הספאם)',
-  }
+  return genericReply
 }
 
 export async function updatePassword(
