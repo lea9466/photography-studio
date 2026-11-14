@@ -315,6 +315,16 @@ export function GalleryPhotosSection({
     [currentPhotos]
   )
 
+  const hiddenPhotoIds = useMemo(
+    () => currentPhotos.filter((photo) => !photo.is_visible_to_client).map((photo) => photo.id),
+    [currentPhotos]
+  )
+  const shownPhotoCount = currentPhotos.length - hiddenPhotoIds.length
+
+  function selectHiddenOnly() {
+    setCurrentSelectedIds(new Set(hiddenPhotoIds))
+  }
+
   const allSelected =
     visiblePhotoIds.length > 0 &&
     visiblePhotoIds.every((id) => currentSelectedIds.has(id))
@@ -570,6 +580,12 @@ export function GalleryPhotosSection({
               <h4 className="text-sm sm:text-base font-semibold text-[#100d1f]">
                 תמונות {activeTab === 'regular' ? 'רגילות' : 'מעובדות'} ({currentPhotos.length})
               </h4>
+              {currentPhotos.length > 0 && (
+                <p className="text-xs sm:text-sm text-[#48464c]">
+                  {storeOriginalPhotos ? 'גלויות ללקוח' : 'מוצגות באתר'} {shownPhotoCount} מתוך {currentPhotos.length}
+                  {hiddenPhotoIds.length > 0 && ` · ${hiddenPhotoIds.length} מוסתרות`}
+                </p>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -628,6 +644,16 @@ export function GalleryPhotosSection({
                 >
                   {allSelected ? 'בטל בחירה' : 'בחר הכל'}
                 </Button>
+                {hiddenPhotoIds.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={selectHiddenOnly}
+                    className="border-[#c9c5cd] hover:bg-[#f7f2f4] text-xs"
+                  >
+                    בחר רק מוסתרות ({hiddenPhotoIds.length})
+                  </Button>
+                )}
                 {shouldShowToggleButton && showAllPhotos && (
                   <Button
                     variant="outline"
