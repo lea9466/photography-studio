@@ -77,8 +77,10 @@ export function DarkAbout(props: DarkAboutProps) {
               // eslint-disable-next-line @next/next/no-img-element
               <img alt={copy.misc.photographerPortraitAlt} className="aspect-[4/5] w-full object-cover" src={imageUrl} />
             ) : null}
+            {/* Two-column layout only: in the single column (below lg) the photo
+                spans the full width, so this overhanging card stuck out past the page edge. */}
             <div
-              className={`${styles.imageQuote} absolute -right-6 -bottom-10 hidden max-w-[260px] md:-right-12 md:block`}
+              className={`${styles.imageQuote} absolute -right-12 -bottom-10 hidden max-w-[260px] lg:block`}
             >
               <div className={styles.imageQuoteLine} />
               <p className={styles.imageQuoteName}>— {photographerName}</p>
@@ -97,16 +99,16 @@ export function DarkAbout(props: DarkAboutProps) {
               {description ? <p className={styles.bodySecondary}>{description}</p> : null}
             </div>
             {hasStats ? (
-              <div className="mt-4 grid max-w-xl grid-cols-3 gap-6 pt-12">
-                <div className="text-start rtl:text-right">
+              <div className="mx-auto mt-4 grid max-w-xl grid-cols-3 gap-6 pt-12 lg:mx-0">
+                <div className={styles.stat}>
                   <div className={styles.statNumber}>{formatStat(statsClients)}</div>
                   <div className={styles.statLabel}>{copy.stats.happyClients}</div>
                 </div>
-                <div className="text-start rtl:text-right">
+                <div className={styles.stat}>
                   <div className={styles.statNumber}>{formatStat(statsProjects)}</div>
                   <div className={styles.statLabel}>{copy.stats.portfolios}</div>
                 </div>
-                <div className="text-start rtl:text-right">
+                <div className={styles.stat}>
                   <div className={styles.statNumber}>{formatStat(statsYears)}</div>
                   <div className={styles.statLabel}>{copy.stats.yearsExperience}</div>
                 </div>

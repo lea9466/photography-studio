@@ -674,7 +674,9 @@
      viewport edge and forced a real horizontal scrollbar on narrow screens */
   overflow: hidden;
   background: #050506;
-  padding: 150px 0 180px;
+  /* bottom was 180px when the laptop ended the section; the demo video now
+     does, and the pricing section below brings its own 100px top padding */
+  padding: 150px 0 40px;
 }
 
 /* split layout, same principle as the hero: text on one side, one visual
@@ -771,6 +773,108 @@
     linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%),
     linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
   mask-composite: intersect;
+}
+
+/* Demo videos — poster + play button; the file loads only after the click
+   (NovaDemoVideo). Same flat black border as .step-card. */
+.how-video {
+  max-width: 960px;
+  margin: 72px auto 0;
+}
+
+.how-video-caption {
+  margin: 0 0 16px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 15px;
+}
+
+.demo-video {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 3px solid #000;
+  background: #000;
+  box-shadow: 0 0 60px rgba(var(--accent-light-rgb), 0.08);
+}
+
+.demo-video-poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.demo-video-media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #000;
+}
+
+.demo-video-play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(var(--accent-light-rgb), 0.92);
+  color: var(--charcoal);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s ease;
+}
+
+.demo-video-play svg {
+  width: 30px;
+  height: 30px;
+  /* optical centring of the triangle */
+  margin-inline-start: 4px;
+}
+
+.demo-video-poster .demo-video-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.demo-video-poster:hover .demo-video-play,
+.demo-video-poster:focus-visible .demo-video-play {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* Same block as .how-video, below the private split; side padding because
+   .private has none of its own (its .private-split carries it). */
+.private-video {
+  padding-inline: 24px;
+  /* a clear break from the laptop block above, whose reflection fades into
+     the background and makes a normal gap read as cramped */
+  margin-top: 150px;
+}
+
+@media (max-width: 640px) {
+  .how-video {
+    margin-top: 48px;
+  }
+
+  .private-video {
+    margin-top: 90px;
+  }
+
+  .demo-video-play {
+    width: 60px;
+    height: 60px;
+  }
+
+  .demo-video-play svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Pricing — one packages panel per product, placed right after that

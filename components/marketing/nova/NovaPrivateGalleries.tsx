@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useInView } from './useInView'
+import { DEMO_VIDEOS, NovaDemoVideo } from './NovaDemoVideo'
 import styles from './nova.module.css'
 
 export function NovaPrivateGalleries() {
@@ -17,6 +18,7 @@ export function NovaPrivateGalleries() {
   // tall once stacked, and a high ratio could become unreachable.
   const [textRef, textInView] = useInView(0.2, '0px 0px -18% 0px')
   const [visualRef, visualInView] = useInView(0.2, '0px 0px -18% 0px')
+  const [videoRef, videoInView] = useInView(0.2, '0px 0px -18% 0px')
 
   return (
     <section className={styles.private} id="private">
@@ -83,6 +85,14 @@ export function NovaPrivateGalleries() {
             alt="גלריה פרטית מוצגת במחשב נייד, עם תמונות לבחירה"
           />
         </div>
+      </div>
+
+      <div
+        ref={videoRef}
+        className={`${styles['how-video']} ${styles['private-video']} ${styles.reveal} ${styles['delay-1']} ${videoInView ? styles['in-view'] : ''}`}
+      >
+        <p className={styles['how-video-caption']}>ככה זה נראה בפועל</p>
+        <NovaDemoVideo video={DEMO_VIDEOS.privateGalleries} />
       </div>
     </section>
   )

@@ -54,6 +54,12 @@
   white-space: pre-line;
 }
 
+/* Start-aligned beside the photo; centered with everything else in the
+   single column (below lg). */
+.stat {
+  text-align: start;
+}
+
 .statNumber {
   font-family: 'Frank Ruhl Libre', serif;
   font-size: clamp(2rem, 3vw, 2.75rem);
@@ -102,5 +108,8 @@
     align-items: center;
     text-align: center;
     width: 100%;
+  }
+  .stat {
+    text-align: center;
   }
 }

@@ -61,10 +61,12 @@
 }
 
 /* Source keeps the "ABOUT" eyebrow (the only current align="right" user)
-   right-aligned at every width, including mobile — this centers it on
-   mobile instead, a deliberate deviation from source per Lea's request
-   (2026-08-24). */
-@media (max-width: 767px) {
+   right-aligned at every width, including mobile — this centers it instead,
+   a deliberate deviation from source per Lea's request (2026-08-24; widened
+   2026-11-16 from 767px to the whole single-column range, since DarkAbout
+   only goes two-column at lg, and on a tablet-width screen the right-pinned
+   eyebrow sat off to the side of the centered title). */
+@media (max-width: 1023px) {
   .wrapRight {
     justify-content: center !important;
     text-align: center;

@@ -2,6 +2,7 @@
 
 import { Fragment } from 'react'
 import { useInView } from './useInView'
+import { DEMO_VIDEOS, NovaDemoVideo } from './NovaDemoVideo'
 import styles from './nova.module.css'
 
 const STEPS = [
@@ -88,6 +89,13 @@ export function NovaHowItWorks() {
               ) : null}
             </Fragment>
           ))}
+        </div>
+
+        <div
+          className={`${styles['how-video']} ${styles.reveal} ${styles['delay-2']} ${stepsInView ? styles['in-view'] : ''}`}
+        >
+          <p className={styles['how-video-caption']}>ככה זה נראה בפועל</p>
+          <NovaDemoVideo video={DEMO_VIDEOS.publicSite} />
         </div>
       </div>
     </section>
