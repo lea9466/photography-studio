@@ -31,6 +31,7 @@ import { HeroOptionTiersManager } from '@/components/admin/HeroOptionTiersManage
 import { CustomDomainVerificationManager } from '@/components/admin/CustomDomainVerificationManager'
 import { UnsentInquiriesManager } from '@/components/admin/UnsentInquiriesManager'
 import { MarketSurveyResults } from '@/components/admin/MarketSurveyResults'
+import { LearningSurveyResults } from '@/components/admin/LearningSurveyResults'
 
 type ManageTabsProps = {
   studios: AdminStudioRow[]
@@ -163,6 +164,7 @@ export function ManageTabs({
         className={activeTab === 'survey' ? 'flex flex-col gap-6' : 'hidden'}
       >
         <MarketSurveyResults />
+        <LearningSurveyResults />
       </div>
 
       <div

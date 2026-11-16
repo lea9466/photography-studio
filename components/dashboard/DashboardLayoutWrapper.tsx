@@ -11,6 +11,7 @@ import { SiteSetupBanner } from './SiteSetupBanner'
 import { SiteOnboardingModal, type SiteOnboardingInitial } from './SiteOnboardingModal'
 import { AssistantWidget } from './assistant/AssistantWidget'
 import { MarketSurveyPrompt } from './market-survey/MarketSurveyPrompt'
+import { LearningSurveyPrompt } from './learning-survey/LearningSurveyPrompt'
 import type { Announcement } from '@/lib/announcements/types'
 
 type DashboardLayoutWrapperProps = {
@@ -93,6 +94,9 @@ export function DashboardLayoutWrapper({
       {siteOnboarding ? <SiteOnboardingModal open initial={siteOnboarding} /> : null}
       <ReferralSuccessModal open={showReferralPopup} />
       <MarketSurveyPrompt
+        enabled={!isImpersonating && !siteUnavailableLocked && !siteOnboarding && !showReferralPopup}
+      />
+      <LearningSurveyPrompt
         enabled={!isImpersonating && !siteUnavailableLocked && !siteOnboarding && !showReferralPopup}
       />
       <SidebarNav

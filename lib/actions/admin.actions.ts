@@ -878,6 +878,42 @@ export async function fetchMarketSurveyResponses(): Promise<AdminMarketSurveyRes
   })
 }
 
+export type AdminLearningSurveyResponse = {
+  userId: string
+  studioName: string
+  completedAt: string | null
+  learnedAt: string[]
+  teacherName: string | null
+}
+
+/** Everyone the "where did you learn" popup was shown to. Empty until the migration is applied. */
+export async function fetchLearningSurveyResponses(): Promise<AdminLearningSurveyResponse[]> {
+  await requireAdmin()
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('learning_survey_responses')
+    .select('user_id, completed_at, answers, users!learning_survey_responses_user_id_fkey(studio_name, name)')
+    .order('completed_at', { ascending: false, nullsFirst: false })
+
+  if (error) {
+    console.error('[fetchLearningSurveyResponses]', error.message)
+    return []
+  }
+
+  return (data ?? []).map((row) => {
+    const owner = row.users as { studio_name: string | null; name: string } | null
+    const answers = (row.answers ?? {}) as { learnedAt?: unknown; teacherName?: unknown }
+    return {
+      userId: row.user_id,
+      studioName: owner?.studio_name || owner?.name || '—',
+      completedAt: row.completed_at,
+      learnedAt: Array.isArray(answers.learnedAt) ? answers.learnedAt.filter((v) => typeof v === 'string') : [],
+      teacherName: typeof answers.teacherName === 'string' && answers.teacherName ? answers.teacherName : null,
+    }
+  })
+}
+
 /** Retries one unsent inquiry's notification email. */
 export async function resendContactInquiry(
   inquiryId: string
